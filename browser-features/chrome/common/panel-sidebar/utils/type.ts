@@ -38,6 +38,8 @@ export const zPanelSidebarConfig = t.intersection([
     webExtensionRunningEnabled: t.boolean,
   }),
   t.partial({
+    overlay: t.boolean,
+    openOnHover: t.boolean,
     floatingWidth: t.number,
     floatingHeight: t.number,
     floatingPositionLeft: t.number,

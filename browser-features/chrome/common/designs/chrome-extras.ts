@@ -39,10 +39,10 @@
  *     python3 ../../../../tools/gen-chrome-extras.py
  *
  * The generator only takes blocks that gate on a single Lepton toggle; blocks
- * that AND several toggles together are layout combinations. The sidebar
- * overlap/auto-hide combination has its own sheet; the other combinations are
- * left to the native implementations. Omissions are listed in generated file
- * headers so the divergence from upstream stays auditable.
+ * that AND several toggles together are layout combinations. Sidebar sheets are
+ * maintained by Floorp's native Firefox sidebar controller rather than generated
+ * from Lepton: it preserves upstream panel widths and overlays both the panel
+ * and hover launcher without changing the web content viewport.
  *
  * Three keys are Floorp-native rather than ported — `autohideNavbar`,
  * `tabbarAsTitlebar` and `tabbarOneLiner`. Lepton implements them inside ~2,500

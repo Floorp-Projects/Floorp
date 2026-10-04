@@ -10,10 +10,13 @@ import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
   isFloating,
+  isPanelSidebarHoverPreview,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
+  setIsPanelSidebarHoverOpen,
+  setIsPanelSidebarHoverPreview,
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
@@ -175,13 +178,33 @@ export class CPanelSidebar {
   }
 
   public changePanel(panelId: string): void {
-    if (panelId === selectedPanelId()) {
-      setSelectedPanelId(null);
-      if (panelSidebarConfig().autoUnload) {
-        this.unloadPanel(panelId);
-      }
+    const wasPreview = isPanelSidebarHoverPreview();
+    setIsPanelSidebarHoverPreview(false);
+    setIsPanelSidebarHoverOpen(false);
+    // Clicking a preview pins it, including a preview that has retracted.
+    if (wasPreview && panelId === selectedPanelId()) {
+      this.openPanel(panelId);
       return;
     }
+    if (panelId === selectedPanelId()) {
+      this.closePanel();
+      return;
+    }
+
+    this.openPanel(panelId);
+  }
+
+  public closePanel(): void {
+    const panelId = selectedPanelId();
+    setIsPanelSidebarHoverPreview(false);
+    setIsPanelSidebarHoverOpen(false);
+    setSelectedPanelId(null);
+    if (panelId && panelSidebarConfig().autoUnload) {
+      this.unloadPanel(panelId);
+    }
+  }
+
+  public openPanel(panelId: string): void {
 
     const panel = this.getPanelData(panelId);
     if (!panel) {

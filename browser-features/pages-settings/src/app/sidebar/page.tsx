@@ -4,6 +4,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { BasicSettings } from "./components/BasicSettings.tsx";
 import { PanelList } from "./components/PanelList.tsx";
+import { FirefoxSidebarSettings } from "./components/FirefoxSidebarSettings.tsx";
 import {
   getPanelSidebarSettings,
   savePanelSidebarSettings,
@@ -70,6 +71,7 @@ export default function Page() {
           </form>
         </FormProvider>
         <PanelList />
+        <FirefoxSidebarSettings />
       </div>
     </div>
   );

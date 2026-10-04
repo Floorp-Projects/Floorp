@@ -192,6 +192,23 @@ export const [isFloatingDragging, setIsFloatingDragging] = createRootHMR(
   import.meta.hot,
 );
 
+/** Hover previews keep their browser loaded while their presentation is closed. */
+export const [isPanelSidebarHoverPreview, setIsPanelSidebarHoverPreview] =
+  createRootHMR(() => createSignal(false), import.meta.hot);
+export const [isPanelSidebarHoverOpen, setIsPanelSidebarHoverOpen] =
+  createRootHMR(() => createSignal(false), import.meta.hot);
+export const [isPanelSidebarResizing, setIsPanelSidebarResizing] =
+  createRootHMR(() => createSignal(false), import.meta.hot);
+
+export function isPanelSidebarOverlay(): boolean {
+  return panelSidebarConfig().overlay === true && !isFloating();
+}
+
+export function isPanelSidebarVisible(): boolean {
+  return selectedPanelId() !== null &&
+    (!isPanelSidebarHoverPreview() || isPanelSidebarHoverOpen());
+}
+
 function createIsPanelSidebarEnabled(): [Accessor<boolean>, Setter<boolean>] {
   const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createSignal<
     boolean
