@@ -9,7 +9,11 @@ import {
   setConfig,
   updateChromeExtrasSetting,
 } from "../configs.ts";
-import { getOldChromeExtrasConfig } from "../utils/old-config-migrator.ts";
+import {
+  getOldChromeExtrasConfig,
+  LEGACY_ALIASES,
+  LEGACY_CHROME_EXTRAS_PREFS,
+} from "../utils/old-config-migrator.ts";
 import { zFloorpDesignConfigs } from "../type.ts";
 import type { TitlebarTestBrowser } from "./types.ts";
 import {
@@ -20,6 +24,12 @@ import {
 
 const VERTICAL_PREF = "sidebar.verticalTabs";
 const LEGACY_PREF = "userChrome.tabbar.as_titlebar";
+const LEGACY_PREF_NAMES = [
+  ...new Set([
+    ...Object.values(LEGACY_CHROME_EXTRAS_PREFS),
+    ...Object.values(LEGACY_ALIASES).flat(),
+  ]),
+];
 const DESIGNS = [
   "proton",
   "lepton",
@@ -28,6 +38,40 @@ const DESIGNS = [
   "fluerial",
 ] as const;
 const browser = gBrowser as TitlebarTestBrowser;
+
+function snapshotPref(name: string) {
+  return {
+    name,
+    hadUserValue: Services.prefs.prefHasUserValue(name),
+    value: Services.prefs.getBoolPref(name, false),
+  };
+}
+
+function restorePref(pref: ReturnType<typeof snapshotPref>): void {
+  if (pref.hadUserValue) {
+    Services.prefs.setBoolPref(pref.name, pref.value);
+  } else {
+    Services.prefs.clearUserPref(pref.name);
+    // Switching designs can apply user.js defaults even when the starting
+    // Proton/Fluerial design does not mirror legacy prefs.
+    if (Services.prefs.getBoolPref(pref.name, false) !== pref.value) {
+      Services.prefs.getDefaultBranch("").setBoolPref(pref.name, pref.value);
+    }
+  }
+}
+
+function assertRestoredPref(pref: ReturnType<typeof snapshotPref>): void {
+  assertEquals(
+    Services.prefs.prefHasUserValue(pref.name),
+    pref.hadUserValue,
+    `${pref.name} must restore its user-value state`,
+  );
+  assertEquals(
+    Services.prefs.getBoolPref(pref.name, false),
+    pref.value,
+    `${pref.name} must restore its effective value`,
+  );
+}
 
 async function waitFor(
   condition: () => boolean,
@@ -63,11 +107,8 @@ async function withTitlebarTabs(
     name,
     value: root.getAttribute(name),
   }));
-  const prefs = [VERTICAL_PREF, LEGACY_PREF, "sidebar.revamp"].map((name) => ({
-    name,
-    hadUserValue: Services.prefs.prefHasUserValue(name),
-    value: Services.prefs.getBoolPref(name, false),
-  }));
+  const browserPrefs = [VERTICAL_PREF, "sidebar.revamp"].map(snapshotPref);
+  const legacyPrefs = LEGACY_PREF_NAMES.map(snapshotPref);
   const tabs: XULElement[] = [];
   try {
     Services.prefs.setBoolPref("sidebar.revamp", true);
@@ -99,13 +140,11 @@ async function withTitlebarTabs(
     await test(tabs);
   } finally {
     setConfig(before);
-    for (const pref of prefs) {
-      if (pref.hadUserValue) {
-        Services.prefs.setBoolPref(pref.name, pref.value);
-      } else {
-        Services.prefs.clearUserPref(pref.name);
-      }
-    }
+    for (const pref of browserPrefs) restorePref(pref);
+    // Settle the mounted design/vertical-pref effects before restoring the
+    // exact legacy values, including values outside the saved design config.
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    for (const pref of legacyPrefs) restorePref(pref);
     for (const attribute of attributes) {
       if (attribute.value === null) {
         root.removeAttribute(attribute.name);
@@ -116,6 +155,9 @@ async function withTitlebarTabs(
     browser.selectedTab = selected;
     for (const tab of tabs) browser.removeTab(tab, { animate: false });
     await new Promise((resolve) => setTimeout(resolve, 25));
+    for (const pref of [...browserPrefs, ...legacyPrefs]) {
+      assertRestoredPref(pref);
+    }
   }
 }
 
@@ -300,6 +342,43 @@ async function testLegacyMigrationKeepsTheSavedTitlebarChoice(): Promise<void> {
   });
 }
 
+async function testFixtureRestoresNativeDesignLegacyPrefs(): Promise<void> {
+  await withTitlebarTabs(async () => {
+    for (const design of ["proton", "fluerial"] as const) {
+      setConfig((previous) => ({
+        ...previous,
+        globalConfigs: { ...previous.globalConfigs, userInterface: design },
+      }));
+      Services.prefs.clearUserPref("userChrome.tabbar.one_liner");
+      Services.prefs.setBoolPref(
+        "userChrome.urlbar.always_show_page_actions",
+        true,
+      );
+      const previous = [
+        "userChrome.tabbar.one_liner",
+        "userChrome.urlbar.always_show_page_actions",
+      ].map(snapshotPref);
+      await withTitlebarTabs(async () => {
+        setConfig((settings) => ({
+          ...settings,
+          globalConfigs: { ...settings.globalConfigs, userInterface: "lepton" },
+        }));
+        updateChromeExtrasSetting("tabbarOneLiner", true);
+        await waitFor(
+          () =>
+            Services.prefs.getBoolPref("userChrome.tabbar.one_liner", false) &&
+            !Services.prefs.getBoolPref(
+              "userChrome.urlbar.always_show_page_actions",
+              true,
+            ),
+          "the mounted legacy mirror must change both fixture preferences",
+        );
+      });
+      for (const pref of previous) assertRestoredPref(pref);
+    }
+  });
+}
+
 await runTests("tabbar-as-titlebar.test.ts", [
   {
     name: "titlebar tabs support boolean attributes and active vendor rules",
@@ -316,5 +395,9 @@ await runTests("tabbar-as-titlebar.test.ts", [
   {
     name: "legacy migration retains the persisted titlebar choice",
     fn: testLegacyMigrationKeepsTheSavedTitlebarChoice,
+  },
+  {
+    name: "fixture cleanup restores legacy preferences for Proton and Fluerial",
+    fn: testFixtureRestoresNativeDesignLegacyPrefs,
   },
 ]);
