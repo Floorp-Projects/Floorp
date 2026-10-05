@@ -4,6 +4,12 @@ export interface AppearanceTestBrowser extends GBrowser {
   addTabGroup(tabs: XULElement[], options: { label: string }): XULElement;
 }
 
+export interface TitlebarTestBrowser extends GBrowser {
+  tabContainer: XULElement;
+  unpinTab(tab: XULElement): void;
+  removeTab(tab: XULElement, options?: { animate: boolean }): void;
+}
+
 export type MenuIconPopup = Element & {
   state: string;
   openPopup(
