@@ -130,11 +130,14 @@ export function getOldChromeExtrasConfig(
  */
 export function syncLegacyChromeExtrasPrefs(
   settings: ChromeExtrasSettings,
+  verticalTabs = false,
 ): void {
   for (const key of CHROME_EXTRAS_KEYS) {
     const legacyPref = LEGACY_CHROME_EXTRAS_PREFS[key];
     if (!legacyPref) continue;
-    const value = settings[key];
+    // Keep Lepton's horizontal layout combinations, but never hide vertical tabs.
+    const value = settings[key] &&
+      !(key === "tabbarAsTitlebar" && verticalTabs);
     const prefs = [legacyPref, ...(LEGACY_ALIASES[key] ?? [])];
     for (const pref of prefs) {
       if (

@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, For, onCleanup, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config, getChromeExtrasSettings } from "./configs.ts";
@@ -33,6 +40,16 @@ export function replaceIconPaths(
 
 export function BrowserDesignElement() {
   const getCSS = () => getCSSFromConfig(config());
+  const verticalPref = "sidebar.verticalTabs";
+  const [verticalTabs, setVerticalTabs] = createSignal(
+    Services.prefs.getBoolPref(verticalPref, false),
+  );
+  const updateVerticalTabs = () =>
+    setVerticalTabs(Services.prefs.getBoolPref(verticalPref, false));
+  Services.prefs.addObserver(verticalPref, updateVerticalTabs);
+  onCleanup(() =>
+    Services.prefs.removeObserver(verticalPref, updateVerticalTabs)
+  );
 
   // Apply UserJS preferences
   createEffect(() => {
@@ -49,7 +66,7 @@ export function BrowserDesignElement() {
     const design = config().globalConfigs.userInterface;
     const settings = getChromeExtrasSettings();
     if (design === "lepton" || design === "photon" || design === "protonfix") {
-      syncLegacyChromeExtrasPrefs(settings);
+      syncLegacyChromeExtrasPrefs(settings, verticalTabs());
     }
   });
 
