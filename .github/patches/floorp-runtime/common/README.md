@@ -5,6 +5,14 @@ Floorp and before the artifact build. Keep Runtime changes here rather than
 editing a sibling Floorp-Runtime checkout. Validate patches against the source
 commit in `floorp-runtime.lock.json`, using an isolated checkout or source fixture.
 
+`workspace-external-containers.patch` chooses the workspace container before
+creating a browser for external URL opens, including cold launch and new windows.
+It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
+modules; native rebuilding is not required. The matching `tools/patches` patch
+maps BrowserContentHandler to the unpacked artifact's `browser/modules` path.
+Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
+in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
+
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
 session state and N-way split layouts on Firefox 157. The tabbrowser and
 sessionstore implementations now live in `moz-src` modules; SessionStore is a

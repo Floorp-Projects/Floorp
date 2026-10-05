@@ -124,6 +124,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       deleteArchivedWorkspace: this.deleteArchivedWorkspace.bind(this),
       resetWorkspaces: this.resetWorkspaces.bind(this),
       getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
+      getCurrentWorkspaceUserContextId: this.getCurrentWorkspaceUserContextId
+        .bind(this),
       changeWorkspace: this.changeWorkspace.bind(this),
       isWorkspaceID: this.isWorkspaceID.bind(this),
     };
@@ -604,8 +606,8 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   private boundHandleTabOpen: (event: Event) => void;
 
   /**
-   * Handle TabOpen event to apply workspace container to new tabs.
-   * This ensures tabs opened from bookmarks, external links, etc. use the current workspace's container.
+   * Attribute a new tab to its workspace. Its container must already have
+   * been selected by the creation path, before constructing the browser.
    */
   private handleTabOpen = (event: Event) => {
     const tabEvent = event as CustomEvent;
@@ -640,31 +642,6 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         );
       }
       return;
-    }
-
-    // Get the workspace ID that should be used (either existing or current)
-    const targetWorkspaceId = workspaceId || currentWorkspaceId;
-    const workspace = this.getRawWorkspace(targetWorkspaceId);
-    const workspaceUserContextId = workspace?.userContextId ?? 0;
-
-    // Only apply userContextId if:
-    // 1. Workspace has a container (userContextId > 0)
-    // 2. Tab doesn't already have a userContextId set (or it's 0/default)
-    const currentTabUserContextId = Number.parseInt(
-      tab.getAttribute("usercontextid") || "0",
-      10,
-    );
-
-    if (workspaceUserContextId > 0 && currentTabUserContextId === 0) {
-      // Apply workspace container to the tab
-      tab.setAttribute("usercontextid", String(workspaceUserContextId));
-      console.debug(
-        "WorkspacesService: Applied workspace container to new tab",
-        {
-          workspaceId: targetWorkspaceId,
-          userContextId: workspaceUserContextId,
-        },
-      );
     }
   };
 }
