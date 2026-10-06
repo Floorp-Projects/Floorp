@@ -67,7 +67,7 @@ index 3338f985a6c..269fedaed7d 100644
    NSEvent* mLastKeyEvent =
        nullptr;  // Retained; this file uses Gecko's MRC input helpers.
 diff --git a/widget/cocoa/appshim/MacWebAppInput.mm b/widget/cocoa/appshim/MacWebAppInput.mm
-index 47b32e89973..772f856d3d2 100644
+index 47b32e89973..b52547aba79 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.mm
 +++ b/widget/cocoa/appshim/MacWebAppInput.mm
 @@ -4,6 +4,7 @@
@@ -130,6 +130,15 @@ index 47b32e89973..772f856d3d2 100644
      event.mDeltaMode = precise ? 0 : 1;
      event.mDeltaX = -dx * (precise ? scale : 1);
      event.mDeltaY = -dy * (precise ? scale : 1);
+@@ -237,7 +256,7 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+   event.mClickCount = clicks;
+   mWidget->DispatchInputEvent(&event);
+   if (message == eMouseUp && domButton == 2 && IsAlive()) {
+-    WidgetMouseEvent menu(true, eContextMenu, mWidget, WidgetMouseEvent::eReal);
++    WidgetPointerEvent menu(true, eContextMenu, mWidget);
+     menu.mRefPoint = point;
+     menu.mModifiers = event.mModifiers;
+     menu.mButton = domButton;
 diff --git a/widget/cocoa/appshim/MacWebAppWidget.h b/widget/cocoa/appshim/MacWebAppWidget.h
 index bc6fcb0b13a..8b2b8ee757f 100644
 --- a/widget/cocoa/appshim/MacWebAppWidget.h

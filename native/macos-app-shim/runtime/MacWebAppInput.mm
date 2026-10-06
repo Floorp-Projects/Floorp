@@ -256,7 +256,7 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
   event.mClickCount = clicks;
   mWidget->DispatchInputEvent(&event);
   if (message == eMouseUp && domButton == 2 && IsAlive()) {
-    WidgetMouseEvent menu(true, eContextMenu, mWidget, WidgetMouseEvent::eReal);
+    WidgetPointerEvent menu(true, eContextMenu, mWidget);
     menu.mRefPoint = point;
     menu.mModifiers = event.mModifiers;
     menu.mButton = domButton;

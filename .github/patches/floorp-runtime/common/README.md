@@ -33,12 +33,16 @@ and selection ranges, and routes phased trackpad input through Gecko's APZ,
 overscroll, and history-swipe handling. PWA widgets bypass host-process AppKit
 popup menus, which require a local NSView, and use Gecko popups presented by the
 Shim instead. Ordinary browser menus keep their existing behavior and native
-menu preferences remain enabled. The canonical Shim files in
+menu preferences remain enabled. PWA context-menu input uses Gecko's pointer
+event class so that remote content processes accept the event without an IPC
+deserialization failure. The canonical Shim files in
 `native/macos-app-shim/` must stay in sync with this patch. Native View regressions
 are covered by `deno task app-shim:build --test`; Runtime phase conversion is
 covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
 `tools/app-shim/test-popups-and-overscroll.py` runner checks popup positioning,
 zoom, option commands, and APZ overscroll against a source-built Runtime.
+`tools/app-shim/test-context-menu.py` checks repeated trusted right-click menu
+delivery and content-process survival through the PWA input adapter.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts

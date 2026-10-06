@@ -326,6 +326,14 @@ Injected phased trackpad packets produced APZ top-edge overscroll, presented
 compositor frames, and settled back to zero scroll offset. Physical trackpad
 gestures remain unverified.
 
+On 2026-10-06, the isolated `tools/app-shim/test-context-menu.py` regression
+confirmed that right-click input reaches a remote page as a trusted mouse
+`PointerEvent`. Twenty injected right-click packet pairs opened the fixture's
+custom menu without a content-process crash or presentation failure. The
+previous event class crashed the remote content process after one packet pair
+with `Error deserializing 'WidgetMouseEvent'`. This check does not exercise the
+live ChatGPT site or a physical right click.
+
 The final signed package also passed frontend lifecycle runs `run-5o38ue6c`
 (keep apps running) and `run-f602_v7x` (quit all). Both exercised the real signed
 installer, native process recovery preserving page and form state, actual
