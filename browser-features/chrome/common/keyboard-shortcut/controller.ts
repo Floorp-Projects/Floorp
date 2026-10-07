@@ -5,7 +5,7 @@
 
 import { getConfig, isEnabled, isSafeErrorHandling } from "./config.ts";
 import { getKeyboardShortcutAction } from "./actions.ts";
-import type { ShortcutConfig } from "./type.ts";
+import type { KeyboardActionFn, ShortcutConfig } from "./type.ts";
 import {
   isBarePrintableKeyEvent,
   isKeyboardShortcutTypingContext,
@@ -33,6 +33,9 @@ export class KeyboardShortcutController {
     win: Window = globalThis as unknown as Window,
     remoteFocusStore: KeyboardShortcutFocusStoreReader | null = null,
     private readonly platform: string = AppConstants.platform,
+    private readonly resolveAction: (
+      actionId: string,
+    ) => KeyboardActionFn | undefined = getKeyboardShortcutAction,
   ) {
     this.targetWindow = win;
     this.remoteFocusStore = remoteFocusStore;
@@ -188,7 +191,7 @@ export class KeyboardShortcutController {
       // Expanded try-catch covers both getAction() resolution and fn()
       // invocation so callers can always run cleanup.
       try {
-        const fn = getKeyboardShortcutAction(shortcut.action);
+        const fn = this.resolveAction(shortcut.action);
         if (fn) {
           fn(this.targetWindow);
         }
@@ -200,7 +203,7 @@ export class KeyboardShortcutController {
       }
     } else {
       // Control: original behaviour (try-catch only around fn call)
-      const fn = getKeyboardShortcutAction(shortcut.action);
+      const fn = this.resolveAction(shortcut.action);
       if (fn) {
         try {
           fn(this.targetWindow);

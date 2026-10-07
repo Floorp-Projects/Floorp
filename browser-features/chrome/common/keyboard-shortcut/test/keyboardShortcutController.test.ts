@@ -1102,6 +1102,177 @@ function testSafeErrorHandlingExperimentDisabled(): void {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Tests — Action execution with mock resolver (DI)
+// ---------------------------------------------------------------------------
+
+function testMockActionCalledOnMatch(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    let receivedWindow: Window | undefined;
+    const mockFn = (win: Window): void => {
+      callCount++;
+      receivedWindow = win;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      1,
+      "mock action should be invoked exactly once on match",
+    );
+    assertEquals(
+      receivedWindow,
+      fakeWin,
+      "mock action should receive the controller's target window",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockActionNotCalledOnMismatch(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const mockFn = (): void => {
+      callCount++;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+
+    // Wrong key — should not match Ctrl+T.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyR",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      0,
+      "mock action should NOT be invoked when shortcut does not match",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockActionNotCalledAfterDestroy(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const mockFn = (): void => {
+      callCount++;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+    controller.destroy();
+
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      0,
+      "destroyed controller should not invoke the mock action",
+    );
+  });
+}
+
+function testMockActionThrowDoesNotCrashController(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const throwingMock = (): void => {
+      callCount++;
+      throw new Error("mock action failure");
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => throwingMock,
+    );
+
+    // The controller's try-catch should swallow the throw.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      1,
+      "throwing mock should still be invoked once",
+    );
+
+    // A second key press should still match (controller is alive).
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      2,
+      "controller should remain functional after action threw",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockResolverReturningUndefined(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => undefined,
+    );
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "shortcut should match even when resolver returns undefined",
+    );
+
+    controller.destroy();
+  });
+}
+
 function testKeyUpClearsKeyState(): void {
   withPrefs(() => {
     applyTestConfig(CTRL_T_CONFIG);
@@ -1649,6 +1820,27 @@ export async function runAllTests(): Promise<void> {
     {
       name: "safe error handling experiment disabled",
       fn: testSafeErrorHandlingExperimentDisabled,
+    },
+    // Action execution with mock resolver (DI)
+    {
+      name: "mock action called on match",
+      fn: testMockActionCalledOnMatch,
+    },
+    {
+      name: "mock action not called on mismatch",
+      fn: testMockActionNotCalledOnMismatch,
+    },
+    {
+      name: "mock action not called after destroy",
+      fn: testMockActionNotCalledAfterDestroy,
+    },
+    {
+      name: "mock action throw does not crash controller",
+      fn: testMockActionThrowDoesNotCrashController,
+    },
+    {
+      name: "mock resolver returning undefined",
+      fn: testMockResolverReturningUndefined,
     },
     // Key state tracking
     {

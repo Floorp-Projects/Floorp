@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useKeyboardShortcutConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/GeneralSettings.tsx";
 import { ShortcutsSettings } from "./components/ShortcutsSettings.tsx";
+import { FirefoxKeysSettings } from "./components/FirefoxKeysSettings.tsx";
 
 export default function Page() {
     const { t } = useTranslation();
@@ -49,6 +50,8 @@ export default function Page() {
                     updateShortcut={updateShortcut}
                     deleteShortcut={deleteShortcut}
                 />
+
+                <FirefoxKeysSettings />
             </div>
         </div>
     );

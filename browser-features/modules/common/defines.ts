@@ -2,6 +2,8 @@
 import type { Experiment } from "../modules/experiments/types.ts";
 import type { AppLifecycleSettings } from "#libs/pwa/appLifecycleTypes.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+import type { FirefoxKeyEntry, KeySyncChangeResult } from "./NRKeySyncTypes.ts";
+import type { XulCombo } from "./NRKeySyncCombo.ts";
 
 export interface PrefGetParams {
   prefName: string;
@@ -103,4 +105,12 @@ export interface NRExperimemmtParentFunctions {
   ): Promise<{ success: boolean; error?: string }>;
   clearExperimentCache(): Promise<{ success: boolean; error?: string }>;
   reinitializeExperiments(): Promise<{ success: boolean; error?: string }>;
+}
+
+export interface NRKeySyncParentFunctions {
+  getFirefoxKeys(): Promise<FirefoxKeyEntry[]>;
+  isKeySyncWriteEnabled(): Promise<boolean>;
+  changeFirefoxKey(id: string, combo: XulCombo): Promise<KeySyncChangeResult>;
+  resetFirefoxKey(id: string): Promise<KeySyncChangeResult>;
+  openAboutKeyboard(): Promise<void>;
 }

@@ -7,11 +7,15 @@ import { Modal } from "../../../../../../libs/ui/modal.tsx";
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { comboToCanonicalCode } from "../../../../../modules/common/NRKeySyncCombo.ts";
+import type { FirefoxKeyEntry } from "../../../../../modules/common/NRKeySyncTypes.ts";
 import {
   getRecordedShortcutCode,
   type ShortcutConfig,
 } from "../../../types/pref.ts";
 import { Input } from "@/components/common/input.tsx";
+import { keySync } from "../../../lib/rpc/keysync.ts";
+import { useFirefoxKeys } from "../firefoxKeysManager.ts";
 import { formatModifierLabel, formatModifierSymbol } from "../platform.ts";
 import type { ShortcutEditorProps } from "../types.ts";
 
@@ -22,6 +26,7 @@ export const ShortcutEditor = ({
   initialShortcut,
   existingShortcuts,
   actionId,
+  firefoxKeys: firefoxKeysOverride,
 }: ShortcutEditorProps) => {
   const { t } = useTranslation();
   const [shortcut, setShortcut] = useState<ShortcutConfig>(
@@ -38,8 +43,12 @@ export const ShortcutEditor = ({
   );
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [firefoxConflict, setFirefoxConflict] =
+    useState<FirefoxKeyEntry | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const hookResult = useFirefoxKeys();
+  const firefoxKeys = firefoxKeysOverride ?? hookResult.keys;
 
   const handleSave = async () => {
     if (saving || !shortcut.key || error) return;
@@ -87,6 +96,7 @@ export const ShortcutEditor = ({
       }));
       setIsRecording(false);
       checkDuplicate(code);
+      checkFirefoxConflict(shortcut.modifiers, normalizeKeyCode(code));
     };
 
     if (isOpen && isRecording) {
@@ -129,8 +139,33 @@ export const ShortcutEditor = ({
   useEffect(() => {
     if (shortcut.key) {
       checkDuplicate(shortcut.key);
+      checkFirefoxConflict(
+        shortcut.modifiers,
+        normalizeKeyCode(shortcut.key),
+      );
     }
   }, [shortcut.modifiers]);
+
+  /**
+   * Warns (without blocking) when the recorded combo matches a Firefox
+   * live key. Floorp's controller takes priority at runtime, so this is
+   * informational only — unlike the Floorp-internal duplicate check.
+   */
+  const checkFirefoxConflict = (
+    modifiers: ShortcutConfig["modifiers"],
+    normalizedKey: string,
+  ): void => {
+    if (!normalizedKey) {
+      setFirefoxConflict(null);
+      return;
+    }
+    const canonical = comboToCanonicalCode(modifiers, normalizedKey);
+    const match = firefoxKeys.find(
+      (entry) =>
+        entry.canonicalCode !== null && entry.canonicalCode === canonical,
+    );
+    setFirefoxConflict(match ?? null);
+  };
 
   if (!isOpen) return null;
 
@@ -169,6 +204,26 @@ export const ShortcutEditor = ({
         {(error || saveError) && (
           <div role="alert" className="floorp-notice floorp-notice-error">
             <span>{error || t("ui.saveError")}</span>
+          </div>
+        )}
+
+        {firefoxConflict && (
+          <div className="floorp-notice floorp-notice-warning">
+            <span className="text-sm">
+              {t("keyboardShortcut.firefoxKeyConflict", {
+                label: firefoxConflict.label,
+                shortcut: firefoxConflict.shortcutText,
+              })}{" "}
+              <button
+                type="button"
+                className="text-[var(--link-text-color)] hover:underline"
+                onClick={() => {
+                  void keySync.openAboutKeyboard();
+                }}
+              >
+                {t("keyboardShortcut.openAboutKeyboard")}
+              </button>
+            </span>
           </div>
         )}
 
