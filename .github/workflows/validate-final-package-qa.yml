@@ -118,7 +118,7 @@ jobs:
             const {data: sourcePackage} = await github.rest.repos.getContent({
               ...context.repo, path:'package.json', ref:run.head_sha});
             const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
-            if (version !== '12.20.0') throw new Error('This regression run requires Floorp12.20.0');
+            if (version !== '12.20.1') throw new Error('This regression run requires Floorp12.20.1');
             fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
               JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
@@ -266,7 +266,7 @@ jobs:
           set -euo pipefail
           python3 tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
-            --expected-floorp-version 12.20.0 --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
+            --expected-floorp-version 12.20.1 --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
 
       - name: Verify final macOS PWA context menus and native GUI input
         if: matrix.platform == 'mac'
