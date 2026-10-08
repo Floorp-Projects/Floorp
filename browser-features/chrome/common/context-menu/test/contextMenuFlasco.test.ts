@@ -536,6 +536,60 @@ async function testExpiry(): Promise<void> {
   }
 }
 
+function testSynchronousAssignmentTimerCleanup(): void {
+  const experiments = new Experiments();
+  const preferences = new Preferences();
+  experiments.entries[0].currentVariantId = null;
+  experiments.entries[0].end = new Date(Date.now() + 60000).toISOString();
+  experiments.ensureActiveAssignment = () => {
+    experiments.entries[0].currentVariantId = "enabled";
+    // The real client publishes a recovered assignment synchronously.
+    experiments.notify();
+    return true;
+  };
+  const timers = new Map<number, () => void>();
+  let nextTimer = 0;
+  let attachments = 0;
+  let destructions = 0;
+  const timerWindow = {
+    setTimeout(callback: () => void) {
+      timers.set(++nextTimer, callback);
+      return nextTimer;
+    },
+    clearTimeout(id: number) {
+      timers.delete(id);
+    },
+  } as unknown as Window;
+  const runtime = new ContextMenuRuntime({
+    window: timerWindow,
+    experiments,
+    preferences,
+    createController: () => ({
+      attach: () => attachments++,
+      destroy: () => destructions++,
+    }),
+  });
+  try {
+    runtime.start();
+    assertEquals(attachments, 1, "assignment notification attaches once");
+    assertEquals(
+      timers.size,
+      1,
+      "assignment recovery keeps one boundary timer",
+    );
+    experiments.notify();
+    assertEquals(timers.size, 1, "repeated notification replaces the timer");
+    runtime.destroy();
+    assertEquals(timers.size, 0, "destroy cancels every owned boundary timer");
+    assertEquals(destructions, 1, "destroy releases the controller once");
+    experiments.notify();
+    assertEquals(timers.size, 0, "destroyed runtime cannot schedule more work");
+  } finally {
+    runtime.destroy();
+    timers.clear();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -558,6 +612,11 @@ export async function runAllTests(): Promise<void> {
       fn: testQueuedWorkIsCancelled,
     },
     { name: "experiment expiry releases the customizer", fn: testExpiry },
+    {
+      name:
+        "synchronous assignment recovery retains one cancellable boundary timer",
+      fn: testSynchronousAssignmentTimerCleanup,
+    },
   ];
   await runTests("contextMenuFlasco.test.ts", tests);
 }

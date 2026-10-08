@@ -98,6 +98,9 @@ export class ContextMenuRuntime {
           .filter((value) => value > now)
           .sort((left, right) => left - right)[0];
         if (nextBoundary !== undefined) {
+          // Assignment recovery can synchronously notify and schedule a timer
+          // in a nested refresh. Replace that timer rather than orphaning it.
+          if (this.#timer !== null) this.#window.clearTimeout(this.#timer);
           this.#timer = this.#window.setTimeout(
             () => this.refresh(),
             Math.min(nextBoundary - now + 1, 0x7fffffff),
