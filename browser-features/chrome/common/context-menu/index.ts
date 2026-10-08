@@ -7,6 +7,8 @@ import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { onCleanup } from "solid-js";
 import { ContextMenuController } from "./controller.ts";
+import { ContextMenuRuntime } from "./runtime.ts";
+import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "./style.ts";
 
 export * from "./config.ts";
 export * from "./types.ts";
@@ -15,28 +17,51 @@ export * from "./types.ts";
 export default class ContextMenu extends NoraComponentBase {
   // NoraComponentBase invokes init() from its constructor. `declare` avoids a
   // derived-class field initializer overwriting the controller created there.
-  declare private controller: ContextMenuController | null | undefined;
+  declare private runtime: ContextMenuRuntime | null | undefined;
   declare private cleanupController: (() => void) | undefined;
 
   init(): void {
-    if (this.controller) return;
-    const contentAreaContextMenu = ContextMenuUtils.contentAreaContextMenu();
-    contentAreaContextMenu?.addEventListener(
-      "popupshowing",
-      ContextMenuUtils.onPopupShowing,
-    );
-    this.controller = new ContextMenuController({ window });
-    this.controller.attach();
+    if (this.runtime) return;
+    this.runtime = new ContextMenuRuntime({
+      window,
+      createController: () => {
+        const controller = new ContextMenuController({ window });
+        const popup = ContextMenuUtils.contentAreaContextMenu();
+        return {
+          attach: () => {
+            popup?.addEventListener(
+              "popupshowing",
+              ContextMenuUtils.onPopupShowing,
+            );
+            controller.attach();
+          },
+          destroy: () => {
+            popup?.removeEventListener(
+              "popupshowing",
+              ContextMenuUtils.onPopupShowing,
+            );
+            controller.destroy();
+            for (
+              const separator of popup?.querySelectorAll(
+                `[${FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE}]`,
+              ) ?? []
+            ) {
+              (separator as XULElement).hidden = false;
+              separator.removeAttribute(
+                FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
+              );
+            }
+          },
+        };
+      },
+    });
+    this.runtime.start();
 
     const cleanup = () => {
       globalThis.removeEventListener("unload", cleanup);
       if (this.cleanupController !== cleanup) return;
-      contentAreaContextMenu?.removeEventListener(
-        "popupshowing",
-        ContextMenuUtils.onPopupShowing,
-      );
-      this.controller?.destroy();
-      this.controller = null;
+      this.runtime?.destroy();
+      this.runtime = null;
       this.cleanupController = undefined;
     };
     this.cleanupController = cleanup;

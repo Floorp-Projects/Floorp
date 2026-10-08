@@ -223,8 +223,8 @@ async function testInitAttachesPopupShowingListener(): Promise<void> {
 
     assertEquals(
       popupListenerAddCount,
-      1,
-      "constructor init and an explicit init should share one document capture listener",
+      0,
+      "constructor init and an explicit init must not attach outside Flasco",
     );
   } finally {
     if (capturedUnloadListener) invokeCapturedUnloadListener();
@@ -1004,14 +1004,14 @@ async function testWindowUnloadDestroysController(): Promise<void> {
     const instance = new mod.default();
     assertEquals(
       popupListenerAddCount,
-      1,
-      "component should attach one controller",
+      0,
+      "component must not attach outside Flasco",
     );
     invokeCapturedUnloadListener();
     assertEquals(
       popupListenerRemoveCount,
-      1,
-      "window unload should destroy the controller",
+      0,
+      "window unload has no customizer popup listener to remove outside Flasco",
     );
     assertEquals(
       unloadListenerRemoveCount,
@@ -1022,8 +1022,8 @@ async function testWindowUnloadDestroysController(): Promise<void> {
     instance.init();
     assertEquals(
       popupListenerAddCount,
-      2,
-      "an explicitly reinitialized instance should own one fresh controller",
+      0,
+      "an explicitly reinitialized instance still respects Flasco",
     );
     invokeCapturedUnloadListener();
   } finally {
@@ -1183,7 +1183,7 @@ export async function runAllTests(): Promise<void> {
 
     // ContextMenu component — Init behavior
     {
-      name: "ContextMenu init attaches popupshowing listener",
+      name: "ContextMenu init registers no popup listeners outside Flasco",
       fn: testInitAttachesPopupShowingListener,
     },
     {
@@ -1326,5 +1326,14 @@ export async function runAllTests(): Promise<void> {
   ];
 
   const { runTests } = await import("../../../test/utils/test_harness.ts");
-  await runTests("contextMenuComponent.test.ts", tests);
+  const policyPref = "floorp.experiments.participationPolicy";
+  const hadPolicy = Services.prefs.prefHasUserValue(policyPref);
+  const policy = Services.prefs.getStringPref(policyPref, "default");
+  Services.prefs.setStringPref(policyPref, "never");
+  try {
+    await runTests("contextMenuComponent.test.ts", tests);
+  } finally {
+    if (hadPolicy) Services.prefs.setStringPref(policyPref, policy);
+    else Services.prefs.clearUserPref(policyPref);
+  }
 }

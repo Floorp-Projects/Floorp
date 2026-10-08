@@ -13,6 +13,6 @@ Keyboard, mouse gesture, context menu, and command palette interaction features.
 | Feature | Source | Entrypoints | Description |
 |---|---|---|---|
 | command-palette | `browser-features/chrome/common/command-palette/index.ts` | `default class CommandPalette`, `init` | Owns the command palette feature through the CommandPalette chrome component and wires `service`, `components/CommandPalette`, `style.css?inline`. |
-| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component and wires `controller`, `config`. |
+| context-menu | `browser-features/chrome/common/context-menu/index.ts` | `default class ContextMenu`, `init` | Owns the context menu feature through the ContextMenu chrome component and wires `controller`, `runtime`, `style`. |
 | keyboard-shortcut | `browser-features/chrome/common/keyboard-shortcut/index.ts` | `default class KeyboardShortcut`, `init` | Owns the keyboard shortcut feature through the KeyboardShortcut chrome component and wires `service`, `config`. |
 | mouse-gesture | `browser-features/chrome/common/mouse-gesture/index.ts` | `default class MouseGesture`, `init` | Owns the mouse gesture feature through the MouseGesture chrome component and wires `service`, `config`, `components/GestureDisplay`. |
