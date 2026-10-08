@@ -61,7 +61,7 @@ def filter_index(data, withheld, expected_version=None, expected_sha256=None):
             version = fields.get("Version", "")
             filename = fields.get("Filename", "").removeprefix("./")
             if not re.fullmatch(r"[A-Za-z0-9.+~_-]+", version) or filename != f"floorp-{version}.deb":
-                raise ValueError("Floorp DEB filename does not match its version")
+                raise ValueError(f"Floorp DEB filename does not match its version: {filename!r}, Version={version!r}")
             if fields.get("Architecture") != "amd64":
                 raise ValueError("Unexpected Floorp architecture in amd64 index")
             if not re.fullmatch(r"[0-9a-f]{64}", fields.get("SHA256", "")):

@@ -28,6 +28,37 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Inspect the authenticated public PPA index
+        run: |
+          set -euo pipefail
+          PPA_FIXTURE="$RUNNER_TEMP/ppa-public-fixture"
+          mkdir -p "$PPA_FIXTURE"
+          for metadata in Packages Packages.gz Release Release.gpg InRelease; do
+            curl -fsSL --connect-timeout 15 --max-time 45 \
+              "https://ppa.floorp.app/amd64/$metadata" -o "$PPA_FIXTURE/$metadata"
+          done
+          curl -fsSL --connect-timeout 15 --max-time 45 \
+            https://raw.githubusercontent.com/Floorp-Projects/Floorp-PPA/6a2e588c8d85ec151b69da84bea5263ac776cd35/amd64/KEY.gpg \
+            -o "$PPA_FIXTURE/KEY.gpg"
+          gpg --batch --dearmor --output "$PPA_FIXTURE/trusted-keyring.gpg" "$PPA_FIXTURE/KEY.gpg"
+          gpgv --keyring "$PPA_FIXTURE/trusted-keyring.gpg" "$PPA_FIXTURE/Release.gpg" "$PPA_FIXTURE/Release"
+          gpgv --keyring "$PPA_FIXTURE/trusted-keyring.gpg" --output "$PPA_FIXTURE/authenticated-release" "$PPA_FIXTURE/InRelease"
+          cmp "$PPA_FIXTURE/Release" "$PPA_FIXTURE/authenticated-release"
+          python3 .github/scripts/ppa_index.py verify-release "$PPA_FIXTURE"
+          python3 - "$PPA_FIXTURE/Packages" <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, '.github/scripts')
+          from ppa_index import paragraphs
+          records = [fields for _, fields in paragraphs(pathlib.Path(sys.argv[1]).read_bytes()) if fields.get('Package') == 'floorp']
+          mismatches = [{key: fields.get(key) for key in ['Package', 'Version', 'Filename', 'SHA256', 'Size', 'Architecture']} for fields in records if fields.get('Filename', '').removeprefix('./') != f'floorp-{fields.get("Version")}.deb']
+          print(json.dumps({'authenticatedRecords': len(records), 'historicalFilenameVersionPairs': mismatches}, indent=2))
+          PY
+      - name: Save authenticated public fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppa-authenticated-fixture-${{ github.run_id }}
+          path: ${{ runner.temp }}/ppa-public-fixture
+          if-no-files-found: error
       - name: Test withholding and real APT candidates
         run: python3 .github/scripts/test_ppa_index.py
       - name: Check publisher shell syntax
