@@ -161,6 +161,31 @@ async function testClientRuntimeBoundaries(
       await client.init({ installId: "context-menu-boundary-test" });
       assertEquals(counts.creations, 1, "opt-in after start activates");
     }
+    const beforeClear = counts.creations;
+    client.clearCache();
+    assertEquals(
+      client.getAllExperiments()[0].currentVariantId,
+      null,
+      "cache clearing does not recreate an assignment from the old manifest",
+    );
+    assertEquals(
+      counts.destructions,
+      beforeClear,
+      "cache clearing releases the active runtime",
+    );
+    runtime.destroy();
+    runtime = startRuntime();
+    assertEquals(
+      counts.creations,
+      beforeClear,
+      "runtime restart after cache clearing waits for client initialization",
+    );
+    await client.init({ installId: "context-menu-boundary-test" });
+    assertEquals(
+      counts.creations,
+      beforeClear + 1,
+      "successful initialization after cache clearing resumes once",
+    );
     const beforeDisable = counts.creations;
     client.disableExperiment(EXPERIMENT_ID);
     assertEquals(
@@ -168,7 +193,25 @@ async function testClientRuntimeBoundaries(
       beforeDisable,
       "disable releases runtime",
     );
+    if (rollout === 0) {
+      Services.prefs.setStringPref(POLICY_PREF, "default");
+      await client.init({ installId: "context-menu-boundary-test" });
+    }
     client.enableExperiment(EXPERIMENT_ID);
+    if (rollout === 0) {
+      assertEquals(
+        client.getAllExperiments()[0].currentVariantId,
+        "control",
+        "re-enable recalculates an assignment retained while disabled",
+      );
+      assertEquals(
+        counts.creations,
+        beforeDisable,
+        "a default-policy rollout exclusion cannot revive the old overlay",
+      );
+      Services.prefs.setStringPref(POLICY_PREF, "always");
+      await client.init({ installId: "context-menu-boundary-test" });
+    }
     assertEquals(
       counts.creations,
       beforeDisable + 1,
@@ -328,9 +371,40 @@ async function testClientNotificationsAndPolicies(): Promise<void> {
       "enabled",
       "always opts in outside rollout",
     );
+    const retainedAssignment = Services.prefs.getStringPref(
+      "floorp.experiments.assignments.v1",
+    );
+    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 25));
+    client.enableExperiment(EXPERIMENT_ID);
+    assertEquals(
+      Services.prefs.getStringPref("floorp.experiments.assignments.v1"),
+      retainedAssignment,
+      "enabling an already enabled experiment does not rewrite its assignment",
+    );
+    client.disableExperiment(EXPERIMENT_ID);
+    Services.prefs.setStringPref(POLICY_PREF, "default");
+    await client.init({ installId: "context-menu-flasco-test" });
+    assertEquals(
+      client.getAllExperiments()[0].currentVariantId,
+      "enabled",
+      "initialization retains the disabled assignment",
+    );
+    client.enableExperiment(EXPERIMENT_ID);
+    assertEquals(
+      states.at(-1)?.variant,
+      "control",
+      "re-enable publishes the recalculated default-policy assignment",
+    );
+    Services.prefs.setStringPref(POLICY_PREF, "always");
+    await client.init({ installId: "context-menu-flasco-test" });
     Services.prefs.setStringPref(POLICY_PREF, "never");
     await client.init({ installId: "context-menu-flasco-test" });
     assertEquals(states.at(-1)?.variant, "control", "never opts out");
+    Services.prefs.setStringPref(POLICY_PREF, "always");
+    await client.init({ installId: "context-menu-flasco-test" });
+    client.disableExperiment(EXPERIMENT_ID);
+    Services.prefs.setStringPref(POLICY_PREF, "default");
+    await client.init({ installId: "context-menu-flasco-test" });
     Services.prefs.setStringPref(
       "floorp.experiments.manifestUrl",
       "data:application/json,invalid",
@@ -345,6 +419,34 @@ async function testClientNotificationsAndPolicies(): Promise<void> {
       states.at(-1)?.manifest,
       false,
       "failed fetch notifies unavailable manifest state",
+    );
+    assertEquals(
+      client.getAllExperiments()[0].currentVariantId,
+      "enabled",
+      "a failed refresh retains the old public assignment",
+    );
+    assertEquals(
+      client.getAllExperiments()[0].isReady,
+      false,
+      "a failed refresh exposes the stale snapshot as unavailable to settings",
+    );
+    client.enableExperiment(EXPERIMENT_ID);
+    assertEquals(
+      client.getAllExperiments()[0].currentVariantId,
+      null,
+      "re-enable without a manifest invalidates the retained assignment",
+    );
+    Services.prefs.setStringPref("floorp.experiments.manifestUrl", manifestUri);
+    await client.init({ installId: "context-menu-flasco-test" });
+    assertEquals(
+      client.getAllExperiments()[0].currentVariantId,
+      "control",
+      "retry evaluates the current rollout instead of the old enabled variant",
+    );
+    assertEquals(
+      client.getAllExperiments()[0].isReady,
+      true,
+      "successful retry exposes a ready settings snapshot",
     );
     client.clearCache();
     assertEquals(

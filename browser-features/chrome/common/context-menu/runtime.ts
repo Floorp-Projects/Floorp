@@ -68,7 +68,7 @@ export class ContextMenuRuntime {
       if (
         this.#experiments?.manifestAvailable &&
         !this.#experiments.initializing && policy !== "never" &&
-        policy === this.#preferences.getStringPref(LAST_POLICY_PREF, "default")
+        policy === this.#preferences.getStringPref(LAST_POLICY_PREF, "")
       ) {
         let experiment = this.#experiments.getAllExperiments().find(
           (entry) => entry.id === CONTEXT_MENU_EXPERIMENT_ID,

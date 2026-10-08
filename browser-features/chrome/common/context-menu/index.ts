@@ -6,7 +6,6 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { onCleanup } from "solid-js";
-import { ContextMenuController } from "./controller.ts";
 import { ContextMenuRuntime } from "./runtime.ts";
 import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "./style.ts";
 
@@ -16,51 +15,35 @@ export * from "./types.ts";
 @noraComponent(import.meta.hot)
 export default class ContextMenu extends NoraComponentBase {
   // NoraComponentBase invokes init() from its constructor. `declare` avoids a
-  // derived-class field initializer overwriting the controller created there.
+  // derived-class field initializer overwriting the runtime created there.
   declare private runtime: ContextMenuRuntime | null | undefined;
   declare private cleanupController: (() => void) | undefined;
 
   init(): void {
     if (this.runtime) return;
-    this.runtime = new ContextMenuRuntime({
-      window,
-      createController: () => {
-        const controller = new ContextMenuController({ window });
-        const popup = ContextMenuUtils.contentAreaContextMenu();
-        return {
-          attach: () => {
-            popup?.addEventListener(
-              "popupshowing",
-              ContextMenuUtils.onPopupShowing,
-            );
-            controller.attach();
-          },
-          destroy: () => {
-            popup?.removeEventListener(
-              "popupshowing",
-              ContextMenuUtils.onPopupShowing,
-            );
-            controller.destroy();
-            for (
-              const separator of popup?.querySelectorAll(
-                `[${FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE}]`,
-              ) ?? []
-            ) {
-              (separator as XULElement).hidden = false;
-              separator.removeAttribute(
-                FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
-              );
-            }
-          },
-        };
-      },
-    });
+    // This native menu repair predates customization and remains available
+    // regardless of enrollment. Only the customizer's controller is gated.
+    const popup = ContextMenuUtils.contentAreaContextMenu();
+    popup?.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    this.runtime = new ContextMenuRuntime({ window });
     this.runtime.start();
 
     const cleanup = () => {
       globalThis.removeEventListener("unload", cleanup);
       if (this.cleanupController !== cleanup) return;
       this.runtime?.destroy();
+      popup?.removeEventListener(
+        "popupshowing",
+        ContextMenuUtils.onPopupShowing,
+      );
+      for (
+        const separator of popup?.querySelectorAll(
+          `[${FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE}]`,
+        ) ?? []
+      ) {
+        (separator as XULElement).hidden = false;
+        separator.removeAttribute(FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE);
+      }
       this.runtime = null;
       this.cleanupController = undefined;
     };

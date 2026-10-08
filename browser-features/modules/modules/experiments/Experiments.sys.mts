@@ -469,6 +469,12 @@ export class ExperimentsClient {
     return this.#initializations > 0;
   }
 
+  private isStateReady(): boolean {
+    return this.manifestAvailable && !this.initializing &&
+      this.getPrefString(PARTICIPATION_POLICY_PREF, "default") ===
+        this.getPrefString(LAST_POLICY_PREF, null);
+  }
+
   /** Runtime consumers refresh after committed changes, not intermediate pref writes. */
   subscribe(listener: () => void): () => void {
     this.#listeners.add(listener);
@@ -479,7 +485,7 @@ export class ExperimentsClient {
   ensureActiveAssignment(experimentId: string): boolean {
     const experiment = this.getExperimentById(experimentId);
     if (
-      !this.manifestAvailable || this.initializing || !this.installId ||
+      !this.isStateReady() || !this.installId ||
       !experiment || !this.isExperimentActive(experiment) ||
       this.disabledExperiments.has(experimentId) ||
       this.assignments[experimentId]
@@ -887,6 +893,27 @@ export class ExperimentsClient {
    */
   enableExperiment(experimentId: string): { success: boolean; error?: string } {
     try {
+      // A disabled assignment can predate a policy change. Recalculate only
+      // the requested experiment before publishing its enabled state.
+      if (this.disabledExperiments.has(experimentId)) {
+        const experiment = this.getExperimentById(experimentId);
+        if (
+          this.isStateReady() && this.installId && experiment
+        ) {
+          this.assignments[experimentId] = {
+            installId: this.installId,
+            variantId: this.chooseVariantForExperiment(
+              experiment,
+              this.installId,
+            ),
+            assignedAt: this.now().toISOString(),
+          };
+        } else {
+          // A later successful init must not reuse an unverifiable assignment.
+          delete this.assignments[experimentId];
+        }
+        this.saveAssignmentsToPrefs();
+      }
       // Remove from disabled list
       this.disabledExperiments.delete(experimentId);
       this.saveDisabledExperiments();
@@ -910,6 +937,7 @@ export class ExperimentsClient {
     start: string | undefined;
     end: string | undefined;
     isActive: boolean;
+    isReady: boolean;
     enrollmentStatus:
       | "enrolled"
       | "not_in_rollout"
@@ -920,6 +948,7 @@ export class ExperimentsClient {
     experimentData: Experiment;
   }> {
     const results = [];
+    const isReady = this.isStateReady();
 
     for (const exp of this.experiments) {
       const isActive = this.isExperimentActive(exp);
@@ -955,6 +984,7 @@ export class ExperimentsClient {
         start: exp.start,
         end: exp.end,
         isActive,
+        isReady,
         enrollmentStatus,
         currentVariantId,
         experimentData: exp,

@@ -16,11 +16,11 @@ control variants, and the **Never participate** policy hide the settings. A
 direct visit then returns to the Hub home page. Failed participation checks also
 keep the settings hidden.
 
-The same Flasco condition controls the runtime in browser windows and secondary
-chrome documents. Outside the enabled participant group, the customizer does not
-initialize, register popup listeners, or build a catalog. Native menus remain
-available. Saved menu customizations and their enabled preference are retained;
-re-enrollment resumes an enabled saved layout.
+The same ready Flasco snapshot controls the editor and runtime in browser
+windows and secondary chrome documents. Outside the enabled participant group,
+the customizer does not initialize, register popup listeners, or build a
+catalog. Native menus remain available. Saved menu customizations and their
+enabled preference are retained; re-enrollment resumes an enabled saved layout.
 
 The **Always participate** policy and per-experiment force enrollment use the
 client's assigned variant; **Default** follows its rollout assignment; **Never
@@ -33,6 +33,12 @@ only its missing assignment using the existing participation and rollout rules;
 it does not refetch the manifest or reinitialize other experiments. Disabling
 `floorp.contextMenu.enabled` also releases the runtime without deleting the
 layout.
+
+Clearing the Flasco cache stops customization until a successful
+reinitialization. Re-enabling an experiment reevaluates its assignment under the
+current policy. The preexisting native screenshot/separator helper remains
+active outside Flasco; customization controllers, popup capture listeners, and
+catalogs stay gated.
 
 A reference manifest entry is provided in
 [`experiments.sample.json`](../browser-features/chrome/common/context-menu/experiments.sample.json).

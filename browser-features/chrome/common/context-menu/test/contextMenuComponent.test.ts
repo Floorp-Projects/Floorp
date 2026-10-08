@@ -995,6 +995,7 @@ async function testCleanupRemovesEventListener(): Promise<void> {
 
 async function testWindowUnloadDestroysController(): Promise<void> {
   cleanupDOM();
+  createMockContentAreaContextMenu();
   const mod = await import("../index.ts");
   resetListenerTracking();
   wrapDocumentForTracking();
@@ -1026,6 +1027,55 @@ async function testWindowUnloadDestroysController(): Promise<void> {
       "an explicitly reinitialized instance still respects Flasco",
     );
     invokeCapturedUnloadListener();
+  } finally {
+    cleanupDOM();
+  }
+}
+
+async function testLegacyNormalizationOutsideFlasco(): Promise<void> {
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+  const screenshot = document.createElement("menuitem");
+  screenshot.id = "context-take-screenshot";
+  const adjacent = document.createElement("menuitem");
+  adjacent.hidden = true;
+  const separator = document.createElement("menuseparator");
+  const hiddenItem = document.createElement("menuitem");
+  hiddenItem.hidden = true;
+  menu.append(screenshot, adjacent, separator, hiddenItem);
+  const mod = await import("../index.ts");
+  resetListenerTracking();
+  wrapDocumentForTracking();
+  wrapWindowForUnloadTracking();
+  try {
+    const instance = new mod.default();
+    instance.init();
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      popupListenerAddCount,
+      0,
+      "excluded customizer stays detached",
+    );
+    assertEquals(adjacent.hidden, false, "legacy screenshot repair still runs");
+    assertEquals(
+      separator.hidden,
+      true,
+      "native hidden-row separator is normalized",
+    );
+    invokeCapturedUnloadListener();
+    adjacent.hidden = true;
+    separator.hidden = false;
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      adjacent.hidden,
+      true,
+      "component cleanup removes the native helper",
+    );
+    assertEquals(
+      separator.hidden,
+      false,
+      "cleanup does not register duplicate helpers",
+    );
   } finally {
     cleanupDOM();
   }
@@ -1193,6 +1243,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "ContextMenu unload destroys and releases controller",
       fn: testWindowUnloadDestroysController,
+    },
+    {
+      name: "Legacy native menu normalization remains outside Flasco",
+      fn: testLegacyNormalizationOutsideFlasco,
     },
 
     // ContextMenuUtils — contentAreaContextMenu
