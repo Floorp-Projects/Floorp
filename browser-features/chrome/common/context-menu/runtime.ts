@@ -70,9 +70,18 @@ export class ContextMenuRuntime {
         !this.#experiments.initializing && policy !== "never" &&
         policy === this.#preferences.getStringPref(LAST_POLICY_PREF, "default")
       ) {
-        const experiment = this.#experiments.getAllExperiments().find(
+        let experiment = this.#experiments.getAllExperiments().find(
           (entry) => entry.id === CONTEXT_MENU_EXPERIMENT_ID,
         );
+        if (
+          this.#preferences.getBoolPref(CONTEXT_MENU_ENABLED_PREF, true) &&
+          experiment?.isActive && experiment.currentVariantId === null &&
+          this.#experiments.ensureActiveAssignment(CONTEXT_MENU_EXPERIMENT_ID)
+        ) {
+          experiment = this.#experiments.getAllExperiments().find(
+            (entry) => entry.id === CONTEXT_MENU_EXPERIMENT_ID,
+          );
+        }
         enabled =
           this.#preferences.getBoolPref(CONTEXT_MENU_ENABLED_PREF, true) &&
           experiment?.isActive === true &&

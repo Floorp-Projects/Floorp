@@ -13,6 +13,7 @@ export interface ContextMenuExperiments {
   readonly manifestAvailable: boolean;
   readonly initializing: boolean;
   getAllExperiments(): ContextMenuExperimentState[];
+  ensureActiveAssignment(experimentId: string): boolean;
   subscribe(listener: () => void): () => void;
 }
 

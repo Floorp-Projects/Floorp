@@ -475,6 +475,27 @@ export class ExperimentsClient {
     return () => this.#listeners.delete(listener);
   }
 
+  /** Fill an assignment skipped before start, using the fetched manifest only. */
+  ensureActiveAssignment(experimentId: string): boolean {
+    const experiment = this.getExperimentById(experimentId);
+    if (
+      !this.manifestAvailable || this.initializing || !this.installId ||
+      !experiment || !this.isExperimentActive(experiment) ||
+      this.disabledExperiments.has(experimentId) ||
+      this.assignments[experimentId]
+    ) {
+      return false;
+    }
+    this.assignments[experimentId] = {
+      installId: this.installId,
+      variantId: this.chooseVariantForExperiment(experiment, this.installId),
+      assignedAt: this.now().toISOString(),
+    };
+    this.saveAssignmentsToPrefs();
+    this.notifyListeners();
+    return true;
+  }
+
   private notifyListeners(): void {
     for (const listener of this.#listeners) {
       try {

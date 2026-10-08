@@ -27,9 +27,12 @@ client's assigned variant; **Default** follows its rollout assignment; **Never
 participate** stops the customizer immediately. A policy change waits for the
 client to recalculate assignments. Pending or failed manifest retrieval keeps
 the customizer stopped even if an enabled assignment was cached. A successful
-refresh, disable/re-enable, removal, or expiry updates running windows.
-Disabling `floorp.contextMenu.enabled` also releases the runtime without
-deleting the layout.
+refresh, disable/re-enable, removal, or expiry updates running windows. If the
+manifest was fetched before the experiment's start, reaching that boundary fills
+only its missing assignment using the existing participation and rollout rules;
+it does not refetch the manifest or reinitialize other experiments. Disabling
+`floorp.contextMenu.enabled` also releases the runtime without deleting the
+layout.
 
 A reference manifest entry is provided in
 [`experiments.sample.json`](../browser-features/chrome/common/context-menu/experiments.sample.json).

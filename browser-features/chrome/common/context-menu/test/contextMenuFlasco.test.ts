@@ -97,6 +97,9 @@ class Experiments implements ContextMenuExperiments {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
+  ensureActiveAssignment(): boolean {
+    return false;
+  }
   notify(): void {
     for (const listener of this.listeners) listener();
   }
