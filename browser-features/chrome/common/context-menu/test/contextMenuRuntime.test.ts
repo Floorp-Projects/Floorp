@@ -151,13 +151,23 @@ class RecordingReporter implements ContextMenuCatalogReporter {
   readonly reports: ContextMenuCatalogSnapshot[] = [];
   readonly reportOwnerIds: string[] = [];
   readonly removedOwners: string[] = [];
+  readonly refreshers = new Map<string, () => void>();
 
   report(ownerId: string, snapshot: ContextMenuCatalogSnapshot): void {
     this.reportOwnerIds.push(ownerId);
     this.reports.push(snapshot);
   }
 
+  registerRefresh(ownerId: string, refresh: () => void): void {
+    this.refreshers.set(ownerId, refresh);
+  }
+
+  refresh(): void {
+    for (const refresh of this.refreshers.values()) refresh();
+  }
+
   removeOwner(ownerId: string): void {
+    this.refreshers.delete(ownerId);
     this.removedOwners.push(ownerId);
   }
 }
@@ -386,6 +396,144 @@ function testControllerSeedsInitialPopupWithoutClaimingComplete(): void {
       childMarkers(popup),
       "runtime-b,runtime-a",
       "normal popup reconciliation still applies the configured order",
+    );
+  } finally {
+    fixture.controller.destroy();
+    popup.remove();
+  }
+}
+
+function testControllerAutoCollectsAllProfilesAndSubmenus(): void {
+  document.getElementById(TEST_POPUP_ID)?.remove();
+  const popup = appendTestNode("menupopup", TEST_POPUP_ID);
+  const submenu = appendTestNode("menu", "runtime-submenu");
+  const childPopup = appendTestNode("menupopup");
+  childPopup.append(appendTestNode("menuitem", "runtime-child"));
+  submenu.append(childPopup);
+  const group = appendTestNode("menugroup", "runtime-group");
+  group.append(appendTestNode("menuitem", "runtime-b"));
+  popup.append(appendTestNode("menuitem", "runtime-a"), submenu, group);
+  (document.body ?? document.documentElement).append(popup);
+  const registry = new ContextMenuRegistry([{
+    ...createTestAdapter(),
+    profiles: [
+      { key: "default", label: "Default" },
+      { key: "link", label: "Link" },
+    ],
+  }]);
+  const reporter = new RecordingReporter();
+  const controller = new ContextMenuController({
+    window,
+    registry,
+    configStore: new ContextMenuConfigStore(
+      new FakePreferenceSource(DEFAULT_CONTEXT_MENU_CONFIG),
+    ),
+    catalogReporter: reporter,
+  });
+  const nativeDOM = popup.outerHTML;
+  try {
+    controller.attach();
+    const surface = reporter.reports.at(-1)?.surfaces[0];
+    assert(
+      surface !== undefined,
+      "the static surface is automatically reported",
+    );
+    for (const profile of surface.profiles) {
+      assertEquals(
+        profile.containers.length,
+        3,
+        "every profile includes its submenu and group",
+      );
+      assertEquals(
+        profile.containers.find((container) => container.key === "root")
+          ?.items[0]?.key,
+        "test.a",
+        "an unused click profile already contains the root items",
+      );
+      assertEquals(
+        profile.containers.find((container) =>
+          container.key === "submenu:test.submenu"
+        )?.items[0]?.key,
+        "test.child",
+        "submenu children are available without opening the submenu",
+      );
+      assertEquals(
+        profile.containers.find((container) =>
+          container.key === "group:test.group"
+        )?.items[0]?.key,
+        "test.b",
+        "virtual group children are available in every profile",
+      );
+      assert(
+        profile.containers.every((container) => !container.complete),
+        "static collection never invents a click context",
+      );
+    }
+    assertEquals(
+      popup.outerHTML,
+      nativeDOM,
+      "automatic collection leaves native menus untouched",
+    );
+  } finally {
+    controller.destroy();
+    popup.remove();
+  }
+}
+
+function testControllerRefreshCollectsLateItemsWithoutRevisionLoop(): void {
+  document.getElementById(TEST_POPUP_ID)?.remove();
+  const popup = appendTestNode("menupopup", TEST_POPUP_ID);
+  popup.append(appendTestNode("menuitem", "runtime-a"));
+  (document.body ?? document.documentElement).append(popup);
+  const fixture = createControllerFixture(DEFAULT_CONTEXT_MENU_CONFIG);
+  try {
+    fixture.controller.attach();
+    const initialReports = fixture.reporter.reports.length;
+    fixture.reporter.refresh();
+    assertEquals(
+      fixture.reporter.reports.length,
+      initialReports,
+      "an unchanged settings read does not trigger revision polling again",
+    );
+
+    popup.append(appendTestNode("menuitem", "runtime-b"));
+    fixture.reporter.refresh();
+    assertEquals(
+      fixture.reporter.reports.length,
+      initialReports + 1,
+      "a settings read publishes items added after startup",
+    );
+    assertEquals(
+      fixture.reporter.reports.at(-1)?.surfaces[0].profiles[0].containers[0]
+        .items.map((item) => item.key).join(","),
+      "test.a,test.b",
+      "the fresh catalog contains the late item without popup events",
+    );
+    fixture.reporter.refresh();
+    assertEquals(
+      fixture.reporter.reports.length,
+      initialReports + 1,
+      "a second unchanged read remains idle",
+    );
+
+    popup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    runPopupShowingReconcile(fixture.callbacks);
+    const observed = fixture.reporter.reports.at(-1);
+    fixture.reporter.refresh();
+    assertEquals(
+      fixture.reporter.reports.at(-1),
+      observed,
+      "refresh retains the actual native click observation",
+    );
+    assert(
+      observed?.surfaces[0].profiles[0].containers[0].complete,
+      "the observed container remains complete",
+    );
+    fixture.controller.destroy();
+    assertEquals(
+      fixture.reporter.refreshers.size,
+      0,
+      "destroy unregisters the window's refresh callback",
     );
   } finally {
     fixture.controller.destroy();
@@ -3845,6 +3993,14 @@ const tests: TestCase[] = [
   {
     name: "controller seeds an initial popup without claiming completeness",
     fn: testControllerSeedsInitialPopupWithoutClaimingComplete,
+  },
+  {
+    name: "controller automatically collects all profiles and submenus",
+    fn: testControllerAutoCollectsAllProfilesAndSubmenus,
+  },
+  {
+    name: "settings refresh collects late items without a revision loop",
+    fn: testControllerRefreshCollectsLateItemsWithoutRevisionLoop,
   },
   {
     name: "catalog seed does not regress to an empty clone",

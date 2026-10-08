@@ -202,6 +202,10 @@ export class ContextMenuController {
       this.#ownerId,
       this.#catalogBuilder.snapshot(),
     );
+    this.#catalogReporter.registerRefresh?.(
+      this.#ownerId,
+      () => this.refreshCatalog(),
+    );
   }
 
   /**
@@ -211,18 +215,23 @@ export class ContextMenuController {
    * menu for a real click context.
    */
   private seedInitialCatalog(): void {
-    const seededRootPopups = new Set<Element>();
     for (const popup of this.#document.querySelectorAll("menupopup")) {
       try {
         const surface = this.#registry.resolvePopup(popup, this.#window);
         if (
-          !surface || surface.popup !== surface.rootPopup ||
-          seededRootPopups.has(surface.rootPopup)
+          !surface || this.#mutationObservers.has(surface.rootPopup) ||
+          this.#mutationObservers.has(popup) ||
+          this.#transactions.has(surface.rootPopup) ||
+          this.#transactions.has(popup)
         ) {
           continue;
         }
-        seededRootPopups.add(surface.rootPopup);
-        this.#catalogBuilder.seed(surface);
+        // Static rows are shared by every declared click profile. Seed child
+        // popups too, so editing a link/image or submenu needs no prior click.
+        // These captures never claim context-specific native visibility.
+        for (const profile of surface.adapter.profiles) {
+          this.#catalogBuilder.seed({ ...surface, profileKey: profile.key });
+        }
       } catch (error) {
         // One Firefox-owned menu changing shape must not prevent the remaining
         // adapters, config observation, or popup event handlers from starting.
@@ -231,6 +240,18 @@ export class ContextMenuController {
           error,
         );
       }
+    }
+  }
+
+  private refreshCatalog(): void {
+    if (this.#destroyed) return;
+    const previous = this.#catalogBuilder.snapshot();
+    this.seedInitialCatalog();
+    const next = this.#catalogBuilder.snapshot();
+    // Unchanged reads must not advance the service revision and trigger the
+    // settings page's revision poll to request another refresh indefinitely.
+    if (JSON.stringify(previous.surfaces) !== JSON.stringify(next.surfaces)) {
+      this.#catalogReporter.report(this.#ownerId, next);
     }
   }
 
