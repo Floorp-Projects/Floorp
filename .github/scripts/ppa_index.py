@@ -69,6 +69,24 @@ def candidate_version(data, expected_product_version):
     return matches[0]
 
 
+def latest_candidate(data):
+    """Select a retained candidate using Debian ordering, never filename order."""
+    records = [fields for _, fields in paragraphs(data) if fields.get("Package") == "floorp"]
+    if not records:
+        raise ValueError("No retained Floorp candidate")
+    candidate = records[0]
+    for record in records[1:]:
+        comparison = subprocess.run(
+            ["dpkg", "--compare-versions", record["Version"], "gt", candidate["Version"]],
+            check=False, capture_output=True,
+        )
+        if comparison.returncode == 0:
+            candidate = record
+        elif comparison.returncode != 1:
+            raise ValueError("Invalid Debian version comparison")
+    return candidate
+
+
 def filter_index(data, withheld, expected_version=None, expected_sha256=None):
     kept = []
     removed = []

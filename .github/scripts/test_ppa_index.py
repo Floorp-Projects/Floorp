@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ppa_index import candidate_version, filter_index, paragraphs, product_version, verify_apt_candidates, verify_release, withheld_versions
+from ppa_index import candidate_version, filter_index, latest_candidate, paragraphs, product_version, verify_apt_candidates, verify_release, withheld_versions
 
 
 DIGEST = "f" * 64
@@ -26,6 +26,15 @@ def record(version, package="floorp", filename_version=None):
 
 
 class PpaIndexTests(unittest.TestCase):
+    def test_live_candidate_selection_accepts_future_releases_in_debian_order(self):
+        before = record("12.9.2~build1", filename_version="12.9.2") + record("12.19.0~build1", filename_version="12.19.0")
+        self.assertEqual(latest_candidate(before)["Version"], "12.19.0~build1")
+        future = record("12.21.0~build1", filename_version="12.21.0")
+        after, _ = filter_index(before + record("12.20.0~build1", filename_version="12.20.0") + future, {"12.20.0"})
+        candidate = latest_candidate(after)
+        self.assertEqual(candidate["Version"], "12.21.0~build1")
+        self.assertEqual(filter_index(after, {"12.20.0"}, product_version(candidate["Version"]), candidate["SHA256"]), (after, []))
+
     def test_authenticated_build1_shape_preserves_records_and_withholds_12_20(self):
         older = record("11.26.0") + record("12.18.1~build1", filename_version="12.18.1")
         candidate = record("12.19.0~build1", filename_version="12.19.0")

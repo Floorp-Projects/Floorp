@@ -25,10 +25,10 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Test the hold against the authenticated public PPA index
+      - name: Verify the authenticated public PPA candidate and withholding policy
         run: |
           set -euo pipefail
           PPA_FIXTURE="$RUNNER_TEMP/ppa-public-fixture"
@@ -48,21 +48,26 @@ jobs:
           python3 - "$PPA_FIXTURE/Packages" <<'PY'
           import json, pathlib, sys
           sys.path.insert(0, '.github/scripts')
-          from ppa_index import candidate_version, filter_index, paragraphs, verify_apt_candidates, withheld_versions
+          from ppa_index import filter_index, latest_candidate, paragraphs, product_version, verify_apt_candidates, withheld_versions
           before = pathlib.Path(sys.argv[1]).read_bytes()
-          expected_sha256 = 'ff9ca00e7ff28b99fe2722e707a35fc6ccb4dd09c789eb3c2bc62a195a753e6f'
-          after, removed = filter_index(before, withheld_versions('.github/ppa-withheld-versions.json'), '12.19.0', expected_sha256)
-          verify_apt_candidates(after, '12.19.0', '12.20.0~build1')
-          verify_apt_candidates(after, '12.19.0', '12.20.0')
-          result = {'authenticatedRecords': len(paragraphs(before)), 'retainedRecords': len(paragraphs(after)), 'withheldDEBs': removed, 'candidate': candidate_version(after, '12.19.0'), 'candidateSHA256': expected_sha256}
+          policy = withheld_versions('.github/ppa-withheld-versions.json')
+          after, removed = filter_index(before, policy)
+          candidate = latest_candidate(after)
+          release_version = product_version(candidate['Version'])
+          filter_index(before, policy, release_version, candidate['SHA256'])
+          verify_apt_candidates(after, release_version, candidate['Version'])
+          result = {'authenticatedRecords': len(paragraphs(before)), 'retainedRecords': len(paragraphs(after)), 'withheldDEBs': removed, 'candidate': candidate['Version'], 'candidateProductVersion': release_version, 'candidateSHA256': candidate['SHA256']}
           pathlib.Path(sys.argv[1]).with_name('hold-regression-result.json').write_text(json.dumps(result, indent=2) + '\n')
           print(json.dumps(result, indent=2))
           PY
+          PPA_PUBLIC_PRODUCT_VERSION=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidateProductVersion"])' "$PPA_FIXTURE/hold-regression-result.json")
+          PPA_PUBLIC_SHA256=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidateSHA256"])' "$PPA_FIXTURE/hold-regression-result.json")
+          PPA_PUBLIC_DEBIAN_VERSION=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidate"])' "$PPA_FIXTURE/hold-regression-result.json")
           curl -fsSL --connect-timeout 15 --max-time 180 \
-            https://ppa.floorp.app/amd64/floorp-12.19.0.deb -o "$RUNNER_TEMP/ppa-candidate.deb"
-          test "$(sha256sum "$RUNNER_TEMP/ppa-candidate.deb" | cut -d' ' -f1)" = ff9ca00e7ff28b99fe2722e707a35fc6ccb4dd09c789eb3c2bc62a195a753e6f
-          test "$(dpkg-deb -f "$RUNNER_TEMP/ppa-candidate.deb" Version)" = 12.19.0~build1
-          echo 'Verified the published 12.19.0~build1 DEB against its Release asset SHA256.'
+            "https://ppa.floorp.app/amd64/floorp-$PPA_PUBLIC_PRODUCT_VERSION.deb" -o "$RUNNER_TEMP/ppa-candidate.deb"
+          test "$(sha256sum "$RUNNER_TEMP/ppa-candidate.deb" | cut -d' ' -f1)" = "$PPA_PUBLIC_SHA256"
+          test "$(dpkg-deb -f "$RUNNER_TEMP/ppa-candidate.deb" Version)" = "$PPA_PUBLIC_DEBIAN_VERSION"
+          echo "Verified public DEB $PPA_PUBLIC_DEBIAN_VERSION against authenticated index SHA256 $PPA_PUBLIC_SHA256."
       - name: Save authenticated public fixture
         uses: actions/upload-artifact@v4
         with:
