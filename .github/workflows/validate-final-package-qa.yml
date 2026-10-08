@@ -18,6 +18,11 @@ name: Validate final Floorp package regressions
         required: false
         type: boolean
         default: true
+      pre_publication:
+        description: Verify signed packages awaiting protected public release approval
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -63,6 +68,7 @@ jobs:
           SOURCE_RUN_ID: ${{ inputs.package_run_id }}
           FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
           VALIDATION_ONLY: ${{ inputs.validation_only }}
+          PRE_PUBLICATION: ${{ inputs.pre_publication }}
           PACKAGE_NAME: ${{ matrix.package }}
           TARGET_PLATFORM: ${{ matrix.platform }}
           TARGET_ARCH: ${{ matrix.arch }}
@@ -71,20 +77,18 @@ jobs:
             const fs = require('node:fs');
             const path = require('node:path');
             const crypto = require('node:crypto');
+            const {validateSourceIdentity,validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
             if (!/^[1-9][0-9]*$/.test(process.env.SOURCE_RUN_ID || '') ||
                 !Number.isSafeInteger(Number(process.env.SOURCE_RUN_ID)) ||
                 !/^[0-9a-f]{40}$/.test(process.env.FLOORP_HEAD_SHA || '') ||
-                !['true', 'false'].includes(process.env.VALIDATION_ONLY)) {
+                !['true', 'false'].includes(process.env.VALIDATION_ONLY) ||
+                !['true', 'false'].includes(process.env.PRE_PUBLICATION)) {
               throw new Error('Invalid immutable package input');
             }
             const runId = Number(process.env.SOURCE_RUN_ID);
             const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: runId});
-            if (run.repository.full_name !== 'Floorp-Projects/Floorp' ||
-                run.path !== '.github/workflows/package_and_publish_release.yml' ||
-                run.status !== 'completed' || run.conclusion !== 'success' ||
-                run.head_sha !== process.env.FLOORP_HEAD_SHA || run.event !== 'workflow_dispatch') {
-              throw new Error('Expected a completed successful canonical package run');
-            }
+            validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
               {...context.repo, run_id: runId, per_page: 100});
             for (const target of ['windows/x86_64', 'linux/x86_64', 'linuxAarch64/aarch64',
@@ -96,6 +100,28 @@ jobs:
             }
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
               {...context.repo, run_id: runId, per_page: 100});
+            const {data: sourcePackage} = await github.rest.repos.getContent({
+              ...context.repo, path:'package.json', ref:run.head_sha});
+            const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
+            if (version !== '12.20.1') throw new Error('This regression run requires Floorp12.20.1');
+            let prePublicationEvidence = {};
+            if (process.env.PRE_PUBLICATION === 'true') {
+              const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+                {...context.repo, run_id: runId});
+              let release = null;
+              try {
+                ({data: release} = await github.rest.repos.getReleaseByTag(
+                  {...context.repo, tag:`v${version}`}));
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              prePublicationEvidence = {pendingDeployments,release,
+                bundleArtifacts:artifacts.filter(artifact => artifact.name === 'floorp-release-bundle-v2')};
+            }
+            const sourceEligibility = validateFinalPackageSource({run,
+              headSha:process.env.FLOORP_HEAD_SHA,jobs,
+              prePublication:process.env.PRE_PUBLICATION === 'true',
+              unsigned:process.env.VALIDATION_ONLY === 'true',...prePublicationEvidence});
             const packageName = process.env.PACKAGE_NAME +
               (process.env.VALIDATION_ONLY === 'true' ? '-unsigned' : '');
             const recordName = `floorp-native-verification-${process.env.TARGET_PLATFORM}-${process.env.TARGET_ARCH}-v2`;
@@ -115,13 +141,10 @@ jobs:
               fs.writeFileSync(path.join(process.env.RUNNER_TEMP, `${kind}.zip`), bytes);
               selected[kind] = {id:artifact.id, name, digest};
             }
-            const {data: sourcePackage} = await github.rest.repos.getContent({
-              ...context.repo, path:'package.json', ref:run.head_sha});
-            const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
-            if (version !== '12.20.1') throw new Error('This regression run requires Floorp12.20.1');
             fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
               JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
+                sourceEligibility, probeHead:context.sha,
                 platform:process.env.TARGET_PLATFORM, arch:process.env.TARGET_ARCH,
                 unsigned:process.env.VALIDATION_ONLY === 'true', ...selected}, null, 2));
 
@@ -268,6 +291,15 @@ jobs:
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
             --expected-floorp-version 12.20.1 --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
 
+      - name: Verify shipped Fluent lookup and Flasco context-menu availability
+        if: inputs.validation_only == false
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/test-final-context-menu.py --browser "$QA_BROWSER" \
+            --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
+            --expected-floorp-version 12.20.1 --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
+
       - name: Verify final macOS PWA context menus and native GUI input
         if: matrix.platform == 'mac'
         shell: bash
@@ -291,6 +323,10 @@ jobs:
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stdout.log
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser-window.png
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stdout.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/result.json
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json

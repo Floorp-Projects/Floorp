@@ -42,6 +42,8 @@ jobs:
       - run: deno task test:smoke
       - name: Verify compiled Runtime source provenance contract
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
+      - name: Test final package QA source intake
+        run: node --test tools/test-final-package-qa-source.mjs
       - name: Run host tool tests
         run: deno task test:host
       - name: Run locked Firefox test tooling tests
