@@ -800,6 +800,31 @@ function testCatalogResolvesNativeLazyFluentLabelsWithoutChangingDOM(): void {
   );
 }
 
+function testCatalogMissingFluentKeyWithBrowserResources(): void {
+  const fixture = createCatalogLabelFixture();
+  for (const link of document.querySelectorAll('link[rel="localization"]')) {
+    fixture.ownerDocument.head.appendChild(link.cloneNode(true));
+  }
+  fixture.append("runtime-a", "floorp-nonexistent-diagnostic-key");
+  fixture.append("runtime-b", "reload-tab");
+  const before = fixture.popup.outerHTML;
+  const expected = new Localization(["browser/tabContextMenu.ftl"], true)
+    .formatMessagesSync(["reload-tab"])[0]?.attributes?.find((attribute) =>
+      attribute.name === "label"
+    )?.value;
+  assert(expected, "native lazy tab label exists");
+  assertEquals(
+    fixture.labels().join("|"),
+    `floorp-nonexistent-diagnostic-key|${expected}`,
+    "missing Fluent keys retain rows without preventing later translations",
+  );
+  assertEquals(
+    fixture.popup.outerHTML,
+    before,
+    "catalog leaves native DOM intact",
+  );
+}
+
 function testCatalogCachesLocalizationAndInvalidatesChangedResources(): void {
   const resourcesSeen: string[][] = [];
   const requests: L10nKey[] = [];
@@ -3641,6 +3666,10 @@ const tests: TestCase[] = [
   {
     name: "catalog caches localization and invalidates changed resources",
     fn: testCatalogCachesLocalizationAndInvalidatesChangedResources,
+  },
+  {
+    name: "catalog handles missing Fluent keys with all browser resources",
+    fn: testCatalogMissingFluentKeyWithBrowserResources,
   },
   {
     name: "catalog localization failures preserve rows",
