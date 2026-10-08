@@ -52,6 +52,23 @@ def paragraphs(data):
     return result
 
 
+def product_version(debian_version):
+    """Map the published stable DEB versions to their release filename version."""
+    match = re.fullmatch(r"(\d+\.\d+\.\d+)(?:~build1)?", debian_version)
+    if match is None:
+        raise ValueError(f"Unsupported Floorp DEB version: {debian_version!r}")
+    return match[1]
+
+
+def candidate_version(data, expected_product_version):
+    matches = [fields["Version"] for _, fields in paragraphs(data)
+               if fields.get("Package") == "floorp"
+               and product_version(fields.get("Version", "")) == expected_product_version]
+    if len(matches) != 1:
+        raise ValueError("Expected candidate must occur exactly once")
+    return matches[0]
+
+
 def filter_index(data, withheld, expected_version=None, expected_sha256=None):
     kept = []
     removed = []
@@ -59,8 +76,9 @@ def filter_index(data, withheld, expected_version=None, expected_sha256=None):
     for paragraph, fields in paragraphs(data):
         if fields.get("Package") == "floorp":
             version = fields.get("Version", "")
+            release_version = product_version(version)
             filename = fields.get("Filename", "").removeprefix("./")
-            if not re.fullmatch(r"[A-Za-z0-9.+~_-]+", version) or filename != f"floorp-{version}.deb":
+            if filename != f"floorp-{release_version}.deb":
                 raise ValueError(f"Floorp DEB filename does not match its version: {filename!r}, Version={version!r}")
             if fields.get("Architecture") != "amd64":
                 raise ValueError("Unexpected Floorp architecture in amd64 index")
@@ -68,7 +86,7 @@ def filter_index(data, withheld, expected_version=None, expected_sha256=None):
                 raise ValueError("Floorp record has no valid SHA256")
             if not fields.get("Size", "").isdigit() or int(fields["Size"]) <= 0:
                 raise ValueError("Floorp record has no valid byte size")
-            if version in withheld:
+            if release_version in withheld:
                 removed.append(filename)
                 continue
             floorp.append(fields)
@@ -76,7 +94,7 @@ def filter_index(data, withheld, expected_version=None, expected_sha256=None):
     if not floorp:
         raise ValueError("Withholding would remove all Floorp candidates")
     if expected_version is not None:
-        matches = [f for f in floorp if f["Version"] == expected_version]
+        matches = [f for f in floorp if product_version(f["Version"]) == expected_version]
         if len(matches) != 1:
             raise ValueError("Expected candidate must occur exactly once")
         if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256 or ""):
@@ -85,7 +103,7 @@ def filter_index(data, withheld, expected_version=None, expected_sha256=None):
             raise ValueError("Expected candidate differs from the verified Release asset")
         for record in floorp:
             comparison = subprocess.run(
-                ["dpkg", "--compare-versions", record["Version"], "gt", expected_version],
+                ["dpkg", "--compare-versions", record["Version"], "gt", matches[0]["Version"]],
                 check=False, capture_output=True,
             )
             if comparison.returncode == 0:
@@ -117,6 +135,7 @@ def verify_release(directory):
 
 def verify_apt_candidates(data, expected_version, installed_version):
     """Read the authenticated index with APT; simulation never installs anything."""
+    expected_debian_version = candidate_version(data, expected_version)
     with tempfile.TemporaryDirectory(prefix="floorp-apt-policy-") as temporary:
         root = Path(temporary)
         lists = root.joinpath("lists")
@@ -138,7 +157,7 @@ def verify_apt_candidates(data, expected_version, installed_version):
             "Dir::Cache::archives": root.joinpath("archives"),
         }.items():
             options.extend(["-o", f"{key}={value}"])
-        for installed, expected in [(None, expected_version), (installed_version, installed_version)]:
+        for installed, expected in [(None, expected_debian_version), (installed_version, installed_version)]:
             status.write_text("" if installed is None else (
                 "Package: floorp\nStatus: install ok installed\nArchitecture: amd64\n"
                 f"Version: {installed}\nDescription: Installed Floorp retained by APT\n\n"
@@ -179,7 +198,7 @@ def main():
     elif args.command == "apt-candidates":
         verify_apt_candidates(Path(args.packages).read_bytes(), args.expected_version, args.installed_version)
     elif args.command == "check-new":
-        if args.version in withheld_versions(args.policy):
+        if product_version(args.version) in withheld_versions(args.policy):
             raise ValueError(f"Refusing to publish withheld Floorp {args.version}")
     else:
         path = Path(args.packages)
@@ -190,7 +209,8 @@ def main():
             "afterSHA256": hashlib.sha256(after).hexdigest(),
             "withheldDEBs": removed,
             "retainedDEBs": [f["Filename"] for _, f in paragraphs(after) if f.get("Package") == "floorp"],
-            "expectedCandidate": args.expected_version,
+            "expectedProductVersion": args.expected_version,
+            "expectedCandidate": candidate_version(after, args.expected_version) if args.expected_version else None,
         }
         path.write_bytes(after)
         if args.report:

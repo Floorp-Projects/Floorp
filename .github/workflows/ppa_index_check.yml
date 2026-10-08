@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Inspect the authenticated public PPA index
+      - name: Test the hold against the authenticated public PPA index
         run: |
           set -euo pipefail
           PPA_FIXTURE="$RUNNER_TEMP/ppa-public-fixture"
@@ -48,11 +48,21 @@ jobs:
           python3 - "$PPA_FIXTURE/Packages" <<'PY'
           import json, pathlib, sys
           sys.path.insert(0, '.github/scripts')
-          from ppa_index import paragraphs
-          records = [fields for _, fields in paragraphs(pathlib.Path(sys.argv[1]).read_bytes()) if fields.get('Package') == 'floorp']
-          mismatches = [{key: fields.get(key) for key in ['Package', 'Version', 'Filename', 'SHA256', 'Size', 'Architecture']} for fields in records if fields.get('Filename', '').removeprefix('./') != f'floorp-{fields.get("Version")}.deb']
-          print(json.dumps({'authenticatedRecords': len(records), 'historicalFilenameVersionPairs': mismatches}, indent=2))
+          from ppa_index import candidate_version, filter_index, paragraphs, verify_apt_candidates, withheld_versions
+          before = pathlib.Path(sys.argv[1]).read_bytes()
+          expected_sha256 = 'ff9ca00e7ff28b99fe2722e707a35fc6ccb4dd09c789eb3c2bc62a195a753e6f'
+          after, removed = filter_index(before, withheld_versions('.github/ppa-withheld-versions.json'), '12.19.0', expected_sha256)
+          verify_apt_candidates(after, '12.19.0', '12.20.0~build1')
+          verify_apt_candidates(after, '12.19.0', '12.20.0')
+          result = {'authenticatedRecords': len(paragraphs(before)), 'retainedRecords': len(paragraphs(after)), 'withheldDEBs': removed, 'candidate': candidate_version(after, '12.19.0'), 'candidateSHA256': expected_sha256}
+          pathlib.Path(sys.argv[1]).with_name('hold-regression-result.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(json.dumps(result, indent=2))
           PY
+          curl -fsSL --connect-timeout 15 --max-time 180 \
+            https://ppa.floorp.app/amd64/floorp-12.19.0.deb -o "$RUNNER_TEMP/ppa-candidate.deb"
+          test "$(sha256sum "$RUNNER_TEMP/ppa-candidate.deb" | cut -d' ' -f1)" = ff9ca00e7ff28b99fe2722e707a35fc6ccb4dd09c789eb3c2bc62a195a753e6f
+          test "$(dpkg-deb -f "$RUNNER_TEMP/ppa-candidate.deb" Version)" = 12.19.0~build1
+          echo 'Verified the published 12.19.0~build1 DEB against its Release asset SHA256.'
       - name: Save authenticated public fixture
         uses: actions/upload-artifact@v4
         with:

@@ -4,25 +4,70 @@
 import gzip
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from ppa_index import filter_index, paragraphs, verify_apt_candidates, verify_release, withheld_versions
+from ppa_index import candidate_version, filter_index, paragraphs, product_version, verify_apt_candidates, verify_release, withheld_versions
 
 
 DIGEST = "f" * 64
 
 
-def record(version, package="floorp"):
+def record(version, package="floorp", filename_version=None):
+    filename_version = version if filename_version is None else filename_version
     return (
         f"Package: {package}\nVersion: {version}\nArchitecture: amd64\n"
-        f"Filename: ./floorp-{version}.deb\nSize: 113309570\nSHA256: {DIGEST}\n"
+        f"Filename: ./floorp-{filename_version}.deb\nSize: 113309570\nSHA256: {DIGEST}\n"
         "Description: Test metadata\n continuation retained\n\n"
     ).encode()
 
 
 class PpaIndexTests(unittest.TestCase):
+    def test_authenticated_build1_shape_preserves_records_and_withholds_12_20(self):
+        older = record("11.26.0") + record("12.18.1~build1", filename_version="12.18.1")
+        candidate = record("12.19.0~build1", filename_version="12.19.0")
+        held = record("12.20.0~build1", filename_version="12.20.0")
+        other = record("12.20.0~build1", "other-package", "12.20.0")
+        after, removed = filter_index(older + candidate + held + other, {"12.20.0"}, "12.19.0", DIGEST)
+        self.assertEqual(after, older + candidate + other)
+        self.assertEqual(removed, ["floorp-12.20.0.deb"])
+        self.assertEqual(candidate_version(after, "12.19.0"), "12.19.0~build1")
+        self.assertEqual(filter_index(after, {"12.20.0"}, "12.19.0", DIGEST), (after, []))
+
+    def test_build1_cannot_disguise_another_release_or_unsupported_suffix(self):
+        for before in [record("12.20.0~build1", filename_version="12.19.0"),
+                       record("12.20.0~build2", filename_version="12.20.0"),
+                       record("12.20.0~build1", filename_version="12.20.0~build1")]:
+            with self.assertRaises(ValueError):
+                filter_index(before, {"12.20.0"})
+
+    def test_build1_keeps_asset_digest_and_candidate_uniqueness_guards(self):
+        candidate = record("12.19.0~build1", filename_version="12.19.0")
+        with self.assertRaisesRegex(ValueError, "verified Release"):
+            filter_index(candidate, set(), "12.19.0", "0" * 64)
+        with self.assertRaisesRegex(ValueError, "exactly once"):
+            filter_index(candidate + record("12.19.0"), set(), "12.19.0", DIGEST)
+
+    def test_build1_candidate_uses_real_debian_ordering(self):
+        candidate = record("12.19.0~build1", filename_version="12.19.0")
+        with self.assertRaisesRegex(ValueError, "newer"):
+            filter_index(candidate + record("12.20.0~build1", filename_version="12.20.0"), set(), "12.19.0", DIGEST)
+
+    def test_new_publish_guard_rejects_real_withheld_deb_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            policy = Path(temporary).joinpath("policy.json")
+            policy.write_text(json.dumps({"schemaVersion": 1, "versions": ["12.20.0"]}))
+            script = Path(__file__).with_name("ppa_index.py")
+            for version in ["12.20.0", "12.20.0~build1"]:
+                rejected = subprocess.run([sys.executable, str(script), "check-new", str(policy), version], capture_output=True, text=True)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn("Refusing to publish withheld Floorp", rejected.stderr)
+            subprocess.run([sys.executable, str(script), "check-new", str(policy), "12.19.0~build1"], check=True)
+        self.assertEqual(product_version("12.19.0~build1"), "12.19.0")
+
     def test_only_withheld_floorp_record_is_removed(self):
         before = record("12.18.1") + record("12.19.0") + record("12.20.0") + record("12.20.0", "other-package")
         after, removed = filter_index(before, {"12.20.0"}, "12.19.0", DIGEST)
@@ -94,6 +139,13 @@ class PpaIndexTests(unittest.TestCase):
         after, _ = filter_index(record("12.18.1") + record("12.19.0") + record("12.20.0"), {"12.20.0"})
         verify_apt_candidates(after, "12.19.0", "12.20.0")
         self.assertEqual(len(paragraphs(after)), 2)
+
+    def test_actual_apt_build1_new_install_and_existing_12_20(self):
+        after, _ = filter_index(record("12.18.1~build1", filename_version="12.18.1")
+                               + record("12.19.0~build1", filename_version="12.19.0")
+                               + record("12.20.0~build1", filename_version="12.20.0"), {"12.20.0"})
+        verify_apt_candidates(after, "12.19.0", "12.20.0~build1")
+        verify_apt_candidates(after, "12.19.0", "12.20.0")
 
 
 if __name__ == "__main__":

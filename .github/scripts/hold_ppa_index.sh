@@ -55,6 +55,13 @@ cd "$PPA_WORKDIR/publish"
 python3 "$PPA_SCRIPT_DIR/ppa_index.py" filter "$PPA_POLICY" Packages \
   --expected-version "$PPA_CANDIDATE" --expected-sha256 "$PPA_CANDIDATE_SHA256" \
   --report "$PPA_WORKDIR/hold-result.json"
+PPA_CANDIDATE_VERSION=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["expectedCandidate"])' "$PPA_WORKDIR/hold-result.json")
+curl -sSfL --connect-timeout 15 --max-time 180 \
+  -o "$PPA_WORKDIR/candidate.deb" "https://ppa.floorp.app/amd64/floorp-$PPA_CANDIDATE.deb"
+PPA_DOWNLOADED_SHA256=$(sha256sum "$PPA_WORKDIR/candidate.deb" | cut -d' ' -f1)
+test "$PPA_DOWNLOADED_SHA256" = "$PPA_CANDIDATE_SHA256"
+test "$(dpkg-deb -f "$PPA_WORKDIR/candidate.deb" Version)" = "$PPA_CANDIDATE_VERSION"
+echo "[ppa-hold] Candidate DEB version $PPA_CANDIDATE_VERSION verified before publication; SHA256 $PPA_DOWNLOADED_SHA256."
 python3 "$PPA_SCRIPT_DIR/test_ppa_index.py"
 gzip -n -k -f Packages
 apt-ftparchive release . > Release
@@ -65,6 +72,7 @@ gpgv --keyring "$PPA_WORKDIR/trusted-keyring.gpg" --output "$PPA_WORKDIR/new-aut
 cmp Release "$PPA_WORKDIR/new-authenticated-release"
 python3 "$PPA_SCRIPT_DIR/ppa_index.py" verify-release .
 python3 "$PPA_SCRIPT_DIR/ppa_index.py" apt-candidates Packages "$PPA_CANDIDATE" 12.20.0
+python3 "$PPA_SCRIPT_DIR/ppa_index.py" apt-candidates Packages "$PPA_CANDIDATE" 12.20.0~build1
 
 # Refuse a race with another publisher after validating the old signature.
 lftp -u "$PPA_FTP_USER","$PPA_FTP_PASS" "$PPA_FTP_URL" <<LFTPEOF
@@ -145,14 +153,15 @@ gpgv --keyring "$PPA_WORKDIR/trusted-keyring.gpg" --output "$PPA_WORKDIR/public/
 cmp "$PPA_WORKDIR/public/Release" "$PPA_WORKDIR/public/authenticated-release"
 python3 "$PPA_SCRIPT_DIR/ppa_index.py" verify-release "$PPA_WORKDIR/public"
 python3 "$PPA_SCRIPT_DIR/ppa_index.py" apt-candidates "$PPA_WORKDIR/public/Packages" "$PPA_CANDIDATE" 12.20.0
+python3 "$PPA_SCRIPT_DIR/ppa_index.py" apt-candidates "$PPA_WORKDIR/public/Packages" "$PPA_CANDIDATE" 12.20.0~build1
 curl -sSfL --connect-timeout 15 --max-time 180 \
   -o "$PPA_WORKDIR/candidate.deb" "https://ppa.floorp.app/amd64/floorp-$PPA_CANDIDATE.deb"
 PPA_DOWNLOADED_SHA256=$(sha256sum "$PPA_WORKDIR/candidate.deb" | cut -d' ' -f1)
 test "$PPA_DOWNLOADED_SHA256" = "$PPA_CANDIDATE_SHA256"
-test "$(dpkg-deb -f "$PPA_WORKDIR/candidate.deb" Version)" = "$PPA_CANDIDATE"
-echo "[ppa-hold] Public DEB version $PPA_CANDIDATE verified; SHA256 $PPA_DOWNLOADED_SHA256."
+test "$(dpkg-deb -f "$PPA_WORKDIR/candidate.deb" Version)" = "$PPA_CANDIDATE_VERSION"
+echo "[ppa-hold] Public DEB version $PPA_CANDIDATE_VERSION verified; SHA256 $PPA_DOWNLOADED_SHA256."
 sha256sum Packages Packages.gz Release Release.gpg InRelease
-echo "[ppa-hold] Public signed index verified; candidate $PPA_CANDIDATE; DEB archive unchanged."
+echo "[ppa-hold] Public signed index verified; candidate $PPA_CANDIDATE_VERSION; DEB archive unchanged."
 PPA_QA_DIR="${RUNNER_TEMP:?}/floorp-ppa-hold-public-evidence"
 mkdir -p "$PPA_QA_DIR/before" "$PPA_QA_DIR/after"
 for ppa_metadata in Packages Packages.gz Release Release.gpg InRelease; do
@@ -162,8 +171,8 @@ done
 cp "$PPA_WORKDIR/hold-result.json" "$PPA_QA_DIR/hold-result.json"
 cp "$PPA_WORKDIR/before-debs-sorted.txt" "$PPA_QA_DIR/before-debs.txt"
 cp "$PPA_WORKDIR/after-debs-sorted.txt" "$PPA_QA_DIR/after-debs.txt"
-printf 'version=%s\nsha256=%s\n' "$PPA_CANDIDATE" "$PPA_DOWNLOADED_SHA256" > "$PPA_QA_DIR/public-deb.txt"
+printf 'product_version=%s\nversion=%s\nsha256=%s\n' "$PPA_CANDIDATE" "$PPA_CANDIDATE_VERSION" "$PPA_DOWNLOADED_SHA256" > "$PPA_QA_DIR/public-deb.txt"
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-  printf 'PPA candidate: %s. Public signed index verified. DEB archive unchanged.\n' "$PPA_CANDIDATE" >> "$GITHUB_STEP_SUMMARY"
+  printf 'PPA candidate: %s. Public signed index verified. DEB archive unchanged.\n' "$PPA_CANDIDATE_VERSION" >> "$GITHUB_STEP_SUMMARY"
   cat "$PPA_WORKDIR/hold-result.json" >> "$GITHUB_STEP_SUMMARY"
 fi
