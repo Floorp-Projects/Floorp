@@ -1,0 +1,60 @@
+{
+  "base": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+  "inputSnapshot": {
+    "base": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+    "inputs": {
+      "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/qa3_build_profile.py": {
+        "sha256": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a",
+        "bytes": 6224
+      },
+      "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/setup-floorp.sh": {
+        "sha256": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c",
+        "bytes": 6220
+      },
+      "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py": {
+        "sha256": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96",
+        "bytes": 14043,
+        "testMethods": 12
+      }
+    },
+    "readOnly": true
+  },
+  "sourceUnchanged": {
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/qa3_build_profile.py": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/setup-floorp.sh": true,
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py": true
+  },
+  "originalMethods": 7,
+  "finalMethods": 12,
+  "retainedMethodNames": [
+    "test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags",
+    "test_invalid_targets_modes_and_profile_inputs_are_rejected",
+    "test_legacy_debug_pgo_is_not_canonical_qualification",
+    "test_production_opt_and_pgo_preserve_tests_and_profile_flags",
+    "test_profile_use_requires_lto_profdata_and_jarlog",
+    "test_real_setup_generates_canonical_debug_on_all_five_targets",
+    "test_wrong_target_debug_tests_and_profiling_are_rejected"
+  ],
+  "newMethods": [
+    "test_legacy_debug_pgo_requires_explicit_noncanonical_policy",
+    "test_real_setup_argument_count_and_optional_defaults",
+    "test_real_setup_rejects_invalid_booleans_and_incomplete_modes",
+    "test_real_setup_rejects_invalid_inputs_before_side_effects",
+    "test_real_setup_rejects_wrong_generated_config_before_bootstrap"
+  ],
+  "oldMethodAstUnchanged": {
+    "test_real_setup_generates_canonical_debug_on_all_five_targets": true,
+    "test_production_opt_and_pgo_preserve_tests_and_profile_flags": true,
+    "test_legacy_debug_pgo_is_not_canonical_qualification": false,
+    "test_invalid_targets_modes_and_profile_inputs_are_rejected": true,
+    "test_wrong_target_debug_tests_and_profiling_are_rejected": true,
+    "test_profile_use_requires_lto_profdata_and_jarlog": true,
+    "test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags": true
+  },
+  "legacyChange": "Existing four profile-use combinations are retained and expanded to eight generate/use combinations; explicit legacy flag and nonqualification assertion added",
+  "diffCheckExit": 0,
+  "sourceMutation": false,
+  "commitOrPush": false,
+  "network": false,
+  "native": false
+}

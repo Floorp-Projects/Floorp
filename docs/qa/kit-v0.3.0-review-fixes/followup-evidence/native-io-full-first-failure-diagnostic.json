@@ -1,0 +1,15 @@
+{
+  "failedRun": "native-io-all-after-fix-final",
+  "productionChangedToResolveFailure": false,
+  "failureCount": 1,
+  "test": "test_worker_sigterm_after_leader_exit_is_not_pass",
+  "observed": {
+    "stop": "TIMEOUT",
+    "cancelled": true,
+    "ownedCleanupComplete": true,
+    "exit": 0
+  },
+  "cause": "fixture timeout=1 competed with the existing 1-second leader-exit cleanup grace; the first TIMEOUT stop was correctly retained when SIGTERM arrived during cleanup",
+  "fixtureChange": "timeout=3 makes normal leader-exit cleanup precede timeout, so this case specifically exercises cancellation without an earlier stop",
+  "rawFirstFailurePreserved": true
+}

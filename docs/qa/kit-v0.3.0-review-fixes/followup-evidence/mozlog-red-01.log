@@ -1,0 +1,158 @@
+test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures (test_qa3_mozlog.MozlogContracts.test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures) ... ok
+test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions (test_qa3_mozlog.MozlogContracts.test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions) ... ok
+test_canonical_package_id_and_browser_chrome_uri (test_qa3_mozlog.MozlogContracts.test_canonical_package_id_and_browser_chrome_uri) ... ok
+test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) ... ok
+test_crash_leak_and_unknown_event (test_qa3_mozlog.MozlogContracts.test_crash_leak_and_unknown_event) ... ok
+test_crlf_and_multiple_complete_events_are_preserved (test_qa3_mozlog.MozlogContracts.test_crlf_and_multiple_complete_events_are_preserved) ... ok
+test_duplicate_execution_and_internal_retry (test_qa3_mozlog.MozlogContracts.test_duplicate_execution_and_internal_retry) ... ok
+test_empty_incomplete_assertion_free_and_missing_case (test_qa3_mozlog.MozlogContracts.test_empty_incomplete_assertion_free_and_missing_case) ... ok
+test_error_after_suite_and_truncated_raw_are_rejected (test_qa3_mozlog.MozlogContracts.test_error_after_suite_and_truncated_raw_are_rejected) ... ok
+test_event_byte_limit_includes_terminator_at_boundary (test_qa3_mozlog.MozlogContracts.test_event_byte_limit_includes_terminator_at_boundary) ... 
+  test_event_byte_limit_includes_terminator_at_boundary (test_qa3_mozlog.MozlogContracts.test_event_byte_limit_includes_terminator_at_boundary) (size=257) ... FAIL
+test_exact_complete_required_execution (test_qa3_mozlog.MozlogContracts.test_exact_complete_required_execution) ... ok
+test_exact_expected_assertion_canary (test_qa3_mozlog.MozlogContracts.test_exact_expected_assertion_canary) ... ok
+test_extra_suite_foreign_source_and_duplicate_id (test_qa3_mozlog.MozlogContracts.test_extra_suite_foreign_source_and_duplicate_id) ... ok
+test_first_failed_process_cannot_be_hidden_by_pass_log (test_qa3_mozlog.MozlogContracts.test_first_failed_process_cannot_be_hidden_by_pass_log) ... ok
+test_formal_nullable_and_string_subtests_are_preserved (test_qa3_mozlog.MozlogContracts.test_formal_nullable_and_string_subtests_are_preserved) ... ok
+test_multibyte_byte_bound_and_truncation_fail_closed (test_qa3_mozlog.MozlogContracts.test_multibyte_byte_bound_and_truncation_fail_closed) ... FAIL
+test_readline_is_bounded_before_oversized_event_is_loaded (test_qa3_mozlog.MozlogContracts.test_readline_is_bounded_before_oversized_event_is_loaded) ... FAIL
+test_required_skip_and_recovered_first_failure (test_qa3_mozlog.MozlogContracts.test_required_skip_and_recovered_first_failure) ... ok
+test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) ... 
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': False}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': True}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': 0}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': 0.0}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': []}) ... FAIL
+  test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': {}}) ... FAIL
+test_unexecuted_setup_failure_is_not_expected_canary (test_qa3_mozlog.MozlogContracts.test_unexecuted_setup_failure_is_not_expected_canary) ... ok
+test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) ... 
+  test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}') ... FAIL
+  test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}\n{"action":"log","level":"INFO"}') ... FAIL
+  test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}\n{"action":"log","level":"INFO"}\r') ... FAIL
+
+======================================================================
+FAIL: test_event_byte_limit_includes_terminator_at_boundary (test_qa3_mozlog.MozlogContracts.test_event_byte_limit_includes_terminator_at_boundary) (size=257)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 120, in test_event_byte_limit_includes_terminator_at_boundary
+    with self.assertRaisesRegex(ValueError, "budget"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_multibyte_byte_bound_and_truncation_fail_closed (test_qa3_mozlog.MozlogContracts.test_multibyte_byte_bound_and_truncation_fail_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 153, in test_multibyte_byte_bound_and_truncation_fail_closed
+    self.assertRaisesRegex(ValueError, "budget"),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_readline_is_bounded_before_oversized_event_is_loaded (test_qa3_mozlog.MozlogContracts.test_readline_is_bounded_before_oversized_event_is_loaded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 98, in test_readline_is_bounded_before_oversized_event_is_loaded
+    verify_mozlog(self.path, self.case, self.root, self.process)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/qa3_mozlog.py", line 59, in verify_mozlog
+    for line in stream:
+                ^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 85, in __iter__
+    raise AssertionError("unbounded line iteration")
+AssertionError: unbounded line iteration
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': 0})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': 0.0})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': []})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_subtest_field_and_raw_type_are_required (test_qa3_mozlog.MozlogContracts.test_subtest_field_and_raw_type_are_required) (fields={'subtest': {}})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 64, in test_subtest_field_and_raw_type_are_required
+    with self.subTest(fields=fields), self.assertRaisesRegex(ValueError, "subtest"):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 132, in test_unterminated_complete_and_partial_events_are_rejected
+    with self.subTest(data=data), self.assertRaises(ValueError):
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}\n{"action":"log","level":"INFO"}')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 132, in test_unterminated_complete_and_partial_events_are_rejected
+    with self.subTest(data=data), self.assertRaises(ValueError):
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unterminated_complete_and_partial_events_are_rejected (test_qa3_mozlog.MozlogContracts.test_unterminated_complete_and_partial_events_are_rejected) (data=b'{"action": "suite_start", "tests": ["xpcom/test.js"]}\n{"action": "test_start", "test": "xpcom/test.js"}\n{"action": "test_status", "test": "xpcom/test.js", "status": "PASS", "subtest": "assert"}\n{"action": "test_end", "test": "xpcom/test.js", "status": "OK"}\n{"action": "suite_end"}\n{"action":"log","level":"INFO"}\r')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_mozlog.py", line 132, in test_unterminated_complete_and_partial_events_are_rejected
+    with self.subTest(data=data), self.assertRaises(ValueError):
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.043s
+
+FAILED (failures=13)

@@ -1,0 +1,11 @@
+{
+  "clarifies": "native-io-full-first-failure-diagnostic.json",
+  "rawObservedAssertions": {
+    "exit": 0,
+    "cancelled": true,
+    "stop": "TIMEOUT"
+  },
+  "ownedCleanupCompleteInFirstDiagnostic": "inferred from the implementation and final fixture cleanup; its assertion had not executed after the stop assertion failed, so it is not a separately captured receipt observation for this first run",
+  "finalFixedRun": "native-io-all-frozen-grace-fix",
+  "finalOwnedCleanupAssertions": "executed and PASS"
+}

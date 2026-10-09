@@ -1,0 +1,18 @@
+[
+  {
+    "label": "source",
+    "fileId": "file_000000006bcc81f8bbe38e9bc10bc844",
+    "mimeType": "application/zip",
+    "rewrittenUrl": false,
+    "status": "blocked",
+    "httpStatus": 403
+  },
+  {
+    "label": "integration",
+    "fileId": "file_00000000e8f881f88851e19c1563c813",
+    "mimeType": "application/zip",
+    "rewrittenUrl": false,
+    "status": "blocked",
+    "httpStatus": 403
+  }
+]

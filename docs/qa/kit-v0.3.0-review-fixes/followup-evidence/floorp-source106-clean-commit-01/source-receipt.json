@@ -1,0 +1,690 @@
+{
+  "schemaVersion": 1,
+  "stage": "shadow",
+  "sourceHead": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+  "expectedSourceHead": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+  "workingTreeClean": true,
+  "localExecution": false,
+  "workflowRun": null,
+  "workflowAttempt": null,
+  "host": {
+    "system": "Linux",
+    "architecture": "x86_64"
+  },
+  "tools": {
+    "python": "3.12.14",
+    "deno": {
+      "exitCode": 0,
+      "version": "deno 2.9.7 (stable, release, x86_64-unknown-linux-gnu)\nv8 15.0.245.2-rusty\ntypescript 6.0.3"
+    },
+    "node": {
+      "exitCode": 0,
+      "version": "v22.23.3"
+    }
+  },
+  "sourceVerdict": "PASS",
+  "productVerdict": "UNVERIFIED",
+  "runtimeQualification": "UNVERIFIED",
+  "officialFirefoxMatch": "unverified",
+  "publicationAuthorized": false,
+  "steps": [
+    {
+      "id": "deno-host",
+      "verdict": "PASS",
+      "cases": [
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode returns 'all' when value is undefined",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode returns 'all' for empty string",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode accepts 'all'",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode accepts 'unit'",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode accepts 'runtime'",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode is case-insensitive",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode maps 'browser' to 'runtime' for backward compatibility",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "resolveMode throws on invalid value",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "createSmokeSteps('unit') returns only unit steps",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "createSmokeSteps('runtime') returns only runtime steps",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "createSmokeSteps('all') returns both unit and runtime steps",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/smoke_runner.test.ts",
+          "name": "createSmokeSteps steps have non-empty name and args",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "resolveFromRoot returns absolute path under PROJECT_ROOT",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "resolveFromRoot with nested path",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "platform returns a valid value",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "arch returns a valid value",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "exists returns true for existing file",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "exists returns false for non-existing file",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/utils.test.ts",
+          "name": "PROJECT_ROOT is a valid directory",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "browser detection uses the abort-bounded TCP reachability helper",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "isTestFile detects supported test patterns",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "isTestFile ignores non-test and excluded paths",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "detectLayer resolves known layer roots",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "detectLayer returns null for unknown paths",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseLayer accepts aliases and rejects invalid values",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "escapeRegExp escapes regex control characters",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "normalizeBrowserResultPath maps known aliases and prefixes",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "isResultMatchTarget matches normalized browser paths",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions applies default timeout values",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions accepts explicit timeout and startup values",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions rejects unknown options",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions rejects invalid timeout values",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions rejects --near with positional path",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "parseOptions supports help mode",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "browser test control is versioned, expiring, and cleared by owner",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "host cleanup removes its control file even when prefs cleanup fails",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows snapshot parsers accept singleton and array JSON shapes",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows snapshot parsers fail closed on blank, null, and missing fields",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows preflight rejects the exact test executable only",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows Deno capture requires path, opaque creation date, and task marker",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows listener ownership accepts dual-stack rows for one verified root",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows listener ownership rejects multiple owners and content roots",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows listener ownership accepts only a previously captured reparented root",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows readiness preserves the verified launcher ancestor of the listener root",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows readiness owns an exact-path sibling currently descended from verified Deno",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows readiness blocks a present previously-owned identity mismatch",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows ownership expands exact-path children by ancestry and -parentPid",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows ownership treats a second root outside the listener tree as ambiguous",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows ownership never grants a new child through a stale -parentPid",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown always cleans verified survivors after diagnostic root taskkill",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown records but never kills an unlinked exact-path process",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown disables Deno tree kill when a sibling is ambiguous",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown revalidates Floorp identity immediately before taskkill",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown revalidates the captured Deno command line before taskkill",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown fails when the captured port remains reachable",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown detects an IPv6 listener even when IPv4 connect fails",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows teardown fails closed when the final listener query fails",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows root-only fallback uses the spawned child control",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows verified teardown failure invokes root-only child fallback and stays failed",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/src/colocated_test_runner.test.ts",
+          "name": "Windows verified teardown combines root-only fallback failure",
+          "verdict": "PASS"
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "node-intake",
+      "verdict": "PASS",
+      "cases": [
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "accepts finished signed packages awaiting protected publication approval",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "default intake still requires the whole run to succeed",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "draft invisibility never substitutes for a pending protected gate",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects foreign source",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects noncanonical workflow",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects foreign repository",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects non-dispatch source",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects unsigned package",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects non-main source",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects failed source",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects skipped native verification",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects missing native architecture",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects ambiguous native evidence",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects unfinished assembly",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects failed draft preparation",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects unprotected environment",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects wrong environment",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects multiple pending gates",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects executing publication",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects completed publication",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects executing PPA child",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects public release",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects unrelated draft",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects missing bundle",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects expired bundle",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects foreign bundle run",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects foreign bundle head",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test-final-package-qa-source.mjs",
+          "name": "rejects missing bundle digest",
+          "verdict": "PASS"
+        }
+      ],
+      "exitCode": 0
+    },
+    {
+      "id": "python-provenance",
+      "verdict": "PASS",
+      "cases": [
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_authenticates_exact_source_and_current_native_patch",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_a_malformed_expected_commit",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_another_run_commit",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_changed_current_floorp_native_patch",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_duplicate_fields_links_and_oversized_json",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_every_upstream_identity_mismatch",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_incomplete_extra_and_boolean_schemas",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_patch_digest_material_and_unknown_fields",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_accepts_preserved_binaries_and_exact_authenticated_identity",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_app_local_identity_overrides_unrelated_default_section",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_case_normalized_identity_keys",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_empty_boolean_and_noninteger_counts",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_escaping_and_noncanonical_native_paths",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_identity_inherited_from_default_section",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_missing_native_inventory_and_invalid_hashes",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_missing_unknown_and_wrong_identity_fields",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_stale_duplicate_missing_and_oversized_ini",
+          "verdict": "PASS"
+        },
+        {
+          "file": "tools/test_validate_runtime_packaging_provenance.py",
+          "name": "test_validate_runtime_packaging_provenance.PackagingProvenanceTests.test_rejects_untrusted_commit_and_invalid_expected_timestamp",
+          "verdict": "PASS"
+        }
+      ],
+      "exitCode": 0
+    }
+  ],
+  "planSha256": "f99d526926f1770dc0e41ddcc04fd5aee0ee17e9f24f89c66c905b67691692b5",
+  "coverageSha256": "2882510ea1f7b32b151d9c588facbf490c1a08bebbf27a0c462c3c6d70428d16",
+  "coverage": {
+    "schemaVersion": 1,
+    "stage": "shadow",
+    "publicationAuthorized": false,
+    "artifacts": [
+      {
+        "kind": "installer",
+        "targets": [
+          "windows-x86_64",
+          "linux-x86_64",
+          "linux-aarch64",
+          "mac-x86_64",
+          "mac-aarch64"
+        ],
+        "verdict": "UNVERIFIED",
+        "requires": [
+          "exact signed final digest",
+          "native launch and feature scenarios per target"
+        ],
+        "producer": "package.yml; source unit tests do not execute its final product"
+      },
+      {
+        "kind": "mar",
+        "targets": [
+          "windows-x86_64",
+          "linux-x86_64",
+          "linux-aarch64",
+          "mac-x86_64",
+          "mac-aarch64"
+        ],
+        "verdict": "UNVERIFIED",
+        "requires": [
+          "from/to artifact and MAR digests",
+          "real update application",
+          "post-update native identity"
+        ],
+        "producer": "package.yml and Updates; installer launch cannot substitute for MAR apply"
+      },
+      {
+        "kind": "deb-ppa",
+        "targets": [
+          "linux-x86_64"
+        ],
+        "verdict": "UNVERIFIED",
+        "requires": [
+          "approved bundle DEB digest",
+          "install/upgrade",
+          "PPA exact bytes and index"
+        ],
+        "producer": "package.yml and publish_ppa.yml"
+      },
+      {
+        "kind": "portable",
+        "targets": [
+          "windows-x86_64"
+        ],
+        "verdict": "UNVERIFIED",
+        "requires": [
+          "input/transform/output digests",
+          "exact producer run",
+          "portable launcher and profile persistence"
+        ],
+        "producer": "downstream Portable workflow after Updates; pre-publication candidate production is deferred"
+      },
+      {
+        "kind": "stub",
+        "targets": [
+          "windows-x86_64"
+        ],
+        "verdict": "UNVERIFIED",
+        "requires": [
+          "stub signature and digest",
+          "downloaded payload identity",
+          "install outcome"
+        ],
+        "producer": "Windows installer assembly"
+      }
+    ],
+    "deferred": [
+      "QA3-02/03 native Debug test-support and Mozilla harness",
+      "QA3-06 full browser test origin and feature/target migration catalog",
+      "QA3-07 all five native GUI targets",
+      "QA3-08 trusted qualification, first-FAIL history and revocation/expiry",
+      "QA3-09 dedicated publisher and approval-bound revalidation",
+      "QA3-10 credential-free Agent worker and deterministic regression promotion",
+      "QA3-11 native known-bad coverage, quarantine, retention and resource measurements",
+      "Official Firefox Git/Hg mapping remains unverified/advisory",
+      "Implementation kit and its 114 tests remain unavailable after Library HTTP 403"
+    ]
+  },
+  "plannedCases": 106,
+  "testFiles": {
+    "tools/src/smoke_runner.test.ts": "755f669c8bbb4c82009aa06da2150e47c8b30831e1e9a7425b376710f3f2d74d",
+    "tools/src/utils.test.ts": "cc23073ba1988b511e3baea303b16590b4e661c01a877544480fc9a3bf75e24d",
+    "tools/src/colocated_test_runner.test.ts": "5e5794a5b1490e8d6429313f115d27989e7ca168fa8c73918b9f87c8ae200d1b",
+    "tools/test-final-package-qa-source.mjs": "470731996f09d9cb43cfafa58750c09d21d27658d3ca3e91c5b1d4e9b8baa884",
+    "tools/test_validate_runtime_source_provenance.py": "a46c1e4c7c0509f105b0902ee434c9529faea834fbc235624274b03305046609",
+    "tools/test_validate_runtime_packaging_provenance.py": "a4d05f61daadbef7892ecd518d7dcbd3f23298a66d5e5127b039572c9bfaa690"
+  },
+  "denoLockSha256": "1eb6c7fa6538a850e216736323edb3eedee85754cb0500e1f171ab945af62d4e",
+  "denoConfigSha256": "ab93e901e1026a67e64150db675aa7066edaedfcef667754414b779def976aff",
+  "denoHostImportMapSha256": "00c231a67b038651c81890a01ee06eb711f76279a4ad1d217a2506deefade16b",
+  "denoHostLockSha256": "c89a55ae88d52eb3f98411307137838e10fb2795b71be6521eb4e5774caae391",
+  "executedCases": 106,
+  "runnerSha256": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32"
+}

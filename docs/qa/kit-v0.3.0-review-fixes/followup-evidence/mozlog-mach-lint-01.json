@@ -1,0 +1,57 @@
+{
+  "phase": "mach-lint-01",
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=2147483648",
+    "--cpu=30",
+    "--fsize=8388608",
+    "--",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "/workspace/qa-review-v030/repos/Floorp-Runtime/mach",
+    "lint",
+    "--linter",
+    "ruff",
+    "--linter",
+    "ruff-format",
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp-Runtime",
+  "exit": 0,
+  "timeout": false,
+  "seconds": 0.704,
+  "limits": {
+    "AS": 2147483648,
+    "CPU": 30,
+    "FSIZE": 8388608,
+    "wall": 60
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "LANG",
+    "MOZBUILD_STATE_PATH",
+    "PATH",
+    "PIP_NO_INDEX",
+    "PYTHONDONTWRITEBYTECODE",
+    "RUFF_CACHE_DIR",
+    "TMPDIR",
+    "UV_OFFLINE"
+  ],
+  "files": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "bytes": 7839
+    },
+    ".github/workflows/scripts/test_qa3_mozlog.py": {
+      "sha256": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063",
+      "bytes": 14148,
+      "testMethods": 21
+    }
+  },
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/mozlog-mach-lint-01.log",
+  "logSha256": "7aa466628f1bc3598effbc56c45c51728ee61db623429f343982a8ec0ff5c011",
+  "native": false,
+  "network": false
+}

@@ -1,0 +1,110 @@
+{
+  "observedAt": "2026-10-09T15:59:03.316375+00:00",
+  "scope": "Existing ordinary public GitHub-hosted PR CI; no manual dispatch or retry",
+  "checks": [
+    {
+      "repository": "Floorp-Projects/Floorp",
+      "pullRequest": 2889,
+      "headSha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "workflowRun": 37949019450,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobIds": [
+        113882663292
+      ],
+      "pullMergeSha": "dd09b0ae176394fc3cc14eef579018d3ebb5ba43",
+      "rawLog": "floorp-ci-source-app.log",
+      "rawContractMethods": 22,
+      "rawSourceTests": {
+        "deno": 60,
+        "node": 28,
+        "python": 18,
+        "total": 106
+      },
+      "sourcePlanExitCodes": [
+        0,
+        0,
+        0
+      ],
+      "artifactMetadataFile": "floorp-ci-source-artifacts.json",
+      "artifactBytesVerified": false
+    },
+    {
+      "repository": "Floorp-Projects/Floorp",
+      "pullRequest": 2889,
+      "headSha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "workflowRun": 37949019544,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobIds": [
+        113882663319
+      ],
+      "rawLog": "floorp-ci-docs-app.log",
+      "conditionalArtifactJob": "skipped; excluded from PASS claims"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp",
+      "pullRequest": 2889,
+      "headSha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "workflowRun": 37949019418,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobIds": [
+        113882662746,
+        113883032040,
+        113883032045,
+        113883032096,
+        113883032258
+      ],
+      "jobsCompletedSuccessfully": 5,
+      "jobsMetadataFile": "floorp-ci-integration-jobs-poll02.json",
+      "linuxBrowserExecutionStep": "success",
+      "linuxCoverageVerificationStep": "success",
+      "linuxRawLog": "floorp-ci-integration-linux-app.log",
+      "otherNativeBrowserSteps": "conditional skips; excluded from PASS claims",
+      "exactBrowserAssertionCount": "UNVERIFIED; raw browser stdout is inside the inaccessible artifact",
+      "artifactMetadataFile": "floorp-ci-integration-artifacts.json",
+      "artifactBytesVerified": false
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "pullRequest": 83,
+      "headSha": "91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+      "workflowRun": 37949737610,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobIds": [
+        113885091214
+      ],
+      "pullMergeSha": "0caeb02c0b1fe94f85d1d8271188064bd00256f6",
+      "rawLog": "runtime83-ci-app.log",
+      "rawContractMethods": 26,
+      "artifactBytesVerified": false
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "pullRequest": 84,
+      "headSha": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+      "workflowRun": 37954821322,
+      "attempt": 1,
+      "conclusion": "success",
+      "jobIds": [
+        113902544655
+      ],
+      "pullMergeSha": "7e4b7ce818aadc5cfd41f58a79b82ed3487d4b6f",
+      "rawLog": "runtime84-ci-app.log",
+      "rawContractMethods": 134,
+      "testSelection": "test_qa3_*.py; not the complete203 local suite",
+      "jobsMetadataFile": "runtime84-ci-jobs01.json",
+      "independentFinalSummary": "workflow-runtime-final-8bbea4ab-ci-final-summary.json",
+      "artifactBytesVerified": false
+    }
+  ],
+  "finalHeadStillPending": [
+    "Floorp #2893"
+  ],
+  "materializationFailureFile": "ci-artifact-materialization.json",
+  "nativeQualification": "UNVERIFIED",
+  "productArtifactQualification": "UNVERIFIED",
+  "publicationAuthorized": false
+}

@@ -1,0 +1,356 @@
+{
+  "sourceSHA256": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32",
+  "nativeOrBrowserExecuted": false,
+  "checks": [],
+  "xml": [
+    {
+      "encoding": "utf-16",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-le",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-le",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-be",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-16-be",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-le",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-le",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-be",
+      "kind": "ordinary",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "utf-32-be",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0,
+      "error": "missing, oversized, or unsafe JUnit report"
+    },
+    {
+      "encoding": "UTF-16",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "UTF-32",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "ISO-8859-1",
+      "kind": "UTF-8 bytes with different declaration",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "utf-8",
+      "kind": "valid",
+      "accepted": true
+    },
+    {
+      "encoding": "utf-8",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0
+    },
+    {
+      "encoding": "utf-8-sig",
+      "kind": "valid",
+      "accepted": true
+    },
+    {
+      "encoding": "utf-8-sig",
+      "kind": "DTD",
+      "rejected": true,
+      "parserCalls": 0
+    }
+  ],
+  "controlFDAndEnvironment": {
+    "fds": {
+      "0": "/dev/null",
+      "1": "/workspace/qa-review-v030/fix-qa309/evidence/floorp-independent-fixtures-02/fd-env.log",
+      "2": "/workspace/qa-review-v030/fix-qa309/evidence/floorp-independent-fixtures-02/fd-env.log"
+    },
+    "fixtureTokensAbsent": true,
+    "parentSubreaperUnchanged": true
+  },
+  "protocol": [
+    {
+      "case": "valid",
+      "acceptedAsZero": true,
+      "outcome": 0,
+      "fixtureOnly": true
+    },
+    {
+      "case": "nonzero",
+      "acceptedAsZero": false,
+      "outcome": 124,
+      "fixtureOnly": true
+    },
+    {
+      "case": "bool-exit",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "float-exit",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "string-exit",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "bool-cleanup",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "incomplete-cleanup",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "missing-cleanup",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "missing-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "null-cleanup-errors",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "untyped-cleanup-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "too-many-cleanup-errors",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "recovered-cleanup-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "untyped-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "empty-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "reported-error",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "extra-field",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "null",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "array",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "malformed",
+      "acceptedAsZero": false,
+      "outcome": "JSONDecodeError",
+      "fixtureOnly": true
+    },
+    {
+      "case": "oversized",
+      "acceptedAsZero": false,
+      "outcome": "ValueError",
+      "fixtureOnly": true
+    }
+  ],
+  "pidfdRaceModels": [
+    {
+      "case": "reused-before-recheck",
+      "signalCalls": 0,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    },
+    {
+      "case": "exited-before-open",
+      "signalCalls": 0,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    },
+    {
+      "case": "exited-before-signal",
+      "signalCalls": 1,
+      "fixtureOnly": true,
+      "wrongBirthSignalled": false
+    }
+  ],
+  "cleanupFaults": [
+    {
+      "case": "transient-pidfd-error-in-cleanup",
+      "faults": 1,
+      "status": {
+        "exitCode": null,
+        "error": "ValueError: source command timed out",
+        "cleanupErrors": [
+          "OSError: [Errno 24] synthetic transient pidfd resource failure"
+        ],
+        "ownedCleanupComplete": true
+      },
+      "childExistsAfterHelperReturned": false,
+      "fixtureCleanup": [
+        {
+          "pid": 52261,
+          "externalKillRequired": false,
+          "fixtureWaitCalled": true
+        }
+      ],
+      "faultInjection": "one fault at the actual helper syscall boundary; later calls succeed",
+      "subreaperRestored": true
+    },
+    {
+      "case": "transient-close-error-in-cleanup",
+      "faults": 1,
+      "status": {
+        "exitCode": null,
+        "error": "ValueError: source command timed out",
+        "cleanupErrors": [
+          "OSError: [Errno 5] synthetic pidfd close failure after fd closed"
+        ],
+        "ownedCleanupComplete": true
+      },
+      "childExistsAfterHelperReturned": false,
+      "fixtureCleanup": [
+        {
+          "pid": 52263,
+          "externalKillRequired": false,
+          "fixtureWaitCalled": true
+        }
+      ],
+      "faultInjection": "one fault at the actual helper syscall boundary; later calls succeed",
+      "subreaperRestored": true
+    },
+    {
+      "case": "transient-snapshot-error-in-cleanup",
+      "faults": 1,
+      "status": {
+        "exitCode": null,
+        "error": "ValueError: source command timed out",
+        "cleanupErrors": [
+          "OSError: [Errno 5] synthetic transient process snapshot failure"
+        ],
+        "ownedCleanupComplete": true
+      },
+      "childExistsAfterHelperReturned": false,
+      "fixtureCleanup": [
+        {
+          "pid": 52265,
+          "externalKillRequired": false,
+          "fixtureWaitCalled": true
+        }
+      ],
+      "faultInjection": "one fault at the actual helper syscall boundary; later calls succeed",
+      "subreaperRestored": true
+    }
+  ]
+}

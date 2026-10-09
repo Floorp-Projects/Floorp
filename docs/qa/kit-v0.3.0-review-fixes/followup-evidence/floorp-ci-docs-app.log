@@ -1,0 +1,1129 @@
+﻿2026-10-09T15:05:00.1417102Z Current runner version: '2.337.0'
+2026-10-09T15:05:00.1451205Z ##[group]Runner Image Provisioner
+2026-10-09T15:05:00.1452675Z Hosted Compute Agent
+2026-10-09T15:05:00.1453868Z Version: 20261002.596
+2026-10-09T15:05:00.1455171Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-09T15:05:00.1456525Z Build Date: 2026-10-02T22:28:27Z
+2026-10-09T15:05:00.1457745Z Worker ID: {accc8b11-a5bd-40e3-a639-a76d0325bb5c}
+2026-10-09T15:05:00.1459053Z Region: eastus
+2026-10-09T15:05:00.1460106Z Cloud: Azure
+2026-10-09T15:05:00.1460959Z ##[endgroup]
+2026-10-09T15:05:00.1463733Z ##[group]Operating System
+2026-10-09T15:05:00.1465201Z Ubuntu
+2026-10-09T15:05:00.1466127Z 24.04.5
+2026-10-09T15:05:00.1467196Z LTS
+2026-10-09T15:05:00.1468023Z ##[endgroup]
+2026-10-09T15:05:00.1469049Z ##[group]Runner Image
+2026-10-09T15:05:00.1470099Z Image: ubuntu-24.04
+2026-10-09T15:05:00.1471064Z Version: 20261004.327.1
+2026-10-09T15:05:00.1473232Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-09T15:05:00.1476448Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-09T15:05:00.1478099Z ##[endgroup]
+2026-10-09T15:05:00.1480059Z ##[group]GITHUB_TOKEN Permissions
+2026-10-09T15:05:00.1482928Z Contents: read
+2026-10-09T15:05:00.1483997Z Metadata: read
+2026-10-09T15:05:00.1485189Z ##[endgroup]
+2026-10-09T15:05:00.1488255Z Secret source: Actions
+2026-10-09T15:05:00.1489852Z Cache mode: write
+2026-10-09T15:05:00.1491458Z Prepare workflow directory
+2026-10-09T15:05:00.1971233Z Prepare all required actions
+2026-10-09T15:05:00.2042129Z Getting action download info
+2026-10-09T15:05:00.4453854Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-10-09T15:05:00.5561837Z Download action repository 'denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282' (SHA:667a34cdef165d8d2b2e98dde39547c9daac7282)
+2026-10-09T15:05:00.6778592Z Download action repository 'actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-10-09T15:05:00.8628210Z Complete job name: verify
+2026-10-09T15:05:00.9443105Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+2026-10-09T15:05:00.9444202Z with:
+2026-10-09T15:05:00.9444642Z   fetch-depth: 1
+2026-10-09T15:05:00.9445359Z   persist-credentials: false
+2026-10-09T15:05:00.9445927Z   repository: Floorp-Projects/Floorp
+2026-10-09T15:05:00.9450051Z   token: ***
+2026-10-09T15:05:00.9450488Z   ssh-strict: true
+2026-10-09T15:05:00.9450933Z   ssh-user: git
+2026-10-09T15:05:00.9451368Z   clean: true
+2026-10-09T15:05:00.9451873Z   sparse-checkout-cone-mode: true
+2026-10-09T15:05:00.9452420Z   fetch-tags: false
+2026-10-09T15:05:00.9452873Z   show-progress: true
+2026-10-09T15:05:00.9453334Z   lfs: false
+2026-10-09T15:05:00.9453757Z   submodules: false
+2026-10-09T15:05:00.9454216Z   set-safe-directory: true
+2026-10-09T15:05:00.9455154Z ##[endgroup]
+2026-10-09T15:05:01.0479383Z Syncing repository: Floorp-Projects/Floorp
+2026-10-09T15:05:01.0481273Z ##[group]Getting Git version info
+2026-10-09T15:05:01.0482074Z Working directory is '/home/runner/work/Floorp/Floorp'
+2026-10-09T15:05:01.0483546Z [command]/usr/bin/git version
+2026-10-09T15:05:01.0594835Z git version 2.55.0
+2026-10-09T15:05:01.0620740Z ##[endgroup]
+2026-10-09T15:05:01.0635798Z Temporarily overriding HOME='/home/runner/work/_temp/9445d71a-d417-4acb-a06b-d032ca3ea65b' before making global git config changes
+2026-10-09T15:05:01.0638476Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-09T15:05:01.0641673Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Floorp/Floorp
+2026-10-09T15:05:01.0700160Z Deleting the contents of '/home/runner/work/Floorp/Floorp'
+2026-10-09T15:05:01.0704629Z ##[group]Initializing the repository
+2026-10-09T15:05:01.0711605Z [command]/usr/bin/git init /home/runner/work/Floorp/Floorp
+2026-10-09T15:05:01.0851944Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-09T15:05:01.0853787Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-09T15:05:01.0854782Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-09T15:05:01.0856424Z hint: call:
+2026-10-09T15:05:01.0857141Z hint:
+2026-10-09T15:05:01.0858349Z hint: 	git config --global init.defaultBranch <name>
+2026-10-09T15:05:01.0859423Z hint:
+2026-10-09T15:05:01.0860293Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-09T15:05:01.0861828Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-09T15:05:01.0863032Z hint:
+2026-10-09T15:05:01.0863771Z hint: 	git branch -m <name>
+2026-10-09T15:05:01.0864281Z hint:
+2026-10-09T15:05:01.0865210Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-09T15:05:01.0866270Z Initialized empty Git repository in /home/runner/work/Floorp/Floorp/.git/
+2026-10-09T15:05:01.0873549Z [command]/usr/bin/git remote add origin https://github.com/Floorp-Projects/Floorp
+2026-10-09T15:05:01.0926993Z ##[endgroup]
+2026-10-09T15:05:01.0928344Z ##[group]Disabling automatic garbage collection
+2026-10-09T15:05:01.0931657Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-09T15:05:01.0972737Z ##[endgroup]
+2026-10-09T15:05:01.0974213Z ##[group]Setting up auth
+2026-10-09T15:05:01.0984272Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T15:05:01.1047308Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T15:05:01.1490411Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T15:05:01.1534476Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T15:05:01.1821134Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T15:05:01.1850556Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T15:05:01.2113160Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-09T15:05:01.2158538Z ##[endgroup]
+2026-10-09T15:05:01.2159588Z ##[group]Fetching the repository
+2026-10-09T15:05:01.2169002Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +dd09b0ae176394fc3cc14eef579018d3ebb5ba43:refs/remotes/pull/2889/merge
+2026-10-09T15:05:02.3862239Z From https://github.com/Floorp-Projects/Floorp
+2026-10-09T15:05:02.3866491Z  * [new ref]         dd09b0ae176394fc3cc14eef579018d3ebb5ba43 -> pull/2889/merge
+2026-10-09T15:05:02.3870893Z ##[endgroup]
+2026-10-09T15:05:02.3872786Z ##[group]Determining the checkout info
+2026-10-09T15:05:02.3874622Z ##[endgroup]
+2026-10-09T15:05:02.3878745Z [command]/usr/bin/git sparse-checkout disable
+2026-10-09T15:05:02.3948781Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-09T15:05:02.3987005Z ##[group]Checking out the ref
+2026-10-09T15:05:02.3990442Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/2889/merge
+2026-10-09T15:05:02.6196280Z Note: switching to 'refs/remotes/pull/2889/merge'.
+2026-10-09T15:05:02.6197628Z 
+2026-10-09T15:05:02.6198594Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-09T15:05:02.6200710Z changes and commit them, and you can discard any commits you make in this
+2026-10-09T15:05:02.6202846Z state without impacting any branches by switching back to a branch.
+2026-10-09T15:05:02.6204074Z 
+2026-10-09T15:05:02.6205215Z If you want to create a new branch to retain commits you create, you may
+2026-10-09T15:05:02.6207672Z do so (now or later) by using -c with the switch command. Example:
+2026-10-09T15:05:02.6208893Z 
+2026-10-09T15:05:02.6209330Z   git switch -c <new-branch-name>
+2026-10-09T15:05:02.6209935Z 
+2026-10-09T15:05:02.6210302Z Or undo this operation with:
+2026-10-09T15:05:02.6210834Z 
+2026-10-09T15:05:02.6211145Z   git switch -
+2026-10-09T15:05:02.6211578Z 
+2026-10-09T15:05:02.6212687Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-09T15:05:02.6213743Z 
+2026-10-09T15:05:02.6215119Z HEAD is now at dd09b0a Merge 7747cf0e711937e056a34594d8d39fcc8dfc54f0 into 013bb6c9ed19250592898ec8fbc8d7d24aa847be
+2026-10-09T15:05:02.6219014Z ##[endgroup]
+2026-10-09T15:05:02.6264613Z [command]/usr/bin/git log -1 --format=%H
+2026-10-09T15:05:02.6293270Z dd09b0ae176394fc3cc14eef579018d3ebb5ba43
+2026-10-09T15:05:02.6303640Z ##[group]Removing auth
+2026-10-09T15:05:02.6307809Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T15:05:02.6342238Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T15:05:02.6573721Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T15:05:02.6602249Z http.https://github.com/.extraheader
+2026-10-09T15:05:02.6610833Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-09T15:05:02.6648467Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T15:05:02.6881282Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T15:05:02.6916880Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T15:05:02.7144435Z ##[endgroup]
+2026-10-09T15:05:02.7525199Z ##[group]Run denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+2026-10-09T15:05:02.7526810Z with:
+2026-10-09T15:05:02.7527700Z   deno-version: v2.x
+2026-10-09T15:05:02.7528704Z   deno-binary-name: deno
+2026-10-09T15:05:02.7529707Z   cache: false
+2026-10-09T15:05:02.7530584Z ##[endgroup]
+2026-10-09T15:05:03.0518426Z Going to install stable version 2.9.7.
+2026-10-09T15:05:03.0533922Z Downloading Deno from https://github.com/denoland/deno/releases/download/v2.9.7/deno-x86_64-unknown-linux-gnu.zip.
+2026-10-09T15:05:03.3842269Z [command]/usr/bin/unzip -o -q /home/runner/work/_temp/4bb26518-a62a-42c8-9984-17ea40658857
+2026-10-09T15:05:04.1608651Z Cached Deno to /opt/hostedtoolcache/deno/2.9.7/x64.
+2026-10-09T15:05:04.1636456Z Installation complete.
+2026-10-09T15:05:04.2419698Z ##[group]Run actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+2026-10-09T15:05:04.2420152Z with:
+2026-10-09T15:05:04.2420398Z   path: ~/.cache/deno
+2026-10-09T15:05:04.2420916Z   key: deno-docs-pipeline-45ad939dce8fdba9d63cdeaca5cc7deba73e1d4f7ad126f88ba75ee74af12a1b
+2026-10-09T15:05:04.2421485Z   restore-keys: deno-docs-pipeline-
+2026-10-09T15:05:04.2421813Z   enableCrossOsArchive: false
+2026-10-09T15:05:04.2422118Z   fail-on-cache-miss: false
+2026-10-09T15:05:04.2422408Z   lookup-only: false
+2026-10-09T15:05:04.2422666Z   save-always: false
+2026-10-09T15:05:04.2422929Z ##[endgroup]
+2026-10-09T15:05:04.3516029Z (node:2417) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-09T15:05:04.3516956Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-09T15:05:04.4330166Z Cache hit for: deno-docs-pipeline-45ad939dce8fdba9d63cdeaca5cc7deba73e1d4f7ad126f88ba75ee74af12a1b
+2026-10-09T15:05:04.4445189Z (node:2417) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-09T15:05:05.2075679Z Received 135462874 of 135462874 (100.0%), 183.2 MBs/sec
+2026-10-09T15:05:05.2077884Z Cache Size: ~129 MB (135462874 B)
+2026-10-09T15:05:05.2123678Z [command]/usr/bin/tar -xf /home/runner/work/_temp/53519dcf-ffba-4934-9821-bb4f675b1ef9/cache.tzst -P -C /home/runner/work/Floorp/Floorp --use-compress-program unzstd
+2026-10-09T15:05:08.1485724Z Cache restored successfully
+2026-10-09T15:05:08.1630266Z Cache restored from key: deno-docs-pipeline-45ad939dce8fdba9d63cdeaca5cc7deba73e1d4f7ad126f88ba75ee74af12a1b
+2026-10-09T15:05:08.1778561Z ##[group]Run deno install
+2026-10-09T15:05:08.1778923Z [36;1mdeno install[0m
+2026-10-09T15:05:08.2107567Z shell: /usr/bin/bash -e {0}
+2026-10-09T15:05:08.2107903Z ##[endgroup]
+2026-10-09T15:05:08.3308470Z [0m[32mInitialize[0m globals@16.5.0
+2026-10-09T15:05:08.3309564Z [0m[32mInitialize[0m birpc@4.0.0
+2026-10-09T15:05:08.3310964Z [0m[32mInitialize[0m eslint-plugin-react-hooks@7.1.1
+2026-10-09T15:05:08.3311952Z [0m[32mInitialize[0m react-refresh@0.18.0
+2026-10-09T15:05:08.3313049Z [0m[32mInitialize[0m @jsr/std__collections@1.2.0
+2026-10-09T15:05:08.3314777Z [0m[32mInitialize[0m i18next-browser-languagedetector@8.2.1
+2026-10-09T15:05:08.3315920Z [0m[32mInitialize[0m tailwind-merge@3.6.0
+2026-10-09T15:05:08.3316599Z [0m[32mInitialize[0m floating-ui@5.2.8
+2026-10-09T15:05:08.3317273Z [0m[32mInitialize[0m react@19.2.6
+2026-10-09T15:05:08.3317979Z [0m[32mInitialize[0m next-themes@0.4.6
+2026-10-09T15:05:08.3318795Z [0m[32mInitialize[0m vite-plugin-istanbul@7.2.1
+2026-10-09T15:05:08.3319790Z [0m[32mInitialize[0m rolldown@1.0.3
+2026-10-09T15:05:08.3320438Z [0m[32mInitialize[0m oxlint@1.67.0
+2026-10-09T15:05:08.3321122Z [0m[32mInitialize[0m @chakra-ui/react@3.37.0
+2026-10-09T15:05:08.3321829Z [0m[32mInitialize[0m @tiptap/react@2.27.2
+2026-10-09T15:05:08.3322526Z [0m[32mInitialize[0m puppeteer-core@24.43.1
+2026-10-09T15:05:08.3323289Z [0m[32mInitialize[0m @solid-primitives/memo@1.4.5
+2026-10-09T15:05:08.3324100Z [0m[32mInitialize[0m @dnd-kit/sortable@10.0.0
+2026-10-09T15:05:08.3324796Z [0m[32mInitialize[0m budoux@0.6.4
+2026-10-09T15:05:08.3325746Z [0m[32mInitialize[0m @tailwindcss/vite@4.3.0
+2026-10-09T15:05:08.3326420Z [0m[32mInitialize[0m vite@7.3.3
+2026-10-09T15:05:08.3327075Z [0m[32mInitialize[0m react-router-dom@7.15.1
+2026-10-09T15:05:08.3327794Z [0m[32mInitialize[0m @jsr/std__toml@1.0.11
+2026-10-09T15:05:08.3328465Z [0m[32mInitialize[0m uuid@13.0.2
+2026-10-09T15:05:08.3329199Z [0m[32mInitialize[0m @tiptap/extension-text-align@2.27.2
+2026-10-09T15:05:08.3329983Z [0m[32mInitialize[0m es-toolkit@1.47.0
+2026-10-09T15:05:08.3330635Z [0m[32mInitialize[0m linkedom@0.18.12
+2026-10-09T15:05:08.3331389Z [0m[32mInitialize[0m eslint-plugin-react-refresh@0.4.26
+2026-10-09T15:05:08.3332194Z [0m[32mInitialize[0m autoprefixer@10.5.0
+2026-10-09T15:05:08.3332862Z [0m[32mInitialize[0m @types/node@25.9.1
+2026-10-09T15:05:08.3333547Z [0m[32mInitialize[0m vite-tsconfig-paths@6.1.1
+2026-10-09T15:05:08.3334322Z [0m[32mInitialize[0m @solid-primitives/utils@6.4.0
+2026-10-09T15:05:08.3337013Z [0m[32mInitialize[0m react-hook-form@7.76.1
+2026-10-09T15:05:08.3337793Z [0m[32mInitialize[0m @dnd-kit/modifiers@9.0.0
+2026-10-09T15:05:08.3338469Z [0m[32mInitialize[0m i18next@25.10.10
+2026-10-09T15:05:08.3339112Z [0m[32mInitialize[0m @types/uuid@11.0.0
+2026-10-09T15:05:08.3339743Z [0m[32mInitialize[0m chokidar@5.0.0
+2026-10-09T15:05:08.3340462Z [0m[32mInitialize[0m @solid-primitives/scheduled@1.5.3
+2026-10-09T15:05:08.3341215Z [0m[32mInitialize[0m recharts@3.8.1
+2026-10-09T15:05:08.3341930Z [0m[32mInitialize[0m @tiptap/extension-underline@2.27.2
+2026-10-09T15:05:08.3342665Z [0m[32mInitialize[0m rolldown-vite@7.3.1
+2026-10-09T15:05:08.3343315Z [0m[32mInitialize[0m @jsr/std__fs@1.0.24
+2026-10-09T15:05:08.3343963Z [0m[32mInitialize[0m lucide-react@0.562.0
+2026-10-09T15:05:08.3344586Z [0m[32mInitialize[0m clsx@2.1.1
+2026-10-09T15:05:08.3345809Z [0m[32mInitialize[0m react-dom@19.2.6
+2026-10-09T15:05:08.3346454Z [0m[32mInitialize[0m typescript@5.9.3
+2026-10-09T15:05:08.3347136Z [0m[32mInitialize[0m @prettier/plugin-oxc@0.1.4
+2026-10-09T15:05:08.3347842Z [0m[32mInitialize[0m @types/chroma-js@3.1.2
+2026-10-09T15:05:08.3348482Z [0m[32mInitialize[0m io-ts@2.2.22
+2026-10-09T15:05:08.3349092Z [0m[32mInitialize[0m prettier@3.8.3
+2026-10-09T15:05:08.3349685Z [0m[32mInitialize[0m fflate@0.8.3
+2026-10-09T15:05:08.3350324Z [0m[32mInitialize[0m solid-styled-jsx@0.27.1
+2026-10-09T15:05:08.3351263Z [0m[32mInitialize[0m chroma-js@3.2.0
+2026-10-09T15:05:08.3351998Z [0m[32mInitialize[0m pathe@2.0.3
+2026-10-09T15:05:08.3352652Z [0m[32mInitialize[0m vite-plugin-solid@2.11.12
+2026-10-09T15:05:08.3353418Z [0m[32mInitialize[0m @vitejs/plugin-react-swc@4.3.1
+2026-10-09T15:05:08.3354132Z [0m[32mInitialize[0m @types/react@19.2.15
+2026-10-09T15:05:08.3354785Z [0m[32mInitialize[0m react-i18next@16.6.6
+2026-10-09T15:05:08.3355664Z [0m[32mInitialize[0m solid-js@1.9.13
+2026-10-09T15:05:08.3356297Z [0m[32mInitialize[0m fp-ts@2.16.11
+2026-10-09T15:05:08.3357125Z [0m[32mInitialize[0m @bytecodealliance/preview2-shim@0.17.9
+2026-10-09T15:05:08.3357859Z [0m[32mInitialize[0m @swc/core@1.15.40
+2026-10-09T15:05:08.3358605Z [0m[32mInitialize[0m @icons-pack/react-simple-icons@13.13.0
+2026-10-09T15:05:08.3359378Z [0m[32mInitialize[0m framer-motion@12.40.0
+2026-10-09T15:05:08.3359998Z [0m[32mInitialize[0m unrun@0.3.0
+2026-10-09T15:05:08.3360573Z [0m[32mInitialize[0m daisyui@5.5.20
+2026-10-09T15:05:08.3361298Z [0m[32mInitialize[0m @tiptap/extension-placeholder@2.27.2
+2026-10-09T15:05:08.3362051Z [0m[32mInitialize[0m @jsr/std__assert@1.0.19
+2026-10-09T15:05:08.3362713Z [0m[32mInitialize[0m @emotion/react@11.14.0
+2026-10-09T15:05:08.3363343Z [0m[32mInitialize[0m postcss@8.5.15
+2026-10-09T15:05:08.3363943Z [0m[32mInitialize[0m @dnd-kit/core@6.3.1
+2026-10-09T15:05:08.3364576Z [0m[32mInitialize[0m @preact/signals@1.3.4
+2026-10-09T15:05:08.3455678Z [0m[32mInitialize[0m chalk@5.6.2
+2026-10-09T15:05:08.3456341Z [0m[32mInitialize[0m qr-code-styling@1.9.2
+2026-10-09T15:05:08.3457091Z [0m[32mInitialize[0m @tiptap/extension-image@2.27.2
+2026-10-09T15:05:08.3457837Z [0m[32mInitialize[0m @tiptap/starter-kit@2.27.2
+2026-10-09T15:05:08.3458521Z [0m[32mInitialize[0m @tiptap/pm@2.27.2
+2026-10-09T15:05:08.3459199Z [0m[32mInitialize[0m @dnd-kit/utilities@3.2.2
+2026-10-09T15:05:08.3459893Z [0m[32mInitialize[0m @types/react-dom@19.2.3
+2026-10-09T15:05:08.3460558Z [0m[32mInitialize[0m tsdown@0.22.0
+2026-10-09T15:05:08.3461162Z [0m[32mInitialize[0m tailwindcss@4.3.0
+2026-10-09T15:05:08.3461763Z [0m[32mInitialize[0m preact@10.29.2
+2026-10-09T15:05:08.3462372Z [0m[32mInitialize[0m cmdk@1.1.1
+2026-10-09T15:05:08.3463016Z [0m[32mInitialize[0m @vitejs/plugin-react@4.7.0
+2026-10-09T15:05:08.3463758Z [0m[32mInitialize[0m @solid-primitives/deep@0.3.5
+2026-10-09T15:05:08.3464493Z [0m[32mInitialize[0m @deno/vite-plugin@1.0.6
+2026-10-09T15:05:08.3465617Z [0m[32mInitialize[0m lightningcss@1.32.0
+2026-10-09T15:05:08.3466245Z [0m[32mInitialize[0m fast-glob@3.3.3
+2026-10-09T15:05:08.3466853Z [0m[32mInitialize[0m unplugin-swc@1.5.9
+2026-10-09T15:05:08.3467497Z [0m[32mInitialize[0m hermes-parser@0.25.1
+2026-10-09T15:05:08.3468129Z [0m[32mInitialize[0m zod@3.25.76
+2026-10-09T15:05:08.3468720Z [0m[32mInitialize[0m @babel/core@7.29.7
+2026-10-09T15:05:08.3469329Z [0m[32mInitialize[0m eslint@10.4.0
+2026-10-09T15:05:08.3469995Z [0m[32mInitialize[0m zod-validation-error@4.0.2
+2026-10-09T15:05:08.3470683Z [0m[32mInitialize[0m @babel/parser@7.29.7
+2026-10-09T15:05:08.3471301Z [0m[32mInitialize[0m @babel/runtime@7.29.7
+2026-10-09T15:05:08.3471934Z [0m[32mInitialize[0m @babel/generator@7.29.7
+2026-10-09T15:05:08.3472564Z [0m[32mInitialize[0m espree@10.4.0
+2026-10-09T15:05:08.3473178Z [0m[32mInitialize[0m picocolors@1.1.1
+2026-10-09T15:05:08.3473917Z [0m[32mInitialize[0m @istanbuljs/load-nyc-config@1.1.0
+2026-10-09T15:05:08.3475253Z [0m[32mInitialize[0m istanbul-lib-instrument@6.0.3
+2026-10-09T15:05:08.3476012Z [0m[32mInitialize[0m source-map@0.7.6
+2026-10-09T15:05:08.3476686Z [0m[32mInitialize[0m @types/babel__generator@7.6.8
+2026-10-09T15:05:08.3477438Z [0m[32mInitialize[0m test-exclude@7.0.2
+2026-10-09T15:05:08.3478159Z [0m[32mInitialize[0m @rolldown/binding-linux-x64-gnu@1.0.3
+2026-10-09T15:05:08.3478919Z [0m[32mInitialize[0m @rolldown/pluginutils@1.0.1
+2026-10-09T15:05:08.3479952Z [0m[32mInitialize[0m @oxc-project/types@0.133.0
+2026-10-09T15:05:08.3480768Z [0m[32mInitialize[0m @rolldown/binding-linux-x64-musl@1.0.3
+2026-10-09T15:05:08.3481657Z [0m[32mInitialize[0m @oxlint/binding-linux-x64-musl@1.67.0
+2026-10-09T15:05:08.3482495Z [0m[32mInitialize[0m @oxlint/binding-linux-x64-gnu@1.67.0
+2026-10-09T15:05:08.3483255Z [0m[32mInitialize[0m @emotion/is-prop-valid@1.4.0
+2026-10-09T15:05:08.3483950Z [0m[32mInitialize[0m @emotion/serialize@1.3.3
+2026-10-09T15:05:08.3484678Z [0m[32mInitialize[0m @pandacss/is-valid-prop@1.12.1
+2026-10-09T15:05:08.3545772Z [0m[32mInitialize[0m @emotion/utils@1.4.2
+2026-10-09T15:05:08.3546430Z [0m[32mInitialize[0m csstype@3.2.3
+2026-10-09T15:05:08.3547281Z [0m[32mInitialize[0m @emotion/use-insertion-effect-with-fallbacks@1.2.0
+2026-10-09T15:05:08.3548116Z [0m[32mInitialize[0m @ark-ui/react@5.39.0
+2026-10-09T15:05:08.3548789Z [0m[32mInitialize[0m fast-deep-equal@3.1.3
+2026-10-09T15:05:08.3549570Z [0m[32mInitialize[0m @types/use-sync-external-store@0.0.6
+2026-10-09T15:05:08.3550337Z [0m[32mInitialize[0m @tiptap/core@2.27.2
+2026-10-09T15:05:08.3551072Z [0m[32mInitialize[0m @tiptap/extension-floating-menu@2.27.2
+2026-10-09T15:05:08.3551919Z [0m[32mInitialize[0m @tiptap/extension-bubble-menu@2.27.2
+2026-10-09T15:05:08.3552681Z [0m[32mInitialize[0m use-sync-external-store@1.6.0
+2026-10-09T15:05:08.3553087Z [0m[32mInitialize[0m chromium-bidi@14.0.0
+2026-10-09T15:05:08.3553484Z [0m[32mInitialize[0m webdriver-bidi-protocol@0.4.1
+2026-10-09T15:05:08.3553913Z [0m[32mInitialize[0m typed-query-selector@2.12.2
+2026-10-09T15:05:08.3554344Z [0m[32mInitialize[0m ws@8.21.0
+2026-10-09T15:05:08.3555195Z [0m[32mInitialize[0m @puppeteer/browsers@2.13.2
+2026-10-09T15:05:08.3555910Z [0m[32mInitialize[0m debug@4.4.3
+2026-10-09T15:05:08.3556601Z [0m[32mInitialize[0m devtools-protocol@0.0.1608973
+2026-10-09T15:05:08.3557284Z [0m[32mInitialize[0m tslib@2.8.1
+2026-10-09T15:05:08.3557853Z [0m[32mInitialize[0m commander@13.1.0
+2026-10-09T15:05:08.3558455Z [0m[32mInitialize[0m jsdom@26.1.0
+2026-10-09T15:05:08.3559098Z [0m[32mInitialize[0m @tailwindcss/oxide@4.3.0
+2026-10-09T15:05:08.3559756Z [0m[32mInitialize[0m @tailwindcss/node@4.3.0
+2026-10-09T15:05:08.3560359Z [0m[32mInitialize[0m fdir@6.5.0
+2026-10-09T15:05:08.3560933Z [0m[32mInitialize[0m esbuild@0.27.7
+2026-10-09T15:05:08.3561517Z [0m[32mInitialize[0m picomatch@4.0.4
+2026-10-09T15:05:08.3562102Z [0m[32mInitialize[0m tinyglobby@0.2.16
+2026-10-09T15:05:08.3562691Z [0m[32mInitialize[0m rollup@4.60.4
+2026-10-09T15:05:08.3563257Z [0m[32mInitialize[0m react-router@7.15.1
+2026-10-09T15:05:08.3563851Z [0m[32mInitialize[0m html-escaper@3.0.3
+2026-10-09T15:05:08.3564436Z [0m[32mInitialize[0m css-select@5.2.2
+2026-10-09T15:05:08.3565260Z [0m[32mInitialize[0m htmlparser2@10.1.0
+2026-10-09T15:05:08.3565848Z [0m[32mInitialize[0m uhyphen@0.2.0
+2026-10-09T15:05:08.3566387Z [0m[32mInitialize[0m cssom@0.5.0
+2026-10-09T15:05:08.3566997Z [0m[32mInitialize[0m postcss-value-parser@4.2.0
+2026-10-09T15:05:08.3567661Z [0m[32mInitialize[0m fraction.js@5.3.4
+2026-10-09T15:05:08.3568310Z [0m[32mInitialize[0m caniuse-lite@1.0.30001793
+2026-10-09T15:05:08.3568962Z [0m[32mInitialize[0m browserslist@4.28.2
+2026-10-09T15:05:08.3569599Z [0m[32mInitialize[0m undici-types@7.24.6
+2026-10-09T15:05:08.3570189Z [0m[32mInitialize[0m globrex@0.1.2
+2026-10-09T15:05:08.3570740Z [0m[32mInitialize[0m tsconfck@3.1.6
+2026-10-09T15:05:08.3571569Z [0m[32mInitialize[0m readdirp@5.0.0
+2026-10-09T15:05:08.3572169Z [0m[32mInitialize[0m immer@10.2.0
+2026-10-09T15:05:08.3572739Z [0m[32mInitialize[0m react-redux@9.3.0
+2026-10-09T15:05:08.3573328Z [0m[32mInitialize[0m @reduxjs/toolkit@2.12.0
+2026-10-09T15:05:08.3573933Z [0m[32mInitialize[0m victory-vendor@37.3.6
+2026-10-09T15:05:08.3574550Z [0m[32mInitialize[0m eventemitter3@5.0.4
+2026-10-09T15:05:08.3598735Z [0m[32mInitialize[0m tiny-invariant@1.3.3
+2026-10-09T15:05:08.3599141Z [0m[32mInitialize[0m decimal.js-light@2.5.1
+2026-10-09T15:05:08.3625447Z [0m[32mInitialize[0m reselect@5.1.1
+2026-10-09T15:05:08.3626251Z [0m[32mInitialize[0m @oxc-project/runtime@0.101.0
+2026-10-09T15:05:08.3626980Z [0m[32mInitialize[0m rolldown@1.0.0-beta.53
+2026-10-09T15:05:08.3627678Z [0m[32mInitialize[0m @jsr/std__internal@1.0.14
+2026-10-09T15:05:08.3628322Z [0m[32mInitialize[0m @jsr/std__path@1.1.5
+2026-10-09T15:05:08.3628936Z [0m[32mInitialize[0m scheduler@0.27.0
+2026-10-09T15:05:08.3629579Z [0m[32mInitialize[0m oxc-parser@0.125.0
+2026-10-09T15:05:08.3630406Z [0m[32mInitialize[0m babel-plugin-transform-rename-import@2.3.0
+2026-10-09T15:05:08.3631237Z [0m[32mInitialize[0m styled-jsx@3.4.7
+2026-10-09T15:05:08.3631872Z [0m[32mInitialize[0m solid-refresh@0.6.3
+2026-10-09T15:05:08.3632527Z [0m[32mInitialize[0m merge-anything@5.1.7
+2026-10-09T15:05:08.3633166Z [0m[32mInitialize[0m vitefu@1.1.3
+2026-10-09T15:05:08.3633810Z [0m[32mInitialize[0m babel-preset-solid@1.9.12
+2026-10-09T15:05:08.3634525Z [0m[32mInitialize[0m @types/babel__core@7.20.5
+2026-10-09T15:05:08.3635531Z [0m[32mInitialize[0m html-parse-stringify@3.0.1
+2026-10-09T15:05:08.3636315Z [0m[32mInitialize[0m seroval@1.5.4
+2026-10-09T15:05:08.3636946Z [0m[32mInitialize[0m seroval-plugins@1.5.4
+2026-10-09T15:05:08.3637595Z [0m[32mInitialize[0m @swc/types@0.1.26
+2026-10-09T15:05:08.3638296Z [0m[32mInitialize[0m @swc/core-linux-x64-musl@1.15.40
+2026-10-09T15:05:08.3639066Z [0m[32mInitialize[0m @swc/core-linux-x64-gnu@1.15.40
+2026-10-09T15:05:08.3639775Z [0m[32mInitialize[0m @swc/counter@0.1.3
+2026-10-09T15:05:08.3640408Z [0m[32mInitialize[0m motion-utils@12.39.0
+2026-10-09T15:05:08.3641042Z [0m[32mInitialize[0m motion-dom@12.40.0
+2026-10-09T15:05:08.3641716Z [0m[32mInitialize[0m @emotion/weak-memoize@0.4.0
+2026-10-09T15:05:08.3642451Z [0m[32mInitialize[0m @emotion/babel-plugin@11.13.5
+2026-10-09T15:05:08.3643144Z [0m[32mInitialize[0m @emotion/cache@11.14.0
+2026-10-09T15:05:08.3643881Z [0m[32mInitialize[0m hoist-non-react-statics@3.3.2
+2026-10-09T15:05:08.3644586Z [0m[32mInitialize[0m source-map-js@1.2.1
+2026-10-09T15:05:08.3675556Z [0m[32mInitialize[0m nanoid@3.3.12
+2026-10-09T15:05:08.3676267Z [0m[32mInitialize[0m @dnd-kit/accessibility@3.1.1
+2026-10-09T15:05:08.3677020Z [0m[32mInitialize[0m @preact/signals-core@1.14.2
+2026-10-09T15:05:08.3677727Z [0m[32mInitialize[0m qrcode-generator@1.5.2
+2026-10-09T15:05:08.3678455Z [0m[32mInitialize[0m @tiptap/extension-bold@2.27.2
+2026-10-09T15:05:08.3679248Z [0m[32mInitialize[0m @tiptap/extension-list-item@2.27.2
+2026-10-09T15:05:08.3680017Z [0m[32mInitialize[0m @tiptap/extension-history@2.27.2
+2026-10-09T15:05:08.3680824Z [0m[32mInitialize[0m @tiptap/extension-bullet-list@2.27.2
+2026-10-09T15:05:08.3681656Z [0m[32mInitialize[0m @tiptap/extension-code-block@2.27.2
+2026-10-09T15:05:08.3682498Z [0m[32mInitialize[0m @tiptap/extension-blockquote@2.27.2
+2026-10-09T15:05:08.3683282Z [0m[32mInitialize[0m @tiptap/extension-heading@2.27.2
+2026-10-09T15:05:08.3684085Z [0m[32mInitialize[0m @tiptap/extension-text-style@2.27.2
+2026-10-09T15:05:08.3685113Z [0m[32mInitialize[0m @tiptap/extension-gapcursor@2.27.2
+2026-10-09T15:05:08.3685953Z [0m[32mInitialize[0m @tiptap/extension-document@2.27.2
+2026-10-09T15:05:08.3686787Z [0m[32mInitialize[0m @tiptap/extension-dropcursor@2.27.2
+2026-10-09T15:05:08.3687604Z [0m[32mInitialize[0m @tiptap/extension-hard-break@2.27.2
+2026-10-09T15:05:08.3688418Z [0m[32mInitialize[0m @tiptap/extension-code@2.27.2
+2026-10-09T15:05:08.3689495Z [0m[32mInitialize[0m @tiptap/extension-horizontal-rule@2.27.2
+2026-10-09T15:05:08.3690367Z [0m[32mInitialize[0m @tiptap/extension-paragraph@2.27.2
+2026-10-09T15:05:08.3691161Z [0m[32mInitialize[0m @tiptap/extension-strike@2.27.2
+2026-10-09T15:05:08.3691918Z [0m[32mInitialize[0m @tiptap/extension-italic@2.27.2
+2026-10-09T15:05:08.3692759Z [0m[32mInitialize[0m @tiptap/extension-ordered-list@2.27.2
+2026-10-09T15:05:08.3693560Z [0m[32mInitialize[0m @tiptap/extension-text@2.27.2
+2026-10-09T15:05:08.3694519Z [0m[32mInitialize[0m prosemirror-gapcursor@1.4.1
+2026-10-09T15:05:08.3695622Z [0m[32mInitialize[0m prosemirror-transform@1.12.0
+2026-10-09T15:05:08.3696357Z [0m[32mInitialize[0m prosemirror-collab@1.3.1
+2026-10-09T15:05:08.3697112Z [0m[32mInitialize[0m prosemirror-inputrules@1.5.1
+2026-10-09T15:05:08.3697858Z [0m[32mInitialize[0m prosemirror-changeset@2.4.1
+2026-10-09T15:05:08.3698578Z [0m[32mInitialize[0m prosemirror-model@1.25.7
+2026-10-09T15:05:08.3699324Z [0m[32mInitialize[0m prosemirror-schema-basic@1.2.4
+2026-10-09T15:05:08.3700043Z [0m[32mInitialize[0m prosemirror-menu@1.3.2
+2026-10-09T15:05:08.3700738Z [0m[32mInitialize[0m prosemirror-history@1.5.0
+2026-10-09T15:05:08.3701450Z [0m[32mInitialize[0m prosemirror-dropcursor@1.8.2
+2026-10-09T15:05:08.3702200Z [0m[32mInitialize[0m prosemirror-keymap@1.2.3
+2026-10-09T15:05:08.3702895Z [0m[32mInitialize[0m prosemirror-state@1.4.4
+2026-10-09T15:05:08.3703653Z [0m[32mInitialize[0m prosemirror-trailing-node@3.0.0
+2026-10-09T15:05:08.3704390Z [0m[32mInitialize[0m prosemirror-tables@1.8.5
+2026-10-09T15:05:08.3722642Z [0m[32mInitialize[0m prosemirror-view@1.41.8
+2026-10-09T15:05:08.3723306Z [0m[32mInitialize[0m prosemirror-commands@1.7.1
+2026-10-09T15:05:08.3723737Z [0m[32mInitialize[0m prosemirror-schema-list@1.5.1
+2026-10-09T15:05:08.3724134Z [0m[32mInitialize[0m prosemirror-markdown@1.13.4
+2026-10-09T15:05:08.3724524Z [0m[32mInitialize[0m rolldown-plugin-dts@0.25.1
+2026-10-09T15:05:08.3725153Z [0m[32mInitialize[0m semver@7.8.1
+2026-10-09T15:05:08.3725785Z [0m[32mInitialize[0m cac@7.0.0
+2026-10-09T15:05:08.3726363Z [0m[32mInitialize[0m tree-kill@1.2.2
+2026-10-09T15:05:08.3727021Z [0m[32mInitialize[0m import-without-cache@0.4.0
+2026-10-09T15:05:08.3727679Z [0m[32mInitialize[0m obug@2.1.1
+2026-10-09T15:05:08.3728245Z [0m[32mInitialize[0m tinyexec@1.2.2
+2026-10-09T15:05:08.3728833Z [0m[32mInitialize[0m ansis@4.3.0
+2026-10-09T15:05:08.3729430Z [0m[32mInitialize[0m empathic@2.0.1
+2026-10-09T15:05:08.3730013Z [0m[32mInitialize[0m hookable@6.1.1
+2026-10-09T15:05:08.3730613Z [0m[32mInitialize[0m unconfig-core@7.5.0
+2026-10-09T15:05:08.3731220Z [0m[32mInitialize[0m defu@6.1.7
+2026-10-09T15:05:08.3731883Z [0m[32mInitialize[0m @radix-ui/react-dialog@1.1.15
+2026-10-09T15:05:08.3732609Z [0m[32mInitialize[0m @radix-ui/react-id@1.1.1
+2026-10-09T15:05:08.3733337Z [0m[32mInitialize[0m @radix-ui/react-primitive@2.1.3
+2026-10-09T15:05:08.3734115Z [0m[32mInitialize[0m @radix-ui/react-compose-refs@1.1.2
+2026-10-09T15:05:08.3735266Z [0m[32mInitialize[0m @babel/plugin-transform-react-jsx-source@7.29.7
+2026-10-09T15:05:08.3736314Z [0m[32mInitialize[0m @babel/plugin-transform-react-jsx-self@7.29.7
+2026-10-09T15:05:08.3737163Z [0m[32mInitialize[0m react-refresh@0.17.0
+2026-10-09T15:05:08.3737888Z [0m[32mInitialize[0m @rolldown/pluginutils@1.0.0-beta.27
+2026-10-09T15:05:08.3738714Z [0m[32mInitialize[0m lightningcss-linux-x64-gnu@1.32.0
+2026-10-09T15:05:08.3739424Z [0m[32mInitialize[0m detect-libc@2.1.2
+2026-10-09T15:05:08.3740147Z [0m[32mInitialize[0m lightningcss-linux-x64-musl@1.32.0
+2026-10-09T15:05:08.3740846Z [0m[32mInitialize[0m merge2@1.4.1
+2026-10-09T15:05:08.3741447Z [0m[32mInitialize[0m glob-parent@5.1.2
+2026-10-09T15:05:08.3770456Z [0m[32mInitialize[0m @nodelib/fs.walk@1.2.8
+2026-10-09T15:05:08.3771238Z [0m[32mInitialize[0m micromatch@4.0.8
+2026-10-09T15:05:08.3771924Z [0m[32mInitialize[0m @nodelib/fs.stat@2.0.5
+2026-10-09T15:05:08.3772903Z [0m[32mInitialize[0m @rollup/pluginutils@5.3.0
+2026-10-09T15:05:08.3773612Z [0m[32mInitialize[0m load-tsconfig@0.2.5
+2026-10-09T15:05:08.3774244Z [0m[32mInitialize[0m unplugin@2.3.11
+2026-10-09T15:05:08.3805228Z [0m[32mInitialize[0m hermes-estree@0.25.1
+2026-10-09T15:05:08.3805985Z [0m[32mInitialize[0m @babel/types@7.29.7
+2026-10-09T15:05:08.3806645Z [0m[32mInitialize[0m @babel/helpers@7.29.7
+2026-10-09T15:05:08.3807294Z [0m[32mInitialize[0m semver@6.3.1
+2026-10-09T15:05:08.3808162Z [0m[32mInitialize[0m @jridgewell/remapping@2.3.5
+2026-10-09T15:05:08.3808905Z [0m[32mInitialize[0m gensync@1.0.0-beta.2
+2026-10-09T15:05:08.3809523Z [0m[32mInitialize[0m json5@2.2.3
+2026-10-09T15:05:08.3810154Z [0m[32mInitialize[0m @babel/template@7.29.7
+2026-10-09T15:05:08.3810841Z [0m[32mInitialize[0m convert-source-map@2.0.0
+2026-10-09T15:05:08.3811534Z [0m[32mInitialize[0m @babel/traverse@7.29.7
+2026-10-09T15:05:08.3812333Z [0m[32mInitialize[0m @babel/helper-compilation-targets@7.29.7
+2026-10-09T15:05:08.3813355Z [0m[32mInitialize[0m @babel/helper-module-transforms@7.29.7
+2026-10-09T15:05:08.3814149Z [0m[32mInitialize[0m @babel/code-frame@7.29.7
+2026-10-09T15:05:08.3815227Z [0m[32mInitialize[0m json-stable-stringify-without-jsonify@1.0.1
+2026-10-09T15:05:08.3816038Z [0m[32mInitialize[0m find-up@5.0.0
+2026-10-09T15:05:08.3816676Z [0m[32mInitialize[0m @eslint/config-helpers@0.6.0
+2026-10-09T15:05:08.3817443Z [0m[32mInitialize[0m @eslint-community/regexpp@4.12.2
+2026-10-09T15:05:08.3818142Z [0m[32mInitialize[0m ajv@6.15.0
+2026-10-09T15:05:08.3818722Z [0m[32mInitialize[0m eslint-scope@9.1.2
+2026-10-09T15:05:08.3819319Z [0m[32mInitialize[0m espree@11.2.0
+2026-10-09T15:05:08.3819937Z [0m[32mInitialize[0m @humanfs/node@0.16.8
+2026-10-09T15:05:08.3820606Z [0m[32mInitialize[0m eslint-visitor-keys@5.0.1
+2026-10-09T15:05:08.3821349Z [0m[32mInitialize[0m @humanwhocodes/retry@0.4.3
+2026-10-09T15:05:08.3822029Z [0m[32mInitialize[0m ignore@5.3.2
+2026-10-09T15:05:08.3822614Z [0m[32mInitialize[0m is-glob@4.0.3
+2026-10-09T15:05:08.3823228Z [0m[32mInitialize[0m @types/estree@1.0.8
+2026-10-09T15:05:08.3823875Z [0m[32mInitialize[0m file-entry-cache@8.0.0
+2026-10-09T15:05:08.3824557Z [0m[32mInitialize[0m imurmurhash@0.1.4
+2026-10-09T15:05:08.3838371Z [0m[32mInitialize[0m optionator@0.9.4
+2026-10-09T15:05:08.3839006Z [0m[32mInitialize[0m glob-parent@6.0.2
+2026-10-09T15:05:08.3839674Z [0m[32mInitialize[0m @eslint/plugin-kit@0.7.1
+2026-10-09T15:05:08.3840346Z [0m[32mInitialize[0m esquery@1.7.0
+2026-10-09T15:05:08.3841300Z [0m[32mInitialize[0m @eslint-community/eslint-utils@4.9.1
+2026-10-09T15:05:08.3842784Z [0m[32mInitialize[0m @humanwhocodes/module-importer@1.0.1
+2026-10-09T15:05:08.3843518Z [0m[32mInitialize[0m @eslint/core@1.2.1
+2026-10-09T15:05:08.3844063Z [0m[32mInitialize[0m esutils@2.0.3
+2026-10-09T15:05:08.3844544Z [0m[32mInitialize[0m natural-compare@1.4.0
+2026-10-09T15:05:08.3845464Z [0m[32mInitialize[0m @eslint/config-array@0.23.5
+2026-10-09T15:05:08.3846147Z [0m[32mInitialize[0m minimatch@10.2.5
+2026-10-09T15:05:08.3846737Z [0m[32mInitialize[0m escape-string-regexp@4.0.0
+2026-10-09T15:05:08.3847118Z [0m[32mInitialize[0m cross-spawn@7.0.6
+2026-10-09T15:05:08.3847501Z [0m[32mInitialize[0m @jridgewell/trace-mapping@0.3.31
+2026-10-09T15:05:08.3848028Z [0m[32mInitialize[0m jsesc@3.1.0
+2026-10-09T15:05:08.3848386Z [0m[32mInitialize[0m @jridgewell/gen-mapping@0.3.13
+2026-10-09T15:05:08.3848782Z [0m[32mInitialize[0m eslint-visitor-keys@4.2.1
+2026-10-09T15:05:08.3849128Z [0m[32mInitialize[0m acorn@8.16.0
+2026-10-09T15:05:08.3849447Z [0m[32mInitialize[0m acorn-jsx@5.3.2
+2026-10-09T15:05:08.3849771Z [0m[32mInitialize[0m resolve-from@5.0.0
+2026-10-09T15:05:08.3850123Z [0m[32mInitialize[0m get-package-type@0.1.0
+2026-10-09T15:05:08.3850471Z [0m[32mInitialize[0m camelcase@5.3.1
+2026-10-09T15:05:08.3850791Z [0m[32mInitialize[0m js-yaml@3.14.2
+2026-10-09T15:05:08.3851297Z [0m[32mInitialize[0m find-up@4.1.0
+2026-10-09T15:05:08.3851647Z [0m[32mInitialize[0m istanbul-lib-coverage@3.2.2
+2026-10-09T15:05:08.3852023Z [0m[32mInitialize[0m @istanbuljs/schema@0.1.6
+2026-10-09T15:05:08.3852364Z [0m[32mInitialize[0m glob@10.5.0
+2026-10-09T15:05:08.3852689Z [0m[32mInitialize[0m @emotion/memoize@0.9.0
+2026-10-09T15:05:08.3853040Z [0m[32mInitialize[0m @emotion/unitless@0.10.0
+2026-10-09T15:05:08.3853384Z [0m[32mInitialize[0m @emotion/hash@0.9.2
+2026-10-09T15:05:08.3853853Z [0m[32mInitialize[0m @zag-js/drawer@1.43.3
+2026-10-09T15:05:08.3854223Z [0m[32mInitialize[0m @zag-js/date-picker@1.43.3
+2026-10-09T15:05:08.3854597Z [0m[32mInitialize[0m @zag-js/scroll-area@1.43.3
+2026-10-09T15:05:08.3855143Z [0m[32mInitialize[0m @zag-js/async-list@1.43.3
+2026-10-09T15:05:08.3855639Z [0m[32mInitialize[0m @zag-js/combobox@1.43.3
+2026-10-09T15:05:08.3856025Z [0m[32mInitialize[0m @zag-js/tooltip@1.43.3
+2026-10-09T15:05:08.3856373Z [0m[32mInitialize[0m @zag-js/core@1.43.3
+2026-10-09T15:05:08.3856747Z [0m[32mInitialize[0m @zag-js/focus-visible@1.43.3
+2026-10-09T15:05:08.3857262Z [0m[32mInitialize[0m @zag-js/auto-resize@1.43.3
+2026-10-09T15:05:08.3857630Z [0m[32mInitialize[0m @zag-js/collection@1.43.3
+2026-10-09T15:05:08.3857999Z [0m[32mInitialize[0m @zag-js/pin-input@1.43.3
+2026-10-09T15:05:08.3858361Z [0m[32mInitialize[0m @zag-js/carousel@1.43.3
+2026-10-09T15:05:08.3858728Z [0m[32mInitialize[0m @zag-js/tags-input@1.43.3
+2026-10-09T15:05:08.3859084Z [0m[32mInitialize[0m @zag-js/toast@1.43.3
+2026-10-09T15:05:08.3859434Z [0m[32mInitialize[0m @zag-js/dom-query@1.43.3
+2026-10-09T15:05:08.3859795Z [0m[32mInitialize[0m @zag-js/file-utils@1.43.3
+2026-10-09T15:05:08.3860187Z [0m[32mInitialize[0m @zag-js/json-tree-utils@1.43.3
+2026-10-09T15:05:08.3860586Z [0m[32mInitialize[0m @zag-js/cascade-select@1.43.3
+2026-10-09T15:05:08.3860978Z [0m[32mInitialize[0m @zag-js/rating-group@1.43.3
+2026-10-09T15:05:08.3861352Z [0m[32mInitialize[0m @zag-js/tree-view@1.43.3
+2026-10-09T15:05:08.3861726Z [0m[32mInitialize[0m @zag-js/date-utils@1.43.3
+2026-10-09T15:05:08.3862098Z [0m[32mInitialize[0m @zag-js/toggle-group@1.43.3
+2026-10-09T15:05:08.3862460Z [0m[32mInitialize[0m @zag-js/tour@1.43.3
+2026-10-09T15:05:08.3862798Z [0m[32mInitialize[0m @zag-js/react@1.43.3
+2026-10-09T15:05:08.3863145Z [0m[32mInitialize[0m @zag-js/select@1.43.3
+2026-10-09T15:05:08.3863481Z [0m[32mInitialize[0m @zag-js/timer@1.43.3
+2026-10-09T15:05:08.3863845Z [0m[32mInitialize[0m @zag-js/color-picker@1.43.3
+2026-10-09T15:05:08.3864229Z [0m[32mInitialize[0m @zag-js/collapsible@1.43.3
+2026-10-09T15:05:08.3864632Z [0m[32mInitialize[0m @zag-js/password-input@1.43.3
+2026-10-09T15:05:08.3865151Z [0m[32mInitialize[0m @zag-js/clipboard@1.43.3
+2026-10-09T15:05:08.3865520Z [0m[32mInitialize[0m @zag-js/radio-group@1.43.3
+2026-10-09T15:05:08.3865904Z [0m[32mInitialize[0m @zag-js/navigation-menu@1.43.3
+2026-10-09T15:05:08.3866284Z [0m[32mInitialize[0m @zag-js/focus-trap@1.43.3
+2026-10-09T15:05:08.3866654Z [0m[32mInitialize[0m @zag-js/color-utils@1.43.3
+2026-10-09T15:05:08.3867014Z [0m[32mInitialize[0m @zag-js/progress@1.43.3
+2026-10-09T15:05:08.3867368Z [0m[32mInitialize[0m @zag-js/switch@1.43.3
+2026-10-09T15:05:08.3867713Z [0m[32mInitialize[0m @zag-js/menu@1.43.3
+2026-10-09T15:05:08.3868052Z [0m[32mInitialize[0m @zag-js/types@1.43.3
+2026-10-09T15:05:08.3868386Z [0m[32mInitialize[0m @zag-js/avatar@1.43.3
+2026-10-09T15:05:08.3868736Z [0m[32mInitialize[0m @zag-js/hover-card@1.43.3
+2026-10-09T15:05:08.3869096Z [0m[32mInitialize[0m @zag-js/toggle@1.43.3
+2026-10-09T15:05:08.3869461Z [0m[32mInitialize[0m @zag-js/floating-panel@1.43.3
+2026-10-09T15:05:08.3869821Z [0m[32mInitialize[0m @zag-js/steps@1.43.3
+2026-10-09T15:05:08.3870180Z [0m[32mInitialize[0m @zag-js/angle-slider@1.43.3
+2026-10-09T15:05:08.3870545Z [0m[32mInitialize[0m @zag-js/tabs@1.43.3
+2026-10-09T15:05:08.3870891Z [0m[32mInitialize[0m @zag-js/splitter@1.43.3
+2026-10-09T15:05:08.3871436Z [0m[32mInitialize[0m @zag-js/pagination@1.43.3
+2026-10-09T15:05:08.3871796Z [0m[32mInitialize[0m @zag-js/anatomy@1.43.3
+2026-10-09T15:05:08.3872148Z [0m[32mInitialize[0m @zag-js/slider@1.43.3
+2026-10-09T15:05:08.3872522Z [0m[32mInitialize[0m @internationalized/date@3.12.3
+2026-10-09T15:05:08.3872913Z [0m[32mInitialize[0m @zag-js/number-input@1.43.3
+2026-10-09T15:05:08.3873291Z [0m[32mInitialize[0m @zag-js/date-input@1.43.3
+2026-10-09T15:05:08.3873683Z [0m[32mInitialize[0m @zag-js/highlight-word@1.43.3
+2026-10-09T15:05:08.3874171Z [0m[32mInitialize[0m @zag-js/hotkeys@1.43.3
+2026-10-09T15:05:08.3874535Z [0m[32mInitialize[0m @zag-js/utils@1.43.3
+2026-10-09T15:05:08.3875170Z [0m[32mInitialize[0m @zag-js/i18n-utils@1.43.3
+2026-10-09T15:05:08.3875571Z [0m[32mInitialize[0m @zag-js/listbox@1.43.3
+2026-10-09T15:05:08.3875934Z [0m[32mInitialize[0m @zag-js/presence@1.43.3
+2026-10-09T15:05:08.3876294Z [0m[32mInitialize[0m @zag-js/editable@1.43.3
+2026-10-09T15:05:08.3876654Z [0m[32mInitialize[0m @zag-js/qr-code@1.43.3
+2026-10-09T15:05:08.3877020Z [0m[32mInitialize[0m @zag-js/file-upload@1.43.3
+2026-10-09T15:05:08.3877375Z [0m[32mInitialize[0m @zag-js/toc@1.43.3
+2026-10-09T15:05:08.3877714Z [0m[32mInitialize[0m @zag-js/checkbox@1.43.3
+2026-10-09T15:05:08.3878064Z [0m[32mInitialize[0m @zag-js/popover@1.43.3
+2026-10-09T15:05:08.3878424Z [0m[32mInitialize[0m @zag-js/accordion@1.43.3
+2026-10-09T15:05:08.3878773Z [0m[32mInitialize[0m @zag-js/marquee@1.43.3
+2026-10-09T15:05:08.3879155Z [0m[32mInitialize[0m @zag-js/signature-pad@1.43.3
+2026-10-09T15:05:08.3879526Z [0m[32mInitialize[0m @zag-js/dialog@1.43.3
+2026-10-09T15:05:08.3879896Z [0m[32mInitialize[0m @zag-js/image-cropper@1.43.3
+2026-10-09T15:05:08.3880251Z [0m[32mInitialize[0m tippy.js@6.3.7
+2026-10-09T15:05:08.3880562Z [0m[32mInitialize[0m mitt@3.0.1
+2026-10-09T15:05:08.3880875Z [0m[32mInitialize[0m proxy-agent@6.5.0
+2026-10-09T15:05:08.3881203Z [0m[32mInitialize[0m progress@2.0.3
+2026-10-09T15:05:08.3881533Z [0m[32mInitialize[0m extract-zip@2.0.1
+2026-10-09T15:05:08.3881849Z [0m[32mInitialize[0m tar-fs@3.1.2
+2026-10-09T15:05:08.3882150Z [0m[32mInitialize[0m yargs@17.7.2
+2026-10-09T15:05:08.3882445Z [0m[32mInitialize[0m ms@2.1.3
+2026-10-09T15:05:08.3882748Z [0m[32mInitialize[0m cssstyle@4.6.0
+2026-10-09T15:05:08.3883063Z [0m[32mInitialize[0m symbol-tree@3.2.4
+2026-10-09T15:05:08.3883410Z [0m[32mInitialize[0m https-proxy-agent@7.0.6
+2026-10-09T15:05:08.3919944Z [0m[32mInitialize[0m data-urls@5.0.0
+2026-10-09T15:05:08.3920708Z [0m[32mInitialize[0m decimal.js@10.6.0
+2026-10-09T15:05:08.3921350Z [0m[32mInitialize[0m nwsapi@2.2.23
+2026-10-09T15:05:08.3921972Z [0m[32mInitialize[0m whatwg-url@14.2.0
+2026-10-09T15:05:08.3922639Z [0m[32mInitialize[0m xml-name-validator@5.0.0
+2026-10-09T15:05:08.3923379Z [0m[32mInitialize[0m http-proxy-agent@7.0.2
+2026-10-09T15:05:08.3924064Z [0m[32mInitialize[0m rrweb-cssom@0.8.0
+2026-10-09T15:05:08.3924708Z [0m[32mInitialize[0m tough-cookie@5.1.2
+2026-10-09T15:05:08.3925640Z [0m[32mInitialize[0m w3c-xmlserializer@5.0.0
+2026-10-09T15:05:08.3926376Z [0m[32mInitialize[0m webidl-conversions@7.0.0
+2026-10-09T15:05:08.3927135Z [0m[32mInitialize[0m html-encoding-sniffer@4.0.0
+2026-10-09T15:05:08.3927838Z [0m[32mInitialize[0m parse5@7.3.0
+2026-10-09T15:05:08.3928429Z [0m[32mInitialize[0m saxes@6.0.0
+2026-10-09T15:05:08.3929170Z [0m[32mInitialize[0m is-potential-custom-element-name@1.0.1
+2026-10-09T15:05:08.3929973Z [0m[32mInitialize[0m whatwg-mimetype@4.0.0
+2026-10-09T15:05:08.3930638Z [0m[32mInitialize[0m whatwg-encoding@3.1.1
+2026-10-09T15:05:08.3931411Z [0m[32mInitialize[0m @tailwindcss/oxide-linux-x64-musl@4.3.0
+2026-10-09T15:05:08.3932298Z [0m[32mInitialize[0m @tailwindcss/oxide-linux-x64-gnu@4.3.0
+2026-10-09T15:05:08.3933064Z [0m[32mInitialize[0m enhanced-resolve@5.22.0
+2026-10-09T15:05:08.3933726Z [0m[32mInitialize[0m magic-string@0.30.21
+2026-10-09T15:05:08.3934559Z [0m[32mInitialize[0m jiti@2.7.0
+2026-10-09T15:05:08.3965534Z [0m[32mInitialize[0m @esbuild/linux-x64@0.27.7
+2026-10-09T15:05:08.3966348Z [0m[32mInitialize[0m @rollup/rollup-linux-x64-musl@4.60.4
+2026-10-09T15:05:08.3967176Z [0m[32mInitialize[0m @rollup/rollup-linux-x64-gnu@4.60.4
+2026-10-09T15:05:08.3967906Z [0m[32mInitialize[0m cookie@1.1.1
+2026-10-09T15:05:08.3968553Z [0m[32mInitialize[0m set-cookie-parser@2.7.2
+2026-10-09T15:05:08.3969188Z [0m[32mInitialize[0m boolbase@1.0.0
+2026-10-09T15:05:08.3969970Z [0m[32mInitialize[0m domhandler@5.0.3
+2026-10-09T15:05:08.3970611Z [0m[32mInitialize[0m nth-check@2.1.1
+2026-10-09T15:05:08.3971201Z [0m[32mInitialize[0m css-what@6.2.2
+2026-10-09T15:05:08.3971782Z [0m[32mInitialize[0m domutils@3.2.2
+2026-10-09T15:05:08.3972407Z [0m[32mInitialize[0m domelementtype@2.3.0
+2026-10-09T15:05:08.3973025Z [0m[32mInitialize[0m entities@7.0.1
+2026-10-09T15:05:08.3973630Z [0m[32mInitialize[0m node-releases@2.0.46
+2026-10-09T15:05:08.3974346Z [0m[32mInitialize[0m update-browserslist-db@1.2.3
+2026-10-09T15:05:08.3975347Z [0m[32mInitialize[0m electron-to-chromium@1.5.362
+2026-10-09T15:05:08.3976146Z [0m[32mInitialize[0m baseline-browser-mapping@2.10.32
+2026-10-09T15:05:08.3976865Z [0m[32mInitialize[0m redux@5.0.1
+2026-10-09T15:05:08.3977476Z [0m[32mInitialize[0m redux-thunk@3.1.0
+2026-10-09T15:05:08.3978087Z [0m[32mInitialize[0m immer@11.1.8
+2026-10-09T15:05:08.3978742Z [0m[32mInitialize[0m @standard-schema/utils@0.3.0
+2026-10-09T15:05:08.3979488Z [0m[32mInitialize[0m @standard-schema/spec@1.1.0
+2026-10-09T15:05:08.3980158Z [0m[32mInitialize[0m d3-scale@4.0.2
+2026-10-09T15:05:08.3980733Z [0m[32mInitialize[0m d3-array@3.2.4
+2026-10-09T15:05:08.3981321Z [0m[32mInitialize[0m @types/d3-time@3.0.4
+2026-10-09T15:05:08.3981967Z [0m[32mInitialize[0m d3-interpolate@3.0.1
+2026-10-09T15:05:08.3982588Z [0m[32mInitialize[0m d3-ease@3.0.1
+2026-10-09T15:05:08.3983188Z [0m[32mInitialize[0m @types/d3-ease@3.0.2
+2026-10-09T15:05:08.3983846Z [0m[32mInitialize[0m @types/d3-array@3.2.2
+2026-10-09T15:05:08.3984465Z [0m[32mInitialize[0m d3-time@3.1.0
+2026-10-09T15:05:08.3985323Z [0m[32mInitialize[0m @types/d3-timer@3.0.2
+2026-10-09T15:05:08.3985973Z [0m[32mInitialize[0m d3-shape@3.2.0
+2026-10-09T15:05:08.3986564Z [0m[32mInitialize[0m d3-timer@3.0.1
+2026-10-09T15:05:08.3987187Z [0m[32mInitialize[0m @types/d3-scale@4.0.9
+2026-10-09T15:05:08.3987891Z [0m[32mInitialize[0m @types/d3-interpolate@3.0.4
+2026-10-09T15:05:08.3988577Z [0m[32mInitialize[0m @types/d3-shape@3.1.8
+2026-10-09T15:05:08.3989385Z [0m[32mInitialize[0m @rolldown/binding-linux-x64-musl@1.0.0-beta.53
+2026-10-09T15:05:08.3990331Z [0m[32mInitialize[0m @rolldown/binding-linux-x64-gnu@1.0.0-beta.53
+2026-10-09T15:05:08.3991219Z [0m[32mInitialize[0m @rolldown/pluginutils@1.0.0-beta.53
+2026-10-09T15:05:08.3991990Z [0m[32mInitialize[0m @oxc-project/types@0.101.0
+2026-10-09T15:05:08.3992703Z [0m[32mInitialize[0m @oxc-project/types@0.125.0
+2026-10-09T15:05:08.3993531Z [0m[32mInitialize[0m @oxc-parser/binding-linux-x64-musl@0.125.0
+2026-10-09T15:05:08.3994459Z [0m[32mInitialize[0m @oxc-parser/binding-linux-x64-gnu@0.125.0
+2026-10-09T15:05:08.4003752Z [0m[32mInitialize[0m loader-utils@1.2.3
+2026-10-09T15:05:08.4004418Z [0m[32mInitialize[0m @babel/types@7.8.3
+2026-10-09T15:05:08.4005403Z [0m[32mInitialize[0m string-hash@1.1.3
+2026-10-09T15:05:08.4006125Z [0m[32mInitialize[0m convert-source-map@1.7.0
+2026-10-09T15:05:08.4006793Z [0m[32mInitialize[0m stylis@3.5.4
+2026-10-09T15:05:08.4007414Z [0m[32mInitialize[0m stylis-rule-sheet@0.0.10
+2026-10-09T15:05:08.4008044Z [0m[32mInitialize[0m source-map@0.7.3
+2026-10-09T15:05:08.4008737Z [0m[32mInitialize[0m babel-plugin-syntax-jsx@6.18.0
+2026-10-09T15:05:08.4009532Z [0m[32mInitialize[0m @babel/helper-module-imports@7.29.7
+2026-10-09T15:05:08.4010219Z [0m[32mInitialize[0m is-what@4.1.16
+2026-10-09T15:05:08.4010939Z [0m[32mInitialize[0m babel-plugin-jsx-dom-expressions@0.40.7
+2026-10-09T15:05:08.4011959Z [0m[32mInitialize[0m @types/babel__template@7.4.4
+2026-10-09T15:05:08.4012669Z [0m[32mInitialize[0m @types/babel__traverse@7.28.0
+2026-10-09T15:05:08.4013320Z [0m[32mInitialize[0m void-elements@3.1.0
+2026-10-09T15:05:08.4013905Z [0m[32mInitialize[0m stylis@4.2.0
+2026-10-09T15:05:08.4014475Z [0m[32mInitialize[0m find-root@1.1.0
+2026-10-09T15:05:08.4015315Z [0m[32mInitialize[0m source-map@0.5.7
+2026-10-09T15:05:08.4015962Z [0m[32mInitialize[0m babel-plugin-macros@3.1.0
+2026-10-09T15:05:08.4016775Z [0m[32mInitialize[0m @emotion/sheet@1.4.0
+2026-10-09T15:05:08.4017399Z [0m[32mInitialize[0m react-is@16.13.1
+2026-10-09T15:05:08.4017979Z [0m[32mInitialize[0m orderedmap@2.1.1
+2026-10-09T15:05:08.4018541Z [0m[32mInitialize[0m crelt@1.0.6
+2026-10-09T15:05:08.4019107Z [0m[32mInitialize[0m rope-sequence@1.3.4
+2026-10-09T15:05:08.4019701Z [0m[32mInitialize[0m w3c-keyname@2.2.8
+2026-10-09T15:05:08.4020401Z [0m[32mInitialize[0m @remirror/core-constants@3.0.0
+2026-10-09T15:05:08.4021126Z [0m[32mInitialize[0m @types/markdown-it@14.1.2
+2026-10-09T15:05:08.4021762Z [0m[32mInitialize[0m markdown-it@14.2.0
+2026-10-09T15:05:08.4022422Z [0m[32mInitialize[0m @babel/parser@8.0.0-rc.4
+2026-10-09T15:05:08.4023261Z [0m[32mInitialize[0m @babel/helper-validator-identifier@8.0.0-rc.5
+2026-10-09T15:05:08.4024074Z [0m[32mInitialize[0m ast-kit@3.0.0-beta.1
+2026-10-09T15:05:08.4024711Z [0m[32mInitialize[0m dts-resolver@3.0.0
+2026-10-09T15:05:08.4026223Z [0m[32mInitialize[0m get-tsconfig@5.0.0-beta.5
+2026-10-09T15:05:08.4026949Z [0m[32mInitialize[0m @babel/generator@8.0.0-rc.5
+2026-10-09T15:05:08.4027620Z [0m[32mInitialize[0m quansync@1.0.0
+2026-10-09T15:05:08.4028203Z [0m[32mInitialize[0m @quansync/fs@1.0.0
+2026-10-09T15:05:08.4028851Z [0m[32mInitialize[0m @radix-ui/react-slot@1.2.3
+2026-10-09T15:05:08.4029564Z [0m[32mInitialize[0m react-remove-scroll@2.7.2
+2026-10-09T15:05:08.4030302Z [0m[32mInitialize[0m @radix-ui/react-presence@1.1.5
+2026-10-09T15:05:08.4031084Z [0m[32mInitialize[0m @radix-ui/react-focus-scope@1.1.7
+2026-10-09T15:05:08.4031819Z [0m[32mInitialize[0m @radix-ui/primitive@1.1.3
+2026-10-09T15:05:08.4032640Z [0m[32mInitialize[0m @radix-ui/react-use-controllable-state@1.2.2
+2026-10-09T15:05:08.4033496Z [0m[32mInitialize[0m @radix-ui/react-portal@1.1.9
+2026-10-09T15:05:08.4034325Z [0m[32mInitialize[0m @radix-ui/react-dismissable-layer@1.1.11
+2026-10-09T15:05:08.4035436Z [0m[32mInitialize[0m @radix-ui/react-context@1.1.2
+2026-10-09T15:05:08.4036148Z [0m[32mInitialize[0m aria-hidden@1.2.6
+2026-10-09T15:05:08.4036855Z [0m[32mInitialize[0m @radix-ui/react-focus-guards@1.1.3
+2026-10-09T15:05:08.4037698Z [0m[32mInitialize[0m @radix-ui/react-use-layout-effect@1.1.1
+2026-10-09T15:05:08.4038554Z [0m[32mInitialize[0m @babel/helper-plugin-utils@7.29.7
+2026-10-09T15:05:08.4039282Z [0m[32mInitialize[0m @nodelib/fs.scandir@2.1.5
+2026-10-09T15:05:08.4039903Z [0m[32mInitialize[0m fastq@1.20.1
+2026-10-09T15:05:08.4040477Z [0m[32mInitialize[0m picomatch@2.3.2
+2026-10-09T15:05:08.4041052Z [0m[32mInitialize[0m braces@3.0.3
+2026-10-09T15:05:08.4041646Z [0m[32mInitialize[0m estree-walker@2.0.2
+2026-10-09T15:05:08.4042350Z [0m[32mInitialize[0m webpack-virtual-modules@0.6.2
+2026-10-09T15:05:08.4043174Z [0m[32mInitialize[0m @babel/helper-validator-identifier@7.29.7
+2026-10-09T15:05:08.4044048Z [0m[32mInitialize[0m @babel/helper-string-parser@7.29.7
+2026-10-09T15:05:08.4044814Z [0m[32mInitialize[0m @babel/helper-globals@7.29.7
+2026-10-09T15:05:08.4045938Z [0m[32mInitialize[0m @babel/compat-data@7.29.7
+2026-10-09T15:05:08.4046724Z [0m[32mInitialize[0m @babel/helper-validator-option@7.29.7
+2026-10-09T15:05:08.4047472Z [0m[32mInitialize[0m lru-cache@5.1.1
+2026-10-09T15:05:08.4048062Z [0m[32mInitialize[0m js-tokens@4.0.0
+2026-10-09T15:05:08.4048657Z [0m[32mInitialize[0m path-exists@4.0.0
+2026-10-09T15:05:08.4049295Z [0m[32mInitialize[0m locate-path@6.0.0
+2026-10-09T15:05:08.4050229Z [0m[32mInitialize[0m fast-json-stable-stringify@2.1.0
+2026-10-09T15:05:08.4050931Z [0m[32mInitialize[0m uri-js@4.4.1
+2026-10-09T15:05:08.4051582Z [0m[32mInitialize[0m json-schema-traverse@0.4.1
+2026-10-09T15:05:08.4052234Z [0m[32mInitialize[0m esrecurse@4.3.0
+2026-10-09T15:05:08.4052826Z [0m[32mInitialize[0m estraverse@5.3.0
+2026-10-09T15:05:08.4053483Z [0m[32mInitialize[0m @types/esrecurse@4.3.1
+2026-10-09T15:05:08.4054163Z [0m[32mInitialize[0m @humanfs/types@0.15.0
+2026-10-09T15:05:08.4054807Z [0m[32mInitialize[0m @humanfs/core@0.19.2
+2026-10-09T15:05:08.4055872Z [0m[32mInitialize[0m is-extglob@2.1.1
+2026-10-09T15:05:08.4056615Z [0m[32mInitialize[0m flat-cache@4.0.1
+2026-10-09T15:05:08.4057220Z [0m[32mInitialize[0m levn@0.4.1
+2026-10-09T15:05:08.4057788Z [0m[32mInitialize[0m deep-is@0.1.4
+2026-10-09T15:05:08.4058392Z [0m[32mInitialize[0m word-wrap@1.2.5
+2026-10-09T15:05:08.4059050Z [0m[32mInitialize[0m fast-levenshtein@2.0.6
+2026-10-09T15:05:08.4059694Z [0m[32mInitialize[0m type-check@0.4.0
+2026-10-09T15:05:08.4060296Z [0m[32mInitialize[0m prelude-ls@1.2.1
+2026-10-09T15:05:08.4060953Z [0m[32mInitialize[0m eslint-visitor-keys@3.4.3
+2026-10-09T15:05:08.4061683Z [0m[32mInitialize[0m @types/json-schema@7.0.15
+2026-10-09T15:05:08.4062379Z [0m[32mInitialize[0m @eslint/object-schema@3.0.5
+2026-10-09T15:05:08.4063071Z [0m[32mInitialize[0m brace-expansion@5.0.6
+2026-10-09T15:05:08.4063704Z [0m[32mInitialize[0m which@2.0.2
+2026-10-09T15:05:08.4064285Z [0m[32mInitialize[0m path-key@3.1.1
+2026-10-09T15:05:08.4065132Z [0m[32mInitialize[0m shebang-command@2.0.0
+2026-10-09T15:05:08.4065885Z [0m[32mInitialize[0m @jridgewell/sourcemap-codec@1.5.5
+2026-10-09T15:05:08.4066664Z [0m[32mInitialize[0m @jridgewell/resolve-uri@3.1.2
+2026-10-09T15:05:08.4067311Z [0m[32mInitialize[0m argparse@1.0.10
+2026-10-09T15:05:08.4067884Z [0m[32mInitialize[0m esprima@4.0.1
+2026-10-09T15:05:08.4068449Z [0m[32mInitialize[0m locate-path@5.0.0
+2026-10-09T15:05:08.4069047Z [0m[32mInitialize[0m jackspeak@3.4.3
+2026-10-09T15:05:08.4069623Z [0m[32mInitialize[0m path-scurry@1.11.1
+2026-10-09T15:05:08.4070284Z [0m[32mInitialize[0m package-json-from-dist@1.0.1
+2026-10-09T15:05:08.4070921Z [0m[32mInitialize[0m minipass@7.1.3
+2026-10-09T15:05:08.4071521Z [0m[32mInitialize[0m foreground-child@3.3.1
+2026-10-09T15:05:08.4072125Z [0m[32mInitialize[0m minimatch@9.0.9
+2026-10-09T15:05:08.4072751Z [0m[32mInitialize[0m @zag-js/remove-scroll@1.43.3
+2026-10-09T15:05:08.4073424Z [0m[32mInitialize[0m @zag-js/aria-hidden@1.43.3
+2026-10-09T15:05:08.4074102Z [0m[32mInitialize[0m @zag-js/dismissable@1.43.3
+2026-10-09T15:05:08.4074755Z [0m[32mInitialize[0m @zag-js/popper@1.43.3
+2026-10-09T15:05:08.4075646Z [0m[32mInitialize[0m @zag-js/live-region@1.43.3
+2026-10-09T15:05:08.4076344Z [0m[32mInitialize[0m @zag-js/scroll-snap@1.43.3
+2026-10-09T15:05:08.4077078Z [0m[32mInitialize[0m @zag-js/interact-outside@1.43.3
+2026-10-09T15:05:08.4077800Z [0m[32mInitialize[0m @zag-js/rect-utils@1.43.3
+2026-10-09T15:05:08.4078474Z [0m[32mInitialize[0m @zag-js/store@1.43.3
+2026-10-09T15:05:08.4079104Z [0m[32mInitialize[0m @swc/helpers@0.5.23
+2026-10-09T15:05:08.4079808Z [0m[32mInitialize[0m @internationalized/number@3.6.7
+2026-10-09T15:05:08.4080504Z [0m[32mInitialize[0m proxy-memoize@3.0.1
+2026-10-09T15:05:08.4081100Z [0m[32mInitialize[0m uqr@0.1.3
+2026-10-09T15:05:08.4081700Z [0m[32mInitialize[0m perfect-freehand@1.2.3
+2026-10-09T15:05:08.4082365Z [0m[32mInitialize[0m @popperjs/core@2.11.8
+2026-10-09T15:05:08.4083030Z [0m[32mInitialize[0m proxy-from-env@1.1.0
+2026-10-09T15:05:08.4083656Z [0m[32mInitialize[0m agent-base@7.1.4
+2026-10-09T15:05:08.4084287Z [0m[32mInitialize[0m pac-proxy-agent@7.2.0
+2026-10-09T15:05:08.4085275Z [0m[32mInitialize[0m lru-cache@7.18.3
+2026-10-09T15:05:08.4085979Z [0m[32mInitialize[0m socks-proxy-agent@8.0.5
+2026-10-09T15:05:08.4086644Z [0m[32mInitialize[0m get-stream@5.2.0
+2026-10-09T15:05:08.4087232Z [0m[32mInitialize[0m yauzl@2.10.0
+2026-10-09T15:05:08.4088042Z [0m[32mInitialize[0m @types/yauzl@2.10.3
+2026-10-09T15:05:08.4088672Z [0m[32mInitialize[0m tar-stream@3.2.0
+2026-10-09T15:05:08.4089276Z [0m[32mInitialize[0m bare-fs@4.7.1
+2026-10-09T15:05:08.4089855Z [0m[32mInitialize[0m pump@3.0.4
+2026-10-09T15:05:08.4090424Z [0m[32mInitialize[0m bare-path@3.0.0
+2026-10-09T15:05:08.4091002Z [0m[32mInitialize[0m y18n@5.0.8
+2026-10-09T15:05:08.4091557Z [0m[32mInitialize[0m escalade@3.2.0
+2026-10-09T15:05:08.4092340Z [0m[32mInitialize[0m get-caller-file@2.0.5
+2026-10-09T15:05:08.4092988Z [0m[32mInitialize[0m cliui@8.0.1
+2026-10-09T15:05:08.4093593Z [0m[32mInitialize[0m string-width@4.2.3
+2026-10-09T15:05:08.4094235Z [0m[32mInitialize[0m require-directory@2.1.1
+2026-10-09T15:05:08.4095200Z [0m[32mInitialize[0m yargs-parser@21.1.1
+2026-10-09T15:05:08.4095902Z [0m[32mInitialize[0m @asamuzakjp/css-color@3.2.0
+2026-10-09T15:05:08.4096566Z [0m[32mInitialize[0m tr46@5.1.1
+2026-10-09T15:05:08.4097142Z [0m[32mInitialize[0m tldts@6.1.86
+2026-10-09T15:05:08.4097710Z [0m[32mInitialize[0m entities@6.0.1
+2026-10-09T15:05:08.4098293Z [0m[32mInitialize[0m xmlchars@2.2.0
+2026-10-09T15:05:08.4098907Z [0m[32mInitialize[0m iconv-lite@0.6.3
+2026-10-09T15:05:08.4099499Z [0m[32mInitialize[0m tapable@2.3.3
+2026-10-09T15:05:08.4100075Z [0m[32mInitialize[0m graceful-fs@4.2.11
+2026-10-09T15:05:08.4100703Z [0m[32mInitialize[0m dom-serializer@2.0.0
+2026-10-09T15:05:08.4101343Z [0m[32mInitialize[0m d3-time-format@4.1.0
+2026-10-09T15:05:08.4101961Z [0m[32mInitialize[0m d3-format@3.1.2
+2026-10-09T15:05:08.4102554Z [0m[32mInitialize[0m internmap@2.0.3
+2026-10-09T15:05:08.4103137Z [0m[32mInitialize[0m d3-color@3.1.0
+2026-10-09T15:05:08.4103708Z [0m[32mInitialize[0m d3-path@3.1.0
+2026-10-09T15:05:08.4104316Z [0m[32mInitialize[0m @types/d3-color@3.1.3
+2026-10-09T15:05:08.4105189Z [0m[32mInitialize[0m @types/d3-path@3.1.1
+2026-10-09T15:05:08.4105852Z [0m[32mInitialize[0m json5@1.0.2
+2026-10-09T15:05:08.4106532Z [0m[32mInitialize[0m emojis-list@2.1.0
+2026-10-09T15:05:08.4107178Z [0m[32mInitialize[0m big.js@5.2.2
+2026-10-09T15:05:08.4107754Z [0m[32mInitialize[0m lodash@4.18.1
+2026-10-09T15:05:08.4108393Z [0m[32mInitialize[0m to-fast-properties@2.0.0
+2026-10-09T15:05:08.4108989Z [0m[32mInitialize[0m safe-buffer@5.1.2
+2026-10-09T15:05:08.4109629Z [0m[32mInitialize[0m @babel/helper-module-imports@7.18.6
+2026-10-09T15:05:08.4110276Z [0m[32mInitialize[0m html-entities@2.3.3
+2026-10-09T15:05:08.4110893Z [0m[32mInitialize[0m @babel/plugin-syntax-jsx@7.29.7
+2026-10-09T15:05:08.4111491Z [0m[32mInitialize[0m cosmiconfig@7.1.0
+2026-10-09T15:05:08.4112058Z [0m[32mInitialize[0m resolve@1.22.12
+2026-10-09T15:05:08.4112579Z [0m[32mInitialize[0m @types/mdurl@2.0.0
+2026-10-09T15:05:08.4113138Z [0m[32mInitialize[0m @types/linkify-it@5.0.0
+2026-10-09T15:05:08.4113718Z [0m[32mInitialize[0m argparse@2.0.1
+2026-10-09T15:05:08.4114227Z [0m[32mInitialize[0m uc.micro@2.1.0
+2026-10-09T15:05:08.4114764Z [0m[32mInitialize[0m punycode.js@2.3.1
+2026-10-09T15:05:08.4115532Z [0m[32mInitialize[0m mdurl@2.0.0
+2026-10-09T15:05:08.4116032Z [0m[32mInitialize[0m linkify-it@5.0.1
+2026-10-09T15:05:08.4116553Z [0m[32mInitialize[0m entities@4.5.0
+2026-10-09T15:05:08.4117120Z [0m[32mInitialize[0m @babel/types@8.0.0-rc.6
+2026-10-09T15:05:08.4117688Z [0m[32mInitialize[0m estree-walker@3.0.3
+2026-10-09T15:05:08.4118253Z [0m[32mInitialize[0m @babel/parser@8.0.0-rc.6
+2026-10-09T15:05:08.4118884Z [0m[32mInitialize[0m resolve-pkg-maps@1.0.0
+2026-10-09T15:05:08.4119455Z [0m[32mInitialize[0m @types/jsesc@2.5.1
+2026-10-09T15:05:08.4120030Z [0m[32mInitialize[0m use-callback-ref@1.3.3
+2026-10-09T15:05:08.4120586Z [0m[32mInitialize[0m use-sidecar@1.1.3
+2026-10-09T15:05:08.4121173Z [0m[32mInitialize[0m react-style-singleton@2.2.3
+2026-10-09T15:05:08.4121849Z [0m[32mInitialize[0m react-remove-scroll-bar@2.3.8
+2026-10-09T15:05:08.4122566Z [0m[32mInitialize[0m @radix-ui/react-use-callback-ref@1.1.1
+2026-10-09T15:05:08.4123547Z [0m[32mInitialize[0m @radix-ui/react-use-effect-event@0.0.2
+2026-10-09T15:05:08.4124315Z [0m[32mInitialize[0m @radix-ui/react-use-escape-keydown@1.1.1
+2026-10-09T15:05:08.4125359Z [0m[32mInitialize[0m run-parallel@1.2.0
+2026-10-09T15:05:08.4125910Z [0m[32mInitialize[0m reusify@1.1.0
+2026-10-09T15:05:08.4126424Z [0m[32mInitialize[0m fill-range@7.1.1
+2026-10-09T15:05:08.4126975Z [0m[32mInitialize[0m yallist@3.1.1
+2026-10-09T15:05:08.4127476Z [0m[32mInitialize[0m p-locate@5.0.0
+2026-10-09T15:05:08.4128139Z [0m[32mInitialize[0m punycode@2.3.1
+2026-10-09T15:05:08.4128685Z [0m[32mInitialize[0m flatted@3.4.2
+2026-10-09T15:05:08.4129180Z [0m[32mInitialize[0m keyv@4.5.4
+2026-10-09T15:05:08.4129693Z [0m[32mInitialize[0m balanced-match@4.0.4
+2026-10-09T15:05:08.4130246Z [0m[32mInitialize[0m isexe@2.0.0
+2026-10-09T15:05:08.4130759Z [0m[32mInitialize[0m shebang-regex@3.0.0
+2026-10-09T15:05:08.4131302Z [0m[32mInitialize[0m sprintf-js@1.0.3
+2026-10-09T15:05:08.4131848Z [0m[32mInitialize[0m p-locate@4.1.0
+2026-10-09T15:05:08.4132388Z [0m[32mInitialize[0m @pkgjs/parseargs@0.11.0
+2026-10-09T15:05:08.4132952Z [0m[32mInitialize[0m @isaacs/cliui@8.0.2
+2026-10-09T15:05:08.4133509Z [0m[32mInitialize[0m lru-cache@10.4.3
+2026-10-09T15:05:08.4134030Z [0m[32mInitialize[0m signal-exit@4.1.0
+2026-10-09T15:05:08.4134587Z [0m[32mInitialize[0m brace-expansion@2.1.1
+2026-10-09T15:05:08.4135431Z [0m[32mInitialize[0m @floating-ui/dom@1.8.0
+2026-10-09T15:05:08.4136082Z [0m[32mInitialize[0m proxy-compare@3.0.1
+2026-10-09T15:05:08.4136668Z [0m[32mInitialize[0m get-uri@6.0.5
+2026-10-09T15:05:08.4137238Z [0m[32mInitialize[0m pac-resolver@7.0.1
+2026-10-09T15:05:08.4137971Z [0m[32mInitialize[0m @tootallnate/quickjs-emscripten@0.23.0
+2026-10-09T15:05:08.4138686Z [0m[32mInitialize[0m socks@2.8.9
+2026-10-09T15:05:08.4139273Z [0m[32mInitialize[0m fd-slicer@1.1.0
+2026-10-09T15:05:08.4139886Z [0m[32mInitialize[0m buffer-crc32@0.2.13
+2026-10-09T15:05:08.4140507Z [0m[32mInitialize[0m fast-fifo@1.3.2
+2026-10-09T15:05:08.4141085Z [0m[32mInitialize[0m streamx@2.26.0
+2026-10-09T15:05:08.4141645Z [0m[32mInitialize[0m b4a@1.8.1
+2026-10-09T15:05:08.4142208Z [0m[32mInitialize[0m bare-stream@2.13.1
+2026-10-09T15:05:08.4142805Z [0m[32mInitialize[0m bare-events@2.8.3
+2026-10-09T15:05:08.4143411Z [0m[32mInitialize[0m bare-url@2.4.3
+2026-10-09T15:05:08.4144012Z [0m[32mInitialize[0m end-of-stream@1.4.5
+2026-10-09T15:05:08.4144595Z [0m[32mInitialize[0m once@1.4.0
+2026-10-09T15:05:08.4145407Z [0m[32mInitialize[0m bare-os@3.9.1
+2026-10-09T15:05:08.4146016Z [0m[32mInitialize[0m strip-ansi@6.0.1
+2026-10-09T15:05:08.4146642Z [0m[32mInitialize[0m wrap-ansi@7.0.0
+2026-10-09T15:05:08.4147318Z [0m[32mInitialize[0m is-fullwidth-code-point@3.0.0
+2026-10-09T15:05:08.4148008Z [0m[32mInitialize[0m emoji-regex@8.0.0
+2026-10-09T15:05:08.4148693Z [0m[32mInitialize[0m @csstools/css-color-parser@3.1.0
+2026-10-09T15:05:08.4149542Z [0m[32mInitialize[0m @csstools/css-parser-algorithms@3.0.5
+2026-10-09T15:05:08.4150318Z [0m[32mInitialize[0m @csstools/css-tokenizer@3.0.4
+2026-10-09T15:05:08.4150996Z [0m[32mInitialize[0m @csstools/css-calc@2.1.4
+2026-10-09T15:05:08.4151620Z [0m[32mInitialize[0m tldts-core@6.1.86
+2026-10-09T15:05:08.4152224Z [0m[32mInitialize[0m safer-buffer@2.1.2
+2026-10-09T15:05:08.4152812Z [0m[32mInitialize[0m minimist@1.2.8
+2026-10-09T15:05:08.4153388Z [0m[32mInitialize[0m parse-json@5.2.0
+2026-10-09T15:05:08.4154011Z [0m[32mInitialize[0m @types/parse-json@4.0.2
+2026-10-09T15:05:08.4154642Z [0m[32mInitialize[0m path-type@4.0.0
+2026-10-09T15:05:08.4155482Z [0m[32mInitialize[0m import-fresh@3.3.1
+2026-10-09T15:05:08.4156067Z [0m[32mInitialize[0m yaml@1.10.3
+2026-10-09T15:05:08.4156629Z [0m[32mInitialize[0m path-parse@1.0.7
+2026-10-09T15:05:08.4157383Z [0m[32mInitialize[0m supports-preserve-symlinks-flag@1.0.0
+2026-10-09T15:05:08.4158132Z [0m[32mInitialize[0m es-errors@1.3.0
+2026-10-09T15:05:08.4159024Z [0m[32mInitialize[0m is-core-module@2.16.2
+2026-10-09T15:05:08.4159850Z [0m[32mInitialize[0m @babel/helper-validator-identifier@8.0.0-rc.6
+2026-10-09T15:05:08.4160764Z [0m[32mInitialize[0m @babel/helper-string-parser@8.0.0-rc.6
+2026-10-09T15:05:08.4161493Z [0m[32mInitialize[0m detect-node-es@1.1.0
+2026-10-09T15:05:08.4162100Z [0m[32mInitialize[0m get-nonce@1.0.1
+2026-10-09T15:05:08.4162702Z [0m[32mInitialize[0m queue-microtask@1.2.3
+2026-10-09T15:05:08.4163337Z [0m[32mInitialize[0m to-regex-range@5.0.1
+2026-10-09T15:05:08.4164078Z [0m[32mInitialize[0m p-limit@3.1.0
+2026-10-09T15:05:08.4164711Z [0m[32mInitialize[0m json-buffer@3.0.1
+2026-10-09T15:05:08.4165712Z [0m[32mInitialize[0m p-limit@2.3.0
+2026-10-09T15:05:08.4166375Z [0m[32mInitialize[0m string-width@5.1.2
+2026-10-09T15:05:08.4167016Z [0m[32mInitialize[0m strip-ansi@7.2.0
+2026-10-09T15:05:08.4167637Z [0m[32mInitialize[0m wrap-ansi@8.1.0
+2026-10-09T15:05:08.4168263Z [0m[32mInitialize[0m balanced-match@1.0.2
+2026-10-09T15:05:08.4168959Z [0m[32mInitialize[0m @floating-ui/core@1.8.0
+2026-10-09T15:05:08.4169659Z [0m[32mInitialize[0m @floating-ui/utils@0.2.12
+2026-10-09T15:05:08.4170362Z [0m[32mInitialize[0m data-uri-to-buffer@6.0.2
+2026-10-09T15:05:08.4171018Z [0m[32mInitialize[0m basic-ftp@5.3.1
+2026-10-09T15:05:08.4171637Z [0m[32mInitialize[0m degenerator@5.0.1
+2026-10-09T15:05:08.4172249Z [0m[32mInitialize[0m netmask@2.1.1
+2026-10-09T15:05:08.4172846Z [0m[32mInitialize[0m smart-buffer@4.2.0
+2026-10-09T15:05:08.4173479Z [0m[32mInitialize[0m ip-address@10.2.0
+2026-10-09T15:05:08.4174067Z [0m[32mInitialize[0m pend@1.2.0
+2026-10-09T15:05:08.4174670Z [0m[32mInitialize[0m text-decoder@1.2.7
+2026-10-09T15:05:08.4175573Z [0m[32mInitialize[0m events-universal@1.0.1
+2026-10-09T15:05:08.4176197Z [0m[32mInitialize[0m teex@1.0.1
+2026-10-09T15:05:08.4176763Z [0m[32mInitialize[0m wrappy@1.0.2
+2026-10-09T15:05:08.4177367Z [0m[32mInitialize[0m ansi-regex@5.0.1
+2026-10-09T15:05:08.4177993Z [0m[32mInitialize[0m ansi-styles@4.3.0
+2026-10-09T15:05:08.4178672Z [0m[32mInitialize[0m @csstools/color-helpers@5.1.0
+2026-10-09T15:05:08.4179346Z [0m[32mInitialize[0m error-ex@1.3.4
+2026-10-09T15:05:08.4179975Z [0m[32mInitialize[0m lines-and-columns@1.2.4
+2026-10-09T15:05:08.4180741Z [0m[32mInitialize[0m json-parse-even-better-errors@2.3.1
+2026-10-09T15:05:08.4181486Z [0m[32mInitialize[0m parent-module@1.0.1
+2026-10-09T15:05:08.4182126Z [0m[32mInitialize[0m resolve-from@4.0.0
+2026-10-09T15:05:08.4182741Z [0m[32mInitialize[0m hasown@2.0.4
+2026-10-09T15:05:08.4183339Z [0m[32mInitialize[0m is-number@7.0.0
+2026-10-09T15:05:08.4183937Z [0m[32mInitialize[0m yocto-queue@0.1.0
+2026-10-09T15:05:08.4184542Z [0m[32mInitialize[0m p-try@2.2.0
+2026-10-09T15:05:08.4185405Z [0m[32mInitialize[0m eastasianwidth@0.2.0
+2026-10-09T15:05:08.4186043Z [0m[32mInitialize[0m emoji-regex@9.2.2
+2026-10-09T15:05:08.4186660Z [0m[32mInitialize[0m ansi-regex@6.2.2
+2026-10-09T15:05:08.4187287Z [0m[32mInitialize[0m ansi-styles@6.2.3
+2026-10-09T15:05:08.4187901Z [0m[32mInitialize[0m ast-types@0.13.4
+2026-10-09T15:05:08.4188458Z [0m[32mInitialize[0m escodegen@2.1.0
+2026-10-09T15:05:08.4189070Z [0m[32mInitialize[0m color-convert@2.0.1
+2026-10-09T15:05:08.4189690Z [0m[32mInitialize[0m is-arrayish@0.2.1
+2026-10-09T15:05:08.4190284Z [0m[32mInitialize[0m callsites@3.1.0
+2026-10-09T15:05:08.4190883Z [0m[32mInitialize[0m function-bind@1.1.2
+2026-10-09T15:05:08.4191475Z [0m[32mInitialize[0m source-map@0.6.1
+2026-10-09T15:05:08.4192064Z [0m[32mInitialize[0m color-name@1.1.4
+2026-10-09T15:05:09.0028199Z [0m[38;5;245mInstalled[0m 745 [0m[38;5;245mpackages[0m [0m[38;5;245min[0m 776ms
+2026-10-09T15:05:09.0028973Z [0m[38;5;245mReused[0m 754 [0m[38;5;245mpackages from cache[0m
+2026-10-09T15:05:09.0032266Z [0m[1m[33m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[0m
+2026-10-09T15:05:09.0034608Z [0m[38;5;245mDownloaded[0m 0 [0m[38;5;245mpackages from JSR[0m
+2026-10-09T15:05:09.0035792Z [0m[38;5;245mDownloaded[0m 0 [0m[38;5;245mpackages from npm[0m
+2026-10-09T15:05:09.0036598Z 
+2026-10-09T15:05:09.0036875Z [0m[36mDependencies:[0m
+2026-10-09T15:05:09.0037735Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@chakra-ui/react [0m[38;5;245m3.37.0[0m
+2026-10-09T15:05:09.0038827Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@deno/vite-plugin [0m[38;5;245m1.0.6[0m
+2026-10-09T15:05:09.0039801Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@dnd-kit/core [0m[38;5;245m6.3.1[0m
+2026-10-09T15:05:09.0041517Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@dnd-kit/modifiers [0m[38;5;245m9.0.0[0m
+2026-10-09T15:05:09.0042208Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@dnd-kit/sortable [0m[38;5;245m10.0.0[0m
+2026-10-09T15:05:09.0042836Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@dnd-kit/utilities [0m[38;5;245m3.2.2[0m
+2026-10-09T15:05:09.0043459Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@emotion/react [0m[38;5;245m11.14.0[0m
+2026-10-09T15:05:09.0044153Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@icons-pack/react-simple-icons [0m[38;5;245m13.13.0[0m
+2026-10-09T15:05:09.0045141Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@jsr/std__assert [0m[38;5;245m1.0.19[0m
+2026-10-09T15:05:09.0045902Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@jsr/std__collections [0m[38;5;245m1.2.0[0m
+2026-10-09T15:05:09.0046536Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@jsr/std__fs [0m[38;5;245m1.0.24[0m
+2026-10-09T15:05:09.0047092Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@jsr/std__toml [0m[38;5;245m1.0.11[0m
+2026-10-09T15:05:09.0047565Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@preact/signals [0m[38;5;245m1.3.4[0m
+2026-10-09T15:05:09.0048072Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@solid-primitives/deep [0m[38;5;245m0.3.5[0m
+2026-10-09T15:05:09.0048638Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@solid-primitives/memo [0m[38;5;245m1.4.5[0m
+2026-10-09T15:05:09.0049231Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@solid-primitives/scheduled [0m[38;5;245m1.5.3[0m
+2026-10-09T15:05:09.0049805Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@solid-primitives/utils [0m[38;5;245m6.4.0[0m
+2026-10-09T15:05:09.0050307Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@swc/core [0m[38;5;245m1.15.40[0m
+2026-10-09T15:05:09.0050815Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tailwindcss/vite [0m[38;5;245m4.3.0[0m
+2026-10-09T15:05:09.0051350Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/extension-image [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0051974Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/extension-placeholder [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0052566Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/extension-text-align [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0053139Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/extension-underline [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0053678Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/pm [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0054171Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/react [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0054678Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@tiptap/starter-kit [0m[38;5;245m2.27.2[0m
+2026-10-09T15:05:09.0055824Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@types/chroma-js [0m[38;5;245m3.1.2[0m
+2026-10-09T15:05:09.0056327Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@types/uuid [0m[38;5;245m11.0.0[0m
+2026-10-09T15:05:09.0056840Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@vitejs/plugin-react [0m[38;5;245m4.7.0[0m
+2026-10-09T15:05:09.1069122Z [0m[32m+[0m [0m[38;5;245mnpm:[0mbirpc [0m[38;5;245m4.0.0[0m
+2026-10-09T15:05:09.1069724Z [0m[32m+[0m [0m[38;5;245mnpm:[0mbudoux [0m[38;5;245m0.6.4[0m
+2026-10-09T15:05:09.1070331Z [0m[32m+[0m [0m[38;5;245mnpm:[0mchroma-js [0m[38;5;245m3.2.0[0m
+2026-10-09T15:05:09.1070920Z [0m[32m+[0m [0m[38;5;245mnpm:[0mclsx [0m[38;5;245m2.1.1[0m
+2026-10-09T15:05:09.1071476Z [0m[32m+[0m [0m[38;5;245mnpm:[0mcmdk [0m[38;5;245m1.1.1[0m
+2026-10-09T15:05:09.1072229Z [0m[32m+[0m [0m[38;5;245mnpm:[0mes-toolkit [0m[38;5;245m1.47.0[0m
+2026-10-09T15:05:09.1072939Z [0m[32m+[0m [0m[38;5;245mnpm:[0meslint-plugin-react-hooks [0m[38;5;245m7.1.1[0m
+2026-10-09T15:05:09.1073727Z [0m[32m+[0m [0m[38;5;245mnpm:[0meslint-plugin-react-refresh [0m[38;5;245m0.4.26[0m
+2026-10-09T15:05:09.1074415Z [0m[32m+[0m [0m[38;5;245mnpm:[0mfflate [0m[38;5;245m0.8.3[0m
+2026-10-09T15:05:09.1075196Z [0m[32m+[0m [0m[38;5;245mnpm:[0mfp-ts [0m[38;5;245m2.16.11[0m
+2026-10-09T15:05:09.1075813Z [0m[32m+[0m [0m[38;5;245mnpm:[0mglobals [0m[38;5;245m16.5.0[0m
+2026-10-09T15:05:09.1076433Z [0m[32m+[0m [0m[38;5;245mnpm:[0mi18next [0m[38;5;245m25.10.10[0m
+2026-10-09T15:05:09.1077164Z [0m[32m+[0m [0m[38;5;245mnpm:[0mi18next-browser-languagedetector [0m[38;5;245m8.2.1[0m
+2026-10-09T15:05:09.1077880Z [0m[32m+[0m [0m[38;5;245mnpm:[0mio-ts [0m[38;5;245m2.2.22[0m
+2026-10-09T15:05:09.1078441Z [0m[32m+[0m [0m[38;5;245mnpm:[0mlucide-react [0m[38;5;245m0.562.0[0m
+2026-10-09T15:05:09.1078942Z [0m[32m+[0m [0m[38;5;245mnpm:[0mnext-themes [0m[38;5;245m0.4.6[0m
+2026-10-09T15:05:09.1079415Z [0m[32m+[0m [0m[38;5;245mnpm:[0mpathe [0m[38;5;245m2.0.3[0m
+2026-10-09T15:05:09.1079896Z [0m[32m+[0m [0m[38;5;245mnpm:[0mpreact [0m[38;5;245m10.29.2[0m
+2026-10-09T15:05:09.1080393Z [0m[32m+[0m [0m[38;5;245mnpm:[0mqr-code-styling [0m[38;5;245m1.9.2[0m
+2026-10-09T15:05:09.1080906Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact [0m[38;5;245m19.2.6[0m
+2026-10-09T15:05:09.1081385Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact-dom [0m[38;5;245m19.2.6[0m
+2026-10-09T15:05:09.1081904Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact-hook-form [0m[38;5;245m7.76.1[0m
+2026-10-09T15:05:09.1082427Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact-i18next [0m[38;5;245m16.6.6[0m
+2026-10-09T15:05:09.1082928Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact-refresh [0m[38;5;245m0.18.0[0m
+2026-10-09T15:05:09.1083456Z [0m[32m+[0m [0m[38;5;245mnpm:[0mreact-router-dom [0m[38;5;245m7.15.1[0m
+2026-10-09T15:05:09.1083958Z [0m[32m+[0m [0m[38;5;245mnpm:[0mrecharts [0m[38;5;245m3.8.1[0m
+2026-10-09T15:05:09.1084426Z [0m[32m+[0m [0m[38;5;245mnpm:[0mrolldown [0m[38;5;245m1.0.3[0m
+2026-10-09T15:05:09.1085032Z [0m[32m+[0m [0m[38;5;245mnpm:[0mrolldown-vite [0m[38;5;245m7.3.1[0m
+2026-10-09T15:05:09.1085533Z [0m[32m+[0m [0m[38;5;245mnpm:[0msolid-js [0m[38;5;245m1.9.13[0m
+2026-10-09T15:05:09.1086036Z [0m[32m+[0m [0m[38;5;245mnpm:[0msolid-styled-jsx [0m[38;5;245m0.27.1[0m
+2026-10-09T15:05:09.1086562Z [0m[32m+[0m [0m[38;5;245mnpm:[0mtailwind-merge [0m[38;5;245m3.6.0[0m
+2026-10-09T15:05:09.1087080Z [0m[32m+[0m [0m[38;5;245mnpm:[0mtailwindcss [0m[38;5;245m4.3.0[0m
+2026-10-09T15:05:09.1087580Z [0m[32m+[0m [0m[38;5;245mnpm:[0mtsdown [0m[38;5;245m0.22.0[0m
+2026-10-09T15:05:09.1088066Z [0m[32m+[0m [0m[38;5;245mnpm:[0munplugin-swc [0m[38;5;245m1.5.9[0m
+2026-10-09T15:05:09.1088518Z [0m[32m+[0m [0m[38;5;245mnpm:[0munrun [0m[38;5;245m0.3.0[0m
+2026-10-09T15:05:09.1088985Z [0m[32m+[0m [0m[38;5;245mnpm:[0muuid [0m[38;5;245m13.0.2[0m
+2026-10-09T15:05:09.1089469Z [0m[32m+[0m [0m[38;5;245mnpm:[0mvite-plugin-istanbul [0m[38;5;245m7.2.1[0m
+2026-10-09T15:05:09.1090004Z [0m[32m+[0m [0m[38;5;245mnpm:[0mvite-tsconfig-paths [0m[38;5;245m6.1.1[0m
+2026-10-09T15:05:09.1090292Z 
+2026-10-09T15:05:09.1090565Z [0m[36mDev dependencies:[0m
+2026-10-09T15:05:09.1091035Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@bytecodealliance/preview2-shim [0m[38;5;245m0.17.9[0m
+2026-10-09T15:05:09.1091601Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@prettier/plugin-oxc [0m[38;5;245m0.1.4[0m
+2026-10-09T15:05:09.1092087Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@types/node [0m[38;5;245m25.9.1[0m
+2026-10-09T15:05:09.1092555Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@types/react [0m[38;5;245m19.2.15[0m
+2026-10-09T15:05:09.1093143Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@types/react-dom [0m[38;5;245m19.2.3[0m
+2026-10-09T15:05:09.1093668Z [0m[32m+[0m [0m[38;5;245mnpm:[0m@vitejs/plugin-react-swc [0m[38;5;245m4.3.1[0m
+2026-10-09T15:05:09.1094169Z [0m[32m+[0m [0m[38;5;245mnpm:[0mautoprefixer [0m[38;5;245m10.5.0[0m
+2026-10-09T15:05:09.1094614Z [0m[32m+[0m [0m[38;5;245mnpm:[0mchalk [0m[38;5;245m5.6.2[0m
+2026-10-09T15:05:09.1095212Z [0m[32m+[0m [0m[38;5;245mnpm:[0mchokidar [0m[38;5;245m5.0.0[0m
+2026-10-09T15:05:09.1095664Z [0m[32m+[0m [0m[38;5;245mnpm:[0mdaisyui [0m[38;5;245m5.5.20[0m
+2026-10-09T15:05:09.1096104Z [0m[32m+[0m [0m[38;5;245mnpm:[0mfast-glob [0m[38;5;245m3.3.3[0m
+2026-10-09T15:05:09.1096562Z [0m[32m+[0m [0m[38;5;245mnpm:[0mfloating-ui [0m[38;5;245m5.2.8[0m
+2026-10-09T15:05:09.1097036Z [0m[32m+[0m [0m[38;5;245mnpm:[0mframer-motion [0m[38;5;245m12.40.0[0m
+2026-10-09T15:05:09.1097514Z [0m[32m+[0m [0m[38;5;245mnpm:[0mlightningcss [0m[38;5;245m1.32.0[0m
+2026-10-09T15:05:09.1097991Z [0m[32m+[0m [0m[38;5;245mnpm:[0mlinkedom [0m[38;5;245m0.18.12[0m
+2026-10-09T15:05:09.1098457Z [0m[32m+[0m [0m[38;5;245mnpm:[0moxlint [0m[38;5;245m1.67.0[0m
+2026-10-09T15:05:09.1098904Z [0m[32m+[0m [0m[38;5;245mnpm:[0mpostcss [0m[38;5;245m8.5.15[0m
+2026-10-09T15:05:09.1099344Z [0m[32m+[0m [0m[38;5;245mnpm:[0mprettier [0m[38;5;245m3.8.3[0m
+2026-10-09T15:05:09.1099813Z [0m[32m+[0m [0m[38;5;245mnpm:[0mpuppeteer-core [0m[38;5;245m24.43.1[0m
+2026-10-09T15:05:09.1100419Z [0m[32m+[0m [0m[38;5;245mnpm:[0mtypescript [0m[38;5;245m5.9.3[0m
+2026-10-09T15:05:09.1100945Z [0m[32m+[0m [0m[38;5;245mnpm:[0mvite [0m[38;5;245m7.3.3[0m
+2026-10-09T15:05:09.1101680Z [0m[32m+[0m [0m[38;5;245mnpm:[0mvite-plugin-solid [0m[38;5;245m2.11.12[0m
+2026-10-09T15:05:09.1102542Z [0m[33m╭[0m [0m[1m[33mWarning[0m
+2026-10-09T15:05:09.1102994Z [0m[33m│[0m
+2026-10-09T15:05:09.1103456Z [0m[33m│[0m  Ignored build scripts for packages:
+2026-10-09T15:05:09.1103945Z [0m[33m│[0m  [0m[3mnpm:@swc/core@1.15.40[0m
+2026-10-09T15:05:09.1104370Z [0m[33m│[0m
+2026-10-09T15:05:09.1105072Z [0m[33m│[0m  Run "[0m[1mdeno approve-scripts[0m" to run build scripts.
+2026-10-09T15:05:09.1105568Z [0m[33m╰─[0m
+2026-10-09T15:05:09.1105992Z [0m[33m╭[0m [0m[1m[33mWarning[0m
+2026-10-09T15:05:09.1106365Z [0m[33m│[0m
+2026-10-09T15:05:09.1106823Z [0m[33m│[0m  The following packages are deprecated:
+2026-10-09T15:05:09.1116099Z [0m[33m│[0m  [0m[38;5;245mnpm:@types/uuid@11.0.0 (This is a stub types definition. uuid provides its own type definitions, so you do not need this installed.)[0m
+2026-10-09T15:05:09.1117330Z [0m[33m│[0m  [0m[38;5;245mnpm:rolldown-vite@7.3.1 (Use this package to migrate from Vite 7 to Vite 8. For the most recent updates, migrate to Vite 8 once you're ready.)[0m
+2026-10-09T15:05:09.1118130Z [0m[33m│[0m  [0m[38;5;245mnpm:tsconfck@3.1.6 (unmaintained)[0m
+2026-10-09T15:05:09.1119506Z [0m[33m│[0m  [0m[38;5;245mnpm:glob@10.5.0 (Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me)[0m
+2026-10-09T15:05:09.1121006Z [0m[33m│[0m  [0m[38;5;245mnpm:whatwg-encoding@3.1.1 (Use @exodus/bytes instead for a more spec-conformant and faster implementation)[0m
+2026-10-09T15:05:09.1121604Z [0m[33m╰─[0m
+2026-10-09T15:05:09.1158449Z ##[group]Run deno task docs-pipeline:collect --out _dist/docs-pipeline/inventory.json
+2026-10-09T15:05:09.1159118Z [36;1mdeno task docs-pipeline:collect --out _dist/docs-pipeline/inventory.json[0m
+2026-10-09T15:05:09.1223560Z shell: /usr/bin/bash -e {0}
+2026-10-09T15:05:09.1223820Z ##[endgroup]
+2026-10-09T15:05:09.1651118Z [0m[32mTask[0m [0m[36mdocs-pipeline:collect[0m deno run --allow-read --allow-write=_dist --allow-run=git tools/docs-pipeline/mod.ts collect '--out' '_dist/docs-pipeline/inventory.json'
+2026-10-09T15:05:09.3243788Z ##[group]Run set -euo pipefail
+2026-10-09T15:05:09.3244139Z [36;1mset -euo pipefail[0m
+2026-10-09T15:05:09.3244413Z [36;1mif [ -d docs/development ]; then[0m
+2026-10-09T15:05:09.3244734Z [36;1m  deno task docs-pipeline:verify \[0m
+2026-10-09T15:05:09.3245414Z [36;1m    --inventory _dist/docs-pipeline/inventory.json \[0m
+2026-10-09T15:05:09.3245766Z [36;1m    --docs-dir docs[0m
+2026-10-09T15:05:09.3246005Z [36;1melse[0m
+2026-10-09T15:05:09.3246233Z [36;1m  deno task docs-pipeline:verify \[0m
+2026-10-09T15:05:09.3246602Z [36;1m    --inventory _dist/docs-pipeline/inventory.json[0m
+2026-10-09T15:05:09.3246926Z [36;1mfi[0m
+2026-10-09T15:05:09.3314121Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-09T15:05:09.3314487Z ##[endgroup]
+2026-10-09T15:05:09.3746997Z [0m[32mTask[0m [0m[36mdocs-pipeline:verify[0m deno run --allow-read --allow-write=_dist tools/docs-pipeline/mod.ts verify '--inventory' '_dist/docs-pipeline/inventory.json' '--docs-dir' 'docs'
+2026-10-09T15:05:09.5181955Z Docs pipeline verification passed.
+2026-10-09T15:05:09.5297838Z ##[group]Run deno task test:docs-pipeline
+2026-10-09T15:05:09.5298224Z [36;1mdeno task test:docs-pipeline[0m
+2026-10-09T15:05:09.5365175Z shell: /usr/bin/bash -e {0}
+2026-10-09T15:05:09.5365449Z ##[endgroup]
+2026-10-09T15:05:09.5820945Z [0m[32mTask[0m [0m[36mtest:docs-pipeline[0m deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/
+2026-10-09T15:05:09.6476117Z [0m[32mCheck[0m tools/docs-pipeline/docs_pipeline.test.ts
+2026-10-09T15:05:10.9258170Z [0m[38;5;245mrunning 50 tests from ./tools/docs-pipeline/docs_pipeline.test.ts[0m
+2026-10-09T15:05:10.9351872Z parseDenoTasksFromText reads sorted task entries ... [0m[32mok[0m [0m[38;5;245m(9ms)[0m
+2026-10-09T15:05:10.9356436Z parseFelesCommandsFromText reads command switch cases ... [0m[32mok[0m [0m[38;5;245m(375µs)[0m
+2026-10-09T15:05:10.9358443Z extractChromeFeatureDiscovery reads import.meta.glob pattern ... [0m[32mok[0m [0m[38;5;245m(156µs)[0m
+2026-10-09T15:05:10.9363987Z extractSettingsRoutes normalizes displayed route paths ... [0m[32mok[0m [0m[38;5;245m(352µs)[0m
+2026-10-09T15:05:10.9366021Z extractSettingsRoutes preserves pages behind a route guard ... [0m[32mok[0m [0m[38;5;245m(251µs)[0m
+2026-10-09T15:05:10.9369193Z extractBridgeLoader reads loader URLs from chrome root source ... [0m[32mok[0m [0m[38;5;245m(221µs)[0m
+2026-10-09T15:05:10.9372267Z extractWindowActors reads addJSWindowActors and actor count ... [0m[32mok[0m [0m[38;5;245m(245µs)[0m
+2026-10-09T15:05:10.9378656Z extractOsApiRouteEntries reads namespaced local HTTP routes ... [0m[32mok[0m [0m[38;5;245m(507µs)[0m
+2026-10-09T15:05:10.9381342Z extractSharedOsApiRouteEntries expands conditional shared routes ... [0m[32mok[0m [0m[38;5;245m(288µs)[0m
+2026-10-09T15:05:10.9390134Z parseWorkflowRunCommands reads inline and block run commands ... [0m[32mok[0m [0m[38;5;245m(772µs)[0m
+2026-10-09T15:05:10.9391818Z readLlmConfig omits empty API keys for local compatible endpoints ... [0m[32mok[0m [0m[38;5;245m(168µs)[0m
+2026-10-09T15:05:10.9395769Z readLlmConfig rejects invalid temperature ... [0m[32mok[0m [0m[38;5;245m(342µs)[0m
+2026-10-09T15:05:10.9398133Z readAuditLlmConfig falls back to generation config ... [0m[32mok[0m [0m[38;5;245m(197µs)[0m
+2026-10-09T15:05:10.9400791Z readAuditLlmConfig rejects invalid audit temperature ... [0m[32mok[0m [0m[38;5;245m(177µs)[0m
+2026-10-09T15:05:10.9402375Z normalizeGeneratedBody converts escaped newlines to real newlines ... [0m[32mok[0m [0m[38;5;245m(77µs)[0m
+2026-10-09T15:05:10.9405395Z escapeMdxText escapes placeholders outside fenced code ... [0m[32mok[0m [0m[38;5;245m(219µs)[0m
+2026-10-09T15:05:10.9416698Z normalizeSourceMarkdownLinks converts source links to code citations ... [0m[32mok[0m [0m[38;5;245m(1ms)[0m
+2026-10-09T15:05:10.9418390Z normalizeSourceMarkdownLinks ignores links inside fenced code ... [0m[32mok[0m [0m[38;5;245m(172µs)[0m
+2026-10-09T15:05:10.9422507Z normalizeDuplicateSourceExtensions fixes repeated TypeScript extensions ... [0m[32mok[0m [0m[38;5;245m(329µs)[0m
+2026-10-09T15:05:10.9504819Z Listening on http://127.0.0.1:42305/
+2026-10-09T15:05:10.9624496Z generateDocsPayload uses OpenAI-compatible chat completions ... [0m[32mok[0m [0m[38;5;245m(20ms)[0m
+2026-10-09T15:05:10.9626145Z Listening on http://127.0.0.1:43057/
+2026-10-09T15:05:10.9679403Z generateDocsPayload retries missing page content ... [0m[32mok[0m [0m[38;5;245m(5ms)[0m
+2026-10-09T15:05:10.9680403Z Listening on http://127.0.0.1:42627/
+2026-10-09T15:05:10.9726649Z generateDocsPayload escapes raw MDX body from model ... [0m[32mok[0m [0m[38;5;245m(4ms)[0m
+2026-10-09T15:05:10.9736055Z Listening on http://127.0.0.1:40127/
+2026-10-09T15:05:10.9899952Z runLlmAudit uses OpenAI-compatible chat completions ... [0m[32mok[0m [0m[38;5;245m(17ms)[0m
+2026-10-09T15:05:10.9902322Z verifyLlmAuditResult rejects blocking audits ... [0m[32mok[0m [0m[38;5;245m(275µs)[0m
+2026-10-09T15:05:11.0263095Z verifyDocsPipeline rejects stale generated command examples ... [0m[32mok[0m [0m[38;5;245m(35ms)[0m
+2026-10-09T15:05:11.0584856Z verifyDocsPipeline does not treat dev-tool as stale dev task ... [0m[32mok[0m [0m[38;5;245m(32ms)[0m
+2026-10-09T15:05:11.0923724Z verifyDocsPipeline rejects unknown deno task commands ... [0m[32mok[0m [0m[38;5;245m(33ms)[0m
+2026-10-09T15:05:11.1238108Z verifyDocsPipeline ignores trailing colon after known deno task names ... [0m[32mok[0m [0m[38;5;245m(31ms)[0m
+2026-10-09T15:05:11.1547837Z verifyDocsPipeline allows explicitly framed drift strings ... [0m[32mok[0m [0m[38;5;245m(30ms)[0m
+2026-10-09T15:05:11.1653256Z verifyDocsPipeline rejects missing required generated pages ... [0m[32mok[0m [0m[38;5;245m(10ms)[0m
+2026-10-09T15:05:11.1967569Z verifyDocsPipeline rejects raw MDX angle brackets outside fences ... [0m[32mok[0m [0m[38;5;245m(31ms)[0m
+2026-10-09T15:05:11.2271967Z verifyDocsPipeline rejects MDX executable syntax ... [0m[32mok[0m [0m[38;5;245m(30ms)[0m
+2026-10-09T15:05:11.2594691Z verifyDocsPipeline allows public LLM env key names but rejects publish tokens ... [0m[32mok[0m [0m[38;5;245m(32ms)[0m
+2026-10-09T15:05:11.2931602Z verifyDocsPipeline rejects literal escaped newlines ... [0m[32mok[0m [0m[38;5;245m(33ms)[0m
+2026-10-09T15:05:11.3236803Z verifyDocsPipeline rejects nonexistent referenced source paths ... [0m[32mok[0m [0m[38;5;245m(30ms)[0m
+2026-10-09T15:05:11.3559435Z verifyDocsPipeline rejects unusable CI summaries ... [0m[32mok[0m [0m[38;5;245m(32ms)[0m
+2026-10-09T15:05:11.3639198Z writeGeneratedDocs stabilizes CI reference from inventory ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+2026-10-09T15:05:11.3733112Z writeGeneratedDocs sanitizes unsupported generated source citations ... [0m[32mok[0m [0m[38;5;245m(9ms)[0m
+2026-10-09T15:05:11.3828530Z writeGeneratedDocs stabilizes command reference from inventory ... [0m[32mok[0m [0m[38;5;245m(9ms)[0m
+2026-10-09T15:05:11.3906324Z writeGeneratedDocs generates nested feature and actor catalogs from inventory ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+2026-10-09T15:05:11.3981920Z writeGeneratedDocs stabilizes architecture overview counts from inventory ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+2026-10-09T15:05:11.4058103Z writeGeneratedDocs generates Floorp OS API layer docs from inventory ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+2026-10-09T15:05:11.4133226Z writeGeneratedDocs generates static Gecko docs from tracked sources ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+2026-10-09T15:05:11.4408044Z verifyDocsPipeline rejects stale deterministic catalog pages ... [0m[32mok[0m [0m[38;5;245m(27ms)[0m
+2026-10-09T15:05:11.4703161Z verifyDocsPipeline ignores volatile commit changes in deterministic pages ... [0m[32mok[0m [0m[38;5;245m(29ms)[0m
+2026-10-09T15:05:11.4804598Z seedCodexDocs writes required docs and prompt ... [0m[32mok[0m [0m[38;5;245m(10ms)[0m
+2026-10-09T15:05:11.4806789Z verifyCodexAuditResult accepts passing audit ... [0m[32mok[0m [0m[38;5;245m(154µs)[0m
+2026-10-09T15:05:11.4810396Z verifyCodexAuditResult rejects malformed or blocking audits ... [0m[32mok[0m [0m[38;5;245m(265µs)[0m
+2026-10-09T15:05:11.4812113Z codexAuditSchema requires pass and finding fields ... [0m[32mok[0m [0m[38;5;245m(125µs)[0m
+2026-10-09T15:05:11.5116663Z verifyDocsPipeline accepts source-backed generated MDX ... [0m[32mok[0m [0m[38;5;245m(30ms)[0m
+2026-10-09T15:05:11.5135434Z 
+2026-10-09T15:05:11.5135957Z [0m[32mok[0m | 50 passed | 0 failed [0m[38;5;245m(587ms)[0m
+2026-10-09T15:05:11.5136244Z 
+2026-10-09T15:05:11.5969315Z Post job cleanup.
+2026-10-09T15:05:11.7084480Z Cache hit occurred on the primary key deno-docs-pipeline-45ad939dce8fdba9d63cdeaca5cc7deba73e1d4f7ad126f88ba75ee74af12a1b, not saving cache.
+2026-10-09T15:05:11.7086680Z (node:2544) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-09T15:05:11.7087920Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-09T15:05:11.7191790Z Post job cleanup.
+2026-10-09T15:05:11.8377484Z Caching is not enabled. Caching is skipped.
+2026-10-09T15:05:11.8601305Z Post job cleanup.
+2026-10-09T15:05:11.9819545Z [command]/usr/bin/git version
+2026-10-09T15:05:11.9884582Z git version 2.55.0
+2026-10-09T15:05:11.9939730Z Temporarily overriding HOME='/home/runner/work/_temp/54004f4d-9c10-4b31-8a12-ec962da6a15e' before making global git config changes
+2026-10-09T15:05:11.9941260Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-09T15:05:11.9948095Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Floorp/Floorp
+2026-10-09T15:05:12.0079908Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-09T15:05:12.0156430Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-09T15:05:12.0660528Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-09T15:05:12.0712868Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-09T15:05:12.0982657Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-09T15:05:12.1030292Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-09T15:05:12.3694521Z Cleaning up orphan processes
+2026-10-09T15:05:12.4011374Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -1,0 +1,70 @@
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because glean-sdk was not found in the cache and you require glean-sdk==68.0.1, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because orjson was not found in the cache and you require orjson>=3.10, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because psutil was not found in the cache and you require psutil>=5.4.2, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because rtoml was not found in the cache and you require rtoml>=0.11.0, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because zstandard was not found in the cache and you require zstandard>=0.11.1,<=0.25.0, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+error: No solution found when resolving dependencies
+  cause: Because pyyaml was not found in the cache and you require pyyaml==6.0.3, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Using Python 3.12.14 environment at: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/lint
+error: No solution found when resolving dependencies
+  cause: Because aiohappyeyeballs was not found in the cache and you require aiohappyeyeballs==2.6.1, we can conclude that your requirements are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 191, in <module>
+    main(sys.argv[1:])
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 147, in main
+    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 39, in check_and_get_mach
+    return load_mach(dir_path, mach_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 25, in load_mach
+    return mach_initialize.initialize(dir_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/build/mach_initialize.py", line 456, in initialize
+    command_site_manager.activate()
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 714, in activate
+    self.ensure()
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 685, in ensure
+    _create_venv_with_pthfile(
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1544, in _create_venv_with_pthfile
+    target_venv.pip_install([
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1106, in pip_install
+    raise cpe
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1088, in pip_install
+    install_result = subprocess.run(  # noqa PLW1510
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/uv', 'pip', 'install', '--python=/workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/lint', '--requirement', '/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/taskcluster/requirements.txt', '--require-hashes']' returned non-zero exit status 1.

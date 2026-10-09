@@ -1,3 +1,4 @@
 # Preserve raw evidence output and required unified-diff context bytes.
 *.log -whitespace
 *.patch -whitespace
+followup-evidence/** -whitespace
