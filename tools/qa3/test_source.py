@@ -25,6 +25,38 @@ class SourceContractTests(unittest.TestCase):
         self.assertEqual(sum(len(g["cases"]) for g in self.plan["groups"]), 106)
         source.audit_deno_subset(source.ROOT)
 
+    def test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes(self):
+        host_map = source.read_json(source.ROOT / "tools/qa3/deno-host-imports.json")
+        host_lock = source.read_json(source.ROOT / "tools/qa3/deno-host.lock")
+        repo_config = source.read_json(source.ROOT / "deno.json")
+        repo_lock = source.read_json(source.ROOT / "deno.lock")
+        source.validate_deno_inputs(host_map, host_lock, repo_config, repo_lock)
+        for field, value in (
+            ("imports", {**host_map["imports"], "extra": "npm:unrelated"}),
+            ("imports", {**host_map["imports"], "@std/assert": "jsr:@std/assert@0"}),
+        ):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                source.validate_deno_inputs(
+                    {**host_map, field: value}, host_lock, repo_config, repo_lock
+                )
+        changed = copy.deepcopy(host_lock)
+        first_package = next(iter(changed["jsr"]))
+        changed["jsr"][first_package]["integrity"] = "0" * 64
+        for lock in (
+            {**host_lock, "npm": {}},
+            {**host_lock, "workspace": repo_lock["workspace"]},
+            {**host_lock, "specifiers": {}},
+            changed,
+        ):
+            with self.subTest(lock=lock), self.assertRaises(ValueError):
+                source.validate_deno_inputs(host_map, lock, repo_config, repo_lock)
+        for config in (
+            {},
+            {"imports": {**repo_config["imports"], "@std/assert": "npm:assert"}},
+        ):
+            with self.subTest(config=config), self.assertRaises(ValueError):
+                source.validate_deno_inputs(host_map, host_lock, config, repo_lock)
+
     def test_missing_empty_reordered_and_duplicate_groups_are_rejected(self):
         changes = [
             [],
@@ -152,10 +184,12 @@ class SourceContractTests(unittest.TestCase):
                 source.validate_coverage(changed)
         for value in (True, 0, "false"):
             with self.assertRaises(ValueError):
-                source.validate_coverage({
-                    **self.coverage,
-                    "publicationAuthorized": value,
-                })
+                source.validate_coverage(
+                    {
+                        **self.coverage,
+                        "publicationAuthorized": value,
+                    }
+                )
         changed = copy.deepcopy(self.coverage)
         changed["artifacts"][0]["verdict"] = "PASS"
         with self.assertRaises(ValueError):
@@ -176,12 +210,18 @@ class SourceContractTests(unittest.TestCase):
     def test_children_do_not_inherit_credentials_or_runner_options(self):
         with patch.dict(
             os.environ,
-            {"GH_TOKEN": "fixture-secret", "NODE_OPTIONS": "bad", "DENO_FLAGS": "bad"},
+            {
+                "GH_TOKEN": "fixture-secret",
+                "NODE_OPTIONS": "bad",
+                "DENO_FLAGS": "bad",
+                "DENO_NO_PACKAGE_JSON": "0",
+            },
         ):
             env = source.child_environment()
             self.assertNotIn("GH_TOKEN", env)
             self.assertNotIn("NODE_OPTIONS", env)
             self.assertNotIn("DENO_FLAGS", env)
+            self.assertEqual(env["DENO_NO_PACKAGE_JSON"], "1")
         code = source.execute(
             [sys.executable, "-c", "print('bounded source fixture')"],
             self.root / "child.log",

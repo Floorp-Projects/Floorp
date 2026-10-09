@@ -15,8 +15,12 @@ provenance cases. These are Floorp host tool tests; they are not Mozilla native
 tests or the unavailable implementation kit's 114 tests. The executor uses a
 fixed command registry and never calls `deno task test`, `test:integration`,
 browser startup, signing or publication. Deno has no run/network/environment
-permission. It uses `--node-modules-dir=none` so a cold host does not initialize
-unrelated workspace npm binaries under the test file-size budget.
+permission. It uses `--no-config`, `--no-npm`, `--node-modules-dir=none` and a
+fixed `DENO_NO_PACKAGE_JSON=1` environment with a host-only import map and
+frozen JSR lock. Preflight requires that the four standard-library aliases and
+all JSR specifiers/integrity records exactly match the root configuration/lock;
+those root files are unchanged. The separate inputs avoid initializing unrelated
+workspace npm binaries under the test file-size budget.
 
 The source runner validates the exact file/case IDs, origin, execution kind,
 target, group order and fixed counts. It rejects missing/duplicate/unexpected
@@ -42,19 +46,20 @@ python3 -B tools/qa3/source.py run /tmp/qa3-new-attempt --expected-head FULL_GIT
 
 The output directory must be new. Logs/reports are never overwritten to hide a
 first failure. CI records actual host/tool versions, source HEAD, run/attempt,
-plan/runner/lock/test-file digests, planned/executed IDs and each raw verdict.
-`--local` explicitly records dirty/local execution during development; it does
-not issue qualification. Preflight rejection also writes a FAIL receipt. CI
-preserves contract-test logs and exit codes alongside the source receipt in
-`source/`. Workflow artifacts are named with run and attempt and retained for 14
-days. This initial receipt does not establish complete history across runs; that
-requires the QA3-08 trusted controller before required promotion.
+plan/runner/root-config/root-lock/host-map/host-lock/test-file digests,
+planned/executed IDs and each raw verdict. `--local` explicitly records
+dirty/local execution during development; it does not issue qualification.
+Preflight rejection also writes a FAIL receipt. CI preserves contract-test logs
+and exit codes alongside the source receipt in `source/`. Workflow artifacts are
+named with run and attempt and retained for 14 days. This initial receipt does
+not establish complete history across runs; that requires the QA3-08 trusted
+controller before required promotion.
 
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular
-file writes (including logs) applied before exec by prlimit, runs in an owned
-process group, and is reaped/terminated on exit. This is a Linux source host,
-not the future cross-platform GUI/Agent supervisor.
+file writes (including cache entries and logs) applied before exec by prlimit,
+runs in an owned process group, and is reaped/terminated on exit. This is a
+Linux source host, not the future cross-platform GUI/Agent supervisor.
 
 ## Coverage and remaining gates
 

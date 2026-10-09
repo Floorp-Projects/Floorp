@@ -27,6 +27,7 @@ GROUPS = {
     ),
 }
 CASE_COUNTS = {"deno-host": 60, "node-intake": 28, "python-provenance": 18}
+DENO_IMPORTS = ("@std/assert", "@std/cli", "@std/fs", "@std/path")
 TARGETS = [
     "windows-x86_64",
     "linux-x86_64",
@@ -179,6 +180,31 @@ def validate_cases(group, actual):
         raise ValueError("failed, skipped, or incomplete source test")
 
 
+def validate_deno_inputs(host_map, host_lock, repo_config, repo_lock):
+    try:
+        imports = {key: repo_config["imports"][key] for key in DENO_IMPORTS}
+        expected_lock = {
+            "version": repo_lock["version"],
+            "specifiers": {
+                key: value
+                for key, value in repo_lock["specifiers"].items()
+                if key.startswith("jsr:")
+            },
+            "jsr": repo_lock["jsr"],
+        }
+    except (KeyError, TypeError, AttributeError) as error:
+        raise ValueError("missing repository Deno host inputs") from error
+    if not all(
+        isinstance(value, str) and value.startswith("jsr:@std/")
+        for value in imports.values()
+    ):
+        raise ValueError(
+            "host imports must remain the repository's standard-library aliases"
+        )
+    if host_map != {"imports": imports} or host_lock != expected_lock:
+        raise ValueError("host import map or JSR lock differs from repository inputs")
+
+
 def audit_deno_subset(repo):
     for path in GROUPS["deno-host"]:
         text = (repo / path).read_text()
@@ -234,11 +260,13 @@ def read_junit(path, repo, node_file=None):
             verdict = "FAIL"
         else:
             verdict = "PASS"
-        cases.append({
-            "file": filename,
-            "name": case.get("name", ""),
-            "verdict": verdict,
-        })
+        cases.append(
+            {
+                "file": filename,
+                "name": case.get("name", ""),
+                "verdict": verdict,
+            }
+        )
     return cases
 
 
@@ -292,7 +320,11 @@ def child_environment():
             "DENO_DIR",
         )
         if key in os.environ
-    } | {"PYTHONDONTWRITEBYTECODE": "1", "LC_ALL": "C.UTF-8"}
+    } | {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "LC_ALL": "C.UTF-8",
+        "DENO_NO_PACKAGE_JSON": "1",
+    }
 
 
 def execute(args, log, repo, timeout=180):
@@ -374,6 +406,17 @@ def run_source(output, expected_head, local=False):
             for p in paths
         }
         receipt["denoLockSha256"] = digest((ROOT / "deno.lock").read_bytes())
+        host_map = ROOT / "tools/qa3/deno-host-imports.json"
+        host_lock = ROOT / "tools/qa3/deno-host.lock"
+        validate_deno_inputs(
+            read_json(host_map),
+            read_json(host_lock),
+            read_json(ROOT / "deno.json"),
+            read_json(ROOT / "deno.lock"),
+        )
+        receipt["denoConfigSha256"] = digest((ROOT / "deno.json").read_bytes())
+        receipt["denoHostImportMapSha256"] = digest(host_map.read_bytes())
+        receipt["denoHostLockSha256"] = digest(host_lock.read_bytes())
         for tool in ("deno", "node"):
             log = output / f"{tool}-version.log"
             try:
@@ -392,6 +435,12 @@ def run_source(output, expected_head, local=False):
                 "deno-host": [
                     "deno",
                     "test",
+                    "--no-config",
+                    "--import-map",
+                    str(host_map),
+                    "--lock",
+                    str(host_lock),
+                    "--no-npm",
                     "--frozen-lockfile",
                     "--node-modules-dir=none",
                     "--no-prompt",
