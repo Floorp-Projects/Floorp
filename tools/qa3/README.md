@@ -15,7 +15,8 @@ provenance cases. These are Floorp host tool tests; they are not Mozilla native
 tests or the unavailable implementation kit's 114 tests. The executor uses a
 fixed command registry and never calls `deno task test`, `test:integration`,
 browser startup, signing or publication. Deno has no run/network/environment
-permission.
+permission. It uses `--node-modules-dir=none` so a cold host does not initialize
+unrelated workspace npm binaries under the test file-size budget.
 
 The source runner validates the exact file/case IDs, origin, execution kind,
 target, group order and fixed counts. It rejects missing/duplicate/unexpected
@@ -50,10 +51,10 @@ days. This initial receipt does not establish complete history across runs; that
 requires the QA3-08 trusted controller before required promotion.
 
 Child processes receive a small environment without credentials or runner option
-injection. Each group has a 180-second timeout and a 16-MiB per-file output
-limit applied before exec by prlimit, runs in an owned process group, and is
-reaped/terminated on exit. This is a Linux source host, not the future
-cross-platform GUI/Agent supervisor.
+injection. Each group has a 180-second timeout and a 16-MiB limit for regular
+file writes (including logs) applied before exec by prlimit, runs in an owned
+process group, and is reaped/terminated on exit. This is a Linux source host,
+not the future cross-platform GUI/Agent supervisor.
 
 ## Coverage and remaining gates
 

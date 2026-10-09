@@ -393,7 +393,7 @@ def run_source(output, expected_head, local=False):
                     "deno",
                     "test",
                     "--frozen-lockfile",
-                    "--node-modules-dir=auto",
+                    "--node-modules-dir=none",
                     "--no-prompt",
                     "--allow-read",
                     "--allow-write",
