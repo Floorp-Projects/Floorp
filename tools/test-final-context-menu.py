@@ -105,7 +105,7 @@ const done = arguments[arguments.length - 1];
     .map(([itemId, key]) => {
       const node = win.document.createXULElement("menuitem");
       node.id = itemId;
-      node.setAttribute("data-l10n-lazy-id", key);
+      node.setAttribute("data-lazy-l10n-id", key);
       popup.appendChild(node);
       return node;
     });
