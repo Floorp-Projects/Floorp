@@ -364,18 +364,34 @@ def main():
         require(host.poll() is None and host._matching_identity(host.pid) == host.identity,
                 "Browser PID/executable changed during regressions")
         report["status"] = "passed"
-        return 0
     except Exception as error:
         report["error"] = str(error)
-        return 1
     finally:
         if client is not None:
-            client.close()
+            try:
+                client.close()
+            except (OSError, RuntimeError) as error:
+                report["clientCleanupError"] = str(error)
+                report["status"] = "failed"
         if host is not None:
-            host.terminate()
+            if host.poll() is not None:
+                report["unexpectedHostExit"] = host.returncode
+                report["status"] = "failed"
+            try:
+                host.close()
+            except Exception as error:
+                report["hostCleanupError"] = str(error)
+                report["status"] = "failed"
+            report["hostExitCode"] = host.returncode
+            report["cleanupRequestedSignal"] = host.requested_signal
+            report["ownedHostPid"] = host.pid
+            if host.returncode not in (0, -int(host.requested_signal or 0)):
+                report["hostCleanupError"] = f"Missing or abnormal browser exit: {host.returncode}"
+                report["status"] = "failed"
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")
         print(json.dumps({"status": report["status"], "report": str(output / "report.json"),
                           "error": report.get("error")}))
+    return 0 if report["status"] == "passed" else 1
 
 
 if __name__ == "__main__":

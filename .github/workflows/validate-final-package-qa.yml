@@ -310,6 +310,43 @@ jobs:
           python3 tools/app-shim/test-runtime.py --browser "$QA_BROWSER" \
             --output "$RUNNER_TEMP/final-package-qa/native-gui" --launch-services --capture-window
 
+      - name: Verify the source still awaits publication after GUI QA
+        if: inputs.pre_publication == true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
+            const inputPath = path.join(process.env.RUNNER_TEMP,'final-package-qa/input.json');
+            const input = JSON.parse(fs.readFileSync(inputPath,'utf8'));
+            const {data: run} = await github.rest.actions.getWorkflowRun(
+              {...context.repo,run_id:input.runId});
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
+              {...context.repo,run_id:input.runId,per_page:100});
+            const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+              {...context.repo,run_id:input.runId});
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo,run_id:input.runId,per_page:100});
+            let release = null;
+            try {
+              ({data: release} = await github.rest.repos.getReleaseByTag(
+                {...context.repo,tag:`v${input.floorpVersion}`}));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const after = validateFinalPackageSource({run,headSha:input.floorpHead,jobs,
+              prePublication:true,unsigned:input.unsigned,pendingDeployments,release,
+              bundleArtifacts:artifacts.filter(a => a.name === 'floorp-release-bundle-v2')});
+            if (JSON.stringify(after) !== JSON.stringify(input.sourceEligibility)) {
+              throw new Error('The immutable bundle or publication approval state changed during QA');
+            }
+            // This read-only attestation is not a publisher dependency or lock.
+            // The owner's existing publication approval remains a separate action.
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'final-package-qa/source-after-qa.json'),
+              JSON.stringify({sourceEligibility:after,checkedAt:new Date().toISOString()},null,2));
+
       - name: Upload compact final package regression evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
