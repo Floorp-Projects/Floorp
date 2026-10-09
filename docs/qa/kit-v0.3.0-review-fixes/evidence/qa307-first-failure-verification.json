@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "runs": [
+    {
+      "name": "kit",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tools/qa/tests",
+        "-p",
+        "test_review_regressions.py",
+        "-v"
+      ],
+      "exitCode": 1,
+      "seconds": 4.778,
+      "log": "qa307-kit-regressions-first-failure.log",
+      "implementationFixed": false
+    },
+    {
+      "name": "runtime",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+        "-B",
+        "-m",
+        "unittest",
+        "test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero",
+        "-v"
+      ],
+      "exitCode": 1,
+      "seconds": 0.115,
+      "log": "qa307-runtime-regressions-first-failure.log",
+      "implementationFixed": false
+    }
+  ],
+  "expectedFailuresReproduced": true
+}
