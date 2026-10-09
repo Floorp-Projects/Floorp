@@ -1,0 +1,72 @@
+test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) ... 
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('windows', 'aarch64', False, False, '', '')) ... FAIL
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'aarch64', False, True, 'generate', '')) ... FAIL
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'x86_64', True, False, 'use', 'old-profile')) ... FAIL
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('mac', 'aarch64', False, True, 'use', '')) ... FAIL
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('mac', 'x86_64', False, True, 'generate', 'old-profile')) ... FAIL
+  test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'x86_64', False, True, 'invalid-mode', '')) ... FAIL
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('windows', 'aarch64', False, False, '', ''))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmpoj1fb68a/bin/sudo apt update -y\n/tmp/tmpoj1fb68a/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'aarch64', False, True, 'generate', ''))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmpc15dy5th/bin/sudo apt update -y\n/tmp/tmpc15dy5th/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'x86_64', True, False, 'use', 'old-profile'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Applying debug patches...\nApplying debug patch: fixture.patch\nUsing debug branding: floorp-daylight\n'
+stderr=''
+effects='/tmp/tmps_z6pof9/bin/git apply --verbose --ignore-space-change --ignore-whitespace .github/patches/debug/fixture.patch\n/tmp/tmps_z6pof9/bin/sudo apt update -y\n/tmp/tmps_z6pof9/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('mac', 'aarch64', False, True, 'use', ''))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\nPGO use mode - re-adding Rust targets if needed...\n'
+stderr=''
+effects='/tmp/tmptxqxjfd6/bin/sudo apt update -y\n/tmp/tmptxqxjfd6/bin/sudo apt install msitools -y\n/tmp/tmptxqxjfd6/bin/rustup target add aarch64-apple-darwin\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('mac', 'x86_64', False, True, 'generate', 'old-profile'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmpm6ojoy36/bin/sudo apt update -y\n/tmp/tmpm6ojoy36/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+======================================================================
+FAIL: test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) (args=('linux', 'x86_64', False, True, 'invalid-mode', ''))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py", line 116, in test_real_setup_rejects_invalid_inputs_before_side_effects
+    self.assertNotEqual(
+AssertionError: 0 == 0 : stdout='Using official branding: floorp-official\n'
+stderr=''
+effects='/tmp/tmpk_8pa696/bin/sudo apt update -y\n/tmp/tmpk_8pa696/bin/sudo apt install msitools -y\n./mach --no-interactive bootstrap --application-choice browser\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.295s
+
+FAILED (failures=6)

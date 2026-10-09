@@ -1,0 +1,13 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-m",
+    "unittest",
+    "-v",
+    "test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap"
+  ],
+  "exit": 1,
+  "failures": 4,
+  "nativeExecuted": false,
+  "credentialsInherited": false
+}

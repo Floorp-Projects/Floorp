@@ -1,0 +1,34 @@
+invalid-syntax: Cannot use parentheses within a `with` statement on Python 3.8 (syntax was added in Python 3.9)
+  --> .github/workflows/scripts/test_qa3_mozlog.py:93:14
+   |
+91 |                 return line
+92 |
+93 |         with (
+   |              ^
+94 |             mock.patch("qa3_mozlog.MAX_EVENT_BYTES", limit, create=True),
+95 |             mock.patch.object(Path, "open", return_value=TrackingStream(data)),
+   |
+
+invalid-syntax: Cannot use parentheses within a `with` statement on Python 3.8 (syntax was added in Python 3.9)
+   --> .github/workflows/scripts/test_qa3_mozlog.py:112:18
+    |
+110 |             self.assertEqual(len(line), size)
+111 |             self.path.write_bytes(prefix + line)
+112 |             with (
+    |                  ^
+113 |                 self.subTest(size=size),
+114 |                 mock.patch("qa3_mozlog.MAX_EVENT_BYTES", limit, create=True),
+    |
+
+invalid-syntax: Cannot use parentheses within a `with` statement on Python 3.8 (syntax was added in Python 3.9)
+   --> .github/workflows/scripts/test_qa3_mozlog.py:151:14
+    |
+149 |                 "PASS",
+150 |             )
+151 |         with (
+    |              ^
+152 |             mock.patch("qa3_mozlog.MAX_EVENT_BYTES", len(line) - 1, create=True),
+153 |             self.assertRaisesRegex(ValueError, "budget"),
+    |
+
+Found 3 errors.

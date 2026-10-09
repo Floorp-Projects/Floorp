@@ -1,0 +1,24 @@
+{
+  "files": {
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063"
+  },
+  "freezeUnchanged": true,
+  "scope": [
+    "missing/raw-subtest contract",
+    "bounded line reading and termination",
+    "event/count/metadata budgets",
+    "preservation of 14 original tests"
+  ],
+  "suiteMethods": 21,
+  "additionalCases": 36,
+  "expectedAccepted": 14,
+  "expectedRejected": 22,
+  "fixtureMismatches": 0,
+  "confirmedResidualP0": [],
+  "confirmedResidualP1": [],
+  "confirmedResidualP2": [],
+  "sourceModified": false,
+  "nativeExecuted": false,
+  "credentialsInherited": false
+}

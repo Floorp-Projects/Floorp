@@ -1,0 +1,14 @@
+test_unrelated_late_adoption_and_caller_subreaper_are_preserved (test_qa3_native_io.ProcessFailureTests.test_unrelated_late_adoption_and_caller_subreaper_are_preserved) ... FAIL
+
+======================================================================
+FAIL: test_unrelated_late_adoption_and_caller_subreaper_are_preserved (test_qa3_native_io.ProcessFailureTests.test_unrelated_late_adoption_and_caller_subreaper_are_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 752, in test_unrelated_late_adoption_and_caller_subreaper_are_preserved
+    self.assertIsNotNone(state)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 1 test in 2.220s
+
+FAILED (failures=1)

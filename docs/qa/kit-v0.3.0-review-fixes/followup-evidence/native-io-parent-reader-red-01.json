@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io.SupervisorBoundaryTests.test_parent_reader_error_with_missing_snapshot_reaps",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 12.286,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testedVariant": "working-fix",
+  "testedSourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testSha256": "b41a10cc3bae75e632dacfcc5d47f0c477f27bffc586b17ae231afbac4ec6f84",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "9c21dbf811a7037d1cc2a60ee99988d32628e3f2a72d83c87288825fdab6fd0a",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}

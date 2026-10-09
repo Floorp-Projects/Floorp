@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-10-09T14:43:37.986429+00:00",
+  "baselineHead": "718e688fbd7ad88a776534e7778ad8e4a7f67364",
+  "files": [
+    {
+      "sourcePath": "tools/qa3/source.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-floorp-candidate-01-source.py",
+      "sha256": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115"
+    },
+    {
+      "sourcePath": "tools/qa3/test_source.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-floorp-candidate-01-test_source.py",
+      "sha256": "8271578a5148caa4094060f546b969332405e319ffeeb6a2fbb313329993c6e3"
+    },
+    {
+      "sourcePath": "tools/qa3/README.md",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-floorp-candidate-01-README.md",
+      "sha256": "ee150ba07a11f2ca5d73128450dcb1e00fd46a71603c39798df4fb4e7b2b6c88"
+    }
+  ],
+  "authorPatchSha256": "ebb5800f550f78c5ddd75e3a5a51e38556b6937df900ee8c6177db11093bd462",
+  "liveDiffMatchesSavedCandidatePatch": true
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "kind": "read-only exact-path/AST analysis; no kit/harness/candidate validator execution by this reviewer",
+  "runtimeProofHead": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+  "sources": [
+    {
+      "path": "testing/mozbase/mozlog/mozlog/structuredlog.py",
+      "revision": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+      "gitBlob": "7700f70e9cfa7e811e47cd54d1c1272c49ab2d2f",
+      "sha256": "69be708d0b333c720b70ea89c1f95e72c6ccc7b45360b29759ae2827fa171d30",
+      "localMatchesPinnedRuntimeTree": true,
+      "sourceUrl": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/120f443af5c257cbdd4712f23b28f9c6fa8c4396/testing/mozbase/mozlog/mozlog/structuredlog.py"
+    },
+    {
+      "path": "testing/mozbase/mozlog/mozlog/logtypes.py",
+      "revision": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+      "gitBlob": "8fea1fdd97086469e83103cd4e9e393db02abf92",
+      "sha256": "6802f736c53758279f0c7bc1684c557d83aac2ba124fd8bf993f11030928d12b",
+      "localMatchesPinnedRuntimeTree": true,
+      "sourceUrl": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/120f443af5c257cbdd4712f23b28f9c6fa8c4396/testing/mozbase/mozlog/mozlog/logtypes.py"
+    }
+  ],
+  "canonicalUpstreamGitRevision": "0c469c2352451630bc69fc328c9f0c589c6c534d",
+  "upstreamObjectVerification": "not independently available in this checkout: git ls-tree returned not a tree object; no additional fetch attempted",
+  "requiredDeclaration": {
+    "path": "testing/mozbase/mozlog/mozlog/structuredlog.py",
+    "lines": [
+      644,
+      648
+    ],
+    "declaration": "Int(\"exitcode\") without a default"
+  },
+  "requiredArgumentEnforcement": {
+    "path": "testing/mozbase/mozlog/mozlog/logtypes.py",
+    "lines": [
+      31,
+      35,
+      66,
+      73
+    ],
+    "behavior": "no-default argument is required; omission raises Too few arguments"
+  },
+  "writerNormalization": {
+    "path": "testing/mozbase/mozlog/mozlog/logtypes.py",
+    "lines": [
+      264,
+      266
+    ],
+    "conversion": "int(data); writer outputs an integer even for coercible input"
+  },
+  "currentConsumer": {
+    "path": ".github/workflows/scripts/qa3_mozlog.py",
+    "lines": [
+      136,
+      138
+    ],
+    "predicate": "entry.get(\"exitcode\", 0) != 0"
+  },
+  "staticallyAcceptedMalformedRaw": {
+    "missing": true,
+    "false": true,
+    "zeroFloat": true
+  },
+  "existingTestModuleContainsProcessExitLiteral": false,
+  "recommendedConsumerContract": "explicit type(exitcode) is int and exitcode == 0; missing/bool/float/nonzero fail closed",
+  "severity": "P2",
+  "scope": "consumerProof local receipt only; nativeQualification/productArtifactQualification remain UNVERIFIED; publicationAuthorized false",
+  "mainSyntheticReproduction": "qa306-kit-pr84-mozlog-comparison.json"
+}

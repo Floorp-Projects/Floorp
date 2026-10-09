@@ -1,0 +1,31 @@
+error: Failed to initialize cache at `/home/agent/.cache/uv`
+  cause: failed to open file `/home/agent/.cache/uv/CACHEDIR.TAG`: Read-only file system (os error 30)
+
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/mach", line 191, in <module>
+    main(sys.argv[1:])
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/mach", line 147, in main
+    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/mach", line 39, in check_and_get_mach
+    return load_mach(dir_path, mach_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/mach", line 25, in load_mach
+    return mach_initialize.initialize(dir_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/build/mach_initialize.py", line 456, in initialize
+    command_site_manager.activate()
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 714, in activate
+    self.ensure()
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 685, in ensure
+    _create_venv_with_pthfile(
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1544, in _create_venv_with_pthfile
+    target_venv.pip_install([
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1106, in pip_install
+    raise cpe
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 1088, in pip_install
+    install_result = subprocess.run(  # noqa PLW1510
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/uv', 'pip', 'install', '--python=/workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/lint', '--requirement', '/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/taskcluster/requirements.txt', '--require-hashes']' returned non-zero exit status 2.

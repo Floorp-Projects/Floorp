@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-m",
+    "unittest",
+    "-v",
+    "test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects"
+  ],
+  "exit": 1,
+  "failures": 6,
+  "nativeExecuted": false,
+  "credentialsInherited": false,
+  "limits": {
+    "addressSpaceMiB": 256,
+    "cpuSeconds": 20,
+    "fileSizeMiB": 8,
+    "wallSeconds": 40
+  },
+  "sourceHashes": {
+    "qa3_build_profile.py": "0cc8a69efe6fd5a46117a835527e040a58676b4b38112ab87809c330658fafaa",
+    "setup-floorp.sh": "ca992937a9288922875493560e07c4be89be6075ba62c51c176a2801af825892",
+    "test_qa3_build_profile.py": "00c3a55c8fc6c6b45066d5f4dddb4e0e5a497883609b7a7d8563441ff7b38019"
+  }
+}

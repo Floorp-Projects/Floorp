@@ -1,0 +1,14 @@
+test_caller_subreaper_zero_is_not_enabled (test_qa3_native_io.ProcessFailureTests.test_caller_subreaper_zero_is_not_enabled) ... FAIL
+
+======================================================================
+FAIL: test_caller_subreaper_zero_is_not_enabled (test_qa3_native_io.ProcessFailureTests.test_caller_subreaper_zero_is_not_enabled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 712, in test_caller_subreaper_zero_is_not_enabled
+    self.assertEqual(current.value, 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.098s
+
+FAILED (failures=1)

@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io.ProcessFailureTests.test_pipe_close_failure_still_reaps_and_saves_first_error",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 2.268,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "bd4d43178933a0fdb272ed2f87067ec0bca4ad07f9202bbc732f82b9d283a5c4",
+  "testedVariant": "pinned-original",
+  "testedSourceSha256": "d1d5e86dc8ae63977248847e1bd3192b5267966ec8011aa2390fd486f2e7bd86",
+  "testSha256": "d21e69c5e6fa6369b2f00e7fc907dec3fdc183bc98e4db7e81d6020a75d2c34e",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "bfcbfbec573e9ddce9fb6d8100238ed3dbd85ac2c0ee1d892c8ee999c81bcf42",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}
