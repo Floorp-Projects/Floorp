@@ -108,6 +108,26 @@ class SourceContractTests(unittest.TestCase):
             )
             self.assertEqual(source.read_junit(report, self.root)[0]["verdict"], "FAIL")
 
+    def test_node22_classname_is_bound_only_to_the_fixed_single_file_command(self):
+        report = self.root / "node22.xml"
+        report.write_text(
+            '<testsuites><testcase classname="test" name="one"/></testsuites>'
+        )
+        file = source.GROUPS["node-intake"][0]
+        self.assertEqual(source.read_junit(report, self.root, file)[0]["file"], file)
+        self.assertEqual(source.read_junit(report, self.root)[0]["file"], "test")
+        with self.assertRaises(ValueError):
+            source.read_junit(report, self.root, "foreign-test.mjs")
+        report.write_text(
+            '<testsuites><testcase file="" classname="test" name="one"/></testsuites>'
+        )
+        self.assertEqual(source.read_junit(report, self.root, file)[0]["file"], "test")
+        report.write_text(
+            '<testsuites><testcase file="/foreign/test.mjs" classname="test" name="one"/></testsuites>'
+        )
+        with self.assertRaises(ValueError):
+            source.read_junit(report, self.root, file)
+
     def test_per_test_retry_ignore_and_options_are_outside_the_fixed_host_plan(self):
         for path in source.GROUPS["deno-host"]:
             file = self.root / path

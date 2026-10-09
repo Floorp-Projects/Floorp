@@ -195,7 +195,9 @@ def audit_deno_subset(repo):
             )
 
 
-def read_junit(path, repo):
+def read_junit(path, repo, node_file=None):
+    if node_file is not None and node_file not in GROUPS["node-intake"]:
+        raise ValueError("unregistered single-file Node report origin")
     data = path.read_bytes()
     if (
         not data
@@ -219,6 +221,8 @@ def read_junit(path, repo):
     cases = []
     for case in root.iter("testcase"):
         filename = case.get("file") or case.get("classname", "")
+        if "file" not in case.attrib and filename == "test" and node_file is not None:
+            filename = node_file
         file = Path(filename)
         if file.is_absolute():
             filename = file.relative_to(repo).as_posix()
@@ -417,7 +421,7 @@ def run_source(output, expected_head, local=False):
                 code = execute(args, log, ROOT)
                 record["exitCode"] = code
                 if group["id"] == "node-intake":
-                    record["cases"] = read_junit(log, ROOT)
+                    record["cases"] = read_junit(log, ROOT, GROUPS["node-intake"][0])
                 elif group["id"] == "python-provenance":
                     record["cases"] = read_json(report)
                 else:
@@ -441,6 +445,28 @@ def run_source(output, expected_head, local=False):
         (output / "source-receipt.json").write_text(
             json.dumps(receipt, indent=2) + "\n"
         )
+        summary = {
+            "sourceHead": receipt["sourceHead"],
+            "sourceVerdict": receipt["sourceVerdict"],
+            "executedCases": receipt["executedCases"],
+            "publicationAuthorized": False,
+            "steps": [],
+        }
+        if "error" in receipt:
+            summary["error"] = receipt["error"]
+        for step in receipt["steps"]:
+            item = {key: value for key, value in step.items() if key != "cases"}
+            item["executedCases"] = len(step["cases"])
+            if step["verdict"] != "PASS":
+                log = output / f"{step['id']}.log"
+                if log.is_file():
+                    with log.open("rb") as stream:
+                        stream.seek(max(0, log.stat().st_size - 4096))
+                        item["logTail"] = stream.read(4096).decode(
+                            "utf-8", errors="replace"
+                        )
+            summary["steps"].append(item)
+        print(json.dumps(summary))
     return 0 if receipt["sourceVerdict"] == "PASS" else 1
 
 

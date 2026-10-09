@@ -26,6 +26,11 @@ definitions; per-test retry/ignore options are outside this plan. There are no
 automatic retries. Test internals and trusted policy changes still require
 normal code review; a candidate-controlled receipt is not an attestation.
 
+Node 22 JUnit uses generic `classname="test"` without a file field. Its origin
+is bound to the one fixed Node input file and exact named cases; explicit
+foreign file fields are rejected. Deno report origins remain explicit. A bounded
+failure summary is printed to CI logs as well as retained in artifacts.
+
 On a disposable Linux x86_64 host with Git, Python 3.12, Node 22, Deno 2.9.7 and
 `/usr/bin/prlimit` (provided by Ubuntu util-linux):
 
