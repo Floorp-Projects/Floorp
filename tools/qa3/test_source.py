@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import copy
+import ctypes
+import json
 import os
+import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -140,6 +144,33 @@ class SourceContractTests(unittest.TestCase):
             )
             self.assertEqual(source.read_junit(report, self.root)[0]["verdict"], "FAIL")
 
+    def test_junit_requires_utf8_and_rejects_encoded_dtd_entities(self):
+        report = self.root / "encoded.xml"
+        document = '<testsuite><testcase classname="file" name="日本語"/></testsuite>'
+        unsafe = '<!DOCTYPE testsuite [<!ENTITY origin "file">]><testsuite><testcase classname="&origin;" name="one"/></testsuite>'
+        for encoding in (
+            "utf-16",
+            "utf-16-le",
+            "utf-16-be",
+            "utf-32",
+            "utf-32-le",
+            "utf-32-be",
+        ):
+            for text in (document, unsafe):
+                with self.subTest(encoding=encoding, unsafe=text == unsafe):
+                    report.write_bytes(text.encode(encoding))
+                    with self.assertRaises(ValueError):
+                        source.read_junit(report, self.root)
+        for encoding in ("utf-8", "utf-8-sig"):
+            report.write_bytes(document.encode(encoding))
+            self.assertEqual(source.read_junit(report, self.root)[0]["name"], "日本語")
+            report.write_bytes(unsafe.encode(encoding))
+            with self.assertRaises(ValueError):
+                source.read_junit(report, self.root)
+        report.write_bytes(b'<?xml version="1.0" encoding="ISO-8859-1"?><testsuite/>')
+        with self.assertRaises(ValueError):
+            source.read_junit(report, self.root)
+
     def test_node22_classname_is_bound_only_to_the_fixed_single_file_command(self):
         report = self.root / "node22.xml"
         report.write_text(
@@ -242,6 +273,252 @@ class SourceContractTests(unittest.TestCase):
             )
         time.sleep(0.25)
         self.assertFalse(marker.exists())
+
+    def test_exit_recovers_detached_descendant_and_preserves_unrelated_child(self):
+        libc = ctypes.CDLL(None, use_errno=True)
+        prior = ctypes.c_int()
+        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
+        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
+        unrelated = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(10)"]
+        )
+        marker = self.root / "detached-pid"
+        descendant = (
+            "import os,signal,time,pathlib; "
+            "signal.signal(signal.SIGTERM,signal.SIG_IGN); "
+            "birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]; "
+            f"pathlib.Path({str(marker)!r}).write_text(str(os.getpid())+' '+birth); "
+            "time.sleep(10)"
+        )
+        command = (
+            "import pathlib,subprocess,sys,time; "
+            f"subprocess.Popen([sys.executable,'-c',{descendant!r}],start_new_session=True); "
+            f"marker=pathlib.Path({str(marker)!r}); "
+            "deadline=time.monotonic()+3\n"
+            "while not marker.exists() and time.monotonic()<deadline: time.sleep(.01)\n"
+            "assert marker.exists()"
+        )
+        pid = None
+        try:
+            self.assertEqual(
+                source.execute(
+                    [sys.executable, "-c", command],
+                    self.root / "detached.log",
+                    self.root,
+                ),
+                0,
+            )
+            pid, birth = map(int, marker.read_text().split())
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                alive = False
+            else:
+                alive = True
+            self.assertFalse(
+                alive, "detached owned descendant survived command completion"
+            )
+            self.assertIsNone(unrelated.poll())
+        finally:
+            if pid is None and marker.exists():
+                pid, birth = map(int, marker.read_text().split())
+            if pid is not None:
+                info = source._process_info(pid)
+                if info and info[2] == birth:
+                    try:
+                        os.kill(pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                try:
+                    os.waitpid(pid, 0)
+                except ChildProcessError:
+                    pass
+            unrelated.kill()
+            unrelated.wait(timeout=3)
+            self.assertEqual(libc.prctl(36, prior.value, 0, 0, 0), 0)
+
+    def test_timeout_recovers_detached_child_that_forks_during_term(self):
+        marker = self.root / "late-fork-pid"
+        ready = self.root / "ready"
+        command = f"""
+import os, pathlib, signal, subprocess, sys, time
+def on_term(*_):
+    if os.fork() == 0:
+        os.setsid()
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
+        pathlib.Path({str(marker)!r}).write_text(str(os.getpid())+' '+birth)
+        time.sleep(10)
+        os._exit(0)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+signal.signal(signal.SIGTERM, on_term)
+birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
+pathlib.Path({str(ready)!r}).write_text(str(os.getpid())+' '+birth)
+time.sleep(10)
+"""
+        try:
+            with self.assertRaisesRegex(ValueError, "timed out"):
+                source.execute(
+                    [sys.executable, "-c", command],
+                    self.root / "late-fork.log",
+                    self.root,
+                    timeout=0.5,
+                )
+            self.assertTrue(ready.exists())
+            self.assertTrue(
+                marker.exists(), "the late-fork cleanup path was not exercised"
+            )
+            with self.assertRaises(ProcessLookupError):
+                os.kill(int(marker.read_text().split()[0]), 0)
+        finally:
+            for file in (ready, marker):
+                if file.exists():
+                    pid, birth = map(int, file.read_text().split())
+                    info = source._process_info(pid)
+                    if info and info[2] == birth:
+                        try:
+                            os.kill(pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+
+    def test_execute_keeps_parent_subreaper_state_and_rejects_invalid_deadlines(self):
+        libc = ctypes.CDLL(None, use_errno=True)
+        prior = ctypes.c_int()
+        after = ctypes.c_int()
+        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
+        self.assertEqual(
+            source.execute(
+                [sys.executable, "-c", "raise SystemExit(124)"],
+                self.root / "nonzero.log",
+                self.root,
+            ),
+            124,
+        )
+        self.assertEqual(libc.prctl(37, ctypes.byref(after), 0, 0, 0), 0)
+        self.assertEqual(after.value, prior.value)
+        for timeout in (0, -1, float("nan"), float("inf")):
+            with self.subTest(timeout=timeout), self.assertRaises(ValueError):
+                source.execute(
+                    [sys.executable, "-c", "pass"],
+                    self.root / "invalid.log",
+                    self.root,
+                    timeout,
+                )
+        self.assertFalse((self.root / "invalid.log").exists())
+
+    def test_spawn_failure_closes_control_pipe_without_overwriting_log(self):
+        count = len(list(Path("/proc/self/fd").iterdir()))
+        with (
+            patch.object(
+                source.subprocess, "Popen", side_effect=OSError("fixture spawn failure")
+            ),
+            self.assertRaisesRegex(OSError, "fixture spawn failure"),
+        ):
+            source.execute(
+                [sys.executable, "-c", "pass"],
+                self.root / "spawn-fail.log",
+                self.root,
+            )
+        self.assertEqual(len(list(Path("/proc/self/fd").iterdir())), count)
+
+    def test_cleanup_fault_and_interruption_are_recorded_without_leaking_children(self):
+        libc = ctypes.CDLL(None, use_errno=True)
+        prior = ctypes.c_int()
+        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
+        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
+        fixture = """
+import errno, os, pathlib, signal, sys
+sys.path.insert(0, sys.argv[2])
+import source
+marker = sys.argv[3]
+if sys.argv[4] == 'pidfd':
+    real = source.os.pidfd_open
+    first = True
+    def fault(pid):
+        global first
+        if first:
+            first = False
+            raise OSError(errno.EMFILE, 'fixture transient pidfd failure')
+        return real(pid)
+    source.os.pidfd_open = fault
+    child = "import os,pathlib,signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]; pathlib.Path("+repr(marker)+").write_text(str(os.getpid())+' '+birth); time.sleep(10)"
+else:
+    real = source._cleanup_owned
+    def interrupt(process, owned):
+        os.kill(os.getpid(), signal.SIGTERM)
+        return real(process, owned)
+    source._cleanup_owned = interrupt
+    child = 'raise SystemExit(0)'
+source._execute_owned(int(sys.argv[1]), .5, [sys.executable, '-I', '-c', child])
+"""
+        try:
+            for mode in ("pidfd", "interrupted"):
+                with self.subTest(mode=mode):
+                    marker = self.root / f"{mode}-child"
+                    read_fd, write_fd = os.pipe()
+                    worker = None
+                    try:
+                        worker = subprocess.Popen(
+                            [
+                                sys.executable,
+                                "-I",
+                                "-B",
+                                "-c",
+                                fixture,
+                                str(write_fd),
+                                str(Path(source.__file__).parent),
+                                str(marker),
+                                mode,
+                            ],
+                            pass_fds=(write_fd,),
+                            env=source.child_environment(),
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                            start_new_session=True,
+                        )
+                    except BaseException:
+                        os.close(read_fd)
+                        raise
+                    finally:
+                        os.close(write_fd)
+                    try:
+                        worker.wait(timeout=8)
+                        with os.fdopen(read_fd, "rb") as control:
+                            read_fd = None
+                            result = json.loads(control.read(4097))
+                        self.assertTrue(result["ownedCleanupComplete"])
+                        if mode == "pidfd":
+                            self.assertIn("timed out", result["error"])
+                            self.assertIn(
+                                "fixture transient pidfd failure",
+                                result["cleanupErrors"][0],
+                            )
+                            self.assertTrue(marker.exists())
+                            with self.assertRaises(ProcessLookupError):
+                                os.kill(int(marker.read_text().split()[0]), 0)
+                        else:
+                            self.assertEqual(result["exitCode"], 0)
+                            self.assertIn("supervisor interrupted", result["error"])
+                    finally:
+                        if read_fd is not None:
+                            os.close(read_fd)
+                        if worker is not None and worker.poll() is None:
+                            worker.kill()
+                            worker.wait(timeout=2)
+                        if marker.exists():
+                            pid, birth = map(int, marker.read_text().split())
+                            info = source._process_info(pid)
+                            if info and info[2] == birth:
+                                try:
+                                    os.kill(pid, signal.SIGKILL)
+                                except ProcessLookupError:
+                                    pass
+                            try:
+                                os.waitpid(pid, 0)
+                            except ChildProcessError:
+                                pass
+        finally:
+            self.assertEqual(libc.prctl(36, prior.value, 0, 0, 0), 0)
 
     def test_reusing_an_output_log_cannot_erase_a_first_failure(self):
         log = self.root / "first.log"

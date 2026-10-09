@@ -1,14 +1,17 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import argparse
+import ctypes
 import hashlib
 import json
+import math
 import os
 import platform
 import re
 import signal
 import subprocess
 import sys
+import time
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -225,13 +228,19 @@ def read_junit(path, repo, node_file=None):
     if node_file is not None and node_file not in GROUPS["node-intake"]:
         raise ValueError("unregistered single-file Node report origin")
     data = path.read_bytes()
-    if (
-        not data
-        or len(data) > 4 * 1024 * 1024
-        or re.search(rb"<!\s*(?:DOCTYPE|ENTITY)", data, re.IGNORECASE)
-    ):
+    if not data or len(data) > 4 * 1024 * 1024 or b"\0" in data:
         raise ValueError("missing, oversized, or unsafe JUnit report")
-    root = ET.fromstring(data)
+    text = data.decode("utf-8-sig")
+    encoding = re.search(
+        r"<\?xml\s+[^?]*\bencoding\s*=\s*(['\"])(.*?)\1", text, re.IGNORECASE
+    )
+    if (
+        re.search(r"<!\s*(?:DOCTYPE|ENTITY)", text, re.IGNORECASE)
+        or encoding
+        and encoding[2].lower() not in {"utf-8", "utf8"}
+    ):
+        raise ValueError("unsafe or non-UTF-8 JUnit report")
+    root = ET.fromstring(text)
     if root.tag not in {"testsuites", "testsuite"}:
         raise ValueError("unsupported JUnit document")
     for suite in root.iter():
@@ -327,28 +336,270 @@ def child_environment():
     }
 
 
-def execute(args, log, repo, timeout=180):
-    with log.open("xb") as stream:
-        child = subprocess.Popen(
-            ["/usr/bin/prlimit", "--fsize=16777216:16777216", "--", *args],
-            cwd=repo,
+def _process_info(pid):
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+        return int(fields[1]), fields[0], int(fields[19])
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
+        return None
+
+
+def _process_snapshot():
+    result = {}
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdecimal():
+            continue
+        info = _process_info(int(entry.name))
+        if info:
+            result[int(entry.name)] = info
+    return result
+
+
+def _owned_descendants(owned):
+    snapshot = _process_snapshot()
+    ancestors = {
+        pid
+        for pid, birth in owned.items()
+        if pid in snapshot and snapshot[pid][2] == birth
+    } | {os.getpid()}
+    while True:
+        children = {
+            pid for pid, info in snapshot.items() if info[0] in ancestors
+        } - ancestors
+        if not children:
+            break
+        for pid in children:
+            owned[pid] = snapshot[pid][2]
+        ancestors.update(children)
+    return {
+        pid: snapshot[pid]
+        for pid, birth in owned.items()
+        if pid in snapshot and snapshot[pid][2] == birth
+    }
+
+
+def _cleanup_owned(process, owned):
+    errors = []
+
+    def record(error):
+        message = _bounded_error(error)
+        if message not in errors and len(errors) < 4:
+            errors.append(message)
+
+    for sig, interval in ((signal.SIGTERM, 2), (signal.SIGKILL, 2)):
+        deadline = time.monotonic() + interval
+        while True:
+            try:
+                alive = _owned_descendants(owned)
+            except OSError as error:
+                record(error)
+                alive = {}
+            try:
+                if process.poll() is None:
+                    process.send_signal(sig)
+            except OSError as error:
+                record(error)
+            for pid, info in alive.items():
+                if info[1] != "Z":
+                    try:
+                        fd = os.pidfd_open(pid)
+                    except ProcessLookupError:
+                        continue
+                    except OSError as error:
+                        record(error)
+                        continue
+                    try:
+                        current = _process_info(pid)
+                        if current and current[2] == info[2]:
+                            signal.pidfd_send_signal(fd, sig)
+                    except ProcessLookupError:
+                        pass
+                    except OSError as error:
+                        record(error)
+                    finally:
+                        try:
+                            os.close(fd)
+                        except OSError as error:
+                            record(error)
+            try:
+                process.poll()
+            except OSError as error:
+                record(error)
+            for pid in alive:
+                if pid == process.pid:
+                    continue
+                try:
+                    os.waitpid(pid, os.WNOHANG)
+                except ChildProcessError:
+                    pass
+                except OSError as error:
+                    record(error)
+            try:
+                remaining = _owned_descendants(owned)
+            except OSError as error:
+                record(error)
+                remaining = True
+            if not remaining and process.returncode is not None:
+                break
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(0.02)
+        if not remaining and process.returncode is not None:
+            break
+    try:
+        process.wait(timeout=1)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        record(error)
+    try:
+        complete = not _owned_descendants(owned) and process.returncode is not None
+    except OSError as error:
+        record(error)
+        complete = False
+    return complete, errors
+
+
+def _bounded_error(error):
+    text = f"{type(error).__name__}: {error}"
+    text = "".join(c if c.isprintable() else " " for c in text)
+    return text.encode("utf-8", errors="replace")[:256].decode("utf-8", errors="ignore")
+
+
+def _execute_owned(control, timeout, argv):
+    result = {
+        "exitCode": None,
+        "error": None,
+        "cleanupErrors": [],
+        "ownedCleanupComplete": False,
+    }
+    process = None
+    owned = {}
+    interrupted = False
+
+    def stop(_signum, _frame):
+        nonlocal interrupted
+        interrupted = True
+
+    try:
+        if not math.isfinite(timeout) or timeout <= 0 or not argv:
+            raise ValueError("invalid source command deadline")
+        libc = ctypes.CDLL(None, use_errno=True)
+        if libc.prctl(36, 1, 0, 0, 0) != 0:
+            raise OSError("cannot own orphaned source descendants")
+        signal.signal(signal.SIGTERM, stop)
+        signal.signal(signal.SIGINT, stop)
+        process = subprocess.Popen(
+            ["/usr/bin/prlimit", "--fsize=16777216:16777216", "--", *argv],
             env=child_environment(),
-            stdout=stream,
-            stderr=stream,
             start_new_session=True,
         )
-        try:
-            code = child.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            os.killpg(child.pid, signal.SIGKILL)
-            child.wait(timeout=10)
-            raise ValueError("source command timed out")
-        finally:
+        deadline = time.monotonic() + timeout
+        while True:
+            _owned_descendants(owned)
+            if interrupted:
+                raise ValueError("source supervisor interrupted")
+            if time.monotonic() >= deadline:
+                raise ValueError("source command timed out")
+            if process.poll() is not None:
+                break
+            time.sleep(0.02)
+        result["exitCode"] = process.returncode
+    except (
+        OSError,
+        ValueError,
+        subprocess.SubprocessError,
+        KeyboardInterrupt,
+    ) as error:
+        result["error"] = _bounded_error(error)
+    finally:
+        if process is not None:
             try:
-                os.killpg(child.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-    return code
+                complete, errors = _cleanup_owned(process, owned)
+                result["ownedCleanupComplete"] = complete
+                result["cleanupErrors"] = errors
+            except (
+                OSError,
+                ValueError,
+                subprocess.SubprocessError,
+                KeyboardInterrupt,
+            ) as error:
+                result["cleanupErrors"].append(_bounded_error(error))
+        else:
+            result["ownedCleanupComplete"] = True
+        if interrupted:
+            result["error"] = result["error"] or "source supervisor interrupted"
+        with os.fdopen(control, "w", encoding="utf-8") as stream:
+            json.dump(result, stream, ensure_ascii=False)
+
+
+def execute(args, log, repo, timeout=180):
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("invalid source command deadline")
+    with log.open("xb") as stream:
+        read_fd, write_fd = os.pipe()
+        try:
+            child = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-I",
+                    "-B",
+                    str(Path(__file__).resolve()),
+                    "_owned",
+                    str(write_fd),
+                    str(timeout),
+                    *args,
+                ],
+                cwd=repo,
+                env=child_environment(),
+                stdout=stream,
+                stderr=stream,
+                start_new_session=True,
+                pass_fds=(write_fd,),
+            )
+        except BaseException:
+            os.close(read_fd)
+            raise
+        finally:
+            os.close(write_fd)
+        with os.fdopen(read_fd, "rb") as control:
+            try:
+                child.wait(timeout=timeout + 8)
+            except BaseException:
+                child.terminate()
+                try:
+                    child.wait(timeout=6)
+                except subprocess.TimeoutExpired:
+                    child.kill()
+                    child.wait(timeout=2)
+                raise
+            result = control.read(4097)
+        if child.returncode != 0 or not result or len(result) > 4096:
+            raise ValueError("source supervisor did not complete")
+        status = json.loads(result)
+        if not isinstance(status, dict) or set(status) != {
+            "exitCode",
+            "error",
+            "cleanupErrors",
+            "ownedCleanupComplete",
+        }:
+            raise ValueError("invalid source supervisor result")
+        if (
+            not isinstance(status["cleanupErrors"], list)
+            or len(status["cleanupErrors"]) > 4
+            or not all(isinstance(error, str) for error in status["cleanupErrors"])
+            or type(status["ownedCleanupComplete"]) is not bool
+            or status["error"] is not None
+            and not isinstance(status["error"], str)
+        ):
+            raise ValueError("untyped source supervisor result")
+        if status["cleanupErrors"] or status["ownedCleanupComplete"] is not True:
+            raise ValueError(
+                f"{status['error'] or 'source cleanup failed'}; cleanup: {status['cleanupErrors']}"
+            )
+        if status["error"] is not None:
+            raise ValueError(status["error"])
+        if type(status["exitCode"]) is not int:
+            raise ValueError("source supervisor lacks a command result")
+        return status["exitCode"]
 
 
 def run_source(output, expected_head, local=False):
@@ -532,4 +783,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 5 and sys.argv[1] == "_owned":
+        _execute_owned(int(sys.argv[2]), float(sys.argv[3]), sys.argv[4:])
+        sys.exit(0)
     sys.exit(main())
