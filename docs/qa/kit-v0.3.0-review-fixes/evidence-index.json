@@ -284,11 +284,32 @@
     "qa306_kit_negative_repros.py": {
       "bytes": 5459,
       "sha256": "3ee7e0e7ac5bba0aa4384685b08117d79b7650e615abba28c51661c0c90d887e"
+    },
+    "qa307-floorp-integration-before-cancel.json": {
+      "bytes": 56611,
+      "sha256": "7d14d877a6db3b4a45b15e1eed1a06809ef31f449b1c7131a69d4ed24a52ea3b"
+    },
+    "qa307-floorp-integration-cancel-result.json": {
+      "bytes": 181,
+      "sha256": "b21834653d9fc8ac79e46cafc5041938813e987d17637c3f06ba563af040c650"
+    },
+    "qa307-floorp-integration-cancel-confirmation.json": {
+      "bytes": 13319,
+      "sha256": "747f1c142354a51c00d487e0e7b11a6735fa928050016e842cbf4ee86c4791b0"
     }
   },
   "sourceCommit": "87311566a225936fbe7948db142bce3f1d3379d8",
   "runtimeFollowup": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
   "rawLogsUnmodified": true,
   "historicalFailuresRetained": true,
-  "publicationAuthorized": false
+  "publicationAuthorized": false,
+  "automaticNativeCI": {
+    "runId": 37933791186,
+    "head": "2d2be1eb70e89931c064de1ce23615b5f02f7a0c",
+    "attempt": 1,
+    "finalStatus": "completed",
+    "finalConclusion": "cancelled",
+    "qualificationAccepted": false,
+    "browserCountVerified": false
+  }
 }

@@ -42,7 +42,7 @@ invalid values and valid integer zero.
 ## Validation and first failures
 
 All counts below are local host checks, with zero skips on Linux x86_64 and
-Python 3.12.14. No native browser or Mozilla harness was launched.
+Python 3.12.14. These local checks launched no native browser or Mozilla harness.
 
 | Check | Result |
 | --- | --- |
@@ -95,6 +95,18 @@ python3 -B -m unittest discover -s tools/qa/tests -v
 POSIX-only subprocess regressions are skipped on other systems; those skips
 are not native success. The attempt ceiling is a local resource limit, not
 authorization to retry a required test.
+
+The initial Draft creation also triggered the repository's existing integration
+workflow [37933791186, attempt 1](https://github.com/Floorp-Projects/Floorp/actions/runs/37933791186)
+at head `2d2be1eb70e89931c064de1ce23615b5f02f7a0c`. Its host smoke completed,
+the ARM/Windows/Mac artifact intake jobs completed, and its Linux combined
+browser suite started automatically. The pre-push workflow inspection missed
+that automatic native continuation. This owned run was cancelled to preserve
+the current native No-Go; REST confirms `completed/cancelled`. The before/after
+records are retained in `evidence/`. That partial CI run issues no qualification
+and supplies no accepted browser test count. No private Runtime Debug build
+workflow was dispatched. Further PR updates can trigger this existing workflow
+again; native continuation requires a separately authorized phase.
 
 ## Remaining qualification work
 
