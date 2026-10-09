@@ -1087,12 +1087,6 @@ export function ContextMenuEditor({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!selectedContainer.complete && (
-              <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
-                {t("contextMenu.incompleteContainer")}
-              </p>
-            )}
-
             <p className="rounded-lg bg-base-200/60 p-3 text-sm text-base-content/70">
               {t("contextMenu.capabilityHelp")}
             </p>
