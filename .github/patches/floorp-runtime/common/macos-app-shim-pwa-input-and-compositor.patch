@@ -36,7 +36,7 @@ index e24d82fcaef..224600b2187 100644
  }
  
 diff --git a/widget/cocoa/appshim/MacWebAppInput.h b/widget/cocoa/appshim/MacWebAppInput.h
-index 3338f985a6c..269fedaed7d 100644
+index 3338f985a6c..dadf040dab0 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.h
 +++ b/widget/cocoa/appshim/MacWebAppInput.h
 @@ -14,15 +14,15 @@
@@ -66,8 +66,16 @@ index 3338f985a6c..269fedaed7d 100644
    std::function<void(NSDictionary*)> mSendEditorState;
    NSEvent* mLastKeyEvent =
        nullptr;  // Retained; this file uses Gecko's MRC input helpers.
+@@ -64,6 +64,7 @@ class MacWebAppInput final : public TextEventDispatcherListener {
+   int16_t mButtons = 0;
+   bool mUpdatingEditorState = false;
+   bool mKeyDownConsumed = false;
++  bool mSuppressNativeKeyBindings = false;
+   bool mComposing = false;
+   bool mIMEFocused = false;
+ };
 diff --git a/widget/cocoa/appshim/MacWebAppInput.mm b/widget/cocoa/appshim/MacWebAppInput.mm
-index 47b32e89973..b52547aba79 100644
+index 47b32e89973..1dec072b8ed 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.mm
 +++ b/widget/cocoa/appshim/MacWebAppInput.mm
 @@ -4,6 +4,7 @@
@@ -86,7 +94,7 @@ index 47b32e89973..b52547aba79 100644
  #include "mozilla/AutoRestore.h"
  #include "mozilla/widget/IMEData.h"
  #include "mozilla/MiscEvents.h"
-@@ -113,7 +115,7 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+@@ -113,7 +115,7 @@ NS_IMPL_ISUPPORTS(MacWebAppInput, TextEventDispatcherListener,
                    nsISupportsWeakReference)
  
  MacWebAppInput::MacWebAppInput(
@@ -95,7 +103,19 @@ index 47b32e89973..b52547aba79 100644
      : mWidget(aWidget), mSendEditorState(std::move(aSendEditorState)) {}
  
  MacWebAppInput::~MacWebAppInput() { OnDestroy(); }
-@@ -186,15 +188,32 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+@@ -148,6 +150,11 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
+   MOZ_ASSERT(NS_IsMainThread());
+   if (!IsAlive()) return;
+   RefPtr<MacWebAppInput> self(this);
++  // Reentrant shim input uses its own command policy.
++  AutoRestore<Maybe<Command>> command(mCommand);
++  AutoRestore<bool> suppressNativeKeyBindings(mSuppressNativeKeyBindings);
++  mCommand.reset();
++  mSuppressNativeKeyBindings = false;
+   NSString* kind = ReadString(aPayload, @"kind", 32);
+   if (!kind) return;
+   if ([kind isEqualToString:@"focus"]) {
+@@ -186,15 +193,32 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
    if ([kind isEqualToString:@"scroll"]) {
      double dx, dy;
      bool precise;
@@ -111,7 +131,7 @@ index 47b32e89973..b52547aba79 100644
 +        !ReadUInt(aPayload, @"momentumPhase", &momentum, true) ||
 +        !ReadNumber(aPayload, @"timestamp", &timestamp, 0, 1e12) ||
 +        (aPayload[@"swipeEnabled"] && !Boolean(aPayload, @"swipeEnabled", &swipeEnabled)))
-       return;
++      return;
 +    if (!aPayload[@"swipeEnabled"])
 +      swipeEnabled = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
 +    if (precise && (phase != NSEventPhaseNone || momentum != NSEventPhaseNone)) {
@@ -121,7 +141,7 @@ index 47b32e89973..b52547aba79 100644
 +          ScreenPoint(-dx * scale, -dy * scale), gfx::IntPoint(),
 +          GeckoModifiers(modifiers));
 +      mWidget->DispatchPanGestureInput(pan);
-+      return;
+       return;
 +    }
      WidgetWheelEvent event(true, eWheel, mWidget);
      event.mRefPoint = point;
@@ -130,7 +150,7 @@ index 47b32e89973..b52547aba79 100644
      event.mDeltaMode = precise ? 0 : 1;
      event.mDeltaX = -dx * (precise ? scale : 1);
      event.mDeltaY = -dy * (precise ? scale : 1);
-@@ -237,7 +256,7 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+@@ -237,7 +261,7 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
    event.mClickCount = clicks;
    mWidget->DispatchInputEvent(&event);
    if (message == eMouseUp && domButton == 2 && IsAlive()) {
@@ -139,6 +159,35 @@ index 47b32e89973..b52547aba79 100644
      menu.mRefPoint = point;
      menu.mModifiers = event.mModifiers;
      menu.mButton = domButton;
+@@ -373,7 +397,6 @@ void MacWebAppInput::HandleText(NSDictionary* aPayload) {
+     WidgetKeyboardEvent event(true, eKeyDown, mWidget);
+     TISInputSourceWrapper::CurrentInputSource().InitKeyEvent(mLastKeyEvent,
+                                                              event, false);
+-    event.InitAllEditCommands(dispatcher->MaybeWritingModeRefAtSelection());
+     dispatcher->MaybeDispatchKeypressEvents(event, status);
+     return;
+   }
+@@ -392,7 +415,8 @@ void MacWebAppInput::HandleText(NSDictionary* aPayload) {
+       WidgetKeyboardEvent event(true, eKeyDown, mWidget);
+       TISInputSourceWrapper::CurrentInputSource().InitKeyEvent(
+           mLastKeyEvent, event, false, &value);
+-      event.PreventNativeKeyBindings();
++      AutoRestore<bool> suppressNativeKeyBindings(mSuppressNativeKeyBindings);
++      mSuppressNativeKeyBindings = true;
+       dispatcher->MaybeDispatchKeypressEvents(event, status);
+     } else {
+       WidgetContentCommandEvent event(true, eContentCommandInsertText, mWidget);
+@@ -435,6 +459,10 @@ bool MacWebAppInput::GetEditCommands(NativeKeyBindingsType aType,
+                                      const WidgetKeyboardEvent& aEvent,
+                                      nsTArray<CommandInt>& aCommands) {
+   if (!IsAlive()) return false;
++  if (mSuppressNativeKeyBindings) {
++    aCommands.Clear();
++    return true;
++  }
+   if (mCommand)
+     aCommands.AppendElement(static_cast<CommandInt>(*mCommand));
+   else
 diff --git a/widget/cocoa/appshim/MacWebAppWidget.h b/widget/cocoa/appshim/MacWebAppWidget.h
 index bc6fcb0b13a..8b2b8ee757f 100644
 --- a/widget/cocoa/appshim/MacWebAppWidget.h
