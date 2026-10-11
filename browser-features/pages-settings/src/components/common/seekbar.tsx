@@ -16,7 +16,7 @@ export function Seekbar({
   showMinMax = true,
   minLabel,
   maxLabel,
-  size = "md",
+  size: _size = "md",
   valuePrefix = "",
   valueSuffix = "",
   min = 0,
