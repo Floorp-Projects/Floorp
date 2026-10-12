@@ -246,10 +246,12 @@ export const zShortcutConfig = t.type({
   action: t.string,
 });
 
+export const zShortcutList = t.array(zShortcutConfig);
+
 export const zKeyboardShortcutConfig = t.type({
-  schemaVersion: t.literal(2),
+  schemaVersion: t.literal(3),
   enabled: t.boolean,
-  shortcuts: t.record(t.string, zShortcutConfig),
+  shortcuts: t.record(t.string, zShortcutList),
 });
 
 export type ShortcutModifiers = t.TypeOf<typeof zShortcutModifiers>;
@@ -266,7 +268,7 @@ export interface KeyboardShortcutActionOption {
   name: string;
 }
 
-export const KEYBOARD_SHORTCUT_SCHEMA_VERSION = 2 as const;
+export const KEYBOARD_SHORTCUT_SCHEMA_VERSION = 3 as const;
 export const ZEN_MODE_ACTION = "floorp-toggle-zen-mode";
 
 function isKeyboardShortcutRecord(
@@ -285,12 +287,12 @@ export function createDefaultKeyboardShortcutConfig(
     schemaVersion: KEYBOARD_SHORTCUT_SCHEMA_VERSION,
     enabled,
     shortcuts: {
-      "floorp-toggle-command-palette": {
+      "floorp-toggle-command-palette": [{
         key: "F2",
         modifiers: { alt: false, ctrl: false, meta: false, shift: false },
         action: "floorp-toggle-command-palette",
-      },
-      [ZEN_MODE_ACTION]: {
+      }],
+      [ZEN_MODE_ACTION]: [{
         key: "KeyZ",
         modifiers: {
           alt: true,
@@ -299,9 +301,54 @@ export function createDefaultKeyboardShortcutConfig(
           shift: false,
         },
         action: ZEN_MODE_ACTION,
-      },
+      }],
     },
   };
+}
+
+function isShortcutShape(value: unknown): value is ShortcutConfig {
+  if (!isKeyboardShortcutRecord(value)) return false;
+  return typeof value.key === "string" &&
+    isKeyboardShortcutRecord(value.modifiers) &&
+    typeof value.modifiers.alt === "boolean" &&
+    typeof value.modifiers.ctrl === "boolean" &&
+    typeof value.modifiers.meta === "boolean" &&
+    typeof value.modifiers.shift === "boolean" &&
+    typeof value.action === "string";
+}
+
+function shortcutSignature(shortcut: ShortcutConfig): string {
+  const key = shortcut.key.replace(/^(Key|Digit)/, "").toUpperCase();
+  return JSON.stringify([shortcut.modifiers, key]);
+}
+
+function normalizeShortcutBindings(
+  value: unknown,
+  actionId: string,
+): ShortcutConfig[] {
+  const candidates = Array.isArray(value) ? value : [value];
+  const normalized: ShortcutConfig[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of candidates) {
+    if (!isShortcutShape(candidate)) continue;
+    const shortcut: ShortcutConfig = {
+      key: candidate.key,
+      modifiers: {
+        alt: candidate.modifiers.alt,
+        ctrl: candidate.modifiers.ctrl,
+        meta: candidate.modifiers.meta,
+        shift: candidate.modifiers.shift,
+      },
+      action: actionId,
+    };
+    const signature = shortcutSignature(shortcut);
+    if (seen.has(signature)) continue;
+    seen.add(signature);
+    normalized.push(shortcut);
+  }
+
+  return normalized;
 }
 
 export function migrateKeyboardShortcutConfig(
@@ -312,20 +359,28 @@ export function migrateKeyboardShortcutConfig(
   const defaults = createDefaultKeyboardShortcutConfig(enabled, platform);
   const source = isKeyboardShortcutRecord(value) ? value : {};
   const sourceShortcuts = isKeyboardShortcutRecord(source.shortcuts)
-    ? source.shortcuts as Record<string, ShortcutConfig>
+    ? source.shortcuts as Record<string, unknown>
     : null;
-  const shortcuts = sourceShortcuts
-    ? { ...sourceShortcuts }
-    : { ...defaults.shortcuts };
+  const shortcuts: Record<string, ShortcutConfig[]> = {};
+
+  if (sourceShortcuts) {
+    for (const [actionId, binding] of Object.entries(sourceShortcuts)) {
+      const bindings = normalizeShortcutBindings(binding, actionId);
+      if (bindings.length > 0) shortcuts[actionId] = bindings;
+    }
+  } else {
+    for (const [actionId, bindings] of Object.entries(defaults.shortcuts)) {
+      shortcuts[actionId] = [...bindings];
+    }
+  }
 
   if (
     source.schemaVersion !== KEYBOARD_SHORTCUT_SCHEMA_VERSION &&
-    !Object.values(shortcuts).some((shortcut) =>
-      isKeyboardShortcutRecord(shortcut) &&
-      shortcut.action === ZEN_MODE_ACTION
+    !Object.values(shortcuts).some((bindings) =>
+      bindings.some((shortcut) => shortcut.action === ZEN_MODE_ACTION)
     )
   ) {
-    shortcuts[ZEN_MODE_ACTION] = defaults.shortcuts[ZEN_MODE_ACTION];
+    shortcuts[ZEN_MODE_ACTION] = [...defaults.shortcuts[ZEN_MODE_ACTION]];
   }
 
   return {

@@ -147,11 +147,13 @@ export class KeyboardShortcutController {
     const config = getConfig();
     const shortcuts = config.shortcuts;
 
-    for (const [_id, shortcut] of Object.entries(shortcuts)) {
-      if (this.isShortcutMatch(shortcut, code)) {
-        this.executeShortcut(shortcut);
-        this.resetState();
-        return true;
+    for (const bindings of Object.values(shortcuts)) {
+      for (const shortcut of bindings) {
+        if (this.isShortcutMatch(shortcut, code)) {
+          this.executeShortcut(shortcut);
+          this.resetState();
+          return true;
+        }
       }
     }
 

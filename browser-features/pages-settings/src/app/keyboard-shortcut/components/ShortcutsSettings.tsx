@@ -49,16 +49,18 @@ function normalizeKeyCode(code: string): string {
 }
 
 function collectFloorpConflictCodes(
-  shortcuts: Record<string, ShortcutConfig>,
+  shortcuts: Record<string, ShortcutConfig[]>,
 ): Set<string> {
   const codes = new Set<string>();
-  for (const shortcut of Object.values(shortcuts)) {
-    codes.add(
-      comboToCanonicalCode(
-        shortcut.modifiers,
-        normalizeKeyCode(shortcut.key),
-      ),
-    );
+  for (const bindings of Object.values(shortcuts)) {
+    for (const shortcut of bindings) {
+      codes.add(
+        comboToCanonicalCode(
+          shortcut.modifiers,
+          normalizeKeyCode(shortcut.key),
+        ),
+      );
+    }
   }
   return codes;
 }
@@ -103,6 +105,7 @@ export const ShortcutsSettings = ({
   const [editingShortcut, setEditingShortcut] = useState<ShortcutConfig | null>(
     null,
   );
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingEntry, setEditingEntry] = useState<FirefoxKeyEntry | null>(
     null,
   );
@@ -111,13 +114,14 @@ export const ShortcutsSettings = ({
   );
 
   const handleSaveShortcut = async (shortcut: ShortcutConfig) => {
-    if (!editingAction) return false;
-    const saved = config.shortcuts[editingAction]
-      ? await updateShortcut(editingAction, shortcut)
-      : await addShortcut(editingAction, shortcut);
+    if (!editingAction || editingIndex === null) return false;
+    const saved = editingIndex < 0
+      ? await addShortcut(editingAction, shortcut)
+      : await updateShortcut(editingAction, editingIndex, shortcut);
     if (!saved) return false;
     setEditingShortcut(null);
     setEditingAction(null);
+    setEditingIndex(null);
     return true;
   };
 
@@ -135,7 +139,9 @@ export const ShortcutsSettings = ({
     if (!row.shortcut) {
       return (
         <span className="text-base-content/50">
-          {t("keyboardShortcut.notSet")}
+          {row.isAddRow
+            ? t("keyboardShortcut.addAnotherShortcut")
+            : t("keyboardShortcut.notSet")}
         </span>
       );
     }
@@ -200,6 +206,7 @@ export const ShortcutsSettings = ({
                   onClick={() => {
                     setEditingShortcut(row.shortcut ?? null);
                     setEditingAction(row.actionId);
+                    setEditingIndex(row.shortcutIndex ?? -1);
                     setIsEditorOpen(true);
                   }}
                 >
@@ -211,9 +218,14 @@ export const ShortcutsSettings = ({
                   <Button
                     type="button"
                     variant="danger"
-                    onClick={() =>
-                      row.actionId &&
-                      deleteShortcut(row.actionId)}
+                    onClick={() => {
+                      if (
+                        row.actionId !== null &&
+                        row.shortcutIndex !== undefined
+                      ) {
+                        void deleteShortcut(row.actionId, row.shortcutIndex);
+                      }
+                    }}
                   >
                     {t("keyboardShortcut.delete")}
                   </Button>
@@ -312,7 +324,7 @@ export const ShortcutsSettings = ({
             onClose={() => setIsEditorOpen(false)}
             onSave={handleSaveShortcut}
             initialShortcut={editingShortcut}
-            existingShortcuts={Object.values(config.shortcuts)}
+            existingShortcuts={Object.values(config.shortcuts).flat()}
             actionId={editingAction || ""}
           />
         )}

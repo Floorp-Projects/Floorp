@@ -7,68 +7,68 @@ import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import type { KeyboardShortcutConfig } from "../../../types/pref.ts";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
 import { Settings } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
 
 interface GeneralSettingsProps {
-    config: KeyboardShortcutConfig;
-    toggleEnabled: () => void;
-    updateConfig: (config: Partial<KeyboardShortcutConfig>) => void;
+  config: KeyboardShortcutConfig;
+  toggleEnabled: () => void;
+  updateConfig: (config: Partial<KeyboardShortcutConfig>) => void;
 }
 
 export const GeneralSettings = ({
-    config,
-    toggleEnabled,
+  config,
+  toggleEnabled,
 }: GeneralSettingsProps) => {
-    const { t } = useTranslation();
+  const { t } = useTranslation();
 
-    return (
-        <Card className={styles.section}>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Settings className="size-5" />
-                    {t("keyboardShortcut.basicSettings")}
-                </CardTitle>
-                <CardDescription className={styles.description}>
-                    {t("keyboardShortcut.basicSettingsDescription")}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div>
-                    <div className="mb-2 inline-flex items-center gap-2">
-                        <h3 className="text-base font-medium">
-                            {t("keyboardShortcut.enableOrDisable")}
-                        </h3>
-                        <InfoTip
-                            description={t("keyboardShortcut.enableDescription")}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <div className={styles.row}>
-                            <div className="space-y-1">
-                                <label htmlFor="enable-shortcuts">
-                                    {t("keyboardShortcut.enable")}
-                                </label>
-                            </div>
-                            <Switch
-                                id="enable-shortcuts"
-                                checked={config.enabled}
-                                onChange={toggleEnabled}
-                            />
-                        </div>
-                        <div className="text-sm text-base-content/70">
-                            {t("keyboardShortcut.needRestartDescription")}
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}; 
+  return (
+    <Card className={styles.section}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="size-5" />
+          {t("keyboardShortcut.basicSettings")}
+        </CardTitle>
+        <CardDescription className={styles.description}>
+          {t("keyboardShortcut.basicSettingsDescription")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2">
+            <h3 className="text-base font-medium">
+              {t("keyboardShortcut.enableOrDisable")}
+            </h3>
+            <InfoTip
+              description={t("keyboardShortcut.enableDescription")}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className={styles.row}>
+              <div className="space-y-1">
+                <label htmlFor="enable-shortcuts">
+                  {t("keyboardShortcut.enable")}
+                </label>
+              </div>
+              <Switch
+                id="enable-shortcuts"
+                checked={config.enabled}
+                onChange={toggleEnabled}
+              />
+            </div>
+            <div className="text-sm text-base-content/70">
+              {t("keyboardShortcut.needRestartDescription")}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};

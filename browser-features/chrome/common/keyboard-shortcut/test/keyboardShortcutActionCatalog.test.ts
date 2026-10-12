@@ -50,8 +50,8 @@ function testNoDefaultBinding(): void {
     "inline URL action must not ship with a default shortcut",
   );
   assert(
-    !Object.values(defaultConfig.shortcuts).some((shortcut) =>
-      shortcut.action === INLINE_TAB_URL_ACTION_ID
+    !Object.values(defaultConfig.shortcuts).some((bindings) =>
+      bindings.some((shortcut) => shortcut.action === INLINE_TAB_URL_ACTION_ID)
     ),
     "inline URL action must not appear in any shipped default binding",
   );

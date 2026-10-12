@@ -42,7 +42,7 @@ async function getTestI18n(): Promise<i18n> {
             key: "Key",
             keyConflict: "This shortcut is already in use",
             firefoxKeyConflict:
-              "Conflicts with Firefox's \"{{label}}\" ({{shortcut}}). Floorp takes priority.",
+              'Conflicts with Firefox\'s "{{label}}" ({{shortcut}}). Floorp takes priority.',
             openAboutKeyboard: "Open about:keyboard",
             modal: {
               description:

@@ -18,7 +18,7 @@ import {
 } from "./type.ts";
 import {
   clearLegacyConfig,
-  migrateConfigToV2,
+  migrateConfigToV3,
   migrateLegacyConfig,
 } from "./migration.ts";
 import { createDefaultConfig } from "./defaults.ts";
@@ -45,7 +45,7 @@ export const strDefaultConfig = JSON.stringify(defaultConfig);
 const normalizeConfig = (
   config: Record<string, unknown>,
 ): KeyboardShortcutConfig => {
-  return migrateConfigToV2(config, defaultConfig);
+  return migrateConfigToV3(config, defaultConfig);
 };
 
 export const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
@@ -169,7 +169,7 @@ export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
 export const setConfig = (value: KeyboardShortcutConfig) =>
-  _setConfig(migrateConfigToV2(value, defaultConfig));
+  _setConfig(migrateConfigToV3(value, defaultConfig));
 
 /**
  * Experiment "ks_safe_error_handling" — wraps getAction + fn invocation

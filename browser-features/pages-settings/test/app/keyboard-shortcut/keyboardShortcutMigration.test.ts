@@ -17,15 +17,15 @@ import {
 
 function testFreshPlatformDefaults(): void {
   const mac = createDefaultKeyboardShortcutConfig(true, "macosx");
-  const macZen = mac.shortcuts[ZEN_MODE_ACTION];
-  assertEquals(mac.schemaVersion, 2, "fresh mac config is v2");
+  const macZen = mac.shortcuts[ZEN_MODE_ACTION]?.[0];
+  assertEquals(mac.schemaVersion, 3, "fresh mac config is v3");
   assertEquals(macZen.key, "KeyZ", "fresh mac config stores physical code");
   assertEquals(macZen.modifiers.alt, true, "mac Zen uses Alt");
   assertEquals(macZen.modifiers.meta, true, "mac Zen uses Meta");
   assertEquals(macZen.modifiers.ctrl, false, "mac Zen excludes Ctrl");
 
   const windows = createDefaultKeyboardShortcutConfig(true, "win");
-  const windowsZen = windows.shortcuts[ZEN_MODE_ACTION];
+  const windowsZen = windows.shortcuts[ZEN_MODE_ACTION]?.[0];
   assertEquals(windowsZen.modifiers.alt, true, "non-mac Zen uses Alt");
   assertEquals(windowsZen.modifiers.ctrl, true, "non-mac Zen uses Ctrl");
   assertEquals(windowsZen.modifiers.meta, false, "non-mac Zen excludes Meta");
@@ -43,16 +43,92 @@ function testLegacyMigrationPreservesRebinding(): void {
     "win",
   );
 
-  assertEquals(migrated.schemaVersion, 2, "legacy settings migrate to v2");
+  assertEquals(migrated.schemaVersion, 3, "legacy settings migrate to v3");
   assertEquals(migrated.enabled, false, "separate enabled pref wins");
   assertEquals(
     JSON.stringify(migrated.shortcuts["floorp-toggle-command-palette"]),
-    JSON.stringify(rebound),
+    JSON.stringify([rebound]),
     "rebound shortcut is preserved exactly",
   );
   assert(
     Object.hasOwn(migrated.shortcuts, ZEN_MODE_ACTION),
     "legacy settings receive Zen once",
+  );
+}
+
+function testV2SingleBindingMigratesToBindingArray(): void {
+  const migrated = migrateKeyboardShortcutConfig(
+    {
+      schemaVersion: 2,
+      enabled: true,
+      shortcuts: {
+        "gecko-back": {
+          key: "KeyB",
+          modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+          action: "gecko-back",
+        },
+      },
+    },
+    true,
+    "win",
+  );
+
+  assertEquals(migrated.schemaVersion, 3, "v2 config migrates to v3");
+  assertEquals(
+    migrated.shortcuts["gecko-back"]?.length,
+    1,
+    "v2 binding should become one array entry",
+  );
+  assertEquals(
+    migrated.shortcuts["gecko-back"]?.[0].key,
+    "KeyB",
+    "binding key should be preserved",
+  );
+  assertEquals(
+    migrated.shortcuts["gecko-back"]?.[0].action,
+    "gecko-back",
+    "binding action should match its record key",
+  );
+}
+
+function testMultipleBindingsArePreservedAndDeduplicated(): void {
+  const migrated = migrateKeyboardShortcutConfig(
+    {
+      schemaVersion: 3,
+      enabled: true,
+      shortcuts: {
+        "gecko-back": [
+          {
+            key: "KeyB",
+            modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+            action: "gecko-back",
+          },
+          {
+            key: "B",
+            modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+            action: "gecko-back",
+          },
+          {
+            key: "ArrowLeft",
+            modifiers: { alt: true, ctrl: false, meta: false, shift: false },
+            action: "gecko-back",
+          },
+        ],
+      },
+    },
+    true,
+    "win",
+  );
+
+  assertEquals(
+    migrated.shortcuts["gecko-back"]?.length,
+    2,
+    "equivalent bindings should be deduplicated",
+  );
+  assertEquals(
+    migrated.shortcuts["gecko-back"]?.[1].key,
+    "ArrowLeft",
+    "distinct binding should remain",
   );
 }
 
@@ -82,14 +158,14 @@ function testExistingZenBindingIsPreserved(): void {
 
 function testV2DeletionSurvivesRoundTrip(): void {
   const deleted = {
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     enabled: true,
     shortcuts: {
-      "floorp-toggle-command-palette": {
+      "floorp-toggle-command-palette": [{
         key: "F2",
         modifiers: { alt: false, ctrl: false, meta: false, shift: false },
         action: "floorp-toggle-command-palette",
-      },
+      }],
     },
   };
   const saved = serializeKeyboardShortcutConfig(deleted);
@@ -103,7 +179,7 @@ function testV2DeletionSurvivesRoundTrip(): void {
   assertEquals(
     JSON.parse(saved).schemaVersion,
     2,
-    "settings save persists schema v2",
+    "settings save persists schema v3",
   );
   assertEquals(
     Object.hasOwn(reopened.shortcuts, ZEN_MODE_ACTION),
@@ -119,7 +195,7 @@ function testV2DeletionSurvivesRoundTrip(): void {
 
 function testInvalidJsonRecoversToV2Defaults(): void {
   const recovered = parseKeyboardShortcutConfig("not-json{{", true, "win");
-  assertEquals(recovered.schemaVersion, 2, "invalid JSON recovers to v2");
+  assertEquals(recovered.schemaVersion, 3, "invalid JSON recovers to v3");
   assertEquals(
     Object.keys(recovered.shortcuts).length,
     2,
@@ -134,15 +210,23 @@ const tests: TestCase[] = [
     fn: testLegacyMigrationPreservesRebinding,
   },
   {
+    name: "v2 binding migrates to binding array",
+    fn: testV2SingleBindingMigratesToBindingArray,
+  },
+  {
+    name: "multiple bindings are preserved and deduplicated",
+    fn: testMultipleBindingsArePreservedAndDeduplicated,
+  },
+  {
     name: "legacy migration preserves existing Zen",
     fn: testExistingZenBindingIsPreserved,
   },
   {
-    name: "v2 deletion survives round trip",
+    name: "v3 deletion survives round trip",
     fn: testV2DeletionSurvivesRoundTrip,
   },
   {
-    name: "invalid JSON recovers to v2 defaults",
+    name: "invalid JSON recovers to v3 defaults",
     fn: testInvalidJsonRecoversToV2Defaults,
   },
 ];

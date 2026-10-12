@@ -168,6 +168,21 @@ const MULTI_CONFIG: KeyboardShortcutConfig = {
   },
 };
 
+const MULTIPLE_BINDING_CONFIG: KeyboardShortcutConfig = {
+  enabled: true,
+  shortcuts: {
+    "test-multiple-bindings": [{
+      key: "KeyB",
+      modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+      action: "test-multiple-bindings",
+    }, {
+      key: "ArrowLeft",
+      modifiers: { alt: true, ctrl: false, meta: false, shift: false },
+      action: "test-multiple-bindings",
+    }],
+  },
+};
+
 // ---------------------------------------------------------------------------
 // Tests — Controller lifecycle
 // ---------------------------------------------------------------------------
@@ -552,6 +567,28 @@ function testMultipleShortcutsNeitherMatches(): void {
       false,
       "Ctrl+Z should NOT match any shortcut in multi-config",
     );
+
+    controller.destroy();
+  });
+}
+
+function testMultipleBindingsForSameActionMatch(): void {
+  withPrefs(() => {
+    applyTestConfig(MULTIPLE_BINDING_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const ctrlB = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyB",
+      ctrlKey: true,
+    });
+    assertEquals(ctrlB.defaultPrevented, true, "first binding should match");
+
+    const altLeft = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "ArrowLeft",
+      altKey: true,
+    });
+    assertEquals(altLeft.defaultPrevented, true, "second binding should match");
 
     controller.destroy();
   });
@@ -1741,6 +1778,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "multi config: Ctrl+Z does NOT match",
       fn: testMultipleShortcutsNeitherMatches,
+    },
+    {
+      name: "multiple bindings for same action match",
+      fn: testMultipleBindingsForSameActionMatch,
     },
     // Disabled state
     {

@@ -24,13 +24,15 @@ export function BasicSettings() {
   const { config: shortcutConfig, loading: shortcutLoading } =
     useKeyboardShortcutConfig();
 
-  const toggleShortcut = shortcutConfig?.shortcuts?.["floorp-toggle-command-palette"];
+  const commandPaletteBindings = shortcutConfig?.shortcuts
+    ?.["floorp-toggle-command-palette"];
+  const toggleShortcut = commandPaletteBindings?.[0];
   const isShortcutFeatureEnabled = shortcutConfig?.enabled === true;
-  const hasShortcut = !shortcutLoading
-    && isShortcutFeatureEnabled
-    && toggleShortcut !== undefined
-    && typeof toggleShortcut.key === "string"
-    && toggleShortcut.key.length > 0;
+  const hasShortcut = !shortcutLoading &&
+    isShortcutFeatureEnabled &&
+    toggleShortcut !== undefined &&
+    typeof toggleShortcut.key === "string" &&
+    toggleShortcut.key.length > 0;
   const shortcutDisplay = toggleShortcut && hasShortcut
     ? shortcutToString(toggleShortcut)
     : "";

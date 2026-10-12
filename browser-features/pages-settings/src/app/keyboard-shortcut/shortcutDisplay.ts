@@ -225,25 +225,34 @@ export function filterActionsForFirefoxPriority<
   TAction extends { id: string },
 >(
   actions: readonly TAction[],
-  shortcuts: Record<string, ShortcutConfig>,
+  shortcuts: Record<string, ShortcutConfig[]>,
   firefoxKeys: readonly FirefoxKeyEntry[],
 ): {
   visibleActions: TAction[];
   hiddenActionCount: number;
+  visibleBindingsByAction: Record<string, ShortcutConfig[]>;
 } {
   const firefoxCodes = new Set(
     firefoxKeys.flatMap((entry) =>
       entry.canonicalCode === null ? [] : [entry.canonicalCode]
     ),
   );
+  const visibleBindingsByAction: Record<string, ShortcutConfig[]> = {};
+  let hiddenActionCount = 0;
   const visibleActions = actions.filter((action) => {
-    const shortcut = shortcuts[action.id];
-    return !shortcut || !firefoxCodes.has(getFloorpCanonicalCode(shortcut));
+    const bindings = shortcuts[action.id] ?? [];
+    const visibleBindings = bindings.filter((shortcut) =>
+      !firefoxCodes.has(getFloorpCanonicalCode(shortcut))
+    );
+    hiddenActionCount += bindings.length - visibleBindings.length;
+    visibleBindingsByAction[action.id] = visibleBindings;
+    return bindings.length === 0 || visibleBindings.length > 0;
   });
 
   return {
     visibleActions,
-    hiddenActionCount: actions.length - visibleActions.length,
+    hiddenActionCount,
+    visibleBindingsByAction,
   };
 }
 
@@ -268,6 +277,10 @@ export interface UnifiedShortcutRow {
   category: ShortcutCategoryId;
   /** Floorp persisted shortcut; Firefox shortcuts read their live entry. */
   shortcut?: ShortcutConfig;
+  /** Index within the action's Floorp binding array. */
+  shortcutIndex?: number;
+  /** Synthetic row used to append another binding to the same action. */
+  isAddRow?: boolean;
   /** Firefox live entry used for editing, reset and conflict display. */
   firefoxKey?: FirefoxKeyEntry;
 }
@@ -280,17 +293,17 @@ export interface UnifiedShortcutRow {
  */
 export function buildUnifiedShortcutRows(
   actions: readonly ShortcutActionOption[],
-  shortcuts: Record<string, ShortcutConfig>,
+  shortcuts: Record<string, ShortcutConfig[]>,
   firefoxKeys: readonly FirefoxKeyEntry[],
 ): {
   rows: UnifiedShortcutRow[];
   hiddenActionCount: number;
 } {
-  const { visibleActions, hiddenActionCount } = filterActionsForFirefoxPriority(
-    actions,
-    shortcuts,
-    firefoxKeys,
-  );
+  const {
+    visibleActions,
+    hiddenActionCount,
+    visibleBindingsByAction,
+  } = filterActionsForFirefoxPriority(actions, shortcuts, firefoxKeys);
   const actionNameById = new Map(
     actions.map((action) => [action.id, action.name]),
   );
@@ -312,15 +325,18 @@ export function buildUnifiedShortcutRows(
   }
 
   for (const action of actions) {
-    const shortcut = shortcuts[action.id];
     if (visibleActionIds.has(action.id)) {
-      rows.push({
-        key: `floorp:${action.id}`,
-        source: "floorp",
-        actionId: action.id,
-        name: action.name,
-        category: getCategoryForAction(action.id),
-        shortcut,
+      const bindings = visibleBindingsByAction[action.id] ?? [];
+      bindings.forEach((shortcut, index) => {
+        rows.push({
+          key: `floorp:${action.id}:${index}`,
+          source: "floorp",
+          actionId: action.id,
+          name: action.name,
+          category: getCategoryForAction(action.id),
+          shortcut,
+          shortcutIndex: shortcuts[action.id]?.indexOf(shortcut) ?? index,
+        });
       });
     }
 
@@ -332,6 +348,17 @@ export function buildUnifiedShortcutRows(
         name: action.name,
         category: getCategoryForAction(action.id),
         firefoxKey,
+      });
+    }
+
+    if (visibleActionIds.has(action.id)) {
+      rows.push({
+        key: `floorp-add:${action.id}`,
+        source: "floorp",
+        actionId: action.id,
+        name: action.name,
+        category: getCategoryForAction(action.id),
+        isAddRow: true,
       });
     }
   }

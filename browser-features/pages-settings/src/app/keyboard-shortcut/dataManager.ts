@@ -8,11 +8,12 @@ import { rpc } from "../../lib/rpc/rpc.ts";
 import {
   createDefaultKeyboardShortcutConfig,
   KEYBOARD_SHORTCUT_SCHEMA_VERSION,
+  type KeyboardShortcutConfig,
   parseKeyboardShortcutConfig,
   serializeKeyboardShortcutConfig,
-  type KeyboardShortcutConfig,
   type ShortcutConfig,
 } from "../../types/pref.ts";
+import { getFloorpCanonicalCode } from "./shortcutDisplay.ts";
 
 declare const ChromeUtils:
   | {
@@ -132,19 +133,67 @@ export const useKeyboardShortcutConfig = () => {
 
   const toggleEnabled = () => updateConfig({ enabled: !config.enabled });
 
-  const addShortcut = (action: string, shortcut: ShortcutConfig) =>
-    updateConfig({
-      shortcuts: { ...config.shortcuts, [action]: shortcut },
-    });
+  const hasDuplicateBinding = (
+    action: string,
+    shortcut: ShortcutConfig,
+    ignoreIndex?: number,
+  ): boolean => {
+    const code = getFloorpCanonicalCode({ ...shortcut, action });
+    return Object.entries(config.shortcuts ?? {}).some((
+      [entryAction, bindings],
+    ) =>
+      (bindings ?? []).some((binding, index) =>
+        entryAction !== action || index !== ignoreIndex
+          ? getFloorpCanonicalCode(binding) === code
+          : false
+      )
+    );
+  };
 
-  const updateShortcut = (action: string, shortcut: ShortcutConfig) =>
-    updateConfig({
-      shortcuts: { ...config.shortcuts, [action]: shortcut },
+  const addShortcut = (action: string, shortcut: ShortcutConfig) => {
+    if (hasDuplicateBinding(action, shortcut)) return Promise.resolve(false);
+    const bindings = config.shortcuts[action] ?? [];
+    return updateConfig({
+      shortcuts: {
+        ...config.shortcuts,
+        [action]: [...bindings, { ...shortcut, action }],
+      },
     });
+  };
 
-  const deleteShortcut = (action: string) => {
+  const updateShortcut = (
+    action: string,
+    index: number,
+    shortcut: ShortcutConfig,
+  ) => {
+    const bindings = config.shortcuts[action] ?? [];
+    if (index < 0 || index >= bindings.length) {
+      return Promise.resolve(false);
+    }
+    if (hasDuplicateBinding(action, shortcut, index)) {
+      return Promise.resolve(false);
+    }
+    return updateConfig({
+      shortcuts: {
+        ...config.shortcuts,
+        [action]: bindings.map((binding, bindingIndex) =>
+          bindingIndex === index ? { ...shortcut, action } : binding
+        ),
+      },
+    });
+  };
+
+  const deleteShortcut = (action: string, index: number) => {
+    const bindings = config.shortcuts[action] ?? [];
+    if (index < 0 || index >= bindings.length) {
+      return Promise.resolve(false);
+    }
     const newShortcuts = { ...config.shortcuts };
-    delete newShortcuts[action];
+    const nextBindings = bindings.filter((_, bindingIndex) =>
+      bindingIndex !== index
+    );
+    if (nextBindings.length > 0) newShortcuts[action] = nextBindings;
+    else delete newShortcuts[action];
     return updateConfig({ shortcuts: newShortcuts });
   };
 

@@ -119,14 +119,51 @@ function testUnifiedRowsUseOneCanonicalNamePerSource(): void {
   );
 }
 
+function testMultipleFloorpBindingsRenderPerBindingRows(): void {
+  const actions = [{ id: "gecko-back", name: "Go Back" }];
+  const shortcuts = {
+    "gecko-back": [
+      createShortcut("KeyB"),
+      createShortcut("ArrowLeft", { ctrl: false, alt: true }),
+    ],
+  };
+  const firefoxKey = createFirefoxKey("alt+ArrowLeft", {
+    id: "key_back",
+    command: "Browser:Back",
+    label: "Back",
+  });
+
+  const result = buildUnifiedShortcutRows(actions, shortcuts, [firefoxKey]);
+  const floorpRows = result.rows.filter((row) => row.source === "floorp");
+
+  assertEquals(
+    result.hiddenActionCount,
+    1,
+    "only the Firefox-owned binding should be hidden",
+  );
+  assertEquals(
+    floorpRows.length,
+    2,
+    "one binding row and one add row should remain",
+  );
+  assertEquals(
+    floorpRows[0].shortcut?.key,
+    "KeyB",
+    "non-conflicting binding should remain",
+  );
+  assertEquals(floorpRows[0].shortcutIndex, 0, "binding index is preserved");
+  assertEquals(floorpRows[1].shortcut, undefined, "add row has no binding");
+  assertEquals(floorpRows[1].key, "floorp-add:gecko-back", "add row is stable");
+}
+
 function testUnifiedRowsKeepFirefoxPriorityBehavior(): void {
   const actions = [
     { id: "gecko-back", name: "Go Back" },
     { id: "gecko-forward", name: "Go Forward" },
   ];
   const shortcuts = {
-    "gecko-back": createShortcut("KeyT"),
-    "gecko-forward": createShortcut("KeyR"),
+    "gecko-back": [createShortcut("KeyT")],
+    "gecko-forward": [createShortcut("KeyR")],
   };
   const firefoxKey = createFirefoxKey("ctrl+KeyT", {
     id: "key_back",
@@ -175,8 +212,8 @@ function testFirefoxPriorityHidesConfiguredDuplicatesOnly(): void {
     { id: "gecko-reload", name: "Reload" },
   ];
   const shortcuts = {
-    "gecko-back": createShortcut("KeyT"),
-    "gecko-forward": createShortcut("KeyR"),
+    "gecko-back": [createShortcut("KeyT")],
+    "gecko-forward": [createShortcut("KeyR")],
   };
   const result = filterActionsForFirefoxPriority(actions, shortcuts, [
     createFirefoxKey("ctrl+KeyT"),
@@ -191,6 +228,16 @@ function testFirefoxPriorityHidesConfiguredDuplicatesOnly(): void {
     result.hiddenActionCount,
     1,
     "only the configured duplicate should be counted",
+  );
+  assertEquals(
+    result.visibleBindingsByAction["gecko-back"].length,
+    0,
+    "conflicting binding should be hidden",
+  );
+  assertEquals(
+    result.visibleBindingsByAction["gecko-forward"].length,
+    1,
+    "non-conflicting binding should be visible",
   );
 }
 
@@ -274,6 +321,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "unified rows use one canonical name per function",
       fn: testUnifiedRowsUseOneCanonicalNamePerSource,
+    },
+    {
+      name: "multiple Floorp bindings render per-binding rows",
+      fn: testMultipleFloorpBindingsRenderPerBindingRows,
     },
     {
       name: "unified rows keep Firefox priority behavior",

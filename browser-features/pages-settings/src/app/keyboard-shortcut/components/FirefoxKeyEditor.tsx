@@ -127,7 +127,10 @@ export const FirefoxKeyEditor = ({ entry, onClose }: FirefoxKeyEditorProps) => {
     );
     setKeyConflict(otherKey ?? null);
 
-    const floorpMatch = Object.entries(config.shortcuts ?? {}).find(
+    const floorpMatch = Object.entries(config.shortcuts ?? {}).flatMap(
+      ([actionId, bindings]) =>
+        bindings.map((shortcut) => [actionId, shortcut] as const),
+    ).find(
       ([, shortcut]) =>
         comboToCanonicalCode(
           shortcut.modifiers,

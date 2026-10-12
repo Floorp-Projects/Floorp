@@ -1,11 +1,18 @@
 import type { FirefoxKeyEntry } from "../../../../modules/common/NRKeySyncTypes.ts";
-import type { KeyboardShortcutConfig, ShortcutConfig } from "../../types/pref.ts";
+import type {
+  KeyboardShortcutConfig,
+  ShortcutConfig,
+} from "../../types/pref.ts";
 
 export interface ShortcutsSettingsProps {
   config: KeyboardShortcutConfig;
   addShortcut: (action: string, shortcut: ShortcutConfig) => Promise<boolean>;
-  updateShortcut: (action: string, shortcut: ShortcutConfig) => Promise<boolean>;
-  deleteShortcut: (action: string) => Promise<boolean>;
+  updateShortcut: (
+    action: string,
+    index: number,
+    shortcut: ShortcutConfig,
+  ) => Promise<boolean>;
+  deleteShortcut: (action: string, index: number) => Promise<boolean>;
 }
 
 export interface ShortcutEditorProps {

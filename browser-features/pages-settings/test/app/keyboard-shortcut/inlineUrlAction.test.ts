@@ -76,7 +76,8 @@ function testPagesDefaultConfigIsUnchanged(): void {
     2,
     "enabled default config should have command-palette and Zen shortcuts",
   );
-  const paletteShortcut = firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
+  const paletteShortcut =
+    firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
   assertEquals(
     paletteShortcut.action,
     "floorp-toggle-command-palette",
@@ -103,8 +104,14 @@ function testPagesDefaultConfigIsUnchanged(): void {
           key: "KeyZ",
           modifiers: {
             alt: true,
-            ctrl: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? false : true,
-            meta: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? true : false,
+            ctrl: typeof navigator !== "undefined" &&
+                navigator.platform.toUpperCase().includes("MAC")
+              ? false
+              : true,
+            meta: typeof navigator !== "undefined" &&
+                navigator.platform.toUpperCase().includes("MAC")
+              ? true
+              : false,
             shift: false,
           },
           action: "floorp-toggle-zen-mode",

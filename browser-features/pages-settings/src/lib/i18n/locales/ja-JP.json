@@ -837,6 +837,7 @@
             "floorp-edit-tab-url": "タブの URL を編集"
         },
         "notSet": "設定なし",
+        "addAnotherShortcut": "ショートカットを追加",
         "add": "追加",
         "edit": "編集",
         "delete": "削除",
