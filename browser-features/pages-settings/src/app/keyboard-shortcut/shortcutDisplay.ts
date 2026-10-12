@@ -19,6 +19,8 @@ export type ShortcutCategoryId =
   | "tools"
   | "other";
 
+export type ShortcutSource = "floorp" | "firefox";
+
 const SHORTCUT_CATEGORY_ORDER = [
   "tabs",
   "windows",
@@ -146,6 +148,48 @@ const CATEGORY_ACTION_IDS: Readonly<
   ]),
 };
 
+/**
+ * Firefox key IDs whose function is identical to a Floorp action. IDs are
+ * preferred over localized DOM labels because labels can vary by locale and
+ * Firefox build.
+ */
+const FIREFOX_KEY_ACTION_BY_ID: Readonly<Record<string, string>> = Object
+  .freeze({
+    "key_back": "gecko-back",
+    "key_forward": "gecko-forward",
+    "key_reload": "gecko-reload",
+    "key_reload_skip_cache": "gecko-force-reload",
+    "key_stop": "gecko-stop",
+    "key_newNavigatorTab": "gecko-open-new-tab",
+    "key_newNavigator": "gecko-open-new-window",
+    "key_newPrivateWindow": "gecko-open-new-private-window",
+    "key_close": "gecko-close-tab",
+    "key_closeWindow": "gecko-close-window",
+    "key_undoCloseTab": "gecko-restore-last-tab",
+    "key_undoCloseWindow": "gecko-restore-last-window",
+  });
+
+/** Stable Gecko command IDs used as a fallback for renamed Firefox keys. */
+const FIREFOX_KEY_ACTION_BY_COMMAND: Readonly<Record<string, string>> = Object
+  .freeze({
+    "Browser:Back": "gecko-back",
+    "Browser:Forward": "gecko-forward",
+    "Browser:Reload": "gecko-reload",
+    "Browser:ReloadSkipCache": "gecko-force-reload",
+    "Browser:Stop": "gecko-stop",
+    "cmd_newNavigatorTab": "gecko-open-new-tab",
+    "cmd_newNavigator": "gecko-open-new-window",
+    "Tools:PrivateBrowsing": "gecko-open-new-private-window",
+    "cmd_close": "gecko-close-tab",
+    "cmd_closeWindow": "gecko-close-window",
+    "cmd_undoCloseTab": "gecko-restore-last-tab",
+    "cmd_undoCloseWindow": "gecko-restore-last-window",
+    "Browser:AddBookmarkAs": "gecko-bookmark-this-page",
+    "Browser:ShowAllBookmarks": "gecko-open-bookmarks-manager",
+    "Browser:Downloads": "gecko-open-downloads",
+    "Tools:AddonMgr": "gecko-open-addons-manager",
+  });
+
 /** Normalize a Floorp shortcut key into the canonical combo space. */
 export function getFloorpCanonicalCode(shortcut: ShortcutConfig): string {
   let key = shortcut.key;
@@ -156,6 +200,20 @@ export function getFloorpCanonicalCode(shortcut: ShortcutConfig): string {
   }
 
   return comboToCanonicalCode(shortcut.modifiers, key);
+}
+
+/** Resolve a Firefox live key to its Floorp canonical action, if known. */
+export function getFirefoxKeyActionId(
+  entry: FirefoxKeyEntry,
+): string | null {
+  return FIREFOX_KEY_ACTION_BY_ID[entry.id] ??
+    FIREFOX_KEY_ACTION_BY_COMMAND[entry.command] ?? null;
+}
+
+function getCategoryForAction(actionId: string): ShortcutCategoryId {
+  return (Object.entries(CATEGORY_ACTION_IDS) as Array<
+    [Exclude<ShortcutCategoryId, "other">, ReadonlySet<string>]
+  >).find(([, ids]) => ids.has(actionId))?.[0] ?? "other";
 }
 
 /**
@@ -194,6 +252,104 @@ export interface ShortcutCategory<TAction> {
   actions: TAction[];
 }
 
+export interface ShortcutActionOption {
+  id: string;
+  name: string;
+}
+
+/** A row in the unified Floorp/Firefox shortcut table. */
+export interface UnifiedShortcutRow {
+  /** Stable React key containing the source namespace. */
+  key: string;
+  source: ShortcutSource;
+  /** Canonical action ID when this row can be compared across sources. */
+  actionId: string | null;
+  name: string;
+  category: ShortcutCategoryId;
+  /** Floorp persisted shortcut; Firefox shortcuts read their live entry. */
+  shortcut?: ShortcutConfig;
+  /** Firefox live entry used for editing, reset and conflict display. */
+  firefoxKey?: FirefoxKeyEntry;
+}
+
+/**
+ * Build one table containing both settings systems. Firefox keys mapped to a
+ * canonical action use that action's display name, while unmapped Firefox
+ * keys keep Firefox's best-effort label. Existing Firefox priority filtering
+ * is applied to Floorp rows before they are added.
+ */
+export function buildUnifiedShortcutRows(
+  actions: readonly ShortcutActionOption[],
+  shortcuts: Record<string, ShortcutConfig>,
+  firefoxKeys: readonly FirefoxKeyEntry[],
+): {
+  rows: UnifiedShortcutRow[];
+  hiddenActionCount: number;
+} {
+  const { visibleActions, hiddenActionCount } = filterActionsForFirefoxPriority(
+    actions,
+    shortcuts,
+    firefoxKeys,
+  );
+  const actionNameById = new Map(
+    actions.map((action) => [action.id, action.name]),
+  );
+  const visibleActionIds = new Set(visibleActions.map((action) => action.id));
+  const rows: UnifiedShortcutRow[] = [];
+  const firefoxByAction = new Map<string, FirefoxKeyEntry[]>();
+  const unmappedFirefoxKeys: FirefoxKeyEntry[] = [];
+
+  for (const entry of firefoxKeys) {
+    const actionId = getFirefoxKeyActionId(entry);
+    if (!actionId || !actionNameById.has(actionId)) {
+      unmappedFirefoxKeys.push(entry);
+      continue;
+    }
+
+    const entries = firefoxByAction.get(actionId) ?? [];
+    entries.push(entry);
+    firefoxByAction.set(actionId, entries);
+  }
+
+  for (const action of actions) {
+    const shortcut = shortcuts[action.id];
+    if (visibleActionIds.has(action.id)) {
+      rows.push({
+        key: `floorp:${action.id}`,
+        source: "floorp",
+        actionId: action.id,
+        name: action.name,
+        category: getCategoryForAction(action.id),
+        shortcut,
+      });
+    }
+
+    for (const firefoxKey of firefoxByAction.get(action.id) ?? []) {
+      rows.push({
+        key: `firefox:${firefoxKey.id}`,
+        source: "firefox",
+        actionId: action.id,
+        name: action.name,
+        category: getCategoryForAction(action.id),
+        firefoxKey,
+      });
+    }
+  }
+
+  for (const firefoxKey of unmappedFirefoxKeys) {
+    rows.push({
+      key: `firefox:${firefoxKey.id}`,
+      source: "firefox",
+      actionId: null,
+      name: firefoxKey.label,
+      category: "other",
+      firefoxKey,
+    });
+  }
+
+  return { rows, hiddenActionCount };
+}
+
 /** Group actions by stable category while preserving each source order. */
 export function groupActionsByCategory<TAction extends { id: string }>(
   actions: readonly TAction[],
@@ -203,10 +359,7 @@ export function groupActionsByCategory<TAction extends { id: string }>(
   );
 
   for (const action of actions) {
-    const category = (Object.entries(CATEGORY_ACTION_IDS) as Array<
-      [Exclude<ShortcutCategoryId, "other">, ReadonlySet<string>]
-    >).find(([, ids]) => ids.has(action.id))?.[0] ?? "other";
-    grouped.get(category)?.push(action);
+    grouped.get(getCategoryForAction(action.id))?.push(action);
   }
 
   return SHORTCUT_CATEGORY_ORDER.flatMap((id) => {
@@ -214,5 +367,23 @@ export function groupActionsByCategory<TAction extends { id: string }>(
     return categoryActions.length === 0
       ? []
       : [{ id, actions: categoryActions }];
+  });
+}
+
+/** Group unified rows using the category stored on each row. */
+export function groupUnifiedShortcutRows(
+  rows: readonly UnifiedShortcutRow[],
+): Array<ShortcutCategory<UnifiedShortcutRow>> {
+  const grouped = new Map<ShortcutCategoryId, UnifiedShortcutRow[]>(
+    SHORTCUT_CATEGORY_ORDER.map((id) => [id, []]),
+  );
+
+  for (const row of rows) {
+    grouped.get(row.category)?.push(row);
+  }
+
+  return SHORTCUT_CATEGORY_ORDER.flatMap((id) => {
+    const categoryRows = grouped.get(id) ?? [];
+    return categoryRows.length === 0 ? [] : [{ id, actions: categoryRows }];
   });
 }

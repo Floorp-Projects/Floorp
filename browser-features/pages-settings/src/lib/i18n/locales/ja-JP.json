@@ -823,10 +823,15 @@
         "enableDescription": "有効にすると、ブラウザーのさまざまな操作に使用するキーボードショートカットをカスタマイズできます。無効にすると、Firefox のショートカットを使用します。",
         "needRestartDescription": "カスタムキーボードショートカット機能を完全に有効または無効にするには、 {{productName}} の再起動が必要です。",
         "shortcuts": "ショートカット",
-        "shortcutsDescription": "ブラウザーのさまざまな操作に使用するキーボードショートカットを設定します",
+        "shortcutsDescription": "Floorp と Firefox のキーボードショートカットを 1 つのテーブルで設定します",
         "shortcutsTip": "Firefox と同じキー組み合わせのショートカットは Firefox 側に表示され、Floorp 側の一覧からは非表示になります。",
         "action": "アクション",
         "shortcut": "ショートカット",
+        "source": {
+            "title": "ソース",
+            "floorp": "Floorp",
+            "firefox": "Firefox"
+        },
         "actions": "アクション",
         "actionLabels": {
             "floorp-edit-tab-url": "タブの URL を編集"

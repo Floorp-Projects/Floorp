@@ -823,10 +823,15 @@
         "enableDescription": "When enabled, you can customize keyboard shortcuts for various browser actions. When disabled, default Firefox shortcuts will be used.",
         "needRestartDescription": "A restart of {{productName}} is required to completely enable or disable the custom keyboard shortcuts feature.",
         "shortcuts": "Shortcuts",
-        "shortcutsDescription": "Configure keyboard shortcuts for various browser actions",
+        "shortcutsDescription": "Configure Floorp and Firefox keyboard shortcuts in one table",
         "shortcutsTip": "Shortcuts that use the same combination as Firefox are shown on the Firefox side and hidden from the Floorp list.",
         "action": "Action",
         "shortcut": "Shortcut",
+        "source": {
+            "title": "Source",
+            "floorp": "Floorp",
+            "firefox": "Firefox"
+        },
         "actions": "Actions",
         "actionLabels": {
             "floorp-edit-tab-url": "Edit Tab URL"

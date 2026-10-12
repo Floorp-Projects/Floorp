@@ -8,51 +8,48 @@ import { useTranslation } from "react-i18next";
 import { useKeyboardShortcutConfig } from "./dataManager.ts";
 import { GeneralSettings } from "./components/GeneralSettings.tsx";
 import { ShortcutsSettings } from "./components/ShortcutsSettings.tsx";
-import { FirefoxKeysSettings } from "./components/FirefoxKeysSettings.tsx";
 
 export default function Page() {
-    const { t } = useTranslation();
-    const {
-        config,
-        loading,
-        updateConfig,
-        toggleEnabled,
-        addShortcut,
-        updateShortcut,
-        deleteShortcut,
-    } = useKeyboardShortcutConfig();
+  const { t } = useTranslation();
+  const {
+    config,
+    loading,
+    updateConfig,
+    toggleEnabled,
+    addShortcut,
+    updateShortcut,
+    deleteShortcut,
+  } = useKeyboardShortcutConfig();
 
-    if (loading) {
-        return <div className="py-6 text-center">{t("loading")}...</div>;
-    }
+  if (loading) {
+    return <div className="py-6 text-center">{t("loading")}...</div>;
+  }
 
-    return (
-        <div className={`floorp-settings-page ${styles.page}`}>
-            <div className="floorp-page-header">
-                <h1 className="floorp-page-heading">
-                    {t("pages.keyboardShortcut")}
-                </h1>
-                <p className="floorp-page-description">
-                    {t("keyboardShortcut.description")}
-                </p>
-            </div>
+  return (
+    <div className={`floorp-settings-page ${styles.page}`}>
+      <div className="floorp-page-header">
+        <h1 className="floorp-page-heading">
+          {t("pages.keyboardShortcut")}
+        </h1>
+        <p className="floorp-page-description">
+          {t("keyboardShortcut.description")}
+        </p>
+      </div>
 
-            <div className={styles.sections}>
-                <GeneralSettings
-                    config={config}
-                    toggleEnabled={toggleEnabled}
-                    updateConfig={updateConfig}
-                />
+      <div className={styles.sections}>
+        <GeneralSettings
+          config={config}
+          toggleEnabled={toggleEnabled}
+          updateConfig={updateConfig}
+        />
 
-                <FirefoxKeysSettings />
-
-                <ShortcutsSettings
-                    config={config}
-                    addShortcut={addShortcut}
-                    updateShortcut={updateShortcut}
-                    deleteShortcut={deleteShortcut}
-                />
-            </div>
-        </div>
-    );
+        <ShortcutsSettings
+          config={config}
+          addShortcut={addShortcut}
+          updateShortcut={updateShortcut}
+          deleteShortcut={deleteShortcut}
+        />
+      </div>
+    </div>
+  );
 }
