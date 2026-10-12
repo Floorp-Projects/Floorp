@@ -76,18 +76,21 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
       defaultConfig.enabled,
     ),
   );
+  let lastWrittenEnabled = enabled();
 
   createEffect(() => {
-    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, enabled());
+    const nextEnabled = enabled();
+    lastWrittenEnabled = nextEnabled;
+    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, nextEnabled);
   });
 
   const enabledObserver = () => {
-    setEnabled(
-      Services.prefs.getBoolPref(
-        KEYBOARD_SHORTCUT_ENABLED_PREF,
-        defaultConfig.enabled,
-      ),
+    const nextEnabled = Services.prefs.getBoolPref(
+      KEYBOARD_SHORTCUT_ENABLED_PREF,
+      defaultConfig.enabled,
     );
+    if (nextEnabled === lastWrittenEnabled) return;
+    setEnabled(nextEnabled);
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_ENABLED_PREF, enabledObserver);
@@ -122,23 +125,24 @@ function createConfig(): [
       ),
     ),
   );
+  let lastWrittenConfig = JSON.stringify(config());
 
   createEffect(() => {
+    const nextConfig = JSON.stringify(config());
+    lastWrittenConfig = nextConfig;
     Services.prefs.setStringPref(
       KEYBOARD_SHORTCUT_CONFIG_PREF,
-      JSON.stringify(config()),
+      nextConfig,
     );
   });
 
   const configObserver = () => {
-    setConfig(
-      parseConfig(
-        Services.prefs.getStringPref(
-          KEYBOARD_SHORTCUT_CONFIG_PREF,
-          strDefaultConfig,
-        ),
-      ),
+    const nextConfig = Services.prefs.getStringPref(
+      KEYBOARD_SHORTCUT_CONFIG_PREF,
+      strDefaultConfig,
     );
+    if (nextConfig === lastWrittenConfig) return;
+    setConfig(parseConfig(nextConfig));
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_CONFIG_PREF, configObserver);
