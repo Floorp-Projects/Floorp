@@ -48,6 +48,12 @@ covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
 zoom, option commands, and APZ overscroll against a source-built Runtime.
 `tools/app-shim/test-context-menu.py` checks repeated trusted right-click menu
 delivery and content-process survival through the PWA input adapter.
+The Shim retains the IME's selected conversion clause while Gecko acknowledges
+a collapsed caret; repeated Space presses continue Japanese conversion. The
+selection override ends on commit, unmark, cancellation, empty marked text,
+leaving an editable element, or disconnection. Candidate geometry uses that same
+selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
+textarea and contenteditable fixtures, using an isolated browser profile.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts
