@@ -229,6 +229,10 @@ Bounded raw evidence collection is attempted independently of stop or scope
 failure. Every collection error is recorded; missing original worker evidence
 emits an incomplete record. Available raw bytes remain retained, and service
 state is removed only after an empty scope and successful evidence collection.
+An incomplete record embeds the bounded original root result and keeps its
+first error separate from a later commit or cancellation error. It also tries
+to preserve every available raw evidence file when cancellation occurs before
+the normal copy begins, recording the partial inventory and retention errors.
 Both successful and failed terminals keep publication unauthorized and native
 and compile/profile qualification unverified.
 

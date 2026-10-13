@@ -269,9 +269,9 @@ def run(prepared, output, claim_policy):
                 stream.write(json.dumps(terminal, indent=2) + "\n")
             cancellation.check()
         except Exception as error:
-            failure = {"schema": "qa3-final-workspace-durable-incomplete-v1", "status": "FAIL", "subject": receipt["subject"], "executionKey": claim, "originalError": str(error), "cancellation": cancellation.message, "publicationAuthorized": False}
+            failure = {"schema": "qa3-final-workspace-durable-incomplete-v1", "status": "FAIL", "subject": receipt["subject"], "executionKey": claim, "originalError": result.get("originalError") or result.get("cleanupError") or str(error), "commitError": str(error), "cancellation": cancellation.message, "publicationAuthorized": False}
             try:
-                failure["durableIncomplete"] = claim_store.incomplete(claim, result, error)
+                failure["durableIncomplete"] = claim_store.incomplete(claim, result, error, output)
             except Exception as retention_error:
                 failure["retentionError"] = str(retention_error)
             with (output / "durable-incomplete.json").open("x") as stream:

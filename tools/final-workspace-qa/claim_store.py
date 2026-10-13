@@ -117,11 +117,43 @@ class ClaimStore:
         durable_file(self.directory, "package-" + package_key + ".json", data)
         return execution_key
 
-    def incomplete(self, execution_key, root_result, error):
-        record = {"schema": "qa3-durable-claim-incomplete-v1", "executionKey": execution_key, "store": self.binding, "subject": root_result["subject"], "status": "FAIL", "originalError": str(error), "publicationAuthorized": False, "nativeProductQualification": "UNVERIFIED", "compileProfileQualification": "UNVERIFIED"}
+    def incomplete(self, execution_key, root_result, error, output=None):
+        protected(self.directory, directory=True)
         name = execution_key + ".incomplete.json"
+        existing = self.directory / name
+        if existing.exists():
+            retained = read_json(existing)
+            if retained.get("schema") != "qa3-durable-claim-incomplete-v1" or retained.get("executionKey") != execution_key or retained.get("subject") != root_result["subject"] or retained.get("status") != "FAIL":
+                raise ValueError("Original incomplete durable record is invalid")
+            return retained
+        inventory, retention_errors = {}, {}
+        # A later cancel must not prevent evacuation of the original raw failure.
+        # This is bounded evidence retention, never an execution retry or PASS seal.
+        if output is not None:
+            evidence = self.directory / (execution_key + ".incomplete-evidence")
+            try:
+                evidence.mkdir(mode=0o700)
+            except Exception as retention_error:
+                retention_errors["directory"] = str(retention_error)
+            else:
+                for member in sorted(EVIDENCE_NAMES):
+                    try:
+                        source = output / member
+                        if not source.exists():
+                            retention_errors[member] = "Original evidence is absent"
+                            continue
+                        data = read_regular(source, 8 * 1024 * 1024)
+                        durable_file(evidence, member, data)
+                        inventory[member] = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+                    except Exception as retention_error:
+                        retention_errors[member] = str(retention_error)
+        first = root_result.get("originalError") or root_result.get("cleanupError") or str(error)
+        record = {"schema": "qa3-durable-claim-incomplete-v1", "executionKey": execution_key, "store": self.binding, "subject": root_result["subject"], "status": "FAIL", "originalError": first, "commitError": str(error), "originalRootResult": root_result, "availableEvidence": inventory, "retentionErrors": retention_errors, "publicationAuthorized": False, "nativeProductQualification": "UNVERIFIED", "compileProfileQualification": "UNVERIFIED"}
+        data = (json.dumps(record, sort_keys=True) + "\n").encode()
+        if len(data) > 4 * 1024 * 1024:
+            raise ValueError("Original incomplete result exceeds its bound")
         try:
-            durable_file(self.directory, name, (json.dumps(record, sort_keys=True) + "\n").encode())
+            durable_file(self.directory, name, data)
         except FileExistsError:
             retained = read_json(self.directory / name)
             if retained.get("schema") != record["schema"] or retained.get("executionKey") != execution_key or retained.get("subject") != record["subject"] or retained.get("status") != "FAIL":
@@ -134,7 +166,7 @@ class ClaimStore:
             return self._commit(execution_key, output, root_result, check_cancellation)
         except Exception as error:
             try:
-                self.incomplete(execution_key, root_result, error)
+                self.incomplete(execution_key, root_result, error, output)
             except Exception as retention_error:
                 raise ValueError(f"Original durable commit failure: {error}; incomplete retention failure: {retention_error}") from error
             raise

@@ -364,6 +364,25 @@ class DurableClaimContracts(unittest.TestCase):
             self.assertFalse((store.directory / (key + ".terminal.json")).exists())
             self.assertEqual(read_json(store.directory / (key + ".incomplete.json"))["status"], "FAIL")
 
+    def test_native_first_failure_and_raw_bytes_survive_before_copy_cancellation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); store = self.store(root); output = root / "original"; output.mkdir()
+            key = store.consume(self.request(), output)
+            result = {"executionStatus": "FAIL", "subject": {"request": self.request()}, "originalError": "Original native first failure", "cleanupError": "Original cleanup second failure"}
+            raw_root = json.dumps(result).encode(); (output / "root-result.json").write_bytes(raw_root)
+            raw_worker = b'{"status":"FAIL","originalError":"original first assertion"}'
+            (output / "worker-result.json").write_bytes(raw_worker)
+            cancellation = Cancellation(); cancellation.cleaning = True; cancellation.handle(signal.SIGTERM, None)
+            with self.assertRaises(InterruptedError): store.commit(key, output, result, cancellation.check)
+            marker = read_json(store.directory / (key + ".incomplete.json"))
+            self.assertEqual(marker["originalError"], "Original native first failure")
+            self.assertEqual(marker["commitError"], cancellation.message)
+            self.assertEqual(marker["originalRootResult"], result)
+            self.assertEqual((store.directory / (key + ".incomplete-evidence/root-result.json")).read_bytes(), raw_root)
+            self.assertEqual((store.directory / (key + ".incomplete-evidence/worker-result.json")).read_bytes(), raw_worker)
+            self.assertIn("browser.stderr", marker["retentionErrors"])
+            self.assertFalse((store.directory / (key + ".terminal.json")).exists())
+
     def test_missing_or_local_store_cannot_qualify_and_no_directory_is_provisioned(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); store = self.store(root)
