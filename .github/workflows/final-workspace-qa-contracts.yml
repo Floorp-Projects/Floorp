@@ -29,6 +29,7 @@ jobs:
           deno lint --no-config tools/final-workspace-qa/*.ts
           deno check --no-config --no-lock tools/final-workspace-qa/cases.ts tools/final-workspace-qa/validate.ts tools/final-workspace-qa/marionette.ts
           deno check --config=deno.json --lock=deno.lock --frozen-lockfile tools/final-workspace-qa/worker.ts
+          deno check --config=deno.json --lock=deno.lock --frozen-lockfile tools/final-workspace-qa/browser.ts
           deno test --no-config --no-lock --allow-read --allow-write --allow-net=127.0.0.1 tools/final-workspace-qa/contract.test.ts
           python3 -B -m unittest discover -s tools/final-workspace-qa -p 'test_*.py' -v
           deno bundle --config=deno.json --lock=deno.lock --frozen-lockfile --platform=deno --format=esm \

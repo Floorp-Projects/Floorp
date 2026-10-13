@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+/// <reference types="../../browser-features/chrome/@types/xul-window.d.ts" />
+/// <reference types="../../libs/@types/gecko/index.d.ts" />
+
 import { nativeHiddenTabTests } from "../../browser-features/chrome/common/workspaces/test/workspace-last-tab-test-utils.ts";
 import {
   beginAssertions,
