@@ -204,7 +204,7 @@ index 4916c301f8b..d5d465bdf91 100644
    if (RefPtr<NativeLayerRootRemoteMacParent> actor = std::move(mRemoteRoot)) {
      CompositorThread()->Dispatch(NewRunnableMethod("MacWebAppWidget::CloseRemoteRoot",
 diff --git a/widget/cocoa/appshim/shim/ShimView.mm b/widget/cocoa/appshim/shim/ShimView.mm
-index 256869bf43d..d0f0fac4c00 100644
+index 256869b..7443931 100644
 --- a/widget/cocoa/appshim/shim/ShimView.mm
 +++ b/widget/cocoa/appshim/shim/ShimView.mm
 @@ -6,6 +6,7 @@
@@ -237,7 +237,40 @@ index 256869bf43d..d0f0fac4c00 100644
      }
    }
    for (int column = 0; column < 4; ++column) {
-@@ -633,6 +636,7 @@ - (void)scrollWheel:(NSEvent*)event {
+@@ -277,6 +280,7 @@ @implementation FPAShimView {
+   uint32_t _textOffset;
+   NSString* _editorText;
+   NSRange _selectedRange;
++  NSRange _imeSelectedRange;
+   NSRange _markedRange;
+   NSRect _caret;
+   BOOL _editable;
+@@ -295,6 +299,7 @@ - (instancetype)initWithFrame:(NSRect)frame windowID:(uint32_t)windowID
+     _sink = [sink copy];
+     _editorText = @"";
+     _selectedRange = NSMakeRange(0, 0);
++    _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+     _markedRange = NSMakeRange(NSNotFound, 0);
+     self.wantsLayer = YES;
+     self.layer.backgroundColor = NSColor.windowBackgroundColor.CGColor;
+@@ -557,6 +562,7 @@ - (BOOL)setEditorState:(NSDictionary*)payload {
+   _caret = NSMakeRect(x, y, width, height);
+   _editable = [payload[@"editable"] boolValue];
+   _password = password;
++  if (!_editable || discard) _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+   if (discard) {
+     _markedRange = NSMakeRange(NSNotFound, 0);
+     [self.inputContext discardMarkedText];
+@@ -588,6 +594,8 @@ - (void)disconnect {
+   _cursor = NSCursor.arrowCursor;
+   [self applyCursor];
+   _sink = nil;
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
++  _markedRange = NSMakeRange(NSNotFound, 0);
+   [self updateSecureInput];
+   [self.inputContext discardMarkedText];
+   self.layer.sublayers = @[];
+@@ -633,6 +641,7 @@ - (void)scrollWheel:(NSEvent*)event {
        @"deltaX": @(event.scrollingDeltaX), @"deltaY": @(event.scrollingDeltaY),
        @"precise": @(event.hasPreciseScrollingDeltas), @"phase": @(event.phase),
        @"momentumPhase": @(event.momentumPhase), @"modifiers": @(event.modifierFlags),
@@ -245,7 +278,13 @@ index 256869bf43d..d0f0fac4c00 100644
        @"timestamp": @(event.timestamp)}];
  }
  - (void)keyEvent:(NSEvent*)event kind:(NSString*)kind {
-@@ -671,10 +675,14 @@ - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange
+@@ -666,23 +675,35 @@ - (void)insertText:(id)value replacementRange:(NSRange)replacement {
+   [self emit:MessageType::Input payload:@{@"kind": @"insertText", @"text": text,
+       @"replacement": RangePayload(replacement), @"editorRevision": @(_editorRevision)}];
+   _markedRange = NSMakeRange(NSNotFound, 0);
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+ }
+ - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange:(NSRange)replacement {
    NSString* text = PlainText(value);
    if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
        selected.length > text.length - selected.location) return;
@@ -257,10 +296,35 @@ index 256869bf43d..d0f0fac4c00 100644
        @"editorRevision": @(_editorRevision)}];
 -  _markedRange = NSMakeRange(_selectedRange.location, text.length);
 +  _markedRange = NSMakeRange(markedStart, text.length);
-+  _selectedRange = NSMakeRange(markedStart + selected.location, selected.length);
++  // Gecko reports a collapsed composition caret, even when AppKit selects a
++  // conversion clause. Keep the IME's range until it commits or cancels so the
++  // next Space continues conversion rather than replacing it with whitespace.
++  _imeSelectedRange = text.length
++      ? NSMakeRange(markedStart + selected.location, selected.length) : NSMakeRange(NSNotFound, 0);
  }
  - (void)unmarkText {
    if ([self hasMarkedText]) [self emit:MessageType::Input payload:@{@"kind": @"unmarkText", @"editorRevision": @(_editorRevision)}];
+   _markedRange = NSMakeRange(NSNotFound, 0);
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+ }
+ - (BOOL)hasMarkedText { return _markedRange.location != NSNotFound && _markedRange.length > 0; }
+ - (NSRange)markedRange { return _markedRange; }
+-- (NSRange)selectedRange { return _selectedRange; }
++- (NSRange)selectedRange {
++  return _imeSelectedRange.location != NSNotFound ? _imeSelectedRange : _selectedRange;
++}
+ - (NSArray<NSAttributedStringKey>*)validAttributesForMarkedText { return @[]; }
+ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actualRange:(NSRangePointer)actual {
+   if (range.location == NSNotFound || range.location < _textOffset ||
+@@ -696,7 +717,7 @@ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actual
+   return [[NSAttributedString alloc] initWithString:[_editorText substringWithRange:local]];
+ }
+ - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actual {
+-  if (actual) *actual = _selectedRange;
++  if (actual) *actual = [self selectedRange];
+   return [self.window convertRectToScreen:[self convertRect:_caret toView:nil]];
+ }
+ - (NSUInteger)characterIndexForPoint:(NSPoint)point { return NSNotFound; }
 diff --git a/widget/cocoa/nsCocoaUtils.h b/widget/cocoa/nsCocoaUtils.h
 index 3a4f96a4ed8..302537e0885 100644
 --- a/widget/cocoa/nsCocoaUtils.h
