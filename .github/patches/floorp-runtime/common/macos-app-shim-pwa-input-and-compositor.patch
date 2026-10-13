@@ -560,16 +560,12 @@ index 00000000000..3a1c513f17b
 +  EXPECT_EQ(pan.mPanDisplacement, ScreenPoint(-19, 6));
 +}
 diff --git a/widget/tests/gtest/moz.build b/widget/tests/gtest/moz.build
-index c870dbd1039..c7f681f3572 100644
+index c870dbd..c7f681f 100644
 --- a/widget/tests/gtest/moz.build
 +++ b/widget/tests/gtest/moz.build
-@@ -12,6 +12,9 @@ UNIFIED_SOURCES = [
- ]
- 
+@@ -14,2 +14,5 @@ UNIFIED_SOURCES = [
  if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 +    SOURCES += [
 +        "TestMacWebAppPanGesture.mm",
 +    ]
      UNIFIED_SOURCES += [
-         "TestNativeKeyBindings.cpp",
-     ]
