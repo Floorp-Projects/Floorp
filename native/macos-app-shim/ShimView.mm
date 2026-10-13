@@ -280,6 +280,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   uint32_t _textOffset;
   NSString* _editorText;
   NSRange _selectedRange;
+  NSRange _imeSelectedRange;
   NSRange _markedRange;
   NSRect _caret;
   BOOL _editable;
@@ -298,6 +299,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
     _sink = [sink copy];
     _editorText = @"";
     _selectedRange = NSMakeRange(0, 0);
+    _imeSelectedRange = NSMakeRange(NSNotFound, 0);
     _markedRange = NSMakeRange(NSNotFound, 0);
     self.wantsLayer = YES;
     self.layer.backgroundColor = NSColor.windowBackgroundColor.CGColor;
@@ -560,6 +562,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   _caret = NSMakeRect(x, y, width, height);
   _editable = [payload[@"editable"] boolValue];
   _password = password;
+  if (!_editable || discard) _imeSelectedRange = NSMakeRange(NSNotFound, 0);
   if (discard) {
     _markedRange = NSMakeRange(NSNotFound, 0);
     [self.inputContext discardMarkedText];
@@ -591,6 +594,8 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   _cursor = NSCursor.arrowCursor;
   [self applyCursor];
   _sink = nil;
+  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+  _markedRange = NSMakeRange(NSNotFound, 0);
   [self updateSecureInput];
   [self.inputContext discardMarkedText];
   self.layer.sublayers = @[];
@@ -670,6 +675,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   [self emit:MessageType::Input payload:@{@"kind": @"insertText", @"text": text,
       @"replacement": RangePayload(replacement), @"editorRevision": @(_editorRevision)}];
   _markedRange = NSMakeRange(NSNotFound, 0);
+  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
 }
 - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange:(NSRange)replacement {
   NSString* text = PlainText(value);
@@ -682,15 +688,22 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
       @"selected": RangePayload(selected), @"replacement": RangePayload(replacement),
       @"editorRevision": @(_editorRevision)}];
   _markedRange = NSMakeRange(markedStart, text.length);
-  _selectedRange = NSMakeRange(markedStart + selected.location, selected.length);
+  // Gecko reports a collapsed composition caret, even when AppKit selects a
+  // conversion clause. Keep the IME's range until it commits or cancels so the
+  // next Space continues conversion rather than replacing it with whitespace.
+  _imeSelectedRange = text.length
+      ? NSMakeRange(markedStart + selected.location, selected.length) : NSMakeRange(NSNotFound, 0);
 }
 - (void)unmarkText {
   if ([self hasMarkedText]) [self emit:MessageType::Input payload:@{@"kind": @"unmarkText", @"editorRevision": @(_editorRevision)}];
   _markedRange = NSMakeRange(NSNotFound, 0);
+  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
 }
 - (BOOL)hasMarkedText { return _markedRange.location != NSNotFound && _markedRange.length > 0; }
 - (NSRange)markedRange { return _markedRange; }
-- (NSRange)selectedRange { return _selectedRange; }
+- (NSRange)selectedRange {
+  return _imeSelectedRange.location != NSNotFound ? _imeSelectedRange : _selectedRange;
+}
 - (NSArray<NSAttributedStringKey>*)validAttributesForMarkedText { return @[]; }
 - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actualRange:(NSRangePointer)actual {
   if (range.location == NSNotFound || range.location < _textOffset ||
@@ -704,7 +717,7 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   return [[NSAttributedString alloc] initWithString:[_editorText substringWithRange:local]];
 }
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actual {
-  if (actual) *actual = _selectedRange;
+  if (actual) *actual = [self selectedRange];
   return [self.window convertRectToScreen:[self convertRect:_caret toView:nil]];
 }
 - (NSUInteger)characterIndexForPoint:(NSPoint)point { return NSNotFound; }

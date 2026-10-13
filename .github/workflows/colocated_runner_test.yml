@@ -118,6 +118,10 @@ jobs:
           deno test --allow-read --allow-write --allow-run
           tools/native/tests/g5_macos_lifecycle_helper.test.ts
 
+      - name: Build and test universal macOS App Shim
+        if: matrix.platform == 'macos'
+        run: deno task app-shim:build --test --universal
+
       - name: Install locked Runtime for browser suite
         if: matrix.browser_suite == true
         run: >-
