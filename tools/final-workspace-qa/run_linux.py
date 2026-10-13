@@ -12,7 +12,8 @@ import tempfile
 import time
 import uuid
 
-from prepare import file_digest, read_json, read_regular
+from prepare import file_digest, read_json, read_regular, validate_provider, validate_execution
+from claim_store import load_claim_store
 
 PROPERTIES = {
     "DynamicUser": "yes",
@@ -27,9 +28,6 @@ PROPERTIES = {
     "TasksMax": "512",
     "KillMode": "control-group",
 }
-
-CLAIM_DIRECTORY = Path("/run/floorp-qa3-workspace-claims")
-
 
 class Cancellation:
     def __init__(self):
@@ -50,21 +48,9 @@ class Cancellation:
         for signum, previous in self.previous.items():
             signal.signal(signum, previous)
 
-
-def claim_execution(request, output, directory=CLAIM_DIRECTORY):
-    directory.mkdir(mode=0o700, exist_ok=True)
-    info = directory.lstat()
-    if directory.is_symlink() or info.st_uid != os.geteuid() or info.st_mode & 0o077:
-        raise ValueError("Execution claim directory is not protected")
-    identity = {"repository": "Floorp-Projects/Floorp", "controllerHead": request["controllerHead"], "executionRun": request["executionRun"], "executionAttempt": request["executionAttempt"], "target": request["target"]}
-    key = hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    claim = directory / (key + ".json")
-    with claim.open("x") as stream:
-        os.chmod(claim, 0o600)
-        json.dump({"identity": identity, "originalRootResult": str(output / "root-result.json"), "status": "CONSUMED_NO_RETRY"}, stream)
-        stream.flush()
-        os.fsync(stream.fileno())
-    return claim
+    def check(self):
+        if self.message is not None:
+            raise InterruptedError(self.message)
 
 
 def command(args, timeout=30):
@@ -124,6 +110,11 @@ def verify_prepared(prepared):
     if receipt.get("schema") != "qa3-final-workspace-prepared-v1" or receipt.get("status") != "PREPARED_NOT_EXECUTED" or receipt.get("publicationAuthorized") is not False:
         raise ValueError("Preparation receipt is not accepted")
     subject = read_json(inputs / "subject.json")
+    snapshots = {name: file_digest(prepared / name) for name in ["original-provider-snapshot.json", "original-execution-snapshot.json"]}
+    if receipt.get("apiSnapshots") != snapshots:
+        raise ValueError("Original independent API snapshots changed")
+    validate_provider(read_json(prepared / "original-provider-snapshot.json"), subject["request"])
+    validate_execution(read_json(prepared / "original-execution-snapshot.json"), subject["request"])
     repository = Path(__file__).resolve().parents[2]
     head = command(["git", "-C", str(repository), "rev-parse", "HEAD"]).strip()
     if subject["request"]["controllerHead"] != head or command(["git", "-C", str(repository), "status", "--porcelain", "--", "tools/final-workspace-qa", "tools/src/browser_launcher.ts", "tools/src/defines.ts", "tools/src/utils.ts", "tools/src/release_provenance.ts", "deno.json", "deno.lock"]).strip():
@@ -140,38 +131,41 @@ def verify_prepared(prepared):
     return receipt
 
 
-def run(prepared, output):
+def run(prepared, output, claim_policy):
     if os.geteuid() != 0 or not Path("/sys/fs/cgroup/cgroup.controllers").is_file():
         raise ValueError("A separately authorized root supervisor with cgroup v2 is required")
     if output.exists():
         raise ValueError("Evidence output is creation-only; reruns are forbidden")
     receipt = verify_prepared(prepared)
+    claim_store = load_claim_store(claim_policy)
     output.mkdir(mode=0o700)
     unit = "qa3-workspace-" + uuid.uuid4().hex + ".service"
     state_name = unit.removesuffix(".service")
     state = Path("/run") / state_name
-    staging = Path(tempfile.mkdtemp(prefix="qa3-workspace-input-"))
-    inputs = staging / "input"
-    shutil.copytree(prepared / "input", inputs, symlinks=True)
-    before = input_hashes(inputs)
-    for path in inputs.rglob("*"):
-        if path.is_file() and not path.is_symlink():
-            path.chmod(0o555 if path.stat().st_mode & 0o111 else 0o444)
-    inputs.chmod(0o555)
-    native = inputs / "browser" / receipt["subject"]["binaryRelativePath"]
-    # Bind the complete member bytes, not just the selected executable.
-    before = input_hashes(inputs)
-    (output / "input-inventory.json").write_text(json.dumps(before, indent=2) + "\n")
-    result = {"schema": "qa3-final-workspace-root-v1", "subject": receipt["subject"], "unit": unit, "status": "FAIL", "publicationAuthorized": False, "nativeProductQualification": "UNVERIFIED", "compileProfileQualification": "UNVERIFIED", "claimScope": "SUPERVISOR_HOST_BOOT_ONLY", "consumerBootSha256": hashlib.sha256(Path('/proc/sys/kernel/random/boot_id').read_bytes()).hexdigest()}
-    claim = claim_execution(receipt["subject"]["request"], output)
-    result["originalExecutionClaim"] = str(claim)
+    result = {"schema": "qa3-final-workspace-root-v2", "subject": receipt["subject"], "unit": unit, "status": "PENDING_DURABLE_COMMIT", "executionStatus": "FAIL", "publicationAuthorized": False, "nativeProductQualification": "UNVERIFIED", "compileProfileQualification": "UNVERIFIED", "claimScope": "QUALIFIED_SHARED_DURABLE_STORE", "claimStore": claim_store.binding, "apiSnapshots": receipt["apiSnapshots"], "consumerBootSha256": hashlib.sha256(Path('/proc/sys/kernel/random/boot_id').read_bytes()).hexdigest()}
+    claim = claim_store.consume(receipt["subject"]["request"], output)
+    result["originalExecutionClaim"] = claim
     original_error = None
     cleanup_error = None
     observed = None
     cancellation = Cancellation()
-    cancellation.install()
+    staging = None
+    service_attempted = False
     started = time.monotonic()
     try:
+        cancellation.install()
+        for name in receipt["apiSnapshots"]:
+            (output / name).write_bytes(read_regular(prepared / name))
+        staging = Path(tempfile.mkdtemp(prefix="qa3-workspace-input-"))
+        inputs = staging / "input"
+        shutil.copytree(prepared / "input", inputs, symlinks=True)
+        for path in inputs.rglob("*"):
+            if path.is_file() and not path.is_symlink():
+                path.chmod(0o555 if path.stat().st_mode & 0o111 else 0o444)
+        inputs.chmod(0o555)
+        # Bind the complete member bytes, not just the selected executable.
+        before = input_hashes(inputs)
+        (output / "input-inventory.json").write_text(json.dumps(before, indent=2) + "\n")
         arguments = ["/usr/bin/systemd-run", "--quiet", "--no-block", "--unit=" + unit]
         for key, value in PROPERTIES.items():
             arguments.append("--property=" + key + "=" + value)
@@ -190,6 +184,7 @@ def run(prepared, output):
             "--allow-write=" + str(state), "--allow-net=127.0.0.1", "--allow-env=HOME,TMPDIR,PATH,LANG,DENO_DIR",
             "/input/worker.js", str(state),
         ]
+        service_attempted = True
         command(arguments)
         observed = properties(unit)
         validate_properties(observed, unit)
@@ -209,30 +204,54 @@ def run(prepared, output):
             raise ValueError("Original worker result or cleanup rejected")
         if input_hashes(inputs) != before:
             raise ValueError("Protected source, binary or support inventory changed")
-        result["status"] = "PASS_WORKSPACE_BEHAVIOR_ONLY"
+        result["executionStatus"] = "PASS_WORKSPACE_BEHAVIOR_ONLY"
     except Exception as error:
         original_error = str(error)
     finally:
         cancellation.cleaning = True
+        result["scopeEmpty"] = not service_attempted
         try:
-            command(["/usr/bin/systemctl", "stop", unit])
-            final = properties(unit)
-            if not scope_empty(final.get("ControlGroup")):
-                raise ValueError("Owned service scope survived stop")
+            if service_attempted:
+                command(["/usr/bin/systemctl", "stop", unit])
+                final = properties(unit)
+                if not scope_empty(final.get("ControlGroup")):
+                    raise ValueError("Owned service scope survived stop")
+                result["finalProperties"] = final
             result["scopeEmpty"] = True
-            result["finalProperties"] = final
-            if state.exists():
-                allowed = {"worker-result.json", "browser.stdout", "browser.stderr"}
-                for name in allowed:
-                    path = state / name
-                    if path.exists():
-                        data = read_regular(path, 8 * 1024 * 1024)
-                        (output / name).write_bytes(data)
-                shutil.rmtree(state)
-            journal = command(["/usr/bin/journalctl", "--unit=" + unit, "--no-pager", "--output=cat"])
-            (output / "service.log").write_text(journal)
         except Exception as error:
             cleanup_error = str(error)
+        collection_errors = {}
+        # Cleanup failure must never suppress the original worker's raw failure.
+        for name in ["worker-result.json", "browser.stdout", "browser.stderr"]:
+            try:
+                path = state / name
+                if path.exists():
+                    (output / name).write_bytes(read_regular(path, 8 * 1024 * 1024))
+                elif service_attempted:
+                    raise ValueError("Original native evidence is absent")
+            except Exception as error:
+                collection_errors[name] = str(error)
+        try:
+            journal = command(["/usr/bin/journalctl", "--unit=" + unit, "--no-pager", "--output=cat"]) if service_attempted else "Native service was not attempted.\n"
+            (output / "service.log").write_text(journal)
+        except Exception as error:
+            collection_errors["service.log"] = str(error)
+        result["evidenceCollectionErrors"] = collection_errors
+        result["evidenceIncomplete"] = bool(collection_errors)
+        if collection_errors:
+            cleanup_error = cleanup_error or "Original evidence collection is incomplete"
+        try:
+            if result["scopeEmpty"] and not collection_errors and state.exists():
+                shutil.rmtree(state)
+        except Exception as error:
+            result["stateCleanupError"] = str(error)
+            cleanup_error = cleanup_error or str(error)
+        try:
+            if staging is not None:
+                shutil.rmtree(staging)
+        except Exception as error:
+            result["stagingCleanupError"] = str(error)
+            cleanup_error = cleanup_error or str(error)
         original_error = original_error or cancellation.message
         result["originalError"] = original_error
         result["cancellation"] = cancellation.message
@@ -240,20 +259,35 @@ def run(prepared, output):
         result["observedWallSeconds"] = round(time.monotonic() - started, 3)
         result["invoiceConfirmed"] = False
         if original_error is not None or cleanup_error is not None:
-            result["status"] = "FAIL"
-        (output / "root-result.json").write_text(json.dumps(result, indent=2) + "\n")
-        with claim.with_suffix(".result.json").open("x") as stream:
-            json.dump({"originalRootResult": str(output / "root-result.json"), "sha256": file_digest(output / "root-result.json"), "status": result["status"]}, stream)
-        shutil.rmtree(staging)
-        cancellation.restore()
-    if result["status"] != "PASS_WORKSPACE_BEHAVIOR_ONLY":
+            result["executionStatus"] = "FAIL"
+        try:
+            with (output / "root-result.json").open("x") as stream:
+                stream.write(json.dumps(result, indent=2) + "\n")
+            terminal = claim_store.commit(claim, output, result, cancellation.check)
+            cancellation.check()
+            with (output / "durable-result.json").open("x") as stream:
+                stream.write(json.dumps(terminal, indent=2) + "\n")
+            cancellation.check()
+        except Exception as error:
+            failure = {"schema": "qa3-final-workspace-durable-incomplete-v1", "status": "FAIL", "subject": receipt["subject"], "executionKey": claim, "originalError": str(error), "cancellation": cancellation.message, "publicationAuthorized": False}
+            try:
+                failure["durableIncomplete"] = claim_store.incomplete(claim, result, error)
+            except Exception as retention_error:
+                failure["retentionError"] = str(retention_error)
+            with (output / "durable-incomplete.json").open("x") as stream:
+                stream.write(json.dumps(failure, indent=2) + "\n")
+            raise
+        finally:
+            cancellation.restore()
+    if terminal["status"] != "PASS_WORKSPACE_BEHAVIOR_ONLY":
         raise ValueError("Final workspace pilot failed; original evidence retained")
-    return result
+    return terminal
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--prepared", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--claim-policy", type=Path, required=True)
     args = parser.parse_args()
-    print(json.dumps(run(args.prepared.resolve(), args.output.resolve())))
+    print(json.dumps(run(args.prepared.resolve(), args.output.resolve(), args.claim_policy.absolute())))

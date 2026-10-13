@@ -25,6 +25,15 @@ The independently supplied `provider-snapshot.json` is compared with those
 expectations, including repository, successful original attempt, expiry and
 the artifact's actual producing run/head. The caller must authenticate this
 API read; a snapshot inside the candidate ZIP is never used as its authority.
+An independent `execution-snapshot.json` must identify the in-progress consumer
+run at the exact controller head, repository ID and original attempt 1. Both
+snapshots are hashed in the preparation receipt, rechecked before launch and
+retained with the original durable result. The trusted caller must fetch them
+through its existing authorized API connection immediately before preparation
+and confirm that the consumer remains that original active run before launch.
+Local JSON alone cannot prove authentication or freshness. Authenticating an
+artifact's identity and bytes is distinct from creating an account credential;
+this adapter creates no credentials.
 All attempts must be the original attempt 1. The archive is copied privately,
 hashed against that expected digest, safely extracted within fixed limits and
 validated with the unchanged `validateReleaseBundle(directory, true)`. That
@@ -74,9 +83,11 @@ file. The fixture opens real windows and native tabs with workspaces enabled.
 
 The dedicated Marionette client connects and creates one session. It bounds
 UTF-8 frames, validates message IDs, writes complete packets and closes the
-socket at a handshake or command deadline. The initial loopback TCP connection
-has no independent deadline yet; the supervisor and service wall bounds remain
-its backstop. It preserves original incoming/outgoing frame text.
+socket at a handshake or command deadline. The initial loopback TCP dial has a
+15-second monotonic deadline and native abort signal. It makes exactly one dial,
+closes a connection that arrives after the deadline and retains the original
+timeout even when the operation rejects later. It preserves original
+incoming/outgoing frame text.
 Bounded startup observations precede test execution and are recorded separately;
 transport, session and test failures are never retried.
 
@@ -133,9 +144,11 @@ reviewed controller, the trusted root supervisor can prepare it with:
 python3 tools/final-workspace-qa/prepare.py prepare \
   --request /trusted/request.json --archive /trusted/original-bundle.zip \
   --provider-snapshot /trusted/original-provider-snapshot.json \
+  --execution-snapshot /trusted/original-execution-snapshot.json \
   --deno /trusted/deno --output /private/new-preparation
 python3 tools/final-workspace-qa/run_linux.py \
-  --prepared /private/new-preparation --output /private/new-evidence
+  --prepared /private/new-preparation --output /private/new-evidence \
+  --claim-policy /trusted/existing-shared-claim-policy.json
 ```
 
 An authorized worker with systemd and cgroup v2 is required. Missing artifact
@@ -159,13 +172,65 @@ signed final member/native target. Preserve the sequence:
 
 ## One-use issuance and cancellation
 
-Before spawning, the supervisor atomically consumes a protected root claim for
-repository/controller revision/execution run/attempt/target. Failure or cancel
-retains that claim and the original root-result reference. A new output or
-preparation path cannot reuse the same original execution. These claims apply
-to one supervisor host boot because `/run` is volatile; cross-worker issuance
-and long-term original failure
-retention still belong to the authenticated CI caller and evidence store.
+Before spawning, the supervisor consumes two creation-only claims in an
+existing, qualified shared filesystem. The execution key binds repository ID,
+execution run, original attempt and target; controller revision, host boot and
+output path cannot change that key. A second package key binds the producer
+run/attempt, artifact ID/digest, target and fixed suite, preventing a new consumer
+run from repeating the same package. A partial failure consumes its claim;
+claims are never removed or released. Both file and parent-directory fsync must
+complete before any native service is attempted.
+
+The `--claim-policy` comes separately from the trusted root caller. The adapter
+requires a preexisting private root-owned directory, matching kernel mount
+type/source and an independently retained qualification record. Only NFS,
+NFS4, Ceph and Gluster shared filesystems are accepted. Local disks, `/run`,
+missing policies and unqualified stores fail closed. The adapter does not
+provision a store, mount, account, qualification record or permanent setting.
+The policy has these exact fields:
+
+```json
+{
+  "schema": "qa3-durable-claim-store-policy-v1",
+  "storeId": "existing-qualified-store",
+  "directory": "/existing/private/claims",
+  "filesystemType": "nfs4",
+  "source": "existing-server:/export",
+  "namespace": "/claims",
+  "qualificationPath": "/trusted/existing-qualification.json",
+  "qualificationSha256": "SHA256_OF_EXISTING_QUALIFICATION_BYTES"
+}
+```
+
+The root operator's separately authenticated qualification uses schema
+`qa3-durable-claim-store-qualification-v1`, repeats `storeId`, `directory`,
+`filesystemType`, `source` and `namespace`, and records `status=PASS` with exactly these
+checks: `crossClientExclusiveCreate`, `serverRestartDurability` and
+`originalEvidenceRetention`, all true. Those checks require real cross-client
+and server-restart evidence. Synthetic host test descriptors cannot establish
+them. No shared backend or authorized root OS worker has been qualified here.
+The namespace is the kernel mount root plus the claim directory's path relative
+to its mountpoint. It must match the qualification, so a bind mount into a
+different subtree of the same server/export cannot silently issue another claim.
+
+Original result and raw log bytes are copied to the shared evidence directory
+before a creation-only terminal seal is synced. The ephemeral root result
+retains `status=PENDING_DURABLE_COMMIT`; its `executionStatus` alone is never a
+PASS receipt. Success requires the supervisor's original successful exit, its
+returned durable terminal and independently authenticated original CI context.
+Absent, partial or unacknowledged durable commits cannot qualify execution.
+Cancellation is checked throughout the commit, including after terminal fsync.
+A commit failure or late cancellation emits an immutable incomplete record;
+its presence rejects any earlier terminal. A failure to retain that marker
+also fails the supervisor and keeps the local incomplete diagnostic. Teardown
+must finish before the verdict is sealed. A terminal file alone never authorizes
+success; the original CI result and supervisor exit remain required.
+Bounded raw evidence collection is attempted independently of stop or scope
+failure. Every collection error is recorded; missing original worker evidence
+emits an incomplete record. Available raw bytes remain retained, and service
+state is removed only after an empty scope and successful evidence collection.
+Both successful and failed terminals keep publication unauthorized and native
+and compile/profile qualification unverified.
 
 The fixed trusted Deno worker requires `--allow-run` for `Deno.kill` of its owned
 descendants: restricting it to the browser executable makes that API fail.

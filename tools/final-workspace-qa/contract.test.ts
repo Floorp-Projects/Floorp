@@ -2,7 +2,7 @@
 
 import { CASES, verifyBrowserResult } from "./cases.ts";
 import { parseRequest, validateProduct } from "./validate.ts";
-import { SinglePassMarionette } from "./marionette.ts";
+import { connectLoopbackOnce, SinglePassMarionette } from "./marionette.ts";
 import type { BrowserResult, PilotRequest } from "./types.ts";
 import {
   assert as observedAssert,
@@ -365,5 +365,110 @@ Deno.test("single-pass packet bound rejects oversized peer frames", async () => 
     assert(await connection.read(new Uint8Array(1)) === null);
   }, async (port) => {
     await rejects(() => SinglePassMarionette.connect(port));
+  });
+});
+
+Deno.test("initial TCP deadline aborts one dial and retains timeout after late rejection", async () => {
+  let calls = 0;
+  let signal: AbortSignal | undefined;
+  let rejectDial: ((error: Error) => void) | undefined;
+  const connecting = connectLoopbackOnce(2828, 10, (options) => {
+    calls++;
+    assert(
+      options.hostname === "127.0.0.1" && options.autoSelectFamily === false,
+    );
+    signal = options.signal;
+    return new Promise((_, reject) => {
+      rejectDial = reject;
+    });
+  });
+  let failure: unknown;
+  try {
+    await connecting;
+  } catch (error) {
+    failure = error;
+  }
+  assert(
+    failure instanceof Error &&
+      failure.message === "Original TCP connection timed out",
+  );
+  assert(calls === 1 && signal?.aborted === true);
+  rejectDial!(new Error("Late dial failure"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert(failure.message === "Original TCP connection timed out");
+});
+
+Deno.test("initial TCP deadline closes a late real socket before any session", async () => {
+  await withPeer(async (connection) => {
+    assert(await connection.read(new Uint8Array(1)) === null);
+  }, async (port) => {
+    let lateDial: Promise<Deno.TcpConn> | undefined;
+    await rejects(() =>
+      connectLoopbackOnce(port, 10, () => {
+        lateDial = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            Deno.connect({ hostname: "127.0.0.1", port }).then(resolve, reject);
+          }, 30);
+        });
+        return lateDial;
+      })
+    );
+    await lateDial;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+});
+
+Deno.test("successful initial TCP dial clears its timer and preserves the socket", async () => {
+  await withPeer(async (connection) => {
+    const data = new Uint8Array(1);
+    assert(await connection.read(data) === 1 && data[0] === 7);
+    assert(await connection.read(new Uint8Array(1)) === null);
+  }, async (port) => {
+    const connection = await connectLoopbackOnce(port, 100);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      assert(await connection.write(new Uint8Array([7])) === 1);
+    } finally {
+      connection.close();
+    }
+  });
+});
+
+Deno.test("fixed SDK aborts an actual native TCP operation", async () => {
+  const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+  const controller = new AbortController();
+  const reason = new Error("Host fixture native cancellation");
+  controller.abort(reason);
+  try {
+    let originalError: unknown;
+    try {
+      await Deno.connect({
+        hostname: "127.0.0.1",
+        port: (listener.addr as Deno.NetAddr).port,
+        signal: controller.signal,
+      });
+    } catch (error) {
+      originalError = error;
+    }
+    assert(originalError === reason);
+  } finally {
+    listener.close();
+  }
+});
+
+Deno.test("initial TCP rejects elapsed monotonic deadline before the timer can run", async () => {
+  await withPeer(async (connection) => {
+    assert(await connection.read(new Uint8Array(1)) === null);
+  }, async (port) => {
+    const connection = await Deno.connect({ hostname: "127.0.0.1", port });
+    await rejects(() =>
+      connectLoopbackOnce(port, 10, () => {
+        const finish = performance.now() + 20;
+        while (performance.now() < finish) {
+          /* Delay microtask completion past the bound. */
+        }
+        return Promise.resolve(connection);
+      })
+    );
   });
 });

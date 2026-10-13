@@ -223,7 +223,15 @@ def build_support(repository, floorp_head, deno, output):
     return binding
 
 
-def prepare(request_path, archive, provider_path, repository, deno, output):
+def validate_execution(provider, request):
+    if not isinstance(provider, dict) or set(provider) != {"run"}:
+        raise ValueError("Independent consumer execution snapshot is required")
+    run = provider["run"]
+    if run.get("id") != request["executionRun"] or run.get("head_sha") != request["controllerHead"] or run.get("run_attempt") != 1 or request["executionAttempt"] != 1 or run.get("status") != "in_progress" or run.get("conclusion") is not None or run.get("repository", {}).get("id") != 437505831 or run.get("repository", {}).get("full_name") != "Floorp-Projects/Floorp":
+        raise ValueError("Original authenticated consumer execution identity differs")
+
+
+def prepare(request_path, archive, provider_path, execution_path, repository, deno, output):
     if os.geteuid() != 0:
         raise ValueError("Execution preparation must be issued by the trusted root supervisor")
     if output.exists():
@@ -231,6 +239,8 @@ def prepare(request_path, archive, provider_path, repository, deno, output):
     request = read_json(request_path)
     provider = read_json(provider_path)
     validate_provider(provider, request)
+    execution = read_json(execution_path)
+    validate_execution(execution, request)
     if request.get("target") != "linux-x86_64" or request.get("executionAttempt") != 1 or request.get("bundleAttempt") != 1:
         raise ValueError("Required original native target/attempt missing")
     head = subprocess.check_output(["git", "-C", str(repository), "rev-parse", "HEAD"], text=True).strip()
@@ -241,6 +251,7 @@ def prepare(request_path, archive, provider_path, repository, deno, output):
         raise ValueError("Controller or inherited validation inputs are not frozen")
     output.mkdir(mode=0o700)
     (output / "original-provider-snapshot.json").write_text(json.dumps(provider, indent=2) + "\n")
+    (output / "original-execution-snapshot.json").write_text(json.dumps(execution, indent=2) + "\n")
     bundle = output / "bundle"
     frozen_archive = output / "original-bundle.zip"
     if not stat.S_ISREG(archive.lstat().st_mode) or archive.stat().st_size > 2 * GIB:
@@ -294,7 +305,8 @@ def prepare(request_path, archive, provider_path, repository, deno, output):
         inventory[name] = {"symlink": os.readlink(path)} if path.is_symlink() else {"directory": True} if path.is_dir() else {"sha256": file_digest(path), "bytes": path.stat().st_size, "mode": path.stat().st_mode & 0o777}
     if configuration != {name: file_digest(repository / name) for name in configuration}:
         raise ValueError("Controller dependency configuration changed during compilation")
-    receipt = {"schema": "qa3-final-workspace-prepared-v1", "subject": subject, "support": binding, "inputInventory": inventory, "controllerConfiguration": configuration, "workerSha256": file_digest(worker), "denoSha256": file_digest(inputs / "deno"), "status": "PREPARED_NOT_EXECUTED", "publicationAuthorized": False}
+    snapshots = {name: file_digest(output / name) for name in ["original-provider-snapshot.json", "original-execution-snapshot.json"]}
+    receipt = {"schema": "qa3-final-workspace-prepared-v1", "subject": subject, "support": binding, "inputInventory": inventory, "controllerConfiguration": configuration, "apiSnapshots": snapshots, "workerSha256": file_digest(worker), "denoSha256": file_digest(inputs / "deno"), "status": "PREPARED_NOT_EXECUTED", "publicationAuthorized": False}
     (output / "prepared.json").write_text(json.dumps(receipt, indent=2) + "\n")
     return receipt
 
@@ -307,6 +319,7 @@ def main():
     parser.add_argument("--request", type=Path)
     parser.add_argument("--archive", type=Path)
     parser.add_argument("--provider-snapshot", type=Path)
+    parser.add_argument("--execution-snapshot", type=Path)
     parser.add_argument("--deno", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -315,9 +328,9 @@ def main():
             parser.error("--floorp-head is required")
         result = build_support(args.repository.resolve(), args.floorp_head, args.deno.resolve(), args.output.resolve())
     else:
-        if not args.request or not args.archive or not args.provider_snapshot:
-            parser.error("--request, --archive and --provider-snapshot are required")
-        result = prepare(args.request.resolve(), args.archive.resolve(), args.provider_snapshot.resolve(), args.repository.resolve(), args.deno.resolve(), args.output.resolve())
+        if not args.request or not args.archive or not args.provider_snapshot or not args.execution_snapshot:
+            parser.error("--request, --archive, --provider-snapshot and --execution-snapshot are required")
+        result = prepare(args.request.resolve(), args.archive.resolve(), args.provider_snapshot.resolve(), args.execution_snapshot.resolve(), args.repository.resolve(), args.deno.resolve(), args.output.resolve())
     print(json.dumps(result))
 
 

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+export type TcpDial = (options: Deno.ConnectOptions) => Promise<Deno.TcpConn>;
+
 export interface PilotCase {
   id: string;
   name: string;

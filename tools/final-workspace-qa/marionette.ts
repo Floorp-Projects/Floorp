@@ -1,6 +1,54 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { TcpDial } from "./types.ts";
+
 const MAX_PACKET = 1024 * 1024;
+
+export async function connectLoopbackOnce(
+  port: number,
+  timeoutMilliseconds = 15_000,
+  dial: TcpDial = Deno.connect,
+): Promise<Deno.TcpConn> {
+  if (
+    !Number.isSafeInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 ||
+    timeoutMilliseconds > 15_000
+  ) {
+    throw new Error("Initial TCP deadline is outside its fixed bound");
+  }
+  const controller = new AbortController();
+  const timeout = new Error("Original TCP connection timed out");
+  const deadline = performance.now() + timeoutMilliseconds;
+  let sealedFailure = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      sealedFailure = true;
+      controller.abort(timeout);
+      reject(timeout);
+    }, timeoutMilliseconds);
+  });
+  try {
+    const connected = dial({
+      hostname: "127.0.0.1",
+      port,
+      signal: controller.signal,
+      autoSelectFamily: false,
+    }).then((connection) => {
+      if (sealedFailure || performance.now() >= deadline) {
+        sealedFailure = true;
+        controller.abort(timeout);
+        try {
+          connection.close();
+        } catch { /* Native abort can already close it. */ }
+        throw timeout;
+      }
+      return connection;
+    });
+    return await Promise.race([connected, expired]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export class SinglePassMarionette {
   #conn: Deno.TcpConn;
@@ -24,7 +72,7 @@ export class SinglePassMarionette {
       event: { direction: string; prefix: string; json: string },
     ) => void = () => {},
   ): Promise<SinglePassMarionette> {
-    const conn = await Deno.connect({ hostname: "127.0.0.1", port });
+    const conn = await connectLoopbackOnce(port);
     const client = new SinglePassMarionette(conn, audit);
     try {
       const hello = await client.#deadline(() => client.#read(), 15_000);
