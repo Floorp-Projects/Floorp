@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: Final workspace QA contracts
+
+on:
+  pull_request:
+    paths:
+      - tools/final-workspace-qa/**
+      - .github/workflows/final-workspace-qa-contracts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - name: Check bounded product and provenance contracts
+        run: |
+          deno fmt --check tools/final-workspace-qa/*.ts
+          deno lint --no-config tools/final-workspace-qa/*.ts
+          deno check --no-config --no-lock tools/final-workspace-qa/cases.ts tools/final-workspace-qa/validate.ts tools/final-workspace-qa/marionette.ts
+          deno check --config=deno.json --lock=deno.lock --frozen-lockfile tools/final-workspace-qa/worker.ts
+          deno test --no-config --no-lock --allow-read --allow-write --allow-net=127.0.0.1 tools/final-workspace-qa/contract.test.ts
+          python3 -B -m unittest discover -s tools/final-workspace-qa -p 'test_*.py' -v
+          deno bundle --config=deno.json --lock=deno.lock --frozen-lockfile --platform=deno --format=esm \
+            --output "$RUNNER_TEMP/workspace-worker.js" tools/final-workspace-qa/worker.ts
+      - name: Compile same-source browser test support
+        env:
+          PRODUCT_SOURCE_HEAD: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 tools/final-workspace-qa/prepare.py build-support \
+            --floorp-head "$PRODUCT_SOURCE_HEAD" \
+            --deno "$(command -v deno)" \
+            --output "$RUNNER_TEMP/workspace-support"
+      - name: Retain support compilation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-workspace-support-contracts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/workspace-support/support-binding.json
+            ${{ runner.temp }}/workspace-support/browser-payload.js
+            ${{ runner.temp }}/workspace-support/bundle.stderr
+          if-no-files-found: error
+          retention-days: 3
