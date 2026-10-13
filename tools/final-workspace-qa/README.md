@@ -180,6 +180,10 @@ run/attempt, artifact ID/digest, target and fixed suite, preventing a new consum
 run from repeating the same package. A partial failure consumes its claim;
 claims are never removed or released. Both file and parent-directory fsync must
 complete before any native service is attempted.
+An unacknowledged issuance keeps this caller's local FAIL result and never
+launches. It does not modify a competing winner's shared record. If the shared
+backend itself is unavailable, original CI evidence retention remains required;
+the local failure cannot claim shared durability or qualify the product.
 
 The `--claim-policy` comes separately from the trusted root caller. The adapter
 requires a preexisting private root-owned directory, matching kernel mount

@@ -143,7 +143,17 @@ def run(prepared, output, claim_policy):
     state_name = unit.removesuffix(".service")
     state = Path("/run") / state_name
     result = {"schema": "qa3-final-workspace-root-v2", "subject": receipt["subject"], "unit": unit, "status": "PENDING_DURABLE_COMMIT", "executionStatus": "FAIL", "publicationAuthorized": False, "nativeProductQualification": "UNVERIFIED", "compileProfileQualification": "UNVERIFIED", "claimScope": "QUALIFIED_SHARED_DURABLE_STORE", "claimStore": claim_store.binding, "apiSnapshots": receipt["apiSnapshots"], "consumerBootSha256": hashlib.sha256(Path('/proc/sys/kernel/random/boot_id').read_bytes()).hexdigest()}
-    claim = claim_store.consume(receipt["subject"]["request"], output)
+    try:
+        claim = claim_store.consume(receipt["subject"]["request"], output)
+    except Exception as error:
+        # Do not mutate a competing winner's shared claim. Retain this caller's
+        # issuance failure even when the shared backend cannot acknowledge sync.
+        result["status"] = "FAIL"
+        result["claimStatus"] = "NOT_ACKNOWLEDGED_NO_NATIVE_LAUNCH"
+        result["originalError"] = str(error)
+        with (output / "root-result.json").open("x") as stream:
+            stream.write(json.dumps(result, indent=2) + "\n")
+        raise
     result["originalExecutionClaim"] = claim
     original_error = None
     cleanup_error = None

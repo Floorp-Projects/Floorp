@@ -112,6 +112,23 @@ class ArchiveContracts(unittest.TestCase):
 
 
 class SupervisorContracts(unittest.TestCase):
+    def test_unacknowledged_claim_retains_local_original_error_and_never_launches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); output = root / "output"
+            receipt = {"subject": {"request": {"executionRun": 123}}, "apiSnapshots": {}}
+            class HostStore:
+                binding = {"storeId": "host-issuance-fixture-not-native-qualified"}
+                def consume(self, _request, _output):
+                    raise OSError("Original host claim sync failure")
+            with patch("run_linux.os.geteuid", return_value=0), patch("run_linux.verify_prepared", return_value=receipt), patch("run_linux.load_claim_store", return_value=HostStore()), patch("run_linux.command") as operation:
+                with self.assertRaises(OSError): run(root / "prepared", output, root / "policy")
+                operation.assert_not_called()
+            result = read_json(output / "root-result.json")
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["claimStatus"], "NOT_ACKNOWLEDGED_NO_NATIVE_LAUNCH")
+            self.assertEqual(result["originalError"], "Original host claim sync failure")
+            self.assertFalse(result["publicationAuthorized"])
+
     def test_stop_failure_still_collects_original_worker_bytes_and_journal(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); prepared = root / "prepared"; inputs = prepared / "input"; inputs.mkdir(parents=True)
