@@ -213,7 +213,6 @@ async function runTest(ownNativeSession = false): Promise<void> {
       logger.success(
         "Dev servers are ready. Launching browser in test mode...",
       );
-      // deno-lint-ignore no-explicit-any
       BrowserLauncher.run({
         marionette: true,
         ownLinuxSession: ownNativeSession,
