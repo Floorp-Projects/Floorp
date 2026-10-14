@@ -74,6 +74,13 @@ class Ownership(unittest.TestCase):
         self.assertEqual(run.present(table,tracked),{12,13});self.assertNotIn(11,tracked)
         table[10]={'start':'new-root','session':10,'ppid':1,'state':'S'}
         with self.assertRaisesRegex(ValueError,'generation reused'):run.capture_browser(table,tracked,root)
+    def test_failed_shutdown_orphan_remains_in_global_cleanup_inventory(self):
+        table={12:{'start':'child','ppid':1,'session':10,'state':'S'}};owned={10:'root'}
+        run.legacy.adopt_owned(table,owned);self.assertNotIn(12,owned)
+        native={10:'root'};run.capture_browser(table,native,{'pid':10,'session':10,'start':'root'})
+        run.merge_native_ownership(owned,native)
+        self.assertEqual(run.live(table,owned),{12});self.assertEqual(owned[12],'child')
+        with self.assertRaisesRegex(ValueError,'generation collision'):run.merge_native_ownership({12:'foreign'},native)
 
 class Isolation(unittest.TestCase):
     def test_control_preserves_original_session_and_workspace_prefs(self):
