@@ -134,7 +134,7 @@ jobs:
           python3 -B -m unittest discover -s tools/workspace-expanded-development -p 'test_*.py' -v
           python3 -B -m unittest discover -s tools/workspace-development -p 'test_*.py' -v
           node --test tools/workspace-development/test_final_separation.mjs
-          node -e "new Function(require('node:fs').readFileSync('tools/workspace-restart-development/browser-phase.js.txt', 'utf8'))"
+          node --test tools/workspace-restart-development/test_restore_oracle.mjs
       - name: Install the authenticated canonical Runtime
         env:
           FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
@@ -194,6 +194,10 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
       - name: Test final package QA source intake
         run: node --test tools/test-final-package-qa-source.mjs
+      - name: Check shared restart oracle and synthetic failure diagnostics
+        run: |
+          node --test tools/workspace-restart-development/test_restore_oracle.mjs
+          python3 -B -m unittest discover -s tools/workspace-restart-development -p 'test_*.py' -v
       - name: Run host tool tests
         run: deno task test:host
       - name: Run locked Firefox test tooling tests

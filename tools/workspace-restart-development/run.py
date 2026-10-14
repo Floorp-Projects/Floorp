@@ -14,7 +14,8 @@ import time
 from urllib.parse import unquote
 import uuid
 
-from protocol import Marionette
+from diagnostics import failure_diagnostic
+from protocol import BrowserPhaseError, Marionette
 from session import decode, validate_saved
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -24,7 +25,7 @@ LIMIT=8*1024*1024
 PORT=2828
 ISOLATION_TARGET='tools/workspace-restart-development/no-autodiscovered-suites.test.ts'
 SOURCE_PATHS=[
-    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','browser-phase.js.txt','cases.json']
+    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','diagnostics.py','restore-oracle.js.txt','browser-phase.js.txt','cases.json']
 ]+['tools/src/browser_launcher.ts','tools/feles-build.ts','floorp-runtime.lock.json','tools/workspace-development/run.py','bridge/startup/src/chrome_root.ts','bridge/loader-features/loader/test/index.ts']
 legacy_spec=importlib.util.spec_from_file_location('owned_six',ROOT/'tools/workspace-development/run.py')
 legacy=importlib.util.module_from_spec(legacy_spec);legacy_spec.loader.exec_module(legacy)
@@ -34,10 +35,52 @@ def write_json(path,value):path.write_text(json.dumps(value,indent=2)+'\n')
 def json_digest(value):return hashlib.sha256((json.dumps(value,indent=2)+'\n').encode()).hexdigest()
 def is_hash(value):return isinstance(value,str) and re.fullmatch('[0-9a-f]{64}',value) is not None
 
+def browser_script():
+    return 'const restartOracle = '+(HERE/'restore-oracle.js.txt').read_bytes().decode('utf-8')+';\n'+(HERE/'browser-phase.js.txt').read_bytes().decode('utf-8')
+
+def browser_phase(client,args,boot,artifact,profile,out,record,receipt):
+    if profile_identity(profile)!=record['profileIdentity']:
+        raise ValueError('Original synthetic profile identity changed before phase')
+    marker=(profile/'qa3-restart-profile.json').read_bytes()
+    if json.loads(marker)!={'nonce':record['nonce'],'case':record['case'],'head':receipt['floorpHead']}:
+        raise ValueError('Original synthetic profile marker changed before phase')
+    payload={**args,'syntheticProfile':record['profileIdentity'],'nativePid':boot['root']['pid']}
+    try:
+        result=client.phase(browser_script(),payload)
+        if profile_identity(profile)!=record['profileIdentity']:
+            raise ValueError('Synthetic profile identity changed during successful phase')
+        if result.get('syntheticProfileVerified') is not True:
+            raise ValueError('Successful phase lacks verified synthetic profile')
+        validate_phase(result,args['action'],record['case'],record['nonce'],args['control'],boot,artifact)
+        client.accept_phase_trace()
+        return result
+    except BrowserPhaseError as error:
+        try:
+            if profile_identity(profile)!=record['profileIdentity']:
+                raise ValueError('Synthetic profile identity changed during failed phase')
+            context={
+                **{key:receipt[key] for key in ['floorpHead','run','attempt']},
+                'case':record['case'],'nonce':record['nonce'],'boot':1 if args['action']=='prepare' else 2,
+                'profileIdentity':record['profileIdentity'],'expectedSyntheticProfile':str(profile.resolve()),
+                'nativePid':boot['root']['pid'],'runtimeVersion':artifact['version'],'runtimeBuildID':artifact['buildId'],
+                'expectedBootstrapRunId':args['control']['runId'],
+                'expectedConfiguredNewTabURL':args.get('expected',{}).get('state',{}).get('configuredNewTabURL'),
+            }
+            _,encoded=failure_diagnostic(error.result,context,(profile/'qa3-restart-profile.json').read_bytes())
+            name=record['case']+'-boot'+str(context['boot'])+'-failure-diagnostic.json'
+            with (out/name).open('xb') as f:f.write(encoded)
+            record['failureDiagnosticEvidenceFile']=name
+            client.accept_phase_trace()
+        except BaseException as diagnostic_error:
+            record['diagnosticError']=str(diagnostic_error)
+        raise
+    finally:
+        client.discard_phase_trace()
+
 def profile_identity(profile):
     if profile.is_symlink() or not profile.is_dir():raise ValueError('Synthetic profile is not the owned directory')
     s=profile.stat();marker=profile/'qa3-restart-profile.json'
-    if marker.is_symlink() or not marker.is_file():raise ValueError('Original profile marker missing')
+    if marker.is_symlink() or not marker.is_file() or marker.stat().st_size>4096:raise ValueError('Original bounded profile marker missing')
     return {'realpath':str(profile.resolve()),'device':s.st_dev,'inode':s.st_ino,'markerSha256':digest(marker)}
 
 def validate_boot_control(control,now_ms):
@@ -304,7 +347,7 @@ def main():
                 if feles.poll() is not None:raise ValueError('Original development server exited between cases')
                 proc=spawn(caseid+'-boot1',[str(binary),'--profile',str(profile),'--marionette','--remote-allow-system-access','--no-remote'])
             client,first=boot(caseid+'-boot1',control,None if index==0 else proc);record['boots'].append(first)
-            prepared=client.phase((HERE/'browser-phase.js.txt').read_text(),{'action':'prepare','case':caseid,'nonce':nonce,'control':control})
+            prepared=browser_phase(client,{'action':'prepare','case':caseid,'nonce':nonce,'control':control},first,artifact,profile,out,record,receipt)
             first['native']=validate_phase(prepared,'prepare',caseid,nonce,control,first,artifact);record['prepared']=prepared;write_json(out/(caseid+'-prepared.json'),prepared)
             if (profile/'nora-tests-control.json').exists():raise ValueError('Original native bootstrap did not consume its control')
             if index==0:userjs=(profile/'user.js').read_bytes()
@@ -318,7 +361,7 @@ def main():
             if digest(clean)!=before or profile_identity(profile)!=pidentity:raise ValueError('Bootstrap control altered original clean session/profile')
             second_proc=spawn(caseid+'-boot2',[str(binary),'--profile',str(profile),'--marionette','--remote-allow-system-access','--no-remote'])
             client,second=boot(caseid+'-boot2',control,second_proc);record['boots'].append(second)
-            verified=client.phase((HERE/'browser-phase.js.txt').read_text(),{'action':'verify','case':caseid,'nonce':nonce,'expected':prepared,'control':control})
+            verified=browser_phase(client,{'action':'verify','case':caseid,'nonce':nonce,'expected':prepared,'control':control},second,artifact,profile,out,record,receipt)
             second['native']=validate_phase(verified,'verify',caseid,nonce,control,second,artifact);record['verified']=verified;write_json(out/(caseid+'-verified.json'),verified)
             if (profile/'nora-tests-control.json').exists():raise ValueError('Original second bootstrap did not consume its control')
             # The locked SessionWriter moves clean to previous on its first
