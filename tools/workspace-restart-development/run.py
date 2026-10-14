@@ -16,6 +16,7 @@ import uuid
 
 from diagnostics import failure_diagnostic
 from protocol import BrowserPhaseError, Marionette
+from rpc_diagnostics import RpcFailureScope, exception_type, failure_text
 from session import decode, validate_saved
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -25,7 +26,7 @@ LIMIT=8*1024*1024
 PORT=2828
 ISOLATION_TARGET='tools/workspace-restart-development/no-autodiscovered-suites.test.ts'
 SOURCE_PATHS=[
-    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','diagnostics.py','restore-oracle.js.txt','browser-phase.js.txt','cases.json']
+    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','diagnostics.py','rpc_diagnostics.py','restore-oracle.js.txt','browser-phase.js.txt','cases.json']
 ]+['tools/src/browser_launcher.ts','tools/feles-build.ts','floorp-runtime.lock.json','tools/workspace-development/run.py','bridge/startup/src/chrome_root.ts','bridge/loader-features/loader/test/index.ts']
 legacy_spec=importlib.util.spec_from_file_location('owned_six',ROOT/'tools/workspace-development/run.py')
 legacy=importlib.util.module_from_spec(legacy_spec);legacy_spec.loader.exec_module(legacy)
@@ -46,6 +47,8 @@ def browser_phase(client,args,boot,artifact,profile,out,record,receipt):
         raise ValueError('Original synthetic profile marker changed before phase')
     payload={**args,'syntheticProfile':record['profileIdentity'],'nativePid':boot['root']['pid']}
     try:
+        scope=getattr(client,'failure_scope',None)
+        if scope is not None:scope.check('phase')
         result=client.phase(browser_script(),payload)
         if profile_identity(profile)!=record['profileIdentity']:
             raise ValueError('Synthetic profile identity changed during successful phase')
@@ -73,6 +76,10 @@ def browser_phase(client,args,boot,artifact,profile,out,record,receipt):
             client.accept_phase_trace()
         except BaseException as diagnostic_error:
             record['diagnosticError']=str(diagnostic_error)
+        raise
+    except BaseException as error:
+        scope=getattr(client,'failure_scope',None)
+        if scope is not None:scope.record_failure('phase',error)
         raise
     finally:
         client.discard_phase_trace()
@@ -185,8 +192,57 @@ def listener_owner(rows,table,owned,binary,profile):
     if len(matches)!=1:raise ValueError('Original listener does not have one owned native root')
     return matches[0]
 
+def rpc_process_ownership(capture,owned,binary,profile,expected_root=None,inspect=None,port_owner=None):
+    """Read only controller-owned generations; emit no argv/exe/foreign details."""
+    def inspect_native(pid):
+        directory=os.open(Path('/proc')/str(pid),os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            fd=os.open('stat',os.O_RDONLY,dir_fd=directory)
+            try:identity=os.read(fd,4097)
+            finally:os.close(fd)
+            if len(identity)>4096 or identity[identity.rfind(b')')+2:].split()[19].decode()!=owned[pid]:
+                raise ValueError('Owned process generation changed before inspection')
+            exe=Path(os.readlink('exe',dir_fd=directory)).resolve()
+            if exe!=binary.resolve():return exe,[]
+            fd=os.open('cmdline',os.O_RDONLY,dir_fd=directory)
+            try:args=os.read(fd,65537)
+            finally:os.close(fd)
+            if len(args)>65536:raise ValueError('Owned process argument byte bound')
+            return exe,args.split(b'\0')
+        finally:os.close(directory)
+    inspect=inspect or inspect_native
+    try:
+        table=capture();matches=[]
+        if expected_root is not None:
+            pid=expected_root['pid']
+            if pid not in table:return {'status':'OWNED_NATIVE_EXITED'}
+            if table[pid]['start']!=expected_root['start'] or owned.get(pid)!=expected_root['start']:
+                return {'status':'OWNERSHIP_REJECTED'}
+            candidates=[pid]
+        else:candidates=live(table,owned)
+        for pid in candidates:
+            row=table[pid]
+            if row['state']=='Z':continue
+            exe,args=inspect(pid)
+            if exe!=binary.resolve():continue
+            if b'--profile' not in args:continue
+            at=args.index(b'--profile')
+            if at+1>=len(args) or os.fsdecode(args[at+1])!=str(profile.resolve()) or row['session']!=pid:continue
+            matches.append({'pid':pid,'start':row['start'],'session':row['session'],'profile':str(profile.resolve())})
+        if len(matches)!=1:return {'status':'OWNERSHIP_REJECTED' if expected_root else 'NO_OWNED_NATIVE'}
+        root=matches[0];after=capture()
+        if root['pid'] not in after or after[root['pid']]['start']!=root['start'] or owned.get(root['pid'])!=root['start'] or after[root['pid']]['session']!=root['session']:
+            return {'status':'OWNERSHIP_REJECTED'}
+        confirmed=False
+        if port_owner is not None:
+            listener=port_owner()
+            confirmed=listener is not None and all(listener.get(key)==root[key] for key in ['pid','start','session','profile'])
+        return {'status':'VERIFIED_LIVE_NATIVE','root':root,'portOwnerConfirmed':confirmed}
+    except Exception:return {'status':'PROBE_UNAVAILABLE'}
+
 def valid_case(case):
     if case.get('status')!='PASS_DEVELOPMENT_ONLY' or len(case.get('boots',[]))!=2:raise ValueError('Missing or failed real restart case')
+    if case.get('rpcFailureDiagnosticEvidenceFile') or case.get('rpcDiagnosticError'):raise ValueError('RPC failure diagnostics cannot qualify a passing case')
     first,second=case['boots']
     if not isinstance(case.get('nonce'),str) or re.fullmatch('[0-9a-f]{32}',case['nonce']) is None:raise ValueError('Fresh synthetic case nonce required')
     if (first['root']['pid'],first['root']['start'])==(second['root']['pid'],second['root']['start']):raise ValueError('Same process was reused instead of restarted')
@@ -240,7 +296,7 @@ def validate_receipt(receipt):
                 if name not in files or files[name]['bytes']==0:raise ValueError('Missing original control/protocol evidence')
             if files[caseid+f'-boot{i}-control.json']['sha256']!=json_digest(control_evidence(boot['control'])):raise ValueError('Original bootstrap control/pref evidence inventory differs')
     if not all(name in files and files[name]['bytes']>0 for name in ['feles.log','workspace-exit-boot1.log','normal-boot2.log','workspace-exit-boot2.log']):raise ValueError('Original native launch logs missing')
-    if receipt.get('originalError') is not None or receipt.get('cleanupError') is not None or receipt.get('ownedCleanupComplete') is not True:raise ValueError('Original failure/cleanup cannot become a pass')
+    if receipt.get('originalError') is not None or receipt.get('cleanupError') is not None or receipt.get('rpcClientCloseError') or receipt.get('ownedCleanupComplete') is not True:raise ValueError('Original failure/cleanup cannot become a pass')
 
 def main():
     out=ROOT/'_dist/workspace-restart-development';out.mkdir(mode=0o700)
@@ -296,19 +352,33 @@ def main():
         return nonce,profile_identity(profile)
     def boot(label,control,proc=None):
         nonlocal native_track,native_root
-        wait(lambda:bool(listeners()),180,'Original native listener startup')
-        root=listener_owner(listeners(),capture(),owned,binary,profile);native_root=root;native_track={root['pid']:root['start']};capture()
-        if root['session']!=root['pid']:raise ValueError('Native browser must own an independent process session')
-        trace=(out/(label+'-protocol.log')).open('xb');logs[label+'-protocol']=trace
+        record=receipt['cases'][-1];number=len(record['boots'])+1;selected={'root':None}
+        def diagnostic_port_owner():
+            rows=listeners()
+            if not rows:return None
+            try:return listener_owner(rows,capture(),owned,binary,profile)
+            except ValueError:return None
+        scope=RpcFailureScope(profile,out,record,receipt,number,artifact,
+              lambda:rpc_process_ownership(capture,owned,binary,profile,selected['root'],port_owner=diagnostic_port_owner))
+        with scope.guard('listener-startup'):
+            wait(lambda:bool(listeners()),180,'Original native listener startup')
+            root=listener_owner(listeners(),capture(),owned,binary,profile);selected['root']=root
+            native_root=root;native_track={root['pid']:root['start']};capture()
+            if root['session']!=root['pid']:raise ValueError('Native browser must own an independent process session')
         def packet(data):
             if trace.tell()+len(data)+1>LIMIT:raise ValueError('Original protocol trace byte bound')
             trace.write(data+b'\n');trace.flush()
-        client=Marionette(PORT,pump,packet);clients.append(client)
-        b={'root':root,'profileIdentity':profile_identity(profile),'binarySha256':digest(binary),'overlayBuildID2':(ROOT/'_dist/buildid2').read_text().strip(),'control':control,'exitCode':None,'normalExit':False,'proc':proc}
+        with scope.guard('initialization'):
+            trace=(out/(label+'-protocol.log')).open('xb');logs[label+'-protocol']=trace
+            b={'root':root,'profileIdentity':profile_identity(profile),'binarySha256':digest(binary),'overlayBuildID2':(ROOT/'_dist/buildid2').read_text().strip(),'control':control,'exitCode':None,'normalExit':False,'proc':proc}
+            record['boots'].append(b)
+            client=Marionette(PORT,pump,packet,failure_sink=scope.note_rpc_failure);clients.append(client)
+        client.failure_scope=scope
         return client,b
     def end_boot(client,b,caseid,first_feles=False,workspace_exit=False):
         nonlocal native_track,native_root
-        client.schedule_quit(workspace_exit);client.close()
+        with client.failure_scope.guard('quit'):
+            client.schedule_quit(workspace_exit);client.close()
         def gone():
             if b.get('proc') is not None:b['proc'].poll()
             return not present(capture(),native_track) and not listeners()
@@ -346,7 +416,7 @@ def main():
                 (profile/'user.js').write_bytes(userjs)
                 if feles.poll() is not None:raise ValueError('Original development server exited between cases')
                 proc=spawn(caseid+'-boot1',[str(binary),'--profile',str(profile),'--marionette','--remote-allow-system-access','--no-remote'])
-            client,first=boot(caseid+'-boot1',control,None if index==0 else proc);record['boots'].append(first)
+            client,first=boot(caseid+'-boot1',control,None if index==0 else proc)
             prepared=browser_phase(client,{'action':'prepare','case':caseid,'nonce':nonce,'control':control},first,artifact,profile,out,record,receipt)
             first['native']=validate_phase(prepared,'prepare',caseid,nonce,control,first,artifact);record['prepared']=prepared;write_json(out/(caseid+'-prepared.json'),prepared)
             if (profile/'nora-tests-control.json').exists():raise ValueError('Original native bootstrap did not consume its control')
@@ -360,7 +430,7 @@ def main():
             write_json(out/(caseid+'-boot2-control.json'),control_evidence(control))
             if digest(clean)!=before or profile_identity(profile)!=pidentity:raise ValueError('Bootstrap control altered original clean session/profile')
             second_proc=spawn(caseid+'-boot2',[str(binary),'--profile',str(profile),'--marionette','--remote-allow-system-access','--no-remote'])
-            client,second=boot(caseid+'-boot2',control,second_proc);record['boots'].append(second)
+            client,second=boot(caseid+'-boot2',control,second_proc)
             verified=browser_phase(client,{'action':'verify','case':caseid,'nonce':nonce,'expected':prepared,'control':control},second,artifact,profile,out,record,receipt)
             second['native']=validate_phase(verified,'verify',caseid,nonce,control,second,artifact);record['verified']=verified;write_json(out/(caseid+'-verified.json'),verified)
             if (profile/'nora-tests-control.json').exists():raise ValueError('Original second bootstrap did not consume its control')
@@ -378,16 +448,19 @@ def main():
         if any(digest(ROOT/path)!=value for path,value in hashes.items()):raise ValueError('Source changed during original restart')
         receipt['status']='PASS_DEVELOPMENT_ONLY'
     except BaseException as error:
-        receipt['originalError']=str(error)
+        observation=receipt.pop('_rpcFailureRecord',None)
+        receipt['originalError']=failure_text(error,observation)
         if receipt['cases']:
-            receipt['cases'][-1]['status']='FAIL_DEVELOPMENT_ONLY';receipt['cases'][-1]['firstError']=str(error)
+            receipt['cases'][-1]['status']='FAIL_DEVELOPMENT_ONLY';receipt['cases'][-1]['firstError']=receipt['originalError']
         for caseid,name in CASES.items():
             if not any(r['case']==caseid for r in receipt['cases']):receipt['cases'].append({'case':caseid,'name':name,'status':'UNEXECUTED'})
     finally:
         cleaning=True
         for client in clients:
             try:client.close()
-            except OSError:pass
+            except BaseException as error:
+                receipt['rpcClientCloseError']='RPC client close failed: '+exception_type(error)
+                receipt['status']='FAIL_DEVELOPMENT_ONLY'
         try:
             t=capture()
             def reject_forced_native(table):
