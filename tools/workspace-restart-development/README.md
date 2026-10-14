@@ -68,6 +68,30 @@ diagnostic type/size/write failure is recorded separately without replacing the
 original failure. Phase error strings contain the error message, not snapshots.
 No user profile, environment, cookies or complete preference dump is collected.
 
+Failures before a verified native callback also produce a separate bounded
+`*-rpc-failure-diagnostic.json`. It records the operation/transport stage, own
+command/request counter, exception category/errno, and host marker/process
+ownership. The host pins `/proc` directory descriptors to an owned PID/start
+generation and checks its canonical executable, profile argument and native
+session. A changed/absent owner withholds process details; the diagnostic never
+queries the browser or retries the failed operation. Host argument/marker proof
+is not native `ProfD` verification, and unavailable native snapshots remain
+explicitly unavailable.
+
+Initialization responses are traced as closed metadata summaries. Correlation
+failures, RPC error bodies, arbitrary messages/stacks and capabilities are
+discarded. Only exact allowed native error codes are retained after ownership
+and correlation checks. A known QA identifier's complete ReferenceError is
+accepted only for the async phase's JavaScript error. The original exception
+object is reraised, while receipt text uses safe categories; diagnostic and close
+failures remain separate. A failure diagnostic or close error cannot qualify a
+PASS. This path has host fault-injection coverage; native execution evidence is
+bound to its source HEAD and requires a separate authorized run.
+The caller holds the original exception identity and RPC metadata outside the
+exception object. Refused attributes, throwing getters/string conversions and
+missing metadata cannot reintroduce arbitrary RPC text into the receipt;
+unavailable metadata stays explicit and the original exception is retained.
+
 The third original failed run `38513152121` did not record its exact unexpected
 URI; its cause remains unconfirmed. A later run's URI observation cannot
 identify it retrospectively. The separate production duplicate-collapse
