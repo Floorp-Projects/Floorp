@@ -92,6 +92,18 @@ exception object. Refused attributes, throwing getters/string conversions and
 missing metadata cannot reintroduce arbitrary RPC text into the receipt;
 unavailable metadata stays explicit and the original exception is retained.
 
+The opt-in `workspace_restart_rpc_fault_probe=true` requires the limited restart
+mode. After the two passing cases it creates a third marked synthetic profile,
+with a new nonce and its own receipt/namespace. Native ProfD/PID/Runtime and the
+fresh zero-suite bootstrap are verified before scheduling a 15-second graceful
+quit. One five-second async RPC intentionally throws an exact QA ReferenceError
+before callback. There is no RPC after this fault. Its original failure remains
+`FAIL_DIAGNOSTIC_ONLY`; the separate experiment can become
+`FAULT_INDUCED_DIAGNOSTIC_VERIFIED` only with a matching bounded private diagnostic,
+normal exit 0, owned tree/port disappearance and profile removal. This is actual
+fault induction, separate from expected rejection, with zero product passing
+case contribution. The normal two-case/four-boot contract remains mandatory.
+
 The third original failed run `38513152121` did not record its exact unexpected
 URI; its cause remains unconfirmed. A later run's URI observation cannot
 identify it retrospectively. The separate production duplicate-collapse

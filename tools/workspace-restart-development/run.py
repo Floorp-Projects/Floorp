@@ -1,4 +1,5 @@
 """Two development-only cases, each with two real boots of one synthetic profile."""
+import argparse
 import configparser
 import hashlib
 import importlib.util
@@ -17,6 +18,7 @@ import uuid
 from diagnostics import failure_diagnostic
 from protocol import BrowserPhaseError, Marionette
 from rpc_diagnostics import RpcFailureScope, exception_type, failure_text
+from native_rpc_probe import exercise_native_fault, validate_probe, VERIFIED
 from session import decode, validate_saved
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -26,7 +28,7 @@ LIMIT=8*1024*1024
 PORT=2828
 ISOLATION_TARGET='tools/workspace-restart-development/no-autodiscovered-suites.test.ts'
 SOURCE_PATHS=[
-    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','diagnostics.py','rpc_diagnostics.py','restore-oracle.js.txt','browser-phase.js.txt','cases.json']
+    'tools/workspace-restart-development/'+name for name in ['run.py','protocol.py','session.py','diagnostics.py','rpc_diagnostics.py','native_rpc_probe.py','restore-oracle.js.txt','browser-phase.js.txt','cases.json']
 ]+['tools/src/browser_launcher.ts','tools/feles-build.ts','floorp-runtime.lock.json','tools/workspace-development/run.py','bridge/startup/src/chrome_root.ts','bridge/loader-features/loader/test/index.ts']
 legacy_spec=importlib.util.spec_from_file_location('owned_six',ROOT/'tools/workspace-development/run.py')
 legacy=importlib.util.module_from_spec(legacy_spec);legacy_spec.loader.exec_module(legacy)
@@ -296,9 +298,14 @@ def validate_receipt(receipt):
                 if name not in files or files[name]['bytes']==0:raise ValueError('Missing original control/protocol evidence')
             if files[caseid+f'-boot{i}-control.json']['sha256']!=json_digest(control_evidence(boot['control'])):raise ValueError('Original bootstrap control/pref evidence inventory differs')
     if not all(name in files and files[name]['bytes']>0 for name in ['feles.log','workspace-exit-boot1.log','normal-boot2.log','workspace-exit-boot2.log']):raise ValueError('Original native launch logs missing')
+    if 'rpcFaultProbeRequested' in receipt or 'rpcFaultProbe' in receipt:
+        if receipt.get('rpcFaultProbeRequested') is not True:raise ValueError('Native fault proof cannot be unrequested or skipped')
+        validate_probe(receipt['rpcFaultProbe'],receipt,validate_isolation)
+        if files.get('rpc-fault-probe-receipt.json',{}).get('sha256')!=json_digest(receipt['rpcFaultProbe']):raise ValueError('Separate native fault receipt inventory differs')
     if receipt.get('originalError') is not None or receipt.get('cleanupError') is not None or receipt.get('rpcClientCloseError') or receipt.get('ownedCleanupComplete') is not True:raise ValueError('Original failure/cleanup cannot become a pass')
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--rpc-failure-probe',action='store_true');args=parser.parse_args()
     out=ROOT/'_dist/workspace-restart-development';out.mkdir(mode=0o700)
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     if os.environ.get('GITHUB_RUN_ATTEMPT')!='1' or head!=os.environ.get('GITHUB_SHA'):raise ValueError('Original source/attempt required')
@@ -313,7 +320,7 @@ def main():
     env={k:os.environ[k] for k in ['PATH','LANG','DENO_DIR','CI','GITHUB_ACTIONS'] if k in os.environ}
     env.update(HOME=str(home),TMPDIR=str(home),DISPLAY=':99',DENO_DIR=os.environ.get('DENO_DIR',str(Path.home()/'.cache/deno')))
     owned={};processes=[];selector=selectors.DefaultSelector();logs={};native_track=None;native_root=None;clients=[]
-    deadline=time.monotonic()+1200;cleaning=False;cancellation=None
+    deadline=time.monotonic()+1200;cleaning=False;cancellation=None;probe_receipt=None;probe_out=None;probe_output_created=False
     def cancel(sig,_):
         nonlocal cancellation
         cancellation=cancellation or ('Original restart controller cancelled '+str(sig))
@@ -350,15 +357,18 @@ def main():
         write_json(profile/'qa3-restart-profile.json',{'nonce':nonce,'case':caseid,'head':head});os.chmod(profile/'qa3-restart-profile.json',0o600)
         (profile/'prefs.js').write_text('user_pref("floorp.workspaces.enabled", true);\nuser_pref("browser.startup.page", 3);\nuser_pref("marionette.port", 2828);\n')
         return nonce,profile_identity(profile)
-    def boot(label,control,proc=None):
+    def boot(label,control,proc=None,record=None,scope_receipt=None,evidence_output=None):
         nonlocal native_track,native_root
-        record=receipt['cases'][-1];number=len(record['boots'])+1;selected={'root':None}
+        record=receipt['cases'][-1] if record is None else record
+        scope_receipt=receipt if scope_receipt is None else scope_receipt
+        evidence_output=out if evidence_output is None else evidence_output
+        number=len(record['boots'])+1;selected={'root':None}
         def diagnostic_port_owner():
             rows=listeners()
             if not rows:return None
             try:return listener_owner(rows,capture(),owned,binary,profile)
             except ValueError:return None
-        scope=RpcFailureScope(profile,out,record,receipt,number,artifact,
+        scope=RpcFailureScope(profile,evidence_output,record,scope_receipt,number,artifact,
               lambda:rpc_process_ownership(capture,owned,binary,profile,selected['root'],port_owner=diagnostic_port_owner))
         with scope.guard('listener-startup'):
             wait(lambda:bool(listeners()),180,'Original native listener startup')
@@ -369,16 +379,18 @@ def main():
             if trace.tell()+len(data)+1>LIMIT:raise ValueError('Original protocol trace byte bound')
             trace.write(data+b'\n');trace.flush()
         with scope.guard('initialization'):
-            trace=(out/(label+'-protocol.log')).open('xb');logs[label+'-protocol']=trace
+            trace=(evidence_output/(label+'-protocol.log')).open('xb');logs[label+'-protocol']=trace
             b={'root':root,'profileIdentity':profile_identity(profile),'binarySha256':digest(binary),'overlayBuildID2':(ROOT/'_dist/buildid2').read_text().strip(),'control':control,'exitCode':None,'normalExit':False,'proc':proc}
             record['boots'].append(b)
             client=Marionette(PORT,pump,packet,failure_sink=scope.note_rpc_failure);clients.append(client)
         client.failure_scope=scope
         return client,b
-    def end_boot(client,b,caseid,first_feles=False,workspace_exit=False):
+    def end_boot(client,b,caseid,first_feles=False,workspace_exit=False,quit_scheduled=False):
         nonlocal native_track,native_root
-        with client.failure_scope.guard('quit'):
-            client.schedule_quit(workspace_exit);client.close()
+        if quit_scheduled:client.close()
+        else:
+            with client.failure_scope.guard('quit'):
+                client.schedule_quit(workspace_exit);client.close()
         def gone():
             if b.get('proc') is not None:b['proc'].poll()
             return not present(capture(),native_track) and not listeners()
@@ -394,6 +406,9 @@ def main():
             code=b.pop('proc').wait(timeout=5)
         if code!=0:raise ValueError('Original browser exit was not successful: '+str(code))
         b.pop('proc',None);b.update(normalExit=True,exitCode=code,oldTreeGone=True,portGone=True,exitedBrowserIdentities={str(pid):start for pid,start in native_track.items()})
+        if quit_scheduled:
+            native_track=None;native_root=None
+            return None
         clean=profile/'sessionstore.jsonlz4'
         if clean.is_symlink() or not clean.is_file() or clean.stat().st_size>4*1024*1024:raise ValueError('Original clean session file missing/unsafe/oversized')
         path=out/(caseid+'-'+str(len(receipt['cases'][-1]['boots']))+'-clean-session.jsonlz4');shutil.copyfile(clean,path)
@@ -445,12 +460,35 @@ def main():
             shutil.rmtree(profile);record['syntheticProfileRemoved']=True
             record['status']='PASS_DEVELOPMENT_ONLY';valid_case(record)
         if len(receipt['cases'])!=2:raise ValueError('Exactly two original restart cases required')
+        if args.rpc_failure_probe:
+            receipt['rpcFaultProbeRequested']=True
+            probe_record={'case':'normal','purpose':'NATIVE_RPC_FAULT_INDUCTION_ONLY','boots':[]}
+            probe_receipt={'schema':'qa3-native-rpc-fault-probe-v1','scope':'NATIVE_RPC_FAULT_INDUCTION_ONLY','status':'RUNNING',
+                **{k:receipt[k] for k in ['floorpHead','run','attempt','sourceHashes','runtimeVersion','runtimeBuildID','nativeProductQualification','compileProfileQualification','publicationAuthorized']},
+                'injectionKind':'NATIVE_ASYNC_EXCEPTION_BEFORE_CALLBACK','expectedRejection':False,'productPassingCasesContributed':0,'record':probe_record,'forcedCleanup':False}
+            receipt['rpcFaultProbe']=probe_receipt
+            probe_out=out/'rpc-fault-probe';probe_out.mkdir(mode=0o700);probe_output_created=True
+            nonce,pidentity=new_profile('normal');probe_record.update(nonce=nonce,profileIdentity=pidentity)
+            control,_=write_boot_control(profile,'rpc-fault-probe',1,receipt['run'])
+            write_json(probe_out/'rpc-fault-probe-boot1-control.json',control_evidence(control))
+            (profile/'user.js').write_bytes(userjs)
+            proc=spawn('rpc-fault-probe-boot1',[str(binary),'--profile',str(profile),'--marionette','--remote-allow-system-access','--no-remote'])
+            client,probe_boot=boot('rpc-fault-probe-boot1',control,proc,probe_record,probe_receipt,probe_out)
+            exercise_native_fault(client,probe_receipt,artifact,validate_isolation)
+            end_boot(client,probe_boot,'rpc-fault-probe',quit_scheduled=True)
+            probe_receipt['postFailureRpcCount']=client.index-probe_receipt['expectedFaultRequestId']-1
+            if client.index!=probe_receipt['requestCounterAfterFault']:raise ValueError('RPC was performed after native fault')
+            if profile_identity(profile)!=pidentity:raise ValueError('Native fault synthetic profile changed')
+            shutil.rmtree(profile);probe_receipt['syntheticProfileRemoved']=True
+            probe_receipt['status']=VERIFIED
         if any(digest(ROOT/path)!=value for path,value in hashes.items()):raise ValueError('Source changed during original restart')
         receipt['status']='PASS_DEVELOPMENT_ONLY'
     except BaseException as error:
-        observation=receipt.pop('_rpcFailureRecord',None)
+        observation=(probe_receipt if probe_receipt is not None else receipt).pop('_rpcFailureRecord',None)
         receipt['originalError']=failure_text(error,observation)
-        if receipt['cases']:
+        if probe_receipt is not None:
+            probe_receipt['status']='FAULT_PROBE_FAILED';probe_receipt['originalError']=receipt['originalError']
+        elif receipt['cases']:
             receipt['cases'][-1]['status']='FAIL_DEVELOPMENT_ONLY';receipt['cases'][-1]['firstError']=receipt['originalError']
         for caseid,name in CASES.items():
             if not any(r['case']==caseid for r in receipt['cases']):receipt['cases'].append({'case':caseid,'name':name,'status':'UNEXECUTED'})
@@ -485,9 +523,18 @@ def main():
         if profile.exists() and receipt.get('ownedCleanupComplete'):
             try:shutil.rmtree(profile)
             except BaseException as error:receipt['cleanupError']=receipt['cleanupError'] or str(error);receipt['status']='FAIL_DEVELOPMENT_ONLY'
-        for record in receipt['cases']:
+        for record in receipt['cases']+([] if probe_receipt is None else [probe_receipt['record']]):
             for b in record.get('boots',[]):b.pop('proc',None)
         for f in logs.values():f.close()
+        if probe_receipt is not None:
+            probe_receipt['forcedCleanup']=receipt['nativeForcedCleanup']
+            probe_receipt['evidenceFiles']={p.name:{'bytes':p.stat().st_size,'sha256':digest(p)} for p in probe_out.iterdir() if p.is_file()} if probe_output_created else {}
+            if probe_receipt['status']==VERIFIED:
+                try:validate_probe(probe_receipt,receipt,validate_isolation)
+                except BaseException as error:
+                    probe_receipt['status']='FAULT_PROBE_FAILED';probe_receipt['verificationError']='Native fault closure failed: '+exception_type(error)
+                    receipt['originalError']=receipt['originalError'] or probe_receipt['verificationError'];receipt['status']='FAIL_DEVELOPMENT_ONLY'
+            write_json(out/'rpc-fault-probe-receipt.json',probe_receipt)
         for path in out.glob('*.log'):receipt.setdefault('logs',{})[path.name]={'bytes':path.stat().st_size,'sha256':digest(path)}
         receipt['evidenceFiles']={p.name:{'bytes':p.stat().st_size,'sha256':digest(p)} for p in out.iterdir() if p.is_file() and p.suffix in ['.json','.log','.jsonlz4'] and p.name!='receipt.json'}
         if cancellation:receipt['originalError']=receipt['originalError'] or cancellation;receipt['status']='FAIL_DEVELOPMENT_ONLY'
