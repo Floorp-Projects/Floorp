@@ -320,6 +320,53 @@ function testButtonStateFollowsSelection(): void {
   controller.destroy();
 }
 
+function testButtonFollowsLanguageChosenByPanel(): void {
+  // The unsupported-language view leaves the source menu empty. The panel
+  // fills it in its own "command" handler, which runs after our capture-phase
+  // listener, and only then reports the new phase.
+  const fixture = createFixture("", "tr");
+  const controller = startController(fixture);
+  fireOnPanel(fixture, "popupshown");
+  assert(
+    swapButton(fixture).hasAttribute("disabled"),
+    "an empty source menu keeps the button disabled",
+  );
+
+  const translateButton = fixture.doc.createElement("button");
+  fixture.panel.appendChild(translateButton);
+  fixture.panel.addEventListener("command", () => {
+    fixture.fromMenu.value = "en";
+  });
+  translateButton.dispatchEvent(new Event("command", { bubbles: true }));
+  assert(
+    swapButton(fixture).hasAttribute("disabled"),
+    "the command listener runs before the panel assigns the language",
+  );
+
+  fixture.doc.dispatchEvent(
+    new CustomEvent("SelectTranslationsPanelStateChanged", {
+      detail: { phase: "translatable" },
+    }),
+  );
+  assert(
+    !swapButton(fixture).hasAttribute("disabled"),
+    "a panel phase change enables the button for the chosen language",
+  );
+
+  controller.destroy();
+  fixture.fromMenu.value = "";
+  fixture.doc.dispatchEvent(
+    new CustomEvent("SelectTranslationsPanelStateChanged", {
+      detail: { phase: "idle" },
+    }),
+  );
+  assertEquals(
+    fixture.doc.getElementById(BUTTON_ID),
+    null,
+    "the phase listener is detached after destroy",
+  );
+}
+
 function testCommandOutsidePanelIsIgnored(): void {
   const fixture = createFixture("en", "tr");
   const controller = startController(fixture);
@@ -437,6 +484,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "button state follows the selection",
       fn: testButtonStateFollowsSelection,
+    },
+    {
+      name: "button follows a language chosen by the panel",
+      fn: testButtonFollowsLanguageChosenByPanel,
     },
     {
       name: "command events outside the panel are ignored",

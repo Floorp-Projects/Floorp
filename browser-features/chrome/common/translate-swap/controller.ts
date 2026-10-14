@@ -55,6 +55,13 @@ export class TranslateSwapController {
     this.doc.addEventListener("popupshowing", this.onPopupEvent, true);
     this.doc.addEventListener("popupshown", this.onPopupEvent, true);
     this.doc.addEventListener("command", this.onCommand, true);
+    // "command" is seen before the panel's own handler runs, so a language the
+    // panel assigns itself (picking a source in the unsupported-language view
+    // and pressing Translate) is only visible once the panel changes phase.
+    this.doc.addEventListener(
+      "SelectTranslationsPanelStateChanged",
+      this.onPanelStateChanged,
+    );
     // The panel may already exist when this module is hot-reloaded.
     this.inject();
   }
@@ -67,6 +74,10 @@ export class TranslateSwapController {
     this.doc.removeEventListener("popupshowing", this.onPopupEvent, true);
     this.doc.removeEventListener("popupshown", this.onPopupEvent, true);
     this.doc.removeEventListener("command", this.onCommand, true);
+    this.doc.removeEventListener(
+      "SelectTranslationsPanelStateChanged",
+      this.onPanelStateChanged,
+    );
     this.doc.getElementById(BUTTON_ID)?.remove();
     for (const style of this.doc.querySelectorAll(`[${STYLE_MARKER_ATTR}]`)) {
       style.remove();
@@ -132,6 +143,10 @@ export class TranslateSwapController {
     if (target instanceof Element && panel?.contains(target)) {
       this.refresh();
     }
+  };
+
+  private readonly onPanelStateChanged = (): void => {
+    this.refresh();
   };
 
   private installStyle(): void {
