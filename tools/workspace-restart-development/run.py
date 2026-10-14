@@ -321,11 +321,14 @@ def main():
             verified=client.phase((HERE/'browser-phase.js.txt').read_text(),{'action':'verify','case':caseid,'nonce':nonce,'expected':prepared,'control':control})
             second['native']=validate_phase(verified,'verify',caseid,nonce,control,second,artifact);record['verified']=verified;write_json(out/(caseid+'-verified.json'),verified)
             if (profile/'nora-tests-control.json').exists():raise ValueError('Original second bootstrap did not consume its control')
+            # The locked SessionWriter moves clean to previous on its first
+            # write, which can be the final shutdown write after a fast restore.
+            # Observe that native boundary; do not manufacture a session save.
+            final_clean=end_boot(client,second,caseid)
+            validate_saved(decode(final_clean.read_bytes()),prepared)
             previous=profile/'sessionstore-backups/previous.jsonlz4'
             if previous.is_symlink() or not previous.is_file() or digest(previous)!=before:raise ValueError('Second boot did not consume the original clean session bytes')
             record['consumedOriginalCleanSessionSha256']=digest(previous)
-            final_clean=end_boot(client,second,caseid)
-            validate_saved(decode(final_clean.read_bytes()),prepared)
             shutil.rmtree(profile);record['syntheticProfileRemoved']=True
             record['status']='PASS_DEVELOPMENT_ONLY';valid_case(record)
         if len(receipt['cases'])!=2:raise ValueError('Exactly two original restart cases required')
