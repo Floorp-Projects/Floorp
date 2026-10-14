@@ -2,6 +2,7 @@
 // Executed only in the owned synthetic browser's Marionette chrome context.
 const cfg = arguments[0];
 const done = arguments[arguments.length - 1];
+let observedState;
 (async () => {
   const until = Date.now() + 70000;
   const check = (condition, message) => { if (!condition) throw new Error(message); };
@@ -37,6 +38,8 @@ const done = arguments[arguments.length - 1];
   check(!Services.prefs.getStringPref('nora.startup.error', ''), 'Native startup has no original error');
   const funcs = win.workspacesFuncs;
   const gb = win.gBrowser;
+  const configuredNewTabURL = win.BROWSER_NEW_TAB_URL;
+  check(typeof configuredNewTabURL === 'string' && configuredNewTabURL.length > 0, 'Native configured new-tab URI is available');
   const identity = {
     profile: Services.dirsvc.get('ProfD', Components.interfaces.nsIFile).path,
     pid: Services.appinfo.processID,
@@ -47,6 +50,7 @@ const done = arguments[arguments.length - 1];
   };
   const snapshot = () => ({
     identity,
+    configuredNewTabURL,
     activeWorkspace: funcs.getSelectedWorkspaceID(),
     tabs: Array.from(gb.tabs).map(tab => {
       const data = JSON.parse(ss.getTabState(tab));
@@ -105,8 +109,10 @@ const done = arguments[arguments.length - 1];
   check(cfg.action === 'verify', 'Only prepared/verify phase actions permitted');
   check(Array.from(Services.wm.getEnumerator('navigator:browser')).length === 1, 'Exactly one restored browser window');
   const before = snapshot();
+  observedState = before;
   const expected = cfg.expected;
   check(expected?.case === cfg.case && expected.nonce === cfg.nonce, 'Original preparation identity required');
+  check(before.configuredNewTabURL === expected.state.configuredNewTabURL, 'Native configured new-tab URI is unchanged across restart');
   if (cfg.case === 'normal') {
     check(before.tabs.length === expected.state.tabs.length, 'Restored exact tab count');
     for (const tab of expected.state.tabs) {
@@ -121,7 +127,7 @@ const done = arguments[arguments.length - 1];
     check(retained.length === 1 && retained[0].workspace === expected.b, 'Original hidden user URL and membership restored exactly once');
     check(!before.tabs.some(t => t.url === expected.closedURL), 'Explicitly closed A tab is not restored');
     const homepage = Services.prefs.getStringPref('browser.startup.homepage', '');
-    const empty = t => ['about:blank','about:home','about:newtab',homepage].includes(t.url);
+    const empty = t => ['about:blank','about:home','about:newtab',homepage,configuredNewTabURL].includes(t.url);
     check(before.tabs.filter(empty).length <= 1, 'No duplicate startup blank/home tabs');
     check(before.tabs.every(t => t.url === expected.retainedURL || empty(t)), 'No unexpected restored tabs');
     check(!before.pendingExit, 'Native workspace initialization consumed pending exit');
@@ -133,4 +139,4 @@ const done = arguments[arguments.length - 1];
     check(after.tabs.find(t => t.selected)?.url === expected.retainedURL, 'Restored B tab is selected');
   }
   return {ok:true, phase:'verified', case:cfg.case, nonce:cfg.nonce, state:before};
-})().then(done, error => done({ok:false, error:error instanceof Error ? error.message : String(error), stack:error?.stack}));
+})().then(done, error => done({ok:false, error:error instanceof Error ? error.message : String(error), stack:error?.stack, observedState}));
