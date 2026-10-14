@@ -111,6 +111,11 @@ def capture_browser(table,tracked,root):
                 if row['state']!='Z':active.add(pid)
     return active
 
+def merge_native_ownership(owned,tracked):
+    for pid,start in tracked.items():
+        if pid in owned and owned[pid]!=start:raise ValueError('Native/global owned generation collision')
+        owned[pid]=start
+
 def listeners():
     rows=[]
     for name,allowed in [('tcp',{'0100007F'}),('tcp6',{'00000000000000000000000001000000'})]:
@@ -217,7 +222,9 @@ def main():
     old_signals={s:signal.signal(s,cancel) for s in [signal.SIGTERM,signal.SIGINT]}
     def capture():
         t=legacy.process_table();legacy.adopt_owned(t,owned)
-        if native_track is not None:capture_browser(t,native_track,native_root)
+        if native_track is not None:
+            capture_browser(t,native_track,native_root)
+            merge_native_ownership(owned,native_track)
         return t
     def pump():
         capture()
