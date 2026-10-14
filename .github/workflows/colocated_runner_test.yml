@@ -9,6 +9,10 @@ on:
         description: Run the separate two same-profile restart development cases
         type: boolean
         default: false
+      workspace_restart_rpc_fault_probe:
+        description: Add one separately classified owned native callback-failure diagnostic probe
+        type: boolean
+        default: false
       workspace_extended_only:
         description: Run the separate preservation four and workspace flow three groups
         type: boolean
@@ -146,7 +150,14 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb
       - name: Execute two original cases with two real boots of each synthetic profile
-        run: python3 -B tools/workspace-restart-development/run.py
+        env:
+          QA3_RPC_FAULT_PROBE_ENABLED: ${{ inputs.workspace_restart_rpc_fault_probe }}
+        run: |
+          if [ "$QA3_RPC_FAULT_PROBE_ENABLED" = "true" ]; then
+            python3 -B tools/workspace-restart-development/run.py --rpc-failure-probe
+          else
+            python3 -B tools/workspace-restart-development/run.py
+          fi
       - name: Preserve original restart development evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -156,6 +167,8 @@ jobs:
             _dist/workspace-restart-development/*.json
             _dist/workspace-restart-development/*.log
             _dist/workspace-restart-development/*.jsonlz4
+            _dist/workspace-restart-development/rpc-fault-probe/*.json
+            _dist/workspace-restart-development/rpc-fault-probe/*.log
           if-no-files-found: error
           retention-days: 1
 
@@ -177,7 +190,7 @@ jobs:
           key: deno-smoke-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}
           restore-keys: deno-smoke-
       - name: Reject ambiguous limited modes
-        if: (inputs.workspace_six_only && inputs.workspace_extended_only) || (inputs.workspace_restart_only && inputs.workspace_six_only) || (inputs.workspace_restart_only && inputs.workspace_extended_only)
+        if: (inputs.workspace_six_only && inputs.workspace_extended_only) || (inputs.workspace_restart_only && inputs.workspace_six_only) || (inputs.workspace_restart_only && inputs.workspace_extended_only) || (inputs.workspace_restart_rpc_fault_probe && !inputs.workspace_restart_only)
         run: exit 1
       - run: deno install
       - name: Validate canonical Runtime lock
