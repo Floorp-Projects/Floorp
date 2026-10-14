@@ -180,7 +180,7 @@ async function runStage(options: { marionette?: boolean } = {}): Promise<void> {
   });
 }
 
-async function runTest(): Promise<void> {
+async function runTest(ownNativeSession = false): Promise<void> {
   logger.info("Starting test environment...");
 
   // Initial setup
@@ -213,9 +213,13 @@ async function runTest(): Promise<void> {
       logger.success(
         "Dev servers are ready. Launching browser in test mode...",
       );
-      // deno-lint-ignore no-explicit-any
-      BrowserLauncher.run({ marionette: true }).catch((e: any) => {
-        logger.error(`Browser launcher failed: ${e?.message ?? e}`);
+      BrowserLauncher.run({
+        marionette: true,
+        ownLinuxSession: ownNativeSession,
+      }).catch((e: unknown) => {
+        logger.error(
+          `Browser launcher failed: ${e instanceof Error ? e.message : e}`,
+        );
       });
     }
   });
@@ -287,13 +291,13 @@ async function main(): Promise<void> {
     }
     case "test": {
       if (argv.includes("--help") || argv.includes("-h")) {
-        console.log("Usage: feles-build test");
+        console.log("Usage: feles-build test [--own-native-session]");
         console.log(
           "  Build with MODE=test, start dev servers, and launch browser.",
         );
         return;
       }
-      await runTest();
+      await runTest(argv.includes("--own-native-session"));
       break;
     }
     case "stage": {
