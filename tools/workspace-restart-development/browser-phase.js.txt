@@ -89,7 +89,7 @@ const done = arguments[arguments.length - 1];
     const desired = cfg.case === 'normal' ? [uri('A1'),uri('A2'),uri('B1'),uri('B2')] : [uri('A1'),uri('B1')];
     await wait(() => desired.every(url => Array.from(gb.tabs).some(tab => gb.getBrowserForTab(tab).currentURI.spec === url)), 'Synthetic local pages load before quit');
     await sleep(300);
-    const {TabStateFlusher} = ChromeUtils.importESModule('resource:///modules/sessionstore/TabStateFlusher.sys.mjs');
+    const {TabStateFlusher} = ChromeUtils.importESModule('moz-src:///browser/components/sessionstore/TabStateFlusher.sys.mjs');
     await bounded(TabStateFlusher.flushWindow(win));
     Services.prefs.savePrefFile(null);
     const state = snapshot();
