@@ -151,7 +151,13 @@ export async function runTests(
 ): Promise<void> {
   const failures: string[] = [];
   const reportWorkspaceCase = (error?: string): void => {
-    if (moduleName === "nativeLastTabWorkspacesEnabled.test.ts") {
+    if (
+      [
+        "nativeLastTabWorkspacesEnabled.test.ts",
+        "workspaceLastTabPreservation.test.ts",
+        "workspaceDevelopmentFlows.test.ts",
+      ].includes(moduleName)
+    ) {
       console.log(`[nora@workspace-case] ${
         encodeURIComponent(JSON.stringify({
           ...globalThis.__NORA_TEST_PROGRESS__,
