@@ -250,3 +250,68 @@ SIGTERM and SIGINT retain the original cancellation and enter bounded unit
 cleanup; later signals during cleanup do not overwrite the first failure.
 SIGKILL or host loss cannot produce a successful root receipt. The service
 runtime cap remains a backstop, and absent cleanup proof stays unverified.
+
+## Read-only retained-history audit
+
+`history.py` reads one existing v1 pilot execution from the same protected
+policy and namespace as the writer. It requires an explicitly authorized root
+supervisor and the existing `load_claim_store` qualification checks. It does
+not discover or provision a store. The writer, old execution/package keys,
+namespace and qualification policy are unchanged.
+
+```bash
+python3 -B tools/final-workspace-qa/history.py \
+  --policy /trusted/existing-claim-policy.json \
+  --execution-key ORIGINAL_64_HEX_EXECUTION_KEY
+```
+
+The CLI always exits **2** and every report retains `gateVerdict=BLOCK`,
+`originalSupervisorFinalOutcome=UNVERIFIED`, product/compile qualification
+UNVERIFIED and publication false. A `CONSISTENT_RETAINED_TERMINAL` observation
+means only that the bounded original v1 snapshot is internally consistent.
+Even a retained PASS terminal does not authenticate the supervisor's final
+exit, the returned terminal or the independently observed final original CI
+outcome. Cancellation can happen after sealing. Incomplete always dominates
+any terminal; an original FAIL remains FAIL.
+
+An incomplete observation checks first-error precedence and compares any
+retained root JSON with the embedded original root. If root retention failed,
+the report explicitly marks it unavailable rather than verified. The embedded
+declaration and its error hash still do not authenticate original completion.
+
+The auditor compares both original claim bytes and their request-derived
+keys, policy/qualification bindings, subject, terminal or incomplete record,
+and retained evidence sizes/hashes. PASS-shaped terminals require all eight
+fixed evidence members, root/worker identity and cleanup consistency, and the
+original snapshot hashes/cohort. Failed terminals can retain the writer's
+root-result-containing subset. Missing, partial, malformed, unknown, changed
+or unreadable data remains BLOCK. This does not replay the browser or reprove
+the native assertions, package bytes, Debug applicability or PGO lineage.
+
+Anchored no-follow FDs reject symlinks, special files, hardlinked records and
+mutable authority. Files, paths, directories and expected absences are checked
+again before returning; a concurrent change blocks this one observation.
+The reader never opens the arbitrary ephemeral `originalRootResult` path.
+JSON envelopes, request/identities, inventories and policy/qualification have
+closed, typed checks, including rejection of duplicate keys and numeric truth
+aliases. Limits are 4 MiB per parsed JSON, 8 MiB per other evidence file,
+96 MiB of snapshot reads, 128 FDs and a 30-second checked monotonic deadline.
+Legacy loader reads have their existing independent 4 MiB bounds. A blocking
+shared-filesystem syscall can outlive an in-process deadline; an external
+supervisor deadline alone does not establish forced teardown or backend
+qualification. Those transport/retention/restart properties require the
+storage operator's independent real-backend evidence.
+
+This is the existing Linux x64 six-case pilot's P/artifact scope. It is not the
+publication model's content-stable first-evaluation authority across different
+producer runs. It emits no backend qualification or publisher capability, and
+has no production publisher connection.
+
+Host contracts use private temporary fixtures with explicitly mocked root,
+loader and mapped harness-ancestor authority. They exercise the real reader,
+writer-generated records and mutation/fault guards; they do not qualify this
+workspace's overlay filesystem, a shared server or a native worker.
+
+```bash
+python3 -B -m unittest discover -s tools/final-workspace-qa -p test_history.py -v
+```
