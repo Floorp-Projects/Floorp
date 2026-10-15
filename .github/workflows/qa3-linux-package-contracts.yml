@@ -5,6 +5,7 @@ name: QA3 Linux package contracts
   pull_request:
     paths:
       - tools/linux-package-qa/**
+      - tools/qa3-publish-contract/**
       - tools/qa3/**
       - tools/src/release_provenance.ts
       - tools/src/release_provenance.test.ts
@@ -30,6 +31,7 @@ jobs:
         run: |
           export QA3_DENO_FOR_CONTRACTS="$(command -v deno)"
           python3 -B -m unittest discover -s tools/linux-package-qa -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/qa3-publish-contract -p 'test_*.py' -v
           deno fmt --check tools/linux-package-qa/*.ts tools/src/release_provenance.ts tools/src/release_provenance.test.ts
           deno lint --no-config tools/linux-package-qa/*.ts tools/src/release_provenance.ts tools/src/release_provenance.test.ts
           deno check --no-config --no-lock tools/linux-package-qa/validate.ts

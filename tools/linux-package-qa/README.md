@@ -53,12 +53,23 @@ python3 -B tools/linux-package-qa/intake.py \
 Successful intake returns `INPUTS_MATCH_SNAPSHOTS_NOT_EXECUTED` and
 `providerAuthentication: EXTERNAL_CALLER_REQUIRED`, with both native
 product and compile/profile qualification `UNVERIFIED` and
-`publicationAuthorized: false`. It does not launch the product. The independent
-CI acquisition entrypoint, root-issued sealed worker adapter and qualified
-first-evaluation backend are not supplied by this intake module. In particular,
-the consumer workflow path in the request is a reserved identity, not a claim
-that such a workflow has run. Do not rename an intake result to the old prepared
-schema or invent a bundle/manifestSetId to pass the old worker.
+`publicationAuthorized: false`. It does not launch the product.
+
+The separate `capture.py` and `qa3-linux-package-intake.yml` now provide a
+metadata-only controller entrypoint using the existing PAT's REST read access.
+The fixed API origin/paths exclude archive endpoints and redirects; requests,
+pages, bytes and elapsed time are bounded, and original API bytes are retained.
+Complete P job/artifact inventories and the active original C are checked.
+Its declared index is used only to select metadata: original index/member bytes
+remain unauthenticated until the separate archive intake. Successful capture is
+`AUTHENTICATED_METADATA_CAPTURED_NOT_EXECUTED`, with no archive acquisition,
+browser launch or product qualification. The workflow has not been dispatched.
+It runs only metadata on standard GitHub Actions; a future native consumer must
+still use the qualified Blacksmith path. No new credential or API write scope
+is added. The root-issued sealed worker adapter, original archive acquisition
+and qualified first-evaluation backend are still missing. Do not rename an
+intake result to the old prepared schema or invent a bundle/manifestSetId to pass
+the old worker.
 
 The old root supervisor, DynamicUser/cgroup limits, token-free worker and shared
 NFS/qualified-filesystem claim requirements remain unchanged. A Git ref or
