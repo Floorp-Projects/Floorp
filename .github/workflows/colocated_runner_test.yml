@@ -532,7 +532,14 @@ jobs:
             exit 1
           fi
 
-          wait "$TEST_PID"
+          if wait "$TEST_PID"; then
+            :
+          else
+            TEST_EXIT=$?
+            echo "::error::Combined browser test suite exited with status $TEST_EXIT"
+            cat _dist/ci-combined-browser-test.log || true
+            exit "$TEST_EXIT"
+          fi
           deno run \
             --allow-net=127.0.0.1 \
             --allow-read=_dist \
