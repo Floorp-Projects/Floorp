@@ -12,7 +12,7 @@ The fixed plan and coverage catalog retain their historical `stage: shadow`
 schema label; this does not promote a shadow execution. Only `--required`
 produces a `required-source` receipt, and that mode rejects local execution,
 dirty checkout, a foreign repository and any attempt other than 1. The receipt
-validator checks the same run/source, all 106 case identities, no failures or
+validator checks the same run/source, all 109 case identities, no failures or
 skips, Python 3.12, Node 22, Deno 2.9.6 and the complete plan, runner,
 configuration, lock and test-file hashes. Required outputs include the receipt
 SHA-256 and immutable evidence artifact ID/digest. A receipt by itself is not a
@@ -21,8 +21,8 @@ run and artifact. These host checks do not issue product qualification.
 
 ## Fixed plan and execution
 
-`source-plan.json` pins 106 existing cases: 60 Deno runner/utils/smoke host
-cases, 28 Node final-package intake cases, and 18 Python source/packaging
+`source-plan.json` pins 109 existing cases: 60 Deno runner/utils/smoke host
+cases, 28 Node final-package intake cases, and 21 Python source/packaging
 provenance cases. These are Floorp host tool tests, separate from Mozilla native
 tests and the implementation kit's 114 tests. The executor uses a fixed command
 registry and never calls `deno task test`, `test:integration`, browser startup,
@@ -42,6 +42,11 @@ ignore/filter input. The selected Deno tests must use plain callback
 definitions; per-test retry/ignore options are outside this plan. There are no
 automatic retries. Test internals and trusted policy changes still require
 normal code review; a candidate-controlled receipt is not an attestation.
+
+The 109-case revision explicitly adds the three immutable release-snapshot
+provenance tests merged in Floorp #2926. Historical 106-case receipts cannot
+satisfy this revision. The fixed case identities and plan/runner/test-file
+hashes change together; discovery never silently expands an approved plan.
 
 Node 22 JUnit uses generic `classname="test"` without a file field. Its origin
 is bound to the one fixed Node input file and exact named cases; explicit

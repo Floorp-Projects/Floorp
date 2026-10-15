@@ -29,7 +29,7 @@ GROUPS = {
         "tools/test_validate_runtime_packaging_provenance.py",
     ),
 }
-CASE_COUNTS = {"deno-host": 60, "node-intake": 28, "python-provenance": 18}
+CASE_COUNTS = {"deno-host": 60, "node-intake": 28, "python-provenance": 21}
 DENO_IMPORTS = ("@std/assert", "@std/cli", "@std/fs", "@std/path")
 TARGETS = [
     "windows-x86_64",
@@ -623,8 +623,8 @@ def validate_required_receipt(receipt, expected_head, expected_run):
         "runtimeQualification": "UNVERIFIED",
         "officialFirefoxMatch": "unverified",
         "publicationAuthorized": False,
-        "plannedCases": 106,
-        "executedCases": 106,
+        "plannedCases": 109,
+        "executedCases": 109,
         "host": {"system": "Linux", "architecture": "x86_64"},
         "planSha256": digest((ROOT / "tools/qa3/source-plan.json").read_bytes()),
         "coverageSha256": digest((ROOT / "tools/qa3/coverage.json").read_bytes()),

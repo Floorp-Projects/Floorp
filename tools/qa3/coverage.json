@@ -79,6 +79,6 @@
     "QA3-10 credential-free Agent worker and deterministic regression promotion",
     "QA3-11 native known-bad coverage, quarantine, retention and resource measurements",
     "Official Firefox Git/Hg mapping remains unverified/advisory",
-    "Implementation kit v0.3.0 was reviewed from immutable GitHub input 87311566; original 114 and repaired 130 host tests remain separate from this fixed 106-case source plan"
+    "Implementation kit v0.3.0 was reviewed from immutable GitHub input 87311566; original 114, repaired 130 and historical 106 source tests remain separate from this fixed 109-case source plan"
   ]
 }

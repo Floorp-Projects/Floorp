@@ -24,9 +24,9 @@ class SourceContractTests(unittest.TestCase):
         self.plan = source.read_json(source.ROOT / "tools/qa3/source-plan.json")
         self.coverage = source.read_json(source.ROOT / "tools/qa3/coverage.json")
 
-    def test_fixed_plan_has_all_106_unique_host_cases(self):
+    def test_fixed_plan_has_all_109_unique_host_cases(self):
         source.validate_plan(self.plan)
-        self.assertEqual(sum(len(g["cases"]) for g in self.plan["groups"]), 106)
+        self.assertEqual(sum(len(g["cases"]) for g in self.plan["groups"]), 109)
         source.audit_deno_subset(source.ROOT)
 
     def test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes(self):
@@ -364,7 +364,11 @@ time.sleep(10)
                     self.root,
                     timeout=0.5,
                 )
-            self.assertTrue(ready.exists())
+            self.assertTrue(
+                ready.exists(),
+                "owned fixture did not become ready before its deadline; log: "
+                + (self.root / "late-fork.log").read_text(),
+            )
             self.assertTrue(
                 marker.exists(), "the late-fork cleanup path was not exercised"
             )
@@ -493,7 +497,10 @@ source._execute_owned(int(sys.argv[1]), .5, [sys.executable, '-I', '-c', child])
                                 "fixture transient pidfd failure",
                                 result["cleanupErrors"][0],
                             )
-                            self.assertTrue(marker.exists())
+                            self.assertTrue(
+                                marker.exists(),
+                                f"owned pidfd fixture did not become ready; control: {result}",
+                            )
                             with self.assertRaises(ProcessLookupError):
                                 os.kill(int(marker.read_text().split()[0]), 0)
                         else:

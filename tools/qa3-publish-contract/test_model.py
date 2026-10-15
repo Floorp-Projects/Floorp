@@ -20,7 +20,7 @@ def fixture():
     def entry(reference, kind, status, run, details):
         return {"sha256": reference["sha256"], "kind": kind, "status": status, "issuer": policy["issuer"], "expiresAt": 2000, "revoked": False, "subjectDigest": model.digest(subject), "sourceKey": subject["runtimeSourceKey"], "buildPolicyKey": subject["buildPolicyKey"], "run": run, "attempt": 1, "details": details}
     entries = {
-        "source": entry(refs["source"], "source", "PASS_SOURCE_ONLY", 123, {"floorpHead": subject["floorpHead"], "executedCases": 106, "originalFailures": 0, "skipped": 0}),
+        "source": entry(refs["source"], "source", "PASS_SOURCE_ONLY", 123, {"floorpHead": subject["floorpHead"], "executedCases": 109, "originalFailures": 0, "skipped": 0}),
         "qualification": entry(refs["qualification"], "qualification", "QUALIFIED", 120, {"productRuntimeHead": subject["runtimeHead"], "targets": sorted(model.TARGETS), "diagnosticChangesReviewed": True, "sourceEquivalenceVerified": True}),
         "compile-profile": entry(refs["compileProfile"], "compile-profile", "QUALIFIED", 122, {"profileChainVerified": True, "manifestDigest": subject["runtimeManifestArtifact"]["digest"], "runtimeBuildID": subject["runtimeBuildID"], "modes": {target: "production-opt" if target == "linux-aarch64" else "pgo-use" for target in sorted(model.TARGETS)}}),
         "sidecar": entry(refs["sidecar"], "sidecar", "PASS_FINAL_ARTIFACT_QA", 124, {"unsigned": False, "complete": True}),
@@ -90,7 +90,8 @@ class ContractTests(unittest.TestCase):
 
     def test_source_debug_applicability_profile_and_arm_opt_remain_distinct(self):
         changes = [
-            lambda s: s["entries"]["source"]["details"].update(executedCases=105),
+            lambda s: s["entries"]["source"]["details"].update(executedCases=108),
+            lambda s: s["entries"]["source"]["details"].update(executedCases=106),
             lambda s: s["entries"]["source"]["details"].update(skipped=1),
             lambda s: s["entries"]["source"].update(run=124),
             lambda s: s["entries"]["qualification"].update(status="PASS_DEBUG_HARNESS_ONLY"),

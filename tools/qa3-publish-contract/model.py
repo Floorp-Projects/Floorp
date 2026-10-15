@@ -128,7 +128,7 @@ def check_snapshot(snapshot, subject, candidate, policy, now):
         require(entry["sha256"] == ref["sha256"] and entry["issuer"] == policy["issuer"] and integer(entry["expiresAt"]) and entry["expiresAt"] > now and entry["revoked"] is False and entry["subjectDigest"] == digest(subject), "evidence changed, expired, revoked or foreign")
         require(entry["sourceKey"] == subject["runtimeSourceKey"] and entry["buildPolicyKey"] == subject["buildPolicyKey"] and integer(entry["run"]) and type(entry["attempt"]) is int and entry["attempt"] == 1, "source/build/original attempt differs")
     source = entries[refs["source"]["id"]]
-    require(source["kind"] == "source" and source["status"] == "PASS_SOURCE_ONLY" and source["run"] == subject["producerRun"] and identical(source["details"], {"floorpHead": subject["floorpHead"], "executedCases": 106, "originalFailures": 0, "skipped": 0}), "complete same-run source evidence missing")
+    require(source["kind"] == "source" and source["status"] == "PASS_SOURCE_ONLY" and source["run"] == subject["producerRun"] and identical(source["details"], {"floorpHead": subject["floorpHead"], "executedCases": 109, "originalFailures": 0, "skipped": 0}), "complete same-run source evidence missing")
     qualification = entries[refs["qualification"]["id"]]
     require(qualification["kind"] == "qualification" and qualification["status"] == "QUALIFIED", "Debug applicability qualification missing")
     require(identical(qualification["details"], {"productRuntimeHead": subject["runtimeHead"], "targets": sorted(TARGETS), "diagnosticChangesReviewed": True, "sourceEquivalenceVerified": True}), "Debug/product source applicability differs")

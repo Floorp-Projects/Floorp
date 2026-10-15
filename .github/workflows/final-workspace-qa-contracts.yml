@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 2
           persist-credentials: false
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
@@ -38,8 +39,9 @@ jobs:
             --output "$RUNNER_TEMP/workspace-worker.js" tools/final-workspace-qa/worker.ts
       - name: Compile same-source browser test support
         env:
-          PRODUCT_SOURCE_HEAD: ${{ github.event.pull_request.base.sha }}
+          PRODUCT_SOURCE_HEAD: ${{ github.sha }}
         run: |
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SOURCE_HEAD"
           python3 tools/final-workspace-qa/prepare.py build-support \
             --floorp-head "$PRODUCT_SOURCE_HEAD" \
             --deno "$(command -v deno)" \

@@ -31,7 +31,7 @@ class RequiredSourceTests(unittest.TestCase):
             "workflowAttempt": "1", "host": {"system": "Linux", "architecture": "x86_64"},
             "sourceVerdict": "PASS", "productVerdict": "UNVERIFIED",
             "runtimeQualification": "UNVERIFIED", "officialFirefoxMatch": "unverified",
-            "publicationAuthorized": False, "plannedCases": 106, "executedCases": 106,
+            "publicationAuthorized": False, "plannedCases": 109, "executedCases": 109,
             **{k: source.digest((root / p).read_bytes()) for k, p in hashes.items()},
             "coverage": source.read_json(root / "tools/qa3/coverage.json"),
             "testFiles": {p: source.digest((root / p).read_bytes()) for paths in source.GROUPS.values() for p in paths},
@@ -46,7 +46,8 @@ class RequiredSourceTests(unittest.TestCase):
         for key, value in (
             ("stage", "shadow"), ("sourceHead", "b" * 40), ("expectedSourceHead", "b" * 40),
             ("workflowRun", "124"), ("workflowAttempt", "2"), ("workflowRepositoryId", "1"),
-            ("workingTreeClean", False), ("localExecution", True), ("executedCases", 105),
+            ("workingTreeClean", False), ("localExecution", True), ("executedCases", 108),
+            ("plannedCases", 106), ("executedCases", 106),
             ("productVerdict", "PASS"), ("publicationAuthorized", True), ("schemaVersion", True),
             ("runnerSha256", "0" * 64), ("denoHostLockSha256", "0" * 64),
         ):

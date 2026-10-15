@@ -385,6 +385,10 @@
       "cases": [
         {
           "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_authenticates_exact_immutable_release_snapshot"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
           "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_authenticates_exact_source_and_current_native_patch"
         },
         {
@@ -405,11 +409,19 @@
         },
         {
           "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_every_snapshot_identity_mismatch_and_extra_record_field"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
           "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_every_upstream_identity_mismatch"
         },
         {
           "file": "tools/test_validate_runtime_source_provenance.py",
           "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_incomplete_extra_and_boolean_schemas"
+        },
+        {
+          "file": "tools/test_validate_runtime_source_provenance.py",
+          "name": "test_validate_runtime_source_provenance.SourceProvenanceTests.test_rejects_partial_unknown_and_invalid_snapshot_pins"
         },
         {
           "file": "tools/test_validate_runtime_source_provenance.py",
