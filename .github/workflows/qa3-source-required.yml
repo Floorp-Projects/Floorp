@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 required source
+
+"on":
+  pull_request:
+    paths:
+      - "tools/qa3/**"
+      - "tools/linux-package-qa/**"
+      - "tools/src/**"
+      - "tools/test-final-package-qa-source.mjs"
+      - "tools/*runtime*provenance*"
+      - ".github/workflows/qa3-source-*.yml"
+      - ".github/workflows/package_and_publish_release.yml"
+      - ".github/workflows/package_and_publish_alpha.yml"
+      - ".github/workflows/qa3-linux-package-producer.yml"
+      - ".github/workflows/package.yml"
+      - ".github/workflows/validate-runtime-provenance.yml"
+      - "deno.json"
+      - "deno.lock"
+  workflow_call:
+    outputs:
+      verdict:
+        value: ${{ jobs.source.outputs.verdict }}
+      receipt_sha256:
+        value: ${{ jobs.source.outputs.receipt_sha256 }}
+      artifact_id:
+        value: ${{ jobs.source.outputs.artifact_id }}
+      artifact_digest:
+        value: ${{ jobs.source.outputs.artifact_digest }}
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      verdict: ${{ steps.verify.outputs.verdict }}
+      receipt_sha256: ${{ steps.verify.outputs.receipt_sha256 }}
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Check source execution contracts
+        run: |
+          mkdir -p "$RUNNER_TEMP/qa3-source-required"
+          set +e
+          python3 -B -m unittest discover -s tools/qa3 -p 'test_*.py' -v > "$RUNNER_TEMP/qa3-source-required/contracts.log" 2>&1
+          status=$?
+          printf '%s\n' "$status" > "$RUNNER_TEMP/qa3-source-required/contracts.exit-code"
+          cat "$RUNNER_TEMP/qa3-source-required/contracts.log"
+          exit "$status"
+      - name: Execute the common fixed source plan once
+        if: ${{ ! cancelled() }}
+        env:
+          QA3_SOURCE_HEAD: ${{ github.sha }}
+        run: >-
+          python3 -B tools/qa3/source.py run "$RUNNER_TEMP/qa3-source-required/source"
+          --expected-head "$QA3_SOURCE_HEAD" --required
+      - name: Validate same-run original receipt
+        id: verify
+        env:
+          QA3_SOURCE_HEAD: ${{ github.sha }}
+        run: |
+          python3 -B tools/qa3/source.py verify-required \
+            "$RUNNER_TEMP/qa3-source-required/source/source-receipt.json" \
+            --expected-head "$QA3_SOURCE_HEAD" --expected-run "$GITHUB_RUN_ID" \
+            > "$RUNNER_TEMP/qa3-source-required/gate.json"
+          python3 -B - <<'PY'
+          import json, os
+          from pathlib import Path
+          gate = json.loads((Path(os.environ["RUNNER_TEMP"]) / "qa3-source-required/gate.json").read_text())
+          with open(os.environ["GITHUB_OUTPUT"], "a") as stream:
+              stream.write("verdict=" + gate["verdict"] + "\n")
+              stream.write("receipt_sha256=" + gate["receiptSha256"] + "\n")
+          PY
+      - name: Preserve original source outcome
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qa3-source-required-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa3-source-required
+          if-no-files-found: error
+          retention-days: 14

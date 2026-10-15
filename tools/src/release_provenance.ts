@@ -1065,6 +1065,40 @@ const NATIVE_RECORD_KEYS = [
   "mac/aarch64",
 ] as const;
 
+/** A separate single-package boundary; the five-record release set stays strict. */
+export function validateLinuxPackageRecord(
+  value: unknown,
+  runtimeValue: unknown,
+  floorpValue: unknown,
+  packageValue: unknown,
+): NativeVerificationRecord {
+  const record = parseNativeVerificationRecord(value, "Linux package record");
+  const runtime = parseNormalizedRuntimeProvenance(runtimeValue);
+  const floorp = parseFloorpIdentity(floorpValue, "expected Floorp identity");
+  const floorpPackage = parseFloorpPackageIdentity(
+    packageValue,
+    "expected package identity",
+  );
+  const target = runtime.targets[TARGETS.findIndex((t) => t.key === "linux")];
+  if (
+    record.target_key !== "linux" || record.native_arch !== "x86_64" ||
+    runtime.run_attempt !== 1 || floorpPackage.unsigned ||
+    canonicalJson(record.floorp) !== canonicalJson(floorp) ||
+    canonicalJson(record.floorp_package) !== canonicalJson(floorpPackage) ||
+    record.runtime.repository !== runtime.repository ||
+    record.runtime.head_sha !== runtime.head_sha ||
+    record.runtime.workflow_run_id !== runtime.workflow_run_id ||
+    record.runtime.expected_build_id !== runtime.expected_build_id ||
+    record.runtime.artifact_id !== target.artifact_id ||
+    record.runtime.artifact_digest !== target.artifact_digest
+  ) {
+    fail(
+      "Linux package record differs from the exact production package cohort",
+    );
+  }
+  return record;
+}
+
 function recordKey(record: NativeVerificationRecord): string {
   return `${record.target_key}/${record.native_arch}`;
 }

@@ -71,7 +71,7 @@
     }
   ],
   "deferred": [
-    "QA3-02/03 native Debug test-support and Mozilla harness",
+    "QA3-02/03 native Debug harness qualification for the exact current Runtime cohort; historical 157 L1 evidence does not qualify the current 158 product",
     "QA3-06 full browser test origin and feature/target migration catalog",
     "QA3-07 all five native GUI targets",
     "QA3-08 trusted qualification, first-FAIL history and revocation/expiry",
@@ -79,6 +79,6 @@
     "QA3-10 credential-free Agent worker and deterministic regression promotion",
     "QA3-11 native known-bad coverage, quarantine, retention and resource measurements",
     "Official Firefox Git/Hg mapping remains unverified/advisory",
-    "Implementation kit and its 114 tests remain unavailable after Library HTTP 403"
+    "Implementation kit v0.3.0 was reviewed from immutable GitHub input 87311566; original 114 and repaired 130 host tests remain separate from this fixed 106-case source plan"
   ]
 }

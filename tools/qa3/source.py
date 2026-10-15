@@ -602,13 +602,94 @@ def execute(args, log, repo, timeout=180):
         return status["exitCode"]
 
 
-def run_source(output, expected_head, local=False):
+def validate_required_receipt(receipt, expected_head, expected_run):
+    """Validate a same-checkout receipt; provider authentication stays outside it."""
+    if not re.fullmatch(r"[0-9a-f]{40}", expected_head or "") or not re.fullmatch(
+        r"[1-9][0-9]*", expected_run or ""
+    ):
+        raise ValueError("required source context must contain a full SHA and run ID")
+    expected = {
+        "schemaVersion": 1,
+        "stage": "required-source",
+        "sourceHead": expected_head,
+        "expectedSourceHead": expected_head,
+        "workingTreeClean": True,
+        "localExecution": False,
+        "workflowRepositoryId": "437505831",
+        "workflowRun": expected_run,
+        "workflowAttempt": "1",
+        "sourceVerdict": "PASS",
+        "productVerdict": "UNVERIFIED",
+        "runtimeQualification": "UNVERIFIED",
+        "officialFirefoxMatch": "unverified",
+        "publicationAuthorized": False,
+        "plannedCases": 106,
+        "executedCases": 106,
+        "host": {"system": "Linux", "architecture": "x86_64"},
+        "planSha256": digest((ROOT / "tools/qa3/source-plan.json").read_bytes()),
+        "coverageSha256": digest((ROOT / "tools/qa3/coverage.json").read_bytes()),
+        "coverage": validate_coverage(read_json(ROOT / "tools/qa3/coverage.json")),
+        "denoLockSha256": digest((ROOT / "deno.lock").read_bytes()),
+        "denoConfigSha256": digest((ROOT / "deno.json").read_bytes()),
+        "denoHostImportMapSha256": digest((ROOT / "tools/qa3/deno-host-imports.json").read_bytes()),
+        "denoHostLockSha256": digest((ROOT / "tools/qa3/deno-host.lock").read_bytes()),
+        "testFiles": {
+            p: digest((ROOT / p).read_bytes()) for paths in GROUPS.values() for p in paths
+        },
+        "runnerSha256": digest(Path(__file__).read_bytes()),
+    }
+    if not isinstance(receipt, dict) or set(receipt) != set(expected) | {"tools", "steps"}:
+        raise ValueError("missing or unknown required source receipt fields")
+    for key, value in expected.items():
+        if type(receipt[key]) is not type(value) or receipt[key] != value:
+            raise ValueError(f"required source receipt mismatch: {key}")
+    tools = receipt["tools"]
+    if not isinstance(tools, dict) or set(tools) != {"python", "node", "deno"}:
+        raise ValueError("incomplete source toolchain evidence")
+    if not isinstance(tools["python"], str) or not re.fullmatch(r"3\.12\.[0-9]+", tools["python"]):
+        raise ValueError("required source plan needs Python 3.12")
+    for name, version in (("deno", r"deno 2\.9\.6(?: .*)?\n.+"), ("node", r"v22\.[0-9]+\.[0-9]+")):
+        observed = tools[name]
+        if (
+            not isinstance(observed, dict)
+            or set(observed) != {"exitCode", "version"}
+            or type(observed["exitCode"]) is not int
+            or observed["exitCode"] != 0
+            or not isinstance(observed["version"], str)
+            or not re.fullmatch(version, observed["version"], flags=re.DOTALL)
+        ):
+            raise ValueError(f"required source toolchain mismatch: {name}")
+    plan = validate_plan(read_json(ROOT / "tools/qa3/source-plan.json"))
+    audit_deno_subset(ROOT)
+    validate_deno_inputs(
+        read_json(ROOT / "tools/qa3/deno-host-imports.json"),
+        read_json(ROOT / "tools/qa3/deno-host.lock"),
+        read_json(ROOT / "deno.json"), read_json(ROOT / "deno.lock"),
+    )
+    steps = receipt["steps"]
+    if not isinstance(steps, list) or len(steps) != len(plan["groups"]):
+        raise ValueError("required source groups are incomplete")
+    for group, step in zip(plan["groups"], steps):
+        if (
+            not isinstance(step, dict)
+            or set(step) != {"id", "verdict", "cases", "exitCode"}
+            or step["id"] != group["id"] or step["verdict"] != "PASS"
+            or type(step["exitCode"]) is not int or step["exitCode"] != 0
+        ):
+            raise ValueError("required source command did not pass originally")
+        validate_cases(group, step["cases"])
+    return {"verdict": "PASS_SOURCE_ONLY", "receiptSha256": digest(
+        (json.dumps(receipt, indent=2) + "\n").encode()
+    )}
+
+
+def run_source(output, expected_head, local=False, required=False):
     output.mkdir(parents=True, exist_ok=False)
     plan_path = ROOT / "tools/qa3/source-plan.json"
     coverage_path = ROOT / "tools/qa3/coverage.json"
     receipt = {
         "schemaVersion": 1,
-        "stage": "shadow",
+        "stage": "required-source" if required else "shadow",
         "sourceHead": None,
         "expectedSourceHead": expected_head,
         "workingTreeClean": None,
@@ -624,7 +705,15 @@ def run_source(output, expected_head, local=False):
         "publicationAuthorized": False,
         "steps": [],
     }
+    if required:
+        receipt["workflowRepositoryId"] = os.environ.get("GITHUB_REPOSITORY_ID")
     try:
+        if required and (
+            local or receipt["workflowRepositoryId"] != "437505831"
+            or receipt["workflowAttempt"] != "1"
+            or not re.fullmatch(r"[1-9][0-9]*", receipt["workflowRun"] or "")
+        ):
+            raise ValueError("required source QA requires an original Floorp CI attempt")
         if not re.fullmatch(r"[0-9a-f]{40}", expected_head):
             raise ValueError("expected source must be a full Git SHA")
         if sys.platform != "linux" or platform.machine() != "x86_64":
@@ -742,6 +831,12 @@ def run_source(output, expected_head, local=False):
     finally:
         receipt["executedCases"] = sum(len(s["cases"]) for s in receipt["steps"])
         receipt["runnerSha256"] = digest(Path(__file__).read_bytes())
+        if required and receipt["sourceVerdict"] == "PASS":
+            try:
+                validate_required_receipt(receipt, expected_head, receipt["workflowRun"])
+            except (ValueError, TypeError, OSError) as error:
+                receipt["error"] = str(error)
+                receipt["sourceVerdict"] = "FAIL"
         (output / "source-receipt.json").write_text(
             json.dumps(receipt, indent=2) + "\n"
         )
@@ -772,14 +867,21 @@ def run_source(output, expected_head, local=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["run", "python-tests"])
+    parser.add_argument("command", choices=["run", "python-tests", "verify-required"])
     parser.add_argument("output", type=Path)
     parser.add_argument("--expected-head")
     parser.add_argument("--local", action="store_true")
+    parser.add_argument("--required", action="store_true")
+    parser.add_argument("--expected-run")
     args = parser.parse_args()
     if args.command == "python-tests":
         return python_tests(args.output)
-    return run_source(args.output.resolve(), args.expected_head or "", args.local)
+    if args.command == "verify-required":
+        print(json.dumps(validate_required_receipt(
+            read_json(args.output), args.expected_head, args.expected_run,
+        )))
+        return 0
+    return run_source(args.output.resolve(), args.expected_head or "", args.local, args.required)
 
 
 if __name__ == "__main__":

@@ -6,6 +6,8 @@ on:
   pull_request:
     paths:
       - tools/final-workspace-qa/**
+      - tools/src/release_provenance.ts
+      - tools/linux-package-qa/**
       - .github/workflows/final-workspace-qa-contracts.yml
 
 permissions:

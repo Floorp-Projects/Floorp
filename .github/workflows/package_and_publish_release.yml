@@ -28,9 +28,9 @@ run-name: >-
   ${{ inputs.validation_only && ' (validation only)' || '' }}
 
 jobs:
-  source-qa-shadow:
-    name: Source QA (shadow)
-    uses: ./.github/workflows/qa3-source-shadow.yml
+  source-qa:
+    name: Required source QA
+    uses: ./.github/workflows/qa3-source-required.yml
     permissions:
       contents: read
 
@@ -125,7 +125,7 @@ jobs:
 
   package-windows:
     name: Package Windows x86_64
-    needs: validate-runtime-provenance
+    needs: [validate-runtime-provenance, source-qa]
     uses: ./.github/workflows/package.yml
     with:
       platform: Windows-x64
@@ -158,7 +158,7 @@ jobs:
 
   package-linux:
     name: Package Linux x86_64
-    needs: validate-runtime-provenance
+    needs: [validate-runtime-provenance, source-qa]
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-x64
@@ -189,7 +189,7 @@ jobs:
 
   package-linux-aarch64:
     name: Package Linux aarch64
-    needs: validate-runtime-provenance
+    needs: [validate-runtime-provenance, source-qa]
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-aarch64
@@ -220,7 +220,7 @@ jobs:
 
   package-macos:
     name: Package macOS universal
-    needs: validate-runtime-provenance
+    needs: [validate-runtime-provenance, source-qa]
     uses: ./.github/workflows/package.yml
     with:
       platform: macOS-x64

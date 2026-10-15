@@ -21,12 +21,13 @@ permissions:
   contents: write
 
 jobs:
-  source-qa-shadow:
-    uses: ./.github/workflows/qa3-source-shadow.yml
+  source-qa:
+    uses: ./.github/workflows/qa3-source-required.yml
     permissions:
       contents: read
 
   package-windows:
+    needs: source-qa
     uses: ./.github/workflows/package.yml
     with:
       platform: Windows-x64
@@ -34,6 +35,7 @@ jobs:
     secrets: inherit
 
   package-linux:
+    needs: source-qa
     uses: ./.github/workflows/package.yml
     with:
       platform: Linux-x64
@@ -41,6 +43,7 @@ jobs:
     secrets: inherit
 
   package-macos:
+    needs: source-qa
     uses: ./.github/workflows/package.yml
     with:
       platform: macOS-x64

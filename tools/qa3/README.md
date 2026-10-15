@@ -1,11 +1,23 @@
-# QA3 source shadow foundation
+# QA3 common source QA
 
-This is the first QA3-04/11 host foundation, not product qualification. The
-approved initial mode is **shadow**. Release and Alpha each call the reusable
-source job once, alongside their existing jobs. Its job-level
-`continue-on-error` preserves the current required jobs, signing, approval,
-bundle schema and publisher. The raw receipt retains FAIL/INCOMPLETE even when
-the calling workflow continues. Do not make packages depend on this job yet.
+Release and Alpha each call `qa3-source-required.yml` once. All four stable
+package jobs and all three legacy Alpha package jobs require its success.
+The job has no `continue-on-error`. Failed, cancelled, skipped, absent or
+unsuccessfully uploaded evidence prevents dependent packages from starting.
+The old shadow workflow remains available for explicitly requested diagnostics;
+it no longer duplicates the required PR run. Signing, approval, the closed v2
+bundle and publisher remain separate existing gates.
+
+The fixed plan and coverage catalog retain their historical `stage: shadow`
+schema label; this does not promote a shadow execution. Only `--required`
+produces a `required-source` receipt, and that mode rejects local execution,
+dirty checkout, a foreign repository and any attempt other than 1. The receipt
+validator checks the same run/source, all 106 case identities, no failures or
+skips, Python 3.12, Node 22, Deno 2.9.6 and the complete plan, runner,
+configuration, lock and test-file hashes. Required outputs include the receipt
+SHA-256 and immutable evidence artifact ID/digest. A receipt by itself is not a
+provider attestation; consumers must also authenticate its original workflow
+run and artifact. These host checks do not issue product qualification.
 
 ## Fixed plan and execution
 
@@ -39,7 +51,7 @@ inputs must be UTF-8 (an optional UTF-8 BOM is accepted). DTD/entity
 declarations, NUL bytes and declarations of a different encoding are rejected
 before XML parsing, including UTF-16/32 encodings of a DTD.
 
-On a disposable Linux x86_64 host with Git, Python 3.12, Node 22, Deno 2.9.7 and
+On a disposable Linux x86_64 host with Git, Python 3.12, Node 22, Deno 2.9.6 and
 `/usr/bin/prlimit` (provided by Ubuntu util-linux):
 
 ```sh
@@ -54,9 +66,10 @@ planned/executed IDs and each raw verdict. `--local` explicitly records
 dirty/local execution during development; it does not issue qualification.
 Preflight rejection also writes a FAIL receipt. CI preserves contract-test logs
 and exit codes alongside the source receipt in `source/`. Workflow artifacts are
-named with run and attempt and retained for 14 days. This initial receipt does
-not establish complete history across runs; that requires the QA3-08 trusted
-controller before required promotion.
+named with run and attempt and retained for 14 days. This receipt does not
+establish complete product evaluation history across runs. QA3-08 still
+requires a qualified claim backend and trusted controller before product
+qualification or evidence reuse.
 
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular
@@ -97,8 +110,9 @@ subsequently reviewed from the user's immutable GitHub input, with its original
 [Floorp #2893](https://github.com/Floorp-Projects/Floorp/pull/2893). Those kit
 tests are separate from the active source plan and do not qualify native builds.
 
-Before any required promotion, run the fixed plan on a clean CI checkout and
-measure missing coverage, initial failure/flake rate and resource use. Then
+Run the required workflow on a clean CI checkout and retain its original
+attempt before accepting this change. Measure missing coverage, initial
+failure/flake rate and resource use. Then
 prove a Linux x64 Debug configure/support/harness with known-bad canaries and
 repeat product evidence on Windows x64, Linux x64/ARM, Mac Intel/ARM. Keep Mac
 universal bytes bound to both native executions. Use separate real MAR, DEB,

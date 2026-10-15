@@ -3,17 +3,6 @@ name: QA3 source shadow
 
 "on":
   workflow_call:
-  pull_request:
-    paths:
-      - "tools/qa3/**"
-      - "tools/src/**"
-      - "tools/test-final-package-qa-source.mjs"
-      - "tools/*runtime*provenance*"
-      - ".github/workflows/qa3-source-shadow.yml"
-      - ".github/workflows/package_and_publish_release.yml"
-      - ".github/workflows/package_and_publish_alpha.yml"
-      - "deno.json"
-      - "deno.lock"
   workflow_dispatch:
 
 permissions:
@@ -30,7 +19,7 @@ jobs:
           persist-credentials: false
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
         with:
-          deno-version: v2.9.7
+          deno-version: v2.9.6
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
