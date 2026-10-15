@@ -1,9 +1,21 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import IdleMemoryReclaim, { sanitizeSettings } from "../index.ts";
-import { BYTES_PER_MB, DEFAULT_SETTINGS, DEFAULT_STATS } from "../types.ts";
-import { assertEquals, runTests } from "../../../test/utils/test_harness.ts";
+import IdleMemoryReclaim, {
+  RECLAIM_REQUEST_TOPIC,
+  sanitizeSettings,
+} from "../index.ts";
+import {
+  BYTES_PER_MB,
+  DEFAULT_SETTINGS,
+  DEFAULT_STATS,
+  IDLE_MEMORY_RECLAIM_PREF,
+} from "../types.ts";
+import {
+  assert,
+  assertEquals,
+  runTests,
+} from "../../../test/utils/test_harness.ts";
 import type { ReclaimTestInstance, SharedReclaimStats } from "./types.ts";
 
 function deferred<T>() {
@@ -212,6 +224,67 @@ async function testFailureReleasesGuard() {
   );
 }
 
+function countRequestObservers(): number {
+  let count = 0;
+  const observers = Services.obs.enumerateObservers(RECLAIM_REQUEST_TOPIC);
+  while (observers.hasMoreElements()) {
+    observers.getNext();
+    count++;
+  }
+  return count;
+}
+
+function testConstructionKeepsInitState() {
+  const hadUserValue = Services.prefs.prefHasUserValue(
+    IDLE_MEMORY_RECLAIM_PREF,
+  );
+  const original = Services.prefs.getStringPref(IDLE_MEMORY_RECLAIM_PREF, "");
+  Services.prefs.setStringPref(
+    IDLE_MEMORY_RECLAIM_PREF,
+    JSON.stringify({ enabled: true }),
+  );
+  let instance: ReclaimTestInstance | null = null;
+  try {
+    const before = countRequestObservers();
+    instance = new IdleMemoryReclaim() as unknown as ReclaimTestInstance;
+    assertEquals(
+      instance.settings.enabled,
+      true,
+      "construction must keep the saved opt-in",
+    );
+    assert(
+      instance.idleObserver !== null,
+      "construction must keep the idle observer handle",
+    );
+    assert(
+      instance.pollTimerId !== null,
+      "construction must keep the poll timer handle",
+    );
+    assertEquals(
+      countRequestObservers(),
+      before + 1,
+      "construction registers one request observer",
+    );
+
+    Services.prefs.setStringPref(
+      IDLE_MEMORY_RECLAIM_PREF,
+      JSON.stringify({ enabled: true, idleThresholdSec: 61 }),
+    );
+    assertEquals(
+      countRequestObservers(),
+      before + 1,
+      "a settings change must replace the request observer, not add one",
+    );
+  } finally {
+    instance?.teardown();
+    if (hadUserValue) {
+      Services.prefs.setStringPref(IDLE_MEMORY_RECLAIM_PREF, original);
+    } else {
+      Services.prefs.clearUserPref(IDLE_MEMORY_RECLAIM_PREF);
+    }
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("reclaimLifecycle.test.ts", [
     {
@@ -242,6 +315,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "failed reclaim releases the request guard",
       fn: testFailureReleasesGuard,
+    },
+    {
+      name: "construction keeps the settings and handles init() set up",
+      fn: testConstructionKeepsInitState,
     },
   ]);
 }

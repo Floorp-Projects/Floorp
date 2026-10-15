@@ -199,19 +199,25 @@ export function isIdleEnough(
  */
 @noraComponent(import.meta.hot)
 export default class IdleMemoryReclaim extends NoraComponentBase {
-  private settings: IdleMemoryReclaimSettings = { ...DEFAULT_SETTINGS };
+  // NoraComponentBase invokes init() during super(). `declare` keeps these
+  // from emitting field initializers that would reset what init() set up.
+  declare private settings: IdleMemoryReclaimSettings;
   /** Seconds passed to addIdleObserver; removal needs the same value. */
-  private registeredIdleSec: number | null = null;
-  private idleObserver: nsIObserver | null = null;
-  private prefObserver: nsIObserver | null = null;
+  declare private registeredIdleSec: number | null;
+  declare private idleObserver: nsIObserver | null;
+  declare private prefObserver: nsIObserver | null;
   /** Timer that re-evaluates idle state periodically. */
-  private pollTimerId: ReturnType<typeof setInterval> | null = null;
+  declare private pollTimerId: ReturnType<typeof setInterval> | null;
   /** Guards against a reclaim starting while one is already running. */
   private reclaiming = false;
   /** Set on teardown so work awaiting a snapshot stops instead of resuming. */
   private disposed = false;
 
   init(): void {
+    this.registeredIdleSec = null;
+    this.idleObserver = null;
+    this.prefObserver = null;
+    this.pollTimerId = null;
     this.settings = this.loadSettings();
     this.setupPrefObserver();
     this.setupIdleObserver();
