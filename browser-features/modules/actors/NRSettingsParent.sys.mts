@@ -11,7 +11,9 @@ function openExternalLinkInBrowser(
       return false;
     }
     const browser = actor.browsingContext?.top?.embedderElement;
-    const win = browser?.ownerGlobal as
+    // `ownerGlobal` is not defined on the <browser> element in this build, so
+    // walk to the chrome window through its document instead.
+    const win = browser?.ownerDocument?.defaultView as
       | (Window & {
         openTrustedLinkIn?: (
           url: string,
