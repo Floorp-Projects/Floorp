@@ -490,6 +490,47 @@ Deno.test("actual loader still rejects an ordinary empty execution using the sam
   });
 });
 
+Deno.test("actual loader normalizes Vite filesystem keys before inventory checks and result publication", async () => {
+  const target =
+    "browser-features/chrome/common/workspaces/test/nativeLastTabWorkspacesEnabled.test.ts";
+  for (
+    const file of [
+      "../../" + target,
+      "/home/runner/work/Floorp/Floorp/" + target,
+      "C:/ci/Floorp/" + target,
+      "#features-chrome/" + target.slice("browser-features/chrome/".length),
+      "/link-features-chrome/" +
+      target.slice("browser-features/chrome/".length),
+    ]
+  ) {
+    await withIsolationControl(
+      { purpose: undefined, filter: [target] },
+      async (prefs) => {
+        let imports = 0;
+        await runBrowserTests({
+          chrome: {
+            [file]: () => {
+              imports++;
+              return Promise.resolve({});
+            },
+          },
+          esm: {},
+          retainForCollection: () => {},
+        });
+        const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+        assertEquals(state.status, "done");
+        assertEquals(state.discoveredFiles, [target]);
+        assertEquals(state.results.length, 1);
+        assertEquals(state.results[0].file, target);
+        assertEquals(state.results[0].origin, "floorp");
+        assertEquals(state.results[0].executionKind, "development-browser");
+        assertEquals(state.results[0].ok, true);
+        assertEquals(imports, 1);
+      },
+    );
+  }
+});
+
 Deno.test("restart isolation rejects stale, broad, foreign, mismatched and oversized controls without fallback", async () => {
   for (
     const changes of [

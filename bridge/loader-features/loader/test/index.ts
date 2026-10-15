@@ -964,8 +964,8 @@ export async function runSingleTest(
     ? [...mozillaTasks.taskResults]
     : undefined;
   return {
-    file,
-    ...testInventoryMetadata(file),
+    file: normalizeBrowserTestPath(file),
+    ...testInventoryMetadata(normalizeBrowserTestPath(file)),
     ok: errors.length === 0,
     durationMs: Math.round(nowMs() - started),
     mode,
@@ -1028,7 +1028,9 @@ export default async function runBrowserTests(
         requestedTestFiles.has(normalizeBrowserTestPath(file))
       );
     discoveredFiles.push(
-      ...entries.map(([file]) => file).sort((a, b) => a.localeCompare(b)),
+      ...entries.map(([file]) => normalizeBrowserTestPath(file)).sort((a, b) =>
+        a.localeCompare(b)
+      ),
     );
     if (control.bootstrapIsolation) {
       if (
@@ -1062,7 +1064,10 @@ export default async function runBrowserTests(
       throw new Error("Browser inventory selected no tests");
     }
     for (const [file] of entries) {
-      if (testInventoryMetadata(file).origin === "unknown") {
+      if (
+        testInventoryMetadata(normalizeBrowserTestPath(file)).origin ===
+          "unknown"
+      ) {
         throw new Error(
           "Browser test is not classified in the inventory: " + file,
         );
