@@ -102,9 +102,7 @@ export function DynamicSearchSettings() {
           showValue
           showMinMax
           disabled={isDisabled || !getValues("showBookmarks")}
-          onChange={(e) =>
-            setValue("maxBookmarkSuggestions", Number(e.target.value))
-          }
+          onValueChange={(value) => setValue("maxBookmarkSuggestions", value)}
         />
         <Seekbar
           label={t("commandPalette.maxHistorySuggestions")}
@@ -116,9 +114,7 @@ export function DynamicSearchSettings() {
           showValue
           showMinMax
           disabled={isDisabled || !getValues("showHistory")}
-          onChange={(e) =>
-            setValue("maxHistorySuggestions", Number(e.target.value))
-          }
+          onValueChange={(value) => setValue("maxHistorySuggestions", value)}
         />
         <Seekbar
           label={t("commandPalette.maxTabsResults")}
@@ -130,7 +126,7 @@ export function DynamicSearchSettings() {
           showValue
           showMinMax
           disabled={isDisabled || !getValues("showTabs")}
-          onChange={(e) => setValue("maxTabsResults", Number(e.target.value))}
+          onValueChange={(value) => setValue("maxTabsResults", value)}
         />
       </CardContent>
     </Card>
