@@ -1,12 +1,12 @@
 ---
 title: "Source Inventory"
 sidebar_label: "Source Inventory"
-floorp_commit: "7f615f9baba8851a9cb33a9314bd7a5b9894903e"
+floorp_commit: "781abc7c4281bfdbca0673c8825105cb9d1ab049"
 generated: true
 ---
 # Source Inventory
 
-Inventory generated from Floorp commit `7f615f9baba8851a9cb33a9314bd7a5b9894903e`.
+Inventory generated from Floorp commit `781abc7c4281bfdbca0673c8825105cb9d1ab049`.
 
 ## Source Precedence
 
@@ -78,7 +78,10 @@ Inventory generated from Floorp commit `7f615f9baba8851a9cb33a9314bd7a5b9894903e
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
-- `.github/workflows/qa3-source-shadow.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
+- `.github/workflows/qa3-linux-package-contracts.yml` - triggers: `pull_request`
+- `.github/workflows/qa3-linux-package-producer.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/qa3-source-required.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
+- `.github/workflows/qa3-source-shadow.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
