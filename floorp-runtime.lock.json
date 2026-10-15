@@ -3,19 +3,19 @@
   "source": {
     "repository": "Floorp-Projects/Floorp-Runtime",
     "trackingRef": "nora-0.2.0",
-    "ref": "daily-1142",
-    "commit": "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
-    "tree": "b59e4839575ca4c357185a159212fe577a272d56",
+    "ref": "daily-1155",
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
     "release": {
-      "id": 406108663,
+      "id": 413004776,
       "immutable": false
     },
     "materials": {
       "count": 53,
-      "totalBytes": 227664,
+      "totalBytes": 227195,
       "entries": [
         {
-          "path": "browser/base/content/test/caps/browser.toml",
+          "path": "browser/base/content/test/browser-caps/browser.toml",
           "role": "manifest",
           "bytes": 339,
           "mode": "100644",
@@ -23,7 +23,7 @@
           "sha256": "c6863e7d9cd86c10610c681c27d5ab8038d5685dcf4f42ea379ba353de8b5386"
         },
         {
-          "path": "browser/base/content/test/caps/browser_principalSerialization_version1.js",
+          "path": "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
           "role": "test",
           "bytes": 5783,
           "mode": "100644",
@@ -31,23 +31,23 @@
           "sha256": "27b510b3b9a7ed2bb42b60422b30ca3ea96adb5a1798e77041109d469fa3144c"
         },
         {
-          "path": "browser/base/content/test/general/app_bug575561.html",
+          "path": "browser/base/content/test/browser-general/app_bug575561.html",
           "role": "support",
-          "bytes": 849,
+          "bytes": 889,
           "mode": "100644",
-          "gitBlob": "00644efc3e027cfdc02c5962464cda2d7106620f",
-          "sha256": "8f6dc2206eb20859c3f6005ae320f34e6011f749ca6b5973b0fb2f1a9a7dabda"
+          "gitBlob": "990fda0101cacb5c1898a27ded60785ef548506a",
+          "sha256": "0030560d6b802aeea22cbdda9a8240a413dbee292cf5a4c62662775ec7755e0e"
         },
         {
-          "path": "browser/base/content/test/general/app_subframe_bug575561.html",
+          "path": "browser/base/content/test/browser-general/app_subframe_bug575561.html",
           "role": "support",
-          "bytes": 297,
+          "bytes": 305,
           "mode": "100644",
-          "gitBlob": "8690497ffb2239b0eac838d922f890d382a40b32",
-          "sha256": "8939ee73a609d40177b30a8e2ecdf1d08904faa8264867afee0ceca2d137505d"
+          "gitBlob": "94b3200bb4a6d487741b1cf931c05a856ee49f81",
+          "sha256": "bf7a6cf0e7d643444af4108910204e443c34f018ba201271a9dd867cb0a5b49d"
         },
         {
-          "path": "browser/base/content/test/general/audio.ogg",
+          "path": "browser/base/content/test/browser-general/audio.ogg",
           "role": "support",
           "bytes": 14293,
           "mode": "100644",
@@ -55,7 +55,7 @@
           "sha256": "b4e9c7a042279e7ed7873aab3e19fae9768a9a378b17e9eff889460836eb44fe"
         },
         {
-          "path": "browser/base/content/test/general/browser.toml",
+          "path": "browser/base/content/test/browser-general/browser.toml",
           "role": "manifest",
           "bytes": 15628,
           "mode": "100644",
@@ -63,7 +63,7 @@
           "sha256": "2767251da985d478a345ff2632ff3b63a0f58fe21006b0fd03a9e6b4e2034580"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug479408_sample.html",
+          "path": "browser/base/content/test/browser-general/browser_bug479408_sample.html",
           "role": "support",
           "bytes": 226,
           "mode": "100644",
@@ -71,7 +71,7 @@
           "sha256": "8603c4530d3d41c4d6c1a91471e349eed53240bf8e7790d55cb9a00a5652ceae"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug537474.js",
+          "path": "browser/base/content/test/browser-general/browser_bug537474.js",
           "role": "test",
           "bytes": 492,
           "mode": "100644",
@@ -79,7 +79,7 @@
           "sha256": "3c29e602d4bd8c215877ffb93167245f3a34925273689cfd8e40ac5f88beedd7"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug565575.js",
+          "path": "browser/base/content/test/browser-general/browser_bug565575.js",
           "role": "test",
           "bytes": 587,
           "mode": "100644",
@@ -87,7 +87,7 @@
           "sha256": "0862a3b48bda9889f7f5c2761084a0eedae790461d488f3fae4dd09e45018c64"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug596687.js",
+          "path": "browser/base/content/test/browser-general/browser_bug596687.js",
           "role": "test",
           "bytes": 716,
           "mode": "100644",
@@ -95,7 +95,7 @@
           "sha256": "aa530beacaf77747680b82186f84bf9af40d094566ac2a83938b2d6350d9e350"
         },
         {
-          "path": "browser/base/content/test/general/browser_star_hsts.sjs",
+          "path": "browser/base/content/test/browser-general/browser_star_hsts.sjs",
           "role": "support",
           "bytes": 598,
           "mode": "100644",
@@ -103,7 +103,7 @@
           "sha256": "ca86bdb49b7ebbea0b601eabff8c6317e552f17fd6cf85c3162145368cdd5771"
         },
         {
-          "path": "browser/base/content/test/general/bug792517-2.html",
+          "path": "browser/base/content/test/browser-general/bug792517-2.html",
           "role": "support",
           "bytes": 82,
           "mode": "100644",
@@ -111,7 +111,7 @@
           "sha256": "2a088667cdb55d3ca84951c852409a60b43d40546e06e693c3cd114c8d59812c"
         },
         {
-          "path": "browser/base/content/test/general/bug792517.html",
+          "path": "browser/base/content/test/browser-general/bug792517.html",
           "role": "support",
           "bytes": 59,
           "mode": "100644",
@@ -119,7 +119,7 @@
           "sha256": "09330c210007e21a72eb3bea2231c41dcc38522167f21b5be63447e97f4ba739"
         },
         {
-          "path": "browser/base/content/test/general/bug792517.sjs",
+          "path": "browser/base/content/test/browser-general/bug792517.sjs",
           "role": "support",
           "bytes": 397,
           "mode": "100644",
@@ -127,7 +127,7 @@
           "sha256": "7a19a62a0f8c246eb58ac2498935e8337e5f2ed19d8b274c31db06102fe1e955"
         },
         {
-          "path": "browser/base/content/test/general/clipboard_pastefile.html",
+          "path": "browser/base/content/test/browser-general/clipboard_pastefile.html",
           "role": "support",
           "bytes": 1276,
           "mode": "100644",
@@ -135,7 +135,7 @@
           "sha256": "cbb492b3b9a9cdd16fa4555dd02df8489ad952a8a7d671cf29509907b20eaf81"
         },
         {
-          "path": "browser/base/content/test/general/download_page.html",
+          "path": "browser/base/content/test/browser-general/download_page.html",
           "role": "support",
           "bytes": 4116,
           "mode": "100644",
@@ -143,7 +143,7 @@
           "sha256": "cd3ed02504cb3401ce8ad18d5830819daabf4473a445ea00e820f5e07b1a58eb"
         },
         {
-          "path": "browser/base/content/test/general/download_page_1.txt",
+          "path": "browser/base/content/test/browser-general/download_page_1.txt",
           "role": "support",
           "bytes": 30,
           "mode": "100644",
@@ -151,7 +151,7 @@
           "sha256": "4b8638268292723e7e1def06ee8808e321b908c7170d8e56468bd8f887cac542"
         },
         {
-          "path": "browser/base/content/test/general/download_page_2.txt",
+          "path": "browser/base/content/test/browser-general/download_page_2.txt",
           "role": "support",
           "bytes": 5,
           "mode": "100644",
@@ -159,7 +159,7 @@
           "sha256": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
         },
         {
-          "path": "browser/base/content/test/general/download_with_content_disposition_header.sjs",
+          "path": "browser/base/content/test/browser-general/download_with_content_disposition_header.sjs",
           "role": "support",
           "bytes": 696,
           "mode": "100644",
@@ -167,7 +167,7 @@
           "sha256": "f1fba454b6d44e71b98eb8b27f3b63dcb254bbd781b2ca6b9586cfc39a0e1ecf"
         },
         {
-          "path": "browser/base/content/test/general/dummy_page.html",
+          "path": "browser/base/content/test/browser-general/dummy_page.html",
           "role": "support",
           "bytes": 173,
           "mode": "100644",
@@ -175,7 +175,7 @@
           "sha256": "6af11adcf7fa48aab2632f1b45cae4124905e52e77e881b90b730b931601b6fa"
         },
         {
-          "path": "browser/base/content/test/general/file_documentnavigation_frameset.html",
+          "path": "browser/base/content/test/browser-general/file_documentnavigation_frameset.html",
           "role": "support",
           "bytes": 658,
           "mode": "100644",
@@ -183,7 +183,7 @@
           "sha256": "470e15c540cb680d8ff05eb5778096ba265186f40787e88174e928f5e6edef20"
         },
         {
-          "path": "browser/base/content/test/general/file_fullscreen-window-open.html",
+          "path": "browser/base/content/test/browser-general/file_fullscreen-window-open.html",
           "role": "support",
           "bytes": 634,
           "mode": "100644",
@@ -191,7 +191,7 @@
           "sha256": "775b12a885b99262f5774cec1dc8c72f69b56089f545dc06b17c3056ac71baad"
         },
         {
-          "path": "browser/base/content/test/general/file_with_link_to_http.html",
+          "path": "browser/base/content/test/browser-general/file_with_link_to_http.html",
           "role": "support",
           "bytes": 195,
           "mode": "100644",
@@ -199,15 +199,15 @@
           "sha256": "26ebb16f6c59174c1bd16611e9c6cb96e459fb770efcebb92789cd4076ee6bc5"
         },
         {
-          "path": "browser/base/content/test/general/head.js",
+          "path": "browser/base/content/test/browser-general/head.js",
           "role": "head-support",
-          "bytes": 7578,
+          "bytes": 6817,
           "mode": "100644",
-          "gitBlob": "52539bb41921eab79853b7bb013509ffe02d4344",
-          "sha256": "847a7a34d1a12958de6908b4c11d863a79e0a95be5497b896191ae2f382babc0"
+          "gitBlob": "bfb15725b907776fadd92e5de3f5bbc749b20a69",
+          "sha256": "d3b3680c8440972abc1674dc83eed4b6fede173548196b0f421cf94e1fc21cd9"
         },
         {
-          "path": "browser/base/content/test/general/moz.png",
+          "path": "browser/base/content/test/browser-general/moz.png",
           "role": "support",
           "bytes": 580,
           "mode": "100644",
@@ -215,15 +215,15 @@
           "sha256": "3f9341cbddc0eb4a89680f30d61ca5758f21a5b0b9801adbf7507c0ede708832"
         },
         {
-          "path": "browser/base/content/test/general/navigating_window_with_download.html",
+          "path": "browser/base/content/test/browser-general/navigating_window_with_download.html",
           "role": "support",
-          "bytes": 262,
+          "bytes": 270,
           "mode": "100644",
-          "gitBlob": "6b0918941f7883e759279c8d9886ee123a9a20e8",
-          "sha256": "484069f056c1be30e93f5e54ae15e34f3351ef3423edfb16541a69c940233ff5"
+          "gitBlob": "0e0ab49decfc56e677470f1e8b039a9f8f563fc1",
+          "sha256": "cebd21fd398c3e9fd88051c02117b06f374d8bdaacb62b565e3c06a52a4dd7a2"
         },
         {
-          "path": "browser/base/content/test/general/test_bug462673.html",
+          "path": "browser/base/content/test/browser-general/test_bug462673.html",
           "role": "support",
           "bytes": 235,
           "mode": "100644",
@@ -231,7 +231,7 @@
           "sha256": "2aa3a76842aa87351cca49689903a4d5a89c9fa1746a2c10c16b29d4e67df1db"
         },
         {
-          "path": "browser/base/content/test/general/test_bug628179.html",
+          "path": "browser/base/content/test/browser-general/test_bug628179.html",
           "role": "support",
           "bytes": 213,
           "mode": "100644",
@@ -239,7 +239,7 @@
           "sha256": "0cb0aa12c2b4694b6885a5b81fe9ca6b415c7b6b1a3fbbfbdbcf1d8493022875"
         },
         {
-          "path": "browser/base/content/test/general/title_test.svg",
+          "path": "browser/base/content/test/browser-general/title_test.svg",
           "role": "support",
           "bytes": 1805,
           "mode": "100644",
@@ -247,7 +247,7 @@
           "sha256": "f9b7025eb284b218bcaf7a161fd0e34000bb2982c981780ee9fbcac5dcf52118"
         },
         {
-          "path": "browser/base/content/test/general/unknownContentType_file.pif",
+          "path": "browser/base/content/test/browser-general/unknownContentType_file.pif",
           "role": "support",
           "bytes": 60,
           "mode": "100644",
@@ -255,7 +255,7 @@
           "sha256": "df37e3a4e0cafaca8c6d5454492b93218ac6acd787f3f8059009b4cd0783d907"
         },
         {
-          "path": "browser/base/content/test/general/unknownContentType_file.pif^headers^",
+          "path": "browser/base/content/test/browser-general/unknownContentType_file.pif^headers^",
           "role": "support",
           "bytes": 39,
           "mode": "100644",
@@ -263,7 +263,7 @@
           "sha256": "d0d5af566f4c23510cdb75d63ca18baa11b155c32b281e2b6cb1669d168bbdaa"
         },
         {
-          "path": "browser/base/content/test/performance/browser.toml",
+          "path": "browser/base/content/test/browser-performance/browser.toml",
           "role": "manifest",
           "bytes": 3212,
           "mode": "100644",
@@ -271,7 +271,7 @@
           "sha256": "5d912d9a5f1e6c5df1831429cefeca513d2ad86de1180f9c4da1c0d292bc6530"
         },
         {
-          "path": "browser/base/content/test/performance/browser_hiddenwindow_existence.js",
+          "path": "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js",
           "role": "test",
           "bytes": 459,
           "mode": "100644",
@@ -279,7 +279,7 @@
           "sha256": "1bb1b457fe97d23a3b767fbefe4e9333427a67259255475c11b3ccd888f332dd"
         },
         {
-          "path": "browser/base/content/test/performance/head.js",
+          "path": "browser/base/content/test/browser-performance/head.js",
           "role": "head-support",
           "bytes": 41581,
           "mode": "100644",
@@ -329,10 +329,10 @@
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
           "role": "manifest",
-          "bytes": 20209,
+          "bytes": 20343,
           "mode": "100644",
-          "gitBlob": "0811e490625c374f9950a8ceef0650871c06c6eb",
-          "sha256": "9e4333d99adff55d2274d6472d2277913b37c76e2bcc1e609b0a4539c74d951e"
+          "gitBlob": "e52eb5df3803e366832a0c04a6f929316037cdd3",
+          "sha256": "03d0868a22d9a3fe5a9af9dc989ad936ae62b74aaa0e1af97099abb32c265457"
         },
         {
           "path": "browser/components/tabbrowser/test/browser/tabs/browser_pinned_and_hidden_tabs.js",
@@ -393,18 +393,18 @@
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser.toml",
           "role": "manifest",
-          "bytes": 2375,
+          "bytes": 2401,
           "mode": "100644",
-          "gitBlob": "fe866648a7730113dc0a2585e8c554028e3cfa35",
-          "sha256": "f2cc59bc13237930fdfaa52ef377c143e9fe3fbce08a10f89fffbdbc68966afc"
+          "gitBlob": "d9f0ca1d146ea1650341f1259e61bb4b89a6ed19",
+          "sha256": "945c89c72505277a3c03ef4b86e2322881cc2d86d01ee211ef8f300920f72f4b"
         },
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/browser_a11y.js",
           "role": "test",
-          "bytes": 2199,
+          "bytes": 2275,
           "mode": "100644",
-          "gitBlob": "8fae51a14770fea6c619bece034af147e83c1521",
-          "sha256": "f63e76a9c27d0bd2c1f16aad7e10d052d966e1008e350f4cf5dadbe79e3c2657"
+          "gitBlob": "e49fd3eb20d2e3d4c00ab47d6ba0c43a4ab84d50",
+          "sha256": "a749e54ec0700c4dd7f8059fe6657b5404384dba1bb3a265fd6aea0bf3b744a4"
         },
         {
           "path": "browser/components/urlbar/tests/browser-UrlbarInput/head.js",
@@ -446,36 +446,36 @@
       "supportDependencyEdges": 93,
       "entries": [
         {
-          "path": "browser/base/content/test/caps/browser_principalSerialization_version1.js",
-          "manifest": "browser/base/content/test/caps/browser.toml",
+          "path": "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
+          "manifest": "browser/base/content/test/browser-caps/browser.toml",
           "expectedTasks": 2,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug537474.js",
-          "manifest": "browser/base/content/test/general/browser.toml",
+          "path": "browser/base/content/test/browser-general/browser_bug537474.js",
+          "manifest": "browser/base/content/test/browser-general/browser.toml",
           "expectedTasks": 1,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug565575.js",
-          "manifest": "browser/base/content/test/general/browser.toml",
+          "path": "browser/base/content/test/browser-general/browser_bug565575.js",
+          "manifest": "browser/base/content/test/browser-general/browser.toml",
           "expectedTasks": 1,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         },
         {
-          "path": "browser/base/content/test/general/browser_bug596687.js",
-          "manifest": "browser/base/content/test/general/browser.toml",
+          "path": "browser/base/content/test/browser-general/browser_bug596687.js",
+          "manifest": "browser/base/content/test/browser-general/browser.toml",
           "expectedTasks": 1,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
         },
         {
-          "path": "browser/base/content/test/performance/browser_hiddenwindow_existence.js",
-          "manifest": "browser/base/content/test/performance/browser.toml",
+          "path": "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js",
+          "manifest": "browser/base/content/test/browser-performance/browser.toml",
           "expectedTasks": 1,
           "headPolicy": "harness-replaced",
           "supportPolicy": "locked-not-loaded"
@@ -504,45 +504,45 @@
       ],
       "manifests": [
         {
-          "path": "browser/base/content/test/caps/browser.toml",
+          "path": "browser/base/content/test/browser-caps/browser.toml",
           "preferences": [],
           "supportPaths": []
         },
         {
-          "path": "browser/base/content/test/general/browser.toml",
+          "path": "browser/base/content/test/browser-general/browser.toml",
           "preferences": [],
           "supportPaths": [
-            "browser/base/content/test/general/app_bug575561.html",
-            "browser/base/content/test/general/app_subframe_bug575561.html",
-            "browser/base/content/test/general/audio.ogg",
-            "browser/base/content/test/general/browser_bug479408_sample.html",
-            "browser/base/content/test/general/browser_star_hsts.sjs",
-            "browser/base/content/test/general/bug792517-2.html",
-            "browser/base/content/test/general/bug792517.html",
-            "browser/base/content/test/general/bug792517.sjs",
-            "browser/base/content/test/general/clipboard_pastefile.html",
-            "browser/base/content/test/general/download_page.html",
-            "browser/base/content/test/general/download_page_1.txt",
-            "browser/base/content/test/general/download_page_2.txt",
-            "browser/base/content/test/general/download_with_content_disposition_header.sjs",
-            "browser/base/content/test/general/dummy_page.html",
-            "browser/base/content/test/general/file_documentnavigation_frameset.html",
-            "browser/base/content/test/general/file_fullscreen-window-open.html",
-            "browser/base/content/test/general/file_with_link_to_http.html",
-            "browser/base/content/test/general/head.js",
-            "browser/base/content/test/general/moz.png",
-            "browser/base/content/test/general/navigating_window_with_download.html",
-            "browser/base/content/test/general/test_bug462673.html",
-            "browser/base/content/test/general/test_bug628179.html",
-            "browser/base/content/test/general/title_test.svg",
-            "browser/base/content/test/general/unknownContentType_file.pif",
-            "browser/base/content/test/general/unknownContentType_file.pif^headers^",
+            "browser/base/content/test/browser-general/app_bug575561.html",
+            "browser/base/content/test/browser-general/app_subframe_bug575561.html",
+            "browser/base/content/test/browser-general/audio.ogg",
+            "browser/base/content/test/browser-general/browser_bug479408_sample.html",
+            "browser/base/content/test/browser-general/browser_star_hsts.sjs",
+            "browser/base/content/test/browser-general/bug792517-2.html",
+            "browser/base/content/test/browser-general/bug792517.html",
+            "browser/base/content/test/browser-general/bug792517.sjs",
+            "browser/base/content/test/browser-general/clipboard_pastefile.html",
+            "browser/base/content/test/browser-general/download_page.html",
+            "browser/base/content/test/browser-general/download_page_1.txt",
+            "browser/base/content/test/browser-general/download_page_2.txt",
+            "browser/base/content/test/browser-general/download_with_content_disposition_header.sjs",
+            "browser/base/content/test/browser-general/dummy_page.html",
+            "browser/base/content/test/browser-general/file_documentnavigation_frameset.html",
+            "browser/base/content/test/browser-general/file_fullscreen-window-open.html",
+            "browser/base/content/test/browser-general/file_with_link_to_http.html",
+            "browser/base/content/test/browser-general/head.js",
+            "browser/base/content/test/browser-general/moz.png",
+            "browser/base/content/test/browser-general/navigating_window_with_download.html",
+            "browser/base/content/test/browser-general/test_bug462673.html",
+            "browser/base/content/test/browser-general/test_bug628179.html",
+            "browser/base/content/test/browser-general/title_test.svg",
+            "browser/base/content/test/browser-general/unknownContentType_file.pif",
+            "browser/base/content/test/browser-general/unknownContentType_file.pif^headers^",
             "image/test/mochitest/blue.png",
             "toolkit/content/tests/browser/common/mockTransfer.js"
           ]
         },
         {
-          "path": "browser/base/content/test/performance/browser.toml",
+          "path": "browser/base/content/test/browser-performance/browser.toml",
           "preferences": [
             {
               "name": "browser.chrome.disableRemoteControlCueForTests",
@@ -571,7 +571,7 @@
             }
           ],
           "supportPaths": [
-            "browser/base/content/test/performance/head.js"
+            "browser/base/content/test/browser-performance/head.js"
           ]
         },
         {
@@ -660,19 +660,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 619643698,
+        "id": 641142004,
         "name": "floorp-linux-aarch64-moz-artifact.tar.xz",
-        "size": 74588712,
-        "sha256": "e7f3a6983e7c9ad6494a635e1e4b58c67574de787dd7d464d3753022d2921ce9"
+        "size": 78612124,
+        "sha256": "9e20e5b38df41a6ef49a6f528dae508be92e6239f93ae31437a35508d65662fa"
       },
       "applicationIniAsset": {
-        "id": 619643702,
+        "id": 641142013,
         "name": "linux-aarch64-application-ini.zip",
         "size": 536,
-        "sha256": "a1bd19626dd989496a91a34bb327f088acf1b9f8c95bdaff142198cb7d8be3e3"
+        "sha256": "17da2fb761498914702ed184f302cea852ba788f0834d2456c189a24117f9ad6"
       },
-      "version": "157.0.1",
-      "buildId": "20261007125927"
+      "version": "158.0.1",
+      "buildId": "20261014104253"
     },
     {
       "platform": "linux",
@@ -680,19 +680,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 619643710,
+        "id": 641142009,
         "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
-        "size": 85429504,
-        "sha256": "9df9045b44cf4abd609b7a2b70d0ca9ebdc20abcd76a126b4b784b46a775eb82"
+        "size": 87108212,
+        "sha256": "f19260ede6fa81ec004d89ccb81438bb9c6bd16d2a6b5dfe386828f62fec65c6"
       },
       "applicationIniAsset": {
-        "id": 619643684,
+        "id": 641142005,
         "name": "linux-x86_64-application-ini.zip",
         "size": 536,
-        "sha256": "c00635156431e2d95fb1786036914537bdcc6c1f40e3d3ad19ecf5a7501484e8"
+        "sha256": "f17f77a79b497830a26804b57a0784bea159aea5cb379f3bd658da1f2ca57f70"
       },
-      "version": "157.0.1",
-      "buildId": "20261007125927"
+      "version": "158.0.1",
+      "buildId": "20261014104253"
     },
     {
       "platform": "macos",
@@ -700,19 +700,19 @@
       "format": "dmg",
       "extractionPolicy": "dmg-floorp-app",
       "asset": {
-        "id": 619643679,
+        "id": 641141999,
         "name": "floorp-macOS-universal-moz-artifact.dmg",
-        "size": 190972720,
-        "sha256": "1739fa04279ab6c0fb42047b5ae5821ffe44e5e530c3b96dac86e9344f67ad61"
+        "size": 197365639,
+        "sha256": "2363232d1fa01a25ad9ae43de8faa97dec750f83bf938bf3d50a1a97e533a6c0"
       },
       "applicationIniAsset": {
-        "id": 619643681,
+        "id": 641142010,
         "name": "macOS-universal-application-ini.zip",
         "size": 536,
-        "sha256": "c0813fd63c1f05c1309785d0eaceff0698835956268b13ac70d549063907c2bf"
+        "sha256": "bc2a24772f5bdf42d46b715f8d34701035052cf49acfe3e3df3840e468398f7c"
       },
-      "version": "157.0.1",
-      "buildId": "20261007125927"
+      "version": "158.0.1",
+      "buildId": "20261014104253"
     },
     {
       "platform": "windows",
@@ -720,19 +720,19 @@
       "format": "zip",
       "extractionPolicy": "zip-direct-floorp",
       "asset": {
-        "id": 619643678,
+        "id": 641142000,
         "name": "floorp-windows-x86_64-moz-artifact.zip",
-        "size": 138549742,
-        "sha256": "a1a628d7d342b05156cc3a64bb58c917f84952dccbd1ad9c9e59856ee6c0b780"
+        "size": 141043954,
+        "sha256": "08131e8e0c0dba2b47916ca33a60d670d6e071892a70d88c6c7e0f68f5b0b724"
       },
       "applicationIniAsset": {
-        "id": 619643685,
+        "id": 641142008,
         "name": "windows-x86_64-application-ini.zip",
         "size": 536,
-        "sha256": "e713120ab29151b9b25f838e52c70f413490a2b064b8448aca99e3cdd5377e18"
+        "sha256": "99009e8adb2cc674436749bea5cc03147449eca8309784e2cc6034f361abe6b4"
       },
-      "version": "157.0.1",
-      "buildId": "20261007125927"
+      "version": "158.0.1",
+      "buildId": "20261014104253"
     }
   ]
 }
