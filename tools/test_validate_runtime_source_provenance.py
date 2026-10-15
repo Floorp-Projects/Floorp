@@ -36,9 +36,64 @@ def record():
     return {**copy.deepcopy(PIN), "runtime_commit": RUNTIME_SHA}
 
 
+def snapshot_pin():
+    pin = copy.deepcopy(PIN)
+    pin["upstream"].update({
+        "version": "158.0.1",
+        "tag": None,
+        "tracking_ref": "refs/heads/release",
+        "commit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181",
+        "tree": "04e6d359951669601fc15746904f31bd906f87f4",
+        "previous_tag": "FIREFOX_157_0_1_RELEASE",
+        "previous_commit": PIN["upstream"]["commit"],
+    })
+    return pin
+
+
 class SourceProvenanceTests(unittest.TestCase):
     def test_authenticates_exact_source_and_current_native_patch(self):
         validate_source_provenance(record(), PIN, RUNTIME_SHA, PATCH)
+
+    def test_authenticates_exact_immutable_release_snapshot(self):
+        pin = snapshot_pin()
+        value = {**copy.deepcopy(pin), "runtime_commit": RUNTIME_SHA}
+        validate_source_provenance(value, pin, RUNTIME_SHA, PATCH)
+        # A later release tag may label the same immutable snapshot.
+        pin["upstream"]["tag"] = "FIREFOX_158_0_1_RELEASE"
+        value["upstream"]["tag"] = pin["upstream"]["tag"]
+        validate_source_provenance(value, pin, RUNTIME_SHA, PATCH)
+
+    def test_rejects_partial_unknown_and_invalid_snapshot_pins(self):
+        for missing in ("tracking_ref", "tree"):
+            pin = snapshot_pin()
+            del pin["upstream"][missing]
+            with self.subTest(missing=missing), self.assertRaises(ValueError):
+                validate_source_provenance(
+                    {**copy.deepcopy(pin), "runtime_commit": RUNTIME_SHA}, pin, RUNTIME_SHA, PATCH)
+        changes = {
+            "tracking_ref": ("release", "refs/heads/beta", "refs/heads/release\n", None),
+            "tree": ("main", "d" * 39, "D" * 40, None, True),
+            "commit": ("release", "a" * 39, None),
+            "previous_commit": ("old-release", None),
+            "version": ("158", "158.0.1\n", None, True),
+            "tag": ("FIREFOX_157_0_1_RELEASE", "release", False),
+            "ignored": ("extra",),
+        }
+        for field, values in changes.items():
+            for change in values:
+                pin = snapshot_pin()
+                pin["upstream"][field] = change
+                with self.subTest(field=field, value=change), self.assertRaises(ValueError):
+                    validate_source_provenance(
+                        {**copy.deepcopy(pin), "runtime_commit": RUNTIME_SHA}, pin, RUNTIME_SHA, PATCH)
+
+    def test_rejects_every_snapshot_identity_mismatch_and_extra_record_field(self):
+        pin = snapshot_pin()
+        for field in (*pin["upstream"], "ignored"):
+            value = {**copy.deepcopy(pin), "runtime_commit": RUNTIME_SHA}
+            value["upstream"][field] = "different-source"
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "upstream source differs"):
+                validate_source_provenance(value, pin, RUNTIME_SHA, PATCH)
 
     def test_rejects_another_run_commit(self):
         with self.assertRaisesRegex(ValueError, "commit differs"):

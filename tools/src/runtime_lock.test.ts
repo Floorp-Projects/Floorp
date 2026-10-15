@@ -49,14 +49,14 @@ Deno.test("Runtime browser lock rejects non-browser harness tests", () => {
   expectInvalid(
     (lock) => {
       lock.source.tests.entries[0].path =
-        "browser/base/content/test/caps/test_not_browser_chrome.js";
+        "browser/base/content/test/browser-caps/test_not_browser_chrome.js";
     },
     "browser-chrome test path",
   );
   expectInvalid(
     (lock) => {
       lock.source.tests.manifests[0].path =
-        "browser/base/content/test/caps/xpcshell.toml";
+        "browser/base/content/test/browser-caps/xpcshell.toml";
     },
     "browser-chrome manifest",
   );
@@ -93,21 +93,21 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   assertEquals(canonicalLock.schemaVersion, 1);
   assertEquals(canonicalLock.source.repository, RUNTIME_REPOSITORY);
   assertEquals(canonicalLock.source.trackingRef, "nora-0.2.0");
-  assertEquals(canonicalLock.source.ref, "daily-1142");
+  assertEquals(canonicalLock.source.ref, "daily-1155");
   assertEquals(
     canonicalLock.source.commit,
-    "c74fe1a545d275cdd710ab44701c1ee0dd6b0eae",
+    "7dd619742b25567e479eeda97ae071d10542ad0b",
   );
   assertEquals(
     canonicalLock.source.tree,
-    "b59e4839575ca4c357185a159212fe577a272d56",
+    "6478a96fe1c1eec9468dd9d631bd065d1128c123",
   );
   assertEquals(canonicalLock.source.release, {
-    id: 406108663,
+    id: 413004776,
     immutable: false,
   });
   assertEquals(canonicalLock.source.materials.count, 53);
-  assertEquals(canonicalLock.source.materials.totalBytes, 227664);
+  assertEquals(canonicalLock.source.materials.totalBytes, 227195);
   assertEquals(canonicalLock.source.tests.count, 8);
   assertEquals(canonicalLock.source.tests.totalTasks, 16);
   assertEquals(canonicalLock.source.tests.supportDependencyEdges, 93);
@@ -129,12 +129,12 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
       ]),
     ),
     {
-      "browser/base/content/test/caps/browser_principalSerialization_version1.js":
+      "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js":
         2,
-      "browser/base/content/test/general/browser_bug537474.js": 1,
-      "browser/base/content/test/general/browser_bug565575.js": 1,
-      "browser/base/content/test/general/browser_bug596687.js": 1,
-      "browser/base/content/test/performance/browser_hiddenwindow_existence.js":
+      "browser/base/content/test/browser-general/browser_bug537474.js": 1,
+      "browser/base/content/test/browser-general/browser_bug565575.js": 1,
+      "browser/base/content/test/browser-general/browser_bug596687.js": 1,
+      "browser/base/content/test/browser-performance/browser_hiddenwindow_existence.js":
         1,
       "browser/components/customizableui/test/browser_996364_registerArea_different_properties.js":
         7,
@@ -149,51 +149,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       tuple: "linux/aarch64",
-      assetId: 619643698,
-      assetSize: 74588712,
+      assetId: 641142004,
+      assetSize: 78612124,
       assetSha:
-        "e7f3a6983e7c9ad6494a635e1e4b58c67574de787dd7d464d3753022d2921ce9",
-      iniId: 619643702,
+        "9e20e5b38df41a6ef49a6f528dae508be92e6239f93ae31437a35508d65662fa",
+      iniId: 641142013,
       iniSize: 536,
       iniSha:
-        "a1bd19626dd989496a91a34bb327f088acf1b9f8c95bdaff142198cb7d8be3e3",
-      buildId: "20261007125927",
+        "17da2fb761498914702ed184f302cea852ba788f0834d2456c189a24117f9ad6",
+      buildId: "20261014104253",
     },
     {
       tuple: "linux/x86_64",
-      assetId: 619643710,
-      assetSize: 85429504,
+      assetId: 641142009,
+      assetSize: 87108212,
       assetSha:
-        "9df9045b44cf4abd609b7a2b70d0ca9ebdc20abcd76a126b4b784b46a775eb82",
-      iniId: 619643684,
+        "f19260ede6fa81ec004d89ccb81438bb9c6bd16d2a6b5dfe386828f62fec65c6",
+      iniId: 641142005,
       iniSize: 536,
       iniSha:
-        "c00635156431e2d95fb1786036914537bdcc6c1f40e3d3ad19ecf5a7501484e8",
-      buildId: "20261007125927",
+        "f17f77a79b497830a26804b57a0784bea159aea5cb379f3bd658da1f2ca57f70",
+      buildId: "20261014104253",
     },
     {
       tuple: "macos/universal",
-      assetId: 619643679,
-      assetSize: 190972720,
+      assetId: 641141999,
+      assetSize: 197365639,
       assetSha:
-        "1739fa04279ab6c0fb42047b5ae5821ffe44e5e530c3b96dac86e9344f67ad61",
-      iniId: 619643681,
+        "2363232d1fa01a25ad9ae43de8faa97dec750f83bf938bf3d50a1a97e533a6c0",
+      iniId: 641142010,
       iniSize: 536,
       iniSha:
-        "c0813fd63c1f05c1309785d0eaceff0698835956268b13ac70d549063907c2bf",
-      buildId: "20261007125927",
+        "bc2a24772f5bdf42d46b715f8d34701035052cf49acfe3e3df3840e468398f7c",
+      buildId: "20261014104253",
     },
     {
       tuple: "windows/x86_64",
-      assetId: 619643678,
-      assetSize: 138549742,
+      assetId: 641142000,
+      assetSize: 141043954,
       assetSha:
-        "a1a628d7d342b05156cc3a64bb58c917f84952dccbd1ad9c9e59856ee6c0b780",
-      iniId: 619643685,
+        "08131e8e0c0dba2b47916ca33a60d670d6e071892a70d88c6c7e0f68f5b0b724",
+      iniId: 641142008,
       iniSize: 536,
       iniSha:
-        "e713120ab29151b9b25f838e52c70f413490a2b064b8448aca99e3cdd5377e18",
-      buildId: "20261007125927",
+        "99009e8adb2cc674436749bea5cc03147449eca8309784e2cc6034f361abe6b4",
+      buildId: "20261014104253",
     },
   ];
 
@@ -212,7 +212,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["157.0.1", "157.0.1", "157.0.1", "157.0.1"],
+    ["158.0.1", "158.0.1", "158.0.1", "158.0.1"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,
@@ -307,19 +307,19 @@ Deno.test("parseRuntimeLock rejects malformed source and material identities", (
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).gitBlob = "g".repeat(40);
   }, "lowercase hexadecimal");
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).sha256 = "0".repeat(63);
   }, "lowercase hexadecimal");
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser.toml",
+      "browser/base/content/test/browser-caps/browser.toml",
     ).mode = "100755" as "100644";
   }, "100644");
 });
@@ -347,7 +347,7 @@ Deno.test("parseRuntimeLock rejects material totals, duplicates, and drift", () 
   expectInvalid((lock) => {
     material(
       lock,
-      "browser/base/content/test/caps/browser_principalSerialization_version1.js",
+      "browser/base/content/test/browser-caps/browser_principalSerialization_version1.js",
     ).role = "head-support";
   }, "head-support");
 });

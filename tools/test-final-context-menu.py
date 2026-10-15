@@ -286,11 +286,14 @@ def main():
     parser.add_argument("--browser", type=Path, required=True)
     parser.add_argument("--native-record", type=Path, required=True)
     parser.add_argument("--expected-floorp-version", required=True)
+    parser.add_argument("--expected-firefox-version", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     record = json.loads(args.native_record.read_text())
     require(record["schema_version"] == 2 and record["verification"]["status"] == "verified",
             "Expected the authenticated final native record")
+    require(record["firefox_version"] == args.expected_firefox_version,
+            "Native record differs from the expected final Firefox version")
     require(not record["floorp_package"]["unsigned"], "Requires normal production package")
     require(not any(os.environ.get(key) for key in (
         "MOZ_DISABLE_CONTENT_SANDBOX", "MOZ_DISABLE_GMP_SANDBOX",
@@ -354,7 +357,7 @@ def main():
         report["browserRegression"] = result
         require(result.get("status") == "passed", f"Shipped context-menu regression: {result.get('error')}")
         identity = result["identity"]
-        require(identity["version"] == record["firefox_version"] == "157.0.1" and
+        require(identity["version"] == record["firefox_version"] == args.expected_firefox_version and
                 identity["appBuildID"] == identity["platformBuildID"] == record["runtime"]["expected_build_id"],
                 "Executing browser differs from the authenticated native Runtime")
         require(identity["floorpVersion"] == args.expected_floorp_version and

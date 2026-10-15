@@ -35,6 +35,27 @@ def closed_object(value, keys, description):
         raise ValueError(f"Invalid {description} schema")
 
 
+def validate_upstream_pin(upstream):
+    legacy_keys = ("repository", "version", "tag", "commit", "previous_tag", "previous_commit")
+    snapshot_keys = (*legacy_keys, "tracking_ref", "tree")
+    if isinstance(upstream, dict) and set(upstream) == set(snapshot_keys):
+        # A release-branch snapshot is identified by its immutable commit/tree.
+        # The ref only describes where that snapshot was selected; never resolve it.
+        if upstream["tracking_ref"] != "refs/heads/release":
+            raise ValueError("Invalid upstream snapshot tracking ref")
+        for field in ("commit", "tree", "previous_commit"):
+            if not isinstance(upstream[field], str) or not re.fullmatch(
+                    r"[0-9a-f]{40}", upstream[field]):
+                raise ValueError(f"Invalid upstream snapshot {field}")
+        version = upstream["version"]
+        if not isinstance(version, str) or not re.fullmatch(r"[0-9]+\.[0-9]+(?:\.[0-9]+)?", version):
+            raise ValueError("Invalid upstream snapshot version")
+        if upstream["tag"] not in (None, f"FIREFOX_{version.replace('.', '_')}_RELEASE"):
+            raise ValueError("Invalid upstream snapshot tag")
+    else:
+        closed_object(upstream, legacy_keys, "upstream pin")
+
+
 def validate_source_provenance(record, pin, runtime_head_sha, floorp_patch: bytes):
     if not re.fullmatch(r"[0-9a-f]{40}", runtime_head_sha):
         raise ValueError("Expected Runtime commit is not a canonical SHA")
@@ -45,9 +66,7 @@ def validate_source_provenance(record, pin, runtime_head_sha, floorp_patch: byte
         raise ValueError("Unsupported Runtime source pin version")
     if type(record["schema_version"]) is not int or record["schema_version"] != 1:
         raise ValueError("Unsupported Runtime source provenance version")
-    closed_object(pin["upstream"],
-                  ("repository", "version", "tag", "commit", "previous_tag", "previous_commit"),
-                  "upstream pin")
+    validate_upstream_pin(pin["upstream"])
     closed_object(pin["floorp_patch"],
                   ("repository", "commit", "path", "runtime_path", "sha256", "patched_files"),
                   "Floorp patch pin")
