@@ -142,6 +142,11 @@ on:
         required: false
         default: false
         description: "Skip code signing process"
+      signed_validation:
+        type: boolean
+        required: false
+        default: false
+        description: "Produce final package bytes for nonpublishing signed validation"
     secrets:
       runtime_artifact_token:
         required: false

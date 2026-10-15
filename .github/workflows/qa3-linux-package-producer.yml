@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 Linux package producer (no publication)
+
+"on":
+  workflow_dispatch:
+    inputs:
+      runtime_workflow_run_id:
+        description: Exact original successful Runtime daily-build run
+        type: string
+        required: true
+      runtime_manifest_artifact_id:
+        description: Exact immutable Runtime manifest artifact
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  source-qa:
+    uses: ./.github/workflows/qa3-source-required.yml
+  runtime:
+    needs: source-qa
+    uses: ./.github/workflows/validate-runtime-provenance.yml
+    with:
+      runtime_workflow_run_id: ${{ inputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: ${{ inputs.runtime_manifest_artifact_id }}
+      validation_only: true
+      require_original_attempt: true
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+  package-linux:
+    needs: [source-qa, runtime]
+    uses: ./.github/workflows/package.yml
+    with:
+      platform: Linux-x64
+      provenance_mode: stable-v2-validation
+      signed_validation: true
+      skip_signing: false
+      runtime_repository: ${{ needs.runtime.outputs.runtime_repository }}
+      runtime_workflow_run_id: ${{ needs.runtime.outputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: ${{ needs.runtime.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: ${{ needs.runtime.outputs.runtime_manifest_artifact_digest }}
+      runtime_head_sha: ${{ needs.runtime.outputs.runtime_head_sha }}
+      expected_build_id: ${{ needs.runtime.outputs.expected_build_id }}
+      runtime_artifact_name: ${{ needs.runtime.outputs.linux_artifact_name }}
+      runtime_artifact_id: ${{ needs.runtime.outputs.linux_artifact_id }}
+      runtime_artifact_digest: ${{ needs.runtime.outputs.linux_artifact_digest }}
+      floorp_head_sha: ${{ github.sha }}
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+  native-identity:
+    needs: [runtime, package-linux]
+    uses: ./.github/workflows/verify-release-artifact.yml
+    with:
+      source_workflow_run_id: ${{ github.run_id }}
+      package_artifact_name: ${{ needs.package-linux.outputs.installer_artifact_name }}
+      package_artifact_id: ${{ needs.package-linux.outputs.installer_artifact_id }}
+      package_artifact_digest: ${{ needs.package-linux.outputs.installer_artifact_digest }}
+      runtime_workflow_run_id: ${{ needs.runtime.outputs.runtime_workflow_run_id }}
+      runtime_head_sha: ${{ needs.runtime.outputs.runtime_head_sha }}
+      runtime_artifact_name: ${{ needs.runtime.outputs.linux_artifact_name }}
+      runtime_artifact_id: ${{ needs.runtime.outputs.linux_artifact_id }}
+      runtime_artifact_digest: ${{ needs.runtime.outputs.linux_artifact_digest }}
+      runtime_manifest_artifact_id: ${{ needs.runtime.outputs.runtime_manifest_artifact_id }}
+      runtime_manifest_artifact_digest: ${{ needs.runtime.outputs.runtime_manifest_artifact_digest }}
+      expected_build_id: ${{ needs.runtime.outputs.expected_build_id }}
+      floorp_head_sha: ${{ github.sha }}
+      platform_key: linux
+      native_arch: x86_64
+      runner: ubuntu-24.04
+      validation_only: false
+    secrets:
+      runtime_artifact_token: ${{ secrets.PAT }}
+  index:
+    needs: [source-qa, runtime, package-linux, native-identity]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Bind the original producer outputs
+        env:
+          QA3_PRODUCER_INPUTS: ${{ toJSON(needs) }}
+        run: python3 -B tools/linux-package-qa/producer.py "$RUNNER_TEMP/qa3-linux-package-index.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qa3-linux-package-index-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa3-linux-package-index.json
+          if-no-files-found: error
+          retention-days: 14

@@ -4,6 +4,23 @@ name: "(CI) 🧪 Browser Integration + Runner Tests"
 
 on:
   workflow_dispatch:
+    inputs:
+      workspace_restart_only:
+        description: Run the separate two same-profile restart development cases
+        type: boolean
+        default: false
+      workspace_restart_rpc_fault_probe:
+        description: Add one separately classified owned native callback-failure diagnostic probe
+        type: boolean
+        default: false
+      workspace_extended_only:
+        description: Run the separate preservation four and workspace flow three groups
+        type: boolean
+        default: false
+      workspace_six_only:
+        description: Run only the six development workspace regressions
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [main]
@@ -12,6 +29,149 @@ permissions:
   contents: read
 
 jobs:
+  workspace-development:
+    if: github.event_name == 'workflow_dispatch' && inputs.workspace_six_only && !inputs.workspace_restart_only
+    needs: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - run: deno install
+      - name: Check development evidence and final intake separation
+        run: |
+          python3 -B -m unittest discover -s tools/workspace-development -p 'test_*.py' -v
+          node --test tools/workspace-development/test_final_separation.mjs
+          deno test --no-config tools/workspace-development/harness.test.ts
+      - name: Install the authenticated canonical Runtime
+        env:
+          FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+      - name: Set up the existing Linux development display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+      - name: Execute the original six cases once in a fresh synthetic profile
+        run: python3 -B tools/workspace-development/run.py
+      - name: Preserve original development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-development-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _dist/workspace-development/*.json
+            _dist/workspace-development/*.log
+            _dist/workspace-development/original-prefs.js
+          if-no-files-found: error
+          retention-days: 1
+
+  workspace-extended-development:
+    if: github.event_name == 'workflow_dispatch' && inputs.workspace_extended_only && !inputs.workspace_six_only && !inputs.workspace_restart_only
+    needs: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - run: deno install
+      - name: Check development evidence and final intake separation
+        run: |
+          python3 -B -m unittest discover -s tools/workspace-expanded-development -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/workspace-development -p 'test_*.py' -v
+          node --test tools/workspace-development/test_final_separation.mjs
+          deno test --no-config tools/workspace-development/harness.test.ts tools/workspace-expanded-development/harness.test.ts tools/workspace-expanded-development/menu_cleanup.test.ts
+      - name: Install the authenticated canonical Runtime
+        env:
+          FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+      - name: Set up the existing Linux development display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+      - name: Execute preservation four and flow three with separate fresh profiles
+        run: |
+          python3 -B tools/workspace-expanded-development/run.py preservation
+          python3 -B tools/workspace-expanded-development/run.py flows
+      - name: Preserve original development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-expanded-development-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _dist/workspace-expanded-development/*/*.json
+            _dist/workspace-expanded-development/*/*.log
+            _dist/workspace-expanded-development/*/original-prefs.js
+          if-no-files-found: error
+          retention-days: 1
+
+  workspace-restart-development:
+    if: github.event_name == 'workflow_dispatch' && inputs.workspace_restart_only && !inputs.workspace_six_only && !inputs.workspace_extended_only
+    needs: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - run: deno install
+      - name: Check restart evidence and existing development intake separation
+        run: |
+          python3 -B -m unittest discover -s tools/workspace-restart-development -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/workspace-expanded-development -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/workspace-development -p 'test_*.py' -v
+          node --test tools/workspace-development/test_final_separation.mjs
+          node --test tools/workspace-restart-development/test_restore_oracle.mjs
+      - name: Install the authenticated canonical Runtime
+        env:
+          FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+      - name: Set up the existing Linux development display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+      - name: Execute two original cases with two real boots of each synthetic profile
+        env:
+          QA3_RPC_FAULT_PROBE_ENABLED: ${{ inputs.workspace_restart_rpc_fault_probe }}
+        run: |
+          if [ "$QA3_RPC_FAULT_PROBE_ENABLED" = "true" ]; then
+            python3 -B tools/workspace-restart-development/run.py --rpc-failure-probe
+          else
+            python3 -B tools/workspace-restart-development/run.py
+          fi
+      - name: Preserve original restart development evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-restart-development-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            _dist/workspace-restart-development/*.json
+            _dist/workspace-restart-development/*.log
+            _dist/workspace-restart-development/*.jsonlz4
+            _dist/workspace-restart-development/rpc-fault-probe/*.json
+            _dist/workspace-restart-development/rpc-fault-probe/*.log
+          if-no-files-found: error
+          retention-days: 1
+
   # ── Smoke: lint / type check / test discovery (fast, no browser) ──
   smoke:
     runs-on: ubuntu-24.04
@@ -29,6 +189,9 @@ jobs:
           path: ~/.cache/deno
           key: deno-smoke-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}
           restore-keys: deno-smoke-
+      - name: Reject ambiguous limited modes
+        if: (inputs.workspace_six_only && inputs.workspace_extended_only) || (inputs.workspace_restart_only && inputs.workspace_six_only) || (inputs.workspace_restart_only && inputs.workspace_extended_only) || (inputs.workspace_restart_rpc_fault_probe && !inputs.workspace_restart_only)
+        run: exit 1
       - run: deno install
       - name: Validate canonical Runtime lock
         run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
@@ -44,6 +207,10 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
       - name: Test final package QA source intake
         run: node --test tools/test-final-package-qa-source.mjs
+      - name: Check shared restart oracle and synthetic failure diagnostics
+        run: |
+          node --test tools/workspace-restart-development/test_restore_oracle.mjs
+          python3 -B -m unittest discover -s tools/workspace-restart-development -p 'test_*.py' -v
       - name: Run host tool tests
         run: deno task test:host
       - name: Run locked Firefox test tooling tests
@@ -54,6 +221,7 @@ jobs:
   # Every native Runtime asset is independently downloaded, authenticated,
   # extracted, and inspected. Only Linux x64 proceeds to executable browser CI.
   native-runtime:
+    if: inputs.workspace_six_only != true && inputs.workspace_extended_only != true && inputs.workspace_restart_only != true
     needs: smoke
     name: Native Runtime / ${{ matrix.runner }}
     runs-on: ${{ matrix.runner }}
@@ -364,7 +532,14 @@ jobs:
             exit 1
           fi
 
-          wait "$TEST_PID"
+          if wait "$TEST_PID"; then
+            :
+          else
+            TEST_EXIT=$?
+            echo "::error::Combined browser test suite exited with status $TEST_EXIT"
+            cat _dist/ci-combined-browser-test.log || true
+            exit "$TEST_EXIT"
+          fi
           deno run \
             --allow-net=127.0.0.1 \
             --allow-read=_dist \
