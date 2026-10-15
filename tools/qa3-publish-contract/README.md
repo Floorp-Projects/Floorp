@@ -16,6 +16,8 @@ compile/profile qualification UNVERIFIED and `publicationAuthorized: false`.
 There is no publisher import, callback, API client, browser or command runner.
 All positive/negative fixtures exercise a fake mutation surface for draft/tag,
 assets, updater, Portable and PPA and require zero calls.
+This observes only the fixture caller; it does not measure the unchanged real
+publish workflows end to end.
 
 The model requires all five native targets and every artifact member/case in
 the fixed policy, source-once, a separate Debug applicability qualification,

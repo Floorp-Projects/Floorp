@@ -31,7 +31,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT }}
           QA3_INTAKE_REQUEST: ${{ inputs.request_json }}
           QA3_INDEX: ${{ inputs.index_json }}
-        run: python3 -B tools/linux-package-qa/capture.py --output "$RUNNER_TEMP/qa3-metadata"
+        run: timeout --signal=TERM --kill-after=5s 150s python3 -B tools/linux-package-qa/capture.py --output "$RUNNER_TEMP/qa3-metadata"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:

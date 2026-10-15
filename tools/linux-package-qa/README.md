@@ -60,6 +60,14 @@ metadata-only controller entrypoint using the existing PAT's REST read access.
 The fixed API origin/paths exclude archive endpoints and redirects; requests,
 pages, bytes and elapsed time are bounded, and original API bytes are retained.
 Complete P job/artifact inventories and the active original C are checked.
+HTTP framing must be complete before JSON is accepted. A later connection-close
+failure cannot replace the original HTTP/read failure or produce a successful
+capture. Partial received bodies and secondary cleanup failures stay separate.
+The CLI checks a 120-second monotonic deadline between reads and uses socket
+timeouts; DNS resolution also needs the workflow's external GNU `timeout`
+(TERM at 150 seconds, KILL after another 5 seconds). An external termination can
+leave the final receipt absent, which remains incomplete evidence and blocks
+qualification; retained files are not promoted to a completed capture.
 Its declared index is used only to select metadata: original index/member bytes
 remain unauthenticated until the separate archive intake. Successful capture is
 `AUTHENTICATED_METADATA_CAPTURED_NOT_EXECUTED`, with no archive acquisition,

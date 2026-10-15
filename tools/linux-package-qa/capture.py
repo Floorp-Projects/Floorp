@@ -49,6 +49,7 @@ class GitHubRest:
         self.bytes = 0
         self.responses = []
         self.retention_errors = []
+        self.close_errors = []
 
     def retain(self, endpoint, data, complete):
         path = self.directory / f"{self.count:03}.json"
@@ -66,6 +67,7 @@ class GitHubRest:
         self.count += 1
         connection = http.client.HTTPSConnection("api.github.com", timeout=min(20, remaining))
         chunks = []
+        primary_error = None
         try:
             connection.request("GET", endpoint, headers={
                 "Authorization": "Bearer " + self.token,
@@ -76,6 +78,10 @@ class GitHubRest:
             if response.status != 200:
                 # Do not retain a redirect URL, token, arbitrary error body or retry.
                 raise ValueError(f"original metadata API HTTP {response.status}; no retry")
+            known_length = type(response.length) is int and response.length >= 0
+            chunked = response.chunked is True
+            if not known_length and not chunked:
+                raise ValueError("unframed original metadata response rejected")
             received = 0
             read_limit = min(4 * 1024**2 + 1, 32 * 1024**2 - self.bytes + 1)
             while received < read_limit:
@@ -87,9 +93,12 @@ class GitHubRest:
                 chunks.append(chunk)
                 received += len(chunk)
             data = b"".join(chunks)
+            if known_length and response.length != 0 or chunked and not response.isclosed():
+                raise ValueError("incomplete original HTTP metadata body")
             if time.monotonic() > self.deadline:
                 raise ValueError("metadata acquisition deadline exceeded")
-        except Exception:
+        except BaseException as error:
+            primary_error = error
             if chunks:
                 try:
                     self.retain(endpoint, b"".join(chunks), False)
@@ -97,7 +106,17 @@ class GitHubRest:
                     self.retention_errors.append(type(error).__name__)
             raise
         finally:
-            connection.close()
+            try:
+                connection.close()
+            except BaseException as error:
+                self.close_errors.append(type(error).__name__)
+                if primary_error is None:
+                    # A received body remains evidence even when cleanup fails.
+                    try:
+                        self.retain(endpoint, data, len(data) < read_limit)
+                    except OSError as retention_error:
+                        self.retention_errors.append(type(retention_error).__name__)
+                    raise ValueError("metadata connection cleanup failed; no retry") from None
         self.retain(endpoint, data, len(data) < read_limit)
         if self.bytes > 32 * 1024**2:
             raise ValueError("total metadata byte bound exceeded")
@@ -213,6 +232,7 @@ def main():
     if "client" in locals():
         receipt["responses"] = client.responses
         receipt["retentionErrors"] = client.retention_errors
+        receipt["closeErrors"] = client.close_errors
     (args.output / "capture-result.json").write_text(json.dumps(receipt, indent=2) + "\n")
     print(json.dumps({k: receipt[k] for k in ("status", "archiveBytesAcquired", "nativeLaunched", "publicationAuthorized")}))
     return 0 if receipt["status"] == "AUTHENTICATED_METADATA_CAPTURED_NOT_EXECUTED" else 1

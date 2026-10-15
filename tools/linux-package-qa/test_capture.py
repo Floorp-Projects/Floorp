@@ -49,6 +49,14 @@ class FakeApi:
         return copy.deepcopy(self.values[endpoint])
 
 
+def http_response(data, declared=None, chunked=False):
+    # Real stdlib HTTP framing over an in-memory socket; no network is used.
+    headers = b"Transfer-Encoding: chunked" if chunked else b"Content-Length: " + str(len(data) if declared is None else declared).encode()
+    socket = Mock(); socket.makefile.return_value = io.BytesIO(b"HTTP/1.1 200 OK\r\n" + headers + b"\r\n\r\n" + data)
+    response = capture.http.client.HTTPResponse(socket); response.begin()
+    return response
+
+
 class CaptureTests(unittest.TestCase):
     def test_original_provider_metadata_is_built_only_from_fixed_authenticated_reads(self):
         index, request, data, env = fixture(); client = FakeApi(data)
@@ -119,7 +127,7 @@ class CaptureTests(unittest.TestCase):
 
     def test_fixed_origin_success_retains_exact_raw_bytes_and_excludes_token(self):
         raw, token = b'{"id":123}\n', "fixture-secret-only-in-header"
-        response = Mock(status=200); response.read1.side_effect = io.BytesIO(raw).read1
+        response = http_response(raw)
         connection = Mock(); connection.getresponse.return_value = response
         with tempfile.TemporaryDirectory() as d, patch.object(capture.http.client, "HTTPSConnection", return_value=connection) as factory:
             client = capture.GitHubRest(token, Path(d) / "raw")
@@ -137,7 +145,7 @@ class CaptureTests(unittest.TestCase):
         endpoint = "/repos/Floorp-Projects/Floorp/actions/runs/123"
         with tempfile.TemporaryDirectory() as d:
             for label, data, previous, expected in [("oversized", b" " * (4 * 1024**2 + 100), 0, 4 * 1024**2 + 1), ("total", b" " * 100, 32 * 1024**2 - 10, 11)]:
-                response = Mock(status=200); response.read1.side_effect = io.BytesIO(data).read1
+                response = http_response(data)
                 connection = Mock(); connection.getresponse.return_value = response
                 with patch.object(capture.http.client, "HTTPSConnection", return_value=connection):
                     client = capture.GitHubRest("fixture", Path(d) / label); client.bytes = previous
@@ -146,7 +154,7 @@ class CaptureTests(unittest.TestCase):
                 self.assertFalse(client.responses[0]["completeBody"])
                 self.assertFalse(client.responses[0]["jsonValidated"])
                 connection.close.assert_called_once()
-            response = Mock(status=200); response.read1.return_value = b"partial-original"
+            response = Mock(status=200, length=100, chunked=False); response.read1.return_value = b"partial-original"
             connection = Mock(); connection.getresponse.return_value = response
             client = capture.GitHubRest("fixture", Path(d) / "deadline"); client.deadline = 200
             with patch.object(capture.http.client, "HTTPSConnection", return_value=connection), patch.object(capture.time, "monotonic", side_effect=[100, 100, 201]):
@@ -154,6 +162,51 @@ class CaptureTests(unittest.TestCase):
             self.assertEqual((client.directory / "001.json").read_bytes(), b"partial-original")
             self.assertFalse(client.responses[0]["completeBody"])
             self.assertEqual(response.read1.call_count, 1)
+
+    def test_close_failure_cannot_replace_original_http_or_read_failure_or_pass(self):
+        endpoint = "/repos/Floorp-Projects/Floorp/actions/runs/123"
+        with tempfile.TemporaryDirectory() as d:
+            for label, status, chunks, expected_error, expected_bytes in [
+                ("http", 403, [], "HTTP 403; no retry", None),
+                ("read", 200, [b"original-prefix", TimeoutError("original read failure")], "original read failure", b"original-prefix"),
+                ("complete", 200, [b'{"id":123}', b""], "connection cleanup failed", b'{"id":123}'),
+            ]:
+                if label == "complete":
+                    response = http_response(expected_bytes)
+                else:
+                    response = Mock(status=status, length=100, chunked=False); response.read1.side_effect = chunks
+                connection = Mock(); connection.getresponse.return_value = response
+                connection.close.side_effect = OSError("secondary close failure")
+                client = capture.GitHubRest("fixture", Path(d) / label)
+                with patch.object(capture.http.client, "HTTPSConnection", return_value=connection):
+                    with self.subTest(label=label), self.assertRaisesRegex((ValueError, TimeoutError), expected_error): client.get(endpoint)
+                self.assertEqual(client.close_errors, ["OSError"])
+                self.assertEqual(client.count, 1)
+                if expected_bytes is None:
+                    self.assertEqual(list(client.directory.iterdir()), [])
+                    response.read1.assert_not_called()
+                else:
+                    self.assertEqual((client.directory / "001.json").read_bytes(), expected_bytes)
+                    self.assertFalse(client.responses[0]["jsonValidated"])
+
+    def test_real_http_framing_rejects_early_eof_even_when_prefix_is_valid_json(self):
+        endpoint, body = "/repos/Floorp-Projects/Floorp/actions/runs/123", b'{"id":123}'
+        with tempfile.TemporaryDirectory() as d:
+            for label, response in [("length", http_response(body, declared=len(body) + 10)), ("chunked", http_response(b"a\r\n" + body + b"\r\n", chunked=True))]:
+                connection = Mock(); connection.getresponse.return_value = response
+                client = capture.GitHubRest("fixture", Path(d) / label)
+                with patch.object(capture.http.client, "HTTPSConnection", return_value=connection):
+                    with self.subTest(label=label), self.assertRaises((ValueError, capture.http.client.IncompleteRead)):
+                        client.get(endpoint)
+                self.assertEqual((client.directory / "001.json").read_bytes(), body)
+                self.assertFalse(client.responses[0]["completeBody"])
+                self.assertFalse(client.responses[0]["jsonValidated"])
+            response = http_response(b"a\r\n" + body + b"\r\n0\r\n\r\n", chunked=True)
+            connection = Mock(); connection.getresponse.return_value = response
+            client = capture.GitHubRest("fixture", Path(d) / "complete-chunked")
+            with patch.object(capture.http.client, "HTTPSConnection", return_value=connection):
+                self.assertEqual(client.get(endpoint), {"id": 123})
+            self.assertTrue(client.responses[0]["completeBody"])
 
 
 if __name__ == "__main__": unittest.main()
