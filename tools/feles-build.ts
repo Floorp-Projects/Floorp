@@ -224,9 +224,8 @@ async function runTest(ownNativeSession = false): Promise<void> {
     }
   });
 
-  // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any).catch((e: any) => {
-    logger.error(`Dev server failed: ${e?.message ?? e}`);
+  DevServer.run(pipe, { testSourceBinding: true }).catch((e: unknown) => {
+    logger.error(`Dev server failed: ${e instanceof Error ? e.message : String(e)}`);
     Deno.exit(1);
   });
 }

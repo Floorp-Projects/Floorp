@@ -7,6 +7,7 @@ import solidPlugin from "vite-plugin-solid";
 import istanbulPlugin from "vite-plugin-istanbul";
 import swc from "unplugin-swc";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
+import { testSourceBindingPlugin } from "../../libs/test-inventory/source-vite-plugin.ts";
 
 const r = (dir: string) => {
   return path.resolve(import.meta.dirname, dir);
@@ -118,6 +119,7 @@ export default defineConfig({
   },
 
   plugins: [
+    testSourceBindingPlugin(r("../..")),
     // deno(),
 
     swc.vite({

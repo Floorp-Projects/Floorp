@@ -19,6 +19,11 @@ import type {
   TestInventoryMetadata,
 } from "../../libs/test-inventory/types.ts";
 import { isTestFile } from "./colocated_test_utils.ts";
+import {
+  MAX_SOURCE_TOTAL_BYTES,
+  readSourceBuffer,
+} from "../../libs/test-inventory/source-files.ts";
+import type { TestSourceContext } from "../../libs/test-inventory/source-types.ts";
 
 const WALK_SKIP_PATTERNS = [
   /(?:^|[\\/])(?:_dist|\.git|node_modules|\.venv|\.vscode|logs)(?:[\\/]|$)/,
@@ -62,15 +67,22 @@ export async function inventorySourceHashes(
   for (const id of files) {
     if (canonicalTestId(id) !== id) throw new Error("Noncanonical source ID");
     const filename = path.join(projectRoot, id);
-    const stat = await Deno.lstat(filename);
-    if (!stat.isFile || stat.isSymlink || stat.size > 2 * 1024 * 1024) {
-      throw new Error("Invalid or oversized test inventory source");
-    }
-    total += stat.size;
-    if (total > 32 * 1024 * 1024) {
+    const source = await readSourceBuffer(filename).catch((error: unknown) => {
+      if (
+        typeof error === "object" && error !== null &&
+        "code" in error && error.code === "ENOENT"
+      ) {
+        throw new Deno.errors.NotFound(
+          "Test inventory source is missing: " + id,
+        );
+      }
+      throw error;
+    });
+    total += source.bytes.length;
+    if (total > MAX_SOURCE_TOTAL_BYTES) {
       throw new Error("Inventory source bound exceeded");
     }
-    hashes.set(id, await sha256(await Deno.readFile(filename)));
+    hashes.set(id, source.sha256);
   }
   return hashes;
 }
@@ -200,6 +212,7 @@ export function requireExecutableBrowserPlan(plan: BrowserInventoryPlan): void {
 export function reconcileBrowserInventoryResults(
   plan: BrowserInventoryPlan,
   results: InventoryBrowserResult[],
+  sourceContext?: TestSourceContext,
 ): string[] {
   const expected = new Map(
     plan.entries.filter((entry) => entry.selected).map((
@@ -222,6 +235,17 @@ export function reconcileBrowserInventoryResults(
       continue;
     }
     seen.add(id);
+    if (sourceContext) {
+      const proof = result.sourceProof;
+      if (
+        !proof || proof.schemaVersion !== 1 || proof.id !== id ||
+        proof.runId !== sourceContext.runId ||
+        proof.manifestSha256 !== sourceContext.manifestSha256 ||
+        proof.sourceSha256 !== entry.sourceSha256
+      ) {
+        issues.push("Result source-input binding mismatch: " + id);
+      }
+    }
     if (
       result.inventoryVersion !== 1 || result.origin !== entry.origin ||
       result.executionKind !== entry.executionKind ||

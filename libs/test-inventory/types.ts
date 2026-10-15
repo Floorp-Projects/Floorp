@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { TestSourceProof } from "./source-types.ts";
+
 export type TestOrigin =
   | "floorp"
   | "mozilla-converted"
@@ -90,6 +92,7 @@ export interface BrowserInventoryPlan {
 
 export interface InventoryBrowserResult {
   file: string;
+  sourceProof?: TestSourceProof;
   inventoryVersion?: number;
   origin?: TestOrigin;
   executionKind?: TestExecutionKind;

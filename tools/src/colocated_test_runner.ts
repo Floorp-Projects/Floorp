@@ -30,6 +30,8 @@ import {
   type TestLayer,
 } from "./colocated_test_utils.ts";
 import { sleep } from "./async_utils.ts";
+import { writeTestSourceManifest } from "./browser_test_sources.ts";
+import type { TestSourceContext } from "../../libs/test-inventory/source-types.ts";
 import { startPageTestServers } from "./page_test_servers.ts";
 import {
   type BrowserTestCollection,
@@ -59,6 +61,7 @@ const TEST_FILTER_PREF = "nora.tests.filter";
 const TEST_FILTER_COUNT_PREF = "nora.tests.filter.count";
 const TEST_FILTER_ITEM_PREF_PREFIX = "nora.tests.filter.";
 const TEST_RUN_ID_PREF = "nora.tests.run_id";
+const TEST_SOURCE_PREF = "nora.tests.source_manifest_sha256";
 const TEST_CONTROL_FILE = "nora-tests-control.json";
 const TEST_CONTROL_SCHEMA_VERSION = 1;
 const MAX_TEST_EXECUTION_TIMEOUT_MS = 1_800_000;
@@ -1978,6 +1981,7 @@ export interface BrowserTestControl {
   runId: string;
   expiresAtMs: number;
   filter: string[];
+  sourceManifestSha256?: string;
 }
 
 export function writeBrowserTestControlPrefs(
@@ -1985,6 +1989,7 @@ export function writeBrowserTestControlPrefs(
   runId: string,
   expiresAtMs: number,
   profileDir = PATHS.profile_test,
+  sourceManifestSha256?: string,
 ): void {
   const prefsPath = path.join(profileDir, "prefs.js");
   Deno.mkdirSync(path.dirname(prefsPath), { recursive: true });
@@ -2014,12 +2019,18 @@ export function writeBrowserTestControlPrefs(
   );
   const withRunId = replaceStringPref(withFilterItems, TEST_RUN_ID_PREF, runId);
 
-  Deno.writeTextFileSync(prefsPath, withRunId);
+  Deno.writeTextFileSync(
+    prefsPath,
+    sourceManifestSha256
+      ? replaceStringPref(withRunId, TEST_SOURCE_PREF, sourceManifestSha256)
+      : withRunId,
+  );
   const control: BrowserTestControl = {
     schemaVersion: TEST_CONTROL_SCHEMA_VERSION,
     runId,
     expiresAtMs,
     filter: targetRels,
+    ...(sourceManifestSha256 ? { sourceManifestSha256 } : {}),
   };
   Deno.writeTextFileSync(
     path.join(profileDir, TEST_CONTROL_FILE),
@@ -2053,6 +2064,7 @@ function removeOwnedControlPrefs(content: string): string {
       if (!match) return true;
       const name = match[1];
       return name !== TEST_FILTER_PREF &&
+        name !== TEST_SOURCE_PREF &&
         name !== TEST_FILTER_COUNT_PREF &&
         name !== TEST_RUN_ID_PREF &&
         !new RegExp(
@@ -2241,10 +2253,10 @@ export async function runColocatedTests(
 
     const runningBeforeConnect = await hasRunningTestBrowser();
     const scopedRun = selection.scope === "explicit-development-selection";
-    if (runningBeforeConnect && scopedRun) {
+    if (runningBeforeConnect) {
       writeLine(
         "ERROR",
-        "A running test browser was detected. Scoped runs require nora.tests.filter and nora.tests.run_id to be written before browser startup.",
+        "A running test browser was detected. Source-bound runs require fresh browser/server startup after the original source plan is written.",
       );
       writeLine(
         "ERROR",
@@ -2255,14 +2267,28 @@ export async function runColocatedTests(
     }
 
     let runId: string | undefined;
+    let sourceContext: TestSourceContext | undefined;
     stopPageTestServers = await startPageTestServers(targetRels);
     if (!runningBeforeConnect) {
       runId = createRunId();
       ownedRunId = runId;
+      sourceContext = await writeTestSourceManifest(
+        inventory,
+        runId,
+        runDeadlineMs,
+        PATHS.profile_test,
+        options.inventoryPath,
+      );
+      writeLine(
+        "INFO",
+        "Source-input binding: " + JSON.stringify(sourceContext),
+      );
       writeBrowserTestControlPrefs(
         browserFilterTargetsForRun(targetRels, scopedRun),
         runId,
         runDeadlineMs,
+        PATHS.profile_test,
+        sourceContext.manifestSha256,
       );
     } else {
       writeLine(
@@ -2344,11 +2370,45 @@ export async function runColocatedTests(
         runId,
       );
       const browserResults = browserCollection.results;
+      if (!sourceContext) throw new Error("Original source context is missing");
       const inventoryIssues = reconcileBrowserInventoryResults(
         inventory,
         browserResults,
+        sourceContext,
       );
       for (const issue of inventoryIssues) writeLine("ERROR", issue);
+      if (options.inventoryPath) {
+        Deno.writeTextFileSync(
+          path.resolve(options.inventoryPath) + ".executed-source.json",
+          JSON.stringify(
+            {
+              schemaVersion: 1,
+              scope: "observed-vite-entry-source-inputs",
+              sourceContext,
+              bindingIssues: inventoryIssues,
+              results: browserResults.map((result) => ({
+                file: result.file,
+                ok: result.ok,
+                mode: result.mode,
+                sourceProof: result.sourceProof
+                  ? {
+                    schemaVersion: result.sourceProof.schemaVersion,
+                    id: result.sourceProof.id,
+                    runId: result.sourceProof.runId,
+                    manifestSha256: result.sourceProof.manifestSha256,
+                    sourceSha256: result.sourceProof.sourceSha256,
+                  }
+                  : null,
+              })),
+              productVerdict: "UNVERIFIED",
+              publicationAuthorized: false,
+            },
+            null,
+            2,
+          ) + "\n",
+          { createNew: true, mode: 0o600 },
+        );
+      }
       const results = filterBrowserResults(browserResults, targetRels);
       const missingTargets = browserCollection.aborted
         ? []

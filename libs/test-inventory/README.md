@@ -1,5 +1,9 @@
 # Development browser test inventory
 
+The [entry source-input binding](source-binding.md) connects the original
+inventory digest to the same buffer supplied by the test Vite load hook. It does
+not attest transformed code, transitive dependencies or products.
+
 The existing colocated runner and browser loader share an explicit 252-file
 catalog: 240 Floorp files, two Floorp harness-compatibility files, two legacy
 Mozilla adaptations and eight locked Mozilla wrappers. This is an inventory of

@@ -410,6 +410,12 @@ Deno.test("runBrowserTests propagates test control consumption failures", async 
 const isolationTarget =
   "tools/workspace-restart-development/no-autodiscovered-suites.test.ts";
 
+const sourceFixtureContext = {
+  schemaVersion: 1,
+  runId: "qa3-restart-host-fixture",
+  manifestSha256: "b".repeat(64),
+} as const;
+
 async function withIsolationControl(
   changes: Record<string, unknown>,
   callback: (prefs: FakePrefs, root: string) => Promise<void>,
@@ -423,8 +429,16 @@ async function withIsolationControl(
     runId: "qa3-restart-host-fixture",
     expiresAtMs: Date.now() + 60_000,
     filter: [isolationTarget],
+    sourceManifestSha256: undefined as string | undefined,
     ...changes,
   };
+  if (control.purpose === undefined) {
+    control.sourceManifestSha256 = sourceFixtureContext.manifestSha256;
+    prefs.setStringPref(
+      "nora.tests.source_manifest_sha256",
+      control.sourceManifestSha256,
+    );
+  }
   seedControlPrefs(
     prefs,
     mismatchedPrefs ? "foreign" : control.runId,
@@ -477,6 +491,7 @@ Deno.test("actual loader preserves explicit one-shot restart isolation as NOT_EX
 Deno.test("actual loader still rejects an ordinary empty execution using the same sentinel", async () => {
   await withIsolationControl({ purpose: undefined }, async (prefs) => {
     await runBrowserTests({
+      sourceBinding: sourceFixtureContext,
       chrome: {},
       esm: {},
       retainForCollection: () => {
@@ -508,10 +523,17 @@ Deno.test("actual loader normalizes Vite filesystem keys before inventory checks
       async (prefs) => {
         let imports = 0;
         await runBrowserTests({
+          sourceBinding: sourceFixtureContext,
           chrome: {
             [file]: () => {
               imports++;
-              return Promise.resolve({});
+              return Promise.resolve({
+                __NORA_TEST_SOURCE_PROOF__: {
+                  ...sourceFixtureContext,
+                  id: target,
+                  sourceSha256: "a".repeat(64),
+                },
+              });
             },
           },
           esm: {},
@@ -570,6 +592,55 @@ Deno.test("restart isolation rejects stale, broad, foreign, mismatched and overs
       "prefs differ",
     );
   }, true);
+});
+
+Deno.test("ordinary source-bound loader rejects missing or foreign driver before eager pages", async () => {
+  for (
+    const driver of [undefined, { ...sourceFixtureContext, runId: "foreign" }, {
+      ...sourceFixtureContext,
+      manifestSha256: "c".repeat(64),
+    }]
+  ) {
+    await withIsolationControl(
+      { purpose: undefined, filter: [] },
+      async (prefs) => {
+        let pageImports = 0;
+        await runBrowserTests({
+          sourceBinding: driver,
+          chrome: {},
+          esm: {},
+          pages: () => {
+            pageImports++;
+            return Promise.resolve({});
+          },
+          retainForCollection: () => {
+            throw new Error("Unverified retention");
+          },
+        });
+        const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+        assertEquals(state.status, "error");
+        assertStringIncludes(state.error, "source");
+        assertEquals(pageImports, 0);
+      },
+    );
+  }
+});
+
+Deno.test("source proof is required before explicit test tasks run", async () => {
+  let calls = 0;
+  const result = await runSingleTest(
+    "browser-features/chrome/common/workspaces/test/nativeLastTabWorkspacesEnabled.test.ts",
+    () =>
+      Promise.resolve({
+        runAllTests: () => {
+          calls++;
+        },
+      }),
+    sourceFixtureContext,
+  );
+  assertEquals(result.ok, false);
+  assertStringIncludes(result.error ?? "", "source");
+  assertEquals(calls, 0);
 });
 
 Deno.test("prefs without the original control file cannot grant restart isolation", async () => {

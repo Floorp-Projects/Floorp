@@ -15,6 +15,16 @@ import {
   type MozillaTaskResult,
 } from "./mochitest_compat.ts";
 import { testInventoryMetadata } from "../../../../libs/test-inventory/contract.ts";
+import {
+  readTestSourceContext,
+  readTestSourceProof,
+  TEST_SOURCE_DRIVER,
+  TEST_SOURCE_EXPORT,
+} from "../../../../libs/test-inventory/source-manifest.ts";
+import type {
+  TestSourceContext,
+  TestSourceProof,
+} from "../../../../libs/test-inventory/source-types.ts";
 import type {
   TestExecutionKind,
   TestOrigin,
@@ -42,6 +52,7 @@ interface DownloadedFirefoxTestMarker {
 
 export interface TestResult {
   file: string;
+  sourceProof?: TestSourceProof;
   inventoryVersion: 1;
   origin: TestOrigin;
   executionKind: TestExecutionKind;
@@ -73,6 +84,7 @@ const TEST_FILTER_PREF = "nora.tests.filter";
 const TEST_FILTER_COUNT_PREF = "nora.tests.filter.count";
 const TEST_FILTER_ITEM_PREF_PREFIX = "nora.tests.filter.";
 const TEST_RUN_ID_PREF = "nora.tests.run_id";
+const TEST_SOURCE_PREF = "nora.tests.source_manifest_sha256";
 const TEST_CONTROL_FILE = "nora-tests-control.json";
 const TEST_CONTROL_SCHEMA_VERSION = 1;
 const RESTART_ISOLATION_TARGET =
@@ -527,11 +539,13 @@ interface BrowserTestControl {
   runId: string;
   expiresAtMs: number;
   filter: string[];
+  sourceManifestSha256?: string;
   purpose?: BrowserBootstrapIsolationLease["purpose"];
 }
 
 export interface ConsumedBrowserTestControl {
   runId?: string;
+  sourceContext?: TestSourceContext;
   requestedTestFiles: Set<string>;
   bootstrapIsolation?: BrowserBootstrapIsolationLease;
 }
@@ -589,6 +603,10 @@ function parseBrowserTestControl(
     runId: value.runId,
     expiresAtMs: value.expiresAtMs,
     filter: value.filter,
+    ...(typeof value.sourceManifestSha256 === "string" &&
+        /^[a-f0-9]{64}$/.test(value.sourceManifestSha256)
+      ? { sourceManifestSha256: value.sourceManifestSha256 }
+      : {}),
   };
 }
 
@@ -638,6 +656,7 @@ function clearControlPrefs(prefs: TestControlPrefs): void {
     TEST_FILTER_PREF,
     TEST_FILTER_COUNT_PREF,
     TEST_RUN_ID_PREF,
+    TEST_SOURCE_PREF,
   ]);
   for (const name of prefs.getChildList?.(TEST_FILTER_ITEM_PREF_PREFIX) ?? []) {
     if (
@@ -738,6 +757,17 @@ export async function consumeRequestedTestControl(
       ) {
         consumed = {
           runId: parsedControl.runId,
+          ...(parsedControl.sourceManifestSha256 &&
+              prefs.getStringPref(TEST_SOURCE_PREF, "") ===
+                parsedControl.sourceManifestSha256
+            ? {
+              sourceContext: {
+                schemaVersion: 1,
+                runId: parsedControl.runId,
+                manifestSha256: parsedControl.sourceManifestSha256,
+              } as TestSourceContext,
+            }
+            : {}),
           requestedTestFiles: setFromFilterEntries(parsedControl.filter) ??
             new Set(),
           ...(parsedControl.purpose
@@ -845,12 +875,14 @@ function withTimeout<T>(
 export async function runSingleTest(
   file: string,
   loader: LazyModule,
+  sourceContext?: TestSourceContext,
 ): Promise<TestResult> {
   const started = nowMs();
   let mode: TestResult["mode"] = "import";
   let timedOut = false;
   const mozillaTasks = new MozillaTaskContext(file);
   let marker: DownloadedFirefoxTestMarker | undefined;
+  let sourceProof: TestSourceProof | undefined;
   let prefBranch: PrefBranchLike | undefined;
   const prefSnapshots: PrefSnapshot[] = [];
   const errors: string[] = [];
@@ -860,6 +892,13 @@ export async function runSingleTest(
     mozillaTasks.install();
     const loaded = await withTimeout(loader(), PER_TEST_TIMEOUT_MS);
     const mod = normalizeLoadedModule(loaded);
+    if (sourceContext) {
+      sourceProof = readTestSourceProof(
+        mod[TEST_SOURCE_EXPORT],
+        normalizeBrowserTestPath(file),
+        sourceContext,
+      );
+    }
     marker = readDownloadedFirefoxTestMarker(mod);
 
     if (marker) {
@@ -965,6 +1004,7 @@ export async function runSingleTest(
     : undefined;
   return {
     file: normalizeBrowserTestPath(file),
+    ...(sourceProof ? { sourceProof } : {}),
     ...testInventoryMetadata(normalizeBrowserTestPath(file)),
     ok: errors.length === 0,
     durationMs: Math.round(nowMs() - started),
@@ -998,6 +1038,25 @@ export default async function runBrowserTests(
 
   try {
     publishRunState({ status: "running", results, discoveredFiles });
+
+    // Must precede discovery of eagerly imported pages. Bootstrap grants no QA.
+    if (!control.bootstrapIsolation) {
+      const expected = readTestSourceContext(control.sourceContext);
+      const driver = readTestSourceContext(
+        discovery?.sourceBinding ??
+          (import.meta as unknown as Record<string, unknown>)[
+            TEST_SOURCE_DRIVER
+          ],
+      );
+      if (
+        driver.runId !== expected.runId ||
+        driver.manifestSha256 !== expected.manifestSha256
+      ) {
+        throw new Error(
+          "Test source driver differs from original control; restart the test server",
+        );
+      }
+    }
 
     // Chrome layer tests (via #features-chrome alias)
     const chromeTests = discovery?.chrome ?? import.meta.glob(
@@ -1081,7 +1140,7 @@ export default async function runBrowserTests(
     let abortReason: string | undefined;
     for (const [file, loader] of entries) {
       console.log(`[nora@test] Running ${file}`);
-      const result = await runSingleTest(file, loader);
+      const result = await runSingleTest(file, loader, control.sourceContext);
       await restorePrimaryBrowserWindow();
       results.push(result);
       publishRunState({ status: "running", results, discoveredFiles });

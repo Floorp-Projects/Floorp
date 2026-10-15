@@ -11,6 +11,7 @@
 
 import { sleep } from "./async_utils.ts";
 import { PATHS } from "./defines.ts";
+import type { TestSourceProof } from "../../libs/test-inventory/source-types.ts";
 import type {
   TestExecutionKind,
   TestOrigin,
@@ -22,6 +23,7 @@ const PREFS_FILE_DEFAULT_TIMEOUT_MS = 300_000;
 
 export interface BrowserTestResult {
   file: string;
+  sourceProof?: TestSourceProof;
   inventoryVersion?: number;
   origin?: TestOrigin;
   executionKind?: TestExecutionKind;

@@ -609,6 +609,8 @@ jobs:
             logs/test/latest.log
             _dist/ci-combined-browser-test.log
             _dist/ci-browser-test-inventory.json
+            _dist/ci-browser-test-inventory.json.source.json
+            _dist/ci-browser-test-inventory.json.executed-source.json
             _dist/ci-feles-build-test.log
             logs/vite-*.log
             _dist/firefox-tests/SUMMARY.md
