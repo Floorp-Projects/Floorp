@@ -24,12 +24,16 @@ type ExtendedGBrowser = typeof globalThis.gBrowser & {
 
 @noraComponent(import.meta.hot)
 export default class TabSleepExclusion extends NoraComponentBase {
-  private settings: TabSleepExclusionSettings = DEFAULT_SETTINGS;
+  // NoraComponentBase invokes init() during super(). `declare` keeps these
+  // from emitting field initializers that would reset what init() set up.
+  declare private settings: TabSleepExclusionSettings;
   // Using 'any' for observer since the nsIObserver type doesn't include QueryInterface
   // deno-lint-ignore no-explicit-any
-  private prefObserver: any = null;
+  declare private prefObserver: any;
 
   init(): void {
+    this.settings = DEFAULT_SETTINGS;
+    this.prefObserver = null;
     this.loadSettings();
     this.setupPrefObserver();
     this.setupTabListeners();

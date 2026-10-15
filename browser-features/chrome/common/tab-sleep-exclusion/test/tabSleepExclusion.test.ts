@@ -26,7 +26,7 @@ function createSubject(): TabSleepExclusion {
   const subject = Object.create(
     TabSleepExclusion.prototype,
   ) as TabSleepExclusion;
-  // Initialize settings to match the class field initializer
+  // Initialize settings to match the defaults init() starts from
   (
     subject as unknown as { settings: { enabled: boolean; patterns: string[] } }
   ).settings = {
@@ -1005,6 +1005,69 @@ function testSetupTabListenersAddsTabsProgressListener(): void {
 /**
  * INITIALIZATION FLOW TESTS
  */
+function testConstructionKeepsSavedPatterns(): void {
+  const hadUserValue = Services.prefs.prefHasUserValue(
+    TAB_SLEEP_EXCLUSION_PREF,
+  );
+  const original = Services.prefs.getStringPref(TAB_SLEEP_EXCLUSION_PREF, "");
+  // Set the pref before swapping gBrowser so the window's own instance
+  // reacts to it against the real tabs, not the fake one below.
+  Services.prefs.setStringPref(
+    TAB_SLEEP_EXCLUSION_PREF,
+    JSON.stringify({ enabled: true, patterns: ["*.example.com"] }),
+  );
+
+  const originalAddEventListener = globalThis.addEventListener;
+  const originalGBrowser = (globalThis as Record<string, unknown>).gBrowser;
+  const tab = createFakeTab("https://www.example.com/");
+  const progressListeners: { onLocationChange: () => void }[] = [];
+  (globalThis as Record<string, unknown>).gBrowser = {
+    tabs: [tab],
+    addTabsProgressListener: (listener: { onLocationChange: () => void }) => {
+      progressListeners.push(listener);
+    },
+  };
+  globalThis.addEventListener =
+    (() => {}) as typeof globalThis.addEventListener;
+
+  let subject: TabSleepExclusion | null = null;
+  try {
+    subject = new TabSleepExclusion();
+    const state = subject as unknown as {
+      settings: { enabled: boolean; patterns: string[] };
+      prefObserver: unknown;
+    };
+    assertEquals(
+      state.settings.patterns.length,
+      1,
+      "construction must keep the saved patterns",
+    );
+    assert(
+      state.prefObserver !== null,
+      "construction must keep the pref observer handle",
+    );
+    assertEquals(tab.undiscardable, true, "init should protect matching tabs");
+
+    for (const listener of progressListeners) {
+      listener.onLocationChange();
+    }
+    assertEquals(
+      tab.undiscardable,
+      true,
+      "a later location change must keep the protection",
+    );
+  } finally {
+    subject?.cleanup();
+    globalThis.addEventListener = originalAddEventListener;
+    (globalThis as Record<string, unknown>).gBrowser = originalGBrowser;
+    if (hadUserValue) {
+      Services.prefs.setStringPref(TAB_SLEEP_EXCLUSION_PREF, original);
+    } else {
+      Services.prefs.clearUserPref(TAB_SLEEP_EXCLUSION_PREF);
+    }
+  }
+}
+
 function testInitCallsAllSetupMethods(): void {
   const subject = createSubject() as unknown as {
     loadSettings: () => void;
@@ -1702,6 +1765,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "setupTabListeners adds tabs progress listener",
       fn: testSetupTabListenersAddsTabsProgressListener,
+    },
+    {
+      name: "construction keeps the saved patterns",
+      fn: testConstructionKeepsSavedPatterns,
     },
     // INITIALIZATION FLOW TESTS
     {
