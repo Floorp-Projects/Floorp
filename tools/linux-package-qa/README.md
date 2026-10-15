@@ -60,6 +60,14 @@ metadata-only controller entrypoint using the existing PAT's REST read access.
 The fixed API origin/paths exclude archive endpoints and redirects; requests,
 pages, bytes and elapsed time are bounded, and original API bytes are retained.
 Complete P job/artifact inventories and the active original C are checked.
+The dispatch `request_json` is a closed run-neutral intake template: it has all
+intake request fields except `executionRun`. The new C ID cannot be known before
+dispatch. The controller binds it once from the canonical original GitHub run
+context; even a matching caller-supplied C ID is rejected. Original template
+bytes/hash, normalized declaration and a separate creation-only
+`request-bound.json`/hash are retained. The latter is the complete request for
+the later archive intake. The returned API C must still match this active run,
+attempt 1, source and workflow, independently of those saved declarations.
 HTTP framing must be complete before JSON is accepted. A later connection-close
 failure cannot replace the original HTTP/read failure or produce a successful
 capture. Partial received bodies and secondary cleanup failures stay separate.

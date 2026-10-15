@@ -37,6 +37,17 @@ def parse(data):
     return json.loads(data.decode("utf-8"), object_pairs_hook=unique_object, parse_constant=reject_constant)
 
 
+def bind_execution_context(template, environment):
+    keys = {"schema", "controllerHead", "producerRun", "floorpHead", "runtimeRun", "runtimeHead", "indexArtifact", "target"}
+    if not isinstance(template, dict) or set(template) != keys or template["schema"] != "qa3-linux-package-intake-request-v1" or template["target"] != "linux-x86_64":
+        raise ValueError("closed run-neutral intake template required; caller cannot choose C")
+    expected = {"GITHUB_ACTIONS": "true", "GITHUB_REPOSITORY": "Floorp-Projects/Floorp", "GITHUB_REPOSITORY_ID": "437505831", "GITHUB_RUN_ATTEMPT": "1"}
+    number = environment.get("GITHUB_RUN_ID")
+    if any(environment.get(k) != v for k, v in expected.items()) or not isinstance(number, str) or not re.fullmatch(r"[1-9][0-9]{0,15}", number) or int(number) >= 2**53:
+        raise ValueError("original active GitHub controller context required before binding C")
+    return {**template, "executionRun": int(number)}
+
+
 class GitHubRest:
     def __init__(self, token, directory):
         if not isinstance(token, str) or not token or any(c in token for c in "\r\n"):
@@ -214,10 +225,17 @@ def main():
     args.output.mkdir(mode=0o700, exist_ok=False)
     receipt = {"schema": "qa3-linux-metadata-capture-v1", "status": "BLOCK", "archiveBytesAcquired": False, "nativeLaunched": False, "providerAuthentication": "UNVERIFIED", "nativeProductQualification": "UNVERIFIED", "publicationAuthorized": False}
     try:
-        request = parse(os.environ.get("QA3_INTAKE_REQUEST", "").encode())
+        template_bytes = os.environ.get("QA3_INTAKE_REQUEST", "").encode()
+        template = parse(template_bytes)
         index = parse(os.environ.get("QA3_INDEX", "").encode())
-        for name, declaration in (("request", request), ("index", index)):
+        with (args.output / "request-template.original.json").open("xb") as stream: stream.write(template_bytes)
+        receipt["requestTemplateSha256"] = hashlib.sha256(template_bytes).hexdigest()
+        for name, declaration in (("request", template), ("index", index)):
             (args.output / (name + "-declared.json")).write_text(json.dumps(declaration, indent=2) + "\n")
+        request = bind_execution_context(template, os.environ)
+        bound = (json.dumps(request, indent=2) + "\n").encode()
+        with (args.output / "request-bound.json").open("xb") as stream: stream.write(bound)
+        receipt["boundRequestSha256"] = hashlib.sha256(bound).hexdigest()
         head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
         if head != request["controllerHead"] or subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=all"], cwd=ROOT):
             raise ValueError("metadata controller checkout is not exact and clean")

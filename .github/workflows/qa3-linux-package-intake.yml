@@ -5,7 +5,7 @@ name: QA3 Linux metadata intake (no archive or native execution)
   workflow_dispatch:
     inputs:
       request_json:
-        description: Closed original P/C/cohort/index identity request
+        description: Run-neutral P/cohort/index request without executionRun; C is bound from active GitHub context
         type: string
         required: true
       index_json:

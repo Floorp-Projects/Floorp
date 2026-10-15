@@ -58,6 +58,48 @@ def http_response(data, declared=None, chunked=False):
 
 
 class CaptureTests(unittest.TestCase):
+    def test_dispatch_template_binds_active_c_in_the_real_main_boundary(self):
+        index, request, data, env = fixture()
+        template = {k: v for k, v in request.items() if k != "executionRun"}
+        original = json.dumps(template, separators=(",", ":")).encode()
+        client = FakeApi(data); client.responses = []; client.retention_errors = []; client.close_errors = []
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "capture"
+            environment = {**env, "QA3_INTAKE_REQUEST": original.decode(), "QA3_INDEX": json.dumps(index), "GH_TOKEN": "fixture-only"}
+            with patch.dict(capture.os.environ, environment, clear=True), patch("sys.argv", ["capture.py", "--output", str(output)]), patch.object(capture.subprocess, "check_output", side_effect=[env["GITHUB_SHA"] + "\n", b""]), patch.object(capture, "GitHubRest", return_value=client):
+                self.assertEqual(capture.main(), 0)
+            receipt = json.loads((output / "capture-result.json").read_text())
+            self.assertEqual((output / "request-template.original.json").read_bytes(), original)
+            self.assertEqual(receipt["requestTemplateSha256"], hashlib.sha256(original).hexdigest())
+            self.assertEqual(json.loads((output / "request-bound.json").read_text()), request)
+            self.assertEqual(receipt["boundRequestSha256"], hashlib.sha256((output / "request-bound.json").read_bytes()).hexdigest())
+            self.assertNotIn("executionRun", json.loads((output / "request-declared.json").read_text()))
+            self.assertEqual(receipt["request"]["executionRun"], int(env["GITHUB_RUN_ID"]))
+            self.assertFalse(receipt["archiveBytesAcquired"] or receipt["nativeLaunched"] or receipt["publicationAuthorized"])
+            self.assertEqual(len(client.calls), 6)
+
+    def test_template_c_or_invalid_context_cannot_reach_transport_and_returned_c_must_match(self):
+        index, request, data, env = fixture()
+        template = {k: v for k, v in request.items() if k != "executionRun"}
+        mutations = [({**template, "executionRun": 124}, env), ({**template, "authenticated": True}, env)]
+        mutations += [(template, {**env, key: value}) for key, value in [("GITHUB_ACTIONS", "false"), ("GITHUB_REPOSITORY", "other/repo"), ("GITHUB_REPOSITORY_ID", "2"), ("GITHUB_RUN_ATTEMPT", "2")]]
+        mutations += [(template, {**env, "GITHUB_RUN_ID": value}) for value in [None, "", "0", "0124", "-1", 124, True, str(2**53)]]
+        with tempfile.TemporaryDirectory() as directory:
+            for n, (declaration, context) in enumerate(mutations):
+                output = Path(directory) / str(n)
+                environment = {k: v for k, v in context.items() if isinstance(v, str)}
+                environment.update(QA3_INTAKE_REQUEST=json.dumps(declaration), QA3_INDEX=json.dumps(index))
+                with self.subTest(case=n), patch.dict(capture.os.environ, environment, clear=True), patch("sys.argv", ["capture.py", "--output", str(output)]), patch.object(capture, "GitHubRest") as transport:
+                    self.assertEqual(capture.main(), 1)
+                    transport.assert_not_called()
+                    self.assertEqual(json.loads((output / "capture-result.json").read_text())["status"], "BLOCK")
+        bound = capture.bind_execution_context(template, env)
+        changed = copy.deepcopy(data)
+        changed["/repos/Floorp-Projects/Floorp/actions/runs/124"]["id"] = 999
+        with self.assertRaises(ValueError): capture.capture(bound, index, FakeApi(changed), env)
+        for value in [124, True]:
+            with self.assertRaises(ValueError): capture.bind_execution_context(template, {**env, "GITHUB_RUN_ID": value})
+
     def test_original_provider_metadata_is_built_only_from_fixed_authenticated_reads(self):
         index, request, data, env = fixture(); client = FakeApi(data)
         provider, inventories = capture.capture(request, index, client, env)
