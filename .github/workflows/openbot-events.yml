@@ -1,0 +1,139 @@
+name: OpenBot event notification
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+  workflow_run:
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: >-
+      github.repository == 'Floorp-Projects/Floorp' &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.conclusion == 'failure' &&
+        github.event.workflow_run.name != 'OpenBot event notification'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send event to the Floorp OpenBot routine
+        env:
+          OPENBOT_WEBHOOK_URL: ${{ secrets.OPENBOT_WEBHOOK_URL }}
+          OPENBOT_WEBHOOK_SECRET: ${{ secrets.OPENBOT_WEBHOOK_SECRET }}
+          OPENBOT_RUN_MAIN: "1"
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHmac } from "node:crypto";
+          import { readFileSync } from "node:fs";
+          import { setTimeout as sleep } from "node:timers/promises";
+          
+          export const notificationWorkflow = "OpenBot event notification";
+          
+          export function formatEvent(input, eventName) {
+            if (input.repository?.full_name !== "Floorp-Projects/Floorp") return null;
+            const data = { repository: "Floorp-Projects/Floorp" };
+            let type;
+            let occurredAt;
+            if (eventName === "issues" && input.action === "opened" && !input.issue?.pull_request) {
+              type = "github.issue.opened";
+              Object.assign(data, {
+                number: input.issue.number, url: input.issue.html_url,
+                title: String(input.issue.title ?? "").slice(0, 1024),
+              });
+              occurredAt = input.issue.created_at;
+            } else if (eventName === "pull_request_target" && input.action === "opened") {
+              type = "github.pull_request.opened";
+              Object.assign(data, {
+                number: input.pull_request.number, url: input.pull_request.html_url,
+                title: String(input.pull_request.title ?? "").slice(0, 1024),
+                draft: Boolean(input.pull_request.draft),
+              });
+              occurredAt = input.pull_request.created_at;
+            } else if (eventName === "workflow_run" && input.action === "completed"
+                && input.workflow_run?.conclusion === "failure"
+                && input.workflow_run.name !== notificationWorkflow) {
+              type = "github.workflow_run.failed";
+              Object.assign(data, {
+                run_id: input.workflow_run.id, url: input.workflow_run.html_url,
+                workflow: String(input.workflow_run.name ?? "").slice(0, 1024),
+                head_sha: input.workflow_run.head_sha,
+                head_branch: input.workflow_run.head_branch,
+                pull_request_numbers: (input.workflow_run.pull_requests ?? []).map(pr => pr.number),
+              });
+              occurredAt = input.workflow_run.updated_at;
+            } else {
+              return null;
+            }
+            return { type, ...(occurredAt ? { occurredAt } : {}), data };
+          }
+          
+          export async function sendEvent(event, {
+            url, secret, deliveryId, fetchImpl = fetch, wait = sleep,
+            now = () => Math.floor(Date.now() / 1000), attempts = 7,
+          }) {
+            const target = new URL(url);
+            if (target.protocol !== "https:" || target.username || target.password || target.hash) {
+              throw new Error("Invalid OpenBot webhook URL");
+            }
+            if (!secret || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,255}$/.test(deliveryId)) {
+              throw new Error("Missing signing secret or invalid delivery ID");
+            }
+            const body = JSON.stringify(event);
+            if (Buffer.byteLength(body, "utf8") > 65536) throw new Error("Event exceeds 64 KiB");
+            for (let attempt = 0; attempt < attempts; attempt++) {
+              const timestamp = String(now());
+              const signature = createHmac("sha256", secret)
+                .update(`${timestamp}.${deliveryId}.${body}`).digest("hex");
+              let status;
+              try {
+                const response = await fetchImpl(url, {
+                  method: "POST", redirect: "manual", signal: AbortSignal.timeout(25000),
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-OpenBot-Timestamp": timestamp,
+                    "X-OpenBot-Delivery-Id": deliveryId,
+                    "X-OpenBot-Signature": `sha256=${signature}`,
+                  }, body,
+                });
+                status = response.status;
+                if (status === 200 || status === 202) return status;
+                if (status !== 429 && status !== 503 && status < 500) {
+                  throw new Error(`OpenBot rejected the event (HTTP ${status})`);
+                }
+              } catch (error) {
+                if (status !== undefined) throw error;
+                // A timeout or transport failure may still have reached OpenBot.
+                // Retain the delivery ID and exact body when retrying.
+              }
+              if (attempt + 1 < attempts) await wait(Math.min(30000, 2000 * 2 ** attempt));
+            }
+            throw new Error("OpenBot event was not accepted after retries; rerun this job to retry");
+          }
+          
+          export async function main() {
+            const event = formatEvent(
+              JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")),
+              process.env.GITHUB_EVENT_NAME,
+            );
+            if (!event) return;
+            const result = await sendEvent(event, {
+              url: process.env.OPENBOT_WEBHOOK_URL,
+              secret: process.env.OPENBOT_WEBHOOK_SECRET,
+              deliveryId: `github.${process.env.GITHUB_RUN_ID}`,
+            });
+            console.log(result === 200 ? "OpenBot already accepted this event" : "OpenBot accepted this event");
+          }
+          
+          if (process.env.OPENBOT_RUN_MAIN === "1") {
+            main().catch(error => {
+              // Do not print transport exceptions: they may include the private URL.
+              console.error(error.message.startsWith("OpenBot ") ? error.message : "OpenBot delivery failed; check configuration and connectivity");
+              process.exitCode = 1;
+            });
+          }
+          NODE
