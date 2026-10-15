@@ -92,11 +92,11 @@ class Isolation(unittest.TestCase):
             self.assertIn('floorp.workspaces.v4.store',prefs.read_text());self.assertNotIn('stale',prefs.read_text());self.assertEqual(before,run.digest(saved))
             b,_=run.write_boot_control(profile,'normal',2,42);self.assertNotEqual(a['runId'],b['runId']);self.assertEqual(before,run.digest(saved))
     def test_empty_foreign_expired_or_broad_control_reject(self):
-        control={'schemaVersion':1,'runId':'boot1','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
+        control={'schemaVersion':1,'purpose':'restart-bootstrap-isolation','runId':'qa3-restart-boot1','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
         run.validate_boot_control(control,1000)
-        for patch in [{'filter':[]},{'filter':['browser-features/chrome/test/other.test.ts']},{'runId':''},{'expiresAtMs':999},{'expiresAtMs':500000}]:
+        for patch in [{'filter':[]},{'filter':['browser-features/chrome/test/other.test.ts']},{'runId':''},{'runId':'foreign'},{'purpose':None},{'expiresAtMs':999},{'expiresAtMs':500000}]:
             with self.subTest(patch=patch),self.assertRaises(ValueError):run.validate_boot_control({**control,**patch},1000)
-        state={'runId':'boot1','status':'done','results':[],'discoveredFiles':[],'aborted':False,'startupTest':'loaded','completedAtMs':1500}
+        state={'runId':control['runId'],'status':'done','results':[],'discoveredFiles':[],'aborted':False,'startupTest':'loaded','completedAtMs':1500}
         run.validate_isolation(state,control)
         for patch in [{'runId':'old'},{'status':'running'},{'results':[{'ok':True}]},{'discoveredFiles':['other.test.ts']},{'aborted':True},{'error':'original error'},{'completedAtMs':2000}]:
             with self.subTest(patch=patch),self.assertRaises(ValueError):run.validate_isolation({**state,**patch},control)
@@ -107,7 +107,7 @@ class Contract(unittest.TestCase):
         for i,(case,name) in enumerate(run.CASES.items()):
             profile={'realpath':'/owned/profile','device':1,'inode':123+i,'markerSha256':f'{i+1:064x}'};nonce=f'{i+1:032x}';boots=[]
             for n,p in enumerate([10+i*20,20+i*20],1):
-                control={'schemaVersion':1,'runId':f'{case}-boot{n}','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
+                control={'schemaVersion':1,'purpose':'restart-bootstrap-isolation','runId':f'qa3-restart-{case}-boot{n}','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
                 isolation={'runId':control['runId'],'status':'done','results':[],'discoveredFiles':[],'aborted':False,'startupTest':'loaded','completedAtMs':1000}
                 saved={'evidenceFile':case+f'-{n}-clean-session.jsonlz4','bytes':20,'sha256':f'{p:064x}'}
                 boots.append({'root':{'pid':p,'start':str(p),'session':p},'profileIdentity':profile,'native':{'profile':'/owned/profile','pid':p,'buildID':'20261007125927','version':'157.0.1','restoreCompleted':True,'bootstrapIsolation':isolation},'control':control,'normalExit':True,'exitCode':0,'oldTreeGone':True,'portGone':True,'binarySha256':'b'*64,'overlayBuildID2':'same-overlay','exitedBrowserIdentities':{str(p):str(p)},'cleanSessionFile':saved})

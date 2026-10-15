@@ -93,7 +93,7 @@ def profile_identity(profile):
     return {'realpath':str(profile.resolve()),'device':s.st_dev,'inode':s.st_ino,'markerSha256':digest(marker)}
 
 def validate_boot_control(control,now_ms):
-    if control.get('schemaVersion')!=1 or not isinstance(control.get('runId'),str) or not control['runId'] or control.get('filter')!=[ISOLATION_TARGET]:raise ValueError('Exact nonempty bootstrap isolation selector required')
+    if control.get('schemaVersion')!=1 or control.get('purpose')!='restart-bootstrap-isolation' or not isinstance(control.get('runId'),str) or not control['runId'].startswith('qa3-restart-') or len(control['runId'])>256 or control.get('filter')!=[ISOLATION_TARGET]:raise ValueError('Exact nonempty explicit bootstrap isolation control required')
     expires=control.get('expiresAtMs')
     if type(expires) is not int or expires<=now_ms or expires>now_ms+300000:raise ValueError('Fresh bounded bootstrap control lease required')
 
@@ -106,7 +106,7 @@ def control_evidence(control):
 def write_boot_control(profile,caseid,number,run):
     if (ROOT/ISOLATION_TARGET).exists():raise ValueError('Bootstrap isolation target must remain undiscovered')
     now=int(time.time()*1000)
-    control={'schemaVersion':1,'runId':f'qa3-restart-{run}-{caseid}-boot{number}-{uuid.uuid4().hex}','expiresAtMs':now+300000,'filter':[ISOLATION_TARGET]}
+    control={'schemaVersion':1,'purpose':'restart-bootstrap-isolation','runId':f'qa3-restart-{run}-{caseid}-boot{number}-{uuid.uuid4().hex}','expiresAtMs':now+300000,'filter':[ISOLATION_TARGET]}
     validate_boot_control(control,now)
     values=control_pref_values(control)
     prefs=profile/'prefs.js';original=prefs.read_text()

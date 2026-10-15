@@ -205,6 +205,8 @@ jobs:
       - run: deno task test:smoke
       - name: Verify compiled Runtime source provenance contract
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
+      - name: Test final Web Panel HTTP oracle and fixed navigation script on host
+        run: python3 -B -m unittest discover -s tools -p 'test_final_web_panel_*.py' -v
       - name: Test final package QA source intake
         run: node --test tools/test-final-package-qa-source.mjs
       - name: Check shared restart oracle and synthetic failure diagnostics
@@ -449,6 +451,7 @@ jobs:
 
           deno task test \
             --layer all \
+            --inventory _dist/ci-browser-test-inventory.json \
             --timeout-ms 1800000 \
             --startup-timeout-ms 180000 \
             --no-autostart \
@@ -605,6 +608,7 @@ jobs:
           path: |
             logs/test/latest.log
             _dist/ci-combined-browser-test.log
+            _dist/ci-browser-test-inventory.json
             _dist/ci-feles-build-test.log
             logs/vite-*.log
             _dist/firefox-tests/SUMMARY.md

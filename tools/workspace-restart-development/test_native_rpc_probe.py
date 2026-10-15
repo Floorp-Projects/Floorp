@@ -14,7 +14,7 @@ class NativeProbe(OwnedFixtures):
     def fixture(self, fault=None):
         scope,record,profile,out,owner=self.scope()
         parent=prior.Contract().receipt();parent.update(floorpHead=scope.receipt['floorpHead'],run=scope.receipt['run'])
-        control={'schemaVersion':1,'runId':'separate-probe-control','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
+        control={'schemaVersion':1,'purpose':'restart-bootstrap-isolation','runId':'qa3-restart-separate-probe-control','expiresAtMs':2000,'filter':[run.ISOLATION_TARGET]}
         boot={'root':owner['root'],'profileIdentity':record['profileIdentity'],'control':control,
               'binarySha256':parent['cases'][0]['boots'][0]['binarySha256'],'overlayBuildID2':'same-overlay'}
         record['boots']=[boot]

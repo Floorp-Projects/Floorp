@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { MarionetteClient } from "./browser_connector.ts";
+import { finishBrowserCleanup, MarionetteClient } from "./browser_connector.ts";
+import type { BrowserOperationFailure } from "./browser_connector_types.ts";
 
 const ENABLED_PREF = "floorp.mousegesture.enabled";
 const CONFIG_PREF = "floorp.mousegesture.config";
@@ -139,7 +140,7 @@ async function resetPageState(): Promise<void> {
 
 async function readPageState(): Promise<PageState> {
   await client.setContext("content");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     return JSON.stringify(window.__floorpDrawnE2E);
   `);
   return JSON.parse(raw) as PageState;
@@ -306,7 +307,7 @@ async function assertUnrecognizedDownGesture(
   assertNoClickLikeEvents(state, "unrecognized down");
 }
 
-let failure: unknown = null;
+let failure: BrowserOperationFailure = { failed: false };
 
 try {
   originalHandle = extractHandle(
@@ -452,10 +453,8 @@ try {
   await assertUnrecognizedDownGesture(x, y, setup);
   await assertOrdinaryLeftClick(x, y, "ordinary left click after gestures");
   await assertOrdinaryRightClick(x, y, "ordinary right click after gestures");
-
-  console.log("Mouse gesture drawn W3C E2E passed");
 } catch (error) {
-  failure = error;
+  failure = { failed: true, error };
 }
 
 const cleanupErrors: unknown[] = [];
@@ -534,17 +533,5 @@ if (originalHandle) {
   }
 }
 
-await client.close();
-
-if (failure !== null) {
-  if (cleanupErrors.length > 0) {
-    console.error("Mouse gesture drawn E2E cleanup errors:", cleanupErrors);
-  }
-  throw failure;
-}
-if (cleanupErrors.length > 0) {
-  throw new AggregateError(
-    cleanupErrors,
-    "Mouse gesture drawn E2E cleanup failed",
-  );
-}
+await finishBrowserCleanup(client, failure, cleanupErrors);
+console.log("Mouse gesture drawn W3C E2E passed");

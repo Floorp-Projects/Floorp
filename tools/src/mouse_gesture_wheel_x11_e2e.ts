@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { MarionetteClient } from "./browser_connector.ts";
+import { finishBrowserCleanup, MarionetteClient } from "./browser_connector.ts";
+import type { BrowserOperationFailure } from "./browser_connector_types.ts";
 
 const ENABLED_PREF = "floorp.mousegesture.enabled";
 const CONFIG_PREF = "floorp.mousegesture.config";
@@ -383,7 +384,7 @@ async function resetPageState(): Promise<void> {
 
 async function readPageState(): Promise<PageState> {
   await client.setContext("content");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     return JSON.stringify(window.__floorpWheelX11E2E);
   `);
   return JSON.parse(raw) as PageState;
@@ -402,7 +403,7 @@ async function resetZoom(): Promise<number> {
 
 async function readWheelActionsFromPref(): Promise<WheelActions | null> {
   await client.setContext("chrome");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     const config = JSON.parse(
       Services.prefs.getStringPref(${JSON.stringify(CONFIG_PREF)}, "{}"),
     );
@@ -447,7 +448,7 @@ async function waitForWheelActions(
 
 async function readWheelSettingsSnapshot(): Promise<WheelSettingsSnapshot> {
   await client.setContext("content");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     const allowed = ${JSON.stringify(REPEAT_SAFE_WHEEL_ACTIONS)};
     const sortedAllowed = [...allowed].sort();
     const selects = [...document.querySelectorAll("select")];
@@ -618,7 +619,7 @@ async function assertTestSettingsEnvironment(): Promise<void> {
   };
   let environment: TestSettingsEnvironment | null = null;
   while (Date.now() - startedAt < STARTUP_WAIT_TIMEOUT_MS) {
-    const raw = await client.executeScript(`
+    const raw = await client.executeScript<string>(`
       return JSON.stringify({
         startupMode: Services.prefs.getStringPref("nora.startup.mode", ""),
         startupLoader: Services.prefs.getStringPref("nora.startup.loader", ""),
@@ -647,7 +648,7 @@ async function assertTestSettingsEnvironment(): Promise<void> {
 
 async function assertSettingsRoute(): Promise<void> {
   await client.setContext("content");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     return JSON.stringify({
       protocol: location.protocol,
       host: location.host,
@@ -672,7 +673,7 @@ async function assertSettingsRoute(): Promise<void> {
 
 async function ensureSettingsActor(): Promise<void> {
   await client.setContext("chrome");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     let browser;
     try {
       const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -994,7 +995,7 @@ async function restoreOriginalState(
   `);
 }
 
-let failure: unknown = null;
+let failure: BrowserOperationFailure = { failed: false };
 
 try {
   originalHandle = await getContentWindowHandle();
@@ -1154,10 +1155,8 @@ try {
   await assertSafeWheelSequence(point.x, point.y, setup);
   await assertOrdinaryRightClick(point.x, point.y);
   await assertForbiddenMappingFailsSafe(point.x, point.y, setup);
-
-  console.log("Mouse gesture wheel X11 E2E passed");
 } catch (error) {
-  failure = error;
+  failure = { failed: true, error };
 }
 
 const cleanupErrors: unknown[] = [];
@@ -1215,17 +1214,5 @@ if (originalHandle && handles.includes(originalHandle)) {
   }
 }
 
-await client.close();
-
-if (failure !== null) {
-  if (cleanupErrors.length > 0) {
-    console.error("Mouse gesture wheel X11 E2E cleanup errors:", cleanupErrors);
-  }
-  throw failure;
-}
-if (cleanupErrors.length > 0) {
-  throw new AggregateError(
-    cleanupErrors,
-    "Mouse gesture wheel X11 E2E cleanup failed",
-  );
-}
+await finishBrowserCleanup(client, failure, cleanupErrors);
+console.log("Mouse gesture wheel X11 E2E passed");

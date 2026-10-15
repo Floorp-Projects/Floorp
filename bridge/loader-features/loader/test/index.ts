@@ -14,6 +14,15 @@ import {
   MozillaTaskContext,
   type MozillaTaskResult,
 } from "./mochitest_compat.ts";
+import { testInventoryMetadata } from "../../../../libs/test-inventory/contract.ts";
+import type {
+  TestExecutionKind,
+  TestOrigin,
+} from "../../../../libs/test-inventory/types.ts";
+import type {
+  BrowserBootstrapIsolationLease,
+  BrowserTestDiscoveryDependencies,
+} from "./types.ts";
 
 type DownloadedFirefoxPref =
   | { name: string; kind: "bool"; value: boolean }
@@ -33,6 +42,9 @@ interface DownloadedFirefoxTestMarker {
 
 export interface TestResult {
   file: string;
+  inventoryVersion: 1;
+  origin: TestOrigin;
+  executionKind: TestExecutionKind;
   ok: boolean;
   durationMs: number;
   mode: "import" | "runAllTests" | "mozillaTasks";
@@ -52,6 +64,8 @@ interface TestState {
   aborted?: boolean;
   abortReason?: string;
   error?: string;
+  executionPurpose?: "restart-bootstrap-isolation";
+  qaVerdict?: "NOT_EXECUTED";
 }
 
 const TEST_STATE_PREF = "nora.tests.state";
@@ -61,6 +75,8 @@ const TEST_FILTER_ITEM_PREF_PREFIX = "nora.tests.filter.";
 const TEST_RUN_ID_PREF = "nora.tests.run_id";
 const TEST_CONTROL_FILE = "nora-tests-control.json";
 const TEST_CONTROL_SCHEMA_VERSION = 1;
+const RESTART_ISOLATION_TARGET =
+  "tools/workspace-restart-development/no-autodiscovered-suites.test.ts";
 const DOWNLOADED_FIREFOX_TEST_EXPORT = "__NORA_DOWNLOADED_FIREFOX_TEST__";
 
 declare global {
@@ -511,11 +527,13 @@ interface BrowserTestControl {
   runId: string;
   expiresAtMs: number;
   filter: string[];
+  purpose?: BrowserBootstrapIsolationLease["purpose"];
 }
 
 export interface ConsumedBrowserTestControl {
   runId?: string;
   requestedTestFiles: Set<string>;
+  bootstrapIsolation?: BrowserBootstrapIsolationLease;
 }
 
 interface TestControlPrefs {
@@ -526,10 +544,36 @@ interface TestControlPrefs {
   savePrefFile?(prefFile: string | null): void;
 }
 
+class InvalidBootstrapControl extends Error {}
+
 function parseBrowserTestControl(
   value: unknown,
   nowMs: number,
 ): BrowserTestControl | undefined {
+  if (isRecord(value) && Object.hasOwn(value, "purpose")) {
+    if (
+      value.purpose !== "restart-bootstrap-isolation" ||
+      value.schemaVersion !== TEST_CONTROL_SCHEMA_VERSION ||
+      typeof value.runId !== "string" ||
+      !value.runId.startsWith("qa3-restart-") || value.runId.length > 256 ||
+      typeof value.expiresAtMs !== "number" ||
+      !Number.isSafeInteger(value.expiresAtMs) ||
+      value.expiresAtMs <= nowMs || value.expiresAtMs > nowMs + 300_000 ||
+      !Array.isArray(value.filter) || value.filter.length !== 1 ||
+      value.filter[0] !== RESTART_ISOLATION_TARGET
+    ) {
+      throw new InvalidBootstrapControl(
+        "Invalid explicit restart bootstrap isolation control",
+      );
+    }
+    return {
+      schemaVersion: 1,
+      runId: value.runId,
+      expiresAtMs: value.expiresAtMs,
+      filter: [RESTART_ISOLATION_TARGET],
+      purpose: value.purpose,
+    };
+  }
   if (
     !isRecord(value) || value.schemaVersion !== TEST_CONTROL_SCHEMA_VERSION ||
     typeof value.runId !== "string" || value.runId.length === 0 ||
@@ -659,6 +703,7 @@ export async function consumeRequestedTestControl(
   }
 
   let parsedControl: BrowserTestControl | undefined;
+  const errors: string[] = [];
   try {
     if (readUTF8) {
       const raw = await readUTF8.call(ioUtils, controlPath);
@@ -666,14 +711,14 @@ export async function consumeRequestedTestControl(
         parsedControl = parseBrowserTestControl(JSON.parse(raw), nowMs);
       }
     }
-  } catch {
+  } catch (error) {
     parsedControl = undefined;
+    if (error instanceof InvalidBootstrapControl) errors.push(error.message);
   }
 
   let consumed: ConsumedBrowserTestControl = {
     requestedTestFiles: new Set(),
   };
-  const errors: string[] = [];
   try {
     if (parsedControl) {
       const prefRunId = prefs.getStringPref(TEST_RUN_ID_PREF, "");
@@ -695,7 +740,17 @@ export async function consumeRequestedTestControl(
           runId: parsedControl.runId,
           requestedTestFiles: setFromFilterEntries(parsedControl.filter) ??
             new Set(),
+          ...(parsedControl.purpose
+            ? {
+              bootstrapIsolation: {
+                purpose: parsedControl.purpose,
+                expiresAtMs: parsedControl.expiresAtMs,
+              },
+            }
+            : {}),
         };
+      } else if (parsedControl.purpose) {
+        errors.push("Restart bootstrap isolation control and prefs differ");
       }
     }
   } catch (error) {
@@ -910,6 +965,7 @@ export async function runSingleTest(
     : undefined;
   return {
     file,
+    ...testInventoryMetadata(file),
     ok: errors.length === 0,
     durationMs: Math.round(nowMs() - started),
     mode,
@@ -922,7 +978,15 @@ export async function runSingleTest(
   };
 }
 
-export default async function runBrowserTests(): Promise<void> {
+function retainForCollection(): void {
+  console.log("[nora@test] Keeping browser alive for result collection...");
+  const keepaliveId = setInterval(() => {}, 60_000);
+  setTimeout(() => clearInterval(keepaliveId), 600_000);
+}
+
+export default async function runBrowserTests(
+  discovery?: BrowserTestDiscoveryDependencies,
+): Promise<void> {
   const control = await consumeRequestedTestControl();
   const runId = control.runId;
   const requestedTestFiles = control.requestedTestFiles;
@@ -936,12 +1000,12 @@ export default async function runBrowserTests(): Promise<void> {
     publishRunState({ status: "running", results, discoveredFiles });
 
     // Chrome layer tests (via #features-chrome alias)
-    const chromeTests = import.meta.glob(
+    const chromeTests = discovery?.chrome ?? import.meta.glob(
       "#features-chrome/**/test/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
     );
 
     // ESM layer tests (via #features-modules alias)
-    const esmTests = import.meta.glob(
+    const esmTests = discovery?.esm ?? import.meta.glob(
       "#features-modules/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
     );
 
@@ -952,7 +1016,9 @@ export default async function runBrowserTests(): Promise<void> {
     if (shouldLoadPagesTests(requestedTestFiles)) {
       Object.assign(
         allTests,
-        (await import("./pages_tests.ts")).getPagesTests(),
+        discovery?.pages
+          ? await discovery.pages()
+          : (await import("./pages_tests.ts")).getPagesTests(),
       );
     }
 
@@ -964,6 +1030,44 @@ export default async function runBrowserTests(): Promise<void> {
     discoveredFiles.push(
       ...entries.map(([file]) => file).sort((a, b) => a.localeCompare(b)),
     );
+    if (control.bootstrapIsolation) {
+      if (
+        !runId?.startsWith("qa3-restart-") ||
+        requestedTestFiles.size !== 1 ||
+        !requestedTestFiles.has(RESTART_ISOLATION_TARGET) ||
+        !Number.isSafeInteger(control.bootstrapIsolation.expiresAtMs) ||
+        control.bootstrapIsolation.expiresAtMs <= Date.now() ||
+        control.bootstrapIsolation.expiresAtMs > Date.now() + 300_000 ||
+        entries.length !== 0
+      ) {
+        throw new Error(
+          "Restart bootstrap isolation selection or lease differs",
+        );
+      }
+      publishRunState({
+        status: "done",
+        results,
+        discoveredFiles,
+        aborted: false,
+        executionPurpose: "restart-bootstrap-isolation",
+        qaVerdict: "NOT_EXECUTED",
+      });
+      console.log(
+        "[nora@test] Restart bootstrap isolated; QA tests NOT_EXECUTED.",
+      );
+      (discovery?.retainForCollection ?? retainForCollection)();
+      return;
+    }
+    if (entries.length === 0) {
+      throw new Error("Browser inventory selected no tests");
+    }
+    for (const [file] of entries) {
+      if (testInventoryMetadata(file).origin === "unknown") {
+        throw new Error(
+          "Browser test is not classified in the inventory: " + file,
+        );
+      }
+    }
     publishRunState({ status: "running", results, discoveredFiles });
 
     console.log(`[nora@test] Found ${entries.length} browser test file(s).`);
@@ -1020,9 +1124,7 @@ export default async function runBrowserTests(): Promise<void> {
     // The interval is cleared after 10 minutes as a safety net to prevent
     // the browser from running indefinitely if the host runner fails to
     // shut it down.
-    console.log("[nora@test] Keeping browser alive for result collection...");
-    const keepaliveId = setInterval(() => {}, 60_000);
-    setTimeout(() => clearInterval(keepaliveId), 600_000);
+    (discovery?.retainForCollection ?? retainForCollection)();
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[nora@test] Fatal error: ${msg}`);

@@ -1,14 +1,29 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { parseArgs } from "@std/cli";
-import { walkSync } from "@std/fs";
 import * as path from "@std/path";
+import {
+  BROWSER_CATALOG,
+  browserDiscoverable,
+  testInventoryMetadata,
+} from "../../libs/test-inventory/contract.ts";
+import type {
+  ResolvedDevelopmentTargets,
+  TestOrigin,
+} from "../../libs/test-inventory/types.ts";
+import {
+  buildBrowserInventoryPlan,
+  discoverColocatedTests,
+  inventorySourceHashes,
+  reconcileBrowserInventoryResults,
+  requireExecutableBrowserPlan,
+  sha256,
+} from "./browser_test_inventory.ts";
 import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
 import {
   detectLayer,
   escapeRegExp,
   isResultMatchTarget,
-  isTestFile,
   normalizeBrowserResultPath,
   normalizeSlashes,
   parseLayer,
@@ -24,6 +39,8 @@ import {
 
 export interface RunnerOptions {
   near?: string;
+  inventoryPath?: string;
+  origin: TestOrigin | "all";
   listOnly: boolean;
   layer: TestLayer;
   autoStart: boolean;
@@ -51,6 +68,8 @@ const AUTOSTART_POLL_INTERVAL_MS = 1_000;
 const AUTOSTART_STOP_TIMEOUT_MS = 5_000;
 const ALLOWED_LONG_OPTIONS = new Set([
   "near",
+  "origin",
+  "inventory",
   "env",
   "layer",
   "list",
@@ -68,6 +87,8 @@ Options:
   --near, -n <path>              Run tests near a directory or source file
   --list, -l                     List resolved targets without executing
   --layer <all|chrome|esm|pages> Filter by test layer (default: all)
+  --origin <all|floorp|mozilla-converted|mozilla-adapted> Filter development tests by origin
+  --inventory <new-json-path>    Write source inventory and selection before execution
   --timeout-ms <ms>              Browser result collection timeout (default/max: 1800000)
   --startup-timeout-ms <ms>      Auto-start browser ready timeout (default/max: 1800000)
   --no-autostart                 Do not auto-start browser when unavailable
@@ -115,72 +136,6 @@ function formatConsoleLine(level: LogLevel, message: string): string {
   }
 
   return `[${levelLabel}] ${formattedMessage}`;
-}
-
-const SOURCE_EXTENSIONS = new Set([
-  ".ts",
-  ".mts",
-  ".tsx",
-  ".js",
-  ".mjs",
-  ".jsx",
-]);
-
-const WALK_SKIP_PATTERNS = [
-  /(?:^|[\\/])_dist(?:[\\/]|$)/,
-  /(?:^|[\\/])\.git(?:[\\/]|$)/,
-  /(?:^|[\\/])node_modules(?:[\\/]|$)/,
-  /(?:^|[\\/])\.venv(?:[\\/]|$)/,
-  /(?:^|[\\/])\.vscode(?:[\\/]|$)/,
-  /(?:^|[\\/])logs(?:[\\/]|$)/,
-  /(?:^|[\\/])libs[\\/]@types[\\/]gecko(?:[\\/]|$)/,
-];
-
-function discoverAllTests(): string[] {
-  const files: string[] = [];
-
-  for (
-    const entry of walkSync(PROJECT_ROOT, {
-      includeDirs: false,
-      followSymlinks: false,
-      skip: WALK_SKIP_PATTERNS,
-    })
-  ) {
-    const ext = path.extname(entry.path);
-    if (!SOURCE_EXTENSIONS.has(ext)) {
-      continue;
-    }
-
-    const relPath = path.relative(PROJECT_ROOT, entry.path);
-    if (isTestFile(relPath)) {
-      files.push(path.normalize(entry.path));
-    }
-  }
-
-  return files.sort((a, b) => a.localeCompare(b));
-}
-
-function isBrowserDiscoverableTest(relPath: string): boolean {
-  const normalized = relPath.replaceAll("\\", "/");
-  return (
-    /^browser-features\/chrome\/(?:.*\/)?test\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/
-      .test(
-        normalized,
-      ) ||
-    /^browser-features\/modules\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
-      normalized,
-    ) ||
-    /^browser-features\/pages-[^/]+\/.*\.test\.(?:ts|mts|tsx|js|mjs|jsx)$/.test(
-      normalized,
-    )
-  );
-}
-
-function discoverBrowserTests(): string[] {
-  return discoverAllTests().filter((absFile) => {
-    const relPath = path.relative(PROJECT_ROOT, absFile);
-    return isBrowserDiscoverableTest(relPath);
-  });
 }
 
 function filterByLayer(files: string[], layer: TestLayer): string[] {
@@ -261,6 +216,48 @@ function errorToMessage(error: unknown): string {
   return String(error);
 }
 
+function selectDevelopmentFiles(
+  files: string[],
+  options: RunnerOptions,
+): string[] {
+  let selected = filterByLayer(files, options.layer);
+  if (options.near) selected = filterNear(selected, options.near);
+  if (options.origin !== "all") {
+    selected = selected.filter((file) =>
+      testInventoryMetadata(relPath(file)).origin === options.origin
+    );
+  }
+  return selected;
+}
+
+export function resolveDevelopmentTargets(
+  options: RunnerOptions,
+  discovered: string[],
+): ResolvedDevelopmentTargets {
+  const scoped = options.near !== undefined || options.layer !== "all" ||
+    options.origin !== "all";
+  const testFiles = selectDevelopmentFiles(
+    discovered.filter(browserDiscoverable).map((id) =>
+      path.join(PROJECT_ROOT, id)
+    ),
+    options,
+  );
+  const requiredCatalogIds = selectDevelopmentFiles(
+    [...BROWSER_CATALOG.keys()].map((id) => path.join(PROJECT_ROOT, id)),
+    options,
+  ).map(relPath);
+  return {
+    testFiles,
+    targetRels: testFiles.map(relPath),
+    selection: {
+      scope: scoped
+        ? "explicit-development-selection"
+        : "full-development-suite",
+      requiredCatalogIds,
+    },
+  };
+}
+
 function ensureSupportedOptions(args: string[]): void {
   for (const arg of args) {
     if (arg === "--") {
@@ -316,7 +313,15 @@ export function parseOptions(args: string[]): RunnerOptions {
   ensureSupportedOptions(args);
 
   const parsed = parseArgs(args, {
-    string: ["near", "env", "layer", "timeout-ms", "startup-timeout-ms"],
+    string: [
+      "near",
+      "env",
+      "layer",
+      "origin",
+      "inventory",
+      "timeout-ms",
+      "startup-timeout-ms",
+    ],
     boolean: ["list", "no-autostart", "help"],
     alias: {
       n: "near",
@@ -326,6 +331,7 @@ export function parseOptions(args: string[]): RunnerOptions {
     default: {
       list: false,
       layer: "all",
+      origin: "all",
       "timeout-ms": String(DEFAULT_TEST_COLLECTION_TIMEOUT_MS),
       "startup-timeout-ms": String(DEFAULT_AUTOSTART_READY_TIMEOUT_MS),
     },
@@ -334,6 +340,7 @@ export function parseOptions(args: string[]): RunnerOptions {
   if (parsed.help) {
     return {
       listOnly: true,
+      origin: "all",
       layer: "all",
       autoStart: true,
       timeoutMs: DEFAULT_TEST_COLLECTION_TIMEOUT_MS,
@@ -356,8 +363,21 @@ export function parseOptions(args: string[]): RunnerOptions {
     );
   }
 
+  if (
+    !["all", "floorp", "mozilla-converted", "mozilla-adapted"].includes(
+      parsed.origin,
+    )
+  ) {
+    throw new Error("Invalid --origin value");
+  }
+  if (parsed.inventory !== undefined && !parsed.inventory.trim()) {
+    throw new Error("Empty --inventory output path");
+  }
+
   return {
     near: parsed.near ?? positional[0],
+    origin: parsed.origin as RunnerOptions["origin"],
+    inventoryPath: parsed.inventory,
     listOnly: Boolean(parsed.list),
     layer: parseLayer(parsed.layer),
     autoStart: parsed["no-autostart"] !== true,
@@ -2083,7 +2103,9 @@ export function clearBrowserTestControlPrefs(
   }
 }
 
-async function main(): Promise<number> {
+export async function runColocatedTests(
+  args: string[] = Deno.args,
+): Promise<number> {
   const startedAt = new Date();
   const logLines: string[] = [];
   const logFilePath = path.join(
@@ -2114,12 +2136,12 @@ async function main(): Promise<number> {
   };
 
   logLines.push(`[META] startedAt=${startedAt.toISOString()}`);
-  logLines.push(`[META] args=${JSON.stringify(Deno.args)}`);
+  logLines.push(`[META] args=${JSON.stringify(args)}`);
 
   try {
     let options: RunnerOptions;
     try {
-      options = parseOptions(Deno.args);
+      options = parseOptions(args);
     } catch (error) {
       writeLine("ERROR", errorToMessage(error));
       exitCode = 1;
@@ -2157,10 +2179,42 @@ async function main(): Promise<number> {
     );
     writeSection("Discovered Test Targets");
 
-    let testFiles = discoverBrowserTests();
-    testFiles = filterByLayer(testFiles, options.layer);
-    if (options.near) {
-      testFiles = filterNear(testFiles, options.near);
+    const discovered = discoverColocatedTests(PROJECT_ROOT);
+    const { testFiles, targetRels, selection } = resolveDevelopmentTargets(
+      options,
+      discovered,
+    );
+    const inventory = buildBrowserInventoryPlan(
+      discovered,
+      targetRels,
+      await inventorySourceHashes(PROJECT_ROOT, discovered),
+      await sha256(
+        await Deno.readFile(
+          path.join(PROJECT_ROOT, "libs/test-inventory/browser-catalog.json"),
+        ),
+      ),
+      BROWSER_CATALOG,
+      selection,
+    );
+    writeLine(
+      "INFO",
+      `Source inventory: ${
+        JSON.stringify(inventory.counts)
+      }; product=UNVERIFIED`,
+    );
+    if (options.inventoryPath) {
+      Deno.writeTextFileSync(
+        path.resolve(options.inventoryPath),
+        JSON.stringify(inventory, null, 2) + "\n",
+        { createNew: true, mode: 0o600 },
+      );
+    }
+    if (options.listOnly) {
+      for (const issue of inventory.issues) {
+        writeLine("INFO", "Inventory observation: " + issue);
+      }
+    } else {
+      requireExecutableBrowserPlan(inventory);
     }
 
     if (testFiles.length === 0) {
@@ -2169,11 +2223,13 @@ async function main(): Promise<number> {
       return exitCode;
     }
 
-    const targetRels = testFiles.map(relPath);
-
     writeLine("INFO", `Found ${targetRels.length} browser test file(s)`);
     for (const rel of targetRels) {
-      writeLine("INFO", `  - ${rel}`);
+      const metadata = testInventoryMetadata(rel);
+      writeLine(
+        "INFO",
+        `  - ${rel} [${metadata.origin}; ${metadata.executionKind}; ${metadata.packagedStatus}]`,
+      );
     }
 
     if (options.listOnly) {
@@ -2184,7 +2240,7 @@ async function main(): Promise<number> {
     writeLine("INFO", "Waiting for browser test results via prefs file...");
 
     const runningBeforeConnect = await hasRunningTestBrowser();
-    const scopedRun = options.near !== undefined || options.layer !== "all";
+    const scopedRun = selection.scope === "explicit-development-selection";
     if (runningBeforeConnect && scopedRun) {
       writeLine(
         "ERROR",
@@ -2288,13 +2344,18 @@ async function main(): Promise<number> {
         runId,
       );
       const browserResults = browserCollection.results;
+      const inventoryIssues = reconcileBrowserInventoryResults(
+        inventory,
+        browserResults,
+      );
+      for (const issue of inventoryIssues) writeLine("ERROR", issue);
       const results = filterBrowserResults(browserResults, targetRels);
       const missingTargets = browserCollection.aborted
         ? []
         : findMissingTargets(results, targetRels);
       const unknownAliasResults = findUnknownAliasResults(browserResults);
       const strictDiscoveryReconciliation = options.layer === "all" &&
-        !options.near;
+        !options.near && options.origin === "all";
       const unexpectedBrowserTargets = strictDiscoveryReconciliation
         ? findUnexpectedBrowserTargets(browserCollection, targetRels)
         : [];
@@ -2404,6 +2465,7 @@ async function main(): Promise<number> {
         missingTargets.length +
         unexpectedBrowserTargets.length +
         unknownAliasResults.length +
+        inventoryIssues.length +
         abortFailure;
       const skipped = skippedTargets.length;
       const downloadedResults = results.filter((result) =>
@@ -2449,7 +2511,10 @@ async function main(): Promise<number> {
     try {
       await stopPageTestServers?.();
     } catch (error) {
-      writeLine("ERROR", `Failed to stop UI test servers: ${errorToMessage(error)}`);
+      writeLine(
+        "ERROR",
+        `Failed to stop UI test servers: ${errorToMessage(error)}`,
+      );
       exitCode = 1;
     }
     if (autoStartedBrowser) {
@@ -2512,6 +2577,6 @@ async function main(): Promise<number> {
 }
 
 if (import.meta.main) {
-  const exitCode = await main();
+  const exitCode = await runColocatedTests();
   Deno.exit(exitCode);
 }

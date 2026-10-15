@@ -407,6 +407,172 @@ Deno.test("runBrowserTests propagates test control consumption failures", async 
   }
 });
 
+const isolationTarget =
+  "tools/workspace-restart-development/no-autodiscovered-suites.test.ts";
+
+async function withIsolationControl(
+  changes: Record<string, unknown>,
+  callback: (prefs: FakePrefs, root: string) => Promise<void>,
+  mismatchedPrefs = false,
+): Promise<void> {
+  const root = await Deno.makeTempDir();
+  const prefs = new FakePrefs();
+  const control = {
+    schemaVersion: 1,
+    purpose: "restart-bootstrap-isolation",
+    runId: "qa3-restart-host-fixture",
+    expiresAtMs: Date.now() + 60_000,
+    filter: [isolationTarget],
+    ...changes,
+  };
+  seedControlPrefs(
+    prefs,
+    mismatchedPrefs ? "foreign" : control.runId,
+    control.filter,
+  );
+  try {
+    await Deno.writeTextFile(
+      `${root}/nora-tests-control.json`,
+      JSON.stringify(control),
+    );
+    await withFakeTestControlEnvironment(
+      prefs,
+      root,
+      () => callback(prefs, root),
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+}
+
+Deno.test("actual loader preserves explicit one-shot restart isolation as NOT_EXECUTED QA", async () => {
+  await withIsolationControl({}, async (prefs) => {
+    let executions = 0;
+    let retainCalls = 0;
+    await runBrowserTests({
+      chrome: {
+        "#features-chrome/test/unused.test.ts": () => {
+          executions++;
+          return Promise.resolve({});
+        },
+      },
+      esm: {},
+      retainForCollection: () => {
+        retainCalls++;
+      },
+    });
+    const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+    assertEquals(state.status, "done");
+    assertEquals(state.runId, "qa3-restart-host-fixture");
+    assertEquals(state.results, []);
+    assertEquals(state.discoveredFiles, []);
+    assertEquals(state.aborted, false);
+    assertEquals(state.executionPurpose, "restart-bootstrap-isolation");
+    assertEquals(state.qaVerdict, "NOT_EXECUTED");
+    assertEquals(executions, 0);
+    assertEquals(retainCalls, 1);
+  });
+});
+
+Deno.test("actual loader still rejects an ordinary empty execution using the same sentinel", async () => {
+  await withIsolationControl({ purpose: undefined }, async (prefs) => {
+    await runBrowserTests({
+      chrome: {},
+      esm: {},
+      retainForCollection: () => {
+        throw new Error("Unexpected success retention");
+      },
+    });
+    const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+    assertEquals(state.status, "error");
+    assertStringIncludes(state.error, "selected no tests");
+    assertEquals(state.qaVerdict, undefined);
+  });
+});
+
+Deno.test("restart isolation rejects stale, broad, foreign, mismatched and oversized controls without fallback", async () => {
+  for (
+    const changes of [
+      { expiresAtMs: Date.now() - 1 },
+      { expiresAtMs: Date.now() + 600_000 },
+      { filter: [] },
+      {
+        filter: [isolationTarget, "browser-features/chrome/test/other.test.ts"],
+      },
+      { filter: ["browser-features/chrome/test/other.test.ts"] },
+      { runId: "foreign" },
+      { purpose: "quality-pass" },
+    ]
+  ) {
+    await withIsolationControl(changes, async (_prefs, root) => {
+      await assertRejects(
+        () =>
+          runBrowserTests({
+            chrome: {},
+            esm: {},
+            retainForCollection: () => {},
+          }),
+        Error,
+        "refusing to apply a scoped run",
+      );
+      await assertRejects(
+        () => Deno.stat(`${root}/nora-tests-control.json`),
+        Deno.errors.NotFound,
+      );
+    });
+  }
+  await withIsolationControl({}, async () => {
+    await assertRejects(
+      () =>
+        runBrowserTests({ chrome: {}, esm: {}, retainForCollection: () => {} }),
+      Error,
+      "prefs differ",
+    );
+  }, true);
+});
+
+Deno.test("prefs without the original control file cannot grant restart isolation", async () => {
+  await withIsolationControl({}, async (prefs, root) => {
+    await Deno.remove(`${root}/nora-tests-control.json`);
+    await runBrowserTests({
+      chrome: {},
+      esm: {},
+      pages: () => Promise.resolve({}),
+      retainForCollection: () => {
+        throw new Error("Unexpected retention");
+      },
+    });
+    const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+    assertEquals(state.status, "error");
+    assertEquals(state.executionPurpose, undefined);
+  });
+});
+
+Deno.test("restart lease expiry during actual discovery cannot produce a done state", async () => {
+  const saved = Date.now;
+  let now = 1000;
+  Date.now = () => now;
+  try {
+    await withIsolationControl({}, async (prefs) => {
+      await runBrowserTests({
+        get chrome() {
+          now += 70_000;
+          return {};
+        },
+        esm: {},
+        retainForCollection: () => {
+          throw new Error("Unexpected retention");
+        },
+      });
+      const state = JSON.parse(prefs.getStringPref("nora.tests.state", ""));
+      assertEquals(state.status, "error");
+      assertStringIncludes(state.error, "lease differs");
+    });
+  } finally {
+    Date.now = saved;
+  }
+});
+
 function downloadedLoader(
   prefs: FakePrefs,
   expectedTaskCount: number,

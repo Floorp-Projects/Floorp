@@ -97,6 +97,12 @@ ownership is not a replacement for an external resource/teardown boundary.
 
 ## Coverage and remaining gates
 
+The connected development browser inventory, shared Marionette transport and
+final-package redirect probe increments are described in
+[independent source work](independent-source-work.md). Their ordinary host tests
+remain outside the fixed 109-case source subset. They do not establish native
+qualification or change the existing publisher.
+
 `coverage.json` keeps installer, MAR, DEB/PPA, Portable and stub proof plans and
 all five native targets visible. Their current verdict is **UNVERIFIED**.
 Installer unit/intake checks cannot substitute for MAR application, DEB

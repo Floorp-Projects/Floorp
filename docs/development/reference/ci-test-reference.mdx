@@ -1,7 +1,7 @@
 ---
 title: "CI & Test Reference"
 sidebar_label: "CI & Tests"
-floorp_commit: "66c84af0b5818290566a3e7541dc47dbd5f0d161"
+floorp_commit: "0a9b09e233cb75b8d59d17f21d6264cb5e91fb51"
 generated: true
 ---
 # CI & Test Reference
@@ -25,7 +25,7 @@ deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
 deno task firefox-tests:collect --runtime-dir _dist/floorp-runtime --out _dist/firefox-tests --source-repo "$RUNTIME_REPOSITORY" --source-ref "$RUNTIME_REF"
 deno task firefox-tests:triage-browser
 deno task firefox-tests:prepare-browser
-deno task test --layer all --timeout-ms 1800000 --startup-timeout-ms 180000 --no-autostart > _dist/ci-combined-browser-test.log 2>&1 &
+deno task test --layer all --inventory _dist/ci-browser-test-inventory.json --timeout-ms 1800000 --startup-timeout-ms 180000 --no-autostart > _dist/ci-combined-browser-test.log 2>&1 &
 deno test -A tools/src/colocated_test_runner.test.ts
 ```
 

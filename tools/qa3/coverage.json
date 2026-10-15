@@ -72,7 +72,7 @@
   ],
   "deferred": [
     "QA3-02/03 native Debug harness qualification for the exact current Runtime cohort; historical 157 L1 evidence does not qualify the current 158 product",
-    "QA3-06 full browser test origin and feature/target migration catalog",
+    "QA3-06 full feature/target migration catalog; the connected 252-file development origin inventory remains not-onboarded for packaged execution",
     "QA3-07 all five native GUI targets",
     "QA3-08 trusted qualification, first-FAIL history and revocation/expiry",
     "QA3-09 dedicated publisher and approval-bound revalidation",
