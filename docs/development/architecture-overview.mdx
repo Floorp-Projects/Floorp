@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "622dd719d17f289d93b45ff6b0cfaa122d34a973"
+floorp_commit: "c710921bd27e9c933bd1e90bc6b49a121ca29295"
 generated: true
 ---
 # Architecture Overview
@@ -148,6 +148,7 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/qa3-debug-evidence-contracts.yml` - triggers: `pull_request`
 - `.github/workflows/qa3-linux-package-contracts.yml` - triggers: `pull_request`
 - `.github/workflows/qa3-linux-package-intake.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/qa3-linux-package-producer.yml` - triggers: `workflow_dispatch`
