@@ -27,3 +27,11 @@ export interface ReclaimTestInstance {
 export interface SharedReclaimStats {
   value: IdleMemoryReclaimStats;
 }
+
+export interface ReclaimConstructorTestInstance extends ReclaimTestInstance {
+  init: () => void;
+  getPreferences: () => nsIPrefBranch;
+  getObserverService: () => nsIObserverService;
+  getIdleService: () => nsIUserIdleService | null;
+  getTimers: () => Pick<Window, "setInterval" | "clearInterval">;
+}

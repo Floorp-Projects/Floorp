@@ -26,6 +26,14 @@ Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
 
+`contextual-search-initialization.patch` lazily loads the selector configuration
+for contextual engine lookups. Floorp's fixed default engine list can initialize
+SearchService without loading that configuration. If it is unavailable, the
+optional lookup returns no match so OpenSearch and other address-bar actions
+can continue. The matching `tools/patches` patch covers extracted local builds;
+the host parity test and browser `contextualSearch.test.ts` cover both paths.
+This changes JavaScript only and does not require native recompilation.
+
 `macos-artifact-app-shim.patch` carries the Runtime's native App Shim executable
 from the macOS Runtime DMG into the artifact build. The package manifest already
 requires that executable; omitting it prevents the final app from being built.

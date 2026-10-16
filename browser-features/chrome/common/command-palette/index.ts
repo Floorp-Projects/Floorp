@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { render } from "@nora/solid-xul";
+import { onCleanup, render } from "@nora/solid-xul";
 import {
   noraComponent,
   NoraComponentBase,
@@ -20,6 +20,10 @@ export default class CommandPalette extends NoraComponentBase {
       document.head?.appendChild(styleEl);
     }
 
+    // Attach before rendering, and release this controller on component HMR.
+    commandPaletteService.attachToWindow(window);
+    onCleanup(() => commandPaletteService.detachFromWindow(window));
+
     // Render the palette overlay
     const mainWindow = document.getElementById("main-window");
     if (mainWindow) {
@@ -27,8 +31,5 @@ export default class CommandPalette extends NoraComponentBase {
         hotCtx: import.meta.hot,
       });
     }
-
-    // Attach service — creates controller and manages lifecycle
-    commandPaletteService.attachToWindow(window);
   }
 }

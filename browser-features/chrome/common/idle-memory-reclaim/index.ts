@@ -199,30 +199,40 @@ export function isIdleEnough(
  */
 @noraComponent(import.meta.hot)
 export default class IdleMemoryReclaim extends NoraComponentBase {
-  private settings: IdleMemoryReclaimSettings = { ...DEFAULT_SETTINGS };
+  declare private settings: IdleMemoryReclaimSettings;
   /** Seconds passed to addIdleObserver; removal needs the same value. */
-  private registeredIdleSec: number | null = null;
-  private idleObserver: nsIObserver | null = null;
-  private prefObserver: nsIObserver | null = null;
+  declare private registeredIdleSec: number | null;
+  declare private idleObserver: nsIObserver | null;
+  declare private prefObserver: nsIObserver | null;
   /** Timer that re-evaluates idle state periodically. */
-  private pollTimerId: ReturnType<typeof setInterval> | null = null;
+  declare private pollTimerId: ReturnType<typeof setInterval> | null;
   /** Guards against a reclaim starting while one is already running. */
-  private reclaiming = false;
+  declare private reclaiming: boolean;
   /** Set on teardown so work awaiting a snapshot stops instead of resuming. */
-  private disposed = false;
+  declare private disposed: boolean;
 
   init(): void {
+    if (this.prefObserver || this.disposed) return;
+    this.registeredIdleSec = null;
+    this.idleObserver = null;
+    this.prefObserver = null;
+    this.pollTimerId = null;
+    this.reclaiming = false;
+    this.disposed = false;
     this.settings = this.loadSettings();
+    onCleanup(() => this.teardown());
     this.setupPrefObserver();
     this.setupIdleObserver();
     this.setupPollTimer();
-    onCleanup(() => this.teardown());
   }
 
   /** Loads settings from the pref, falling back to defaults on failure. */
   private loadSettings(): IdleMemoryReclaimSettings {
     try {
-      const raw = Services.prefs.getStringPref(IDLE_MEMORY_RECLAIM_PREF, "");
+      const raw = this.getPreferences().getStringPref(
+        IDLE_MEMORY_RECLAIM_PREF,
+        "",
+      );
       if (!raw) {
         return { ...DEFAULT_SETTINGS };
       }
@@ -236,7 +246,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   /** Loads stats from the pref, falling back to zeroed stats on failure. */
   private loadStats(): IdleMemoryReclaimStats {
     try {
-      const raw = Services.prefs.getStringPref(
+      const raw = this.getPreferences().getStringPref(
         IDLE_MEMORY_RECLAIM_STATS_PREF,
         "",
       );
@@ -253,13 +263,25 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   /** Writes stats back to the pref, which every window shares. */
   private saveStats(stats: IdleMemoryReclaimStats): void {
     try {
-      Services.prefs.setStringPref(
+      this.getPreferences().setStringPref(
         IDLE_MEMORY_RECLAIM_STATS_PREF,
         JSON.stringify(stats),
       );
     } catch (error) {
       console.error("[IdleMemoryReclaim] Failed to save stats:", error);
     }
+  }
+
+  private getPreferences(): nsIPrefBranch {
+    return Services.prefs;
+  }
+
+  private getObserverService(): nsIObserverService {
+    return Services.obs;
+  }
+
+  private getTimers(): Pick<Window, "setInterval" | "clearInterval"> {
+    return window;
   }
 
   private getMemoryManager(): nsIMemoryReporterManager | null {
@@ -349,7 +371,10 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   private setupPrefObserver(): void {
     this.prefObserver = {
       observe: (_subject: nsISupports, topic: string, data: string) => {
-        if (topic !== "nsPref:changed" || data !== IDLE_MEMORY_RECLAIM_PREF) {
+        if (
+          this.disposed || topic !== "nsPref:changed" ||
+          data !== IDLE_MEMORY_RECLAIM_PREF
+        ) {
           return;
         }
         this.settings = this.loadSettings();
@@ -359,7 +384,10 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
       },
     };
 
-    Services.prefs.addObserver(IDLE_MEMORY_RECLAIM_PREF, this.prefObserver);
+    this.getPreferences().addObserver(
+      IDLE_MEMORY_RECLAIM_PREF,
+      this.prefObserver,
+    );
   }
 
   /**
@@ -402,7 +430,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
     // Let tests and other features request a reclaim explicitly.
     try {
-      Services.obs.addObserver(observer, RECLAIM_REQUEST_TOPIC);
+      this.getObserverService().addObserver(observer, RECLAIM_REQUEST_TOPIC);
     } catch (error) {
       console.error(
         "[IdleMemoryReclaim] Failed to add request observer:",
@@ -432,7 +460,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     }
 
     try {
-      Services.obs.removeObserver(observer, RECLAIM_REQUEST_TOPIC);
+      this.getObserverService().removeObserver(observer, RECLAIM_REQUEST_TOPIC);
     } catch {
       // Not registered - nothing to do.
     }
@@ -456,7 +484,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
     }
 
     const intervalMs = Math.round(this.settings.pollIntervalSec) * 1000;
-    this.pollTimerId = setInterval(() => {
+    this.pollTimerId = this.getTimers().setInterval(() => {
       if (this.isStillIdle()) {
         void this.reclaimIfNeeded(true);
       }
@@ -465,7 +493,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
   private clearPollTimer(): void {
     if (this.pollTimerId !== null) {
-      clearInterval(this.pollTimerId);
+      this.getTimers().clearInterval(this.pollTimerId);
       this.pollTimerId = null;
     }
   }
@@ -579,13 +607,14 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
 
   /** Removes observers when the window goes away or on HMR. */
   private teardown(): void {
+    if (this.disposed) return;
     this.disposed = true;
     this.clearPollTimer();
     this.unregisterIdleObserver();
 
     if (this.prefObserver) {
       try {
-        Services.prefs.removeObserver(
+        this.getPreferences().removeObserver(
           IDLE_MEMORY_RECLAIM_PREF,
           this.prefObserver,
         );
