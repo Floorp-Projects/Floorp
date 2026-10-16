@@ -1,21 +1,24 @@
 import styles from "@/components/common/settings-sections.module.css";
-import { Button } from "../../../../../../libs/ui/button.tsx";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL-2.0/. */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { comboToCanonicalCode } from "../../../../../modules/common/NRKeySyncCombo.ts";
 import type { FirefoxKeyEntry } from "../../../../../modules/common/NRKeySyncTypes.ts";
 import type { ShortcutConfig } from "../../../types/pref.ts";
 import type { ShortcutsSettingsProps } from "../types.ts";
+import { Button } from "../../../../../../libs/ui/button.tsx";
+import { Input } from "../../../../../../libs/ui/input.tsx";
 import { useAvailableActions } from "../../gesture/useAvailableActions.ts";
 import { getKeyboardShortcutActionOptions } from "../actionCatalog.ts";
 import {
   buildUnifiedShortcutRows,
+  filterUnifiedShortcutRows,
   groupUnifiedShortcutRows,
+  normalizeShortcutSearchText,
   type ShortcutCategoryId,
   type UnifiedShortcutRow,
 } from "../shortcutDisplay.ts";
@@ -29,7 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Keyboard } from "lucide-react";
+import { Keyboard, Search } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
 import { keySync } from "../../../lib/rpc/keysync.ts";
 import { formatModifierSymbol } from "../platform.ts";
@@ -99,7 +102,16 @@ export const ShortcutsSettings = ({
     config.shortcuts ?? {},
     firefoxKeys,
   );
-  const categories = groupUnifiedShortcutRows(rows);
+  const categories = useMemo(
+    () => groupUnifiedShortcutRows(rows),
+    [rows],
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const visibleCategories = useMemo(
+    () => filterUnifiedShortcutRows(categories, searchQuery, t),
+    [categories, searchQuery, t],
+  );
+  const hasSearchQuery = normalizeShortcutSearchText(searchQuery).length > 0;
   const [editingAction, setEditingAction] = useState<string | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingShortcut, setEditingShortcut] = useState<ShortcutConfig | null>(
@@ -293,6 +305,17 @@ export const ShortcutsSettings = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <label className="mb-4 flex w-full items-center gap-2">
+          <Search className="size-4 text-base-content/50" />
+          <Input
+            type="search"
+            className="min-w-0 grow"
+            aria-label={t("keyboardShortcut.searchLabel")}
+            placeholder={t("keyboardShortcut.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          />
+        </label>
         {!firefoxKeysLoading && !writeEnabled && (
           <div className="floorp-notice mb-4 text-base-content/70">
             <span className="text-sm">
@@ -310,17 +333,25 @@ export const ShortcutsSettings = ({
           </div>
         )}
         <div className="overflow-x-auto">
-          <table className={`floorp-table ${styles.table}`}>
-            <thead>
-              <tr>
-                <th>{t("keyboardShortcut.action")}</th>
-                <th>{t("keyboardShortcut.source.title")}</th>
-                <th>{t("keyboardShortcut.shortcut")}</th>
-                <th>{t("keyboardShortcut.actions")}</th>
-              </tr>
-            </thead>
-            {categories.map(renderCategory)}
-          </table>
+          {visibleCategories.length === 0 && hasSearchQuery
+            ? (
+              <p className="mb-4 text-sm text-base-content/60">
+                {t("keyboardShortcut.noSearchResults")}
+              </p>
+            )
+            : (
+              <table className={`floorp-table ${styles.table}`}>
+                <thead>
+                  <tr>
+                    <th>{t("keyboardShortcut.action")}</th>
+                    <th>{t("keyboardShortcut.source.title")}</th>
+                    <th>{t("keyboardShortcut.shortcut")}</th>
+                    <th>{t("keyboardShortcut.actions")}</th>
+                  </tr>
+                </thead>
+                {visibleCategories.map(renderCategory)}
+              </table>
+            )}
         </div>
 
         {isEditorOpen && (

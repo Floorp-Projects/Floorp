@@ -825,6 +825,9 @@
     "shortcuts": "ショートカット",
     "shortcutsDescription": "Floorp と Firefox のキーボードショートカットを 1 つのテーブルで設定します",
     "shortcutsTip": "同じ操作のショートカットは Firefox 側に表示されます。未設定の重複する Floorp 行は非表示になりますが、追加の Floorp ショートカットは利用できます。",
+    "searchLabel": "キーボードショートカットを検索",
+    "searchPlaceholder": "ショートカットを検索",
+    "noSearchResults": "一致するキーボードショートカットはありません",
     "action": "アクション",
     "shortcut": "ショートカット",
     "source": {

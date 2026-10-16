@@ -19,9 +19,11 @@ import type { ShortcutConfig } from "../../../src/types/pref.ts";
 import {
   buildUnifiedShortcutRows,
   filterActionsForFirefoxPriority,
+  filterUnifiedShortcutRows,
   getFirefoxKeyActionId,
   getFloorpCanonicalCode,
   groupActionsByCategory,
+  groupUnifiedShortcutRows,
 } from "../../../src/app/keyboard-shortcut/shortcutDisplay.ts";
 
 function createShortcut(
@@ -289,6 +291,41 @@ function testActionsAreGroupedWithoutEmptyCategories(): void {
   );
 }
 
+function testShortcutRowsMatchNamesAndShortcutSeparators(): void {
+  const categories = groupUnifiedShortcutRows([
+    {
+      key: "floorp:gecko-back:0",
+      source: "floorp",
+      actionId: "gecko-back",
+      name: "Go Back",
+      category: "page",
+      shortcut: createShortcut("KeyT"),
+    },
+  ]);
+  const translate = (key: string): string =>
+    key === "keyboardShortcut.categories.page" ? "Page" : key;
+
+  assertStringArrayEqual(
+    filterUnifiedShortcutRows(categories, "go back", translate).flatMap(
+      (category) => category.actions.map((row) => row.name),
+    ),
+    ["Go Back"],
+    "action names should be searchable",
+  );
+  assertStringArrayEqual(
+    filterUnifiedShortcutRows(categories, "ctrl+t", translate).flatMap(
+      (category) => category.actions.map((row) => row.name),
+    ),
+    ["Go Back"],
+    "+ in shortcut queries should behave like whitespace",
+  );
+  assertEquals(
+    filterUnifiedShortcutRows(categories, "bookmark", translate).length,
+    0,
+    "non-matching queries should remove empty categories",
+  );
+}
+
 function testShortcutDisplayLocales(): void {
   const categoryKeys = [
     "tabs",
@@ -365,6 +402,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "Firefox priority hides configured and equivalent duplicates",
       fn: testFirefoxPriorityHidesConfiguredAndEquivalentDuplicates,
+    },
+    {
+      name: "shortcut rows match names and shortcut separators",
+      fn: testShortcutRowsMatchNamesAndShortcutSeparators,
     },
     {
       name: "actions are grouped without empty categories",

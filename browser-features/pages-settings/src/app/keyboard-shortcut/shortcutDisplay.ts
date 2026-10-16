@@ -355,6 +355,62 @@ export interface UnifiedShortcutRow {
   firefoxKey?: FirefoxKeyEntry;
 }
 
+/** Normalize shortcut search text, including modifier/key separators. */
+export function normalizeShortcutSearchText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[+\-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Keep only rows matching the query in action names, source names, category
+ * names, labels or shortcut text. Punctuation such as "+" is ignored so both
+ * "ctrl t" and "ctrl+t" find Ctrl+T.
+ */
+export function filterUnifiedShortcutRows(
+  categories: ReadonlyArray<{
+    id: ShortcutCategoryId;
+    actions: readonly UnifiedShortcutRow[];
+  }>,
+  query: string,
+  translate: (key: string) => string,
+): Array<{
+  id: ShortcutCategoryId;
+  actions: UnifiedShortcutRow[];
+}> {
+  const normalizedQuery = normalizeShortcutSearchText(query);
+  if (normalizedQuery.length === 0) {
+    return categories.map(({ id, actions }) => ({
+      id,
+      actions: [...actions],
+    }));
+  }
+
+  return categories.flatMap(({ id, actions }) => {
+    const categoryName = translate(`keyboardShortcut.categories.${id}`);
+    const matchingActions = actions.filter((row) =>
+      [
+        row.name,
+        row.actionId ?? "",
+        row.source,
+        categoryName,
+        row.firefoxKey?.label ?? "",
+        row.firefoxKey?.shortcutText ?? "",
+        row.firefoxKey?.keycode ?? "",
+        row.shortcut?.key ?? "",
+      ].map(normalizeShortcutSearchText).some((text) =>
+        text.includes(normalizedQuery)
+      )
+    );
+
+    return matchingActions.length > 0 ? [{ id, actions: matchingActions }] : [];
+  });
+}
+
 /**
  * Build one table containing both settings systems. Firefox keys mapped to a
  * canonical action use that action's display name, while unmapped Firefox

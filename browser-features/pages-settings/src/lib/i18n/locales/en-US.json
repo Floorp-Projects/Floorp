@@ -825,6 +825,9 @@
     "shortcuts": "Shortcuts",
     "shortcutsDescription": "Configure Floorp and Firefox keyboard shortcuts in one table",
     "shortcutsTip": "Equivalent Firefox shortcuts are shown on the Firefox side. Matching unset Floorp rows are hidden, while extra Floorp bindings remain available.",
+    "searchLabel": "Search keyboard shortcuts",
+    "searchPlaceholder": "Search shortcuts",
+    "noSearchResults": "No matching keyboard shortcuts",
     "action": "Action",
     "shortcut": "Shortcut",
     "source": {
