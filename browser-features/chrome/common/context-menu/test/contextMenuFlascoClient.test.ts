@@ -16,12 +16,19 @@ const POLICY_PREF = "floorp.experiments.participationPolicy";
 async function waitUntil(
   condition: () => boolean,
   message: string,
+  timeoutMs = 5000,
+  diagnostics?: (deadline: number) => string,
 ): Promise<void> {
-  const deadline = Date.now() + 5000;
+  const deadline = Date.now() + timeoutMs;
   while (!condition() && Date.now() < deadline) {
     await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 25));
   }
-  assert(condition(), message);
+  if (!condition()) {
+    assert(
+      false,
+      diagnostics ? `${message}: ${diagnostics(deadline)}` : message,
+    );
+  }
 }
 
 async function testClientRuntimeBoundaries(
@@ -73,13 +80,14 @@ async function testClientRuntimeBoundaries(
     Services.prefs.setStringPref("floorp.experiments.disabled", "[]");
     Services.prefs.setStringPref("floorp.experiments.forceEnrolled", "[]");
     const start = Date.now() + 1500;
+    const end = start + 5000;
     const manifest = {
       experiments: [
         {
           id: EXPERIMENT_ID,
           rollout,
           start: new Date(start).toISOString(),
-          end: new Date(start + 5000).toISOString(),
+          end: new Date(end).toISOString(),
           variants: [{ id: "control", weight: 0 }, {
             id: "enabled",
             weight: 1,
@@ -228,9 +236,26 @@ async function testClientRuntimeBoundaries(
     Services.prefs.setStringPref(POLICY_PREF, "always");
     await client.init({ installId: "context-menu-boundary-test" });
     assertEquals(counts.creations, beforeDisable + 2, "opt-in resumes once");
+    // The runtime schedules expiry at end + 1ms. Give that real boundary a
+    // separate scheduler allowance instead of racing a fixed five-second wait.
     await waitUntil(
       () => counts.destructions === counts.creations,
       "end boundary stops the real-client runtime",
+      Math.max(0, end - Date.now()) + 2000,
+      (deadline) => {
+        const now = Date.now();
+        const experiment = client.getAllExperiments()[0];
+        return JSON.stringify({
+          now,
+          end,
+          deadline,
+          millisecondsPastEnd: now - end,
+          millisecondsPastDeadline: now - deadline,
+          isActive: experiment?.isActive,
+          currentVariantId: experiment?.currentVariantId,
+          counts,
+        });
+      },
     );
     assertEquals(
       client.getAllExperiments()[0].isActive,
