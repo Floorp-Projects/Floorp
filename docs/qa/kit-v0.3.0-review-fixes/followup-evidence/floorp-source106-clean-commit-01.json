@@ -1,0 +1,29 @@
+{
+  "check": "floorp-source106",
+  "label": "clean-commit-01",
+  "sourceHead": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+  "startedAt": "2026-10-09T15:00:34.290893+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "tools/qa3/source.py",
+    "run",
+    "/workspace/qa-review-v030/fix-qa309/evidence/floorp-source106-clean-commit-01",
+    "--expected-head",
+    "7747cf0e711937e056a34594d8d39fcc8dfc54f0"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 1.473,
+  "log": "floorp-source106-clean-commit-01.log",
+  "logSha256": "094338991399497849c122614ea02dec8d429f8388a029cffdaffcd3d7cd0150",
+  "credentialsInherited": false,
+  "browserRequired": false,
+  "workerPhysicalMemoryMaxBytes": 17179869184,
+  "outerSoftASBytes": null,
+  "outerHardASBytes": null,
+  "outerSoftFSIZEBytes": 33554432,
+  "outerHardFSIZEBytes": 68719476736,
+  "wallTimeoutSeconds": 150
+}

@@ -1,0 +1,432 @@
+{
+  "capturedAt": "2026-10-09T15:18:09.852623+00:00",
+  "head83": "91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+  "head84": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "baseline83": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+  "baseline84": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "head83AncestorOf84": true,
+  "repoHead": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+  "status": "",
+  "files": [
+    {
+      "path": ".github/workflows/scripts/qa3_build_profile.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-qa3_build_profile.py",
+      "sha256": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a",
+      "gitBlob": "d207415401407e730fa28c9124aa206b9d35504d"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_mozlog.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-qa3_mozlog.py",
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "gitBlob": "a61092a47e408e541484ac1677dc6dfc874d5159"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_native_io.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-qa3_native_io.py",
+      "sha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+      "gitBlob": "a8a231959a179e223971689e17d268bcae3d78d3"
+    },
+    {
+      "path": ".github/workflows/scripts/setup-floorp.sh",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-setup-floorp.sh",
+      "sha256": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c",
+      "gitBlob": "f0ac55081b68a0a10986b9498faf0f80c9f6752a"
+    },
+    {
+      "path": ".github/workflows/scripts/test_qa3_build_profile.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-test_qa3_build_profile.py",
+      "sha256": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96",
+      "gitBlob": "937c09c2eb52f4d7d795bdb391735627038650d3"
+    },
+    {
+      "path": ".github/workflows/scripts/test_qa3_mozlog.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-test_qa3_mozlog.py",
+      "sha256": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063",
+      "gitBlob": "dcdbf0e1b11e3b231be9582b29fcc9c8bdf74521"
+    },
+    {
+      "path": ".github/workflows/scripts/test_qa3_native_io.py",
+      "snapshot": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-test_qa3_native_io.py",
+      "sha256": "f1bfacc36f844e3f4d0aab51066b41aaab30b58f8c57d2d676ddf2fb40283888",
+      "gitBlob": "fd67b6ed7fb837e505af404ca0e16cebab41a121"
+    }
+  ],
+  "setup83To84": [
+    {
+      "path": ".github/workflows/scripts/setup-floorp.sh",
+      "sameBytes": true,
+      "sha256": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_build_profile.py",
+      "sameBytes": true,
+      "sha256": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a"
+    },
+    {
+      "path": ".github/workflows/scripts/test_qa3_build_profile.py",
+      "sameBytes": true,
+      "sha256": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96"
+    }
+  ],
+  "mozconfigs": [
+    {
+      "path": ".github/workflows/mozconfigs/android-arm64-v8a.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "7ee9080b8673a1d12d8b6beb1db1cac1901fb7683fe3199b46950c2f365ccf1a"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/android-armeabi-v7a.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "3b30ce83e24fd01cc3a248dc80fe64369fe60fbbb86dc4dbe4ecd07a56c9b4f1"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/android-x86_64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "a3db7f418f64222d171c006856fb90facb74b0b3095239c7caa0abfd73a6abbf"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/linux-aarch64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "52bf234fbb62b610ed86a9222eb31bc5357da2b62f4663deeabe9213e1beea49"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/linux-x86_64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "340ff7786df952869618855905a5da72a181a81380e33f34703c54e4cd5b31da"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/macosx64-aarch64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "bd2c84f30569724bf0ddeba3201c6f4ad1336c0f453a3374aef4b32826600efa"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/macosx64-x86_64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "8997298667a649ab55f413dfce16a19dbcd4d763536c1dea3ad7a4c49604ecb4"
+    },
+    {
+      "path": ".github/workflows/mozconfigs/windows-x86_64.mozconfig",
+      "sameOld83Final83Final84": true,
+      "sha256": "ff3af484bcba966be587303cebecc3f43ddf21b4fdb2b4f724d8d2e0f33a3064"
+    }
+  ],
+  "workflowComparisons": [
+    {
+      "label": "pr83",
+      "before": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+      "after": "91e94b73617730d54ffee3d4ea42ff3a91463c7d",
+      "files": [
+        {
+          "path": ".github/workflows/android-build.yml",
+          "sameBytes": true,
+          "sha256": "bf81edbef54740f3ea90ca95fce5b8740ed0a3bbda73923d1d65d92f0b515dd4"
+        },
+        {
+          "path": ".github/workflows/autodiff-per-file-pr.yml",
+          "sameBytes": true,
+          "sha256": "37154b747fe2a63505f421ebb91ebb970669ebda3607044f602cf9f33b42c6ba"
+        },
+        {
+          "path": ".github/workflows/cleanup-large-caches.yml",
+          "sameBytes": true,
+          "sha256": "be96f73ab5c57b328c5f2f4faef932a2e884d0c4a2ec72e16aa532ca800e8377"
+        },
+        {
+          "path": ".github/workflows/common-build.yml",
+          "sameBytes": true,
+          "sha256": "1e334cb990c6e6da97624dbf115e12a54405ca328587ccf36deb322ec1269bab"
+        },
+        {
+          "path": ".github/workflows/daily-build.yml",
+          "sameBytes": true,
+          "sha256": "d14c6b15be1680f7c8fefa9f90823ec1b0b9135cf9a16d64e600cb5efdbed273"
+        },
+        {
+          "path": ".github/workflows/generate-pgo-profile-linux.yml",
+          "sameBytes": true,
+          "sha256": "b8dcba208a82c0ae2914d8991c46429ca226b8ee162e6b371e27adc938efa841"
+        },
+        {
+          "path": ".github/workflows/generate-pgo-profile-windows.yml",
+          "sameBytes": true,
+          "sha256": "1a2ec3556e8ad9d14b865e89f9544e2d3970eca8ac35247c272456b012407a3c"
+        },
+        {
+          "path": ".github/workflows/mac_integration.yml",
+          "sameBytes": true,
+          "sha256": "7a8ff89c0096a804e28436932ee1926d536fb03a7415547f6918caee2dcb893e"
+        },
+        {
+          "path": ".github/workflows/mac_pgo.yml",
+          "sameBytes": true,
+          "sha256": "910e53d9ab5b3e64f084475be994b373e1ef7b82c7d626e3c2af8a75e572e98c"
+        },
+        {
+          "path": ".github/workflows/misc-pull-upstream.yml",
+          "sameBytes": true,
+          "sha256": "3ed51c918739e9c61bd1ebd2eba6a58ead982ab0016c6f5a3d8eb3171a23d92c"
+        },
+        {
+          "path": ".github/workflows/qa3-shadow.yml",
+          "sameBytes": true,
+          "sha256": "0599ce8def7c176ad2093a0992be2c4a68ca368d5f12a9e56f8ac574f4ccb39d"
+        },
+        {
+          "path": ".github/workflows/recover-runtime-variants.yml",
+          "sameBytes": true,
+          "sha256": "a3f57c00b2797453f4aa19c2cea60239b99f337b9cf6c819a8d8ec7e56d26d1b"
+        },
+        {
+          "path": ".github/workflows/resolve-build-context.yml",
+          "sameBytes": true,
+          "sha256": "c9bce191fe4713f2e3eb7b56f4ffe56a86ede9feafadbbb070d51b31aea810ba"
+        },
+        {
+          "path": ".github/workflows/validate-pwa-context-menu.yml",
+          "sameBytes": true,
+          "sha256": "d253bb9daae4818195c2cfa108a5b1c5205d196b8f0f8266f8390bff656bab0e"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-debug.yml",
+          "sameBytes": true,
+          "sha256": "adad5b37fcd62a4b9b5cbfbb32337f1b96d55f1ea863609e7c3ad6432fa4d839"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-pgo.yml",
+          "sameBytes": true,
+          "sha256": "26d8ce008f5efd5baa65545462c7c73f1935a2031c180093409be0fb3e30a97f"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-source.yml",
+          "sameBytes": true,
+          "sha256": "6dfa0f0982feea4e6ba8daaa28cf54d38fd554802fe17ef45f276e322d15daca"
+        },
+        {
+          "path": ".github/workflows/verify-runtime-artifact.yml",
+          "sameBytes": true,
+          "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-android.yml",
+          "sameBytes": true,
+          "sha256": "2d95f547d70cb9523c27f585cbc858db816e01fe0e9a10bcbd8a1b92db3e0202"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-linux.yml",
+          "sameBytes": true,
+          "sha256": "9b84814ac364facdddeb9afe2db081aad4fb2517a66caf8fab47f911c55ece4d"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-windows.yml",
+          "sameBytes": true,
+          "sha256": "901c03950c222a4eb301428427024be89a39f48d4f378878ae54a3f566999dcc"
+        },
+        {
+          "path": ".github/workflows/wrapper-mac-build.yml",
+          "sameBytes": true,
+          "sha256": "1c92a789dba7281226256ea963a8ce642131d8ef26822348eeae64e845cdd862"
+        }
+      ]
+    },
+    {
+      "label": "pr84",
+      "before": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+      "after": "cc83e6fea6499d6ec89c76ae9837c280556e9d53",
+      "files": [
+        {
+          "path": ".github/workflows/android-build.yml",
+          "sameBytes": true,
+          "sha256": "bf81edbef54740f3ea90ca95fce5b8740ed0a3bbda73923d1d65d92f0b515dd4"
+        },
+        {
+          "path": ".github/workflows/autodiff-per-file-pr.yml",
+          "sameBytes": true,
+          "sha256": "37154b747fe2a63505f421ebb91ebb970669ebda3607044f602cf9f33b42c6ba"
+        },
+        {
+          "path": ".github/workflows/cleanup-large-caches.yml",
+          "sameBytes": true,
+          "sha256": "be96f73ab5c57b328c5f2f4faef932a2e884d0c4a2ec72e16aa532ca800e8377"
+        },
+        {
+          "path": ".github/workflows/common-build.yml",
+          "sameBytes": true,
+          "sha256": "1e334cb990c6e6da97624dbf115e12a54405ca328587ccf36deb322ec1269bab"
+        },
+        {
+          "path": ".github/workflows/daily-build.yml",
+          "sameBytes": true,
+          "sha256": "d14c6b15be1680f7c8fefa9f90823ec1b0b9135cf9a16d64e600cb5efdbed273"
+        },
+        {
+          "path": ".github/workflows/generate-pgo-profile-linux.yml",
+          "sameBytes": true,
+          "sha256": "b8dcba208a82c0ae2914d8991c46429ca226b8ee162e6b371e27adc938efa841"
+        },
+        {
+          "path": ".github/workflows/generate-pgo-profile-windows.yml",
+          "sameBytes": true,
+          "sha256": "1a2ec3556e8ad9d14b865e89f9544e2d3970eca8ac35247c272456b012407a3c"
+        },
+        {
+          "path": ".github/workflows/mac_integration.yml",
+          "sameBytes": true,
+          "sha256": "7a8ff89c0096a804e28436932ee1926d536fb03a7415547f6918caee2dcb893e"
+        },
+        {
+          "path": ".github/workflows/mac_pgo.yml",
+          "sameBytes": true,
+          "sha256": "910e53d9ab5b3e64f084475be994b373e1ef7b82c7d626e3c2af8a75e572e98c"
+        },
+        {
+          "path": ".github/workflows/misc-pull-upstream.yml",
+          "sameBytes": true,
+          "sha256": "3ed51c918739e9c61bd1ebd2eba6a58ead982ab0016c6f5a3d8eb3171a23d92c"
+        },
+        {
+          "path": ".github/workflows/qa3-linux-debug-proof.yml",
+          "sameBytes": true,
+          "sha256": "91fd71f852e883b76361534c5b8fba76078e3cce1a56730dc8c9f80541472646"
+        },
+        {
+          "path": ".github/workflows/qa3-shadow.yml",
+          "sameBytes": true,
+          "sha256": "0599ce8def7c176ad2093a0992be2c4a68ca368d5f12a9e56f8ac574f4ccb39d"
+        },
+        {
+          "path": ".github/workflows/recover-runtime-variants.yml",
+          "sameBytes": true,
+          "sha256": "a3f57c00b2797453f4aa19c2cea60239b99f337b9cf6c819a8d8ec7e56d26d1b"
+        },
+        {
+          "path": ".github/workflows/resolve-build-context.yml",
+          "sameBytes": true,
+          "sha256": "c9bce191fe4713f2e3eb7b56f4ffe56a86ede9feafadbbb070d51b31aea810ba"
+        },
+        {
+          "path": ".github/workflows/validate-pwa-context-menu.yml",
+          "sameBytes": true,
+          "sha256": "d253bb9daae4818195c2cfa108a5b1c5205d196b8f0f8266f8390bff656bab0e"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-debug.yml",
+          "sameBytes": true,
+          "sha256": "adad5b37fcd62a4b9b5cbfbb32337f1b96d55f1ea863609e7c3ad6432fa4d839"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-pgo.yml",
+          "sameBytes": true,
+          "sha256": "26d8ce008f5efd5baa65545462c7c73f1935a2031c180093409be0fb3e30a97f"
+        },
+        {
+          "path": ".github/workflows/validate-runtime-source.yml",
+          "sameBytes": true,
+          "sha256": "6dfa0f0982feea4e6ba8daaa28cf54d38fd554802fe17ef45f276e322d15daca"
+        },
+        {
+          "path": ".github/workflows/verify-runtime-artifact.yml",
+          "sameBytes": true,
+          "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-android.yml",
+          "sameBytes": true,
+          "sha256": "2d95f547d70cb9523c27f585cbc858db816e01fe0e9a10bcbd8a1b92db3e0202"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-linux.yml",
+          "sameBytes": true,
+          "sha256": "9b84814ac364facdddeb9afe2db081aad4fb2517a66caf8fab47f911c55ece4d"
+        },
+        {
+          "path": ".github/workflows/wrapper-build-windows.yml",
+          "sameBytes": true,
+          "sha256": "901c03950c222a4eb301428427024be89a39f48d4f378878ae54a3f566999dcc"
+        },
+        {
+          "path": ".github/workflows/wrapper-mac-build.yml",
+          "sameBytes": true,
+          "sha256": "1c92a789dba7281226256ea963a8ce642131d8ef26822348eeae64e845cdd862"
+        }
+      ]
+    }
+  ],
+  "unchangedGateScripts": [
+    {
+      "path": ".github/workflows/scripts/qa3_native_build.py",
+      "sameBytes": true,
+      "sha256": "8f75c2de1ce17c1779364aa8294d6539b1661e366964b19a860f2fe16ab0ad3d"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_native_consume.py",
+      "sameBytes": true,
+      "sha256": "7c73e0fb85f2a714636507c1f9f5d79575b7b860e67f0c430509743879b662e2"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_native_worker.py",
+      "sameBytes": true,
+      "sha256": "f138b83fdde8c39ca83c1de9c3838d3819fb1c9e5a09c5ffb7278b0c2786c142"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_source_prepare.py",
+      "sameBytes": true,
+      "sha256": "1925e9db2af22b3f36b350d0ca14ccc3a4a26b02d9a49a1dd9682090bdea0e33"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_config_probe.py",
+      "sameBytes": true,
+      "sha256": "4bdf6fae2218eabde1bf032e9c23a589d0d81ecee2ece280dfd210b952980022"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_harness_probe.py",
+      "sameBytes": true,
+      "sha256": "5977066d7be19851f9601f5a7994a5c3232f5525bd6edd123956dcef59e85216"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_xpcshell_entry.py",
+      "sameBytes": true,
+      "sha256": "c33ecd311df37961d41e89402dfc6223dc76f5efe4d9592149fb5856c8e48a5d"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_native_transport.py",
+      "sameBytes": true,
+      "sha256": "cce9771053302b5a4dacda58a6a531d8b491c3f4ecebd26c1d403f01f0c0cfe7"
+    },
+    {
+      "path": ".github/workflows/scripts/qa3_source_cohort.py",
+      "sameBytes": true,
+      "sha256": "d2293fcf095b13783bb911861915e605969638068be2e942996785941f5e5434"
+    },
+    {
+      "path": ".github/workflows/scripts/runtime_build_context.py",
+      "sameBytes": true,
+      "sha256": "7495feedabf03ee49da4bbcbd7af8838f11f4b604b312afc1679af3aa254b637"
+    }
+  ],
+  "floorpFinal": {
+    "head": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+    "sourceSha256": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32",
+    "testSha256": "a8e50bc710b7a2fce37269df43326d2683d4997d9a40772f5f286f6a7a9dde51",
+    "READMEOnlyWhitespaceReflow": true,
+    "READMEFinalSha256": "91a09ecc0eaaa9136dfca829fcb44554b53b58ba4776e3430f93e3e5e7d424a6"
+  },
+  "nativeIOUnchangedFunctions": {
+    "read_json": true,
+    "write_json": true,
+    "outside": true,
+    "capture_material_tree": true,
+    "fresh": true,
+    "child_environment": true,
+    "_proc": true,
+    "_descendants": true,
+    "owned_alive": true,
+    "copy_file": true,
+    "verify_group_limits": true,
+    "elf_identity": true,
+    "_archive_name": true,
+    "extract_archive": true,
+    "pack_tree": true,
+    "verify_budget": true
+  },
+  "nativeIOPublicAbiUnchanged": true
+}

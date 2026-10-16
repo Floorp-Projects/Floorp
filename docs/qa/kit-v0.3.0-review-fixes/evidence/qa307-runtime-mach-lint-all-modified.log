@@ -1,0 +1,39 @@
+Error running mach:
+
+    mach lint
+
+The error occurred in code that was called by the mach command. This is either
+a bug in the called code itself or in the way that mach is calling it.
+You can invoke ``./mach busted`` to check if this issue is already on file. If it
+isn't, please use ``./mach busted file lint`` to report it. If ``./mach busted`` is
+misbehaving, you can also inspect the dependencies of bug 1543241.
+
+If filing a bug, please include the full output of mach, including this error
+message.
+
+The details of the failure are as follows:
+
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mach/mach/main.py", line 430, in _run
+    return Registrar._run_command_handler(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mach/mach/registrar.py", line 124, in _run_command_handler
+    result = fn(instance, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/tools/lint/mach_commands.py", line 115, in lint
+    ret = cli.run(*runargs, setupargs=setupargs, **lintargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozlint/mozlint/cli.py", line 440, in run
+    lint.read(linters_info["lint_paths"])
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozlint/mozlint/roller.py", line 221, in read
+    for linter in chain(*[self.parse(p) for p in paths]):
+                          ^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozlint/mozlint/parser.py", line 29, in __call__
+    return self.parse(path)
+           ^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozlint/mozlint/parser.py", line 130, in parse
+    self._validate(linter)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/python/mozlint/mozlint/parser.py", line 78, in _validate
+    raise LinterParseError(
+mozlint.errors.LinterParseError: tools/lint/pnpm-audit.yml: The include directive contains the following paths that don't exist:
+  third_party/node/pnpm-lock.yaml

@@ -1,0 +1,3 @@
+Read-only inspection fixture failed before output creation, exit 1.
+TypeError at line 65: historical evidence-index.files is a mapping, not a list of records.
+This is an independent diagnostic fixture defect; packaging was not executed.

@@ -1,0 +1,21 @@
+{
+  "stage": "before-regression-edits",
+  "head": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "files": {
+    "qa3_mozlog.py": {
+      "sha256": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c",
+      "bytes": 7436
+    },
+    "test_qa3_mozlog.py": {
+      "sha256": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8",
+      "bytes": 8811,
+      "testMethods": 14
+    }
+  },
+  "permittedSourceFiles": [
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "native": false,
+  "network": false
+}

@@ -1,0 +1,6 @@
+{
+  "command": "End pin attempted to assert all three author files and the complete diff still match floorp-candidate-03.patch.",
+  "exitCode": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 6, in <module>\nAssertionError\n",
+  "classification": "metadata check retained; parent reports README-only deno fmt reflow after review; code pins checked separately below"
+}

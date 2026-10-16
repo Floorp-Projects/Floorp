@@ -1,0 +1,63 @@
+{
+  "finding": "P2-DOC-01",
+  "status": "CLOSED",
+  "scope": "Corrected publication wording and static public evidence selection; not Native/code acceptance or archive verification",
+  "packagerExecutedOrImported": false,
+  "sourceMutation": false,
+  "preservedInitialEvidence": [
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-independent-review-01.md",
+      "bytes": 9180,
+      "sha256": "26517cbc066d5c7571af99aa19f59283ee2dbfe4a8200c1fefeae039a6af014c"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-static-inspection-01.json",
+      "bytes": 316657,
+      "sha256": "1996f2b0fad3e3af14192c14a32355d6dc8b7f4e2e1011cfd416892531389ec1"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-static-inspection-01-failure.log",
+      "bytes": 237,
+      "sha256": "c3d07707e014faf698f06afea4eb84cb3893aa67ec8fcfdcbed1c0701eccc24d"
+    }
+  ],
+  "inputs": [
+    {
+      "file": "FOLLOWUP_QA309.md",
+      "bytes": 10015,
+      "sha256": "b6aa92471ab2b8b2bcf3fe5d352976f2d66eed17ac48e5e934141df776221e51"
+    },
+    {
+      "file": "README.md",
+      "bytes": 8669,
+      "sha256": "5991067ab2f82763f2ed2043f3f724955e9eb4b19fae897083ad4d879b0ce1d6"
+    }
+  ],
+  "packagerSha256": "9b41eee28cd37e8f351d0a12a578d580783e118b30f79d54b4b0e043ba988a32",
+  "currentSelection": {
+    "files": 322,
+    "bytes": 3140758,
+    "maxMemberBytes": 318142,
+    "credentialQueryMatches": 0,
+    "credentialShapeMatches": [],
+    "symlinks": [],
+    "cacheMembers": [],
+    "nonUtf8": [],
+    "privateFixtureDescriptorsSelected": false
+  },
+  "rootFullSuiteRetainedObservation": {
+    "sourceHead": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+    "methods": 203,
+    "rawUnittestSeconds": 56.217,
+    "wrapperSeconds": 56.487,
+    "exitCode": 0,
+    "skips": 0,
+    "rawLog": "runtime-all-integrated-commit-02.log",
+    "rawLogSha256": "4df5b120197165d0e265050af7550584ae28aedbdeb2dd6b60fc9f954e88b622",
+    "independentlyReexecuted": false,
+    "nativeQualification": false
+  },
+  "newFindings": [],
+  "documentGo": "Go in scoped wording/public-selection review; final #84 acceptance paragraph and final archive/CI verification remain separately pending",
+  "publicationAuthorized": false
+}

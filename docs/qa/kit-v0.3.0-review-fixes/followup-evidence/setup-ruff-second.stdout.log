@@ -1,0 +1,13 @@
+PLW1510 `subprocess.run` without explicit `check` argument
+  --> .github/workflows/scripts/test_qa3_build_profile.py:89:22
+   |
+87 |                     "20261009000000",
+88 |                 ]
+89 |             result = subprocess.run(
+   |                      ^^^^^^^^^^^^^^
+90 |                 ["bash", str(scripts / "setup-floorp.sh"), *arguments],
+91 |                 cwd=root,
+   |
+help: Add explicit `check=False`
+
+Found 1 error.

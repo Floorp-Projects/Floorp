@@ -1,0 +1,4 @@
+{"observation": {"synthetic": true}, "allowedTargets": ["chrome.new-tab", "chrome.reload", "fixture.increment", "fixture.reset"], "protocol": "one validated action JSON per line"}
+{"step": 1, "at": "2026-10-09T12:46:43.740297Z", "action": {"kind": "observe"}, "phase": "end", "status": "completed", "observation": {"synthetic": true}}
+{"step": 2, "at": "2026-10-09T12:46:43.740350Z", "action": {"kind": "observe"}, "phase": "end", "status": "completed", "observation": {"synthetic": true}}
+{"schemaVersion": 1, "subjectId": "synthetic-review", "status": "budget-exhausted", "releaseEvidence": false, "completedSteps": 2, "fakeDriverClosed": true, "stdinBlockingBefore": true, "stdinBlockingAfter": true, "campaignSeconds": 0.001}
