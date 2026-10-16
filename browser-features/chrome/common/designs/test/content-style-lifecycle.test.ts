@@ -39,7 +39,7 @@ function createStyleOwner(initial: ReturnType<typeof getCSSFromConfig>) {
   return { target, setStyles, dispose };
 }
 
-function testSharedContentSheetOwners(): void {
+async function testSharedContentSheetOwners(): Promise<void> {
   const token = crypto.randomUUID();
   const selector = `[data-floorp-sheet-lease="${token}"]`;
   const oldCSS = `${selector} { --floorp-sheet-lease: old; }`;
@@ -56,13 +56,23 @@ function testSharedContentSheetOwners(): void {
     assert(style, "the real test node has computed styles");
     return style.getPropertyValue("--floorp-sheet-lease").trim();
   };
+  const timerWindow: Window = window;
+  const waitForComputed = async (expected: string, label: string) => {
+    // Native sheet changes can queue document restyling after registration has
+    // already changed. Require the real computed rule to settle within 2s.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (computed() === expected) return;
+      await new Promise<void>((resolve) => timerWindow.setTimeout(resolve, 20));
+    }
+    assertEquals(computed(), expected, label);
+  };
   try {
     assertEquals(registered(oldURI), false, "unique old sheet starts unloaded");
     assertEquals(registered(newURI), false, "unique new sheet starts unloaded");
     first = createStyleOwner({ userjs: null, stylesRaw: [oldCSS] });
     // Exercise both production URL and development raw-CSS paths with one URI.
     survivor = createStyleOwner({ userjs: null, styles: [oldURI.spec] });
-    assertEquals(computed(), "old", "native agent sheet reaches a real node");
+    await waitForComputed("old", "native agent sheet reaches a real node");
 
     first.target.dispatchEvent(new Event("unload"));
     first.dispose();
@@ -76,12 +86,12 @@ function testSharedContentSheetOwners(): void {
     survivor.setStyles({ userjs: null, stylesRaw: [newCSS] });
     assertEquals(registered(oldURI), false, "theme change releases old URI");
     assertEquals(registered(newURI), true, "theme change acquires new URI");
-    assertEquals(computed(), "new", "new theme replaces the old computed rule");
+    await waitForComputed("new", "new theme replaces the old computed rule");
 
     survivor.dispose();
     survivor.target.dispatchEvent(new Event("unload"));
     assertEquals(registered(newURI), false, "last owner releases its URI");
-    assertEquals(computed(), "", "no rule remains after the last release");
+    await waitForComputed("", "no rule remains after the last release");
   } finally {
     first?.dispose();
     survivor?.dispose();
