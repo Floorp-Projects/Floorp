@@ -95,8 +95,8 @@ async function testNativeOwnerClosePreservesArea(): Promise<void> {
       "native close preserves the remaining window's toolbar node",
     );
     assertEquals(
-      browserWindow.CustomizableUI.getWidgetIdsInArea(area),
-      originalPlacements,
+      JSON.stringify(browserWindow.CustomizableUI.getWidgetIdsInArea(area)),
+      JSON.stringify(originalPlacements),
       "native close must not destroy process-wide saved placements",
     );
   } finally {
