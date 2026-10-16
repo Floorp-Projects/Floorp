@@ -28,8 +28,10 @@ def identity(data):
 
 
 class Export:
-    def __init__(self, root):
+    def __init__(self, root, *, raw_log_number=int, watched_log_number=int):
         self.root = root
+        self.raw_log_number = raw_log_number
+        self.watched_log_number = watched_log_number
         self.members = {}
         self.runtime = POLICY["runtimeHead"]
         self.context = {"schema": "qa3-hosted-context-v1", "profile": "github-hosted-debug-to-blacksmith-consumer",
@@ -92,8 +94,10 @@ class Export:
         for item, command in zip(self.consumer["cases"], self.consumer["commands"]):
             phase = item["name"]
             raw_identity = identity(self.members["export/logs/" + phase + ".mozlog"])
-            item["rawLog"] = {"path": "logs/" + phase + ".mozlog", **raw_identity}
-            command["watchedLogs"] = {phase + ".mozlog": raw_identity}
+            item["rawLog"] = {"path": "logs/" + phase + ".mozlog", **raw_identity,
+                              "bytes": self.raw_log_number(raw_identity["bytes"])}
+            command["watchedLogs"] = {phase + ".mozlog": {
+                **raw_identity, "bytes": self.watched_log_number(raw_identity["bytes"])}}
             self.members["export/logs/" + phase + ".process.json"] = encoded(command)
         self.members["export/consumer.json"] = encoded(self.consumer)
         rows = [{"path": n.removeprefix("export/"), **identity(b)} for n, b in sorted(self.members.items())
@@ -224,6 +228,17 @@ class CollectorIntegration(unittest.TestCase):
             self.assertNotEqual(reply.returncode, 0)
             self.assertEqual(result["status"], "FAIL")
             self.assertTrue((f.root / "result/replay.log").is_file())
+
+    def test_raw_binding_numeric_alias_is_rejected_before_replay(self):
+        for number_field in ("raw_log_number", "watched_log_number"):
+            with self.subTest(number_field=number_field), tempfile.TemporaryDirectory() as temp:
+                f = Export(Path(temp), **{number_field: float})
+                reply, result = f.run()
+                self.assertNotEqual(reply.returncode, 0, result["status"])
+                self.assertEqual(result["status"], "BLOCK")
+                self.assertFalse((f.root / "result/replay.log").exists())
+                self.assertFalse(result["nativeLaunchedByCollector"])
+                self.assertFalse(result["publicationAuthorized"])
 
 
 if __name__ == "__main__":

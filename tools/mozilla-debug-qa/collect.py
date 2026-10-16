@@ -284,8 +284,8 @@ def collect(args, output, result):
                         "original process log digest differs")
             raw_name = phase + ".mozlog"
             identity = inventory["export/logs/" + raw_name]
-            require(item.get("rawLog") == {"path": "logs/" + raw_name, **identity}
-                    and command.get("watchedLogs") == {raw_name: identity}, "raw mozlog binding differs")
+            require(same(item.get("rawLog"), {"path": "logs/" + raw_name, **identity})
+                    and same(command.get("watchedLogs"), {raw_name: identity}), "raw mozlog binding differs")
             raw = output / raw_name
             with raw.open("xb") as stream:
                 stream.write(member("export/logs/" + raw_name))
