@@ -205,7 +205,7 @@ export default class IdleMemoryReclaim extends NoraComponentBase {
   declare private idleObserver: nsIObserver | null;
   declare private prefObserver: nsIObserver | null;
   /** Timer that re-evaluates idle state periodically. */
-  declare private pollTimerId: ReturnType<typeof setInterval> | null;
+  declare private pollTimerId: ReturnType<Window["setInterval"]> | null;
   /** Guards against a reclaim starting while one is already running. */
   declare private reclaiming: boolean;
   /** Set on teardown so work awaiting a snapshot stops instead of resuming. */

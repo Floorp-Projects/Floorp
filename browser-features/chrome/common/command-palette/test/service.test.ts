@@ -14,12 +14,18 @@ import {
   setEnabled,
 } from "../config.ts";
 import { CommandPaletteController } from "../controller.ts";
+import { mountCommandPalette } from "../mount.ts";
 import {
   COMMAND_PALETTE_TOGGLE_EVENT,
   CommandPaletteService,
+  commandPaletteService,
 } from "../service.ts";
 import type { CommandPaletteWindow } from "../types.ts";
 import { gestureActions } from "../../mouse-gesture/utils/gestures.ts";
+
+// A Window-typed receiver keeps browser timer IDs numeric even when a host
+// type-check also includes Node's global setTimeout overloads.
+const timerWindow: Window = window;
 
 function createWindow(closed = false) {
   const target = new EventTarget();
@@ -43,7 +49,7 @@ function createWindow(closed = false) {
     win: Object.assign(target, {
       closed,
       setTimeout(handler: TimerHandler, timeout?: number): number {
-        const timer = globalThis.setTimeout(() => {
+        const timer = timerWindow.setTimeout(() => {
           timers.delete(timer);
           if (typeof handler === "function") handler();
         }, timeout);
@@ -52,7 +58,7 @@ function createWindow(closed = false) {
       },
       clearTimeout(timer?: number): void {
         if (timer !== undefined) timers.delete(timer);
-        globalThis.clearTimeout(timer);
+        timerWindow.clearTimeout(timer);
       },
     }) as unknown as CommandPaletteWindow,
     listenerCount: (type: string) => listeners.get(type)?.size ?? 0,
@@ -295,6 +301,75 @@ function testPreferenceAndRootCleanup(): void {
   }
 }
 
+function testPaletteMountPreservesNativeChrome(): void {
+  const mainWindow = document.getElementById("main-window");
+  const nativeHead = document.head;
+  const nativeBody = document.body;
+  const tabbrowser = document.getElementById("tabbrowser-tabbox");
+  assert(
+    mainWindow && nativeHead && nativeBody && tabbrowser,
+    "native browser chrome is present",
+  );
+  const previousEnabled = isEnabled();
+  setEnabled(true);
+
+  let paletteMount: HTMLElement | undefined;
+  const dispose = createRoot((cleanup) => {
+    // Exercise the exact production mounting boundary in the real browser DOM.
+    paletteMount = mountCommandPalette(mainWindow);
+    return cleanup;
+  });
+  const assertNativeChrome = () => {
+    assertEquals(document.head, nativeHead, "the native head is unchanged");
+    assertEquals(document.body, nativeBody, "the native body is unchanged");
+    assertEquals(
+      document.getElementById("tabbrowser-tabbox"),
+      tabbrowser,
+      "the native tabbrowser is unchanged",
+    );
+    assert(
+      nativeHead.isConnected && nativeBody.isConnected &&
+        tabbrowser.isConnected,
+      "native browser elements remain connected",
+    );
+    assert(
+      paletteMount?.isConnected,
+      "the palette keeps its own mounting boundary",
+    );
+  };
+  try {
+    for (let cycle = 0; cycle < 3; cycle++) {
+      const controller = commandPaletteService.getController(window);
+      assert(controller, "the real window owns its enabled palette controller");
+      controller.state.setIsVisible(true);
+      assert(
+        document.getElementById("command-palette-overlay")?.isConnected,
+        "the real palette UI renders before disabling",
+      );
+      Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, false);
+      assertNativeChrome();
+      Services.prefs.setBoolPref(COMMAND_PALETTE_ENABLED_PREF, true);
+      assertNativeChrome();
+      assert(
+        commandPaletteService.getController(window) !== controller,
+        "the real UI receives a replacement controller",
+      );
+    }
+  } finally {
+    dispose();
+    setEnabled(previousEnabled);
+  }
+  assertEquals(
+    paletteMount?.isConnected,
+    false,
+    "owner cleanup removes only the palette mounting boundary",
+  );
+  assert(
+    nativeHead.isConnected && nativeBody.isConnected && tabbrowser.isConnected,
+    "palette cleanup preserves native browser chrome",
+  );
+}
+
 function testUnloadAndLateInitialization(): void {
   for (const initiallyClosed of [false, true]) {
     const target = createWindow(initiallyClosed);
@@ -365,7 +440,7 @@ async function testControllerCancelsPendingWork(): Promise<void> {
     // Hidden controllers can still have a pending debounced input callback.
     hiddenController.updateSearch("@b lifecycle-cleanup");
     hiddenController.destroy();
-    await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 60));
+    await new Promise<void>((resolve) => timerWindow.setTimeout(resolve, 60));
     assertEquals(
       hiddenController.state.highlightQuery(),
       "",
@@ -398,6 +473,10 @@ export async function runAllTests(): Promise<void> {
       {
         name: "an action from another realm toggles only its target window",
         fn: testToggleActionTargetsAnotherWindow,
+      },
+      {
+        name: "production palette OFF/ON preserves native browser chrome",
+        fn: testPaletteMountPreservesNativeChrome,
       },
       {
         name: "OFF/ON and HMR replace UI state without retaining listeners",
