@@ -116,6 +116,17 @@ qualified on a real native worker. Other OS/architectures need their own owned
 process supervisors and final artifacts. Linux ARM production-opt and both Mac
 architectures remain separate required production qualification work.
 
+The root supervisor's trusted CLI helper drains stdout and stderr together,
+with a 2 MiB combined read limit and one monotonic deadline covering pipes and
+child exit. It closes stdin and inherited descriptors, and kills/reaps its own
+direct CLI child on overflow, timeout or cancellation. Secondary cleanup errors
+cannot replace the first failure. This bounds CLI capture before allocation;
+it does not impose an OS memory cap on the root controller or qualify native
+process-tree cleanup. The existing unit/cgroup path remains responsible for
+the native service. This internal helper is not exposed as an Agent exec API.
+The deadline is checked after process creation returns; stalled kernel/spawn
+operations still require external host supervision.
+
 ## Local host validation
 
 ```sh

@@ -3,8 +3,10 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
+import selectors
 import shutil
 import signal
 import subprocess
@@ -28,6 +30,9 @@ PROPERTIES = {
     "TasksMax": "512",
     "KillMode": "control-group",
 }
+
+MAX_COMMAND_OUTPUT = 2 * 1024 * 1024
+COMMAND_REAP_SECONDS = 5
 
 class Cancellation:
     def __init__(self):
@@ -54,12 +59,84 @@ class Cancellation:
 
 
 def command(args, timeout=30):
-    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
-    if len(result.stdout) + len(result.stderr) > 2 * 1024 * 1024:
-        raise ValueError("Supervisor diagnostics exceeded the bound")
-    if result.returncode:
-        raise ValueError(f"Original supervisor operation failed: {result.stderr.decode(errors='replace')[:2048]}")
-    return result.stdout.decode()
+    """Bound trusted supervisor CLI output while reading, not after communicate().
+
+    This owns only the direct CLI child. Native service/tree cleanup remains the
+    caller's existing systemd/cgroup operation; this is not an Agent exec API.
+    """
+    if type(timeout) not in (int, float) or not math.isfinite(timeout) or not 0 < timeout <= 30:
+        raise ValueError("Supervisor command deadline is outside its fixed bound")
+    deadline = time.monotonic() + timeout
+    child = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, bufsize=0, close_fds=True)
+    selector = None
+    output = {"stdout": bytearray(), "stderr": bytearray()}
+    total = 0
+    original_error = cleanup_error = None
+    value = None
+    try:
+        selector = selectors.DefaultSelector()
+        for name, stream in (("stdout", child.stdout), ("stderr", child.stderr)):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, name)
+        while selector.get_map():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(args, timeout)
+            for key, _events in selector.select(min(remaining, 0.05)):
+                # Read at most the remaining allowance plus one overflow byte.
+                data = os.read(key.fd, min(65536, MAX_COMMAND_OUTPUT - total + 1))
+                if not data:
+                    selector.unregister(key.fileobj)
+                    continue
+                total += len(data)
+                if total > MAX_COMMAND_OUTPUT:
+                    raise ValueError("Supervisor diagnostics exceeded the bound")
+                output[key.data].extend(data)
+        # EOF does not mean that the child exited. Keep the original deadline.
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise subprocess.TimeoutExpired(args, timeout)
+        status = child.wait(timeout=remaining)
+        if time.monotonic() >= deadline:
+            raise subprocess.TimeoutExpired(args, timeout)
+        if status:
+            raise ValueError("Original supervisor operation failed: " +
+                             output["stderr"].decode(errors="replace")[:2048])
+        value = output["stdout"].decode()
+    except BaseException as error:
+        original_error = error
+    finally:
+        # Popen targets its own unreaped child, never a discovered PID/group.
+        if child.returncode is None:
+            try:
+                child.kill()
+            except BaseException as error:
+                cleanup_error = error
+            try:
+                child.wait(timeout=COMMAND_REAP_SECONDS)
+            except BaseException as error:
+                cleanup_error = cleanup_error or error
+        if selector is not None:
+            try:
+                selector.close()
+            except BaseException as error:
+                cleanup_error = cleanup_error or error
+        for stream in (child.stdout, child.stderr):
+            try:
+                stream.close()
+            except BaseException as error:
+                cleanup_error = cleanup_error or error
+    if original_error is not None:
+        if cleanup_error is not None:
+            try:
+                original_error.add_note("Owned supervisor CLI cleanup also failed")
+            except BaseException:
+                pass  # Diagnostic annotation cannot replace the original error.
+        raise original_error
+    if cleanup_error is not None:
+        raise ValueError("Owned supervisor CLI cleanup is incomplete") from None
+    return value
 
 
 def properties(unit):
