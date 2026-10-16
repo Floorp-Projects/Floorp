@@ -828,6 +828,7 @@
     "searchLabel": "Search keyboard shortcuts",
     "searchPlaceholder": "Search shortcuts",
     "noSearchResults": "No matching keyboard shortcuts",
+    "categoryContents": "Shortcut categories",
     "action": "Action",
     "shortcut": "Shortcut",
     "source": {

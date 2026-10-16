@@ -278,7 +278,11 @@ export const ShortcutsSettings = ({
     id: ShortcutCategoryId;
     actions: UnifiedShortcutRow[];
   }) => (
-    <tbody key={category.id}>
+    <tbody
+      key={category.id}
+      id={`keyboard-shortcut-category-${category.id}`}
+      tabIndex={-1}
+    >
       <tr>
         <th colSpan={4}>
           {t(`keyboardShortcut.categories.${category.id}`)}
@@ -316,6 +320,35 @@ export const ShortcutsSettings = ({
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
           />
         </label>
+        {visibleCategories.length > 0 && (
+          <nav
+            aria-label={t("keyboardShortcut.categoryContents")}
+            className="mb-4"
+          >
+            <ul className="flex flex-wrap gap-2">
+              {visibleCategories.map((category) => (
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className="text-sm text-[var(--link-text-color)] hover:underline"
+                    onClick={() => {
+                      document
+                        .getElementById(
+                          `keyboard-shortcut-category-${category.id}`,
+                        )
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    }}
+                  >
+                    {t(`keyboardShortcut.categories.${category.id}`)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
         {!firefoxKeysLoading && !writeEnabled && (
           <div className="floorp-notice mb-4 text-base-content/70">
             <span className="text-sm">

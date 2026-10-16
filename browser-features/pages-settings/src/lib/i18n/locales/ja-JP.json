@@ -828,6 +828,7 @@
     "searchLabel": "キーボードショートカットを検索",
     "searchPlaceholder": "ショートカットを検索",
     "noSearchResults": "一致するキーボードショートカットはありません",
+    "categoryContents": "ショートカットカテゴリ",
     "action": "アクション",
     "shortcut": "ショートカット",
     "source": {
