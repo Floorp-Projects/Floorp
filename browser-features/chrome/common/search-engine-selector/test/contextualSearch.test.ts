@@ -13,6 +13,9 @@ const { RemoteSettings } = ChromeUtils.importESModule(
 const { SearchUtils } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
 ) as { SearchUtils: { SETTINGS_KEY: string; SETTINGS_OVERRIDES_KEY: string } };
+const { SearchService } = ChromeUtils.importESModule(
+  "moz-src:///toolkit/components/search/SearchService.sys.mjs",
+);
 
 const engineId = "floorp-contextual-test";
 const engineBase = {
@@ -58,7 +61,7 @@ function replaceGet(
 }
 
 async function testConcurrentFreshLookups(): Promise<void> {
-  await Services.search.init();
+  await SearchService.init();
   let release = () => {};
   const ready = new Promise<void>((resolve) => release = resolve);
   let configurationLoads = 0;
