@@ -52,6 +52,24 @@ function keysetKindForId(keysetId: string): "main" | "extension" {
 }
 
 /**
+ * Build a stable synthetic id for a `<key>` element that has no DOM id.
+ * The attributes are part of the identity so equivalent keys from separate
+ * browser windows still share one mirror entry, while distinct shortcuts in
+ * the same keyset remain separate.
+ */
+function syntheticKeyId(
+  keysetId: string,
+  index: number,
+  key: Element,
+): string {
+  const modifiers = key.getAttribute("modifiers") ?? "";
+  const keyValue = key.getAttribute("key") ?? "";
+  const keycode = key.getAttribute("keycode") ?? "";
+  const command = key.getAttribute("command") ?? "";
+  return `id-less:${keysetId}:${index}:${modifiers}:${keyValue}:${keycode}:${command}`;
+}
+
+/**
  * Derive a fallback label from a key id, e.g. "key_newNavigator" ->
  * "New Navigator" (key_ prefix stripped, camelCase / separators split,
  * first letter of each word uppercased).
@@ -73,6 +91,18 @@ function labelFromKeyId(id: string): string {
 /** Escape a value for use inside a double-quoted attribute selector. */
 function escapeAttributeValue(value: string): string {
   return value.replace(/["\\]/g, "\\$&");
+}
+
+/** Best-effort fallback label for id-less keys. */
+function fallbackLabelForKey(
+  key: Element,
+  keysetId: string,
+): string {
+  const source = key.getAttribute("command") ||
+    key.getAttribute("keycode") ||
+    key.getAttribute("key") ||
+    keysetId;
+  return labelFromKeyId(source || "unnamed-key");
 }
 
 /**
@@ -424,13 +454,22 @@ export class KeySyncService {
       if (!keyset || !keyset.id) {
         continue;
       }
-      // Key elements without an id cannot be identified, addressed by
-      // CustomKeys.changeKey(), or deduplicated across windows, so they are
-      // excluded from the mirror.
-      if (!keyEl.id) {
-        continue;
-      }
-      const entry = this.#buildEntry(keyEl, doc, keysetKindForId(keyset.id));
+      // Key elements without a DOM id cannot be addressed by CustomKeys, but
+      // they are still real Firefox shortcuts and must remain visible as
+      // read-only rows.
+      const syntheticId = keyEl.id
+        ? keyEl.id
+        : syntheticKeyId(
+          keyset.id,
+          Array.from(keyset.children).indexOf(keyEl),
+          keyEl,
+        );
+      const entry = this.#buildEntry(
+        keyEl,
+        doc,
+        keysetKindForId(keyset.id),
+        syntheticId,
+      );
       currentIds.add(entry.id);
       this.#mirror.set(entry.id, entry);
     }
@@ -447,9 +486,19 @@ export class KeySyncService {
         for (const keyEl of otherWin.document.querySelectorAll(
           "keyset[id] > key",
         )) {
-          if (keyEl.id) {
-            otherWindowIds.add(keyEl.id);
+          const keyset = keyEl.parentElement;
+          if (!keyset || !keyset.id) {
+            continue;
           }
+          otherWindowIds.add(
+            keyEl.id
+              ? keyEl.id
+              : syntheticKeyId(
+                keyset.id,
+                Array.from(keyset.children).indexOf(keyEl),
+                keyEl,
+              ),
+          );
         }
       } catch (_error) {
         // The other window may be going away.
@@ -493,8 +542,8 @@ export class KeySyncService {
     keyEl: Element,
     doc: Document,
     keysetKind: "main" | "extension",
+    id: string,
   ): FirefoxKeyEntry {
-    const id = keyEl.id;
     const modifiers = keyEl.getAttribute("modifiers") ?? "";
     const key = keyEl.getAttribute("key") ?? "";
     const keycode = keyEl.getAttribute("keycode") ?? "";
@@ -510,12 +559,18 @@ export class KeySyncService {
       key,
       keycode,
       command: keyEl.getAttribute("command") ?? "",
-      internal: keyEl.getAttribute("internal") === "true",
+      internal: keyEl.id === "" || keyEl.getAttribute("internal") === "true",
       reserved: keyEl.getAttribute("reserved") === "true",
       customized: this.#customKeys
         ? this.#customKeys.getDefaultKey(id) != null
         : false,
-      label: this.#resolveLabel(doc, keyEl),
+      label: this.#resolveLabel(
+        doc,
+        keyEl,
+        keyEl.id
+          ? labelFromKeyId(id)
+          : fallbackLabelForKey(keyEl, keyEl.parentElement?.id ?? ""),
+      ),
       shortcutText: formatXulComboText(combo, IS_MAC),
       canonicalCode: xulComboToCanonicalCode(combo, IS_MAC),
     };
@@ -525,7 +580,11 @@ export class KeySyncService {
    * Best-effort label resolution: command element's label, then a matching
    * menuitem's label, then a generated label derived from the key id.
    */
-  #resolveLabel(doc: Document, keyEl: Element): string {
+  #resolveLabel(
+    doc: Document,
+    keyEl: Element,
+    fallbackLabel: string,
+  ): string {
     const commandId = keyEl.getAttribute("command");
     if (commandId) {
       const commandLabel =
@@ -544,7 +603,7 @@ export class KeySyncService {
         return menuLabel;
       }
     }
-    return labelFromKeyId(keyEl.id);
+    return fallbackLabel;
   }
 }
 

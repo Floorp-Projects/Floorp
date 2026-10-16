@@ -166,6 +166,11 @@ export const ShortcutsSettings = ({
             {t("keyboardShortcut.firefoxKeyCustomized")}
           </span>
         )}
+        {entry.internal && (
+          <span className="badge badge-error badge-outline badge-sm">
+            {t("keyboardShortcut.firefoxKeyInternal")}
+          </span>
+        )}
         {entry.canonicalCode !== null &&
           floorpConflictCodes.has(entry.canonicalCode) && (
           <span
@@ -232,7 +237,7 @@ export const ShortcutsSettings = ({
                 )}
               </>
             )}
-            {entry && entry.keysetKind === "main" && (
+            {entry && !entry.internal && entry.keysetKind === "main" && (
               <Button
                 type="button"
                 variant="primary"

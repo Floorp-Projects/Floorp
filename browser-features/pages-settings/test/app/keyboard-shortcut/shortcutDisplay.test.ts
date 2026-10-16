@@ -191,6 +191,29 @@ function testUnifiedRowsKeepFirefoxPriorityBehavior(): void {
   );
 }
 
+function testInternalFirefoxRowsStayVisible(): void {
+  const actions = [{ id: "gecko-back", name: "Go Back" }];
+  const internalKey = createFirefoxKey("ctrl+KeyT", {
+    id: "key_idless_internal",
+    command: "",
+    internal: true,
+  });
+
+  const result = buildUnifiedShortcutRows(actions, {}, [internalKey]);
+
+  assertEquals(
+    result.rows.length,
+    1,
+    "internal Firefox shortcuts should remain visible",
+  );
+  assertEquals(
+    result.rows[0].source,
+    "firefox",
+    "the visible row should be Firefox-owned",
+  );
+  assert(result.rows[0].firefoxKey?.internal, "the row should be internal");
+}
+
 function testFloorpCanonicalCodeNormalizesSimpleKeys(): void {
   assertEquals(
     getFloorpCanonicalCode(createShortcut("T")),
@@ -334,6 +357,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "unified rows keep Firefox priority behavior",
       fn: testUnifiedRowsKeepFirefoxPriorityBehavior,
+    },
+    {
+      name: "internal Firefox rows stay visible",
+      fn: testInternalFirefoxRowsStayVisible,
     },
     {
       name: "Firefox priority hides configured and equivalent duplicates",
