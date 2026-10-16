@@ -1,0 +1,36 @@
+{
+  "schema": "qa3-debug-evidence-runtime-recipe-v1",
+  "runtimeHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "files": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "bytes": 8453,
+      "sha256": "9d77a5d3a9c10dc50c73059895ac53ca1f9ac134e1192cbb434f9465b32a833c"
+    },
+    ".github/workflows/scripts/runtime_build_context.py": {
+      "bytes": 15291,
+      "sha256": "7495feedabf03ee49da4bbcbd7af8838f11f4b604b312afc1679af3aa254b637"
+    },
+    ".github/workflows/scripts/qa3_source_cohort.py": {
+      "bytes": 19087,
+      "sha256": "cc1e2f3a12dfeb48b9c244d05420bf53f9e58e1d630d165aec54c4d2437017c5"
+    },
+    ".github/workflows/scripts/qa3_build_profile.py": {
+      "bytes": 7526,
+      "sha256": "5ad51570597e9435134c5e97754041b9bfa6e859390093990263084dbf09b624"
+    },
+    ".github/workflows/scripts/qa3_xpcshell_entry.py": {
+      "bytes": 1992,
+      "sha256": "f654b99c0fb0b6eb3a02cf006e1b4448fca2ce957c96dd1e09a02b5f18b87aa9"
+    },
+    ".github/qa/hosted-linux-debug-plan.json": {
+      "bytes": 11688,
+      "sha256": "7c1079ba1f1314f1adb91623d02a917ece7dbb0334a28b08419ac32c93498470"
+    }
+  },
+  "caseId": "xpcom/tests/unit/test_nsIMutableArray.js",
+  "suite": "xpcshell",
+  "phases": [
+    "native-1-required",
+    "native-1-assertion-canary"
+  ]
+}
