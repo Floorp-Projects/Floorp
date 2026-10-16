@@ -381,7 +381,7 @@ Deno.test("inventory CLI options constrain development origin and create-only JS
     assertThrows(() => parseOptions(["--origin", origin]), Error, "origin");
   }
   assertThrows(() => parseOptions(["--inventory", ""]), Error, "Empty");
-  assertEquals(BROWSER_CATALOG.size, 252);
+  assertEquals(BROWSER_CATALOG.size, 262);
 });
 
 Deno.test("real runner rejects an empty browser scope before reaching any network or process permission", async () => {
@@ -421,7 +421,7 @@ Deno.test("real runner emits the complete informational inventory and refuses ov
     const bytes = await Deno.readTextFile(filename);
     const inventory = JSON.parse(bytes);
     assertEquals(inventory.scope, "colocated-source-files");
-    assertEquals(inventory.counts.catalogBrowserFiles, 252);
+    assertEquals(inventory.counts.catalogBrowserFiles, 262);
     assertEquals(inventory.counts.selected, 0);
     assertEquals(inventory.counts.executed, 0);
     assertEquals(inventory.productVerdict, "UNVERIFIED");
