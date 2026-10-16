@@ -15,13 +15,38 @@ import { PwaService } from "./pwaService.ts";
 import { ManifestProcesser } from "./manifestProcesser.ts";
 import { DataManager } from "./dataStore.ts";
 import { SiteSpecificBrowserManager } from "./ssbManager.ts";
+import { getOwner, onCleanup, runWithOwner } from "solid-js";
 
 @noraComponent(import.meta.hot)
 export default class Pwa extends NoraComponentBase {
   static ctx: PwaService | null = null;
-  private initialized = false;
+  declare private initialized: boolean | undefined;
+  declare private disposed: boolean;
 
   init() {
+    if (this.initialized !== undefined || this.disposed) return;
+    this.initialized = false;
+    this.disposed = false;
+    const owner = getOwner();
+    let startupObserverRegistered = false;
+    const removeStartupObserver = () => {
+      if (!startupObserverRegistered) return;
+      startupObserverRegistered = false;
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+    };
+    const onDelayedStartup = (subject: nsISupports | null) => {
+      if (subject !== window || this.disposed || window.closed) return;
+      removeStartupObserver();
+      // Native observer callbacks do not carry the component's Solid owner.
+      runWithOwner(owner, () => this.initialize());
+    };
+    onCleanup(() => {
+      this.disposed = true;
+      removeStartupObserver();
+    });
     if (!enabled()) return;
     // Finder can open a PWA window before Firefox has installed gBrowser on
     // that window. Initializing the manager earlier aborts the whole module.
@@ -30,28 +55,17 @@ export default class Pwa extends NoraComponentBase {
       return;
     }
 
-    const onDelayedStartup = (subject: nsISupports | null) => {
-      if (subject !== window) return;
-      Services.obs.removeObserver(
-        onDelayedStartup,
-        "browser-delayed-startup-finished",
-      );
-      this.initialize();
-    };
     Services.obs.addObserver(
       onDelayedStartup,
       "browser-delayed-startup-finished",
     );
-    globalThis.addEventListener("unload", () => {
-      Services.obs.removeObserver(
-        onDelayedStartup,
-        "browser-delayed-startup-finished",
-      );
-    }, { once: true });
+    startupObserverRegistered = true;
   }
 
   private initialize(): void {
-    if (this.initialized || !globalThis.gBrowser || window.closed) return;
+    if (
+      this.initialized || this.disposed || !globalThis.gBrowser || window.closed
+    ) return;
     this.initialized = true;
     const manifestProcesser = new ManifestProcesser();
     const dataManager = new DataManager();

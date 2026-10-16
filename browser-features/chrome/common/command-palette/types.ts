@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { CommandPaletteController } from "./controller.ts";
+
+export interface CommandPaletteWindow extends Window {
+  __commandPaletteControllerAttached?: boolean;
+}
+
+export interface CommandPaletteContentProps {
+  controller: CommandPaletteController;
+}
+
 /** Firefox may return url as a string, URL object, or nsIURI */
 export type UrlLike = string | { href: string } | { spec: string };
 
