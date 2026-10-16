@@ -111,11 +111,10 @@ function testUnifiedRowsUseOneCanonicalNamePerSource(): void {
   assertStringArrayEqual(
     result.rows.map((row) => `${row.source}:${row.name}`),
     [
-      "floorp:Go Back",
       "firefox:Go Back",
       "floorp:Reload",
     ],
-    "mapped Firefox rows should use the canonical Floorp action name",
+    "a mapped Firefox key should replace an unconfigured Floorp add row",
   );
 }
 
@@ -205,9 +204,10 @@ function testFloorpCanonicalCodeNormalizesSimpleKeys(): void {
   );
 }
 
-function testFirefoxPriorityHidesConfiguredDuplicatesOnly(): void {
+function testFirefoxPriorityHidesConfiguredAndEquivalentDuplicates(): void {
   const actions = [
     { id: "gecko-back", name: "Back" },
+    { id: "gecko-open-new-tab", name: "New Tab" },
     { id: "gecko-forward", name: "Forward" },
     { id: "gecko-reload", name: "Reload" },
   ];
@@ -217,6 +217,11 @@ function testFirefoxPriorityHidesConfiguredDuplicatesOnly(): void {
   };
   const result = filterActionsForFirefoxPriority(actions, shortcuts, [
     createFirefoxKey("ctrl+KeyT"),
+    createFirefoxKey(null, {
+      id: "key_newNavigatorTab",
+      command: "cmd_newNavigatorTab",
+      shortcutText: "",
+    }),
   ]);
 
   assertStringArrayEqual(
@@ -226,8 +231,8 @@ function testFirefoxPriorityHidesConfiguredDuplicatesOnly(): void {
   );
   assertEquals(
     result.hiddenActionCount,
-    1,
-    "only the configured duplicate should be counted",
+    2,
+    "configured and equivalent duplicates should be counted",
   );
   assertEquals(
     result.visibleBindingsByAction["gecko-back"].length,
@@ -331,8 +336,8 @@ export async function runAllTests(): Promise<void> {
       fn: testUnifiedRowsKeepFirefoxPriorityBehavior,
     },
     {
-      name: "Firefox priority hides configured duplicates only",
-      fn: testFirefoxPriorityHidesConfiguredDuplicatesOnly,
+      name: "Firefox priority hides configured and equivalent duplicates",
+      fn: testFirefoxPriorityHidesConfiguredAndEquivalentDuplicates,
     },
     {
       name: "actions are grouped without empty categories",

@@ -167,6 +167,36 @@ const FIREFOX_KEY_ACTION_BY_ID: Readonly<Record<string, string>> = Object
     "key_closeWindow": "gecko-close-window",
     "key_undoCloseTab": "gecko-restore-last-tab",
     "key_undoCloseWindow": "gecko-restore-last-window",
+    "key_nextTab": "gecko-show-next-tab",
+    "key_previousTab": "gecko-show-previous-tab",
+    "key_showAllTabs": "gecko-show-all-tabs-panel",
+    "key_duplicateTab": "gecko-duplicate-tab",
+    "key_toggleMute": "gecko-mute-current-tab",
+    "goHomeKb": "gecko-open-home-page",
+    "key_fullZoomEnlarge": "gecko-zoom-in",
+    "key_fullZoomReduce": "gecko-zoom-out",
+    "key_fullZoomReset": "gecko-reset-zoom",
+    "key_find": "gecko-search-in-this-page",
+    "key_findAgain": "gecko-show-next-search-result",
+    "key_findPrevious": "gecko-show-previous-search-result",
+    "key_search": "gecko-search-the-web",
+    "key_search2": "gecko-search-the-web",
+    "key_sendLink": "gecko-send-with-mail",
+    "key_savePage": "gecko-save-page",
+    "printKb": "gecko-print-page",
+    "key_viewSource": "gecko-show-source-of-page",
+    "key_viewInfo": "gecko-show-page-info",
+    "addBookmarkAsKb": "gecko-bookmark-this-page",
+    "bookmarkAllTabsKb": "gecko-open-bookmark-add-tool",
+    "viewBookmarksSidebarKb": "gecko-show-bookmark-sidebar",
+    "viewBookmarksToolbarKb": "gecko-toggle-bookmark-toolbar",
+    "key_gotoHistory": "gecko-search-history",
+    "showAllHistoryKb": "gecko-manage-history",
+    "key_openDownloads": "gecko-open-downloads",
+    "key_screenshot": "gecko-open-screen-capture",
+    "key_aboutProcesses": "gecko-open-task-manager",
+    "key_viewAboutProcesses": "gecko-open-task-manager",
+    "key_togglePictureInPicture": "floorp-show-pip",
   });
 
 /** Stable Gecko command IDs used as a fallback for renamed Firefox keys. */
@@ -184,9 +214,36 @@ const FIREFOX_KEY_ACTION_BY_COMMAND: Readonly<Record<string, string>> = Object
     "cmd_closeWindow": "gecko-close-window",
     "cmd_undoCloseTab": "gecko-restore-last-tab",
     "cmd_undoCloseWindow": "gecko-restore-last-window",
+    "Browser:NextTab": "gecko-show-next-tab",
+    "Browser:PrevTab": "gecko-show-previous-tab",
+    "Browser:ShowAllTabs": "gecko-show-all-tabs-panel",
+    "cmd_duplicateTab": "gecko-duplicate-tab",
+    "cmd_toggleMute": "gecko-mute-current-tab",
+    "Browser:GoHome": "gecko-open-home-page",
+    "cmd_fullZoomEnlarge": "gecko-zoom-in",
+    "cmd_fullZoomReduce": "gecko-zoom-out",
+    "cmd_fullZoomReset": "gecko-reset-zoom",
+    "cmd_find": "gecko-search-in-this-page",
+    "cmd_findAgain": "gecko-show-next-search-result",
+    "cmd_findPrevious": "gecko-show-previous-search-result",
+    "Tools:Search": "gecko-search-the-web",
+    "Browser:SendLink": "gecko-send-with-mail",
     "Browser:AddBookmarkAs": "gecko-bookmark-this-page",
     "Browser:ShowAllBookmarks": "gecko-open-bookmarks-manager",
+    "Browser:BookmarkAllTabs": "gecko-open-bookmark-add-tool",
+    "viewBookmarksSidebar": "gecko-show-bookmark-sidebar",
+    "Browser:BookmarksToolbar": "gecko-toggle-bookmark-toolbar",
+    "History:SearchHistory": "gecko-search-history",
+    "Browser:ShowAllHistory": "gecko-manage-history",
     "Browser:Downloads": "gecko-open-downloads",
+    "Browser:SavePage": "gecko-save-page",
+    "cmd_print": "gecko-print-page",
+    "View:PageSource": "gecko-show-source-of-page",
+    "View:PageInfo": "gecko-show-page-info",
+    "Tools:Sanitize": "gecko-forget-history",
+    "Browser:Screenshot": "gecko-open-screen-capture",
+    "View:AboutProcesses": "gecko-open-task-manager",
+    "View:PictureInPicture": "floorp-show-pip",
     "Tools:AddonMgr": "gecko-open-addons-manager",
   });
 
@@ -217,9 +274,9 @@ function getCategoryForAction(actionId: string): ShortcutCategoryId {
 }
 
 /**
- * Split actions into visible rows and actions whose configured Floorp combo
- * is owned by Firefox in the UI. Actions without a configured combo stay
- * visible because there is nothing to duplicate yet.
+ * Split actions into visible rows and rows replaced by Firefox. A mapped
+ * Firefox action replaces Floorp's empty add row. Actions with additional,
+ * non-conflicting Floorp bindings stay editable alongside the Firefox row.
  */
 export function filterActionsForFirefoxPriority<
   TAction extends { id: string },
@@ -237,6 +294,12 @@ export function filterActionsForFirefoxPriority<
       entry.canonicalCode === null ? [] : [entry.canonicalCode]
     ),
   );
+  const firefoxActionIds = new Set(
+    firefoxKeys.flatMap((entry) => {
+      const actionId = getFirefoxKeyActionId(entry);
+      return actionId === null ? [] : [actionId];
+    }),
+  );
   const visibleBindingsByAction: Record<string, ShortcutConfig[]> = {};
   let hiddenActionCount = 0;
   const visibleActions = actions.filter((action) => {
@@ -244,9 +307,16 @@ export function filterActionsForFirefoxPriority<
     const visibleBindings = bindings.filter((shortcut) =>
       !firefoxCodes.has(getFloorpCanonicalCode(shortcut))
     );
-    hiddenActionCount += bindings.length - visibleBindings.length;
+    const hiddenBindingCount = bindings.length - visibleBindings.length;
+    hiddenActionCount += bindings.length === 0
+      ? firefoxActionIds.has(action.id) ? 1 : 0
+      : hiddenBindingCount;
     visibleBindingsByAction[action.id] = visibleBindings;
-    return bindings.length === 0 || visibleBindings.length > 0;
+    return bindings.length > 0
+      ? visibleBindings.length > 0
+      : !firefoxActionIds.has(
+        action.id,
+      );
   });
 
   return {
