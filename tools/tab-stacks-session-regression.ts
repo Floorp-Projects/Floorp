@@ -76,18 +76,34 @@ function assert(value: unknown, message: string): asserts value {
 }
 
 async function processes(): Promise<ProcessIdentity[]> {
-  const result = await new Deno.Command("powershell.exe", {
-    args: [
-      "-NoProfile",
-      "-NonInteractive",
-      "-Command",
-      "$ErrorActionPreference='Stop'; @(Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid=[int]$_.ProcessId; parent=[int]$_.ParentProcessId; created=if ($_.CreationDate) {$_.CreationDate.ToUniversalTime().ToString('o')} else {''}; executable=[string]$_.ExecutablePath; command=[string]$_.CommandLine } }) | ConvertTo-Json -Compress",
-    ],
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  assert(result.success, new TextDecoder().decode(result.stderr));
-  return JSON.parse(new TextDecoder().decode(result.stdout));
+  const controller = new AbortController();
+  const timeoutMs = 20_000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const result = await new Deno.Command("powershell.exe", {
+      args: [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "$ErrorActionPreference='Stop'; @(Get-CimInstance Win32_Process | ForEach-Object { [pscustomobject]@{ pid=[int]$_.ProcessId; parent=[int]$_.ParentProcessId; created=if ($_.CreationDate) {$_.CreationDate.ToUniversalTime().ToString('o')} else {''}; executable=[string]$_.ExecutablePath; command=[string]$_.CommandLine } }) | ConvertTo-Json -Compress",
+      ],
+      signal: controller.signal,
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assert(
+      !controller.signal.aborted,
+      `Windows process snapshot timed out (${timeoutMs}ms)`,
+    );
+    assert(
+      result.success,
+      new TextDecoder().decode(result.stderr) ||
+        `Windows process snapshot exited with code ${result.code}`,
+    );
+    return JSON.parse(new TextDecoder().decode(result.stdout));
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function sameProcess(a: ProcessIdentity, b: ProcessIdentity): boolean {
@@ -122,6 +138,27 @@ async function until<T>(
     await pause();
   }
   throw new Error(`${description} timed out${last ? `: ${last}` : ""}`);
+}
+
+async function within<T>(
+  operation: Promise<T>,
+  timeoutMs: number,
+  description: string,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${description} timed out (${timeoutMs}ms)`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 const prefs: Record<string, string | number | boolean> = {
@@ -194,6 +231,7 @@ class Browser {
   browserIdentity?: ProcessIdentity;
   readonly child: Deno.ChildProcess;
   readonly logs: Promise<unknown>[];
+  private readonly logController = new AbortController();
 
   constructor(readonly phase: string) {
     this.child = new Deno.Command(binary, {
@@ -215,8 +253,12 @@ class Browser {
         createNew: true,
         write: true,
       });
-      await this.child[stream as "stdout" | "stderr"].pipeTo(file.writable);
+      await this.child[stream as "stdout" | "stderr"].pipeTo(file.writable, {
+        signal: this.logController.signal,
+      });
     });
+    // Handle an early pipe/open rejection while retaining it for drainLogs.
+    for (const log of this.logs) void log.catch(() => {});
   }
 
   async capture(): Promise<void> {
@@ -349,9 +391,13 @@ class Browser {
       "Owned browser exit",
       20_000,
     );
-    await this.client?.close();
-    this.client = undefined;
-    await Promise.allSettled(this.logs);
+    await this.verifyStopped();
+    await this.closeClient();
+    evidence[`${this.phase}Processes`] = [...this.owned.values()];
+    await this.drainLogs();
+  }
+
+  private async verifyStopped(): Promise<void> {
     await until(
       async () => {
         const snapshot = await processes();
@@ -359,29 +405,89 @@ class Browser {
           const original = this.owned.get(p.pid);
           return original && sameProcess(original, p);
         });
-        return alive.length === 0 && !await portOpen() ? true : null;
+        return this.exited && alive.length === 0 && !await portOpen()
+          ? true
+          : null;
       },
       "No owned browser processes or Marionette listener remain",
       20_000,
     );
-    evidence[`${this.phase}Processes`] = [...this.owned.values()];
+  }
+
+  private async closeClient(): Promise<void> {
+    const client = this.client;
+    this.client = undefined;
+    if (client) await within(client.close(), 6_000, "Marionette cleanup");
+  }
+
+  private async drainLogs(): Promise<void> {
+    try {
+      const results = await within(
+        Promise.allSettled(this.logs),
+        5_000,
+        "Browser log drainage",
+      );
+      const failures = results.flatMap((result) =>
+        result.status === "rejected" ? [result.reason] : []
+      );
+      if (failures.length) {
+        throw new AggregateError(failures, "Browser log capture failed");
+      }
+    } finally {
+      // A surviving process may keep inherited pipe handles open. Cancel the
+      // reads too, so a timed-out drain cannot keep the host runner alive.
+      this.logController.abort();
+    }
   }
 
   async abort(): Promise<void> {
+    const failures: unknown[] = [];
     if (!this.exited) {
-      await this.capture();
-      this.child.kill("SIGKILL");
-      await this.child.status;
-    }
-    // Any surviving subprocess must match a previously captured identity.
-    for (const current of await processes()) {
-      const owned = this.owned.get(current.pid);
-      if (owned && sameProcess(owned, current)) {
-        Deno.kill(current.pid, "SIGKILL");
+      try {
+        await this.capture();
+      } catch (error) {
+        if (!this.exited) failures.push(error);
+      }
+      try {
+        // The spawn handle remains owned even when identity capture failed.
+        this.child.kill("SIGKILL");
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) failures.push(error);
       }
     }
-    await this.client?.close();
-    await Promise.allSettled(this.logs);
+    // Any surviving subprocess must match a previously captured identity.
+    try {
+      for (const current of await processes()) {
+        const owned = this.owned.get(current.pid);
+        if (owned && sameProcess(owned, current)) {
+          try {
+            Deno.kill(current.pid, "SIGKILL");
+          } catch (error) {
+            if (!(error instanceof Deno.errors.NotFound)) failures.push(error);
+          }
+        }
+      }
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
+      await this.verifyStopped();
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
+      await this.closeClient();
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
+      await this.drainLogs();
+    } catch (error) {
+      failures.push(error);
+    }
+    if (failures.length) {
+      throw new AggregateError(failures, "Browser cleanup failed");
+    }
   }
 }
 
