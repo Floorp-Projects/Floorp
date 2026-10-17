@@ -1,6 +1,38 @@
+diff --git a/tools/app-shim/test-runtime.py b/tools/app-shim/test-runtime.py
+index de54988b..b9bc0e74 100644
 --- a/tools/app-shim/test-runtime.py
 +++ b/tools/app-shim/test-runtime.py
-@@ -148,6 +148,8 @@
+@@ -118,22 +118,15 @@ class HostProcess:
+             self.pid = self.process.pid
+
+     @staticmethod
+-    def _process_rows(pid=None):
+-        command = ["/bin/ps", "-ww"]
+-        command += ["-p", str(pid)] if pid is not None else ["-ax"]
+-        result = subprocess.run(command + ["-o", "pid=,lstart=,command="],
+-            capture_output=True, text=True, env={**os.environ, "LC_ALL": "C"}, timeout=5)
+-        if result.returncode not in (0, 1):
+-            raise RuntimeError(f"Cannot verify test browser process: {result.stderr.strip()}")
+-        rows = []
+-        for line in result.stdout.splitlines():
+-            fields = line.split(None, 6)
+-            if len(fields) == 7 and fields[0].isdigit():
+-                rows.append((int(fields[0]), " ".join(fields[1:6]), fields[6]))
+-        return rows
++    def _process_rows(pid=None, executable=None):
++        from importlib.util import spec_from_file_location, module_from_spec
++        spec = spec_from_file_location("native_processes", Path(__file__).with_name("native_processes.py"))
++        module = module_from_spec(spec)
++        spec.loader.exec_module(module)
++        return module.NativeProcesses().rows(pid, executable)
+
+     def _matching_identity(self, pid):
+-        expected = " ".join(self.command)
++        expected = tuple(self.command)
+         return next((row for row in self._process_rows(pid)
+                      if row[0] == pid and row[2] == expected), None)
+
+@@ -148,6 +141,8 @@ class HostProcess:
          identity = self._matching_identity(pid)
          if not identity:
              raise RuntimeError("Browser PID does not have the exact executable and isolated profile command")
@@ -8,8 +40,19 @@
 +            raise RuntimeError("Marionette browser identity differs from the observed launch")
          self._adopt(identity)
          self.verified = True
- 
-@@ -197,7 +199,14 @@
+
+@@ -176,8 +171,8 @@ class HostProcess:
+     def _discover_for_cleanup(self):
+         # A launch may fail before Marionette is ready. Only the newly-created,
+         # private profile's complete argv identifies a process we may clean up.
+-        expected = " ".join(self.command)
+-        matches = [row for row in self._process_rows() if row[2] == expected]
++        expected = tuple(self.command)
++        matches = [row for row in self._process_rows(executable=self.command[0]) if row[2] == expected]
+         if len(matches) > 1:
+             raise RuntimeError("Multiple processes claim the isolated test profile; refusing cleanup")
+         if matches:
+@@ -197,7 +192,14 @@ class HostProcess:
          if self.exited:
              return 0  # Liveness sentinel; never reported as the browser exit code.
          if self.pid is None:
@@ -25,7 +68,7 @@
          if self._matching_identity(self.pid) != self.identity:
              self.exited = True
              return 0
-@@ -245,7 +254,10 @@
+@@ -245,7 +247,10 @@ class HostProcess:
          try:
              # Discover an unconnected browser even if open has already exited.
              if self.launch_services and self.pid is None:
@@ -37,3 +80,50 @@
              if self.poll() is None:
                  self.terminate()
                  try:
+diff --git a/tools/app-shim/shim_lifecycle.py b/tools/app-shim/shim_lifecycle.py
+index e8796cf7..5b17f8cc 100644
+--- a/tools/app-shim/shim_lifecycle.py
++++ b/tools/app-shim/shim_lifecycle.py
+@@ -88,9 +88,11 @@ class ShimMonitor:
+         if info.start_sec + info.start_usec / 1000000 < self.started_wall:
+             return None
+         rows = self.process_rows(pid)
+-        if len(rows) != 1 or not rows[0][2].startswith(self.executable + " "):
++        if len(rows) != 1 or not rows[0][2] or rows[0][2][0] != self.executable:
+             return None
+-        arguments = rows[0][2][len(self.executable)+1:].split()
++        if rows[0][1] != f"{info.start_sec}.{info.start_usec:06}":
++            raise RuntimeError("process-generation-changed")
++        arguments = list(rows[0][2][1:])
+         if len(arguments) > 16:
+             return None
+         for flag, pattern in (("--host-service", r"\S{1,256}"),
+@@ -101,20 +103,21 @@ class ShimMonitor:
+             index = arguments.index(flag)
+             if index+1 >= len(arguments) or not re.fullmatch(pattern, arguments[index+1]):
+                 return None
+-        return (pid, info.start_sec, info.start_usec, hashlib.sha256(rows[0][2].encode()).digest())
++        return (pid, info.start_sec, info.start_usec, hashlib.sha256(json.dumps(rows[0][2], separators=(",", ":")).encode()).digest())
+
+     def _observe(self):
+         queue = None
+         try:
+             self.status = "discovering"
+             deadline = time.monotonic() + 35
++            from importlib.util import spec_from_file_location, module_from_spec
++            spec = spec_from_file_location("native_processes", Path(__file__).with_name("native_processes.py"))
++            module = module_from_spec(spec)
++            spec.loader.exec_module(module)
++            inventory = module.NativeProcesses()
+             while not self.done.is_set() and self.pid is None and time.monotonic() < deadline:
+-                pids = subprocess.run(["/bin/ps", "-axo", "pid="], capture_output=True, text=True,
+-                                      check=True, timeout=2).stdout
+-                if len(pids) > 65536:
+-                    raise RuntimeError("process-list-limit")
+-                matches = [identity for value in pids.split() if value.isdecimal()
+-                           if (identity := self._identity(int(value))) is not None]
++                matches = [identity for pid in inventory.pids()
++                           if (identity := self._identity(pid)) is not None]
+                 if len(matches) > 1:
+                     raise RuntimeError("ambiguous-instance")
+                 if matches:

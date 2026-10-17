@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "6553f77f6d974636d274449ba18063e21708a03a",
+  "scope": "Exact owned-child cleanup ordering plus removal of the two native-harness setuid ps census producers; no browser/build/SDK or permission changes.",
+  "cleanup": {
+    "change": "Poll the exact Popen child before group probes. A permission error permits one fresh group probe only after poll newly reaps that exact child. Live, already-reaped and still-denied residual groups remain unavailable/error. No signal target selection changes.",
+    "requiredMacEvidence": "Pipe-gated exact live child -> WNOWAIT exit-pending -> same-birth BSD zombie; kill(pid,0) succeeds, raw group-probe EPERM; exact Popen reap -> group-probe ESRCH. No signals in this experiment."
+  },
+  "nativeHarness": {
+    "baseCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "rawFourFileHashesChanged": false,
+    "changedProducers": [
+      "HostProcess._process_rows",
+      "ShimMonitor._observe PID inventory"
+    ],
+    "api": "Read-only libproc PROC_UID_ONLY list, full BSD136 arg1, proc_pidpath, sysctl KERN_PROCARGS2. UID-only discovery does not alter all-member resource sampling.",
+    "identity": "PID/full birth/effective UID/path/exact argv tuple snapshot consistency, ambiguity/profile checks and per-signal rechecks retained. Two argv snapshots and path/BSD rechecks cannot make exec atomic.",
+    "unavailable": "Zero/errno/short/saturated/truncated inventory or argv, UID/birth/path/argv conflict, and permission denial fail closed. A read failure may be skipped only after fresh authoritative BSD/ESRCH proves absence. No EINVAL=>gone shortcut.",
+    "bounds": {
+      "processCount": 4096,
+      "argvBufferBytes": 65536,
+      "saturatedArgvRejected": true,
+      "environmentParsed": false,
+      "scanDeadlineSeconds": 5
+    },
+    "binding": "Existing startup patch now binds both modified harness files. Helper absent target/source hash/copy hash verified. Mac preflight uses identical prepare_harness and checks all prepared bytes."
+  },
+  "monitorCorrectness": {
+    "threeEPERM": "Known owned ps lifetime can legitimately deny counters; that alone establishes no product failure. Live unknown counters still cannot satisfy the existing resource contract.",
+    "expectedExit": "An exact exited stage retains existing break/wait/cleanup handling; owned zombie cleanup is reaped before interpreting group state.",
+    "remainingLiveDenial": "Still abort/inconclusive, with RSS/CPU null, unchanged resource limits/retry count/spacing and no role exclusion.",
+    "nativePath": "Avoid creating the privileged census descendants instead of pretending they used zero resources.",
+    "report": "Explicit validationOutcome execution=monitor-inconclusive and nativeAuthentication=not-verified unless actual native summary passed. Overall status and final proof gates unchanged."
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_owned_cleanup test_native_processes test_ps_lifetime test_guards -q",
+    "platform": "Linux",
+    "total": 97,
+    "passed": 94,
+    "skipped": 3,
+    "elapsedSeconds": 3.655,
+    "MacRequirements": [
+      "Actual zombie-only group cleanup",
+      "Actual ordinary process identity/argv/absence",
+      "Existing actual unreaped-child resource probe"
+    ]
+  },
+  "plannedMacJob": "One standard public macos-15-intel job, all97 tests plus existing controlled ps lifetime and newly prepared real-harness census; no upload/SDK/build/security changes.",
+  "limitations": [
+    "Real Mac APIs and cleanup ordering not yet executed for this patch",
+    "No native browser/Shim authentication in an SDK-free gate",
+    "Historical denied generation and native exit cause remain unknown"
+  ],
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 23641,
+      "sha256": "e935c247ca133e48756db7e7d34f68373e76cb2f98effdcbf5b8d9bf5b889824"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 28886,
+      "sha256": "2da20b958b5e3d40b1e5ea1c77ad98d959a4a64b88cc38268284364727fec4af"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_processes.py",
+      "bytes": 6111,
+      "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_native_processes.py",
+      "bytes": 7399,
+      "sha256": "f4562ffd7ca3f8b3097cb04592f0c8588559409a8df7cd0e36c0218a31de6a3c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_owned_cleanup.py",
+      "bytes": 6034,
+      "sha256": "2ec589910058d6864ccae020a23dfc10f84c26036826c6ff5ea4a14aa71bde98"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 82556,
+      "sha256": "4767339960ccf36efd525125cdac0c99d67fa050b60850c83e804aec3d50275f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+      "bytes": 6922,
+      "sha256": "2b8b8803371d4a1ea2d1ace988ce6ba3943e4b1baa47f1cc6332c9e96fb7b415"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+      "bytes": 16833,
+      "sha256": "19f31ea18e8430e8776e56a98d3c387d0e75355d185a9582ef9d6bddd99645e3"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+      "bytes": 7180,
+      "sha256": "955a3b2330ab326fef83cd22df4179be3094d5e47fef902103180241cc066562"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+      "bytes": 6724,
+      "sha256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 24899,
+      "sha256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb"
+    },
+    {
+      "path": "tools/app-shim/shim_lifecycle.py",
+      "bytes": 15224,
+      "sha256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d"
+    }
+  ]
+}

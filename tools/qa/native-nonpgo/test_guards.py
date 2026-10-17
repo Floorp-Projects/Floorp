@@ -36,7 +36,7 @@ from owned_native import MacProcesses, OwnedNative
 class Guards(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
 
     def tearDown(self):
         self.temp.cleanup()
@@ -48,6 +48,10 @@ class Guards(unittest.TestCase):
         target = harness / plan['harness']['startupPatch']['target']
         target.parent.mkdir(parents=True)
         target.write_bytes((fixture / plan['harness']['startupPatch']['target']).read_bytes())
+        for row in plan['harness']['startupPatch'].get('additionalFiles', []):
+            destination = harness / row['target']
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((fixture / row['target']).read_bytes())
         runner = mock.Mock()
         def run(stage, command, cwd, env, minutes):
             self.assertEqual(minutes, 360)
@@ -77,7 +81,7 @@ class Guards(unittest.TestCase):
 
     def test_poll_passively_adopts_exact_browser_before_session(self):
         _, host = self.patched_host_class()
-        identity = (42, 'fixed birth', ' '.join(host.command))
+        identity = (42, 'fixed birth', tuple(host.command))
         other = (43, 'other birth', '/another/browser --profile /another/profile')
         def adopt(value):
             host.pid, host.identity = value[0], value
@@ -89,6 +93,43 @@ class Guards(unittest.TestCase):
         self.assertEqual(host.pid, 42)
         self.assertFalse(host.verified)
         host.process.poll.assert_not_called()
+
+    def test_native_browser_identity_preserves_real_argument_boundaries(self):
+        _, host = self.patched_host_class()
+        combined = (host.command[0], ' '.join(host.command[1:]))
+        with mock.patch.object(host, '_process_rows', return_value=[(42, 'birth', combined)]):
+            self.assertIsNone(host._matching_identity(42))
+            self.assertFalse(host._discover_for_cleanup())
+        exact = (42, 'birth', tuple(host.command))
+        with mock.patch.object(host, '_process_rows', return_value=[exact]):
+            self.assertEqual(host._matching_identity(42), exact)
+
+    def test_shim_identity_uses_real_arguments_and_the_same_full_birth(self):
+        self.patched_host_class()
+        lifecycle = native_cause.load_module('prepared_lifecycle', self.root / 'harness/tools/app-shim/shim_lifecycle.py')
+        executable = str((self.root / 'floorp-app-shim').resolve())
+        argv = (executable, '--host-service', 'owned-service', '--host-pid', '42', '--launch-token', 'a' * 64)
+        rows = [(900, '100.000007', argv)]
+        observer = lifecycle.ShimMonitor(executable, 42, lambda pid: rows)
+        observer.started_wall = 90
+        observer.lib = mock.Mock()
+        def path(pid, buffer, size):
+            data = os.fsencode(executable) + b'\0'
+            ctypes.memmove(buffer, data, len(data))
+            return len(data)
+        def bsd(pid, flavor, arg, buffer, size):
+            value = ctypes.cast(buffer, ctypes.POINTER(lifecycle.BSDInfo)).contents
+            value.pid, value.uid, value.status = pid, os.geteuid(), 2
+            value.start_sec, value.start_usec = 100, 7
+            return size
+        observer.lib.proc_pidpath.side_effect = path
+        observer.lib.proc_pidinfo.side_effect = bsd
+        self.assertEqual(observer._identity(900)[:3], (900, 100, 7))
+        rows[:] = [(900, '100.000007', (executable, '--host-service owned-service', *argv[3:]))]
+        self.assertIsNone(observer._identity(900))
+        rows[:] = [(900, '100.000008', argv)]
+        with self.assertRaisesRegex(RuntimeError, 'process-generation-changed'):
+            observer._identity(900)
 
     def test_early_browser_identity_cannot_be_rebound_by_marionette(self):
         _, host = self.patched_host_class()
@@ -877,13 +918,13 @@ class Guards(unittest.TestCase):
 
 
 class DarwinCounterGuards(unittest.TestCase):
-    def test_native_census_cannot_pass_when_system_ps_was_never_sampled(self):
+    def test_replaced_native_census_requires_complete_samples_without_ps_descendants(self):
         observations = {'samples': 4, 'completeSamples': 4, 'systemPsObserved': 0}
-        with self.assertRaisesRegex(Failure, 'census-system-ps-not-observed'):
-            monitor_native_preflight.require_observation(observations, 'darwin')
+        monitor_native_preflight.require_observation(observations, 'darwin')
         monitor_native_preflight.require_observation(observations, 'linux')
         observations['systemPsObserved'] = 1
-        monitor_native_preflight.require_observation(observations, 'darwin')
+        with self.assertRaisesRegex(Failure, 'census-unexpected-system-ps'):
+            monitor_native_preflight.require_observation(observations, 'darwin')
         observations['completeSamples'] = 0
         with self.assertRaisesRegex(Failure, 'census-insufficient-complete-samples'):
             monitor_native_preflight.require_observation(observations, 'darwin')

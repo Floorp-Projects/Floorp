@@ -31,6 +31,7 @@ class PsLifetimeGuards(unittest.TestCase):
                'exitPending': False, 'errno': 0}
         case = {'parentPopenLifetimeBinding': True, 'bsdSameIdentityAllObservations': True,
                 'sameChildThreeEPERM': True, 'errorCode': 'monitor-unavailable',
+                'firstFailure': {'code': 'monitor-unavailable'},
                 'monitorFailure': {'diagnostic': True},
                 'observations': [{'bsdBefore': identity, 'bsdAfter': identity,
                                   'parentBefore': ack, 'parentAfter': ack}] * 3,
@@ -60,6 +61,11 @@ class PsLifetimeGuards(unittest.TestCase):
         for row in unknown['observations']:
             row['bsdBefore'] = row['bsdAfter'] = {'status': 'unavailable', 'reason': 'permission'}
         validate_held(unknown)
+        failed_cleanup = copy.deepcopy(case)
+        failed_cleanup['errorCode'] = 'PermissionError'
+        failed_cleanup['stages'][0]['groupCleanup'] = 'unverified'
+        with self.assertRaisesRegex(Failure, 'ps-group-cleanup-incomplete'):
+            validate_held(failed_cleanup)
 
     def test_waitid_keeps_exact_exited_child_waitable_until_reaped(self):
         child = subprocess.Popen([sys.executable, '-c', 'import sys; sys.stdin.buffer.read(1); raise SystemExit(7)'],

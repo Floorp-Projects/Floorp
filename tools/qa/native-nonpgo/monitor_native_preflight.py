@@ -18,25 +18,32 @@ import time
 from support import Failure, Runner, clean_environment, digest, require, write_json
 
 
-def verify_harness(harness, plan):
+def verify_harness(harness, plan, prepared=False):
+    changed = {}
+    if prepared:
+        pin = plan['harness']['startupPatch']
+        changed[pin['target']] = pin['patchedSHA256']
+        changed.update({row['target']: row['patchedSHA256'] for row in pin.get('additionalFiles', [])})
     for row in plan['harness']['files']:
-        require(digest(harness / row['path']) == row['sha256'], 'census-harness-binding')
+        require(digest(harness / row['path']) == changed.get(row['path'], row['sha256']), 'census-harness-binding')
+    if prepared and plan['harness']['startupPatch'].get('inventoryHelper'):
+        helper = plan['harness']['startupPatch']['inventoryHelper']
+        require(digest(harness / helper['target']) == helper['sha256'], 'census-inventory-helper-binding')
 
 
 def workload(harness, task):
     spec = importlib.util.spec_from_file_location('census_runtime', harness / 'tools/app-shim/test-runtime.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    from native_processes import NativeProcesses
+    inventory = NativeProcesses()
     counts = {'hostAll': 0, 'hostSingle': 0, 'shimPIDInventory': 0}
     for _ in range(12):
-        module.HostProcess._process_rows()
+        module.HostProcess._process_rows(executable=str(Path(sys.executable).resolve()))
         counts['hostAll'] += 1
         module.HostProcess._process_rows(os.getpid())
         counts['hostSingle'] += 1
-        # Same command, timeout and inherited group as ShimMonitor._run.
-        result = subprocess.run(['/bin/ps', '-axo', 'pid='], capture_output=True,
-                                text=True, check=True, timeout=2)
-        require(len(result.stdout) <= 1024**2, 'census-pid-inventory-limit')
+        require(len(inventory.pids()) <= 4096, 'census-pid-inventory-limit')
         counts['shimPIDInventory'] += 1
         time.sleep(0.25)
     write_json(task / 'census-workload.json', counts)
@@ -62,7 +69,7 @@ def record_observation(activity, observations):
 def require_observation(observations, platform):
     require(observations['completeSamples'] >= 2, 'census-insufficient-complete-samples')
     if platform == 'darwin':
-        require(observations['systemPsObserved'] > 0, 'census-system-ps-not-observed')
+        require(observations['systemPsObserved'] == 0, 'census-unexpected-system-ps')
 
 
 def main():
@@ -70,9 +77,10 @@ def main():
     parser.add_argument('--harness', required=True, type=Path)
     parser.add_argument('--task', required=True, type=Path)
     parser.add_argument('--worker', action='store_true')
+    parser.add_argument('--prepared', action='store_true')
     args = parser.parse_args()
     plan = json.loads(Path(__file__).with_name('plan.json').read_text())
-    verify_harness(args.harness, plan)
+    verify_harness(args.harness, plan, args.prepared)
     if args.worker:
         workload(args.harness, args.task)
         return 0
@@ -88,6 +96,9 @@ def main():
     observations = {'samples': 0, 'completeSamples': 0, 'systemPsObserved': 0,
                     'differentOwnerObserved': 0, 'psTaskDeniedSamples': 0}
     try:
+        from pipeline import prepare_harness
+        result['harnessPreparation'] = prepare_harness(plan, args.harness, Path(__file__).resolve().parents[3],
+                                                       runner, env)
         metadata = Path('/bin/ps').stat()
         result['systemPsFile'] = {'ownedByRoot': metadata.st_uid == 0,
                                   'setuidBit': bool(metadata.st_mode & stat.S_ISUID)}
@@ -109,7 +120,7 @@ def main():
             return activity
         runner.group_activity = observe
         runner.run('harness-census-preflight', [sys.executable, str(Path(__file__).resolve()), '--worker',
-                   '--harness', str(args.harness.resolve()), '--task', str(args.task.resolve())],
+                   '--harness', str(args.harness.resolve()), '--task', str(args.task.resolve()), '--prepared'],
                    args.task, env, plan['limits']['jobMinutes'])
         counts = json.loads((args.task / 'census-workload.json').read_text())
         require(counts == {'hostAll': 12, 'hostSingle': 12, 'shimPIDInventory': 12}, 'census-workload-incomplete')

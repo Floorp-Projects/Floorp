@@ -259,7 +259,7 @@ def validate_held(case):
                     for value in (row['bsdBefore'], row['bsdAfter']) if value.get('identityTag') is not None}
     require(len(known_births) <= 1, 'ps-bsd-generation-conflict')
     if case['sameChildThreeEPERM']:
-        require(case['errorCode'] == 'monitor-unavailable' and case['monitorFailure'] is not None,
+        require(case.get('firstFailure', {}).get('code') == 'monitor-unavailable' and case['monitorFailure'] is not None,
                 'ps-fail-closed-missing')
         require(all(not row['sampleComplete'] and row['rssMiB'] is None and row['cpuSeconds'] is None
                     for row in case['samples']), 'ps-unavailable-measurement')
@@ -269,6 +269,7 @@ def validate_held(case):
             case['childReap']['outputBytes'] >= 65536, 'ps-backpressure-or-reap-coverage')
     require(all(row['groupCleanup'] == 'verified-gone' and row['leaderReap']['status'] == 'reaped'
                 for row in case['stages']), 'ps-group-cleanup-incomplete')
+    require(case['errorCode'] in (None, 'monitor-unavailable'), 'ps-unexpected-terminal-failure')
 
 
 def main():

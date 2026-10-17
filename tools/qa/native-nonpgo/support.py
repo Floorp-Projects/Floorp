@@ -207,6 +207,17 @@ class Runner:
                 del diagnostics[:-16]
             raise
 
+    def owned_group_alive(self, process, diagnostics=None):
+        process.poll()
+        try:
+            return self.group_alive(process.pid, diagnostics)
+        except PermissionError:
+            # A newly exited, unreaped leader can leave a zombie-only Darwin
+            # group. Only an exact-child reap permits a fresh group probe.
+            if process.returncode is not None or process.poll() is None:
+                raise
+            return self.group_alive(process.pid, diagnostics)
+
     @staticmethod
     def parse_group_activity(text, pgid):
         require(len(text) <= 1024**2, 'process-inventory-limit')
@@ -385,7 +396,7 @@ class Runner:
                     time.sleep(1)
             phase = 'wait'
             code = process.wait(timeout=5)
-            if self.group_alive(process.pid, cleanup_diagnostics):
+            if self.owned_group_alive(process, cleanup_diagnostics):
                 reason = reason or 'owned-descendants-outlived-leader'
                 self.fail(stage, reason)
                 self.stop(process, cleanup_diagnostics)
@@ -404,7 +415,7 @@ class Runner:
             try:
                 if process is not None:
                     try:
-                        if self.group_alive(process.pid, cleanup_diagnostics):
+                        if self.owned_group_alive(process, cleanup_diagnostics):
                             self.stop(process, cleanup_diagnostics)
                         group_cleanup = 'verified-gone'
                     finally:
@@ -450,7 +461,7 @@ class Runner:
     def stop(self, process, diagnostics=None):
         for value, grace in ((signal.SIGINT, self.limits['processCleanupGraceSeconds']),
                              (signal.SIGTERM, 10), (signal.SIGKILL, 5)):
-            if not self.group_alive(process.pid, diagnostics):
+            if not self.owned_group_alive(process, diagnostics):
                 process.poll()
                 return
             try:
@@ -464,7 +475,6 @@ class Runner:
                     del diagnostics[:-16]
                 raise
             deadline = time.monotonic() + grace
-            while self.group_alive(process.pid, diagnostics) and time.monotonic() < deadline:
-                process.poll()
+            while self.owned_group_alive(process, diagnostics) and time.monotonic() < deadline:
                 time.sleep(0.05)
-        require(not self.group_alive(process.pid, diagnostics), 'owned-process-cleanup-timeout')
+        require(not self.owned_group_alive(process, diagnostics), 'owned-process-cleanup-timeout')

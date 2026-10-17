@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "scope": "Read-only analysis of privileged process-census helpers and the minimum route toward native validation",
+  "sourceCommit": "6553f77f6d974636d274449ba18063e21708a03a",
+  "pinnedHarnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "terminalEvidence": {
+    "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8B_EXECUTION_RESULT.json",
+    "sha256": "2020206430ff18675d0fde915d63e4060e8520d81e499930f96d674abb16e639",
+    "runId": 39075099849,
+    "jobId": 117520498246
+  },
+  "observedConclusion": {
+    "sameExactChildThreeEPERM": true,
+    "effectiveUIDSameAsWorker": false,
+    "effectiveUIDEvidence": "Inventory snapshot classified different effective owner and same real owner; exact Popen-child WNOWAIT acknowledgements establish the controlled child lifetime independently of inaccessible BSD birth data.",
+    "resourceTotals": "Unknown; no measured zero or finite upper bound follows from exact ownership or expected utility lifetime.",
+    "cleanup": "The controlled ps was drained and reaped before Runner cleanup. The remaining group probe returned EPERM; whole-group cleanup remains unverified.",
+    "originalFullRunCause": "UNKNOWN; controlled same-child observations do not establish the denied generation or cause in run 39045848018.",
+    "productOrNativeAuthenticationFailureEstablished": false
+  },
+  "existingLifecycle": [
+    "Runner.group_activity already retries an incomplete group sample at most three times and retains partial observations.",
+    "Runner.run checks the exact Popen child after a terminal incomplete sample. If that child has exited, it proceeds to wait and group cleanup; it does not automatically label the expected exit monitor-unavailable.",
+    "A live stage with persistent unknown resource totals cannot satisfy the current complete-owned-RSS contract. Continuing it would require another trustworthy accounting or enforcement mechanism, not a role exemption or zero substitution.",
+    "Transient recovery continues normally and resets the progress watcher so an unobserved interval does not become stall evidence."
+  ],
+  "recommendation": {
+    "decision": "ORDINARY_READ_ONLY_CENSUS_REPLACEMENT_IS_THE_MINIMUM_CANDIDATE; EXECUTION_QUALIFICATION_PENDING",
+    "paths": [
+      {
+        "path": "tools/app-shim/test-runtime.py",
+        "method": "HostProcess._process_rows",
+        "current": "Spawns /bin/ps for all-process and single-PID argv/start-time rows inside the monitored group."
+      },
+      {
+        "path": "tools/app-shim/shim_lifecycle.py",
+        "method": "ShimMonitor._observe",
+        "current": "Spawns /bin/ps for the PID inventory and delegates candidate argv reads to HostProcess._process_rows."
+      }
+    ],
+    "candidate": "Use exported ordinary libproc PID enumeration, full BSD identity, executable path, and sysctl KERN_PROCARGS2 reads in the existing harness process, without spawning setuid census children.",
+    "resourceMonitor": "Keep target selection, complete/null resource semantics, retry count, limits, and safe cleanup unchanged.",
+    "privilegeExpansionRequiredByDesign": false,
+    "permissionFailure": "Stop or report observation unavailable if ordinary APIs are denied; do not add sudo, entitlements, protection changes, or a privileged fallback.",
+    "remainingScope": "Other native utilities and genuine browser or Shim permission failures remain possible; this candidate removes only the two identified census producers."
+  },
+  "requiredImplementationContracts": [
+    "Keep all-process discovery and single-PID identity checks; do not replace exact argv/profile matching with process-name or path-only matching.",
+    "Preserve a full positive (PID,startSec,startUsec) identity and same effective UID. Read executable path and argv with before/after identity checks. Treat these as consistent snapshots, not atomic immunity to exec or exit races.",
+    "Use the argc count to parse exactly the argv entries with bounded buffers, complete NUL terminators, and byte-preserving path decoding. Do not include environment contents or raw launch tokens in public evidence.",
+    "Distinguish absence, mismatch, and unavailable evidence. proc_pidinfo errors return zero with errno; proc_listpids returns bytes whereas proc_listallpids returns PID count. Clear and retain errno, reject malformed sizes and saturated or truncated inventories.",
+    "Do not classify KERN_PROCARGS2 EINVAL as process exit: the kernel also uses it for credential mismatch and unavailable or inactive process state. Recheck identity to establish an exit or mismatch.",
+    "Retain ambiguity refusal, exact identity recheck before signalling, kqueue registration recheck, existing startup deadlines, and bounded iteration/buffer sizes.",
+    "Bind the overlay and any additional module to immutable hashes and update sparse checkout, verification, and SDK-free census tests. A direct API call deadline check is not a guarantee of cancellability inside the kernel."
+  ],
+  "rejectedShortcuts": [
+    "Ignoring a system-ps role, a different owner, or a known exact child in resource totals.",
+    "Treating a short expected lifetime, successful later reap, or a measured lower bound as a complete total at the denied samples.",
+    "Moving helpers outside the target group without equivalent owned-process accounting and cleanup.",
+    "Suppressing sampling or adding unbounded lifecycle coordination or additional retries as a substitute for complete accounting."
+  ],
+  "minimumValidation": [
+    "Portable parser/ABI/size/error tests for argc and argv, truncation, zero/error return values, identity changes, same PID with different birth, foreign owner, exact profile mismatch, and ambiguous discovery.",
+    "One bounded SDK-free macos-15-intel gate exercising all-process and single-PID reads, exact live child identity, an unreaped child, matching and nonmatching argv/profile cases, candidate Shim selection, and a no-match case.",
+    "The Mac gate must establish ordinary API availability and complete monitored resource samples without the two census ps producers. It does not establish browser startup or native authentication.",
+    "Keep the owned-zombie cleanup ordering change separately scoped and retain unknown group permissions as failure until a fresh successful probe establishes the state."
+  ],
+  "apiLimits": [
+    "The Apple libproc header describes its process-information interfaces as private and subject to change. Pin and check the ABI on the selected runner; no cross-version stability claim is made.",
+    "XNU applies MAC policy before libproc same-user checks. Same UID alone does not guarantee access.",
+    "KERN_PROCARGS2 may return stale information during exec according to its kernel implementation. Before/after full identity and path checks reduce mixed-generation evidence but do not create an atomic signal operation."
+  ],
+  "sources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/libsyscall/wrappers/libproc/libproc.h",
+      "supports": "Exported enumeration, path, and process-info interfaces; header stability warning."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/libsyscall/wrappers/libproc/libproc.c",
+      "supports": "Enumeration byte/count units and zero-on-error wrappers."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+      "supports": "Bounded PID list copyout, MAC policy, and same-user requirements for full BSD/task data."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sysctl.c",
+      "supports": "Read-only KERN_PROCARGS2, credential and state EINVAL paths, argument layout and exec caveat."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/6bed8737a34dbb54782a18f47dccf933a9967a12/ps/print.c",
+      "supports": "The existing utility itself obtains argv through KERN_PROCARGS2 and falls back to a nonexact command representation on read failure."
+    }
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "newProcessesUnderTest": 0,
+    "macExecutions": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0,
+    "method": "Static source and committed execution evidence review; official Apple source comparison."
+  }
+}

@@ -119,11 +119,22 @@ def prepare_harness(plan, harness, fixture, runner, env):
     target = harness / pin['target']
     require(digest(patch) == pin['sha256'], 'harness-startup-patch-hash')
     require(digest(target) == pin['baseSHA256'], 'harness-startup-base-hash')
+    for row in pin.get('additionalFiles', []):
+        require(digest(harness / row['target']) == row['baseSHA256'], 'harness-additional-base-hash')
+    helper = pin.get('inventoryHelper')
+    if helper:
+        require(digest(fixture / helper['source']) == helper['sha256'] and
+                not (harness / helper['target']).exists(), 'harness-inventory-helper-binding')
     runner.run('harness-startup-check', ['git', 'apply', '--check', str(patch)],
                harness, env, plan['limits']['jobMinutes'])
     runner.run('harness-startup-apply', ['git', 'apply', str(patch)],
                harness, env, plan['limits']['jobMinutes'])
     require(digest(target) == pin['patchedSHA256'], 'harness-startup-patched-hash')
+    for row in pin.get('additionalFiles', []):
+        require(digest(harness / row['target']) == row['patchedSHA256'], 'harness-additional-patched-hash')
+    if helper:
+        shutil.copyfile(fixture / helper['source'], harness / helper['target'])
+        require(digest(harness / helper['target']) == helper['sha256'], 'harness-inventory-helper-hash')
     return {'commit': plan['harness']['commit'], 'patchSHA256': pin['sha256'],
             'baseSHA256': pin['baseSHA256'], 'patchedSHA256': pin['patchedSHA256']}
 
@@ -274,6 +285,12 @@ def macho(path, kind):
     require(struct.unpack_from('<IIII', header)[3] == kind, 'macho-filetype')
     return {'bytes': path.stat().st_size, 'sha256': digest(path), 'filetype': kind,
             'uuid': uuid, 'sectionsSHA256': section_hash, 'sections': len(sections)}
+
+
+def validation_outcome(report):
+    return {'execution': 'monitor-inconclusive' if report.get('monitorFailure') is not None else report['status'],
+            'nativeAuthentication': 'passed' if report.get('native', {}).get('status') == 'passed' else 'not-verified',
+            'monitorFailureEstablishesProductFailure': False}
 
 
 def main():
@@ -429,11 +446,13 @@ def main():
             if not complete:
                 runner.fail('final-proof', 'proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
+        report['validationOutcome'] = validation_outcome(report)
         try:
             write_json(task / 'summary.json', report)
         except OSError as error:
             report['status'] = 'failed'
             report['evidenceWriteError'] = error.errno
+            report['validationOutcome'] = validation_outcome(report)
         finally:
             print(json.dumps(report), flush=True)
     return 0 if report['status'] == 'passed' else 1

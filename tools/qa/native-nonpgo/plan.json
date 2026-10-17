@@ -63,11 +63,23 @@
     ],
     "repository": "Floorp-Projects/Floorp",
     "startupPatch": {
+      "additionalFiles": [
+        {
+          "baseSHA256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d",
+          "patchedSHA256": "578d2650952af2b316278680f2666f61537a19ce6f83927572dc5a13c50eacc5",
+          "target": "tools/app-shim/shim_lifecycle.py"
+        }
+      ],
       "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
-      "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e",
+      "inventoryHelper": {
+        "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b",
+        "source": "tools/qa/native-nonpgo/native_processes.py",
+        "target": "tools/app-shim/native_processes.py"
+      },
+      "patchedSHA256": "e6cd34f8008a9a3f45496c4474de77552756aee7afc109b9ea745a07a6365c11",
       "path": "tools/qa/native-nonpgo/launch-services-host.patch",
-      "scope": "Separate LaunchServices helper status from exact observed browser liveness; preserve Marionette ownership and startup deadlines.",
-      "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+      "scope": "Preserve exact LaunchServices startup identity and replace native census ps producers with ordinary read-only process APIs; no resource-monitor exclusions or permission changes.",
+      "sha256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e",
       "target": "tools/app-shim/test-runtime.py"
     }
   },
