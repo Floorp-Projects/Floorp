@@ -1,0 +1,226 @@
+{
+  "bindings": {
+    "callerCommit": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+    "callerParentCommit": "ae47a2baf6a96ead6f8797c659f22090850f1066",
+    "changedFields": [
+      "workflow name",
+      "push branch",
+      "exact ref guard",
+      "private task root",
+      "explicit verbose test gate"
+    ],
+    "changedLineCount": 5,
+    "fixtureAndProductionBytesUnchanged": true,
+    "fixtureCommit": "82414aa914508516c2735b32e7d9536effa69a18",
+    "followupRecord": {
+      "commit": "90fd6f8ca17bb35a705276426cedecb400ed04bc",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_FOCUSED_FOLLOWUP.json",
+      "sha256": "af805f76df7471531e4e0774ccd78abb6cf2b3d97271d4e18ed43d810b1a9faa"
+    },
+    "priorReceipt": {
+      "commit": "90fd6f8ca17bb35a705276426cedecb400ed04bc",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_PREPARATION_RESULT.json",
+      "sha256": "1203449fa51cf2837c1c667a147289dc58b49c9d2c55c03040e1cf89fb3de0d1"
+    },
+    "reviewedFiles": [
+      {
+        "bytes": 16712,
+        "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+        "sha256": "2c3e93b58930b6536a11498a06242b8a173dec471906030c37b5ac6c78901eb4"
+      },
+      {
+        "bytes": 6570,
+        "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+        "sha256": "b1268883e3975b13ef160fc6b918c896cf0df76f918a83c139611ceb7f7a9241"
+      },
+      {
+        "bytes": 23162,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "f5201d07cb122c80d527b0b30f97f04c713a2f89e559e41d8721524026e26b1d"
+      },
+      {
+        "bytes": 11249,
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "sha256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e"
+      },
+      {
+        "bytes": 12062,
+        "path": "tools/qa/native-nonpgo/owned_native.py",
+        "sha256": "9b677774f13ce368bb59945659c4a5f9c71d59102e6692bd691a05d8b5dee2b3"
+      }
+    ],
+    "workflowBytes": 3303,
+    "workflowChangedLines": [
+      1,
+      4,
+      23,
+      31,
+      55
+    ],
+    "workflowPath": ".github/workflows/mac-native-ps-lifetime.yml",
+    "workflowSHA256": "bc2888c523c84a2e41f9470544c09bd5f4e71a432d1ac39cca6b57d2340e1614"
+  },
+  "checks": {
+    "callerFiveLineScope": "PASS",
+    "codeAndManifestBinding": "PASS",
+    "runtimeRouteAudit": "PASS",
+    "shellAndPythonSyntax": [
+      {
+        "bash": "PASS",
+        "step": 1
+      },
+      {
+        "bash": "PASS",
+        "step": 4
+      },
+      {
+        "bash": "PASS",
+        "step": 5
+      },
+      {
+        "bash": "PASS",
+        "pythonHeredoc": "PASS",
+        "step": 6
+      }
+    ]
+  },
+  "decision": "GO_FOCUSED_DIAGNOSTIC_ONLY_WITH_RETAINED_FULL_SUITE_FAILURES",
+  "focusedGate": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning \"$TASK_PYTHON\" -m unittest test_ps_lifetime test_guards.DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds -v",
+    "fullMacSuiteQualified": false,
+    "localExecution": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_ps_lifetime test_guards.DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds -v",
+      "elapsedSeconds": 0.775,
+      "localMacOnlySkipped": 1,
+      "localPassed": 5,
+      "localPlatform": "Linux",
+      "total": 6
+    },
+    "provenance": "Local execution recorded in the committed followup record; not rerun during independent review.",
+    "retainedChecks": [
+      "exact Popen child WNOWAIT live/exit-pending/reap behavior",
+      "six sequence-bound known-child live ACKs",
+      "streaming output cap and exact child cleanup",
+      "validation of unknown BSD, known birth conflict and null unavailable counters",
+      "actual Mac unreaped-child behavior"
+    ],
+    "selectedTests": "All five test_ps_lifetime guards plus the explicit actual-Mac unreaped-child test; six named tests in verbose output."
+  },
+  "initialTerminal": {
+    "artifacts": 0,
+    "attempt": 1,
+    "conclusion": "failure",
+    "diagnosticStarted": false,
+    "fullSuite": {
+      "classification": {
+        "groupCleanupPermission": "Three tests starting owned Python children received EPERM from existing killpg(pgid,0) during cleanup. This is unresolved real Mac behavior; no unavailable-to-gone conversion is made.",
+        "missingSourceFixture": "Nine host startup tests expected tools/app-shim/test-runtime.py in the sparse fixture checkout; it was not included.",
+        "platformMock": "Native-census mock expectation failed (records 0 rather than 3). MacProcesses is mocked directly; the platform-specific assumption causing this is unresolved."
+      },
+      "elapsedSeconds": 5.441,
+      "errors": 12,
+      "failureNames": [
+        "test_resource_reserve_is_checked_even_when_monitor_would_be_unavailable",
+        "test_cleanup_requested_signal_is_distinct_from_observed_browser_signal",
+        "test_early_browser_identity_cannot_be_rebound_by_marionette",
+        "test_launcher_exit_is_not_unobserved_browser_exit",
+        "test_no_browser_identity_cleanup_only_reaps_owned_launcher",
+        "test_observed_browser_exit_is_not_hidden_by_running_launcher",
+        "test_poll_passively_adopts_exact_browser_before_session",
+        "test_sampler_exception_records_stage_and_reaps_owned_process",
+        "test_snapshot_liveness_and_exit_code_use_the_same_kernel_observation",
+        "test_startup_snapshot_keeps_codes_and_markers_without_private_text",
+        "test_startup_stream_codes_keep_first_and_last_failure_without_raw_text",
+        "test_unavailable_monitor_preserves_failure_and_reclaims_owned_group",
+        "test_native_census_binds_profile_and_never_persists_nonce"
+      ],
+      "failures": 1,
+      "total": 82
+    },
+    "independentProviderMetadataMatches": true,
+    "interpretation": "The failed broad gate prevented the focused diagnostic. The complete 82-test Mac suite remains failed and is not superseded by the narrower gate.",
+    "job": 117519463251,
+    "jobCount": 1,
+    "jobDurationSeconds": 25,
+    "logBytes": 51251,
+    "nativeAuthentication": "NOT_TESTED",
+    "privateDecodedLogSHA256": "9cbdd5994aae81af4cdef38bb73b044374aa0218f2aaf8df6a7d90318854c2da",
+    "rawLogPublished": false,
+    "run": 39074746800,
+    "sameChildThreeEPERM": "NOT_TESTED",
+    "status": "completed",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39074746800"
+  },
+  "openBlockingFindingsForFocusedJob": [],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent focused diagnostic gate review",
+  "route": {
+    "alwaysFinalFailureCheck": true,
+    "attemptGuard": 1,
+    "branch": "codex/mac-native-ps-lifetime-recovery8b-20261017",
+    "branchPushRunsAtReadback": 0,
+    "createOrWorkflowRunTriggers": 0,
+    "createdPushAndZeroBeforeRequired": true,
+    "jobCount": 1,
+    "limit": "Initial-created/attempt checks are not a permanent exactly-once ledger against ref recreation.",
+    "newFocusedRunExecutedAtReview": false,
+    "noContinueOnError": true,
+    "otherMatchingPushWorkflows": 0,
+    "otherWorkflowCount": 24,
+    "permissions": {
+      "contents": "read"
+    },
+    "priorRunTerminalBeforeFollowup": true,
+    "runner": "macos-15-intel",
+    "sameFixtureAndHarnessPins": true,
+    "timeoutMinutes": 360
+  },
+  "runtimeSafetyAndScope": {
+    "artifactUpload": false,
+    "browserStartup": "NOT_TESTED",
+    "build": false,
+    "cleanupQualification": "The focused experiment still records group/leader cleanup separately and rejects unverified group cleanup. A recurring EPERM may leave this diagnostic failed even if three task denials were observed.",
+    "controlLimit": "Normal-drain and fixed-harness census controls remain unchanged. Reaping the controlled ps before Runner stop does not reproduce signalling a live setuid helper.",
+    "focusedExperimentSourceChanged": false,
+    "historicalCause": "UNKNOWN",
+    "nativeAuthentication": "NOT_TESTED",
+    "permissionOrProtectionChanges": false,
+    "productionSourceChanged": false,
+    "sdkAcquisition": false,
+    "signing": false,
+    "syntheticLimit": "Repeated PID columns, intentional backpressure and ACK/BSD instrumentation differ from the native harness and add timing overhead.",
+    "unavailableHandling": "Unchanged unknown/null and fail-closed behavior."
+  },
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "commit": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+      "path": ".github/workflows/mac-native-ps-lifetime.yml"
+    },
+    {
+      "commit": "90fd6f8ca17bb35a705276426cedecb400ed04bc",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_PREPARATION_RESULT.json"
+    },
+    {
+      "commit": "90fd6f8ca17bb35a705276426cedecb400ed04bc",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_FOCUSED_FOLLOWUP.json"
+    },
+    {
+      "supports": "Independent terminal run metadata.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39074746800"
+    },
+    {
+      "supports": "One failed job; diagnostic step skipped.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39074746800/jobs?per_page=100"
+    }
+  ],
+  "unresolvedFullSuiteFindings": {
+    "cleanupCause": "UNKNOWN; target state at the denied instant was not recorded. A failed probe is not converted to gone.",
+    "cleanupGroupEPERMTests": 3,
+    "cleanupObservedOperation": "support.py group_alive: os.killpg(pgid,0), errno1 during stop/final cleanup",
+    "missingFixtureTests": 9,
+    "nativeCensusCause": "MacProcesses was mocked and records0vs3 failed; the platform-specific assumption is unresolved. No ps-column or filesystem-root cause is asserted.",
+    "nativeCensusMockExpectationFailures": 1,
+    "scope": "These failures remain separately recorded. The new caller does not fix them or establish production/native-authentication readiness."
+  }
+}
