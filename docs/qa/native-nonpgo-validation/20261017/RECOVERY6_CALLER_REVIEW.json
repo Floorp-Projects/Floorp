@@ -1,0 +1,296 @@
+{
+  "bindings": {
+    "checkoutAction": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+    "codeReviewSHA256": "156173e6c3def46556dbdbd3dcd511e105df3035ef70ea923be61873173b0799",
+    "fetchDepth": 1,
+    "fixtureCommit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "persistCredentials": false,
+    "pythonAvailability": "Existing executable required; missing interpreter fails before checkout/workload. The path matches the prior full-job caller.",
+    "pythonExecutable": "$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3",
+    "reviewedCodeFilesMatch": true
+  },
+  "caller": {
+    "artifactAndCommittedBytesMatch": true,
+    "baseCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "branch": "codex/mac-native-monitor-preflight-recovery6-20261017",
+    "changedFiles": [
+      {
+        "path": ".github/workflows/mac-native-monitor-census.yml",
+        "status": "added"
+      }
+    ],
+    "commit": "1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "workflowBytes": 2944,
+    "workflowSHA256": "f0bc6933fb5c008dbccc11279e79f93787bbb004a54c9a794876889a77b48ebe",
+    "workingTreeClean": true
+  },
+  "checks": {
+    "diffCheckExitCode": 0,
+    "fixtureFourCodeHashes": "PASS",
+    "immutableGitObjectAndLocalArtifactComparison": "PASS",
+    "shellAndEmbeddedPythonSyntax": [
+      {
+        "bashSyntax": "PASS",
+        "step": 1
+      },
+      {
+        "bashSyntax": "PASS",
+        "step": 4
+      },
+      {
+        "bashSyntax": "PASS",
+        "pythonHeredocSyntax": "PASS",
+        "step": 5
+      }
+    ],
+    "yamlUniqueKeys": "PASS"
+  },
+  "controls": {
+    "automaticRetryOrDispatch": false,
+    "concurrencyCancelInProgress": false,
+    "finalStep": "Always checks setup and census-summary presence; non-passed result returns failure.",
+    "guardOrder": "First step, before checkout or workload",
+    "initialExecutionGuards": [
+      "repository equals Floorp-Projects/Floorp-Runtime",
+      "ref equals refs/heads/codex/mac-native-monitor-preflight-recovery6-20261017",
+      "event equals push",
+      "run attempt equals 1",
+      "event.created equals true",
+      "event.before equals 40 zeroes"
+    ],
+    "jobCount": 1,
+    "jobId": "native-monitor",
+    "permissions": {
+      "contents": "read"
+    },
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 360,
+    "trigger": {
+      "push": {
+        "branches": [
+          "codex/mac-native-monitor-preflight-recovery6-20261017"
+        ]
+      }
+    }
+  },
+  "decision": "GO_FOR_SINGLE_INITIAL_PUSH_DIAGNOSTIC_ROUTE",
+  "executionDuringReview": false,
+  "existingRouteAudit": {
+    "baseCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "existingCreateWorkflows": 0,
+    "existingWorkflowRunWorkflows": 0,
+    "matchingExistingPushWorkflows": 0,
+    "scopeNote": "Audit covers workflows present in the pinned Runtime tree. It does not attest provider-side apps, external automation or later changes to a repository default branch.",
+    "workflowCount": 24,
+    "workflows": [
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "path": ".github/workflows/android-build.yml"
+      },
+      {
+        "events": [
+          "issue_comment"
+        ],
+        "path": ".github/workflows/autodiff-per-file-pr.yml"
+      },
+      {
+        "events": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/cleanup-large-caches.yml"
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/common-build.yml"
+      },
+      {
+        "events": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/daily-build.yml"
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/generate-pgo-profile-linux.yml"
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/generate-pgo-profile-windows.yml"
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/mac_integration.yml"
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/mac_pgo.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call",
+          "schedule"
+        ],
+        "path": ".github/workflows/misc-pull-upstream.yml"
+      },
+      {
+        "branchMatch": false,
+        "events": [
+          "push"
+        ],
+        "path": ".github/workflows/qa3-hosted-linux-debug.yml",
+        "pushBranches": [
+          "codex/qa3-actions-native-proof-qa337-17"
+        ]
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/qa3-linux-debug-proof.yml"
+      },
+      {
+        "events": [
+          "pull_request",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/qa3-shadow.yml"
+      },
+      {
+        "branchMatch": false,
+        "events": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/recover-runtime-variants.yml",
+        "pushBranches": [
+          "codex/runtime-variants/**/recovery",
+          "codex/runtime-variants/**/mac-debug-recovery"
+        ]
+      },
+      {
+        "events": [
+          "workflow_call"
+        ],
+        "path": ".github/workflows/resolve-build-context.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/validate-pwa-context-menu.yml"
+      },
+      {
+        "branchMatch": false,
+        "events": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/validate-runtime-debug.yml",
+        "pushBranches": [
+          "codex/runtime-variants/**/debug"
+        ]
+      },
+      {
+        "branchMatch": false,
+        "events": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/validate-runtime-pgo.yml",
+        "pushBranches": [
+          "codex/runtime-variants/**/pgo"
+        ]
+      },
+      {
+        "branchMatch": false,
+        "events": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/validate-runtime-source.yml",
+        "pushBranches": [
+          "codex/runtime-build/**"
+        ]
+      },
+      {
+        "events": [
+          "workflow_call",
+          "workflow_dispatch"
+        ],
+        "path": ".github/workflows/verify-runtime-artifact.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "path": ".github/workflows/wrapper-build-android.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "path": ".github/workflows/wrapper-build-linux.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "path": ".github/workflows/wrapper-build-windows.yml"
+      },
+      {
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "path": ".github/workflows/wrapper-mac-build.yml"
+      }
+    ]
+  },
+  "limitations": [
+    "The review verifies immutable local git objects and caller bytes; it does not attest a provider push/readback or a completed run.",
+    "Initial-created/before-zero/attempt-one guards restrict this branch-creation event; they are not a persistent exactly-once ledger against deleting and recreating the same ref.",
+    "The interpreter is selected by its existing fixed path; actual runner availability is determined by the fail-closed executable check.",
+    "A successful census does not establish browser startup, native Shim authentication, historical native exit cause, or permission-failure remediation.",
+    "Owner/role metadata is an earlier identityBound=false snapshot. systemPsObserved demonstrates inventory overlap only, and bounded psTaskDeniedSamples is a lower bound."
+  ],
+  "openBlockingFindings": [],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent static caller-route review",
+  "schemaVersion": 1,
+  "scope": {
+    "artifactDownload": false,
+    "artifactUpload": false,
+    "browserLaunch": false,
+    "fullBuild": false,
+    "loopPauseSeconds": 0.25,
+    "nativeAuthentication": false,
+    "permissionOrProtectionChanges": false,
+    "platformLimitNote": "The job ceiling remains the existing 360-minute platform-budget binding; the diagnostic workload is fixed and finite and is not a full build or a guaranteed 30-second run.",
+    "resultPublication": "Allowlisted JSON is printed by the reviewed preflight. Private stage logs are not uploaded by this workflow.",
+    "sdkAcquisition": false,
+    "signing": false,
+    "workload": "SDK-free pinned process census only: self counter and unreaped-child check on Mac, then 12 repetitions each of HostProcess all-PID inventory, single-PID inventory and ShimMonitor PID enumeration. Workload children keep inherited monitored PGID."
+  }
+}
