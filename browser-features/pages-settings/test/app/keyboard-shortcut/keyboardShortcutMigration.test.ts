@@ -139,14 +139,14 @@ function testExistingZenBindingIsPreserved(): void {
     action: ZEN_MODE_ACTION,
   };
   const migrated = migrateKeyboardShortcutConfig(
-    { shortcuts: { "custom-zen-binding": reboundZen } },
+    { shortcuts: { "custom-zen-binding": [reboundZen] } },
     true,
     "win",
   );
 
   assertEquals(
     JSON.stringify(migrated.shortcuts["custom-zen-binding"]),
-    JSON.stringify(reboundZen),
+    JSON.stringify([reboundZen]),
     "legacy migration does not overwrite an existing Zen binding under a custom id",
   );
   assertEquals(
@@ -178,7 +178,7 @@ function testV2DeletionSurvivesRoundTrip(): void {
 
   assertEquals(
     JSON.parse(saved).schemaVersion,
-    2,
+    3,
     "settings save persists schema v3",
   );
   assertEquals(

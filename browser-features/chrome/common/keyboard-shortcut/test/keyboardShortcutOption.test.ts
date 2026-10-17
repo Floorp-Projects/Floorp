@@ -41,7 +41,7 @@ function testOptionAndAltGr(): void {
             setConfig({
               enabled: true,
               shortcuts: {
-                option: {
+                [action]: {
                   key: code,
                   modifiers: { alt: true, ctrl, meta, shift },
                   action,

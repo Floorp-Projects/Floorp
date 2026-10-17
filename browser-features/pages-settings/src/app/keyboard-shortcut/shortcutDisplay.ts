@@ -275,8 +275,8 @@ function getCategoryForAction(actionId: string): ShortcutCategoryId {
 
 /**
  * Split actions into visible rows and rows replaced by Firefox. A mapped
- * Firefox action replaces Floorp's empty add row. Actions with additional,
- * non-conflicting Floorp bindings stay editable alongside the Firefox row.
+ * Firefox action replaces only an unconfigured Floorp add row; configured
+ * Floorp bindings remain editable and are flagged as conflicts for display.
  */
 export function filterActionsForFirefoxPriority<
   TAction extends { id: string },
@@ -289,11 +289,6 @@ export function filterActionsForFirefoxPriority<
   hiddenActionCount: number;
   visibleBindingsByAction: Record<string, ShortcutConfig[]>;
 } {
-  const firefoxCodes = new Set(
-    firefoxKeys.flatMap((entry) =>
-      entry.canonicalCode === null ? [] : [entry.canonicalCode]
-    ),
-  );
   const firefoxActionIds = new Set(
     firefoxKeys.flatMap((entry) => {
       const actionId = getFirefoxKeyActionId(entry);
@@ -304,19 +299,14 @@ export function filterActionsForFirefoxPriority<
   let hiddenActionCount = 0;
   const visibleActions = actions.filter((action) => {
     const bindings = shortcuts[action.id] ?? [];
-    const visibleBindings = bindings.filter((shortcut) =>
-      !firefoxCodes.has(getFloorpCanonicalCode(shortcut))
+    hiddenActionCount += bindings.length === 0 &&
+        firefoxActionIds.has(action.id)
+      ? 1
+      : 0;
+    visibleBindingsByAction[action.id] = bindings;
+    return bindings.length > 0 ? true : !firefoxActionIds.has(
+      action.id,
     );
-    const hiddenBindingCount = bindings.length - visibleBindings.length;
-    hiddenActionCount += bindings.length === 0
-      ? firefoxActionIds.has(action.id) ? 1 : 0
-      : hiddenBindingCount;
-    visibleBindingsByAction[action.id] = visibleBindings;
-    return bindings.length > 0
-      ? visibleBindings.length > 0
-      : !firefoxActionIds.has(
-        action.id,
-      );
   });
 
   return {
@@ -351,6 +341,8 @@ export interface UnifiedShortcutRow {
   shortcutIndex?: number;
   /** Synthetic row used to append another binding to the same action. */
   isAddRow?: boolean;
+  /** Whether the Floorp binding shares a canonical code with Firefox. */
+  hasFirefoxConflict?: boolean;
   /** Firefox live entry used for editing, reset and conflict display. */
   firefoxKey?: FirefoxKeyEntry;
 }
@@ -364,6 +356,18 @@ export function normalizeShortcutSearchText(value: string): string {
     .replace(/[+\-_]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Build searchable shortcut text that accepts both "T" and "KeyT". */
+function shortcutToSearchText(shortcut: ShortcutConfig): string {
+  const modifiers = [
+    shortcut.modifiers.alt && "Alt",
+    shortcut.modifiers.ctrl && "Ctrl",
+    shortcut.modifiers.meta && "Meta",
+    shortcut.modifiers.shift && "Shift",
+  ].filter((value): value is string => typeof value === "string");
+  const key = shortcut.key.replace(/^(Key|Digit)/, "") || shortcut.key;
+  return [...modifiers, key.toUpperCase()].join("+");
 }
 
 /**
@@ -402,6 +406,7 @@ export function filterUnifiedShortcutRows(
         row.firefoxKey?.shortcutText ?? "",
         row.firefoxKey?.keycode ?? "",
         row.shortcut?.key ?? "",
+        row.shortcut ? shortcutToSearchText(row.shortcut) : "",
       ].map(normalizeShortcutSearchText).some((text) =>
         text.includes(normalizedQuery)
       )
@@ -437,6 +442,11 @@ export function buildUnifiedShortcutRows(
   const rows: UnifiedShortcutRow[] = [];
   const firefoxByAction = new Map<string, FirefoxKeyEntry[]>();
   const unmappedFirefoxKeys: FirefoxKeyEntry[] = [];
+  const firefoxConflictCodes = new Set(
+    firefoxKeys.flatMap((entry) =>
+      entry.canonicalCode === null ? [] : [entry.canonicalCode]
+    ),
+  );
 
   for (const entry of firefoxKeys) {
     const actionId = getFirefoxKeyActionId(entry);
@@ -462,6 +472,9 @@ export function buildUnifiedShortcutRows(
           category: getCategoryForAction(action.id),
           shortcut,
           shortcutIndex: shortcuts[action.id]?.indexOf(shortcut) ?? index,
+          hasFirefoxConflict: firefoxConflictCodes.has(
+            getFloorpCanonicalCode(shortcut),
+          ),
         });
       });
     }

@@ -139,13 +139,13 @@ function testMultipleFloorpBindingsRenderPerBindingRows(): void {
 
   assertEquals(
     result.hiddenActionCount,
-    1,
-    "only the Firefox-owned binding should be hidden",
+    0,
+    "conflicting Floorp bindings should remain visible",
   );
   assertEquals(
     floorpRows.length,
-    2,
-    "one binding row and one add row should remain",
+    3,
+    "all bindings and one add row should remain",
   );
   assertEquals(
     floorpRows[0].shortcut?.key,
@@ -153,8 +153,14 @@ function testMultipleFloorpBindingsRenderPerBindingRows(): void {
     "non-conflicting binding should remain",
   );
   assertEquals(floorpRows[0].shortcutIndex, 0, "binding index is preserved");
-  assertEquals(floorpRows[1].shortcut, undefined, "add row has no binding");
-  assertEquals(floorpRows[1].key, "floorp-add:gecko-back", "add row is stable");
+  assertEquals(
+    floorpRows[1].shortcut?.key,
+    "ArrowLeft",
+    "conflicting binding is preserved",
+  );
+  assert(floorpRows[1].hasFirefoxConflict, "conflicting binding is flagged");
+  assertEquals(floorpRows[2].shortcut, undefined, "add row has no binding");
+  assertEquals(floorpRows[2].key, "floorp-add:gecko-back", "add row is stable");
 }
 
 function testUnifiedRowsKeepFirefoxPriorityBehavior(): void {
@@ -177,13 +183,17 @@ function testUnifiedRowsKeepFirefoxPriorityBehavior(): void {
 
   assertEquals(
     result.hiddenActionCount,
-    1,
-    "the conflicting Floorp action should remain hidden",
+    0,
+    "configured Floorp actions should not be hidden by conflicts",
   );
   assertStringArrayEqual(
     backRows.map((row) => row.source),
-    ["firefox"],
-    "Firefox should remain represented when it owns the configured combo",
+    ["floorp", "firefox", "floorp"],
+    "the conflicting binding, Firefox key and add row should remain visible",
+  );
+  assert(
+    backRows[0].hasFirefoxConflict,
+    "the retained Floorp binding should be flagged as conflicting",
   );
   assert(
     result.rows.some((row) =>
@@ -205,15 +215,16 @@ function testInternalFirefoxRowsStayVisible(): void {
 
   assertEquals(
     result.rows.length,
-    1,
+    2,
     "internal Firefox shortcuts should remain visible",
   );
-  assertEquals(
-    result.rows[0].source,
-    "firefox",
-    "the visible row should be Firefox-owned",
+  assertStringArrayEqual(
+    result.rows.map((row) => row.source),
+    ["floorp", "firefox"],
+    "the internal Firefox row should coexist with its add row",
   );
-  assert(result.rows[0].firefoxKey?.internal, "the row should be internal");
+  const firefoxRow = result.rows.find((row) => row.source === "firefox");
+  assert(firefoxRow?.firefoxKey?.internal, "the row should be internal");
 }
 
 function testFloorpCanonicalCodeNormalizesSimpleKeys(): void {
@@ -251,18 +262,18 @@ function testFirefoxPriorityHidesConfiguredAndEquivalentDuplicates(): void {
 
   assertStringArrayEqual(
     result.visibleActions.map((action) => action.id),
-    ["gecko-forward", "gecko-reload"],
-    "only the configured Firefox duplicate should be hidden",
+    ["gecko-back", "gecko-forward", "gecko-reload"],
+    "configured Floorp actions remain visible despite Firefox conflicts",
   );
   assertEquals(
     result.hiddenActionCount,
-    2,
-    "configured and equivalent duplicates should be counted",
+    1,
+    "only an unconfigured Firefox-mapped action should be counted",
   );
   assertEquals(
     result.visibleBindingsByAction["gecko-back"].length,
-    0,
-    "conflicting binding should be hidden",
+    1,
+    "conflicting binding should remain visible",
   );
   assertEquals(
     result.visibleBindingsByAction["gecko-forward"].length,
@@ -311,6 +322,13 @@ function testShortcutRowsMatchNamesAndShortcutSeparators(): void {
     ),
     ["Go Back"],
     "action names should be searchable",
+  );
+  assertStringArrayEqual(
+    filterUnifiedShortcutRows(categories, "ctrl t", translate).flatMap(
+      (category) => category.actions.map((row) => row.name),
+    ),
+    ["Go Back"],
+    "modifier words should be searchable",
   );
   assertStringArrayEqual(
     filterUnifiedShortcutRows(categories, "ctrl+t", translate).flatMap(

@@ -370,7 +370,7 @@ function testStrDefaultConfigIsParseable(): void {
   assertEquals(parsed.schemaVersion, 3, "parsed default config should be v3");
   const parsedShortcut = parsed.shortcuts[
     "floorp-toggle-command-palette"
-  ] as ShortcutConfig[];
+  ]?.[0] as ShortcutConfig;
   assertEquals(
     parsedShortcut.action,
     "floorp-toggle-command-palette",
@@ -453,8 +453,8 @@ function testParseConfigHandlesMalformedObject(): void {
   const parsed = parseConfig(JSON.stringify({ invalidField: "test" }));
   assertEquals(
     parsed.schemaVersion,
-    2,
-    "malformed object should migrate to v3",
+    3,
+    "malformed object should normalize to v3",
   );
   assertEquals(
     Object.keys(parsed.shortcuts).length,

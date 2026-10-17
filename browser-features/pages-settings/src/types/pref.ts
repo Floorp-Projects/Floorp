@@ -340,7 +340,7 @@ function normalizeShortcutBindings(
         meta: candidate.modifiers.meta,
         shift: candidate.modifiers.shift,
       },
-      action: actionId,
+      action: candidate.action === ZEN_MODE_ACTION ? ZEN_MODE_ACTION : actionId,
     };
     const signature = shortcutSignature(shortcut);
     if (seen.has(signature)) continue;

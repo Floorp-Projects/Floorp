@@ -76,8 +76,8 @@ function testPagesDefaultConfigIsUnchanged(): void {
     2,
     "enabled default config should have command-palette and Zen shortcuts",
   );
-  const paletteShortcut =
-    firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
+  const paletteShortcut = firstEnabledDefault
+    .shortcuts["floorp-toggle-command-palette"]?.[0];
   assertEquals(
     paletteShortcut.action,
     "floorp-toggle-command-palette",
@@ -85,22 +85,22 @@ function testPagesDefaultConfigIsUnchanged(): void {
   );
   assertEquals(paletteShortcut.key, "F2", "default shortcut key should be F2");
   assertEquals(
-    firstEnabledDefault.shortcuts["floorp-toggle-zen-mode"].action,
+    firstEnabledDefault.shortcuts["floorp-toggle-zen-mode"]?.[0].action,
     "floorp-toggle-zen-mode",
     "default config should include Zen mode shortcut",
   );
   assertEquals(
     JSON.stringify(createDefaultKeyboardShortcutConfig(false)),
     JSON.stringify({
-      schemaVersion: 2,
+      schemaVersion: 3,
       enabled: false,
       shortcuts: {
-        "floorp-toggle-command-palette": {
+        "floorp-toggle-command-palette": [{
           key: "F2",
           modifiers: { alt: false, ctrl: false, meta: false, shift: false },
           action: "floorp-toggle-command-palette",
-        },
-        "floorp-toggle-zen-mode": {
+        }],
+        "floorp-toggle-zen-mode": [{
           key: "KeyZ",
           modifiers: {
             alt: true,
@@ -115,7 +115,7 @@ function testPagesDefaultConfigIsUnchanged(): void {
             shift: false,
           },
           action: "floorp-toggle-zen-mode",
-        },
+        }],
       },
     }),
     "disabled default config should differ only by its enabled state",

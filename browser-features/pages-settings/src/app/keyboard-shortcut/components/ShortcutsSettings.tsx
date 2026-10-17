@@ -158,7 +158,19 @@ export const ShortcutsSettings = ({
         </span>
       );
     }
-    return renderShortcutText(row.shortcut);
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {renderShortcutText(row.shortcut)}
+        {row.hasFirefoxConflict && (
+          <span
+            className="badge badge-warning badge-sm"
+            title={t("keyboardShortcut.firefoxKeyFloorpConflictHint")}
+          >
+            {t("keyboardShortcut.firefoxKeyFloorpConflict")}
+          </span>
+        )}
+      </div>
+    );
   };
 
   const renderFirefoxCell = (row: UnifiedShortcutRow) => {
