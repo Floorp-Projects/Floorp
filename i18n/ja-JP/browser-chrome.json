@@ -2,6 +2,9 @@
   "tab-refresh": {
     "reload": "タブを再読み込み"
   },
+  "translate-swap": {
+    "label": "言語を入れ替える"
+  },
   "undo-closed-tab": {
     "label": "閉じたタブを元に戻す",
     "tooltiptext": "最後に閉じたタブを開きなおす {{shortcut}}"
