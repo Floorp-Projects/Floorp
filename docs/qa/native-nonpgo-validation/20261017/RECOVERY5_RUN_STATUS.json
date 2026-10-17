@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "observed": {
+    "atUTC": "2026-10-17T15:44:23.290005+00:00",
+    "run": 39045848018,
+    "status": "in_progress",
+    "conclusion": null,
+    "attempt": 1,
+    "job": {
+      "id": 117434289619,
+      "status": "in_progress",
+      "conclusion": null,
+      "labels": [
+        "macos-15-intel"
+      ],
+      "active": [
+        "Compile full host and XUL then authenticate native Shim"
+      ],
+      "completed": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Bound the initial authorized run",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout immutable preparation fixture",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify owned process sampling before source checkout",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout immutable Runtime source",
+          "conclusion": "success"
+        },
+        {
+          "name": "Checkout immutable native harness",
+          "conclusion": "success"
+        },
+        {
+          "name": "Acquire only the existing fixed SDK",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+  "result": "IN_PROGRESS_NOT_QUALIFIED",
+  "mandatoryMacPreflightStep": "SUCCESS_PROVIDER_CONFIRMED",
+  "sdkAcquisitionStep": "SUCCESS_PROVIDER_CONFIRMED",
+  "fullBuildAndNative": "IN_PROGRESS",
+  "numericTerminalEvidence": "PENDING",
+  "noAutomaticRerun": true,
+  "noElapsedTimeCancellation": true,
+  "terminalResultRequired": true
+}
