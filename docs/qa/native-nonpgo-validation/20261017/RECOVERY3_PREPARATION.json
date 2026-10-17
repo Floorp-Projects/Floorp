@@ -61,11 +61,12 @@
   "productQualification": false,
   "newCIStarted": false,
   "implementationIndependentReview": "GO_STATIC_PREPARATION_ONLY",
-  "immutableRouteReview": "PENDING",
+  "immutableRouteReview": "GO_FIXED_REVIEWED_ROUTE",
   "independentReviewSHA256": "0bab974dd4947f1039746248864c5812d22d684569253babd89e1c584c583494",
   "independentGuards": {
     "passed": 36,
     "total": 36,
     "elapsedSeconds": 1.414
-  }
+  },
+  "routeReviewSHA256": "50653283c486d9a11cf9dea7bcb723dd483883561e534fc6ab3c2b421fc5ce5f"
 }

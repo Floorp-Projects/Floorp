@@ -1,0 +1,278 @@
+{
+  "schema": 1,
+  "status": "FULL_BUILD_PASSED_NATIVE_STARTUP_FAILED",
+  "evidenceScope": "Actual fresh Debug non-PGO host object and linked XUL, staged and verified disposable ad hoc validation copy in the same standard macOS job.",
+  "runId": 39020119793,
+  "attempt": 1,
+  "jobId": 117360090798,
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39020119793",
+  "executionHead": "d86e63bc621d647efd8389fbf226f841ebb52501",
+  "fixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+  "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "runtimeTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+  "jobStartedAt": "2026-10-17T09:10:37Z",
+  "jobCompletedAt": "2026-10-17T13:10:19Z",
+  "effectiveConfig": {
+    "CC_TYPE": "clang",
+    "CC_VERSION": "22.1.8",
+    "ENABLE_TESTS": "1",
+    "HOST_CC_TYPE": "clang",
+    "HOST_CC_VERSION": "22.1.8",
+    "HOST_CPU_ARCH": "x86_64",
+    "MOZ_APP_VERSION": "158.0.1",
+    "MOZ_DEBUG": "1",
+    "MOZ_MACBUNDLE_NAME": "Floorp DaylightDebug.app",
+    "MOZ_PACKAGER_FORMAT": "flat",
+    "OS_ARCH": "Darwin",
+    "OS_TARGET": "Darwin",
+    "RUSTC_VERSION": "1.95.0",
+    "TARGET_CPU": "x86_64",
+    "allFourCompilerPathsPinned": true,
+    "artifact": false,
+    "compiledSandbox": true,
+    "debug": true,
+    "macOSMinimumFromFourCompilerFlags": "10.15",
+    "nativeHelpers": [
+      "Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container",
+      "Contents/MacOS/media-plugin-helper.app/Contents/MacOS/Floorp Daylight Media Plugin Helper",
+      "Contents/MacOS/gpu-helper.app/Contents/MacOS/Floorp Daylight GPU Helper"
+    ],
+    "onnxPathPinned": true,
+    "pgo": false,
+    "sdkPathPinned": true,
+    "wasiPathPinned": true
+  },
+  "source": {
+    "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+    "baselineProvenanceVerified": true,
+    "bootstrapLoaderChangedToFixedPaths": true,
+    "hostChangedFromOriginal": true,
+    "mozconfigSHA256": "501544b92cb62b34ba7591fe6bfb2d957b1bdb66d71bded2806bad74a89535c6",
+    "originalPatchCount": 30,
+    "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+    "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+  },
+  "hostObject": {
+    "bytes": 2187728,
+    "sha256": "e38371ec181175e8cd94ac319fd53047c33328ca4d82414b5b2515abd1f814e2",
+    "filetype": 1,
+    "uuid": null,
+    "sectionsSHA256": "4c69a7e38520c69364d9c9fbc08e9a6978b1bb7d52abb929bd5c26c88089e165",
+    "sections": 30
+  },
+  "linkedXUL": {
+    "bytes": 253796292,
+    "sha256": "80e7f6955d739aac168b2ccff9e9aca86c8d488310a14a4133812e59c4230673",
+    "filetype": 6,
+    "uuid": "4c4c445555553144a1af61d7048b5a65",
+    "sectionsSHA256": "fe03a5d31d6c7c40d85fff94aa4146d303d52ec73cfda9b92ede2e55c769c5c4",
+    "sections": 35
+  },
+  "signedCopyXUL": {
+    "bytes": 255797344,
+    "sha256": "43b4850654a0b168d560c45829bd64f4b13b331955d056b9e037212c43c1365e",
+    "filetype": 6,
+    "uuid": "4c4c445555553144a1af61d7048b5a65",
+    "sectionsSHA256": "fe03a5d31d6c7c40d85fff94aa4146d303d52ec73cfda9b92ede2e55c769c5c4",
+    "sections": 35
+  },
+  "adHocXULSectionsAndUUIDMatch": true,
+  "completedStages": [
+    {
+      "stage": "configure",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 13054,
+      "peakRSSMiB": 571,
+      "minimumFreeGiB": 98.86,
+      "lastActivity": {
+        "rssMiB": 522.890625,
+        "cpuSeconds": 28.12,
+        "rssLowerBoundMiB": 522.890625,
+        "cpuLowerBoundSeconds": 28.12,
+        "processes": 3,
+        "states": [
+          "R",
+          "S"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 61884 0:01.33 S<s"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "effective-config",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 71761,
+      "peakRSSMiB": 2,
+      "minimumFreeGiB": 98.86,
+      "lastActivity": {
+        "rssMiB": 2.05859375,
+        "cpuSeconds": 0.01,
+        "rssLowerBoundMiB": 2.05859375,
+        "cpuLowerBoundSeconds": 0.01,
+        "processes": 1,
+        "states": [
+          "R"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 2108 0:00.01 R<s"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 28242592,
+      "peakRSSMiB": 7259,
+      "minimumFreeGiB": 78.04,
+      "lastActivity": {
+        "rssMiB": 126.3515625,
+        "cpuSeconds": 103.91,
+        "rssLowerBoundMiB": 126.3515625,
+        "cpuLowerBoundSeconds": 103.91,
+        "processes": 1,
+        "states": [
+          "R"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 129384 1:43.91 RNs"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "stage-package",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 6792,
+      "peakRSSMiB": 871,
+      "minimumFreeGiB": 77.8,
+      "lastActivity": {
+        "rssMiB": 68.984375,
+        "cpuSeconds": 1.65,
+        "rssLowerBoundMiB": 68.984375,
+        "cpuLowerBoundSeconds": 1.65,
+        "processes": 3,
+        "states": [
+          "S"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 45000 0:01.35 SNs"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "adhoc-copy",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 0,
+      "peakRSSMiB": 33,
+      "minimumFreeGiB": 77.3,
+      "lastActivity": {
+        "rssMiB": 12.3203125,
+        "cpuSeconds": 3.07,
+        "rssLowerBoundMiB": 12.3203125,
+        "cpuLowerBoundSeconds": 3.07,
+        "processes": 1,
+        "states": [
+          "R"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 12616 0:03.07 R<s"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "verify-copy",
+      "exitCode": 0,
+      "reason": null,
+      "logBytes": 0,
+      "peakRSSMiB": 19,
+      "minimumFreeGiB": 77.53,
+      "lastActivity": {
+        "rssMiB": 19.0703125,
+        "cpuSeconds": 2.21,
+        "rssLowerBoundMiB": 19.0703125,
+        "cpuLowerBoundSeconds": 2.21,
+        "processes": 1,
+        "states": [
+          "R"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 19528 0:02.21 R<s"
+          }
+        ],
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    }
+  ],
+  "jobLogSummarySHA256": "8af4d520736c9fa69792b16afb64a523b2ab048e06a8f2ff6962688ffade80f3",
+  "terminalEvidenceSHA256": "39c0ee6f2c84dac2c2bd77d9b012c7ac5b43c9aca9d35466285bfacc3f03cbf1",
+  "binaryFilesDownloadedByThisReceipt": false,
+  "newActionsArtifacts": 0,
+  "nativeAuthentication": "NOT_QUALIFIED",
+  "nativeContext20": "NOT_RUN",
+  "nativeGUI": "NOT_RUN",
+  "browserSpontaneousExitCause": "UNKNOWN_NOT_RECORDED",
+  "completeMozillaDebugQualification": false,
+  "productQualification": false,
+  "originalFailedRunConclusionPreserved": "failure"
+}

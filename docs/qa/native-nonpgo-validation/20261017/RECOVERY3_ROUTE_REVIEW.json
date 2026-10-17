@@ -1,0 +1,193 @@
+{
+  "schema": 1,
+  "decision": "GO_EXACT_RECOVERY3_INITIAL_PUSH_ROUTE",
+  "findings": [],
+  "scope": "Immutable fixture/caller/delivery binding and pre-activation checks. Existing explicit authorization remains limited to the fixed single standard Intel validation job.",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "69391c259358025ff2532d027b970e5babf43ec9",
+    "tree": "834d850a02b2eb7ba3cbc6af3f37c226550ab070",
+    "parent": "6d5a13178c6a46e4231f42e75aa89d1b75daa05a",
+    "commitAndTreeIndependentlyRead": true,
+    "codeManifestSHA256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+    "independentCodeReviewSHA256": "0bab974dd4947f1039746248864c5812d22d684569253babd89e1c584c583494",
+    "all12RecordedProviderSourceBytesAndLocalHashesMatchFrozenManifest": true,
+    "independentlyFetchedProviderCodeFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 23860,
+        "sha256": "32fd745de1864e2a377aa062432d7b0a78b6d109309da2f9108a403531c79aaa",
+        "gitBlob": "4290e4dd50692cdf22a08b668fe6fceaf9fb26b2",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_cause.py",
+        "bytes": 12552,
+        "sha256": "e42bc2911f3f8af3f7434efcb9ebb9c5aaa8eef316dde6e2a904f87b1122cc00",
+        "gitBlob": "aef1e4eba181334dcfc6d6d8a18131cf8bdb745b",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_suite.py",
+        "bytes": 9253,
+        "sha256": "f7ca85e795e27b604d33b74ccf78b68eda8e660959ff17627cbd687e72e70584",
+        "gitBlob": "0fcd90a00fbc8dea5217d805b40cd7cc2e806aae",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 27634,
+        "sha256": "0ca446c274f2d6c8df20b3b270ac6070e0d174e90ce168bc7cc57e7aac802510",
+        "gitBlob": "b74f8ef6b52348f2cf8fbf705cf4c97a2ea6a226",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "bytes": 33656,
+        "sha256": "25bbcbed8dd3f39a7fe8b0d84184eedab4a752ce1cb145cb7a0e28a20dcc2da1",
+        "gitBlob": "a7a62d968eb11a7518c4223a694cfb4f80247d25",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/workflow.yml.in",
+        "bytes": 5675,
+        "sha256": "c3873eeefce1b286de573a198a85aac67ba0ff1b675f67772091a0760d45dff2",
+        "gitBlob": "bb8cdeae032c1e4c62cf6083fce6f50683f5c48c",
+        "providerBytesEqualReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+        "bytes": 1789,
+        "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+        "gitBlob": "f5a62aecfec0c0e763e1bee0fae95234af92ee87",
+        "providerBytesEqualReviewedLocal": true
+      }
+    ],
+    "existingPortableTests": {
+      "count": 36,
+      "status": "PASS",
+      "independentlyObservedSeconds": 1.414,
+      "rerunForRouteReview": false
+    }
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+    "tree": "81944a6bd1de995bb9514635863a4ad977410d79",
+    "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "onlyChange": [
+      {
+        "path": ".github/workflows/mac-native-nonpgo.yml",
+        "status": "added",
+        "gitBlob": "7d2f30608f2b9e1f435a53c9ffd393e48b6b6782"
+      }
+    ],
+    "immutableWorkflowURL": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/be9eadeb6deccb3bcb879ce29acf6f9219687171/.github/workflows/mac-native-nonpgo.yml",
+    "rawImmutableWorkflowURL": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/be9eadeb6deccb3bcb879ce29acf6f9219687171/.github/workflows/mac-native-nonpgo.yml",
+    "providerWorkflowContentIndependentlyFetched": true,
+    "providerBytesAndGitBlobEqualRenderedDocument": true,
+    "workflowSHA256": "12e22e607ae54eb10ab39d87086ae35d5c73308bfdd128fc5630a6d245ead7b8",
+    "workflowBytes": 5693
+  },
+  "delivery": {
+    "templateSHA256": "c3873eeefce1b286de573a198a85aac67ba0ff1b675f67772091a0760d45dff2",
+    "renderedDocument": "docs/qa/native-nonpgo-validation/20261017/RECOVERY3_WORKFLOW.yml.disabled",
+    "renderedWorkflowSHA256": "12e22e607ae54eb10ab39d87086ae35d5c73308bfdd128fc5630a6d245ead7b8",
+    "patchSHA256": "08077c32bbe21dad3e2d3529d964a148f643ffe38b48e6e317a15d1d9b3bd6d5",
+    "patchBytes": 6013,
+    "onlyRenderChange": "Single __FLOORP_FIXTURE_SHA__ placeholder replaced with 69391c259358025ff2532d027b970e5babf43ec9",
+    "parsedYAMLGates": "PASS",
+    "independentScratchGitApplyCheckAndApplicationMatchRenderedBytes": true,
+    "activeFloorpCallerAbsent": true
+  },
+  "controls": {
+    "branch": "codex/mac-native-nonpgo-recovery3-20261017",
+    "event": "push",
+    "created": true,
+    "beforeSHA": "0000000000000000000000000000000000000000",
+    "attempt": 1,
+    "repositoryGuard": "Floorp-Projects/Floorp-Runtime",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "platformJobMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "fixedRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixedHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "reviewedStartupPatchBaseAndPostHashesRequired": true,
+    "completeProcessSamplingPreflightBeforeRuntimeCheckoutAndSDK": true,
+    "ownershipAuthenticationProtectionAndFunctionalTimeoutsPreserved": true,
+    "token": "Existing read-only job token is passed only to the fixed SDK reader step; checkouts do not persist credentials; native children use the existing clean environment.",
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "newCredentials": false,
+    "disposableAdHocCopy": "Existing isolated test-copy authorization only",
+    "productSigning": false,
+    "productPublication": false,
+    "merge": false,
+    "osPermissionOrProtectionChanges": false,
+    "failClosed": "Missing samples, pin/hash/SDK gates, authentication/assertion failure, cleanup failure and unavailable required evidence fail the run."
+  },
+  "preActivationObservations": {
+    "bothRepositoriesPublic": true,
+    "runtimeDefaultHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "newRuntimeBranchAbsent": true,
+    "newRuntimeBranchRuns": 0,
+    "floorpSourceBranchRuns": 0,
+    "priorRun": {
+      "id": 39020119793,
+      "head": "d86e63bc621d647efd8389fbf226f841ebb52501",
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 1
+    },
+    "priorFailedRunsRetained": [
+      39016143725,
+      39018277446,
+      39020119793
+    ],
+    "triggerInventory": {
+      "runtimePinnedCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "runtimeWorkflowCount": 24,
+      "runtimeMatchingOtherPushWorkflows": 0,
+      "runtimeWorkflowRunTriggers": 0,
+      "runtimeCreateTriggers": 0,
+      "runtimePushPatternsReevaluated": [
+        "codex/qa3-actions-native-proof-qa337-17",
+        "codex/runtime-variants/**/recovery",
+        "codex/runtime-variants/**/mac-debug-recovery",
+        "codex/runtime-variants/**/debug",
+        "codex/runtime-variants/**/pgo",
+        "codex/runtime-build/**"
+      ],
+      "floorpSourcePushFilters": "Existing source workflows require main; no active caller is added. The existing Floorp workflow_run notification is not triggered by a Runtime repository run."
+    }
+  },
+  "sdk": {
+    "artifact": 12074136738,
+    "sourceRun": 38963901545,
+    "expiresAt": "2026-10-17T20:41:19Z",
+    "expectedZIP_SHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "availabilityObservation": "Parent supported-metadata preflight reports unexpired with the expected digest and more than six hours remaining.",
+    "payloadDownloadedByReviewer": false,
+    "requiredExecutionGate": "The fixed SDK reader must independently satisfy existing metadata/digest/size/expiry checks. No substitute artifact, relaxed check or alternate acquisition route is authorized by this review."
+  },
+  "limits": {
+    "newDarwinExecutionOrAuthenticationNotYetValidated": true,
+    "originalAuthenticationTimeoutCause": "UNKNOWN",
+    "priorBrowserSpontaneousExit": "UNKNOWN",
+    "previousFullHostTUAndXULSuccess": "Separate build evidence retained; previous run remains a terminal failure.",
+    "productQualification": false
+  },
+  "reviewerActions": {
+    "remoteMutations": 0,
+    "ciRunsStarted": 0,
+    "reruns": 0,
+    "artifactPayloadDownloads": 0,
+    "sourceEdits": 0,
+    "scratchDeliveryApplicationOnly": true
+  },
+  "reviewedAtUTC": "2026-10-17T13:35:39.737527+00:00"
+}

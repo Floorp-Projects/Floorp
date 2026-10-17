@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "commit": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+  "tree": "81944a6bd1de995bb9514635863a4ad977410d79",
+  "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "changes": [
+    {
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "status": "added"
+    }
+  ],
+  "workflowBytes": 5693,
+  "workflowSHA256": "12e22e607ae54eb10ab39d87086ae35d5c73308bfdd128fc5630a6d245ead7b8",
+  "workflowReadbackMatches": true,
+  "branchCreated": false,
+  "runsBeforeBranch": 0,
+  "productQualification": false
+}

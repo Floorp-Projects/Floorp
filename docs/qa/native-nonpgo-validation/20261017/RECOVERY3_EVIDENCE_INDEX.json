@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "preparedAtUTC": "2026-10-17T13:36:36.051204+00:00",
+  "status": "REVIEWED_PREACTIVATION_SEAL",
+  "codeFixture": "69391c259358025ff2532d027b970e5babf43ec9",
+  "fixtureTree": "834d850a02b2eb7ba3cbc6af3f37c226550ab070",
+  "runtimeCandidate": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+  "runtimeCandidateTree": "81944a6bd1de995bb9514635863a4ad977410d79",
+  "runtimeParent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "branch": "codex/mac-native-nonpgo-recovery3-20261017",
+  "codeManifestSHA256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+  "codeReviewSHA256": "0bab974dd4947f1039746248864c5812d22d684569253babd89e1c584c583494",
+  "routeReviewSHA256": "50653283c486d9a11cf9dea7bcb723dd483883561e534fc6ab3c2b421fc5ce5f",
+  "workflowSHA256": "12e22e607ae54eb10ab39d87086ae35d5c73308bfdd128fc5630a6d245ead7b8",
+  "deliveryPatchSHA256": "08077c32bbe21dad3e2d3529d964a148f643ffe38b48e6e317a15d1d9b3bd6d5",
+  "helperProviderReadback": "12/12 bytes and hashes match",
+  "actualWorkflowProviderReadback": "matches rendered bytes",
+  "guards": {
+    "rootPassed": 36,
+    "independentPassed": 36
+  },
+  "priorTerminalEvidence": "RECOVERY2_EXECUTION_RESULT.json",
+  "priorFullBuildEvidence": "RECOVERY2_FULL_BUILD_RECEIPT.json",
+  "priorFailedRuns": [
+    39016143725,
+    39018277446,
+    39020119793
+  ],
+  "qualification": {
+    "currentNativeAuthentication": "NOT_QUALIFIED",
+    "originalDisconnectCause": "UNKNOWN",
+    "actualPriorBrowserExitCause": "UNKNOWN_NOT_RECORDED",
+    "fullMozillaDebugQualification": false,
+    "productQualification": false
+  },
+  "activationRequirements": [
+    "Fresh exact new branch absence and zero runs.",
+    "Old execution remains terminal failure attempt 1.",
+    "Existing fixed SDK12074136738 unexpired with current helper required margin.",
+    "Runtime default remains exact pinned7dd; create the reviewed commit as a new branch exactly once."
+  ],
+  "newCIStarted": false
+}
