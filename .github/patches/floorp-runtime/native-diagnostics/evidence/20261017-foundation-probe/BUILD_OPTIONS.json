@@ -1,0 +1,107 @@
+{
+  "schema": "floorp.native-cocoa-build-options.v1",
+  "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "method": "Read-only pinned source/workflow and existing build metadata investigation; no full Runtime build or objdir archive download.",
+  "findings": [
+    {
+      "topic": "Host translation unit",
+      "fact": "MacWebAppService.mm is a non-unified SOURCES entry in widget/cocoa/moz.build, uses -fobjc-arc, and belongs to xul."
+    },
+    {
+      "topic": "Separate Shim target",
+      "fact": "The standalone floorp-app-shim program compiles 8 Shim translation units and does not compile the host service."
+    },
+    {
+      "topic": "Incremental possibility",
+      "fact": "A compatible configured objdir can permit a single host translation-unit compilation; a full clean build is not inherently mandatory. Compatible SDK/compiler/flags and generated headers are necessary."
+    },
+    {
+      "topic": "Host execution",
+      "fact": "A changed native host object must be linked into xul and put into a new test package before host execution evidence is possible."
+    },
+    {
+      "topic": "Artifact build",
+      "fact": "An existing precompiled browser or source-only artifact build cannot incorporate changed compiled native C++."
+    },
+    {
+      "topic": "Current build",
+      "fact": "The pinned normal Mac workflow builds on Linux cross compilation with sccache enabled. No verified cache hit or ready configured objdir was established."
+    },
+    {
+      "topic": "Original non-PGO artifacts",
+      "fact": "The archived outputs save dist rather than a complete configured objdir."
+    },
+    {
+      "topic": "Source provenance",
+      "fact": "The existing recorder checks version and 12 pinned patched source files; the host service is outside that set. A future native build needs explicit patch/compiled-source provenance while retaining those checks."
+    },
+    {
+      "topic": "Regular build path",
+      "fact": "Any later full native integration must apply the patch before configure/compile and retain PGO profiling/optimization and existing verification/publication gates."
+    }
+  ],
+  "previousBuildTiming": {
+    "run": 38963901545,
+    "x64": {
+      "job": 117185970899,
+      "start": "2026-10-16T20:41:29Z",
+      "end": "2026-10-16T23:33:32Z"
+    },
+    "arm64": {
+      "job": 117185970982,
+      "start": "2026-10-16T20:41:29Z",
+      "end": "2026-10-16T23:36:11Z"
+    },
+    "universal": {
+      "job": 117245703297,
+      "start": "2026-10-16T23:36:19Z",
+      "end": "2026-10-17T00:03:49Z"
+    }
+  },
+  "objdirCandidates": {
+    "metadataSourceRun": 38885821823,
+    "observation": "Earlier metadata-only inspection and build-source intent, not archive contents inspection.",
+    "candidates": [
+      {
+        "id": 12047907028,
+        "architecture": "x86_64",
+        "sizeBytes": 5470281993,
+        "digest": "sha256:de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d"
+      },
+      {
+        "id": 12044965771,
+        "architecture": "aarch64",
+        "sizeBytes": 5482659552,
+        "digest": "sha256:91a07ca4a23ebcd8907528082ce59e126a86b1e06005af9ab6f507ab7206d650"
+      }
+    ],
+    "expiresAt": "2027-01-14T10:13:43Z",
+    "downloaded": false,
+    "archiveContentsVerified": false,
+    "configurationCompatibility": "UNKNOWN",
+    "laterDirectMetadataRefresh": "Not available on the permitted endpoint; no alternate route used."
+  },
+  "limitedProbe": {
+    "scope": "source-derived-foundation-smoke",
+    "actualCodecLinked": true,
+    "frameworks": [
+      "Foundation",
+      "CoreFoundation"
+    ],
+    "runner": "macos-15-intel",
+    "completeHostTranslationUnitCompiled": false,
+    "xulLinked": false,
+    "nativeRuntimeServiceExecuted": false,
+    "originalFailureCauseResolved": false,
+    "productOrDebugQualification": false
+  },
+  "references": [
+    "https://firefox-source-docs.mozilla.org/build/buildsystem/build-targets.html",
+    "https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html",
+    "https://firefox-source-docs.mozilla.org/setup/configuring_build_options.html",
+    "https://firefox-source-docs.mozilla.org/setup/macos_build.html",
+    "https://docs.github.com/en/actions/reference/runners/github-hosted-runners",
+    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching"
+  ]
+}

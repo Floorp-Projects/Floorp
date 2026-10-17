@@ -1,0 +1,51 @@
+{
+  "schema": "floorp.native-cocoa-probe-evidence-index.v1",
+  "scope": "Public bounded proof and API-only verification of run38999883111 attempt1; not product/Debug qualification.",
+  "files": [
+    {
+      "name": "EXECUTION_INTENT.json",
+      "gitBlob": "39b3572e293ff1c942c5afdf269766ef8589cff5",
+      "sha256": "dfab4dffbd3c99c3bd76e79a3f963cc21f6b6349a84173cc8ceea14c17a43e72"
+    },
+    {
+      "name": "EXECUTION_REQUEST.json",
+      "gitBlob": "2b3857ea12b52772a9accffde28169e03aa3e638",
+      "sha256": "abb83c7eb44f7affc08360e6929d4db20e9988476af0e94bf1fe6820d0fd6997"
+    },
+    {
+      "name": "INDEPENDENT_PRE_REVIEW.json",
+      "gitBlob": "85cd813356e63a4dfeedb3e056c47e75f689daed",
+      "sha256": "848c6e512d006ed5d5fc339f30af196031c23b7a35e487bbe43ab894c8b949a8"
+    },
+    {
+      "name": "BUILD_OPTIONS.json",
+      "gitBlob": "3ef9570cffb91c9a691d92c8115bc630d991afc1",
+      "sha256": "708d4a2c9ad83c011864f501107103725bcb31fa5b6084359d47285bf69895d2"
+    },
+    {
+      "name": "JOBLOG_PROOF_WRAPPER.json",
+      "gitBlob": "ff103b25ea485da2d81427c1e4a38c1949129d03",
+      "sha256": "646974079e582bdd8bb1dc989795f24f4199073d1c59fcc6e44c6477475017e9"
+    },
+    {
+      "name": "RESULT_VERIFICATION.json",
+      "gitBlob": "3f39ba23b086b2e1459279406f8117d6c06a0ae2",
+      "sha256": "af3abffdfec1f2f05635ae21fc83ff77d5459e9cfe913d740ca8cf046f4bdb51"
+    },
+    {
+      "name": "INDEPENDENT_RESULT_REVIEW.json",
+      "gitBlob": "c19ca5940e9f6d22ee9d7c565ab5798b6e278c58",
+      "sha256": "bdfdca6021923dd1589c3efe0176737ce2505a6992a4d8145ad19d8aa42736cb"
+    },
+    {
+      "name": "REPORT.ja.md",
+      "gitBlob": "92b52a79c55207e7911f7c5e5a0da163d61d27d8",
+      "sha256": "f4230fdd24634cbbd3730bf44c289790e81581cc71bf25f9215812ad2386da94"
+    }
+  ],
+  "fileCount": 8,
+  "indexExcludes": [
+    "EVIDENCE_INDEX.json",
+    "FINAL_HANDOFF.json"
+  ]
+}

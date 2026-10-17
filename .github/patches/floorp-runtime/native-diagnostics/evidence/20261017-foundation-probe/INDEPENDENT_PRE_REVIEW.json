@@ -1,0 +1,87 @@
+{
+  "schema": "floorp.native-cocoa-probe-independent-review.v1",
+  "recordKind": "Public-source summary of the independent API-only pre-execution review",
+  "verdict": "GO_ONE_LIMITED_FOUNDATION_PROBE",
+  "unresolvedFindings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "identities": {
+    "floorpFixture": {
+      "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "tree": "a50c662e916d39da8a63854ead7549cd475d2c37"
+    },
+    "floorpSource": {
+      "commit": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c",
+      "tree": "0be76945681f28d6643a55e29edb3cae0e395210"
+    },
+    "runtimeCaller": {
+      "commit": "d49872d2a8d70884d670fc9132728944baa4147b",
+      "tree": "cf2850f1e1a37a0594bbde44529d1be6acb59671",
+      "comparisonBase": "7dd619742b25567e479eeda97ae071d10542ad0b"
+    }
+  },
+  "verifiedSHA256": {
+    "main": "97b8a11235497e8832c121a5760fc22e24e68c13f70fca7ffe17d33e1b1a01c8",
+    "template": "95709848461a83a0b2a5fb272b03020f1e7a33a2ceedadbf20877c50173863df",
+    "tests": "0ca98869bad2f2e85d641755b63ef818a892add820a876de95f69eee3f1953a2",
+    "workflow": "10b7286dfd8d4df3f0aab1702a055dedd05208667baac49af10fe38da5306038",
+    "maintainedPatch": "902cb53f4d1e8569d62e816520f03d71a69d12cb770d8b283520e2f851f57ca9",
+    "readme": "d4f650197c3a781acc778ecc6f1c694fec2396a649f1433d45a6b5218d4de06a",
+    "nativePatch": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+  },
+  "staticDerivation": {
+    "method": "Strict in-memory patch application to API-read pinned Runtime source and exact extraction; no compile/test execution.",
+    "patchedServiceSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "headerSHA256": "070ecacbca5132f4ed879eded8fd40f099de143e6b79afa2b54494ffe10cce08",
+    "rememberMethodSHA256": "ba8b3cb409a636983f9d0dc0369156ed8eadcc39a3b2222eea372288410c3b0a",
+    "payloadExpressionSHA256": "adbe54d5a15460a25a857b084c4f5bca5b93c33a3fe65f415395bdd072a02af8",
+    "generatedProbeSHA256": "2df028b174a2189e7ceba49636861c837448b4037021a112379750af676a58fc",
+    "nativeChecks": 25,
+    "maintainedPatchRecreatesExactCaller": true
+  },
+  "scopeCorrection": "The only change to the frozen main source is the explicit CoreFoundation framework link. It was not independently re-tested locally; this CI run must pass all 9 guards before native compilation.",
+  "route": {
+    "runtimeExistingWorkflowsReviewed": 24,
+    "runtimeTotalWithProbe": 25,
+    "floorpExistingWorkflowsReviewed": 21,
+    "floorpExistingWorkflowChanges": 0,
+    "runtimeOtherPushFiltersMatch": false,
+    "runtimeWorkflowRunTriggers": 0,
+    "sourceBranchExpectedJobs": 0,
+    "executionJobsExpected": 1,
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 10,
+    "contentsPermission": "read",
+    "inheritedSecrets": false,
+    "officialImmutableActionsVerified": true
+  },
+  "failClosed": [
+    "source and patch digests",
+    "patched source digest",
+    "unique fragments and resolved template",
+    "portable guard subprocess exit",
+    "native compiler exit",
+    "native subprocess exit",
+    "exact proof with 25 checks"
+  ],
+  "limitations": [
+    "Complete host translation unit is not compiled.",
+    "xul is not linked.",
+    "Host lifecycle/authentication are not executed.",
+    "Original failure cause is unresolved.",
+    "No compiled Debug/product or other native-target qualification.",
+    "Original SDK, deployment target and complete flags are not reproduced.",
+    "A failed native Check does not publish its individual label; the stage/type/exit remains fail-closed.",
+    "Artifact metadata is distinct from consumer-side ZIP byte verification."
+  ],
+  "reviewerActions": {
+    "apiReadOnly": true,
+    "sourceEdits": false,
+    "filesystemAccess": false,
+    "compileOrTests": false,
+    "ciMutation": false,
+    "credentialDiscovery": false
+  }
+}

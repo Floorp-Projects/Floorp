@@ -1,0 +1,68 @@
+{
+  "schema": "floorp.native-cocoa-probe-handoff.v1",
+  "verdict": "PASS_LIMITED_SOURCE_DERIVED_FOUNDATION_PROBE",
+  "run": {
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/38999883111",
+    "id": 38999883111,
+    "attempt": 1,
+    "head": "d49872d2a8d70884d670fc9132728944baa4147b",
+    "tree": "cf2850f1e1a37a0594bbde44529d1be6acb59671",
+    "job": 117300368731,
+    "jobSeconds": 42,
+    "jobCount": 1,
+    "runner": "macos-15-intel",
+    "portableGuards": 9,
+    "nativeChecks": 25
+  },
+  "source": {
+    "fixture": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "reviewedFloorpHead": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c",
+    "reviewedFloorpTree": "0be76945681f28d6643a55e29edb3cae0e395210",
+    "evidenceCommitParent": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c",
+    "branch": "codex/mac-native-cocoa-probe-source-20261017",
+    "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "evidence": {
+    "indexFile": "EVIDENCE_INDEX.json",
+    "indexedFiles": 8,
+    "indexSHA256": "3a59eb6b2ccee667b0ed1f563ee399ae62f83153145c225d90e81ff8cc891b52",
+    "decodedJobLogUTF8SHA256": "7b39b4d7783fb9162b95625ad91477b185faa15ef8e62fa46494e53652b64205",
+    "artifactId": 12089125335,
+    "providerArtifactDigest": "sha256:39c850fa15d7d61b8a8ca01470a2f5e301063b09f5cf3e0381304d3f05677ffe",
+    "providerArtifactBytes": 1248,
+    "consumerArtifactBytesVerified": false
+  },
+  "independentReview": {
+    "beforeExecution": "GO_ONE_LIMITED_FOUNDATION_PROBE",
+    "afterExecution": "PASS_LIMITED_SOURCE_DERIVED_FOUNDATION_PROBE",
+    "unresolvedP0": 0,
+    "unresolvedP1": 0,
+    "unresolvedP2": 0
+  },
+  "remaining": {
+    "completeHostTranslationUnitCompiled": false,
+    "xulLinked": false,
+    "nativeRuntimeServiceExecuted": false,
+    "originalFailureCause": "UNKNOWN",
+    "compiledDebugQualification": "UNVERIFIED",
+    "productQualification": false,
+    "otherMacTargetQualified": false,
+    "existingObjdirCompatibility": "UNKNOWN",
+    "zipBytesOrCRCVerified": false
+  },
+  "preserved": {
+    "floorpSourceBranchRuns": 0,
+    "runtimeProbeBranchRuns": 1,
+    "runtimeAttempt": 1,
+    "oldFailureRerun": false,
+    "heavyRuntimeBuildStarted": false,
+    "merge": false,
+    "signing": false,
+    "notarization": false,
+    "productPublish": false,
+    "credentialsCreated": false,
+    "productionSettingsChanged": false,
+    "existingWorkflowChanges": 0
+  },
+  "resultLimit": "Actual header/extracted changed expressions/real Protocol codec Foundation/ARC validation only. This success does not replace prior failures or prove their cause was fixed."
+}

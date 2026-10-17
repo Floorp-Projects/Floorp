@@ -1,0 +1,174 @@
+{
+  "schema": "floorp.native-cocoa-probe-verification.v1",
+  "recordedAt": "2026-10-17 03:45:48 UTC",
+  "verdict": "PASS_LIMITED_FOUNDATION_COMPONENT_PROBE",
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 38999883111,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/38999883111",
+    "attempt": 1,
+    "event": "push",
+    "path": ".github/workflows/mac-native-cocoa-probe.yml",
+    "branch": "codex/mac-native-cocoa-probe-20261017",
+    "head": "d49872d2a8d70884d670fc9132728944baa4147b",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-17T03:43:41Z"
+  },
+  "job": {
+    "id": 117300368731,
+    "name": "cocoa-probe",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "status": "completed",
+    "conclusion": "success",
+    "startedAt": "2026-10-17T03:43:46Z",
+    "completedAt": "2026-10-17T03:44:28Z",
+    "durationSeconds": 42,
+    "steps": [
+      {
+        "number": 1,
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 2,
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 3,
+        "name": "Compile and execute source-derived Foundation probe",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 4,
+        "name": "Record bounded JSON proof",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 5,
+        "name": "Save bounded proof",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 10,
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "number": 11,
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "runner": {
+    "os": "macOS",
+    "version": "15.7.9",
+    "build": "24G830",
+    "image": "macos-15",
+    "imageVersion": "20260824.0482.1",
+    "architecture": "x86_64",
+    "sdk": "15.5",
+    "compiler": "Apple clang version 17.0.0 (clang-1700.0.13.5)"
+  },
+  "sourceFixture": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "checks": {
+    "oneBegin": true,
+    "oneEnd": true,
+    "fixture": true,
+    "status": true,
+    "scope": true,
+    "workflow": true,
+    "guard": true,
+    "compile": true,
+    "native": true,
+    "target": true,
+    "source": true,
+    "limits": true,
+    "oneJob": true,
+    "steps": true,
+    "oneArtifact": true,
+    "artifactBinding": true,
+    "artifactDigestInLog": true
+  },
+  "portableGuardEvidence": {
+    "status": "passed",
+    "count": 9,
+    "countBasis": "All 9 unfiltered unittest test methods in the immutable fixture are executed as a subprocess before compilation; exit 0 is mandatory. Individual test output is intentionally not published.",
+    "testsSHA256": "0ca98869bad2f2e85d641755b63ef818a892add820a876de95f69eee3f1953a2"
+  },
+  "nativeEvidence": {
+    "compileExitCode": 0,
+    "nativeExitCode": 0,
+    "nativeChecks": 25,
+    "binarySHA256ReportedByRunner": "656221893708cffe86999ec2c18c97e6175ea6b06308a3a384f6a5d6fe97689a",
+    "elapsedSeconds": 22.646783056000004
+  },
+  "jobLogWrapperSHA256WithoutTrailingLF": "3608259c5c723493eb328d3a7f8d2c21f09f8caab50b8bcd157ef48adc46a7b8",
+  "artifact": {
+    "id": 12089125335,
+    "name": "cocoa-cause-probe-x86_64-38999883111-1",
+    "sizeBytes": 1248,
+    "digest": "sha256:39c850fa15d7d61b8a8ca01470a2f5e301063b09f5cf3e0381304d3f05677ffe",
+    "createdAt": "2026-10-17T03:44:24Z",
+    "expiresAt": "2026-10-18T03:44:15Z",
+    "expiredAtRead": false,
+    "runId": 38999883111,
+    "head": "d49872d2a8d70884d670fc9132728944baa4147b",
+    "uploadLogDigestMatchesMetadata": true,
+    "zipDownloaded": false,
+    "consumerBytesRehashed": false,
+    "zipCRCOrContentsVerified": false,
+    "reportObtainedFrom": "bounded JSON wrapper in same job log; not downloaded ZIP bytes"
+  },
+  "postflight": {
+    "recordedAt": "2026-10-17 03:45:48 UTC",
+    "sourceRuns": 0,
+    "executionRuns": 1,
+    "executionRun": [
+      {
+        "id": 38999883111,
+        "status": "completed",
+        "conclusion": "success",
+        "attempt": 1,
+        "head": "d49872d2a8d70884d670fc9132728944baa4147b"
+      }
+    ],
+    "floorpDefault": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "runtimeDefault": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "priorDiagnosticHead": "198241c5e9e45b7b46da6f8c8d3d8db957222339",
+    "executionHead": "d49872d2a8d70884d670fc9132728944baa4147b",
+    "sourceHead": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c"
+  },
+  "scope": {
+    "completeHostTranslationUnitCompiled": false,
+    "xulLinked": false,
+    "nativeRuntimeServiceExecuted": false,
+    "authenticationValidated": false,
+    "originalFailureCauseResolved": false,
+    "productOrDebugQualification": false,
+    "otherMacTargetQualified": false
+  },
+  "additionalActions": {
+    "runtimeRepush": false,
+    "rerun": false,
+    "heavyRuntimeBuild": false,
+    "cacheDownloaded": false,
+    "merge": false,
+    "signing": false,
+    "notarization": false,
+    "publication": false,
+    "credentialCreation": false,
+    "productionSettingsChange": false
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "floorp.native-cocoa-probe-request.v1",
+  "recordedAt": "2026-10-17 03:44:00 UTC",
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "runId": 38999883111,
+  "attempt": 1,
+  "head": "d49872d2a8d70884d670fc9132728944baa4147b",
+  "path": ".github/workflows/mac-native-cocoa-probe.yml",
+  "event": "push",
+  "branch": "codex/mac-native-cocoa-probe-20261017",
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/38999883111",
+  "createdAt": "2026-10-17T03:43:41Z",
+  "initialStatus": "queued",
+  "purpose": "One new source-derived Foundation probe; prior failed runs remain unchanged.",
+  "floorpFixture": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "sourceOnlyHead": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c",
+  "sourceOnlyObservedRuns": 0,
+  "intentGitBlob": "39b3572e293ff1c942c5afdf269766ef8589cff5",
+  "intentSHA256": "dfab4dffbd3c99c3bd76e79a3f963cc21f6b6349a84173cc8ceea14c17a43e72",
+  "retryRequested": false
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "floorp.native-cocoa-probe-intent.v1",
+  "recordedAt": "2026-10-17 03:43:18 UTC",
+  "purpose": "New source-derived Foundation/Objective-C++ component compile and execution, separate from prior browser diagnostics.",
+  "identities": {
+    "floorpFixture": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "floorpSource": "2d1a8dfac9eded7421edfdea8b9c6f3cbd611b8c",
+    "floorpTree": "0be76945681f28d6643a55e29edb3cae0e395210",
+    "runtimeCaller": "d49872d2a8d70884d670fc9132728944baa4147b",
+    "runtimeTree": "cf2850f1e1a37a0594bbde44529d1be6acb59671",
+    "runtimeSourceBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sha256": {
+      "main": "97b8a11235497e8832c121a5760fc22e24e68c13f70fca7ffe17d33e1b1a01c8",
+      "template": "95709848461a83a0b2a5fb272b03020f1e7a33a2ceedadbf20877c50173863df",
+      "tests": "0ca98869bad2f2e85d641755b63ef818a892add820a876de95f69eee3f1953a2",
+      "workflow": "10b7286dfd8d4df3f0aab1702a055dedd05208667baac49af10fe38da5306038",
+      "maintainedPatch": "902cb53f4d1e8569d62e816520f03d71a69d12cb770d8b283520e2f851f57ca9",
+      "readme": "d4f650197c3a781acc778ecc6f1c694fec2396a649f1433d45a6b5218d4de06a"
+    },
+    "nativePatchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+  },
+  "sourceBranch": {
+    "repository": "Floorp-Projects/Floorp",
+    "branch": "codex/mac-native-cocoa-probe-source-20261017",
+    "expectedJobs": 0
+  },
+  "executionBranch": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "branch": "codex/mac-native-cocoa-probe-20261017",
+    "expectedRuns": 1,
+    "expectedAttempt": 1,
+    "expectedJobs": 1,
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 10
+  },
+  "requirements": {
+    "portableGuards": 9,
+    "nativeChecks": 25,
+    "contentsPermission": "read",
+    "inheritedSecrets": false,
+    "cache": false,
+    "dependencyInstallation": false,
+    "browserExecution": false,
+    "rawCompilerOutputPublished": false,
+    "artifactFiles": 1,
+    "artifactRetentionDays": 1,
+    "jobLogProofMaximumBytes": 16384
+  },
+  "preflight": {
+    "recordedAt": "2026-10-17 03:40:23 UTC",
+    "bothRepositoriesPublic": true,
+    "newBranchesAbsent": true,
+    "existingWorkflowChanges": 0,
+    "priorDiagnosticsUnchanged": true
+  },
+  "independentReview": {
+    "verdict": "GO_ONE_LIMITED_FOUNDATION_PROBE",
+    "unresolvedP0": 0,
+    "unresolvedP1": 0,
+    "unresolvedP2": 0,
+    "finalCommitTreeAndSourceHashesVerified": true,
+    "allRelevantWorkflowTriggersReviewed": true,
+    "staticDerivationVerified": true,
+    "compileOrTestsPerformedByReviewer": false,
+    "ciMutationByReviewer": false
+  },
+  "scopeLimits": {
+    "completeHostTranslationUnitCompiled": false,
+    "xulLinked": false,
+    "nativeRuntimeServiceExecuted": false,
+    "authenticationValidated": false,
+    "originalFailureCauseResolved": false,
+    "productOrDebugQualification": false,
+    "otherMacTargetQualified": false
+  },
+  "existingGatesAndSettingsChanged": false,
+  "priorFailuresRerun": false,
+  "heavyRuntimeBuildRequested": false,
+  "paidRunnerRequested": false,
+  "status": "ready-for-one-limited-run"
+}
