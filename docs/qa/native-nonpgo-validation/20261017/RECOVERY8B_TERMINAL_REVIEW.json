@@ -1,0 +1,218 @@
+{
+  "causalLimits": {
+    "actualNativeHarnessLongLivedPsStall": "NOT_REPRODUCED",
+    "cleanupHypothesis": "Reference XNU killpg1 filters zombies in an explicit group and may return POSIX EPERM with no eligible members. This is a plausible mechanism; the actual worker/group state at denial was not captured, so no zombie-only attribution is made.",
+    "historicalNativeBrowserExitCause": "UNKNOWN",
+    "historicalRun39045848018DeniedGeneration": "UNKNOWN",
+    "historicalThreeDeniedTargetMatch": "NOT_ESTABLISHED",
+    "nativeAuthentication": "NOT_TESTED",
+    "synthetic": "16384 repeated PID columns and intentionally undrained stdout, with before/after ACK/BSD timing overhead, differ from normal fixed-harness capture_output behavior."
+  },
+  "controlledObservation": {
+    "allSampleTotalsNull": true,
+    "allSamplesIncomplete": true,
+    "elapsedObservationSeconds": [
+      0.587937,
+      0.990367,
+      1.401092
+    ],
+    "inventoryLimit": "Role/owner/parent relations are earlier identityBound=false snapshots; the new exact-child lifetime proof comes from the unreaped Popen parent, not from unavailable BSD birth values.",
+    "output": "Controlled ps drained98304 stdout bytes and0 stderr bytes, then reaped exit0. No raw output is published.",
+    "pidTag": "e3068537f5fff503",
+    "primaryLifetimeProof": "Six sequence1..6 parent WNOWAIT acknowledgments bracket the three queries, all same exact unreaped child, matching child, no exit pending, errno0.",
+    "sameExactLivePopenChildAcrossThreeQueries": "ESTABLISHED_FOR_THIS_NEW_CONTROLLED_CHILD",
+    "supplementalBSDQueries": {
+      "birthIdentity": "UNKNOWN",
+      "bytes": 0,
+      "count": 6,
+      "errno": 1,
+      "expectedBytes": 136,
+      "status": "unavailable"
+    },
+    "systemPsFile": {
+      "ownedByRoot": true,
+      "setuidBit": true
+    },
+    "taskQueries": {
+      "bytes": 0,
+      "count": 3,
+      "errno": 1,
+      "expectedBytes": 232,
+      "status": "unavailable"
+    }
+  },
+  "controls": {
+    "normalDrain": {
+      "caseCompleted": true,
+      "childReapedExit0": true,
+      "interpretation": "The normally drained child was not captured by target task-query observations. This is not proof that a live setuid ps task became readable. Its final zero-total sample records confirmedGone=1, not unavailable-to-zero conversion.",
+      "targetTaskObservations": 0,
+      "workerGroupCleanup": "verified-gone"
+    },
+    "realHarness": {
+      "firstFailure": null,
+      "limit": "One ps inventory overlap and no captured denied sample in this run do not establish that a live ps task was measured or exclude intermittent later denial. No browser or Shim authentication was exercised.",
+      "monitorFailure": null,
+      "observations": {
+        "completeSamples": 6,
+        "differentOwnerObserved": 2,
+        "psTaskDeniedSamples": 0,
+        "samples": 6,
+        "systemPsObserved": 1
+      },
+      "status": "passed",
+      "workload": {
+        "hostAll": 12,
+        "hostSingle": 12,
+        "shimPIDInventory": 12
+      }
+    }
+  },
+  "decision": "OVERALL_FAILURE_RETAINED_CONTROLLED_THREE_EPERM_ESTABLISHED_CLEANUP_UNVERIFIED",
+  "diagnosticFinding": {
+    "independentPureValidationCheck": {
+      "actualHeldRecordLabel": "ps-fail-closed-missing",
+      "copyWithOnlyErrorCodeSetToRecordedPrimaryLabel": "ps-group-cleanup-incomplete",
+      "sourceChanged": false
+    },
+    "location": "monitor_ps_lifetime.py:validate_held",
+    "outcome": "Correcting diagnostic classification would still leave group cleanup incomplete and the job failed. Existing receipt/status/error strings remain unchanged.",
+    "problem": "Validator demands top errorCode monitor-unavailable even when a later cleanup exception becomes PermissionError. Primary firstFailure, stage reason and saved monitorFailure already prove the intended fail-closed action. The label incorrectly suggests this evidence is missing.",
+    "reportedLabel": "ps-fail-closed-missing",
+    "severity": "P2",
+    "status": "OPEN_IN_FROZEN_EXPERIMENT_VALIDATOR; no code change or rerun"
+  },
+  "failClosedAndCleanup": {
+    "chronology": "The source releases/drains and reaps the controlled ps before returning the incomplete group sample to Runner. Therefore the later group-probe denial is not evidence that this controlled ps remained alive during cleanup.",
+    "cleanupDiagnostics": [
+      {
+        "errno": 1,
+        "errorType": "PermissionError",
+        "operation": "group-probe",
+        "signal": 0
+      }
+    ],
+    "cleanupFailure": "PermissionError",
+    "exactPsChildReapedExitCode": 0,
+    "exactWorkerLeaderReap": {
+      "exitCode": 0,
+      "status": "reaped"
+    },
+    "failClosedObserved": true,
+    "firstFailure": {
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 1.48,
+      "stage": "ps-held"
+    },
+    "groupCleanup": "unverified",
+    "heldTerminalException": "PermissionError",
+    "limit": "Worker exit0 and exact-child reap do not establish whole-group disappearance. No process-state snapshot at the failing group probe was retained; group cleanup remains unverified.",
+    "monitorFailureRetained": true,
+    "stageFailurePhase": "group-activity",
+    "stageReason": "monitor-unavailable"
+  },
+  "nextStepAssessment": {
+    "assessment": "The proposed same-UID known-child zombie-only read-probe/reap experiment is a focused discriminator. A candidate reap-before-probe ordering change must retain errors for live/foreign/unknown or denied remaining groups and must preserve descendant verification.",
+    "execution": "No additional Mac job, full build or repair is performed by this review; no unchanged full build is proposed as evidence.",
+    "nativeHarnessAlternative": "A ps-free ordinary read-only API replacement is design only. Exact birth/argv/profile identity, unknown/ambiguity handling, bounds and pre-signal generation validation require separate implementation and small Mac validation.",
+    "recordStatus": "PROPOSED_NOT_IMPLEMENTED_OR_EXECUTED"
+  },
+  "receipts": {
+    "commit": "064eee4514fa8845fe0e23ac8e51549b0c853186",
+    "execution": {
+      "bytes": 37488,
+      "immutablePublicBytesMatch": true,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8B_EXECUTION_RESULT.json",
+      "sha256": "2020206430ff18675d0fde915d63e4060e8520d81e499930f96d674abb16e639"
+    },
+    "nextStep": {
+      "bytes": 3358,
+      "immutablePublicBytesMatch": true,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_NEXT_NATIVE_STEP.json",
+      "sha256": "5660211c1bd4168dac8917cd18558f2e241bdef355fc7e7e0fc44db2f4441435"
+    },
+    "privateDecodedLogBytes": 49317,
+    "privateDecodedLogSHA256": "5e27f3736b05f111eb8cdf3ba1e2e61a1ee0f032ce2f97d5b166cdb6e0979f99",
+    "publicSummaryBytes": 31403,
+    "publicSummarySHA256": "76f004fee25718517db51dbb92b66ba9c485d75edeb545ee52b8b9ccae027730",
+    "rawLogPublished": false,
+    "singleLogSummaryMatches": true
+  },
+  "remainingBlockers": [
+    "Whole-group cleanup remains unverified after EPERM.",
+    "Preceding broad82-test Mac suite remains failed; the focused6-test success does not supersede it.",
+    "Historical denied identity/cause and native browser exit remain unresolved.",
+    "Native authentication and product readiness remain unverified."
+  ],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent terminal review of focused controlled ps lifetime experiment",
+  "schemaVersion": 1,
+  "scope": {
+    "artifactUpload": false,
+    "browserOrBuildExecuted": false,
+    "jobRelabeledPassed": false,
+    "permissionOrProtectionChanged": false,
+    "productionSamplerSourceChanged": false,
+    "sdkAcquired": false,
+    "signing": false
+  },
+  "sources": [
+    {
+      "commit": "064eee4514fa8845fe0e23ac8e51549b0c853186",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8B_EXECUTION_RESULT.json"
+    },
+    {
+      "commit": "064eee4514fa8845fe0e23ac8e51549b0c853186",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_NEXT_NATIVE_STEP.json"
+    },
+    {
+      "commit": "82414aa914508516c2735b32e7d9536effa69a18",
+      "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py"
+    },
+    {
+      "commit": "82414aa914508516c2735b32e7d9536effa69a18",
+      "path": "tools/qa/native-nonpgo/support.py"
+    },
+    {
+      "supports": "Independent failed terminal metadata.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39075099849"
+    },
+    {
+      "supports": "One32-second job with focused gate success and experiment failure.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39075099849/jobs?per_page=100"
+    },
+    {
+      "supports": "Reference explicit-group zombie filter and zero-eligible-member POSIX EPERM; no direct attribution to this runtime state.",
+      "url": "https://raw.githubusercontent.com/apple-oss-distributions/xnu/xnu-11417.101.15/bsd/kern/kern_sig.c"
+    }
+  ],
+  "terminal": {
+    "artifacts": 0,
+    "attempt": 1,
+    "caller": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+    "conclusion": "failure",
+    "durationSeconds": 32,
+    "fixture": "82414aa914508516c2735b32e7d9536effa69a18",
+    "focusedGate": {
+      "passed": 6,
+      "seconds": 1.607,
+      "tests": [
+        "test_ps_lifetime.PsLifetimeGuards.test_denial_requires_exact_three_actual_eperm_queries",
+        "test_ps_lifetime.PsLifetimeGuards.test_exact_worker_child_is_held_then_drained_and_reaped",
+        "test_ps_lifetime.PsLifetimeGuards.test_streaming_drain_rejects_overflow_and_closes_exact_child",
+        "test_ps_lifetime.PsLifetimeGuards.test_validation_requires_lifetime_generation_live_state_and_null_totals",
+        "test_ps_lifetime.PsLifetimeGuards.test_waitid_keeps_exact_exited_child_waitable_until_reaped",
+        "test_guards.DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds"
+      ],
+      "total": 6
+    },
+    "independentProviderMetadataCheck": "PASS",
+    "job": 117520498246,
+    "jobs": 1,
+    "run": 39075099849,
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39075099849"
+  }
+}
