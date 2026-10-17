@@ -1,0 +1,83 @@
+{
+  "actions": {
+    "authOrPermissionChanges": 0,
+    "blacksmithAccess": 0,
+    "merges": 0,
+    "newArtifactUploads": 0,
+    "newCIRuns": 0,
+    "newLargeArtifactStorage": 0,
+    "productSigning": 0,
+    "publishing": 0,
+    "realSDKPayloadDownloads": 0,
+    "remoteWrites": 0
+  },
+  "baseCommit": "f5bca1ae0542130b56874c382e687e249572dbe4",
+  "changes": [
+    "Enable zombie lookup only for BSD flavor 3. Require exact response size, matching PID, valid birth and BSD status; check expected generation before zombie classification. Preserve live UID/PGID checks.",
+    "Retain recent 16 monitor diagnostics and a separate terminal monitor failure, with numeric task/BSD size and errno and bounded fallback classification. Always append stage evidence after cleanup, including failure phase and cleanup failure. Unmeasured peak RSS is null.",
+    "Replace the SDK six-hour job margin with strict unexpired-at-acquisition validation. Keep the official API, HTTP error refusal, existing 600-second transfer deadline, all fixed ZIP/TAR/tree/version checks, retention and permissions unchanged.",
+    "Wire the real Mac unreaped-child regression into the preflight template before source checkout; require the original monitor-preflight stage to have its own complete task sample."
+  ],
+  "codeManifest": {
+    "path": "RECOVERY5_CODE_HASHES.json",
+    "sha256": "72292dcd08458b7ea31cfdb4645475539edab4962f042a23800a9bb8c347ecf0"
+  },
+  "decision": {
+    "actualMacPreflight": "PENDING",
+    "longBuild": "NOT_STARTED",
+    "nativeAuthentication": "NOT_QUALIFIED",
+    "productQualification": false,
+    "staticPreparation": "READY"
+  },
+  "evidence": [
+    "RECOVERY5_RECOVERY_AND_EVIDENCE.json",
+    "RECOVERY5_LOCAL_TESTS.json",
+    "RECOVERY5_CODE_HASHES.json",
+    "RECOVERY5_INDEPENDENT_REVIEW.json"
+  ],
+  "hypotheses": [
+    {
+      "historicalLimit": "This fixes a demonstrated code defect, but does not prove the missing fatal Recovery4 query was a zombie.",
+      "id": "H1",
+      "nextEvidence": "On macos-15-intel, the real child test must show kill(pid,0) success, a complete BSD zombie record with exact birth, and read status gone. The child is always reaped in finally.",
+      "question": "Can an unreaped owned child cause false monitor unavailability because BSD lookup excluded zombies?"
+    },
+    {
+      "historicalLimit": "The exact run39040773718 fatal query is not recoverable from its first16 diagnostics.",
+      "id": "H2",
+      "nextEvidence": "Separate fatal sample retains task/BSD byte counts, errno, fallback result, bounded opaque identity tags and all three partial attempts; finally retains the failing stage and cleanup result.",
+      "question": "If monitoring still fails, is the target live but unavailable, malformed, denied, replaced or already gone?"
+    },
+    {
+      "historicalLimit": "Metadata was read only; no real SDK payload was acquired in this preparation.",
+      "id": "H3",
+      "nextEvidence": "Portable integration test passes with a one-hour margin and checks expired/HTTP/deadline/hash failures; the real run must reacquire via the authorized API before actual expiry, then use only the verified local files.",
+      "question": "Does an unexpired fixed SDK with less than six hours remaining still pass the legitimate acquisition and local validation route?"
+    },
+    {
+      "historicalLimit": "Original native-cause-exit / cause-host-exited / firstCause=null remains unknown; neither failed monitoring run reached native authentication.",
+      "id": "H4",
+      "nextEvidence": "Use the already saved bounded native diagnostics after full-build/package/ad-hoc verification. Keep actual browser exit and requested cleanup signals separate.",
+      "question": "After a completed full build, does native startup observe an actual browser exit, launcher-only exit, or a Shim authentication failure?"
+    }
+  ],
+  "independentReview": {
+    "openP1": 0,
+    "openP2": 0,
+    "path": "RECOVERY5_INDEPENDENT_REVIEW.json",
+    "sha256": "61a28bfec9771fc76cc81b6f4da629adfa5d8a27ec52bee74ad50c69b8c82c61"
+  },
+  "remainingGates": [
+    "Run the real Mac unreaped-child and self-counter/churn preflight on authorized public macos-15-intel. The saved development shell is Linux and cannot execute libproc.",
+    "Review a new immutable execution route before using the workflow template. Its existing recovery4 branch filter and fixture placeholder are not a newly launched route.",
+    "Return these changes and hypotheses before any long execution. Full host/XUL build, package/ad-hoc copy and native Shim authentication need a fresh actual Mac run.",
+    "Check SDK expiry again at acquisition. Do not bypass expiry or HTTP failure. Respect the unchanged six-hour platform maximum and existing resource/ownership/cleanup limits."
+  ],
+  "reviewedPatch": {
+    "files": 6,
+    "sha256": "7db8825f0a7facf8b087ae966f117ea68e9c09357f2199407daeef9e2937fe13"
+  },
+  "savedCodeCommit": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+  "schema": 1,
+  "scope": "RECOVERY5_MONITOR_AND_SDK_PREPARATION_ONLY"
+}

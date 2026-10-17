@@ -2,6 +2,7 @@
 import copy
 import contextlib
 import ctypes
+import datetime
 import errno
 import io
 import json
@@ -17,11 +18,15 @@ import tempfile
 import textwrap
 import time
 import unittest
+import urllib.error
+import zipfile
 from types import SimpleNamespace
 from unittest import mock
 import native_cause
+import fetch_sdk
+import materialize
 from darwin_activity import BSDInfo, DarwinActivity, TaskAllInfo, TaskInfo
-from support import Failure, ProgressWatch, Runner, clean_environment, extract_tar, scan_tar
+from support import Failure, ProgressWatch, Runner, clean_environment, digest, extract_tar, scan_tar
 from native_suite import cause_failure_snapshot, context_result, failure_snapshot
 from pipeline import macho, prepare_harness, verify_config
 from owned_native import MacProcesses, OwnedNative
@@ -381,9 +386,13 @@ class Guards(unittest.TestCase):
         (self.root / 'started-monotonic').write_text(str(time.monotonic()))
         native = mock.Mock(numer=1, denom=1)
         native.read.return_value = {'status': 'measured', 'rssMiB': 10, 'cpuSeconds': 1, 'state': 'R'}
+        def record_zombie_only(runner, stage, *_args):
+            if stage == 'monitor-zombie-preflight':
+                runner.records.append({'stage': stage, 'lastActivity': {
+                    'sampleComplete': True, 'counterSource': 'libproc-taskallinfo'}})
         with mock.patch.dict(os.environ, {'GITHUB_WORKSPACE': str(workspace), 'TASK_ROOT': str(self.root)}), \
                 mock.patch('darwin_activity.probe', return_value=native), \
-                mock.patch.object(Runner, 'run', return_value=None), contextlib.redirect_stdout(io.StringIO()):
+                mock.patch.object(Runner, 'run', new=record_zombie_only), contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaisesRegex(Failure, 'monitor-preflight-no-complete-sample'):
                 exec(compile(script, 'workflow-monitor-preflight', 'exec'), {})
         proof = json.loads((self.root / 'monitor-preflight.json').read_text())
@@ -393,6 +402,8 @@ class Guards(unittest.TestCase):
     def test_unavailable_monitor_preserves_failure_and_reclaims_owned_group(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         runner = Runner(self.root, time.time(), limits)
+        for index in range(20):
+            runner.record_monitor('old-' + str(index), {'sampleComplete': True})
         incomplete = {'sampleComplete': False, 'sampleAttempts': 3,
                       'partialSamples': [{'unknownKinds': {'state-unavailable': 1}}],
                       'unknownKinds': {'state-unavailable': 1}}
@@ -404,7 +415,68 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.failure['code'], 'monitor-unavailable')
         self.assertEqual(json.loads((self.root / 'first-failure.json').read_text())['code'], 'monitor-unavailable')
         self.assertFalse(runner.groups)
-        self.assertEqual(runner.monitor_diagnostics[0]['unknownKinds'], {'state-unavailable': 1})
+        self.assertEqual(len(runner.monitor_diagnostics), 16)
+        self.assertEqual(runner.monitor_diagnostics[0]['stage'], 'old-5')
+        self.assertEqual(runner.monitor_diagnostics[-1]['unknownKinds'], {'state-unavailable': 1})
+        fatal = copy.deepcopy(runner.monitor_failure)
+        for index in range(20):
+            runner.record_monitor('later-' + str(index), {'sampleComplete': True})
+        self.assertEqual(runner.monitor_failure, fatal)
+        self.assertEqual(runner.records[0]['lastActivity'], incomplete)
+        self.assertEqual(runner.records[0]['failurePhase'], 'group-activity')
+        self.assertEqual(runner.records[0]['reason'], 'monitor-unavailable')
+        self.assertIsNone(runner.records[0]['peakRSSMiB'])
+        self.assertIsNotNone(runner.records[0]['exitCode'])
+
+    def test_sampler_exception_records_stage_and_reaps_owned_process(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        children, popen = [], subprocess.Popen
+        def launch(*args, **kwargs):
+            child = popen(*args, **kwargs)
+            children.append(child)
+            return child
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch('support.subprocess.Popen', side_effect=launch), \
+                mock.patch.object(runner, 'group_activity', side_effect=subprocess.TimeoutExpired('private command', 3)):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                runner.run('sampler-exception', [sys.executable, '-c', 'import time; time.sleep(30)'],
+                           self.root, os.environ.copy(), 360)
+        self.assertIsNotNone(children[0].poll())
+        self.assertFalse(runner.group_alive(children[0].pid))
+        self.assertEqual(len(runner.records), 1)
+        self.assertEqual(runner.records[0]['reason'], 'TimeoutExpired')
+        self.assertEqual(runner.records[0]['failurePhase'], 'group-activity')
+        self.assertEqual(runner.monitor_failure['errorType'], 'TimeoutExpired')
+        self.assertNotIn('private command', json.dumps(runner.records + runner.monitor_diagnostics))
+
+    def test_cleanup_failure_keeps_initial_failure_and_final_stage_record(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        runner.native_registry = mock.Mock()
+        runner.native_registry.finish.return_value = {'outlivedHarness': 1, 'allOwnedGone': False}
+        incomplete = {'sampleComplete': False, 'rssMiB': None, 'rssLowerBoundMiB': 0}
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch.object(runner, 'group_activity', return_value=incomplete):
+            with self.assertRaisesRegex(Failure, 'owned-native-cleanup-incomplete'):
+                runner.run('cleanup-failure', [sys.executable, '-c', 'import time; time.sleep(30)'],
+                           self.root, os.environ.copy(), 360)
+        self.assertEqual(runner.failure['code'], 'monitor-unavailable')
+        self.assertEqual(runner.records[0]['reason'], 'monitor-unavailable')
+        self.assertEqual(runner.records[0]['cleanupFailure'], 'owned-native-cleanup-incomplete')
+        self.assertIsNone(runner.records[0]['peakRSSMiB'])
+        self.assertFalse(runner.groups)
+
+    def test_launch_failure_still_has_a_stage_record(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        with self.assertRaises(FileNotFoundError):
+            runner.run('launch-failure', [str(self.root / 'missing-executable')],
+                       self.root, os.environ.copy(), 360)
+        self.assertEqual(len(runner.records), 1)
+        self.assertEqual(runner.records[0]['failurePhase'], 'launch')
+        self.assertIsNone(runner.records[0]['exitCode'])
+        self.assertIsNone(runner.records[0]['peakRSSMiB'])
 
     def test_stall_requires_multiple_stable_signals(self):
         activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
@@ -694,6 +766,7 @@ class DarwinCounterGuards(unittest.TestCase):
             return 0
         system.mach_timebase_info.side_effect = timebase
         def query(pid, flavor, arg, pointer, size):
+            self.assertEqual(arg, 1 if flavor == 3 else 0)
             value = pointer._obj
             bsd = value.bsd if flavor == 2 else value
             bsd.pid, bsd.uid, bsd.pgid = pid, os.geteuid(), 900
@@ -757,12 +830,132 @@ class DarwinCounterGuards(unittest.TestCase):
                 return 0
             original(pid, flavor, arg, pointer, size)
             pointer._obj.status = 5
+            pointer._obj.pgid = 0
             return size
         library.proc_pidinfo.side_effect = zombie
         self.assertEqual(sensor.read(42, 900)['reason'], 'bsd-zombie')
+        expected = {'pid': 42, 'startSec': 100, 'startUsec': 7}
+        self.assertEqual(sensor.read(42, 900, expected)['reason'], 'bsd-zombie')
+        expected['startSec'] = 99
+        self.assertEqual(sensor.read(42, 900, expected)['reason'], 'generation-replaced')
+        def invalid_state(*args):
+            size = original(*args)
+            args[3]._obj.bsd.status = 0
+            return size
+        library.proc_pidinfo.side_effect = invalid_state
+        self.assertEqual(sensor.read(42, 900, expected)['status'], 'unavailable')
         library.proc_pidinfo.side_effect = original
         expected = {'pid': 42, 'startSec': 99, 'startUsec': 7}
         self.assertEqual(sensor.read(42, 900, expected)['reason'], 'generation-replaced')
+
+    def test_only_bsd_query_enables_zombie_search_and_resets_errno(self):
+        sensor, library = self.sensor()
+        ctypes.set_errno(errno.EACCES)
+        self.assertEqual(sensor.bsd(42)[0], 'measured')
+        self.assertEqual(ctypes.get_errno(), 0)
+        self.assertEqual(library.proc_pidinfo.call_args.args[1:3], (3, 1))
+        sensor.read(42, 900)
+        self.assertEqual(library.proc_pidinfo.call_args.args[1:3], (2, 0))
+        with mock.patch('darwin_activity.os.kill') as kill:
+            for pid in (0, -1):
+                with self.assertRaisesRegex(ValueError, 'positive-process-id-required'):
+                    sensor.bsd(pid)
+            kill.assert_not_called()
+
+    def test_full_task_zombie_with_exit_pgid_is_gone_after_generation_check(self):
+        sensor, library = self.sensor()
+        original = library.proc_pidinfo.side_effect
+        def zombie(*args):
+            size = original(*args)
+            args[3]._obj.bsd.status, args[3]._obj.bsd.pgid = 5, 0
+            return size
+        library.proc_pidinfo.side_effect = zombie
+        expected = {'pid': 42, 'startSec': 100, 'startUsec': 7}
+        self.assertEqual(sensor.read(42, 900, expected)['reason'], 'bsd-zombie')
+        expected['startSec'] = 99
+        self.assertEqual(sensor.read(42, 900, expected)['reason'], 'generation-replaced')
+        library.proc_pidinfo.side_effect = original
+        self.assertEqual(sensor.read(42, 901)['reason'], 'membership-changed')
+
+    def test_full_bsd_response_requires_valid_identity_birth_and_state(self):
+        for field, value in [('pid', 43), ('start_sec', 0), ('start_usec', 1000000), ('status', 0), ('status', 6)]:
+            with self.subTest(field=field, value=value):
+                sensor, library = self.sensor()
+                original = library.proc_pidinfo.side_effect
+                def invalid(*args):
+                    size = original(*args)
+                    setattr(args[3]._obj, field, value)
+                    return size
+                library.proc_pidinfo.side_effect = invalid
+                with mock.patch('darwin_activity.os.kill') as kill:
+                    self.assertEqual(sensor.bsd(42)[0], 'unavailable')
+                    kill.assert_not_called()
+
+    def test_short_or_oversized_zombie_response_cannot_prove_gone(self):
+        for returned in (0, 135, 137):
+            with self.subTest(returned=returned):
+                sensor, library = self.sensor()
+                original = library.proc_pidinfo.side_effect
+                def invalid(*args):
+                    original(*args)
+                    args[3]._obj.status = 5
+                    return returned
+                library.proc_pidinfo.side_effect = invalid
+                with mock.patch('darwin_activity.os.kill'):
+                    self.assertEqual(sensor.bsd(42)[0], 'unavailable')
+
+    def test_failed_query_keeps_numeric_details_without_private_identity(self):
+        sensor, library = self.sensor()
+        library.proc_pidinfo.side_effect = lambda *args: 0
+        with mock.patch('darwin_activity.os.kill'):
+            value = sensor.group('900 42\n', 900)
+        example = value['formatExamples'][0]
+        self.assertEqual(example['taskQuery'], {'bytes': 0, 'expectedBytes': 232, 'errno': 0})
+        self.assertEqual(example['bsdQuery'], {'bytes': 0, 'expectedBytes': 136, 'errno': 0})
+        self.assertEqual(example['fallbackReason'], 'short-bsd-info')
+        self.assertIsNone(value['rssMiB'])
+        self.assertNotIn('start_sec', json.dumps(example))
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'requires real macOS libproc and an unreaped child')
+    def test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds(self):
+        sensor = DarwinActivity()
+        read_fd, write_fd = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            os.close(write_fd)
+            os.read(read_fd, 1)
+            os._exit(0)
+        os.close(read_fd)
+        try:
+            state, birth, _ = sensor.bsd(pid)
+            self.assertEqual(state, 'measured')
+            expected = {'pid': pid, 'startSec': birth.start_sec, 'startUsec': birth.start_usec}
+            os.close(write_fd)
+            write_fd = None
+            deadline = time.monotonic() + 5
+            details = {}
+            while time.monotonic() < deadline:
+                state, value, reason = sensor.bsd(pid, details)
+                if state == 'gone':
+                    break
+                time.sleep(0.01)
+            self.assertEqual((state, reason), ('gone', 'bsd-zombie'))
+            self.assertEqual(details['bytes'], 136)
+            self.assertEqual((value.pid, value.start_sec, value.start_usec),
+                             (pid, expected['startSec'], expected['startUsec']))
+            self.assertEqual(value.status, 5)
+            os.kill(pid, 0)
+            self.assertEqual(sensor.read(pid, os.getpgrp(), expected)['reason'], 'bsd-zombie')
+            expected['startSec'] -= 1
+            self.assertEqual(sensor.read(pid, expected=expected)['reason'], 'generation-replaced')
+        finally:
+            if write_fd is not None:
+                os.close(write_fd)
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            os.waitpid(pid, 0)
 
     def test_group_partial_totals_remain_unknown_and_tags_do_not_publish_names(self):
         sensor, _ = self.sensor()
@@ -815,6 +1008,108 @@ class DarwinCounterGuards(unittest.TestCase):
             sample.assert_not_called()
             self.assertEqual(runner.failure['code'], 'free-disk-reserve')
             self.assertFalse(runner.groups)
+
+
+class SDKGuards(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.plan = json.loads(Path(__file__).with_name('plan.json').read_text())
+        pin = self.plan['sdk']
+        tar_path = self.root / pin['entry']
+        settings = plistlib.dumps({'Version': pin['version']})
+        with tarfile.open(tar_path, 'w:xz') as archive:
+            item = tarfile.TarInfo('MacOSX.sdk/SDKSettings.plist')
+            item.size = len(settings)
+            archive.addfile(item, io.BytesIO(settings))
+        zip_path = self.root / 'input.zip'
+        with zipfile.ZipFile(zip_path, 'w') as archive:
+            archive.write(tar_path, arcname=pin['entry'])
+        self.zip_bytes = zip_path.read_bytes()
+        pin.update(zipBytes=len(self.zip_bytes), zipSHA256=digest(zip_path),
+                   tarBytes=tar_path.stat().st_size, tarSHA256=digest(tar_path),
+                   draftReaderTreeSHA256=scan_tar(tar_path)['canonicalSHA256'])
+        self.plan_path = self.root / 'plan.json'
+        self.plan_path.write_text(json.dumps(self.plan))
+        self.now = datetime.datetime(2026, 10, 17, 16, tzinfo=datetime.timezone.utc)
+        self.artifact = {'id': pin['artifact'], 'name': pin['name'], 'size_in_bytes': pin['zipBytes'],
+                         'digest': 'sha256:' + pin['zipSHA256'], 'expired': False,
+                         'workflow_run': {'id': pin['run']},
+                         'expires_at': (self.now + datetime.timedelta(hours=1)).isoformat()}
+        self.run = {'run_attempt': pin['attempt'], 'head_sha': self.plan['runtime']['ref'], 'status': 'completed'}
+        self.api_opener, self.download_opener = mock.Mock(), mock.Mock()
+        self.api_opener.open.side_effect = self.open_api
+        self.download_opener.open.side_effect = lambda *_args, **_kwargs: io.BytesIO(self.zip_bytes)
+
+    def open_api(self, request, **_kwargs):
+        self.assertTrue(request.full_url.startswith('https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/'))
+        if request.full_url.endswith('/zip'):
+            raise urllib.error.HTTPError(request.full_url, 302, 'redirect', {'Location': 'https://example.invalid/fixed.zip'}, None)
+        data = self.run if '/runs/' in request.full_url else self.artifact
+        return io.BytesIO(json.dumps(data).encode())
+
+    def fetch(self):
+        fixed_now = self.now
+        class Clock(datetime.datetime):
+            @classmethod
+            def now(cls, _tz=None):
+                return fixed_now
+        with mock.patch.dict(os.environ, {'SDK_READ_TOKEN': 'test-only-placeholder'}), \
+                mock.patch.object(sys, 'argv', ['fetch_sdk.py', '--plan', str(self.plan_path),
+                                               '--output', str(self.root / 'sdk-download')]), \
+                mock.patch('fetch_sdk.datetime.datetime', Clock), \
+                mock.patch('fetch_sdk.urllib.request.build_opener', side_effect=[self.api_opener, self.download_opener]):
+            return fetch_sdk.main()
+
+    def test_unexpired_sdk_with_less_than_six_hours_can_be_acquired(self):
+        self.assertEqual(self.plan['limits']['jobMinutes'], 360)
+        self.assertEqual(self.fetch(), 0)
+        self.assertEqual(self.api_opener.open.call_count, 3)
+        self.assertEqual(self.download_opener.open.call_count, 1)
+        receipt = json.loads((self.root / 'sdk-download/receipt.json').read_text())
+        self.assertEqual(receipt['tarSHA256'], self.plan['sdk']['tarSHA256'])
+        self.assertFalse(receipt['signedURLPublished'])
+
+    def test_expired_flag_or_elapsed_expiry_stops_before_download(self):
+        for flagged, expiry in ((True, self.now + datetime.timedelta(hours=1)),
+                                (False, self.now), (False, self.now - datetime.timedelta(seconds=1))):
+            with self.subTest(flagged=flagged, expiry=expiry):
+                self.artifact.update(expired=flagged, expires_at=expiry.isoformat())
+                self.api_opener.open.reset_mock()
+                with self.assertRaisesRegex(Failure, 'sdk-artifact-provenance' if flagged else 'sdk-expired'):
+                    self.fetch()
+                self.assertEqual(self.api_opener.open.call_count, 2)
+                self.download_opener.open.assert_not_called()
+                self.assertFalse((self.root / 'sdk-download').exists())
+
+    def test_http_error_never_uses_a_bypass_download(self):
+        self.api_opener.open.side_effect = urllib.error.HTTPError('https://api.github.com/', 410, 'gone', {}, None)
+        with self.assertRaises(urllib.error.HTTPError):
+            self.fetch()
+        self.download_opener.open.assert_not_called()
+
+    def test_download_deadline_and_fixed_zip_digest_remain_enforced(self):
+        with mock.patch('support.time.monotonic', side_effect=[0, 601]):
+            with self.assertRaisesRegex(Failure, 'download-deadline'):
+                self.fetch()
+        self.assertFalse((self.root / 'sdk-download/receipt.json').exists())
+        (self.root / 'sdk-download/sdk.zip').unlink()
+        (self.root / 'sdk-download').rmdir()
+        self.download_opener.open.side_effect = lambda *_args, **_kwargs: io.BytesIO(b'x' * len(self.zip_bytes))
+        with self.assertRaisesRegex(Failure, 'download-hash-mismatch'):
+            self.fetch()
+
+    def test_local_verified_sdk_materializes_without_service_expiry_queries(self):
+        self.fetch()
+        self.artifact.update(expired=True, expires_at=(self.now - datetime.timedelta(hours=1)).isoformat())
+        with mock.patch('materialize.__file__', str(self.root / 'materialize.py')), \
+                mock.patch.object(sys, 'argv', ['materialize.py', 'sdk', '--task', str(self.root)]), \
+                mock.patch('urllib.request.build_opener', side_effect=AssertionError('unexpected network')):
+            self.assertEqual(materialize.main(), 0)
+        proof = json.loads((self.root / 'sdk-materialized.json').read_text())
+        self.assertEqual(proof['canonicalSHA256'], self.plan['sdk']['draftReaderTreeSHA256'])
+        self.assertTrue((Path(proof['path']) / 'SDKSettings.plist').is_file())
 
 
 if __name__ == '__main__':

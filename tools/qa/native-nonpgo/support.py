@@ -163,6 +163,7 @@ class Runner:
         self.native_registry = None
         self.native_cleanup = None
         self.monitor_diagnostics = []
+        self.monitor_failure = None
 
     def elapsed(self):
         return max(0, time.monotonic() - self.monotonic_started)
@@ -276,6 +277,13 @@ class Runner:
         require(value['sampleComplete'], 'monitor-unavailable')
         return value['rssMiB']
 
+    def record_monitor(self, stage, activity):
+        value = {'stage': stage, 'elapsedSeconds': round(self.elapsed(), 2),
+                 **{key: item for key, item in activity.items() if not key.startswith('_')}}
+        self.monitor_diagnostics.append(value)
+        del self.monitor_diagnostics[:-16]
+        return value
+
     def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None):
         require(stage.replace('-', '').isalnum(), 'stage-name')
         require(deadline_minutes == self.limits['jobMinutes'], 'platform-budget-binding')
@@ -284,7 +292,10 @@ class Runner:
         reason = None
         process = None
         progress = ProgressWatch(self.limits['stallQuietMinutes'])
-        peak_rss, minimum_free, last_activity, quiet = 0, None, None, 0
+        peak_rss, minimum_free, last_activity, quiet = None, None, None, 0
+        phase = 'launch'
+        failure_phase = None
+        cleanup_failure = None
         try:
             with path.open('xb') as output:
                 process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
@@ -292,6 +303,7 @@ class Runner:
                 self.groups.add(process.pid)
                 next_status = 0
                 while process.poll() is None:
+                    phase = 'resources'
                     elapsed = self.elapsed()
                     free = shutil.disk_usage(self.task).free
                     size = path.stat().st_size
@@ -316,21 +328,21 @@ class Runner:
                         self.fail(stage, reason)
                         self.stop(process)
                         break
+                    phase = 'group-activity'
                     activity = self.group_activity(process.pid)
+                    last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
                     if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete']:
-                        if len(self.monitor_diagnostics) < 16:
-                            self.monitor_diagnostics.append({'stage': stage, 'elapsedSeconds': round(elapsed, 2),
-                                'sampleAttempts': activity.get('sampleAttempts', 1),
-                                'sampleComplete': activity['sampleComplete'],
-                                'partialSamples': activity.get('partialSamples', []),
-                                'unknownKinds': activity.get('unknownKinds', {})})
+                        diagnostic = self.record_monitor(stage, activity)
                     if not activity['sampleComplete']:
                         if process.poll() is not None:
                             break
+                        if self.monitor_failure is None:
+                            self.monitor_failure = diagnostic
                         if activity.get('rssLowerBoundMiB', 0) > self.limits.get('maxOwnedRSSMiB', 10240):
                             raise Failure('owned-process-memory-limit')
                         raise Failure('monitor-unavailable')
                     rss = activity['rssMiB']
+                    phase = 'native-census'
                     if self.native_registry is not None:
                         self.native_registry.census()
                         rss += self.native_registry.outside_group_rss(process.pid)
@@ -338,9 +350,9 @@ class Runner:
                         # An unobserved interval cannot count as evidence of
                         # unchanged CPU, memory, membership or runnable state.
                         progress = ProgressWatch(self.limits['stallQuietMinutes'])
+                    phase = 'progress'
                     quiet, stalled = progress.observe(time.monotonic(), size, free, activity)
-                    peak_rss = max(peak_rss, rss)
-                    last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
+                    peak_rss = max(peak_rss or 0, rss)
                     if rss > self.limits.get('maxOwnedRSSMiB', 10240):
                         reason = 'owned-process-memory-limit'
                     elif stalled:
@@ -358,34 +370,53 @@ class Runner:
                                           'quietSeconds': round(quiet)}), flush=True)
                         next_status = elapsed + 30
                     time.sleep(1)
+            phase = 'wait'
             code = process.wait(timeout=5)
             if self.group_alive(process.pid):
                 reason = reason or 'owned-descendants-outlived-leader'
                 self.fail(stage, reason)
                 self.stop(process)
-            self.records.append({'stage': stage, 'exitCode': code, 'reason': reason,
-                                 'logBytes': path.stat().st_size, 'peakRSSMiB': round(peak_rss),
-                                 'minimumFreeGiB': round(minimum_free / 1024**3, 2) if minimum_free else None,
-                                 'lastActivity': last_activity, 'quietSeconds': round(quiet)})
             if code or reason:
                 self.fail(stage, reason or 'nonzero-exit')
                 raise Failure(reason or 'nonzero-exit')
             return path
         except BaseException as error:
-            self.fail(stage, str(error) if isinstance(error, Failure) else type(error).__name__)
+            reason = reason or (str(error) if isinstance(error, Failure) else type(error).__name__)
+            failure_phase = phase
+            if phase == 'group-activity' and self.monitor_failure is None:
+                self.monitor_failure = self.record_monitor(stage, {'errorType': type(error).__name__})
+            self.fail(stage, reason)
             raise
         finally:
-            if process is not None:
+            try:
+                if process is not None:
+                    try:
+                        if self.group_alive(process.pid):
+                            self.stop(process)
+                    finally:
+                        self.groups.discard(process.pid)
+                        if self.native_registry is not None:
+                            self.native_cleanup = self.native_registry.finish()
+                            if self.native_cleanup['outlivedHarness'] or not self.native_cleanup['allOwnedGone']:
+                                self.fail(stage, 'owned-native-cleanup-incomplete')
+                                raise Failure('owned-native-cleanup-incomplete')
+            except BaseException as error:
+                cleanup_failure = str(error) if isinstance(error, Failure) else type(error).__name__
+                reason = reason or cleanup_failure
+                failure_phase = failure_phase or 'cleanup'
+                self.fail(stage, reason)
+                raise
+            finally:
                 try:
-                    if self.group_alive(process.pid):
-                        self.stop(process)
-                finally:
-                    self.groups.discard(process.pid)
-                    if self.native_registry is not None:
-                        self.native_cleanup = self.native_registry.finish()
-                        if self.native_cleanup['outlivedHarness'] or not self.native_cleanup['allOwnedGone']:
-                            self.fail(stage, 'owned-native-cleanup-incomplete')
-                            raise Failure('owned-native-cleanup-incomplete')
+                    log_bytes = path.stat().st_size
+                except OSError:
+                    log_bytes = None
+                self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
+                                     'reason': reason, 'failurePhase': failure_phase,
+                                     'cleanupFailure': cleanup_failure,
+                                     'logBytes': log_bytes, 'peakRSSMiB': round(peak_rss) if peak_rss is not None else None,
+                                     'minimumFreeGiB': round(minimum_free / 1024**3, 2) if minimum_free is not None else None,
+                                     'lastActivity': last_activity, 'quietSeconds': round(quiet)})
 
     def stop(self, process):
         for value, grace in ((signal.SIGINT, self.limits['processCleanupGraceSeconds']),

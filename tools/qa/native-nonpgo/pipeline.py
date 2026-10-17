@@ -416,6 +416,7 @@ def main():
         report['planSHA256'] = plan_hash
         report['nativeCleanup'] = runner.native_cleanup
         report['monitorDiagnostics'] = runner.monitor_diagnostics
+        report['monitorFailure'] = runner.monitor_failure
         report['firstFailure'] = runner.failure
         report['stages'] = runner.records
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)

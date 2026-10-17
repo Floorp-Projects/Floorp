@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "observedAtUTC": "2026-10-17T15:29:44Z",
+  "environment": {
+    "startup": "ready",
+    "shell": "bash",
+    "shellCommandExit": 0,
+    "os": "Linux",
+    "architecture": "x86_64",
+    "repositoryRead": "success",
+    "initialFloorpHEAD": "edb99a7d7d972cf201725bd556868bde4da1e4ba",
+    "restoredBase": "f5bca1ae0542130b56874c382e687e249572dbe4",
+    "savedCodeCommit": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+    "savedManifestFilesVerified": 13,
+    "savedManifestHashMismatches": 0
+  },
+  "runs": [
+    {
+      "id": 39020119793,
+      "job": 117360090798,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39020119793",
+      "providerConclusion": "failure",
+      "terminalSummaries": 1,
+      "identity": {
+        "repository": "Floorp-Projects/Floorp-Runtime",
+        "id": "39020119793",
+        "attempt": "1",
+        "executionHead": "d86e63bc621d647efd8389fbf226f841ebb52501",
+        "fixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1"
+      },
+      "status": "failed",
+      "firstFailure": {
+        "stage": "native-suite",
+        "code": "nonzero-exit",
+        "elapsedSeconds": 14342.83
+      },
+      "stagesOfInterest": [
+        {
+          "stage": "full-build",
+          "exitCode": 0,
+          "reason": null
+        },
+        {
+          "stage": "stage-package",
+          "exitCode": 0,
+          "reason": null
+        },
+        {
+          "stage": "adhoc-copy",
+          "exitCode": 0,
+          "reason": null
+        },
+        {
+          "stage": "verify-copy",
+          "exitCode": 0,
+          "reason": null
+        },
+        {
+          "stage": "native-suite",
+          "exitCode": 1,
+          "reason": null
+        }
+      ],
+      "native": {
+        "contextMenu": null,
+        "errorCode": "native-cause-exit",
+        "firstCause": null,
+        "firstFailureSnapshot": {
+          "cleanupComplete": true,
+          "errorCode": "cause-host-exited",
+          "phase": "host",
+          "status": "failed"
+        },
+        "gui": null,
+        "status": "failed"
+      },
+      "monitorDiagnosticsRetained": 16,
+      "lastRetainedDiagnosticStage": "full-build",
+      "exactFatalMonitorQuery": "NOT_APPLICABLE",
+      "productQualification": false
+    },
+    {
+      "id": 39037341780,
+      "job": 117409729426,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39037341780",
+      "providerConclusion": "failure",
+      "terminalSummaries": 1,
+      "identity": {
+        "repository": "Floorp-Projects/Floorp-Runtime",
+        "id": "39037341780",
+        "attempt": "1",
+        "executionHead": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+        "fixture": "69391c259358025ff2532d027b970e5babf43ec9"
+      },
+      "status": "failed",
+      "firstFailure": {
+        "stage": "full-build",
+        "code": "monitor-unavailable",
+        "elapsedSeconds": 803.59
+      },
+      "stagesOfInterest": [
+        {
+          "stage": "full-build",
+          "recorded": false
+        },
+        {
+          "stage": "stage-package",
+          "recorded": false
+        },
+        {
+          "stage": "adhoc-copy",
+          "recorded": false
+        },
+        {
+          "stage": "verify-copy",
+          "recorded": false
+        },
+        {
+          "stage": "native-suite",
+          "recorded": false
+        }
+      ],
+      "native": "NOT_RUN",
+      "monitorDiagnosticsRetained": 8,
+      "lastRetainedDiagnosticStage": "full-build",
+      "exactFatalMonitorQuery": "ps state unavailable",
+      "productQualification": false
+    },
+    {
+      "id": 39040773718,
+      "job": 117419664787,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39040773718",
+      "providerConclusion": "failure",
+      "terminalSummaries": 1,
+      "identity": {
+        "repository": "Floorp-Projects/Floorp-Runtime",
+        "id": "39040773718",
+        "attempt": "1",
+        "executionHead": "9b561d7df526a2cc40d0f4737d141039c713b6df",
+        "fixture": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603"
+      },
+      "status": "failed",
+      "firstFailure": {
+        "stage": "full-build",
+        "code": "monitor-unavailable",
+        "elapsedSeconds": 2393.52
+      },
+      "stagesOfInterest": [
+        {
+          "stage": "full-build",
+          "recorded": false
+        },
+        {
+          "stage": "stage-package",
+          "recorded": false
+        },
+        {
+          "stage": "adhoc-copy",
+          "recorded": false
+        },
+        {
+          "stage": "verify-copy",
+          "recorded": false
+        },
+        {
+          "stage": "native-suite",
+          "recorded": false
+        }
+      ],
+      "native": "NOT_RUN",
+      "monitorDiagnosticsRetained": 16,
+      "lastRetainedDiagnosticStage": "patch-14",
+      "exactFatalMonitorQuery": "UNKNOWN_NOT_RECORDED",
+      "productQualification": false
+    }
+  ],
+  "sdk": {
+    "id": 12074136738,
+    "name": "macos-sdk",
+    "size_in_bytes": 105082683,
+    "expired": false,
+    "expires_at": "2026-10-17T20:41:19Z",
+    "digest": "sha256:bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "workflow_run": {
+      "id": 38963901545,
+      "repository_id": 914860957,
+      "head_repository_id": 914860957,
+      "head_branch": "nora-0.2.0",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b"
+    },
+    "payloadDownloaded": false,
+    "retentionChanged": false,
+    "permissionsChanged": false
+  },
+  "limits": {
+    "originalNativeExitCause": "UNKNOWN",
+    "recovery4MonitorCause": "UNKNOWN_NOT_RECORDED",
+    "oldRunsRemainFailures": true,
+    "newCIRuns": 0,
+    "remoteWrites": 0,
+    "artifactUploads": 0,
+    "signing": 0,
+    "merges": 0,
+    "authChanges": 0
+  }
+}

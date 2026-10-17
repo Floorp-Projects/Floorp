@@ -57,13 +57,18 @@ class DarwinActivity:
         return hashlib.blake2s(str(pid).encode(), key=self.tag_key, digest_size=8).hexdigest()
 
     def query(self, pid, flavor, value):
+        if not isinstance(pid, int) or pid <= 0:
+            raise ValueError('positive-process-id-required')
         ctypes.set_errno(0)
-        size = self.lib.proc_pidinfo(pid, flavor, 0, ctypes.byref(value), ctypes.sizeof(value))
+        size = self.lib.proc_pidinfo(pid, flavor, 1 if flavor == 3 else 0,
+                                     ctypes.byref(value), ctypes.sizeof(value))
         return size, ctypes.get_errno()
 
-    def bsd(self, pid):
+    def bsd(self, pid, details=None):
         value = BSDInfo()
         size, code = self.query(pid, 3, value)
+        if details is not None:
+            details.update(bytes=size, expectedBytes=ctypes.sizeof(value), errno=code)
         if size == ctypes.sizeof(value):
             if value.pid != pid or not value.start_sec or value.start_usec >= 1000000:
                 return 'unavailable', None, 'invalid-identity'
@@ -86,33 +91,40 @@ class DarwinActivity:
         result = {'status': 'unavailable', 'pidTag': self.tag(pid)}
         value = TaskAllInfo()
         size, code = self.query(pid, 2, value)
+        result['taskQuery'] = {'bytes': size, 'expectedBytes': ctypes.sizeof(value), 'errno': code}
         if size != ctypes.sizeof(value):
             result['reason'] = 'permission' if code in (errno.EPERM, errno.EACCES) else 'short-task-info'
             if code in (errno.EPERM, errno.EACCES):
                 return result
-            state, bsd, reason = self.bsd(pid)
+            details = {}
+            state, bsd, reason = self.bsd(pid, details)
+            result.update(bsdQuery=details, fallbackReason=reason or state)
             if bsd is not None:
                 result['identityTag'] = self.tag((bsd.pid, bsd.start_sec, bsd.start_usec))
-            if state == 'gone':
-                return {**result, 'status': 'gone', 'reason': reason}
-            if reason == 'permission':
-                return {**result, 'reason': reason}
             if bsd is not None and expected is not None and (
                     bsd.pid, bsd.start_sec, bsd.start_usec) != (
                     expected['pid'], expected['startSec'], expected['startUsec']):
                 return {**result, 'status': 'gone', 'reason': 'generation-replaced'}
+            if state == 'measured' and (bsd.uid != os.geteuid() or (pgid is not None and bsd.pgid != pgid)):
+                return {**result, 'reason': 'membership-changed'}
+            if state == 'gone':
+                return {**result, 'status': 'gone', 'reason': reason}
+            if reason == 'permission':
+                return {**result, 'reason': reason}
             return result
         bsd, task = value.bsd, value.task
         birth = (bsd.pid, bsd.start_sec, bsd.start_usec)
         if bsd.pid != pid or not bsd.start_sec or bsd.start_usec >= 1000000:
             return {**result, 'reason': 'invalid-identity'}
         result['identityTag'] = self.tag(birth)
+        if bsd.status not in (1, 2, 3, 4, 5):
+            return {**result, 'reason': 'invalid-bsd-state'}
         if expected is not None and birth != (expected['pid'], expected['startSec'], expected['startUsec']):
             return {**result, 'status': 'gone', 'reason': 'generation-replaced'}
-        if bsd.uid != os.geteuid() or (pgid is not None and bsd.pgid != pgid):
-            return {**result, 'reason': 'membership-changed'}
         if bsd.status == 5:
             return {**result, 'status': 'gone', 'reason': 'bsd-zombie'}
+        if bsd.uid != os.geteuid() or (pgid is not None and bsd.pgid != pgid):
+            return {**result, 'reason': 'membership-changed'}
         if (bsd.status not in (1, 2, 3, 4) or task.policy != 1 or not task.virtual_size or
                 task.threadnum <= 0 or not 0 <= task.numrunning <= task.threadnum):
             return {**result, 'reason': 'invalid-task-counters'}
@@ -144,7 +156,9 @@ class DarwinActivity:
                 unknown[reason] = unknown.get(reason, 0) + 1
                 if len(examples) < 3:
                     examples.append({'kind': reason, 'pidTag': value['pidTag'],
-                                     'identityTag': value.get('identityTag'), 'source': 'libproc-taskallinfo'})
+                                     'identityTag': value.get('identityTag'), 'source': 'libproc-taskallinfo',
+                                     **{key: value[key] for key in ('taskQuery', 'bsdQuery', 'fallbackReason')
+                                        if key in value}})
             elif value['status'] == 'gone':
                 gone += 1
             else:

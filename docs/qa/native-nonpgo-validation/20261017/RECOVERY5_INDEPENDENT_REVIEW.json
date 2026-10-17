@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-17",
+  "reviewType": "independent static review",
+  "baseCommit": "f5bca1ae0542130b56874c382e687e249572dbe4",
+  "patch": {
+    "path": "/tmp/floorp-recovery5-reviewed.patch",
+    "sha256": "7db8825f0a7facf8b087ae966f117ea68e9c09357f2199407daeef9e2937fe13",
+    "matchesWorkingTreeDiff": true,
+    "filesReviewed": [
+      "tools/qa/native-nonpgo/darwin_activity.py",
+      "tools/qa/native-nonpgo/support.py",
+      "tools/qa/native-nonpgo/fetch_sdk.py",
+      "tools/qa/native-nonpgo/pipeline.py",
+      "tools/qa/native-nonpgo/workflow.yml.in",
+      "tools/qa/native-nonpgo/test_guards.py"
+    ]
+  },
+  "findings": [],
+  "openP1": 0,
+  "openP2": 0,
+  "resolvedReviewPoints": [
+    {
+      "area": "zombie lookup and identity",
+      "result": "Flavor 3 uses arg=1; flavor 2 remains arg=0. Only complete records with the requested PID, valid birth time and valid BSD state are trusted. Expected generation is checked before classifying a zombie. Live processes retain UID and process-group checks. Unknown task counters remain unavailable."
+    },
+    {
+      "area": "monitor evidence and cleanup",
+      "result": "Recent diagnostics retain the latest 16 entries, with the first terminal monitor failure retained separately. Stages are recorded in finally after cleanup, including initial reason, failure phase and cleanup failure. Unmeasured peak RSS remains null. Existing resource limits and owned-process cleanup are retained."
+    },
+    {
+      "area": "preflight isolation",
+      "result": "The real Mac zombie test is included in the existing preflight. Complete samples from its separate stage cannot satisfy the original monitor-preflight stage's complete-sample requirement."
+    },
+    {
+      "area": "SDK expiry",
+      "result": "Only the job-duration expiry margin is removed. Acquisition still rejects expired metadata or expires_at <= now. Official API acquisition, HTTP failure handling, the existing 600-second download check, fixed ZIP/TAR hashes and sizes, and local tree/version validation are retained. A verified local SDK can be materialized without a new service expiry query."
+    }
+  ],
+  "verification": {
+    "reviewerChecks": [
+      "Read the final six-file diff and regression tests.",
+      "Matched SHA-256 of the immutable patch to git diff --binary.",
+      "Ran git diff --check successfully.",
+      "Read the final local unittest log; did not independently rerun the suite."
+    ],
+    "localTestEvidence": {
+      "path": "/tmp/floorp-recovery5-tests.log",
+      "platform": "Linux x86_64",
+      "testsRun": 62,
+      "passed": 61,
+      "skipped": 1,
+      "failures": 0,
+      "errors": 0,
+      "durationSeconds": 1.770,
+      "result": "OK (skipped=1)",
+      "skippedTest": "DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds"
+    },
+    "coverageReviewed": [
+      "Exact proc_pidinfo flavor arguments and errno reset",
+      "Full response length, PID, birth time, generation and BSD-state validation",
+      "Zombie fallback and full-task zombie handling",
+      "Diagnostic overflow beyond 16 entries and separate terminal detail retention",
+      "Sampler exception with real owned-process reclamation",
+      "Launch and cleanup failures with preserved first failure and stage records",
+      "SDK short remaining lifetime, expired metadata, HTTP failures, deadline and fixed digest",
+      "Offline materialization of an already verified local SDK"
+    ]
+  },
+  "sources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L2023-L2039",
+      "supports": "A nonzero arg enables zombie lookup for BSD-info flavors; flavor 2 is not one of those flavors."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/proc_info.c#L2046-L2064",
+      "supports": "The current official XNU implementation retains the same nonzero-arg zombie lookup."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/proc_info.h#L54-L77",
+      "supports": "BSD-info fields include PID, status and process birth time."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/proc.h#L153-L158",
+      "supports": "BSD process states 1 through 5, including SZOMB=5."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sig.c#L1311-L1321",
+      "supports": "kill succeeds for a zombie, so signal-zero success cannot prove a measurable live process."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exit.c#L2395-L2405",
+      "supports": "XNU documents references as drained before setting SZOMB. Full-task zombie ordering is reviewed as defensive consistency, not a separately proven runtime race."
+    }
+  ],
+  "actualMacPending": [
+    "Execute the unreaped-child libproc test on the authorized macos-15-intel runner; Linux skipped it.",
+    "Verify native self counters and a complete real monitor-preflight sample on that runner.",
+    "After reporting the changes and hypotheses, run the Intel Mac non-PGO full host/XUL build, package and ad-hoc test-copy checks under existing limits.",
+    "Verify native Shim authentication and capture the native termination cause if it recurs. The prior native-cause-exit/cause-host-exited with firstCause=null remains unexplained."
+  ],
+  "decision": {
+    "staticReady": true,
+    "executionReady": false,
+    "summary": "No open P1/P2 was found in the frozen patch. Static review and portable regression evidence are sufficient to prepare the existing Mac validation, but actual Mac behavior and the original native termination are not yet verified."
+  },
+  "reviewActions": {
+    "codeEdited": false,
+    "ciStarted": false,
+    "externalWrites": false
+  }
+}

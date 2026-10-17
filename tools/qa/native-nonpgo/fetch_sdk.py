@@ -42,7 +42,7 @@ def main():
             run['status'] == 'completed', 'sdk-run-provenance')
     expires = datetime.datetime.fromisoformat(artifact['expires_at'].replace('Z', '+00:00'))
     now = datetime.datetime.now(datetime.timezone.utc)
-    require((expires - now).total_seconds() > plan['limits']['jobMinutes'] * 60, 'sdk-expiry-margin')
+    require(expires > now, 'sdk-expired')
     try:
         opener.open(urllib.request.Request(base + 'artifacts/' + str(pin['artifact']) + '/zip', headers=headers), timeout=30)
         raise Failure('sdk-expected-download-redirect')

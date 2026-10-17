@@ -1,0 +1,34 @@
+{
+  "architecture": "x86_64",
+  "command": "python3 -m unittest discover -s tools/qa/native-nonpgo -p test_guards.py -v",
+  "coverage": [
+    "flavor 2 arg=0 and flavor 3 arg=1",
+    "full length, PID, birth, expected generation and status validation",
+    "zombie exit PGID and same-PID generation replacement",
+    "unknown counters remain unavailable and unmeasured peak remains null",
+    "recent 16 diagnostics and separately retained fatal sample",
+    "sampler exception records stage and reaps real owned process",
+    "cleanup failure retains initial failure and cleanup detail",
+    "SDK acquisition accepts an unexpired one-hour margin independent of six-hour job budget",
+    "expired flag, elapsed expiry and HTTP error refuse acquisition",
+    "600-second deadline and fixed ZIP digest enforced",
+    "verified local TAR/tree/version materializes without service expiry query"
+  ],
+  "diffCheck": "PASS",
+  "exitCode": 0,
+  "logSHA256": "275ece4a2d5ef3d458454bc03a893f5683d7142e49e104fc7d85a9101d99bf3d",
+  "passed": 61,
+  "platform": "Linux",
+  "python": "3.12.14",
+  "realMacTest": {
+    "name": "DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds",
+    "requiredBeforeLongBuild": true,
+    "status": "SKIPPED_LINUX",
+    "wiredIntoWorkflowTemplatePreflight": true
+  },
+  "result": "OK (skipped=1)",
+  "schema": 1,
+  "seconds": 1.77,
+  "skipped": 1,
+  "tests": 62
+}
