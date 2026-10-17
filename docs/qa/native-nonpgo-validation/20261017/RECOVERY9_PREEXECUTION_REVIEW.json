@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "decision": "GO_FOR_ONE_SDK_FREE_MAC_DIAGNOSTIC_JOB",
+  "staticReady": true,
+  "nativeExecutionQualified": false,
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "binding": {
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "fixtureCommit": "c127e001c5337e47a842c7453177da286bc02c54",
+    "fixtureBaseCommit": "6553f77f6d974636d274449ba18063e21708a03a",
+    "fixtureFullDiffSHA256": "bad458169b328be5044ddb709df1f5313b4223c40e6d755d52a86f2ffc88a242",
+    "fixtureFullDiffBytes": 78556,
+    "callerRepository": "Floorp-Projects/Floorp-Runtime",
+    "callerCommit": "29695fa16f1842e0f436efb14489500e0cbf978c",
+    "callerParentCommit": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+    "runtimeBaseCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "workflow": {
+      "path": ".github/workflows/mac-native-ps-lifetime.yml",
+      "bytes": 3297,
+      "sha256": "6bd1c3153e9b68649d2ed51ca22d22799a874d61dd69a405d499cc6b1dd9eb8b"
+    },
+    "implementation": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY9_IMPLEMENTATION.json",
+      "bytes": 5913,
+      "sha256": "da4293b6d9d859449528e31e67e9521642a8bebf7a23e8fa3de67f6976b0ddb9"
+    },
+    "routeAnalysis": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY9_NATIVE_ROUTE_ANALYSIS.json",
+      "bytes": 8385,
+      "sha256": "6dff4022aee74125c6372fa1d348e21e38796287494cd699c0e036d2b7faaafe"
+    },
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 23641,
+        "sha256": "e935c247ca133e48756db7e7d34f68373e76cb2f98effdcbf5b8d9bf5b889824"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 28886,
+        "sha256": "2da20b958b5e3d40b1e5ea1c77ad98d959a4a64b88cc38268284364727fec4af"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_processes.py",
+        "bytes": 6111,
+        "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_native_processes.py",
+        "bytes": 7399,
+        "sha256": "f4562ffd7ca3f8b3097cb04592f0c8588559409a8df7cd0e36c0218a31de6a3c"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_owned_cleanup.py",
+        "bytes": 6034,
+        "sha256": "2ec589910058d6864ccae020a23dfc10f84c26036826c6ff5ea4a14aa71bde98"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "bytes": 82556,
+        "sha256": "4767339960ccf36efd525125cdac0c99d67fa050b60850c83e804aec3d50275f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+        "bytes": 6922,
+        "sha256": "2b8b8803371d4a1ea2d1ace988ce6ba3943e4b1baa47f1cc6332c9e96fb7b415"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+        "bytes": 16833,
+        "sha256": "19f31ea18e8430e8776e56a98d3c387d0e75355d185a9582ef9d6bddd99645e3"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+        "bytes": 7180,
+        "sha256": "955a3b2330ab326fef83cd22df4179be3094d5e47fef902103180241cc066562"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+        "bytes": 6724,
+        "sha256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 24899,
+        "sha256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb"
+      },
+      {
+        "path": "tools/app-shim/shim_lifecycle.py",
+        "bytes": 15224,
+        "sha256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d"
+      }
+    ],
+    "bothWorkingTreesClean": true
+  },
+  "cleanup": {
+    "verifiedDesign": "Poll the exact Popen child before group probes. One fresh probe after EPERM is allowed only when a second poll newly reaps that exact child.",
+    "unknownPreserved": "Live, already-reaped, and still-denied residual groups retain permission failure. EPERM is never directly treated as gone.",
+    "safety": "Remaining groups still require cleanup; signal target selection and grace periods are unchanged. Exact child reap and verified group disappearance are recorded independently.",
+    "realMacGate": "Pipe-gated actual child: WNOWAIT exit-pending and same-birth BSD zombie; raw PID signal-zero succeeds and group signal-zero is EPERM; exact reap then fresh group ESRCH. No signals sent."
+  },
+  "ordinaryNativeCensus": {
+    "removedProducers": [
+      "HostProcess._process_rows /bin/ps",
+      "ShimMonitor._observe /bin/ps PID inventory"
+    ],
+    "interfaces": "Read-only PROC_UID_ONLY enumeration, full BSD136, proc_pidpath, KERN_PROCARGS2.",
+    "identity": "Full PID/birth/effective UID and path consistency; two argv snapshots; real argv tuples retained. Host matching/cleanup compares tuple(self.command). Shim checks real argv flag boundaries and the helper birth against its initial BSD birth.",
+    "failClosed": "Zero/error/short/saturated/truncated/conflicting evidence remains unavailable. EINVAL is not gone. A read failure is skipped only after fresh authoritative absence/zombie evidence.",
+    "bounds": "4096 PID slots; 65536-byte argv buffer with saturation rejected; argc/NUL validation; environment ignored; scan deadline checks.",
+    "binding": {
+      "rawHarnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "rawFourFileHashesUnchanged": true,
+      "patch": {
+        "additionalFiles": [
+          {
+            "baseSHA256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d",
+            "patchedSHA256": "578d2650952af2b316278680f2666f61537a19ce6f83927572dc5a13c50eacc5",
+            "target": "tools/app-shim/shim_lifecycle.py"
+          }
+        ],
+        "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+        "inventoryHelper": {
+          "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b",
+          "source": "tools/qa/native-nonpgo/native_processes.py",
+          "target": "tools/app-shim/native_processes.py"
+        },
+        "patchedSHA256": "e6cd34f8008a9a3f45496c4474de77552756aee7afc109b9ea745a07a6365c11",
+        "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+        "scope": "Preserve exact LaunchServices startup identity and replace native census ps producers with ordinary read-only process APIs; no resource-monitor exclusions or permission changes.",
+        "sha256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e",
+        "target": "tools/app-shim/test-runtime.py"
+      },
+      "preparation": "Raw and patch hashes before apply; both patched file hashes afterward; absent helper target, source hash, and copied helper hash verified. Preflight worker verifies prepared bytes."
+    },
+    "scope": "UID discovery filter is restricted to native ownership discovery and does not filter resource samples."
+  },
+  "resourceInvariants": {
+    "unchangedSources": {
+      "darwin_activity.py": true,
+      "owned_native.py": true
+    },
+    "groupActivityGroupRSSParserAndGroupProbeASTUnchanged": true,
+    "limitsUnchanged": true,
+    "sdkConfigurationUnchanged": true,
+    "resourceTargetExclusionsAdded": false,
+    "resourceQueriesChanged": false,
+    "retryCountOrSpacingChanged": false,
+    "unknown": "Incomplete RSS/CPU remain null with lower bounds retained; persistent unknown for a live stage still stops as monitor-unavailable. Exact stage exit retains existing break/wait/cleanup handling.",
+    "outcome": "Monitor failure is explicitly inconclusive and establishes no product failure; native authentication requires actual passed native summary. Overall failure and final proof gates are unchanged.",
+    "writeErrorConsistency": "validationOutcome is recomputed after summary-write failure changes status to failed.",
+    "heldValidator": "The expected negative case uses preserved firstFailure=monitor-unavailable and separately requires verified group cleanup and exact child reap; other terminal errors remain failure."
+  },
+  "route": {
+    "branch": "codex/mac-native-lifecycle-recovery9-20261017",
+    "jobCount": 1,
+    "jobId": "native-monitor",
+    "runner": "macos-15-intel",
+    "permissions": {
+      "contents": "read"
+    },
+    "platformTimeoutMinutes": 360,
+    "initialExecutionGuards": [
+      "Exact repository and branch ref",
+      "push event",
+      "run attempt 1",
+      "created=true",
+      "before=0000000000000000000000000000000000000000"
+    ],
+    "concurrencyCancelInProgress": false,
+    "python": "Runner tool-cache Python 3.12.10 x64",
+    "checkoutActionCommit": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "persistCredentials": false,
+    "fixtureSparsePaths": [
+      "tools/qa/native-nonpgo",
+      "tools/app-shim"
+    ],
+    "order": [
+      "All 97 tests, including the three actual-Mac gates, verbose",
+      "Controlled held ps and normal-drain control",
+      "Prepared pinned-harness native census",
+      "Always-run result check"
+    ],
+    "runtimeBaseDifference": "Only the diagnostic workflow is added relative to the fixed Runtime base.",
+    "otherWorkflows": {
+      "countInspected": 25,
+      "potentialMatchingPushCreateOrWorkflowRunTriggers": []
+    },
+    "branchWorkflowRunsAtReadOnlyProviderCheck": 0,
+    "providerQuery": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs?branch=codex%2Fmac-native-lifecycle-recovery9-20261017&per_page=100",
+    "newArtifactUpload": false,
+    "sdkDownloadOrMaterialization": false,
+    "fullBuild": false,
+    "browserStartup": false,
+    "nativeAuthentication": false,
+    "productSigningPublishingMergeOrPermissionChanges": false,
+    "activationCondition": "Immutable source and caller byte readback must match the reviewed commits before initial branch activation."
+  },
+  "validation": {
+    "linux": {
+      "total": 97,
+      "passed": 94,
+      "skipped": 3,
+      "elapsedSeconds": 3.655,
+      "provenance": "Execution recorded in the committed implementation manifest; full suite not rerun by reviewer."
+    },
+    "reviewerChecks": [
+      "All 12 manifest byte lengths and SHA256 values",
+      "Clean commit identities and full diff",
+      "QA Python AST parsing",
+      "Workflow YAML parsing and all other workflow triggers",
+      "Resource method AST and source/configuration equality to base",
+      "Provider branch workflow-run lookup"
+    ],
+    "macExecution": "NOT_EXECUTED for this fixture at review time; development environment is Linux"
+  },
+  "remainingGates": [
+    "All 97 tests must pass on the selected Mac, including actual zombie-group, ordinary identity/argv/absence, and unreaped-child resource gates.",
+    "Held three-EPERM negative case must retain null counters and preserve fail-closed while verifying cleanup.",
+    "Prepared census must complete all/single/PID paths 12 times each, at least two complete resource samples, and zero system-ps observations in sampled target inventories."
+  ],
+  "limits": [
+    "Zero sampled ps observations do not prove absence at every instant; source inspection separately establishes removal of the two census producers.",
+    "libproc ABI remains version-sensitive and subject to MAC policy; same UID does not guarantee access and denial must stop without escalation.",
+    "Snapshot consistency checks do not make exec atomic. Scan deadlines cannot interrupt an in-progress kernel call.",
+    "No browser startup or Shim authentication is tested. Historical run 39045848018 denied generation and original native cause remain UNKNOWN.",
+    "A controlled zombie-only-group reproduction does not establish prior failed-probe process states."
+  ],
+  "sources": [
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sig.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sysctl.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/libsyscall/wrappers/libproc/libproc.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/libsyscall/wrappers/libproc/libproc.h"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "fullSuiteReruns": 0,
+    "macJobsStarted": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0,
+    "notInScope": [
+      "SDK acquisition",
+      "Product signing or publication",
+      "Repository merge",
+      "Security policy or privilege changes"
+    ]
+  }
+}
