@@ -1,0 +1,470 @@
+{
+  "activation": {
+    "allowInitialPushOnly": true,
+    "allowedBranch": "codex/mac-native-nonpgo-20261017",
+    "approvalRequiredBeforeRuntimeBranchPush": true,
+    "helperFixtureCommit": "UNSET_UNTIL_LOCAL_REVIEW_SEAL",
+    "runAttempt": 1
+  },
+  "baseline": {
+    "attempt": 1,
+    "binaryCompiledDebug": "UNVERIFIED",
+    "buildAndPackageSeconds": 9934,
+    "compileJob": 117185970899,
+    "configureDebug": true,
+    "configureTests": true,
+    "host": "x86_64-pc-linux-gnu",
+    "originalDisconnectCause": "UNKNOWN",
+    "run": 38963901545,
+    "target": "x86_64-apple-darwin"
+  },
+  "criteria": {
+    "browserCompiledDebug": true,
+    "cleanup": "required",
+    "contentSandboxLevel": 3,
+    "contextMenuIterations": 20,
+    "debug": true,
+    "downloadDeprecations": "record separately; do not invalidate verified bytes/configuration",
+    "firstCauseControlledCancel": "required",
+    "freshObjdir": true,
+    "fullHostTU": true,
+    "fullXUL": true,
+    "hiddenToolchainDownload": "fail",
+    "integrityWarnings": "fail",
+    "macOSMin": "10.15",
+    "nativeInput": "required",
+    "pgo": false,
+    "productQualification": false,
+    "retry": "fail",
+    "sameJob": true,
+    "skip": "fail",
+    "target": "x86_64-apple-darwin",
+    "tests": true
+  },
+  "harness": {
+    "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "files": [
+      {
+        "path": "tools/app-shim/test-runtime.py",
+        "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+      },
+      {
+        "path": "tools/app-shim/test-context-menu.py",
+        "sha256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911"
+      },
+      {
+        "path": "tools/app-shim/shim_diagnostics.py",
+        "sha256": "4607da57c3ae874952f26b8926ec2bbe16e5ccdb86374b2a8a261c5f7be95a18"
+      },
+      {
+        "path": "tools/app-shim/shim_lifecycle.py",
+        "sha256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d"
+      }
+    ],
+    "repository": "Floorp-Projects/Floorp"
+  },
+  "limits": {
+    "buildDeadlineMinutes": 185,
+    "cleanupDeadlineMinutes": 205,
+    "configureDeadlineMinutes": 45,
+    "jobMinutes": 210,
+    "maxNativePrivateBytes": 134217728,
+    "maxOwnedRSSMiB": 10240,
+    "maxStageLogBytes": 268435456,
+    "minFreeBeforeBuildGiB": 40,
+    "minFreeDuringBuildGiB": 8,
+    "nativeDeadlineMinutes": 200,
+    "prepareDeadlineMinutes": 35,
+    "processCleanupGraceSeconds": 90,
+    "signDeadlineMinutes": 190,
+    "sourceDeadlineMinutes": 40
+  },
+  "preparedAt": "2026-10-17",
+  "runner": {
+    "capacityValidated": false,
+    "coldBuildDurationValidated": false,
+    "host": "x86_64-apple-darwin",
+    "imageVersion": "20260824.0482.1",
+    "label": "macos-15-intel",
+    "osVersion": "15.7.9",
+    "python": "3.12.10"
+  },
+  "runtime": {
+    "firstCausePatch": {
+      "baseHostSHA256": "e6897fdd9a235fbdff6ce181ac9d7f61afee91ed9349d8238eda6a423c3f9059",
+      "commit": "77de64d89ae6f2f44e5fca8ce71eb9d550981663",
+      "hostFile": "widget/cocoa/appshim/MacWebAppService.mm",
+      "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "provider": "Floorp-Projects/Floorp",
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+    },
+    "patches": [
+      {
+        "blob": "ed04f195d3d083920763eb5057893cd42371c935",
+        "path": ".github/patches/upstream/LocalizationCpp.patch",
+        "phase": "upstream",
+        "sha256": "61e0476c14f9e065e8bba1cbd281db406f1981513e341069c165728cfa2d508b"
+      },
+      {
+        "blob": "2204eb7405e934758b6c3a11a907f3e13dfc0722",
+        "path": ".github/patches/upstream/artifacts.py.patch",
+        "phase": "upstream",
+        "sha256": "34d9b3d625fc9fef589aba604bdc56b55203828abe3321f38d837f5dafc8bb1a"
+      },
+      {
+        "blob": "1a140b2fdc48a141106bb9f5f38a362c155269f6",
+        "path": ".github/patches/upstream/bootstrap.py.patch",
+        "phase": "upstream",
+        "sha256": "678754694a8ca39628604b5c98edb97eebea869a10110f265e56bb284f6df7d3"
+      },
+      {
+        "blob": "b0f0b9514f8e95736195d00f614f13054e29832c",
+        "path": ".github/patches/upstream/brandingFileIcon.patch",
+        "phase": "upstream",
+        "sha256": "55d5bc554135564b6324b8206de28c21e87712c6d4a10093936cc0c228409fa0"
+      },
+      {
+        "blob": "df2c95b3b918604de496e95135606ac3c1ce7fda",
+        "path": ".github/patches/upstream/browser-installer-windows-nsis-shared.nsh.patch",
+        "phase": "upstream",
+        "sha256": "7ce5c08329053846d3714266c4228df1a4f675d6582fb1d9cd1a875f832e19b6"
+      },
+      {
+        "blob": "643e32a39b44426b2e2f51bc345cd692e32029e4",
+        "path": ".github/patches/upstream/common.nsh.patch",
+        "phase": "upstream",
+        "sha256": "69bcf9c0a3a2109b2821c7a49b4015995eb669f5684fb27055d1744d9a0ddeb6"
+      },
+      {
+        "blob": "930753785b765f2f7017dc20aea689903475ed0d",
+        "path": ".github/patches/upstream/commonupdatedir.cpp.patch",
+        "phase": "upstream",
+        "sha256": "f01e4f5768caa5ae1903988597397d632c684ab45c5567fc73f158971ad840ce"
+      },
+      {
+        "blob": "3ae027f01c81864574a05c5b6a0c098a48d5893d",
+        "path": ".github/patches/upstream/config-external-nspr-pr-moz.build.patch",
+        "phase": "upstream",
+        "sha256": "e0fc458b8d8025a87f80692f53db3089b5825006b59a049bfd4023f9683daf2f"
+      },
+      {
+        "blob": "e2f579e43bea7c5cd15bc8978f61b71d40af75fa",
+        "path": ".github/patches/upstream/localizeFfiLib.patch",
+        "phase": "upstream",
+        "sha256": "fb4e8297fedc9be79c63028163e934fb9bf67dcc1fcae6e1f5435a255461b701"
+      },
+      {
+        "blob": "97b4f712119bf16402aec0c97951dda2cbe402bb",
+        "path": ".github/patches/upstream/macos-app-shim-pwa-input-and-compositor.patch",
+        "phase": "upstream",
+        "sha256": "f8ac8397bc2ab5908f2f1efcdcd873985d062d239b51d13b045510535cbb002e"
+      },
+      {
+        "blob": "1e92fcc377245a31d35122ebe1da419db8e9dee7",
+        "path": ".github/patches/upstream/moz.build.patch",
+        "phase": "upstream",
+        "sha256": "d7cab6efd6445cd9b9c2e32ab1751e92e80015ac7e279d9b9b9a2a9397ee7e6e"
+      },
+      {
+        "blob": "120da87dc518060665e222f9f740218ebb0144e4",
+        "path": ".github/patches/upstream/moz.configure.patch",
+        "phase": "upstream",
+        "sha256": "b8366597de51a2778a181ac65a5a2bb62b7f3b27d6e7ad22cf33fcf338592f48"
+      },
+      {
+        "blob": "342122c5b8fad5e1009b773c78c9bc30de318acc",
+        "path": ".github/patches/upstream/nsIUpdateService.idl.patch",
+        "phase": "upstream",
+        "sha256": "8a9626efe2de66589f65a0fee722d6a8c87a40fdf6926ee8e5af2322eebed313"
+      },
+      {
+        "blob": "ec03f90153de71ab4889f313f5581750b0b78e01",
+        "path": ".github/patches/upstream/nxXREDirProvider.cpp.patch",
+        "phase": "upstream",
+        "sha256": "04c14d704a6feb38ab4f335edf4faf90b557f6dbd05e76e20427e44311642043"
+      },
+      {
+        "blob": "ed1f69457441d596fc49d7483d7db91523124d55",
+        "path": ".github/patches/upstream/pgo-test-helper-install.patch",
+        "phase": "upstream",
+        "sha256": "ce14cfa519fda94073aa24d4f5d5f6fd655d8d0456b7c54c1f0a171ec05cab64"
+      },
+      {
+        "blob": "4c2c07760f6427044ca4c26ea9f988ef085492b2",
+        "path": ".github/patches/upstream/python-mozbuild-mozbuild-repackaging-desktop_file.py.patch",
+        "phase": "upstream",
+        "sha256": "ecbdac0be968694ec0bcd6f4bb71a71f9bf930ffea092c22a445e53d98309671"
+      },
+      {
+        "blob": "a9ed2b8ffa71ebaf560f0cad337c23b059ea5c67",
+        "path": ".github/patches/upstream/removed-files.in.patch",
+        "phase": "upstream",
+        "sha256": "153ce32214ae6e3d75a0c1a9d8c8cad49c7ba5a27b6c58acef11980aec53e614"
+      },
+      {
+        "blob": "d815f8f317e342e2fccb09642e82274fc653dd91",
+        "path": ".github/patches/upstream/toolkit-crashreporter-google-breakpad-.gitignore.patch",
+        "phase": "upstream",
+        "sha256": "f2467ae3460f6a3deda270ed4bf0effa84ca30198083047400f891e88728251a"
+      },
+      {
+        "blob": "148f12c803681608657f5da2e6c005671de722f9",
+        "path": ".github/patches/upstream/toolkit-modules-UpdateUtils.sys.mjs.patch",
+        "phase": "upstream",
+        "sha256": "e1a7409e2e616e15bd0b9d48a910db47be6426e7eeda0f1a3662025428e3ba92"
+      },
+      {
+        "blob": "6e05ab796299db04c47384c8fa23dbdf1d3d7029",
+        "path": ".github/patches/upstream/toolkit-moz.configure.patch",
+        "phase": "upstream",
+        "sha256": "89a7ffbf99a62568a02d8209765b41d3860e89de32528b181e3aeb2ab3dd1909"
+      },
+      {
+        "blob": "f466db35dac600e2ecb0cfc9586d41b46f3d73e1",
+        "path": ".github/patches/upstream/toolkit-mozapps-update-UpdateService.sys.mjs.patch",
+        "phase": "upstream",
+        "sha256": "88eb64084fb6cb054e3110665de821260b3395124d7d666e77eff377e75159ab"
+      },
+      {
+        "blob": "f782bdc4070b327ec619af82a1445d18e0c86eab",
+        "path": ".github/patches/upstream/toolkit-mozapps-update-nsIUpdateService.idl.patch",
+        "phase": "upstream",
+        "sha256": "4a742c0dcc7f42173d85c20f046f000c9a9f1fc9d23ce51ccc3d08355a05a3fd"
+      },
+      {
+        "blob": "37c8c75b6a9bfcfab728292aa7ce97ab49a73976",
+        "path": ".github/patches/upstream/toolkit-mozapps-update-tests-data-sharedUpdateXML.js.patch",
+        "phase": "upstream",
+        "sha256": "c9ab95598cadc59ab330beb306a620a69ae3fcea1507b6c95330b0a42c0b2256"
+      },
+      {
+        "blob": "b5b739d280b7603a0df3172c538302481ecf3e79",
+        "path": ".github/patches/upstream/toolkit-mozapps-update-tests-unit_aus_update-updateManagerXML.js.patch",
+        "phase": "upstream",
+        "sha256": "5cb523194d452460d244bf7d1e118f4f65090203f74d794239dfc972ce209e24"
+      },
+      {
+        "blob": "67d61264fda5301829633888724760fab63a0e1d",
+        "path": ".github/patches/upstream/toolkit-tests-gtest-TestXREAppDir.cpp.patch",
+        "phase": "upstream",
+        "sha256": "7f820ccd1eeff90b397b9408785ac645c9b10e6097e2c40c1f444c222230eea9"
+      },
+      {
+        "blob": "c04109ea10040c5bbd674640dab4353d7cc66a80",
+        "path": ".github/patches/upstream/toolkit-xre-nsAppRunner.cpp.patch",
+        "phase": "upstream",
+        "sha256": "7030dda5e6793f02a6a11f23fc201ee02495437a82eef9e875fb3be204c31725"
+      },
+      {
+        "blob": "2c4e85c6372dae70184d509b77ff92b30ed3c1c6",
+        "path": ".github/patches/upstream/tools-signing-macos-mach_commands.py.patch",
+        "phase": "upstream",
+        "sha256": "0710aa23682cf1cfb4f555527eef31ae759c9d82ff315003330d020747991a92"
+      },
+      {
+        "blob": "588bd6481b3158f18ae73089efda3ea07747e4ad",
+        "path": ".github/patches/debug/dom-security-nsCSPService.patch",
+        "phase": "debug",
+        "sha256": "e481bd686e82279dfc125a67276dc9fa1095f73666e225193e540d09cd2a5992"
+      },
+      {
+        "blob": "57ce067cad633fca3d98cb6dcf500abc9b01e2c7",
+        "path": ".github/patches/debug/dom-security-nsContentSecurityManager.patch",
+        "phase": "debug",
+        "sha256": "53d6ce8c09a61dc45eb5cebbbd50eb49043a6b7e854a0d1ab8fe7869bd0fbadf"
+      },
+      {
+        "blob": "f388c463cc9fb059ae5bde632a8dc0269334a61c",
+        "path": ".github/patches/debug/dom-security-nsContentSecurityUtils.patch",
+        "phase": "debug",
+        "sha256": "9dc5a92af923a5df56c5aea58a091298e27e0a7eca4037d05b380d2e55476a3b"
+      }
+    ],
+    "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+    "upstream": {
+      "floorp_patch": {
+        "commit": "18abb0b570bda854f3cf00d05920ed0d3ba79ab3",
+        "patched_files": {
+          "gfx/webrender_bindings/RenderCompositorNative.cpp": "6fd9a00098801c4df23fa04c9589bbddb5cc2f1811e7716d0127aa2819b7a64c",
+          "widget/cocoa/NativeMenuSupport.mm": "a1f724e706bd9366e6d368d5239bca56babeebcdc521f64d879a25895e60d94d",
+          "widget/cocoa/appshim/MacWebAppInput.h": "f11f765719eebb0750ef984ad51e94c0c9ae197279a99f75c984548caf40e954",
+          "widget/cocoa/appshim/MacWebAppInput.mm": "7fd3d83b6e98f6639caf532950088786db557413383cbcbbc142539a04026593",
+          "widget/cocoa/appshim/MacWebAppWidget.h": "9b1df8468cd1cc6bcac75bb2e4439e12e567d775b8a0fb268533d486918927a3",
+          "widget/cocoa/appshim/MacWebAppWidget.mm": "78ab9402f65ce8ea2e81d1efd8f9854bf3435a63a5f0cb18ebed780aaa531386",
+          "widget/cocoa/appshim/shim/ShimView.mm": "88aef211fa49e1f9c1bd46269fa50a5c38d5a7950e7a1dbd3578f8c30548d7cd",
+          "widget/cocoa/nsCocoaUtils.h": "21bd73593b238d8973acbf9d0f4eb3454a9e6a10668836d6ff574d1620c2ab81",
+          "widget/cocoa/nsCocoaUtils.mm": "4f9d72eadf699be1203d642d945d0ff625f534e39d39cb0cb1325f7a012debb7",
+          "widget/nsIWidget.cpp": "33d1a517f78947683f404453e9aba3d9867dc6e4e25aee6de8326b5fda2d1ead",
+          "widget/tests/gtest/TestMacWebAppPanGesture.mm": "03de4ce729d8a2ee6b752890eb231904df1246e004dd2d0ede9ddfb55b24a7cb",
+          "widget/tests/gtest/moz.build": "69e98aea3fef235bf840a6fae8c1ad392b0df7fa127aaf125fda8d26f3326da8"
+        },
+        "path": ".github/patches/floorp-runtime/common/macos-app-shim-pwa-input-and-compositor.patch",
+        "repository": "Floorp-Projects/Floorp",
+        "runtime_path": ".github/patches/upstream/macos-app-shim-pwa-input-and-compositor.patch",
+        "sha256": "f8ac8397bc2ab5908f2f1efcdcd873985d062d239b51d13b045510535cbb002e"
+      },
+      "schema_version": 1,
+      "upstream": {
+        "commit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181",
+        "previous_commit": "0c469c2352451630bc69fc328c9f0c589c6c534d",
+        "previous_tag": "FIREFOX_157_0_1_RELEASE",
+        "repository": "mozilla-firefox/firefox",
+        "tag": null,
+        "tracking_ref": "refs/heads/release",
+        "tree": "04e6d359951669601fc15746904f31bd906f87f4",
+        "version": "158.0.1"
+      }
+    }
+  },
+  "schema": 1,
+  "sdk": {
+    "artifact": 12074136738,
+    "attempt": 1,
+    "draftReaderFormat": "sorted compact JSON [normalized POSIX path,file|dir|symlink|hardlink,header size,content or linkname SHA256]",
+    "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "entry": "macos_sdk.tar.gz",
+    "expiresObserved": "2026-10-17T20:41:19Z",
+    "name": "macos-sdk",
+    "run": 38963901545,
+    "tarBytes": 105567985,
+    "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929",
+    "treeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+    "version": "26.5",
+    "zipBytes": 105082683,
+    "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+  },
+  "status": "PREPARATION_ONLY_NO_CI_APPROVAL",
+  "storage": {
+    "cacheWrites": 0,
+    "newActionsArtifacts": 0,
+    "rawLogs": "ephemeral runner private task directory; bounded allowlisted summary only in existing job log",
+    "signing": "ad hoc only on disposable app copy; no signing service or new credentials"
+  },
+  "toolchains": {
+    "cotSignaturesVerified": false,
+    "expected": {
+      "clang": "22.1.8",
+      "nasm": "3.02",
+      "node": "v22.16.0",
+      "rustc": "1.95.0"
+    },
+    "payloadHashesVerified": false,
+    "rust": {
+      "date": "2026-04-16",
+      "manifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+      "manifestURL": "https://static.rust-lang.org/dist/channel-rust-1.95.0.toml",
+      "packages": {
+        "cargo": {
+          "sha256": "e2e1131ade2dddc0d779e0ab3a6a990085c7a654951235742823c3a1ce0f190f",
+          "url": "https://static.rust-lang.org/dist/2026-04-16/cargo-1.95.0-x86_64-apple-darwin.tar.xz",
+          "version": "0.96.0 (f2d3ce0bd 2026-03-21)"
+        },
+        "rust-std": {
+          "sha256": "2be13c14122b8d4d09b7f7c434fca9ae7215ec72049944189c88c4d9128ce504",
+          "url": "https://static.rust-lang.org/dist/2026-04-16/rust-std-1.95.0-x86_64-apple-darwin.tar.xz",
+          "version": "1.95.0 (59807616e 2026-04-14)"
+        },
+        "rustc": {
+          "sha256": "33db457715446a69ed6f69f78f5fbb9ca8e17a16585d1d7a0060479bfe4c7afc",
+          "url": "https://static.rust-lang.org/dist/2026-04-16/rustc-1.95.0-x86_64-apple-darwin.tar.xz",
+          "version": "1.95.0 (59807616e 2026-04-14)"
+        }
+      },
+      "target": "x86_64-apple-darwin"
+    },
+    "taskclusterPackages": [
+      {
+        "artifact": "public/build/clang.tar.zst",
+        "bytes": 446162417,
+        "name": "macosx64-clang-22",
+        "relationToOriginal": "Darwin host counterpart; expected clang 22.1.8 must be checked before configure",
+        "run": 0,
+        "sha256": "208106a2f7b577d7d082a75d10fe7e15e2beed7dd74d64e66639a9fbe7fbb7e6",
+        "sourceRevision": "bcfc01cf2bbfb3c1c8377d00cf06f3ccb7bdaa50",
+        "task": "Ld8yp25XTD6R0KdDNdYnEw"
+      },
+      {
+        "artifact": "public/build/cbindgen.tar.zst",
+        "bytes": 1868481,
+        "expires": "2027-10-13T12:04:48.265Z",
+        "name": "macosx64-cbindgen",
+        "relationToOriginal": "new Darwin host package; original Linux host equivalence is not claimed",
+        "run": 0,
+        "sha256": "533d61ca7bb2ec890a1b638231130ef37c0c9c16712c852ab00c24d54fa25f44",
+        "source": "https://hg.mozilla.org/integration/autoland/file/bcfc01cf2bbfb3c1c8377d00cf06f3ccb7bdaa50/taskcluster/kinds/toolchain",
+        "task": "HduedNRXSlyEwOgg8Wm5cw"
+      },
+      {
+        "artifact": "public/build/dump_syms.tar.zst",
+        "bytes": 4088102,
+        "expires": "2027-10-13T12:04:48.321Z",
+        "name": "macosx64-dump_syms",
+        "relationToOriginal": "new Darwin host package; original Linux host equivalence is not claimed",
+        "run": 0,
+        "sha256": "9bbc811434207e78cdd7643e60df94859f2ba3c05b61a880b22429fa36aeeee1",
+        "source": "https://hg.mozilla.org/integration/autoland/file/bcfc01cf2bbfb3c1c8377d00cf06f3ccb7bdaa50/taskcluster/kinds/toolchain",
+        "task": "PubzlxOeREyQ9Ut0ktZD9Q"
+      },
+      {
+        "artifact": "public/build/fix-stacks.tar.zst",
+        "bytes": 1410044,
+        "expires": "2027-10-13T12:04:48.015Z",
+        "name": "macosx64-fix-stacks",
+        "relationToOriginal": "new Darwin host package; original Linux host equivalence is not claimed",
+        "run": 0,
+        "sha256": "f6039e2b679c7785323dba067f2c08b1d26367480dcd942a09c010ecb5427cc8",
+        "source": "https://hg.mozilla.org/integration/autoland/file/bcfc01cf2bbfb3c1c8377d00cf06f3ccb7bdaa50/taskcluster/kinds/toolchain",
+        "task": "QCb_JAgtS-m4kiZC7DLmsg"
+      },
+      {
+        "artifact": "public/build/nasm.tar.zst",
+        "bytes": 410844,
+        "expires": "2027-10-13T12:04:48.209Z",
+        "name": "macosx64-nasm",
+        "relationToOriginal": "new Darwin host package; original Linux host equivalence is not claimed",
+        "run": 0,
+        "sha256": "0632372125ad611cb37f5a46d5fc9f130262ef21c1838cb1025228a47fa9e0aa",
+        "source": "https://hg.mozilla.org/integration/autoland/file/bcfc01cf2bbfb3c1c8377d00cf06f3ccb7bdaa50/taskcluster/kinds/toolchain",
+        "task": "LqZleUrdSxK0ROjmOYdOkQ"
+      },
+      {
+        "artifact": "public/build/node.tar.zst",
+        "bytes": 38832558,
+        "expires": "2027-10-15T01:44:07.424Z",
+        "name": "macosx64-node-22",
+        "relationToOriginal": "new Darwin host package; original Linux host equivalence is not claimed",
+        "run": 0,
+        "sha256": "f1e9b9adaaf288502bff046bdbdd749d0181e57c36b8a15fc452476bfce8b349",
+        "source": "https://hg.mozilla.org/integration/autoland/file/3c8a1ea78941705ca9e5475647814b3c3f695513/taskcluster/kinds/toolchain",
+        "task": "bdl-YfjqRoOt4RfFAZkEhg"
+      },
+      {
+        "artifact": "public/build/onnxruntime-x86_64-apple-darwin.tar.zst",
+        "bytes": 3421269,
+        "canonicalURLSHA256": "17918a34882281795a195c41979e4a02f21b939a45c99c9f2f8ba197a34018c7",
+        "name": "onnxruntime-x86_64-apple-darwin",
+        "originalCachePrefix": "17918a3488228179",
+        "relationToOriginal": "unique 64bit cache URL prefix match; original payload digest not independently remeasured",
+        "run": 0,
+        "sha256": "f6f086e5066f84fd8016c911fcf69d536e4d244cb043ae601166d75815dd81e4",
+        "sourceRevision": "7936fb8bbeea32ffa6b06db4a15d8a2fe5991b76",
+        "task": "HmSZzgp5TJ-szyUmVMMd7g"
+      },
+      {
+        "artifact": "public/build/sysroot-wasm32-wasi.tar.zst",
+        "bytes": 11909224,
+        "canonicalURLSHA256": "7f8d68255add1b533159340fabcf8408412dda954248606d7f5f20efab02acf9",
+        "name": "sysroot-wasm32-wasi-clang-22",
+        "originalCachePrefix": "7f8d68255add1b53",
+        "relationToOriginal": "unique 64bit cache URL prefix match; original payload digest not independently remeasured",
+        "run": 0,
+        "sha256": "6d3fba5824b0c83c2115464dd18e5feb4d2d0c3092d4ad52add3be7e42addd7d",
+        "sourceRevision": "7936fb8bbeea32ffa6b06db4a15d8a2fe5991b76",
+        "task": "SirUGMldT3uoFtKn74I9WQ"
+      }
+    ]
+  }
+}

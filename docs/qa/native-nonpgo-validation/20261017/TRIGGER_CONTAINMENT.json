@@ -1,0 +1,16 @@
+{
+  "floorpBase": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "priorInventorySHA256": "708597a3bc894afacbb0485cb1639da55562fe806d40ce38aa7528a070caf14a",
+  "floorpWorkflowCount": 21,
+  "runtimeWorkflowCount": 24,
+  "sourceBranch": "codex/mac-native-nonpgo-plan-20261017",
+  "runtimeBranch": "codex/mac-native-nonpgo-20261017",
+  "existingSourcePushMatches": [],
+  "existingRuntimePushMatches": [],
+  "activeNewWorkflowFiles": 0,
+  "expectedSourceBranchRuns": 0,
+  "expectedRuntimeInitialPushRunsAfterApproval": 1,
+  "runtimeBranchCreated": false,
+  "newCIRuns": 0
+}

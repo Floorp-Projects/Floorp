@@ -1,0 +1,49 @@
+{
+  "status": "STATIC_PREPARATION_GO",
+  "ci": "NOT_RUN_APPROVAL_PENDING",
+  "pythonAST": {
+    "files": 8,
+    "status": "PASS"
+  },
+  "portableGuards": {
+    "tests": 17,
+    "status": "PASS",
+    "independentlyReexecuted": true,
+    "developmentHistory": [
+      {
+        "tests": 15,
+        "status": "PASS"
+      },
+      {
+        "tests": 17,
+        "status": "FAIL",
+        "cause": "new test fixture retained a deleted PID in static fake inventory; one fixture error"
+      },
+      {
+        "tests": 17,
+        "status": "PASS",
+        "change": "fake PID inventory derives current rows"
+      }
+    ]
+  },
+  "newJavaScriptSyntax": {
+    "scripts": 7,
+    "status": "PASS",
+    "method": "node --check only"
+  },
+  "workflowYAML": "PASS",
+  "firstCausePatch": {
+    "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "applyCheck": "PASS",
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0"
+  },
+  "sdkLocalSafeExtraction": "PASS",
+  "darwinFullTU": "NOT_RUN",
+  "darwinXUL": "NOT_RUN",
+  "nativeAuthentication": "NOT_RUN",
+  "coldBuildCapacity": "UNVERIFIED",
+  "coldBuildDuration": "UNVERIFIED",
+  "newRuntimeBranchCreated": false,
+  "newCIRuns": 0,
+  "newActionsArtifacts": 0
+}

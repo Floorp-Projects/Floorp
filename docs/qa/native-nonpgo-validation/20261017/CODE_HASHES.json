@@ -1,0 +1,57 @@
+[
+  {
+    "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+    "bytes": 4264,
+    "sha256": "da90adb513d25d847fc1571ea48a8bb92e22a1dbfc863c89915c5cded942a2c3"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/materialize.py",
+    "bytes": 2347,
+    "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/native_cause.py",
+    "bytes": 8643,
+    "sha256": "e207e18d619b0b2611ea2ef70b54d8780733fee2cac683037d4b0bae657211ca"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/native_suite.py",
+    "bytes": 7488,
+    "sha256": "bcad9d92f1ac9e28daff9f1665964097cb9e122a92ac063dc7ef75daa32b4754"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/owned_native.py",
+    "bytes": 12279,
+    "sha256": "ff1ee4a405425ef7e41bd95998fca1a77ea38b1e0123843111d2bfa9c81d57f4"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/pipeline.py",
+    "bytes": 25742,
+    "sha256": "abd94edf8f31a3c9b30173efb1e496e61abc054912f88f3697406c630683c31d"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/support.py",
+    "bytes": 12586,
+    "sha256": "a5d904a72a1b955f466cdc8bc0810a9b7d8c8c7db56193499b29bf535872237b"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/test_guards.py",
+    "bytes": 13252,
+    "sha256": "254bba026c0912317badf745e855bc5f977418f4b34ffd21aae8cce61823e323"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/plan.json",
+    "bytes": 21083,
+    "sha256": "800709ef7342dd85be253e2c1880e8848374b7313e6643abc23d7c2e8510a17e"
+  },
+  {
+    "path": "tools/qa/native-nonpgo/workflow.yml.in",
+    "bytes": 4001,
+    "sha256": "e4c5f6cdf23b6a77536edfc06b0d83d718ddd7051e44f39ce85860a901126a1c"
+  },
+  {
+    "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+    "bytes": 4264,
+    "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+  }
+]

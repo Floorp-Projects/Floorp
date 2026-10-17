@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17 05:49:22 UTC",
+  "decision": {
+    "staticPreparation": "GO",
+    "dispatch": "NO_GO_PENDING_EXPLICIT_APPROVAL_AND_FINAL_IMMUTABLE_ROUTE_BINDING",
+    "remainingP0": 0,
+    "remainingP1": 0,
+    "remainingP2": 0,
+    "sourceEditsByReviewer": 0,
+    "newCI": 0,
+    "newArtifactPayloadAcquisition": 0,
+    "nativeExecution": 0,
+    "compile": 0,
+    "link": 0,
+    "signing": 0
+  },
+  "scope": "Focused independent final review of the frozen helper/cleanup/error deltas and portable guards. This receipt approves preparation only.",
+  "manifest": {
+    "path": "records/DRAFT_CODE_HASHES_FINAL.json",
+    "sha256": "dde56ae406043fb9d0760551dc795ee2582d610cd1fcc7fd5848f68a948592a1",
+    "files": 11,
+    "allFileBytesAndSHA256Matched": true
+  },
+  "previousReview": {
+    "path": "records/INDEPENDENT_FROZEN_REVIEW_EE05.json",
+    "sha256": "f59035a611a41b95fb8b8999c6e0aa0d2b1e3df2e671c3364df6c0f342c9bd2c",
+    "disposition": "Superseded for final source approval; retained as the reviewed earlier snapshot and open-finding history."
+  },
+  "verification": {
+    "portableGuards": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_guards -v",
+      "methods": 17,
+      "result": "PASS",
+      "reportedDurationSeconds": 0.216,
+      "processExitCode": 0,
+      "outputFile": "records/INDEPENDENT_FINAL_GUARDS.log"
+    },
+    "pythonAST": {
+      "files": 8,
+      "result": "PASS"
+    },
+    "runtimeSourceBindings": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "launcher": {
+        "path": "ipc/glue/GeckoChildProcessHost.cpp",
+        "gitBlob": "e2b4d823617c1d154ff21b6d97818ce298c3270a",
+        "lines": "538-608"
+      },
+      "names": {
+        "path": "toolkit/moz.configure",
+        "gitBlob": "d006ca665319efc64840754e477af09d79e78273",
+        "lines": "3307-3338,3933-4014"
+      }
+    },
+    "notPerformed": [
+      "Darwin/Cocoa or browser execution",
+      "configure/full build/link",
+      "ad-hoc or product signing",
+      "CI dispatch/rerun",
+      "artifact payload download",
+      "remote branch or configuration mutation",
+      "credential inspection"
+    ]
+  },
+  "resolvedFindings": [
+    {
+      "id": "NATIVE-OWNED-HELPERS",
+      "priority": "P1",
+      "status": "RESOLVED_STATICALLY",
+      "evidence": [
+        "pipeline.py:196-212 derives four exact helper bundle/name patterns from effective configuration, checking pinned source rules and rejecting unsafe names.",
+        "owned_native.py:114-158 recognizes app-contained candidates, rejects unknown helper executables, binds new helpers to a live registered parent generation and PPID, and retains registered instances after reparenting.",
+        "owned_native.py:178-241 includes registered helpers in live/RSS/cleanup and proof. The updated census guard covers a helper surviving host exit and reparenting."
+      ]
+    },
+    {
+      "id": "NATIVE-CLEANUP-EXCEPTIONS",
+      "priority": "P1",
+      "status": "RESOLVED_STATICALLY",
+      "evidence": [
+        "owned_native.py:178-192 records individual inspection errors while allowing other identities to be processed.",
+        "owned_native.py:197-241 independently catches census and per-PID errors, continues reclamation of known matching instances and keeps censusComplete/allOwnedGone false after errors.",
+        "test_guards.py:145-156 verifies a census error does not skip another known instance's cleanup.",
+        "support.py:249-251 fixes the first failure before finally cleanup can raise."
+      ]
+    },
+    {
+      "id": "SAME-GENERATION-IDENTITY-CHANGE",
+      "priority": "P1",
+      "status": "RESOLVED_STATICALLY",
+      "evidence": [
+        "owned_native.py:183-191 distinguishes a reused PID generation from a live same-generation identity mismatch. The mismatch is unresolved, is not signaled, and prevents successful cleanup proof.",
+        "test_guards.py:135-143 checks changed argv on the same precise birth remains unresolved; existing PID reuse guard still passes."
+      ]
+    },
+    {
+      "id": "PUBLIC-EXCERPT-POLICY",
+      "priority": "P2",
+      "status": "RESOLVED",
+      "evidence": [
+        "pipeline.py:368-375 replaces partial raw diagnostic text with fixed marker counts and bounded Rust E-number codes."
+      ]
+    },
+    {
+      "id": "CAUSE-ERROR-CODE",
+      "priority": "P2",
+      "status": "RESOLVED",
+      "evidence": [
+        "native_suite.py:91-96 preserves native_cause.py's fixed Failure code or exception class in firstFailureSnapshot."
+      ]
+    }
+  ],
+  "preservedProperties": [
+    "Authentication predicates, original harness files, native-input assertions and timeout values are unchanged.",
+    "Controlled cancellation requires an authenticated matching Shim PID, preserved launch-cancelled first cause, connectedBeforeDisconnect=true, bounded timestamp and an independently observed kernel exit. No specific terminal callback ordering is forced.",
+    "Actual debug, BuildID/version/architecture, sandbox level 3, no sandbox-level user override and an empty sandbox-disable environment must pass before subsequent native tests.",
+    "Only individually revalidated identities are signaled. Up to five seconds of passive cleanup settling is allowed; forced cleanup or unresolved identities cannot yield a passing run.",
+    "Build, link and authentication use one candidate job with fixed inputs, no large Actions artifact output, and no retries/full-build fallback.",
+    "SDK/toolchain materialization stays inside the monitored worker process group. First failure persistence and final stdout evidence fallback remain present."
+  ],
+  "remainingValidationBlockers": [
+    "Explicit authorization for the 210-minute execution has not been received. The workflow template still has an unresolved fixture SHA; no execution route is approved by this source-only receipt.",
+    "Final fixture commit/tree, rendered caller, provider source readback, trigger side effects and fresh artifact availability must be bound before any authorized dispatch.",
+    "No actual Darwin host TU, XUL link or browser authentication has been tested with this candidate.",
+    "The new host is Darwin, unlike the original Linux-to-Darwin build. This is a new native cohort; original binary compiledDebug remains UNVERIFIED and the original timeout cause remains UNKNOWN.",
+    "Darwin toolchain payload materialization and effective configuration are future run-time integrity gates. ONNX/WASI original association remains a unique observed 64-bit cache-URL prefix match plus immutable task metadata, not a newly measured original archive digest.",
+    "Disk capacity, cold-build duration and link/RSS behavior are unvalidated. 210 minutes is a hard stopping budget, not a guarantee that compilation and tests will finish.",
+    "Child environment allowlisting prevents direct token inheritance. The trusted, pinned job still shares an OS UID; it is not a strong OS credential isolation boundary.",
+    "Ad-hoc signing is confined to the authorized disposable test copy. Product signing, release/publication, merge, new credentials, OS protection changes and broader QA qualification remain outside this task."
+  ],
+  "qualification": {
+    "fullHostTUCompiled": false,
+    "xulLinked": false,
+    "nativeAuthValidated": false,
+    "debugQualification": false,
+    "productQualification": false,
+    "originalTimeoutCause": "UNKNOWN"
+  }
+}

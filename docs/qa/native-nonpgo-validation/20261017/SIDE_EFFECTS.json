@@ -1,0 +1,16 @@
+{
+  "status": "PLANNED_ONLY_NO_CI_APPROVAL",
+  "compute": {"runner": "standard public macos-15-intel", "jobs": 1, "hardCapMinutes": 210, "durationValidated": false},
+  "remoteReads": ["fixed GitHub source/harness/helper commits", "existing SDK artifact 12074136738 and its run metadata", "eight fixed Taskcluster task/run0 artifacts", "three fixed official Rust archives"],
+  "remoteWritesForExecution": ["one isolated Runtime branch initial push after explicit approval; exactly one new workflow file"],
+  "newActionsArtifacts": 0,
+  "cacheUploads": 0,
+  "evidence": "bounded allowlisted existing job log; raw compiler/browser/profile/nonce/cookie data stays ephemeral",
+  "localWritesOnRunner": ["disposable source checkout plus original patches", "task SDK/tools/objdir/log/profile directories", "standalone staged app and ad hoc signed disposable copy", "possible source-controlled Mach/Python local caches on the ephemeral runner"],
+  "processChanges": ["owned build/materialization groups", "exact owned test browser and Shim instances", "normal LaunchServices registration for disposable test apps"],
+  "signing": "ad hoc on disposable copy and private Shim fixture only; no distribution signing service",
+  "credentials": "existing ephemeral Actions token restricted to contents/actions read; SDK token scoped to transport step; no new credentials",
+  "environmentIsolation": "child allowlist removes CI token and sandbox/DYLD overrides; not a same-UID OS secret boundary",
+  "unchanged": ["default branches", "production settings", "PGO profiling/use workflows", "existing release/final-QA/manual-approval/publish gates", "native authentication predicate", "OS protection and TCC settings"],
+  "forbidden": ["unapproved Runtime branch push or dispatch", "automatic retry", "old binary fallback", "paid or self-hosted runner substitution", "credential or principal changes", "merge", "release", "distribution signing", "notarization", "publication", "global tool install or disk cleanup"]
+}

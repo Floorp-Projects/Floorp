@@ -1,0 +1,66 @@
+{
+  "schema": "floorp.original-target-task-review.v1",
+  "scope": "public source and task metadata only",
+  "originalRun": 38963901545,
+  "originalAttempt": 1,
+  "originalCompileJob": 117185970899,
+  "sourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "association": "unique source-derived 64-bit cache URL prefix match among bounded public namespace candidates",
+  "sourceAlgorithm": {
+    "cachePath": "python/mozbuild/mozbuild/artifact_cache.py",
+    "cacheGitBlob": "f6ba037641e1cd5b9da2b92b0c9985186b603bd7",
+    "cacheSHA256": "1d2139bf997f1926b621fc99b3a3a482ea19ebc3c63f63d0f153a34d56fee5c6",
+    "clientPath": "third_party/python/taskcluster/taskcluster/client.py",
+    "clientGitBlob": "d1f33b686b28fef6d4778d9943f0d61312bba43c",
+    "clientSHA256": "2c3e1c485575c33da714176637797c286bbc1da5a8fa110e330617a61d484ed6"
+  },
+  "packages": [
+    {
+      "name": "onnxruntime-x86_64-apple-darwin",
+      "taskId": "HmSZzgp5TJ-szyUmVMMd7g",
+      "runId": 0,
+      "state": "completed",
+      "artifact": "public/build/onnxruntime-x86_64-apple-darwin.tar.zst",
+      "bytes": 3421269,
+      "cotDeclaredSHA256": "f6f086e5066f84fd8016c911fcf69d536e4d244cb043ae601166d75815dd81e4",
+      "originalCachePrefix": "17918a3488228179",
+      "canonicalURL": "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/HmSZzgp5TJ-szyUmVMMd7g/artifacts/public%2Fbuild%2Fonnxruntime-x86_64-apple-darwin.tar.zst",
+      "canonicalURLSHA256": "17918a34882281795a195c41979e4a02f21b939a45c99c9f2f8ba197a34018c7",
+      "contentIndexHash": "ce363503c9719dce914b3e8e807cc9cd1b4b6a518a7e38e52a7f15b4e6720fd3",
+      "cotDocumentSHA256": "78794b80b64ee6b5cbe08835fe5c13917f4640fda508933766ee64d31e242d6d",
+      "expires": "2027-09-23T00:30:15.153Z",
+      "namespaceCandidates": 81
+    },
+    {
+      "name": "sysroot-wasm32-wasi-clang-22",
+      "taskId": "SirUGMldT3uoFtKn74I9WQ",
+      "runId": 0,
+      "state": "completed",
+      "artifact": "public/build/sysroot-wasm32-wasi.tar.zst",
+      "bytes": 11909224,
+      "cotDeclaredSHA256": "6d3fba5824b0c83c2115464dd18e5feb4d2d0c3092d4ad52add3be7e42addd7d",
+      "originalCachePrefix": "7f8d68255add1b53",
+      "canonicalURL": "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/SirUGMldT3uoFtKn74I9WQ/artifacts/public%2Fbuild%2Fsysroot-wasm32-wasi.tar.zst",
+      "canonicalURLSHA256": "7f8d68255add1b533159340fabcf8408412dda954248606d7f5f20efab02acf9",
+      "contentIndexHash": "fe39c95acf0175e6e748f4108cc29c473fb14153cfa31ec490896e2460d61a80",
+      "cotDocumentSHA256": "84d33c81d5c308390d6ca1518e2acd95d74e09d4df54eeb875a01fe367f4a1d5",
+      "expires": "2027-09-23T00:30:15.592Z",
+      "namespaceCandidates": 10
+    }
+  ],
+  "bothTaskSourceRevision": "7936fb8bbeea32ffa6b06db4a15d8a2fe5991b76",
+  "indexPaginationComplete": true,
+  "artifactListAndRun0HEADSizesMatch": true,
+  "cotSignatureVerified": false,
+  "payloadDownloaded": false,
+  "payloadHashIndependentlyVerified": false,
+  "originalFullLogReadByThisReviewer": false,
+  "originalCachePrefixEvidence": "Parent-provided original decoded log excerpts and prefixes",
+  "limits": [
+    "A cache URL prefix identifies the source URL, not an independently remeasured original payload digest.",
+    "Current latest tasks were not substituted for the original prefix-matched target dependencies.",
+    "Original Linux-host toolchain equality with new Darwin-host packages is not claimed."
+  ],
+  "executionApproval": false,
+  "CIStartedByReviewer": false
+}
