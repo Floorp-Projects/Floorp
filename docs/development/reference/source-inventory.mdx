@@ -67,9 +67,9 @@ Inventory generated from Floorp commit `unknown`.
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
-- `.github/workflows/openbot-events.yml` - triggers: `issues`
-- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
-- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/openbot-events.yml` - triggers: `issue_comment`, `issues`, `pull_request_review`, `pull_request_target`, `workflow_run`
+- `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`

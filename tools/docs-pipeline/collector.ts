@@ -436,21 +436,46 @@ function buildFloorpOsApiInventory(
   };
 }
 
-function parseWorkflowTriggers(workflowText: string): string[] {
+export function parseWorkflowTriggers(workflowText: string): string[] {
   const triggers = new Set<string>();
-  for (
-    const trigger of [
-      "workflow_dispatch",
-      "pull_request",
-      "push",
-      "schedule",
-      "workflow_call",
-      "issues",
-      "issue_comment",
-    ]
-  ) {
-    if (workflowText.includes(`${trigger}:`)) {
-      triggers.add(trigger);
+  const knownTriggers = new Set([
+    "workflow_dispatch",
+    "pull_request",
+    "pull_request_target",
+    "pull_request_review",
+    "workflow_run",
+    "push",
+    "schedule",
+    "workflow_call",
+    "issues",
+    "issue_comment",
+  ]);
+  let inEventBlock = false;
+  let eventIndent: number | null = null;
+  for (const line of workflowText.split(/\r?\n/)) {
+    const header = line.match(/^(?:on|"on"|'on'):[ \t]*(.*)$/);
+    if (header) {
+      const inline = header[1].split("#", 1)[0].trim();
+      if (inline) {
+        for (const event of inline.replace(/^\[|\]$/g, "").split(",")) {
+          const name = event.trim().replace(/^["']|["']$/g, "");
+          if (knownTriggers.has(name)) triggers.add(name);
+        }
+        break;
+      }
+      inEventBlock = true;
+      continue;
+    }
+    if (!inEventBlock) continue;
+    if (/^\S/.test(line) && !line.startsWith("#")) break;
+    // Only the direct event keys under on:, never fields or strings in a
+    // job's inline code (for example data.is_pull_request), are triggers.
+    const child = line.match(/^( +)([a-z_]+):(?:[ \t]|$)/);
+    if (child) {
+      eventIndent ??= child[1].length;
+      if (child[1].length === eventIndent && knownTriggers.has(child[2])) {
+        triggers.add(child[2]);
+      }
     }
   }
   return [...triggers].sort();

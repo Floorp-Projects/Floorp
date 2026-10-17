@@ -2,22 +2,29 @@ name: OpenBot event notification
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened, edited]
+  issue_comment:
+    types: [created]
   pull_request_target:
-    types: [opened]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
   workflow_run:
     workflows: ["*"]
     types: [completed]
 
+# Forward metadata only. Never check out PRs, run repository code, or download
+# artifacts in this privileged pull_request_target / workflow_run job.
 permissions: {}
 
 jobs:
   notify:
     if: >-
       github.repository == 'Floorp-Projects/Floorp' &&
+      github.event.repository.id == 437505831 &&
       (github.event_name != 'workflow_run' ||
-       (github.event.workflow_run.conclusion == 'failure' &&
-        github.event.workflow_run.name != 'OpenBot event notification'))
+       (github.event.workflow_run.name != 'OpenBot event notification' &&
+        github.event.workflow_run.path != '.github/workflows/openbot-events.yml'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -29,60 +36,133 @@ jobs:
         shell: bash
         run: |
           node --input-type=module <<'NODE'
-          import { createHmac } from "node:crypto";
+          import { createHash, createHmac } from "node:crypto";
           import { readFileSync } from "node:fs";
           import { setTimeout as sleep } from "node:timers/promises";
-          
+
           export const notificationWorkflow = "OpenBot event notification";
-          
+          export const automationMarker = "<!-- openbot-floorp-automation:v1 -->";
+          const repository = "Floorp-Projects/Floorp";
+          const repositoryId = 437505831;
+          const shaPattern = /^[a-f0-9]{40}$/;
+          const positiveInteger = value => Number.isSafeInteger(value) && value > 0;
+          const digest = value => createHash("sha256").update(value).digest("hex");
+          const bounded = value => String(value ?? "").slice(0, 1024);
+          const timestamp = value => typeof value === "string" &&
+            /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?Z$/.test(value) &&
+            Number.isFinite(Date.parse(value)) ? value : null;
+          const canonical = value => Array.isArray(value) ? value.map(canonical) :
+            value && typeof value === "object" ? Object.fromEntries(
+              Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+
+          function numberAndUrl(object, kind) {
+            if (!positiveInteger(object?.number)) return null;
+            const expected = `https://github.com/${repository}/${kind}/${object.number}`;
+            return object.html_url === expected ? { number: object.number, url: expected } : null;
+          }
+
+          function isOpenBotActor(input) {
+            // Content markers can be quoted by other contributors. Only our
+            // known GitHub App actor is an authoritative self-loop signal.
+            return String(input.sender?.login ?? "").toLowerCase() === "openbotgit[bot]";
+          }
+
           export function formatEvent(input, eventName) {
-            if (input.repository?.full_name !== "Floorp-Projects/Floorp") return null;
-            const data = { repository: "Floorp-Projects/Floorp" };
-            let type;
+            if (input?.repository?.full_name !== repository || input.repository.id !== repositoryId) return null;
+            const data = { schema_version: 2, repository, repository_id: repositoryId };
             let occurredAt;
-            if (eventName === "issues" && input.action === "opened" && !input.issue?.pull_request) {
-              type = "github.issue.opened";
-              Object.assign(data, {
-                number: input.issue.number, url: input.issue.html_url,
-                title: String(input.issue.title ?? "").slice(0, 1024),
-              });
-              occurredAt = input.issue.created_at;
-            } else if (eventName === "pull_request_target" && input.action === "opened") {
-              type = "github.pull_request.opened";
-              Object.assign(data, {
-                number: input.pull_request.number, url: input.pull_request.html_url,
-                title: String(input.pull_request.title ?? "").slice(0, 1024),
-                draft: Boolean(input.pull_request.draft),
-              });
-              occurredAt = input.pull_request.created_at;
-            } else if (eventName === "workflow_run" && input.action === "completed"
-                && input.workflow_run?.conclusion === "failure"
-                && input.workflow_run.name !== notificationWorkflow) {
-              type = "github.workflow_run.failed";
-              Object.assign(data, {
-                run_id: input.workflow_run.id, url: input.workflow_run.html_url,
-                workflow: String(input.workflow_run.name ?? "").slice(0, 1024),
-                head_sha: input.workflow_run.head_sha,
-                head_branch: input.workflow_run.head_branch,
-                pull_request_numbers: (input.workflow_run.pull_requests ?? []).map(pr => pr.number),
-              });
-              occurredAt = input.workflow_run.updated_at;
+            let revision;
+            if (eventName === "issues" && ["opened", "reopened", "edited"].includes(input.action)
+                && !input.issue?.pull_request) {
+              const identity = numberAndUrl(input.issue, "issues");
+              if (!identity || input.issue.state !== "open") return null;
+              Object.assign(data, identity, { kind: "issue", action: input.action,
+                title: bounded(input.issue.title), updated_at: timestamp(input.issue.updated_at) });
+              occurredAt = data.updated_at;
+              revision = { body: digest(String(input.issue.body ?? "")) };
+            } else if (eventName === "issue_comment" && input.action === "created") {
+              const comment = input.comment;
+              const body = String(comment?.body ?? "");
+              const visible = body.replace(/<!--[\s\S]*?-->/g, "").trim();
+              if (isOpenBotActor(input) || !/[\p{L}\p{N}]/u.test(visible)
+                  || input.issue?.state !== "open" || !positiveInteger(comment?.id)) return null;
+              const isPr = Boolean(input.issue.pull_request);
+              const identity = numberAndUrl(input.issue, isPr ? "pull" : "issues");
+              if (!identity || comment.html_url !== `${identity.url}#issuecomment-${comment.id}`) return null;
+              Object.assign(data, identity, { kind: "issue_comment", action: "created",
+                is_pull_request: isPr, comment_id: comment.id, comment_url: comment.html_url });
+              occurredAt = timestamp(comment.created_at);
+              revision = { body: digest(body) };
+            } else if (eventName === "pull_request_target" &&
+                ["opened", "reopened", "synchronize", "ready_for_review", "edited"].includes(input.action)) {
+              const pr = input.pull_request;
+              const identity = numberAndUrl(pr, "pull");
+              if (!identity || pr.state !== "open" || !shaPattern.test(pr.head?.sha ?? "")
+                  || pr.base?.repo?.id !== repositoryId || pr.base.repo.full_name !== repository) return null;
+              Object.assign(data, identity, { kind: "pull_request", action: input.action,
+                title: bounded(pr.title), draft: Boolean(pr.draft), head_sha: pr.head.sha,
+                base_ref: bounded(pr.base.ref), updated_at: timestamp(pr.updated_at) });
+              occurredAt = data.updated_at;
+              revision = { body: digest(String(pr.body ?? "")) };
+            } else if (eventName === "pull_request_review" && ["submitted", "edited", "dismissed"].includes(input.action)) {
+              const pr = input.pull_request;
+              const review = input.review;
+              const identity = numberAndUrl(pr, "pull");
+              if (!identity || pr.state !== "open" || !positiveInteger(review?.id)
+                  || !shaPattern.test(pr.head?.sha ?? "") || !shaPattern.test(review.commit_id ?? "")
+                  || isOpenBotActor(input)
+                  || review.html_url !== `${identity.url}#pullrequestreview-${review.id}`) return null;
+              Object.assign(data, identity, { kind: "pull_request_review", action: input.action,
+                head_sha: pr.head.sha, review_id: review.id, review_url: review.html_url,
+                review_state: bounded(review.state), review_commit_sha: review.commit_id,
+                updated_at: timestamp(pr.updated_at) });
+              occurredAt = timestamp(review.submitted_at) ?? data.updated_at;
+              revision = { body: digest(String(review.body ?? "")), dismissal: input.dismissal ?? null };
+            } else if (eventName === "workflow_run" && input.action === "completed") {
+              const run = input.workflow_run;
+              if (!run || run.name === notificationWorkflow ||
+                  String(run.path ?? "").split("@")[0] === ".github/workflows/openbot-events.yml" ||
+                  !positiveInteger(run.id) || !positiveInteger(run.run_attempt) ||
+                  run.status !== "completed" || !run.conclusion || !shaPattern.test(run.head_sha ?? "") ||
+                  run.html_url !== `https://github.com/${repository}/actions/runs/${run.id}`) return null;
+              const pullRequests = Array.isArray(run.pull_requests) ? run.pull_requests : [];
+              if (pullRequests.length > 100 || pullRequests.some(pr => !positiveInteger(pr.number))) return null;
+              Object.assign(data, { kind: "workflow_run", action: "completed", run_id: run.id,
+                run_attempt: run.run_attempt, url: run.html_url, workflow: bounded(run.name),
+                workflow_path: bounded(run.path), conclusion: bounded(run.conclusion),
+                source_event: bounded(run.event), head_sha: run.head_sha,
+                head_branch: bounded(run.head_branch),
+                pull_request_numbers: [...new Set(pullRequests.map(pr => pr.number))].sort((a, b) => a - b) });
+              occurredAt = timestamp(run.updated_at);
+              revision = {};
             } else {
               return null;
             }
-            return { type, ...(occurredAt ? { occurredAt } : {}), data };
+            // Replayed Actions runs retain this revision. Edits, new PR heads,
+            // reviews, comments and CI attempts have independent identifiers.
+            if (!occurredAt) return null;
+            const eventRevision = digest(JSON.stringify(canonical({ data, occurredAt, revision })));
+            return { type: "github.repository.event", occurredAt, data: { ...data, event_revision: eventRevision } };
           }
-          
+
+          export function deliveryIdFor(event) {
+            if (event?.type !== "github.repository.event" || !/^[a-f0-9]{64}$/.test(event.data?.event_revision ?? "")) {
+              throw new Error("Invalid normalized OpenBot event");
+            }
+            return `github.v2.${event.data.event_revision}`;
+          }
+
           export async function sendEvent(event, {
-            url, secret, deliveryId, fetchImpl = fetch, wait = sleep,
+            url, secret, deliveryId = deliveryIdFor(event), fetchImpl = fetch, wait = sleep,
             now = () => Math.floor(Date.now() / 1000), attempts = 7,
           }) {
             const target = new URL(url);
             if (target.protocol !== "https:" || target.username || target.password || target.hash) {
               throw new Error("Invalid OpenBot webhook URL");
             }
-            if (!secret || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,255}$/.test(deliveryId)) {
-              throw new Error("Missing signing secret or invalid delivery ID");
+            if (!secret || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,255}$/.test(deliveryId) ||
+                !Number.isInteger(attempts) || attempts < 1 || attempts > 7) {
+              throw new Error("Missing signing secret or invalid delivery options");
             }
             const body = JSON.stringify(event);
             if (Buffer.byteLength(body, "utf8") > 65536) throw new Error("Event exceeds 64 KiB");
@@ -94,45 +174,48 @@ jobs:
               try {
                 const response = await fetchImpl(url, {
                   method: "POST", redirect: "manual", signal: AbortSignal.timeout(25000),
-                  headers: {
-                    "Content-Type": "application/json",
-                    "X-OpenBot-Timestamp": timestamp,
-                    "X-OpenBot-Delivery-Id": deliveryId,
-                    "X-OpenBot-Signature": `sha256=${signature}`,
-                  }, body,
-                });
+                  headers: { "Content-Type": "application/json", "X-OpenBot-Timestamp": timestamp,
+                    "X-OpenBot-Delivery-Id": deliveryId, "X-OpenBot-Signature": `sha256=${signature}` }, body });
                 status = response.status;
                 if (status === 200 || status === 202) return status;
-                if (status !== 429 && status !== 503 && status < 500) {
+                if (status !== 429 && status < 500) {
                   throw new Error(`OpenBot rejected the event (HTTP ${status})`);
                 }
               } catch (error) {
                 if (status !== undefined) throw error;
-                // A timeout or transport failure may still have reached OpenBot.
-                // Retain the delivery ID and exact body when retrying.
+                // A timeout can have reached OpenBot: retain exact body and ID.
               }
               if (attempt + 1 < attempts) await wait(Math.min(30000, 2000 * 2 ** attempt));
             }
             throw new Error("OpenBot event was not accepted after retries; rerun this job to retry");
           }
-          
-          export async function main() {
-            const event = formatEvent(
-              JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")),
-              process.env.GITHUB_EVENT_NAME,
-            );
+
+          export async function main(env = process.env) {
+            const input = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8"));
+            const event = formatEvent(input, env.GITHUB_EVENT_NAME);
             if (!event) return;
-            const result = await sendEvent(event, {
-              url: process.env.OPENBOT_WEBHOOK_URL,
-              secret: process.env.OPENBOT_WEBHOOK_SECRET,
-              deliveryId: `github.${process.env.GITHUB_RUN_ID}`,
-            });
+            if (!env.OPENBOT_WEBHOOK_URL || !env.OPENBOT_WEBHOOK_SECRET) {
+              const headRepo = input.pull_request?.head?.repo;
+              const baseRepo = input.pull_request?.base?.repo;
+              const expectedForkReview = env.GITHUB_EVENT_NAME === "pull_request_review" &&
+                headRepo?.fork === true && positiveInteger(headRepo.id) && headRepo.id !== repositoryId &&
+                baseRepo?.id === repositoryId && baseRepo.full_name === repository;
+              // Both repository secrets are normally withheld for fork reviews.
+              // Partial configuration, or missing config on any other event,
+              // must fail visibly instead of silently disabling monitoring.
+              if (expectedForkReview && !env.OPENBOT_WEBHOOK_URL && !env.OPENBOT_WEBHOOK_SECRET) {
+                console.log("OpenBot signing configuration withheld for a fork review; periodic reconciliation will cover this event");
+                return;
+              }
+              throw new Error("OpenBot signing configuration is required for this event");
+            }
+            const result = await sendEvent(event, { url: env.OPENBOT_WEBHOOK_URL, secret: env.OPENBOT_WEBHOOK_SECRET });
             console.log(result === 200 ? "OpenBot already accepted this event" : "OpenBot accepted this event");
           }
-          
+
           if (process.env.OPENBOT_RUN_MAIN === "1") {
             main().catch(error => {
-              // Do not print transport exceptions: they may include the private URL.
+              // Transport exceptions can contain a private URL or credentials.
               console.error(error.message.startsWith("OpenBot ") ? error.message : "OpenBot delivery failed; check configuration and connectivity");
               process.exitCode = 1;
             });

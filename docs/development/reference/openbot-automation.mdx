@@ -1,0 +1,84 @@
+---
+title: "OpenBot Development Automation"
+sidebar_label: "OpenBot Automation"
+---
+
+# OpenBot Development Automation
+
+`.github/workflows/openbot-events.yml` wakes the existing **Floorp 開発** agent for
+`Floorp-Projects/Floorp` (repository ID `437505831`). The sender has no GitHub token
+permissions and performs no triage, checkout, code execution, review, or merge.
+Those operations belong to the separately configured Debian agent and its policy.
+
+## Event coverage
+
+| Source | Actions | Purpose |
+| --- | --- | --- |
+| Issue | opened, reopened, edited | Triage current evidence and investigate a reproducible fix. |
+| Issue/PR comment | created | Revisit a report when a person supplies additional information. |
+| PR | opened, reopened, synchronize, ready_for_review, edited | Review the current head and invalidate conclusions about an earlier head. |
+| PR review | submitted, edited, dismissed | Reevaluate outstanding review conditions and new evidence in edited reviews. |
+| Workflow run | completed, including success and failure | Reevaluate PRs after CI settles; successful CI must wake the agent too. |
+
+Comments with no visible letters or numbers and comments/reviews sent by the
+known OpenBot GitHub App actor `openbotgit[bot]` are ignored. The self-loop check
+uses actor identity, not the author-controlled `<!-- openbot-floorp-automation:v1 -->`
+content marker. Human quotations of that marker and other bots' comments/reviews
+remain eligible for reevaluation, including new CodeRabbit review findings.
+The agent can still tag its own replies with the marker for action reconciliation.
+The notification workflow's own completion is excluded by both name and path.
+An empty CI `pull_request_numbers` list is permitted: the agent must find and
+verify the associated open PR using `head_sha` before making a decision.
+
+## Signed delivery and idempotency
+
+The existing `OPENBOT_WEBHOOK_URL` and `OPENBOT_WEBHOOK_SECRET` repository secrets
+remain the only transport configuration. They must target the existing native
+webhook routine owned by **Floorp 開発**. Do not expose either value in logs or
+agent instructions.
+
+The envelope type is `github.repository.event`. Its `data` contains schema version
+2, repository name and numeric ID, `kind`, `action`, stable `event_revision`, and
+bounded source references: issue/PR number and URL, comment/review ID, PR head SHA,
+or CI run ID, attempt, conclusion, head SHA and associated PR numbers. Bodies are
+not forwarded. Their digests participate in revision identity so two body edits
+in the same timestamp remain distinct. The agent reads current GitHub content
+independently; webhook metadata never authorizes shell commands or a merge.
+
+Delivery IDs are `github.v2.` followed by the normalized revision's SHA-256. An
+Actions rerun retains the exact normalized body and identifier. Transport retries
+retain those bytes and identifier while refreshing the timestamp and HMAC. HTTP
+200 means already accepted and 202 means admitted to the native queue; neither
+proves investigation, review, merge, or device-notification completion. Requests
+retry only for transport uncertainty, 429 and server errors, with bounded backoff.
+
+## Execution boundary and missed wakeups
+
+The privileged `pull_request_target` and `workflow_run` jobs execute only the
+inline sender from the trusted default-branch workflow. They never check out a
+head commit, use third-party actions, download artifacts, or interpolate event
+text into shell code. The sender verifies both repository name and numeric ID,
+source URLs, numeric identifiers, timestamps and head SHAs before forwarding.
+`permissions: {}` is deliberate.
+
+GitHub withholds repository secrets for fork-origin `pull_request_review` events.
+Only a review whose payload identifies a distinct fork head and this repository
+as its base may skip delivery when both signing settings are absent. Other events,
+same-repository reviews and partial signing configurations fail the Actions job
+with a fixed error message containing no secret values, so broken configuration
+cannot silently disable monitoring. The Debian agent's existing 15-minute reconciliation is the
+fallback for those review events, missing deliveries and runs without an associated
+PR. It must independently recheck the latest PR head, CI, protections, unresolved
+reviews and the owner-approved small-change policy before any merge. Notifier
+workflow completion is never used to grant an approval or bypass a required check.
+
+## Validation
+
+Run `node --test tools/test-openbot-events.mjs`. The tests import the workflow's
+actual inline code and use synthetic payloads and a stub transport: no webhook,
+GitHub mutation, secret or real agent is involved. They cover all event actions,
+successful CI wakeups, fork/no-PR metadata, bot loops, source validation, stable
+revisions, edited review body changes, HMAC bytes, retries, permanent rejection
+and fork-specific versus erroneous missing secrets. The docs
+inventory parser also recognizes all five trigger kinds; run the docs-pipeline
+unit suite when modifying its collector.
