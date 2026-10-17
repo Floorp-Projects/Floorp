@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "scope": "Recovery3 causal harness startup repair after actual full build success",
+  "priorRun": 39020119793,
+  "priorAttempt": 1,
+  "priorConclusion": "failure",
+  "priorFullBuild": "passed",
+  "priorNativeAuthentication": "NOT_QUALIFIED",
+  "priorBrowserSpontaneousExitCause": "UNKNOWN_NOT_RECORDED",
+  "diagnosisReceipt": "RECOVERY2_STARTUP_DIAGNOSIS.json",
+  "repair": [
+    "Patch only the pinned Floorp test harness: passively discover the exact browser before using its liveness; never interpret the open helper exit status as browser exit.",
+    "Reject changed observed browser identity at Marionette verification so an existing kernel monitor cannot remain bound to a different process.",
+    "Keep cleanup without a discovered browser bounded to reaping the owned launcher; unknown browser identity cannot prove cleanup or authentication success.",
+    "Save bounded pre-cleanup browser/launcher state and fixed stream markers, preserve the initial failure through diagnostic/cleanup errors, and retain safe fields in the suite summary.",
+    "Use one final kernel observation for pre-cleanup liveness/exit-code fields; a known host exit or requested signal cannot pass."
+  ],
+  "immutablePinsUnchangedFromPrior": [
+    "Runtime source/patches including first-cause C++ patch",
+    "SDK and 11 fixed toolchain archives",
+    "original cbe harness commit and four original file hashes",
+    "mozconfig/configuration logic, sandbox protections, authentication assertions and native functional deadlines",
+    "resource and multiple-signal stall guards, platform 360 minutes, no human cumulative elapsed cutoff"
+  ],
+  "harnessPatch": {
+    "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+    "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e",
+    "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+    "scope": "Separate LaunchServices helper status from exact observed browser liveness; preserve Marionette ownership and startup deadlines.",
+    "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+    "target": "tools/app-shim/test-runtime.py"
+  },
+  "regression": {
+    "command": "python3 -m unittest discover -s tools/qa/native-nonpgo -p test_guards.py",
+    "tests": 36,
+    "passed": 36,
+    "elapsedSeconds": 1.423,
+    "newTests": 8,
+    "pythonCompile": "PASS",
+    "nativeExecutionByPortableChecks": false
+  },
+  "rebuildReason": "The previous standard runner has completed and no large build artifact/cache was uploaded. Rebuild in the same new job binds the actual fresh host TU and linked XUL to the repaired native harness run. Runtime C++ and compiler configuration are unchanged.",
+  "nextValidation": {
+    "branch": "codex/mac-native-nonpgo-recovery3-20261017",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "attempt": 1,
+    "initialBranchCreationOnly": true,
+    "platformMinutes": 360,
+    "earlyActualMonitorPreflight": true,
+    "nativeCriteria": "Controlled authenticated cancellation, exact PID/kernel-exit binding, trusted context menu 20/20, native GUI input, unchanged sandbox protections and complete owned cleanup. No skip/retry pass.",
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0
+  },
+  "failureHistory": [
+    39016143725,
+    39018277446,
+    39020119793
+  ],
+  "originalDisconnectCause": "UNKNOWN",
+  "productQualification": false,
+  "newCIStarted": false,
+  "implementationIndependentReview": "GO_STATIC_PREPARATION_ONLY",
+  "immutableRouteReview": "PENDING",
+  "independentReviewSHA256": "0bab974dd4947f1039746248864c5812d22d684569253babd89e1c584c583494",
+  "independentGuards": {
+    "passed": 36,
+    "total": 36,
+    "elapsedSeconds": 1.414
+  }
+}

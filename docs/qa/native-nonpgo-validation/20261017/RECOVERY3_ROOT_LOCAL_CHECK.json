@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "manifestSHA256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+  "files": 12,
+  "priorPlanSectionsEqual": [
+    "runtime",
+    "sdk",
+    "toolchains",
+    "limits",
+    "runner",
+    "criteria",
+    "baseline",
+    "timePolicy"
+  ],
+  "originalHarnessPinAndFourHashesEqual": true,
+  "rootGuards": {
+    "passed": 36,
+    "total": 36,
+    "elapsedSeconds": 1.423
+  },
+  "latestFloorpMain": "ef5c84c7b8b52568df146241f4d456fc50ec31fe",
+  "latestMainPackageWorkflowEqualsFixedBase": true,
+  "terminalResultProviderReadbackEqualsLocal": true,
+  "terminalSourceCommit": "6d5a13178c6a46e4231f42e75aa89d1b75daa05a",
+  "newCIStarted": false,
+  "productQualification": false
+}

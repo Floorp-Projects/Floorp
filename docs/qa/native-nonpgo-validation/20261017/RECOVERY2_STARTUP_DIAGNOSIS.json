@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "reviewScope": "READ_ONLY_RECOVERY2_NATIVE_STARTUP_DIAGNOSIS_AND_MINIMAL_REPAIR_DESIGN",
+  "reviewedRun": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "runId": 39020119793,
+    "attempt": 1,
+    "jobId": 117360090798,
+    "executionHead": "d86e63bc621d647efd8389fbf226f841ebb52501",
+    "conclusion": "failure"
+  },
+  "sourceBindings": {
+    "harness": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "path": "tools/app-shim/test-runtime.py",
+      "gitBlob": "de54988b914645657b11222c6a6141f4f1380c2d",
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "providerUTF8AndGitBlobVerified": true
+    },
+    "nativeCause": {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "sha256": "e207e18d619b0b2611ea2ef70b54d8780733fee2cac683037d4b0bae657211ca"
+    },
+    "nativeSuite": {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "sha256": "bcad9d92f1ac9e28daff9f1665964097cb9e122a92ac063dc7ef75daa32b4754"
+    },
+    "terminalEvidenceSnapshotSHA256": "39c0ee6f2c84dac2c2bd77d9b012c7ac5b43c9aca9d35466285bfacc3f03cbf1",
+    "localReferenceDifference": "Only one additional trailing blank line versus immutable provider harness; class contents are identical."
+  },
+  "findings": [
+    {
+      "priority": "P1",
+      "status": "CONFIRMED_CURRENT_INTEGRATION_DEFECT",
+      "title": "Before adoption, LaunchServices launcher termination is classified as host termination",
+      "evidence": [
+        "native_cause.py:49-57 constructs LaunchServices HostProcess, checks poll before verify_session, with no earlier adoption.",
+        "test-runtime.py:99 initializes pid=None; 115 launches /usr/bin/open; 199-200 returns open.poll when pid is None."
+      ],
+      "conclusion": "The failing cause-host-exited guard observed a non-None launcher status. It does not establish spontaneous browser exit. Launcher exact exit code was not preserved.",
+      "minimalRepair": "Shared harness poll should attempt existing passive exact-argv discovery and report an unobserved browser as unknown, without converting any launcher exit status into browser death. Keep bounded startup waits and mandatory verify_session unchanged."
+    },
+    {
+      "priority": "P1",
+      "status": "REQUIRED_GUARD_FOR_PROPOSED_EARLY_ADOPTION",
+      "title": "Do not rebind adopted identity while retaining an earlier kernel monitor",
+      "evidence": [
+        "test-runtime.py:151 calls _adopt from verify_session.",
+        "_adopt:155 replaces identity/PID unconditionally; 156-165 registers only when exit_events is None."
+      ],
+      "minimalRepair": "Reject a different PID/birth/argv identity after adoption, while making identical adoption idempotent. Preserve the existing kernel monitor and verify_session profile/PID/exact-argv checks."
+    },
+    {
+      "priority": "P1",
+      "status": "CONFIRMED_DIAGNOSTIC_GAP",
+      "title": "Preserve pre-cleanup ownership and launcher/browser statuses through the suite report",
+      "evidence": [
+        "native_cause.py:120-141 records cleanupComplete but has no pre-cleanup host snapshot; poll at 122/137 is outside independent error capture.",
+        "native_suite.py:94-96 projects only seven cause fields."
+      ],
+      "minimalRepair": "Capture a bounded allowlist before cleanup, including launcher code and distinct identityObserved/verified/liveness/browser-code/requested-signal fields. Guard snapshot, cleanup and result saving independently, retain the first failure, and project those safe fields into native-summary."
+    },
+    {
+      "priority": "P2",
+      "status": "OBSERVATION_LIMIT",
+      "title": "Post-cleanup disappearance is not proof of spontaneous browser exit",
+      "evidence": [
+        "test-runtime.py:247-250 may passively discover an unconnected browser and then terminate it.",
+        "Outer nativeCleanup signalsToVerifiedOwnedInstances counts its own registry cleanup, not HostProcess.close signaling."
+      ],
+      "minimalRepair": "Keep before/after cleanup separate and mark unobserved identity/liveness as unknown. Do not infer crash, security rejection or authentication failure from cleanupComplete/allOwnedGone."
+    }
+  ],
+  "mockVerification": {
+    "exactPinnedClassASTUsed": true,
+    "nativeOrBrowserProcessesStarted": 0,
+    "signalsToOS": 0,
+    "firstAttempt": "Mock fixture omitted time from globals, producing NameError; no source defect or product execution.",
+    "correctedAttempt": "PASS",
+    "checks": [
+      "Unadopted browser plus launcher exit 0 produces poll 0 and browser returncode null without browser identity checking.",
+      "close can discover then request termination of a previously unadopted browser; signaling was mocked.",
+      "_adopt can replace a PID while retaining an existing queue, demonstrating the need for an identity guard."
+    ]
+  },
+  "validationScope": {
+    "currentRunFullHostTUAndXUL": "Successful build evidence is retained; this startup review does not independently rebuild or recompute the remote Mach-O hashes.",
+    "controlledFirstCause": "NOT_QUALIFIED",
+    "nativeContext20": "NOT_RUN",
+    "nativeGUI": "NOT_RUN",
+    "actualBrowserSpontaneousExit": "UNKNOWN",
+    "actualBrowserExitCode": "UNKNOWN_NOT_RECORDED",
+    "originalAuthenticationTimeoutCause": "UNKNOWN",
+    "productQualification": false
+  },
+  "decision": {
+    "minimalRepairPreparation": "GO_WITH_REQUIRED_IDENTITY_AND_EVIDENCE_GUARDS",
+    "implementationReviewed": false,
+    "newCIOrRuntimePush": "NOT_AUTHORIZED_BY_THIS_REVIEW",
+    "nativeAuthenticationQualification": "NO_GO",
+    "sourceEditsPerformed": false,
+    "additionalArtifactDownloads": 0,
+    "ciRunsStarted": 0
+  }
+}

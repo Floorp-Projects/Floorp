@@ -1,7 +1,7 @@
 {
   "activation": {
     "allowInitialPushOnly": true,
-    "allowedBranch": "codex/mac-native-nonpgo-recovery2-20261017",
+    "allowedBranch": "codex/mac-native-nonpgo-recovery3-20261017",
     "approvalRequiredBeforeRuntimeBranchPush": true,
     "helperFixtureCommit": "BOUND_BY_WORKFLOW_ENV_FLOORP_FIXTURE_SHA",
     "runAttempt": 1
@@ -61,7 +61,15 @@
         "sha256": "b0eede6c253a067b31388b43120c95957a6275c89f3ae9a325b33b09bfabc88d"
       }
     ],
-    "repository": "Floorp-Projects/Floorp"
+    "repository": "Floorp-Projects/Floorp",
+    "startupPatch": {
+      "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e",
+      "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+      "scope": "Separate LaunchServices helper status from exact observed browser liveness; preserve Marionette ownership and startup deadlines.",
+      "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+      "target": "tools/app-shim/test-runtime.py"
+    }
   },
   "limits": {
     "buildDeadlineMinutes": 360,
@@ -82,6 +90,7 @@
   },
   "preparedAt": "2026-10-17",
   "recovery": {
+    "actualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
     "actualFailedMonitorField": "UNKNOWN_NOT_RECORDED",
     "priorExecutions": [
       {
@@ -99,17 +108,30 @@
         },
         "run": 39018277446,
         "status": "failed"
+      },
+      {
+        "actualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
+        "firstFailure": {
+          "code": "nonzero-exit",
+          "nestedCode": "cause-host-exited",
+          "stage": "native-suite"
+        },
+        "fullBuild": "passed",
+        "run": 39020119793,
+        "status": "failed"
       }
     ],
     "priorFailure": {
-      "code": "process-activity-format",
-      "stage": "tools-materialize"
+      "code": "nonzero-exit",
+      "nestedCode": "cause-host-exited",
+      "stage": "native-suite"
     },
-    "priorFixture": "b00f0761850046de58f5186614e0d250973fa5ea",
+    "priorFixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
     "priorResult": "failed",
-    "priorRun": 39018277446,
-    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39018277446",
+    "priorRun": 39020119793,
+    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39020119793",
     "recoveryExplicitlyAuthorized": true,
+    "repairScope": "Harness startup liveness and bounded before-cleanup diagnostics only; runtime C++/build/toolchain/protection/authentication pins unchanged.",
     "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
   },
   "runner": {
@@ -368,7 +390,7 @@
     "zipBytes": 105082683,
     "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
   },
-  "status": "RECOVERY2_AUTHORIZED_PARTIAL_MONITOR_SAMPLING_FIX",
+  "status": "RECOVERY3_AUTHORIZED_NATIVE_STARTUP_IDENTITY_FIX",
   "storage": {
     "cacheWrites": 0,
     "newActionsArtifacts": 0,

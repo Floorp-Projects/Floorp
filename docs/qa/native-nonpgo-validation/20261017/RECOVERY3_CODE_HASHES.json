@@ -1,0 +1,65 @@
+{
+  "files": [
+    {
+      "bytes": 4264,
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "sha256": "da90adb513d25d847fc1571ea48a8bb92e22a1dbfc863c89915c5cded942a2c3"
+    },
+    {
+      "bytes": 2347,
+      "path": "tools/qa/native-nonpgo/materialize.py",
+      "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db"
+    },
+    {
+      "bytes": 12552,
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "sha256": "e42bc2911f3f8af3f7434efcb9ebb9c5aaa8eef316dde6e2a904f87b1122cc00"
+    },
+    {
+      "bytes": 9253,
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "sha256": "f7ca85e795e27b604d33b74ccf78b68eda8e660959ff17627cbd687e72e70584"
+    },
+    {
+      "bytes": 12279,
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "sha256": "ff1ee4a405425ef7e41bd95998fca1a77ea38b1e0123843111d2bfa9c81d57f4"
+    },
+    {
+      "bytes": 27634,
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "0ca446c274f2d6c8df20b3b270ac6070e0d174e90ce168bc7cc57e7aac802510"
+    },
+    {
+      "bytes": 23860,
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "32fd745de1864e2a377aa062432d7b0a78b6d109309da2f9108a403531c79aaa"
+    },
+    {
+      "bytes": 18654,
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "b6a198c0314be9069f0c1a3077c244aa1080993f314e0656d6b363e9608f845e"
+    },
+    {
+      "bytes": 33656,
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "sha256": "25bbcbed8dd3f39a7fe8b0d84184eedab4a752ce1cb145cb7a0e28a20dcc2da1"
+    },
+    {
+      "bytes": 5675,
+      "path": "tools/qa/native-nonpgo/workflow.yml.in",
+      "sha256": "c3873eeefce1b286de573a198a85aac67ba0ff1b675f67772091a0760d45dff2"
+    },
+    {
+      "bytes": 4264,
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+    },
+    {
+      "bytes": 1789,
+      "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+      "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80"
+    }
+  ],
+  "schema": 1
+}

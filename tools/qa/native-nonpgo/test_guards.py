@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import plistlib
 import struct
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -15,9 +16,10 @@ import textwrap
 import time
 import unittest
 from unittest import mock
+import native_cause
 from support import Failure, ProgressWatch, Runner, clean_environment, extract_tar, scan_tar
-from native_suite import context_result, failure_snapshot
-from pipeline import macho, verify_config
+from native_suite import cause_failure_snapshot, context_result, failure_snapshot
+from pipeline import macho, prepare_harness, verify_config
 from owned_native import OwnedNative
 
 
@@ -28,6 +30,151 @@ class Guards(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def patched_host_class(self):
+        fixture = Path(__file__).resolve().parents[3]
+        plan = json.loads(Path(__file__).with_name('plan.json').read_text())
+        harness = self.root / 'harness'
+        target = harness / plan['harness']['startupPatch']['target']
+        target.parent.mkdir(parents=True)
+        target.write_bytes((fixture / plan['harness']['startupPatch']['target']).read_bytes())
+        runner = mock.Mock()
+        def run(stage, command, cwd, env, minutes):
+            self.assertEqual(minutes, 360)
+            subprocess.run(command, cwd=cwd, env=env, check=True, capture_output=True)
+        runner.run.side_effect = run
+        proof = prepare_harness(plan, harness, fixture, runner, os.environ.copy())
+        self.assertEqual(proof['patchedSHA256'], plan['harness']['startupPatch']['patchedSHA256'])
+        module = native_cause.load_module('startup_harness', target)
+        host = module.HostProcess.__new__(module.HostProcess)
+        host.launch_services, host.pid, host.identity = True, None, None
+        host.exited, host.verified, host.exit_events = False, False, None
+        host.exit_code, host.requested_signal = None, None
+        host.process = mock.Mock()
+        host.profile = self.root / 'isolated-profile'
+        host.command = ['/validation.app/browser', '--profile', str(host.profile)]
+        return module, host
+
+    def test_launcher_exit_is_not_unobserved_browser_exit(self):
+        _, host = self.patched_host_class()
+        with mock.patch.object(host, '_process_rows', return_value=[]):
+            for launcher_code in (0, 1, -9, None):
+                host.process.poll.return_value = launcher_code
+                self.assertIsNone(host.poll())
+                self.assertIsNone(host.pid)
+                self.assertFalse(host.exited)
+        host.process.poll.assert_not_called()
+
+    def test_poll_passively_adopts_exact_browser_before_session(self):
+        _, host = self.patched_host_class()
+        identity = (42, 'fixed birth', ' '.join(host.command))
+        other = (43, 'other birth', '/another/browser --profile /another/profile')
+        def adopt(value):
+            host.pid, host.identity = value[0], value
+        with mock.patch.object(host, '_process_rows', return_value=[other, identity]), \
+                mock.patch.object(host, '_adopt', side_effect=adopt) as adopted, \
+                mock.patch.object(host, '_read_exit_events'):
+            self.assertIsNone(host.poll())
+        adopted.assert_called_once_with(identity)
+        self.assertEqual(host.pid, 42)
+        self.assertFalse(host.verified)
+        host.process.poll.assert_not_called()
+
+    def test_early_browser_identity_cannot_be_rebound_by_marionette(self):
+        _, host = self.patched_host_class()
+        original = (42, 'first birth', ' '.join(host.command))
+        host.pid, host.identity, host.exit_events = 42, original, mock.Mock()
+        queue = host.exit_events
+        with mock.patch.object(host, '_matching_identity') as matching, \
+                mock.patch.object(host, '_adopt') as adopt:
+            for replacement in ((43, 'first birth', original[2]), (42, 'later birth', original[2])):
+                matching.return_value = replacement
+                with self.assertRaisesRegex(RuntimeError, 'identity differs'):
+                    host.verify_session({'capabilities': {'moz:processID': replacement[0],
+                                                         'moz:profile': str(host.profile)}})
+                self.assertEqual(host.identity, original)
+                self.assertIs(host.exit_events, queue)
+                self.assertFalse(host.verified)
+            adopt.assert_not_called()
+            matching.return_value = original
+            host.verify_session({'capabilities': {'moz:processID': 42, 'moz:profile': str(host.profile)}})
+            adopt.assert_called_once_with(original)
+            self.assertTrue(host.verified)
+
+    def test_observed_browser_exit_is_not_hidden_by_running_launcher(self):
+        _, host = self.patched_host_class()
+        host.pid, host.identity, host.exited, host.exit_code = 42, (42, 'birth', 'argv'), True, -11
+        host.process.poll.return_value = None
+        self.assertEqual(host.poll(), 0)
+        self.assertEqual(host.returncode, -11)
+
+    def test_no_browser_identity_cleanup_only_reaps_owned_launcher(self):
+        _, host = self.patched_host_class()
+        with mock.patch.object(host, '_process_rows', return_value=[]), \
+                mock.patch.object(host, 'terminate') as terminate, \
+                mock.patch.object(host, 'kill') as kill:
+            host.close()
+        terminate.assert_not_called()
+        kill.assert_not_called()
+        host.process.wait.assert_called_once_with(timeout=2)
+        self.assertIsNone(host.identity)
+
+    def test_startup_snapshot_keeps_codes_and_markers_without_private_text(self):
+        _, host = self.patched_host_class()
+        host.process.poll.return_value = 1
+        (self.root / 'browser.private.log').write_text('PRIVATE path Error Domain=NSOSStatusErrorDomain\n')
+        (self.root / 'browser.stderr.log').write_text('PRIVATE token Assertion failure: detail\nMOZ_CRASH detail\n')
+        with mock.patch.object(host, '_process_rows', return_value=[]):
+            snapshot = native_cause.startup_snapshot(host, self.root)
+        self.assertEqual(snapshot['hostStartup']['browserLiveness'], 'not-observed')
+        self.assertIsNone(snapshot['hostStartup']['browserExitCode'])
+        self.assertEqual(snapshot['hostStartup']['launcherExitCode'], 1)
+        self.assertIn('gecko-fatal-assertion', snapshot['streams']['stderr']['markers'])
+        self.assertNotIn('PRIVATE', json.dumps(snapshot))
+        snapshot['hostStartup']['argv'] = 'PRIVATE'
+        snapshot['streams']['stderr']['markers'].append('PRIVATE')
+        snapshot['streams']['stderr']['rawContent'] = 'PRIVATE'
+        projected = cause_failure_snapshot({'status': 'failed', 'beforeCleanup': snapshot})
+        self.assertNotIn('PRIVATE', json.dumps(projected))
+        self.assertEqual(projected['beforeCleanupHostStartup']['launcherExitCode'], 1)
+
+    def test_snapshot_failure_does_not_skip_cleanup_or_replace_first_failure(self):
+        browser = self.root / 'validation.app'
+        (browser / 'Contents').mkdir(parents=True)
+        (browser / 'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleExecutable': 'browser'}))
+        output = self.root / 'cause'
+        host = mock.Mock(pid=42, identity=(42, 'birth', 'argv'), verified=False)
+        host.poll.side_effect = RuntimeError('PRIVATE observation')
+        harness, lifecycle = mock.Mock(), mock.Mock()
+        harness.HostProcess.return_value = host
+        harness.unused_port.return_value = 12345
+        harness.wait_for.side_effect = lambda description, callback, timeout: callback()
+        argv = ['native_cause.py', '--browser', str(browser), '--harness', str(self.root),
+                '--output', str(output), '--build-id', '20261017000000']
+        with mock.patch.object(sys, 'argv', argv), \
+                mock.patch('native_cause.load_module', side_effect=[harness, lifecycle]):
+            self.assertEqual(native_cause.main(), 1)
+        host.close.assert_called_once()
+        result = json.loads((output / 'result.json').read_text())
+        self.assertEqual(result['errorCode'], 'RuntimeError')
+        self.assertEqual(result['status'], 'failed')
+        self.assertTrue(result['diagnosticsIncomplete'])
+        self.assertFalse(result['cleanupComplete'])
+        self.assertNotIn('PRIVATE', json.dumps(result))
+        self.assertEqual(harness.wait_for.call_args.args[2], 35)
+
+    def test_snapshot_liveness_and_exit_code_use_the_same_kernel_observation(self):
+        module, host = self.patched_host_class()
+        host.pid, host.identity, host.verified = 42, (42, 'birth', 'argv'), True
+        host.process.poll.return_value = None
+        def observed_exit():
+            host.exited, host.exit_code = True, -11
+        with mock.patch.object(host, '_read_exit_events', side_effect=observed_exit), \
+                mock.patch.object(module.HostProcess, 'returncode', new_callable=mock.PropertyMock) as code:
+            snapshot = native_cause.startup_snapshot(host, self.root)
+        code.assert_not_called()
+        self.assertEqual(snapshot['hostStartup']['browserLiveness'], 'exit-observed')
+        self.assertEqual(snapshot['hostStartup']['browserExitCode'], -11)
 
     def test_effective_config_uses_upstream_host_cpu_arch(self):
         tools, sdk = self.root / 'tools', self.root / 'sdk'

@@ -1,0 +1,39 @@
+--- a/tools/app-shim/test-runtime.py
++++ b/tools/app-shim/test-runtime.py
+@@ -148,6 +148,8 @@
+         identity = self._matching_identity(pid)
+         if not identity:
+             raise RuntimeError("Browser PID does not have the exact executable and isolated profile command")
++        if self.identity is not None and identity != self.identity:
++            raise RuntimeError("Marionette browser identity differs from the observed launch")
+         self._adopt(identity)
+         self.verified = True
+ 
+@@ -197,7 +199,14 @@
+         if self.exited:
+             return 0  # Liveness sentinel; never reported as the browser exit code.
+         if self.pid is None:
+-            return self.process.poll()
++            # The open helper cannot establish browser liveness or exit status.
++            # Observe the exact private-profile browser without signalling it;
++            # the caller's existing startup deadline still bounds this wait.
++            if not self._discover_for_cleanup():
++                return None
++            self._read_exit_events()
++            if self.exited:
++                return 0
+         if self._matching_identity(self.pid) != self.identity:
+             self.exited = True
+             return 0
+@@ -245,7 +254,10 @@
+         try:
+             # Discover an unconnected browser even if open has already exited.
+             if self.launch_services and self.pid is None:
+-                self._discover_for_cleanup()
++                if not self._discover_for_cleanup():
++                    # There is no verified browser to signal or wait on. The
++                    # finally block still reaps this instance's open helper.
++                    return
+             if self.poll() is None:
+                 self.terminate()
+                 try:

@@ -10,6 +10,59 @@ import uuid
 from support import Failure, require, write_json
 
 
+STREAM_MARKERS = {
+    'Library not loaded:': 'loader-library-not-loaded',
+    'Bad CPU type in executable': 'loader-unsupported-cpu',
+    'Code Signature Invalid': 'invalid-code-signature',
+    '###!!! ASSERTION:': 'gecko-assertion',
+    'Assertion failure:': 'gecko-fatal-assertion',
+    'MOZ_CRASH': 'gecko-crash-marker',
+    'Marionette enabled': 'marionette-enabled',
+    'Listening on port': 'listener-started',
+    'Error Domain=NSOSStatusErrorDomain': 'launch-services-osstatus',
+    'kLSNoLaunchPermissionErr': 'launch-services-permission',
+    'kLSNoExecutableErr': 'launch-services-no-executable',
+    'kLSExecutableIncorrectFormat': 'launch-services-executable-format',
+}
+
+
+def startup_snapshot(host, output):
+    snapshot = {'observedAtMs': int(time.time() * 1000), 'hostStartup': {'started': host is not None},
+                'streams': {}}
+    if host is not None:
+        launcher_code = host.process.poll()
+        host.poll()
+        observed = host.pid is not None and host.identity is not None
+        # This probe always uses LaunchServices. Read the exit code already
+        # consumed by poll; returncode would consume a later event after the
+        # liveness observation and could make the two fields contradictory.
+        browser_code = host.exit_code
+        snapshot['hostStartup'].update({
+            'browserIdentityObserved': observed, 'marionetteOwnershipVerified': host.verified,
+            'browserLiveness': ('not-observed' if not observed else
+                                'exit-observed' if host.exited else 'alive'),
+            'browserExitCode': browser_code, 'launcherExitCode': launcher_code,
+            'requestedSignal': host.requested_signal})
+    for label, name in (('launcher', 'browser.private.log'), ('stdout', 'browser.stdout.log'),
+                         ('stderr', 'browser.stderr.log')):
+        path = output / name
+        record = {'present': path.is_file(), 'rawContentPublished': False, 'markers': []}
+        if record['present']:
+            with path.open('rb') as stream:
+                size = stream.seek(0, 2)
+                offset = max(0, size - 65536)
+                stream.seek(offset)
+                data = stream.read(65536)
+            text = data.decode('utf-8', errors='replace')
+            if offset and '\n' in text:
+                text = text.split('\n', 1)[1]
+            record.update({'bytesObserved': size, 'tailBytesRead': len(data),
+                           'tailTruncated': offset > 0,
+                           'markers': sorted({value for key, value in STREAM_MARKERS.items() if key in text})})
+        snapshot['streams'][label] = record
+    return snapshot
+
+
 def load_module(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
@@ -119,12 +172,28 @@ Services.obs.addObserver({state}.observer,'floorp-web-app-shim-event');
         report['status'] = 'failed'
     finally:
         errors = []
-        if client and host and host.verified and host.poll() is None:
-            try:
+        try:
+            log.flush()
+            report['beforeCleanup'] = startup_snapshot(host, output)
+            observed = report['beforeCleanup']['hostStartup']
+            if report['status'] == 'passed' and not (
+                    observed.get('browserLiveness') == 'alive' and
+                    observed.get('marionetteOwnershipVerified') is True and
+                    observed.get('browserExitCode') is None and
+                    observed.get('requestedSignal') is None):
+                report['status'] = 'failed'
+                report['errorCode'] = 'cause-host-not-alive-before-cleanup'
+        except BaseException as error:
+            report['diagnosticsIncomplete'] = True
+            report['snapshotErrorType'] = type(error).__name__
+            report['status'] = 'failed'
+            report.setdefault('errorCode', 'cause-startup-snapshot-unavailable')
+        try:
+            if client and host and host.verified and host.poll() is None:
                 client.context('chrome')
                 client.script(f"Services.obs.removeObserver({state}.observer,'floorp-web-app-shim-event');{h.SERVICE}.stop();")
-            except Exception as error:
-                errors.append(type(error).__name__)
+        except BaseException as error:
+            errors.append(type(error).__name__)
         for value, method in ((client, 'close'), (host, 'close'), (monitor, 'close'), (log, 'close')):
             if value:
                 try:
@@ -134,10 +203,17 @@ Services.obs.addObserver({state}.observer,'floorp-web-app-shim-event');
                         getattr(value, method)()
                 except BaseException as error:
                     errors.append(type(error).__name__)
-        report['cleanupComplete'] = not errors and host is not None and host.poll() is not None
+        try:
+            report['cleanupComplete'] = (not errors and host is not None and
+                                         host.pid is not None and host.identity is not None and
+                                         host.poll() is not None)
+        except BaseException as error:
+            errors.append(type(error).__name__)
+            report['cleanupComplete'] = False
         if errors or not report['cleanupComplete']:
             report['cleanupErrors'] = errors
             report['status'] = 'failed'
+            report.setdefault('errorCode', 'cause-cleanup-incomplete')
         write_json(output / 'result.json', report)
     return 0 if report['status'] == 'passed' else 1
 

@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 from support import Failure, clean_environment, require, write_json
+from native_cause import STREAM_MARKERS
 
 
 def read_one(directory, name):
@@ -56,6 +57,40 @@ def failure_snapshot(value):
             'cleanupErrorsPresent': bool(value.get('cleanupErrors'))}
 
 
+def cause_failure_snapshot(value):
+    result = {key: value[key] for key in
+              ('status', 'phase', 'causeReason', 'connectedBeforeDisconnect',
+               'kernelExitObserved', 'cleanupComplete', 'errorCode', 'diagnosticsIncomplete',
+               'snapshotErrorType') if key in value}
+    before = value.get('beforeCleanup', {})
+    if type(before.get('observedAtMs')) is int:
+        result['beforeCleanupObservedAtMs'] = before['observedAtMs']
+    source = before.get('hostStartup', {})
+    host = {}
+    for key in ('started', 'browserIdentityObserved', 'marionetteOwnershipVerified'):
+        if type(source.get(key)) is bool:
+            host[key] = source[key]
+    if source.get('browserLiveness') in ('not-observed', 'alive', 'exit-observed'):
+        host['browserLiveness'] = source['browserLiveness']
+    for key in ('browserExitCode', 'launcherExitCode', 'requestedSignal'):
+        if source.get(key) is None or type(source.get(key)) is int:
+            host[key] = source.get(key)
+    result['beforeCleanupHostStartup'] = host
+    result['beforeCleanupStreams'] = {}
+    for label in ('launcher', 'stdout', 'stderr'):
+        source = before.get('streams', {}).get(label, {})
+        record = {'markers': [marker for marker in source.get('markers', [])
+                               if marker in STREAM_MARKERS.values()]}
+        for key in ('present', 'rawContentPublished', 'tailTruncated'):
+            if type(source.get(key)) is bool:
+                record[key] = source[key]
+        for key in ('bytesObserved', 'tailBytesRead'):
+            if type(source.get(key)) is int and source[key] >= 0:
+                record[key] = source[key]
+        result['beforeCleanupStreams'][label] = record
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--browser', type=Path, required=True)
@@ -91,9 +126,7 @@ def main():
             elif code and name == 'cause':
                 try:
                     value = read_one(private / name, 'result.json')
-                    report['firstFailureSnapshot'] = {key: value[key] for key in
-                        ('status', 'phase', 'causeReason', 'connectedBeforeDisconnect',
-                         'kernelExitObserved', 'cleanupComplete', 'errorCode') if key in value}
+                    report['firstFailureSnapshot'] = cause_failure_snapshot(value)
                 except Exception:
                     report['firstFailureSnapshot'] = {'unavailable': True}
             require(code == 0, 'native-' + name + '-exit')
@@ -111,11 +144,13 @@ def main():
                 value = read_one(private / name, 'result.json')
                 require(value['status'] == 'passed' and value['kernelExitObserved'] is True and
                         value['cleanupComplete'] is True and value['causeReason'] == 'launch-cancelled' and
+                        value['hostOwnershipVerified'] is True and not value.get('diagnosticsIncomplete') and
                         value['connectedBeforeDisconnect'] is True and value['contentSandboxLevel'] == 3 and
                         value['browserCompiledDebug'] is True and value['contentSandboxUserOverride'] is False and
                         value['contentSandboxDisableEnvEmpty'] is True, 'native-first-cause-result')
                 report['firstCause'] = {key: value[key] for key in ('status', 'causeReason', 'causeTimeMs',
                       'terminalReason', 'connectedBeforeDisconnect', 'kernelExitObserved', 'cleanupComplete',
+                      'hostOwnershipVerified',
                       'contentSandboxLevel', 'browserCompiledDebug', 'contentSandboxUserOverride',
                       'contentSandboxDisableEnvEmpty', 'browserBuildID', 'browserVersion')}
         report['status'] = 'passed'

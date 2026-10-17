@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "reviewScope": "RECOVERY3_NATIVE_STARTUP_PATCH_STATIC_AND_STDLIB_REGRESSION_REVIEW",
+  "reviewedManifest": {
+    "path": "RECOVERY3_CODE_HASHES_FINAL.json",
+    "sha256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+    "fileCount": 12,
+    "allByteLengthsAndSHA256Verified": true
+  },
+  "decision": {
+    "staticPreparation": "GO",
+    "remainingP0": 0,
+    "remainingP1": 0,
+    "remainingP2": 0,
+    "immutableExecutionRoute": "SEPARATE_REVIEW_PENDING",
+    "nativeAuthenticationQualification": "NOT_YET_VALIDATED",
+    "productQualification": false
+  },
+  "bindings": {
+    "originalHarnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "originalHarnessSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+    "harnessPatchSHA256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+    "patchedHarnessSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e",
+    "nativeCauseSHA256": "e42bc2911f3f8af3f7434efcb9ebb9c5aaa8eef316dde6e2a904f87b1122cc00",
+    "nativeSuiteSHA256": "f7ca85e795e27b604d33b74ccf78b68eda8e660959ff17627cbd687e72e70584",
+    "pipelineSHA256": "0ca446c274f2d6c8df20b3b270ac6070e0d174e90ce168bc7cc57e7aac802510",
+    "planSHA256": "32fd745de1864e2a377aa062432d7b0a78b6d109309da2f9108a403531c79aaa",
+    "testsSHA256": "25bbcbed8dd3f39a7fe8b0d84184eedab4a752ce1cb145cb7a0e28a20dcc2da1",
+    "templateSHA256": "c3873eeefce1b286de573a198a85aac67ba0ff1b675f67772091a0760d45dff2",
+    "runtimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runtimeFirstCausePatchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+  },
+  "verifiedBehavior": [
+    {
+      "area": "Unobserved startup",
+      "result": "PASS",
+      "evidence": "The patched shared HostProcess.poll passively discovers only the full exact private-profile argv; no discovery returns None without interpreting any launcher status as browser exit. The existing 35-second cause connection deadline and mandatory verify_session remain."
+    },
+    {
+      "area": "Ownership and kernel binding",
+      "result": "PASS",
+      "evidence": "verify_session still checks Marionette PID/profile/full executable argv and now rejects a different previously observed identity before _adopt; identical adoption retains the existing queue. Existing exit observation and pre-signal identity revalidation remain."
+    },
+    {
+      "area": "Cleanup",
+      "result": "PASS",
+      "evidence": "No-discovery close only reaps its own launcher. native_cause cannot mark cleanup complete without an observed browser identity and a post-close non-None browser poll. Snapshot and per-resource cleanup exceptions are caught independently; an earlier errorCode is retained."
+    },
+    {
+      "area": "Snapshot consistency",
+      "result": "PASS",
+      "evidence": "The final snapshot reads launcher status, polls browser/kernel state, then reads plain exit_code/exited from that same state. It does not invoke the state-changing returncode property after calculating liveness. A passed probe requires alive, verified ownership, no observed browser exit code and no requested signal."
+    },
+    {
+      "area": "Diagnostic privacy and limits",
+      "result": "PASS",
+      "evidence": "Each of three streams reads at most a 65536-byte tail; only fixed marker names, counts, booleans and numeric process statuses enter the report. Raw text, argv, private paths, token/nonce values and OS stderr are not copied. Suite projection retains only allowed startup fields/markers."
+    },
+    {
+      "area": "Harness provenance",
+      "result": "PASS",
+      "evidence": "Preflight retains the original four harness hashes; prepare_harness checks immutable patch/base hashes, performs git apply --check/apply and checks the final harness hash. The report includes original commit plus patch/base/post hashes."
+    },
+    {
+      "area": "Existing native assertions",
+      "result": "PRESERVED",
+      "evidence": "Controlled authentication PID/kernel binding, launch-cancelled first cause, connected-before-disconnect, actual browser BuildID/debug/protection checks, content sandbox level 3 with no override, trusted context-menu assertions and GUI tests remain required. Runtime C++ patch remains unchanged."
+    }
+  ],
+  "findingsResolved": [
+    {
+      "priority": "P1",
+      "title": "Early adoption must not rebind identity while retaining an older kernel monitor",
+      "resolution": "Shared harness verify_session requires exact equality with any already observed identity; replacement PID and birth are rejected by regression tests."
+    },
+    {
+      "priority": "P1",
+      "title": "Snapshot could report alive with a newly observed exit code",
+      "foundInManifest": "d59e895cb07d232c37cd09270a0aec8697aa93b34ce7701e84bd44903416beed",
+      "independentlyReproduced": true,
+      "resolution": "Final manifest uses one kernel observation and rejects known exit/requested signal before cleanup. New regression asserts exit-observed/-11 consistency and no returncode property access."
+    },
+    {
+      "priority": "P2",
+      "title": "Recovery2 status string remained in Recovery3 plan",
+      "resolution": "Plan status is now RECOVERY3_AUTHORIZED_NATIVE_STARTUP_IDENTITY_FIX."
+    }
+  ],
+  "regressionEvidence": {
+    "command": "python3 -m unittest -v test_guards.py",
+    "finalRun": {
+      "tests": 36,
+      "elapsedSeconds": 1.414,
+      "status": "PASS",
+      "failures": 0,
+      "errors": 0
+    },
+    "earlierCandidateRun": {
+      "tests": 35,
+      "elapsedSeconds": 1.41,
+      "status": "PASS",
+      "additionalStaticFinding": "Snapshot ordering race was found independently despite all tests passing; a new regression was added before final approval."
+    },
+    "coverage": [
+      "launcher 0/nonzero/signal/running are not browser exit before adoption",
+      "passive exact adoption and Marionette identity mismatch rejection",
+      "observed browser exit is retained despite running launcher",
+      "no-identity cleanup does not signal an unknown browser",
+      "snapshot failure does not skip cleanup or replace first failure",
+      "fixed diagnostic markers exclude private values",
+      "snapshot liveness/exit code share the same kernel observation",
+      "existing ownership/PID reuse/process monitoring/archive/Mach-O/config guards"
+    ],
+    "allHelperPythonAST": "PASS",
+    "darwinExecution": false,
+    "browserExecution": false
+  },
+  "unchangedInputsComparedWithPriorRunReceipts": {
+    "priorRun": 39020119793,
+    "sdkZIPAndTarSHA256": "MATCH",
+    "taskclusterPackagesTaskRunSHAAndBytes": {
+      "count": 8,
+      "result": "MATCH"
+    },
+    "rustPackagesVersionAndSHA256": {
+      "count": 3,
+      "result": "MATCH"
+    },
+    "priorFailedRunsRetained": [
+      39016143725,
+      39018277446,
+      39020119793
+    ]
+  },
+  "limitations": [
+    "No macOS launch, Darwin kernel event delivery, full build, native authentication or browser test was executed in this review.",
+    "Static approval and stdlib mocks do not qualify native authentication or prove the original authentication-timeout cause.",
+    "The prior full Host TU/XUL build remains a separate successful build observation; this review does not rerun or independently rehash remote Mach-O files.",
+    "Original timeout cause and the previous real browser's spontaneous exit remain UNKNOWN.",
+    "The immutable rendered workflow/caller/fixture route is intentionally reserved for the next independent review."
+  ],
+  "actions": {
+    "sourceEdits": 0,
+    "newCIRuns": 0,
+    "pushes": 0,
+    "reruns": 0,
+    "artifactPayloadDownloads": 0,
+    "signing": 0
+  }
+}

@@ -113,6 +113,21 @@ def prepare_tools(plan, task, runner, env):
     return tools
 
 
+def prepare_harness(plan, harness, fixture, runner, env):
+    pin = plan['harness']['startupPatch']
+    patch = fixture / pin['path']
+    target = harness / pin['target']
+    require(digest(patch) == pin['sha256'], 'harness-startup-patch-hash')
+    require(digest(target) == pin['baseSHA256'], 'harness-startup-base-hash')
+    runner.run('harness-startup-check', ['git', 'apply', '--check', str(patch)],
+               harness, env, plan['limits']['jobMinutes'])
+    runner.run('harness-startup-apply', ['git', 'apply', str(patch)],
+               harness, env, plan['limits']['jobMinutes'])
+    require(digest(target) == pin['patchedSHA256'], 'harness-startup-patched-hash')
+    return {'commit': plan['harness']['commit'], 'patchSHA256': pin['sha256'],
+            'baseSHA256': pin['baseSHA256'], 'patchedSHA256': pin['patchedSHA256']}
+
+
 def prepare_source(plan, source, fixture, task, tools, sdk, runner, env):
     for phase in ('upstream', 'debug'):
         for i, row in enumerate(plan['runtime']['patches']):
@@ -283,6 +298,8 @@ def main():
         basic_env = clean_environment(task)
         basic_env['PATH'] += ':/usr/local/bin'
         report['preflight'] = preflight(plan, args.source, args.fixture, args.harness, task)
+        stage = 'harness'
+        report['harness'] = prepare_harness(plan, args.harness, args.fixture, runner, basic_env)
         stage = 'sdk'
         runner.run('sdk-materialize', [sys.executable, str(HERE / 'materialize.py'), 'sdk',
                    '--task', str(task)], task, basic_env, plan['limits']['jobMinutes'])
@@ -403,7 +420,7 @@ def main():
         report['stages'] = runner.records
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)
         if report['status'] == 'passed':
-            complete = (all(key in report for key in ('monitorPreflight', 'sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
+            complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
                         report.get('monitorPreflight', {}).get('status') == 'passed' and
                         len(report.get('toolchains', [])) == 11 and runner.native_cleanup is not None and
                         runner.native_cleanup['allOwnedGone'] and runner.native_cleanup['censusComplete'] and
