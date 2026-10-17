@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "recordedAtUTC": "2026-10-17 08:41:40 UTC",
+  "run": {
+    "id": 39018277446,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39018277446",
+    "createdAt": "2026-10-17T08:40:58Z",
+    "attempt": 1,
+    "event": "push",
+    "executionCommit": "8c7e8b009020735a3d9fe4f477bc7d1ca0b7b685",
+    "executionTree": "6a0b0f29ebd7d02e6c06fab257a30d4608aceaff",
+    "jobId": 117354765209,
+    "jobStartedAt": "2026-10-17T08:41:02Z",
+    "status": "in_progress",
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "runnerGroup": "GitHub Actions"
+  },
+  "fixture": {
+    "commit": "b00f0761850046de58f5186614e0d250973fa5ea",
+    "tree": "26fabae0fc1b9f7404fbfd41c74a213dc0ee2b27",
+    "routeSeal": "b5ac747242e389b5f558b17f18c1f41d82cf8a8c",
+    "workflowSHA256": "9fbc21231626e050131b8765a87c8c3338922ee430c887bd9d66fe907ac2bc10",
+    "codeManifestSHA256": "29c8e059b6695732c8424b151b6b13e56c851e45b8216615cd24ed7d1d3941ac",
+    "independentCodeReviewSHA256": "7bcfec822a8f18cc469298a600d84419e6b70a1e6366362306cfabe2b2e3a84d",
+    "independentRouteReviewSHA256": "29e517ecba45f1c0e4c3fb030eff315584f16041bf779536feb048d657894a61"
+  },
+  "priorFailedRun": 39016143725,
+  "timePolicy": {
+    "humanCumulativeLimitMinutes": null,
+    "platformJobMinutes": 360,
+    "progressGuard": "multiple signals; no log-silence-only cutoff; 20 minutes without progress across log/CPU/roster/RSS/disk and no runnable process",
+    "functionalTimeoutsAndResourceLimits": "unchanged"
+  },
+  "qualification": {
+    "fullBuild": "NOT_YET_PROVEN",
+    "nativeAuth": "NOT_YET_PROVEN",
+    "productQualification": false
+  },
+  "newActionsArtifacts": 0,
+  "duplicateExecution": false
+}
