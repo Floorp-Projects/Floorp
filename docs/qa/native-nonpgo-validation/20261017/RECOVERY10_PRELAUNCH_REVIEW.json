@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "decision": "GO_FOR_ONE_PINNED_INTEL_FULL_HOST_XUL_NATIVE_RUN",
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "reviewedAtUTC": "2026-10-17T22:58:59.976521+00:00",
+  "binding": {
+    "callerRepository": "Floorp-Projects/Floorp-Runtime",
+    "callerCommit": "dbca173839e63b82fcca2f1a109dfd1ec671f0a3",
+    "callerParent": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "workflow": {
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "bytes": 6749,
+      "sha256": "8f4face006efd626dc58715b5c29f249fa7e098b4ea42c7f2542c60c5ed117e8"
+    },
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "fixtureCommit": "c127e001c5337e47a842c7453177da286bc02c54",
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "runtimeSourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "targetedMacRun": 39076694914,
+    "targetedMacReceiptSHA256": "7e5abc0cf523bcae1fed9c62dfad78c2850859898375617a45209db5b44ced5e",
+    "targetedMacTerminalReviewSHA256": "a5bc9a2731830b08f494d03274596684d52203b2bf3942fc3cdc0c1a3c4d3135"
+  },
+  "minimalCallerDiff": {
+    "verified": true,
+    "changes": [
+      "Exact push branch changed to codex/mac-native-nonpgo-recovery10-20261017",
+      "Exact ref guard changed to the same branch",
+      "Fixture pin changed from ac273d616cb94347f122c7247f5e989aef7e13f1 to c127e001c5337e47a842c7453177da286bc02c54"
+    ],
+    "otherWorkflowBytesUnchanged": true,
+    "runtimeBaseTreeDifference": "Only this validation workflow is added relative to the fixed Runtime source commit."
+  },
+  "route": {
+    "branch": "codex/mac-native-nonpgo-recovery10-20261017",
+    "trigger": "push",
+    "jobCount": 1,
+    "jobId": "validate",
+    "runner": "macos-15-intel",
+    "platformTimeoutMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "guards": [
+      "Exact repository",
+      "Exact branch ref",
+      "push event",
+      "run attempt 1",
+      "created=true",
+      "before=0000000000000000000000000000000000000000"
+    ],
+    "cancelInProgress": false,
+    "python": "Runner tool-cache Python 3.12.10 x64",
+    "checkoutActionCommit": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "persistCredentials": false,
+    "newArtifactUpload": false,
+    "productSigningPublishingMergeOrPermissionChanges": false,
+    "testCopySigning": "Existing disposable ad-hoc test-copy signing and verification only.",
+    "branchWorkflowRunsAtReadOnlyCheck": 0,
+    "otherWorkflowsInspected": 24,
+    "otherMatchingPushCreateOrWorkflowRunTriggers": 0,
+    "matchingActiveNativeRunsAtReadOnlyCheck": 0,
+    "unrelatedExistingDailyBuilds": "One in progress and one queued; neither is this native validation workflow.",
+    "activationCondition": "Immutable provider bytes must match the reviewed caller and fixture before the initial branch push."
+  },
+  "executionGuards": {
+    "sequence": [
+      "Actual native self counter and unreaped-child zombie guard",
+      "Complete descendant-sampling preflight before Runtime source checkout",
+      "Fixed Runtime and harness checkout",
+      "Existing fixed SDK normal API acquisition",
+      "Fresh full host/XUL build and staged disposable test copy",
+      "Actual native suite and final proof gates",
+      "Always-run summary or first-failure fallback"
+    ],
+    "unknownResources": "Persistent incomplete live samples retain null totals and stop as monitor-unavailable. No role exclusion, counter substitution, or new retry window.",
+    "ownershipAndCleanup": "Reviewed full-birth/argv ownership and exact-child reap-before-group-probe behavior retained; remaining denied groups remain unverified/error.",
+    "firstFailure": "Fixture retains first-failure evidence and terminal monitor details; caller prints saved first failure when the final summary is missing.",
+    "timeBudget": "Existing 360-minute platform binding is retained. No six-hour remaining-SDK-life gate or separate arbitrary elapsed-time cancellation was added.",
+    "secretHandling": "SDK token remains scoped to acquisition; subsequent pipeline uses the existing clean environment. Raw private logs are not uploaded."
+  },
+  "sdk": {
+    "snapshotCommit": "abb4f898c2793aa811181fad068f73b3f90a9c1a",
+    "snapshotPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY10_SDK_PRELAUNCH.json",
+    "snapshotBytes": 1371,
+    "snapshotSHA256": "c597f67bef52893d7d9afd46580ae3272474e7a29e713f12893a06330bf3a199",
+    "snapshotCheckedAtUTC": "2026-10-17T22:57:06.337388+00:00",
+    "artifact": 12096898807,
+    "run": 39022451582,
+    "attempt": 1,
+    "version": "26.5",
+    "zipBytes": 105082683,
+    "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "tarSHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+    "canonicalDraftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "materializerTreeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+    "expiresAt": "2026-10-18T09:48:20Z",
+    "expired": false,
+    "independentCurrentOfficialMetadataCheck": "Artifact ID/name, run/head, expiry, size and ZIP digest match the fixed plan.",
+    "normalZipEndpoint302": "Recorded in the committed prelaunch snapshot; payload was not downloaded in that check or this review.",
+    "acquisitionGates": "Job must recheck current official metadata/expiry and stop on HTTP failure; retain 600-second deadline and fixed ZIP/TAR/tree/version validation.",
+    "retentionOrAccessChanges": false
+  },
+  "validation": {
+    "callerYAMLParsed": true,
+    "allThreePythonHeredocsParsed": true,
+    "exactThreeSubstitutionsReconstructed": true,
+    "targetedMacPrerequisite": "All 97 tests passed with no skips; owned-zombie ordering, ordinary API census and unchanged held-EPERM negative guard validated.",
+    "publicationsOrExecutionsByReviewer": 0
+  },
+  "unresolvedQuestions": [
+    "Historical denied PID generation and original native host exit remain unknown.",
+    "This new full run must establish actual native authentication; the preceding SDK-free success does not establish it.",
+    "Other native permission or lifecycle failures remain possible and must retain their original evidence."
+  ],
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39076694914",
+    "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39022451582/artifacts",
+    "https://github.com/Floorp-Projects/Floorp/blob/abb4f898c2793aa811181fad068f73b3f90a9c1a/docs/qa/native-nonpgo-validation/20261017/RECOVERY10_SDK_PRELAUNCH.json"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "SDKPayloadDownloads": 0,
+    "externalWrites": 0,
+    "method": "Read-only immutable local caller comparison, syntax and workflow trigger inspection, committed SDK snapshot comparison, current official artifact metadata and active-run checks."
+  }
+}
