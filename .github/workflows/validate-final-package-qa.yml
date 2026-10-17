@@ -377,6 +377,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          include-hidden-files: false
           path: |
             ${{ runner.temp }}/final-package-qa/*.json
             ${{ runner.temp }}/final-package-qa/*.txt
@@ -390,7 +391,11 @@ jobs:
             ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stdout.log
             ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/result.json
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/first-failure.json
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/before-cleanup.json
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.stdout.log
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/fixture-window.png
           if-no-files-found: warn

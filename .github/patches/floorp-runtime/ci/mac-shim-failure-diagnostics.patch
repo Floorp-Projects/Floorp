@@ -1,0 +1,147 @@
+diff --git a/.github/workflows/daily-build.yml b/.github/workflows/daily-build.yml
+index fef8955..d8a572c 100644
+--- a/.github/workflows/daily-build.yml
++++ b/.github/workflows/daily-build.yml
+@@ -134,6 +134,7 @@ jobs:
+       platform: Linux
+       arch: x86_64
+       runner: ubuntu-24.04
++      debug: ${{ github.event.schedule == '0 18 * * *' || github.event.inputs.debug == 'true' }}
+
+   verify-linux-aarch64:
+     name: Verify Linux aarch64 runtime artifact
+@@ -146,6 +147,7 @@ jobs:
+       platform: Linux
+       arch: aarch64
+       runner: ubuntu-24.04-arm
++      debug: ${{ github.event.schedule == '0 18 * * *' || github.event.inputs.debug == 'true' }}
+
+   verify-mac-x86_64:
+     name: Verify macOS x86_64 runtime artifact
+@@ -158,6 +160,7 @@ jobs:
+       platform: Darwin
+       arch: x86_64
+       runner: macos-15-intel
++      debug: ${{ github.event.schedule == '0 18 * * *' || github.event.inputs.debug == 'true' }}
+
+   verify-mac-aarch64:
+     name: Verify macOS aarch64 runtime artifact
+@@ -170,6 +173,7 @@ jobs:
+       platform: Darwin
+       arch: aarch64
+       runner: macos-14
++      debug: ${{ github.event.schedule == '0 18 * * *' || github.event.inputs.debug == 'true' }}
+
+   aggregate-runtime-manifest-v2:
+     name: Aggregate Runtime Build Manifest v2
+diff --git a/.github/workflows/mac-shim-native-diagnostic.yml b/.github/workflows/mac-shim-native-diagnostic.yml
+new file mode 100644
+index 0000000..78cf1ac
+--- /dev/null
++++ b/.github/workflows/mac-shim-native-diagnostic.yml
+@@ -0,0 +1,35 @@
++---
++# SPDX-License-Identifier: MPL-2.0
++
++name: Mac Intel Shim diagnostic (existing artifact only)
++run-name: Mac Intel diagnostic / original run 38963901545 attempt 1
++
++'on':
++  push:
++    branches:
++      - codex/mac-shim-native-diagnostic-20261017
++
++permissions:
++  actions: read
++  contents: read
++
++concurrency:
++  group: mac-shim-native-diagnostic-20261017
++  cancel-in-progress: false
++
++jobs:
++  mac-intel-diagnostic:
++    if: >-
++      github.repository == 'Floorp-Projects/Floorp-Runtime' &&
++      github.event_name == 'push' &&
++      github.ref == 'refs/heads/codex/mac-shim-native-diagnostic-20261017'
++    uses: ./.github/workflows/verify-runtime-artifact.yml
++    with:
++      source-workflow-run-id: '38963901545'
++      artifact-id: '12082552649'
++      artifact-name: floorp-mac-universal-moz-artifact
++      expected-build-id: '20261016204014'
++      platform: Darwin
++      arch: x86_64
++      runner: macos-15-intel
++      debug: true
+diff --git a/.github/workflows/verify-runtime-artifact.yml b/.github/workflows/verify-runtime-artifact.yml
+index 8e7a1aa..b84e132 100644
+--- a/.github/workflows/verify-runtime-artifact.yml
++++ b/.github/workflows/verify-runtime-artifact.yml
+@@ -36,7 +36,7 @@ name: Verify Final Runtime Artifact
+         type: string
+         required: true
+       debug:
+-        description: Whether the artifact is a Debug build
++        description: Requested Debug verifier mode; compiled build type is not attested
+         type: boolean
+         required: false
+         default: false
+@@ -84,7 +84,7 @@ name: Verify Final Runtime Artifact
+           - macos-15-intel
+           - macos-14
+       debug:
+-        description: Whether the artifact is a Debug build
++        description: Requested Debug verifier mode; compiled build type is not attested
+         type: boolean
+         required: false
+         default: false
+@@ -264,13 +264,14 @@ jobs:
+         uses: actions/checkout@v4
+         with:
+           repository: Floorp-Projects/Floorp
+-          ref: e1da5a98af5fa72065994514dc9618f2a38ba338
++          ref: 7b13484a3102861bf34af7f4b0d57fdfa787d3cd
+           path: floorp-native-tests
+           persist-credentials: false
+           sparse-checkout-cone-mode: false
+           sparse-checkout: |
+             tools/app-shim/test-runtime.py
+             tools/app-shim/test-context-menu.py
++            tools/app-shim/shim_diagnostics.py
+
+       - name: Download exact final primary artifact by ID
+         uses: actions/download-artifact@v4
+@@ -492,12 +493,13 @@ jobs:
+           OUTPUT_FILE: ${{ runner.temp }}/native-full-version.txt
+           PARSER_PATH: ${{ github.workspace }}/.github/workflows/scripts/verify_full_version.py
+           TARGET_ARCH: ${{ inputs.arch }}
+-          DEBUG_BUILD: ${{ inputs.debug }}
++          REQUESTED_DEBUG_BUILD: ${{ inputs.debug }}
+           DEBUG_VERIFIER: ${{ github.workspace }}/.github/workflows/scripts/verify_debug_runtime.py
+           DEBUG_EVIDENCE_DIR: ${{ runner.temp }}/native-debug-evidence
+           PWA_EVIDENCE_DIR: ${{ runner.temp }}/native-pwa-evidence
+         run: |
+           set -euo pipefail
++          echo "Requested Debug verifier mode: $REQUESTED_DEBUG_BUILD; compiled build type is not verified"
+           case "$TARGET_ARCH" in
+             x86_64) expected_runner_arch=x86_64; expected_slice=x86_64 ;;
+             aarch64) expected_runner_arch=arm64; expected_slice=arm64 ;;
+@@ -671,11 +673,16 @@ jobs:
+         uses: actions/upload-artifact@v4
+         with:
+           name: native-pwa-${{ inputs.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
++          include-hidden-files: false
+           path: |
+             ${{ runner.temp }}/native-pwa-evidence/*.json
+             ${{ runner.temp }}/native-pwa-evidence/*.txt
+             ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/result.json
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/first-failure.json
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/before-cleanup.json
+             ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.log
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.stdout.log
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.stderr.log
+             ${{ runner.temp }}/native-pwa-evidence/native-gui/run-*/report.json
+             ${{ runner.temp }}/native-pwa-evidence/native-gui/run-*/fixture-window.png
+           if-no-files-found: warn
