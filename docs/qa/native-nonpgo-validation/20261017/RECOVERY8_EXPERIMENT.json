@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "phase": "PRE_EXECUTION",
+  "baseCommit": "477b9b0c8a12f7e712dd9209dee493617ab34196",
+  "purpose": "Determine whether one live known-child system ps can produce three actual EPERM task queries across the unchanged retry window. Compare with normal draining and pinned harness census.",
+  "syntheticDifference": "16384 repeated PID output columns and intentionally undrained stdout hold the exact child; neither is the actual native harness command or normal capture_output consumption.",
+  "ownership": "A dedicated new-session worker retains its exact Popen ps child without a reaping wait or poll until release. For every target query, before/after sequence-bound parent acknowledgments use waitid(P_PID,WNOHANG|WEXITED|WNOWAIT) to prove the same exact child is not exit-pending. BSD birth/parent/group/status are supplemental; permission-denied identity remains unknown, never authorizes counters.",
+  "observation": "Save every full sample and actual target task query. Append the query row before optional diagnostics and store task result before after-diagnostics. Before/after WNOWAIT acknowledgments and BSD queries add timing overhead, without changing production source, return values, retry count or 0.25-second spacing.",
+  "retryPolicy": "Unchanged Runner.group_activity: up to three attempts, 0.25 seconds between incomplete attempts, no process exclusion or unavailable-to-zero conversion.",
+  "cleanup": "Release stdout and independently reap exact ps child before returning the group sample to Runner; worker stays live for existing fail-closed/cleanup. This intentionally does not recreate signalling a live setuid ps child. Preserve group cleanup and exact leader reap separately.",
+  "bounds": {
+    "formatColumns": 16384,
+    "fixedCommandOutputLimitBytes": 2097152,
+    "readyWaitSeconds": 5,
+    "workerReleaseWaitSeconds": 15,
+    "childDrainAndReapWaitSeconds": 5,
+    "streamingStdoutCapBytes": 2097152,
+    "streamingStderrCapBytes": 1048576,
+    "parentAckWaitSeconds": 2
+  },
+  "controls": [
+    "same command with normal immediate pipe drain",
+    "existing fixed native harness census preflight including real Mac unreaped-child guard"
+  ],
+  "execution": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "attempt": 1,
+    "sdk": false,
+    "browser": false,
+    "build": false,
+    "artifactUpload": false,
+    "privilegeOrProtectionChanges": false,
+    "permissions": {
+      "contents": "read"
+    }
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_ps_lifetime test_guards -q",
+    "platform": "Linux",
+    "total": 82,
+    "passed": 81,
+    "skipped": 1,
+    "elapsedSeconds": 3.798,
+    "skip": "Real Mac unreaped-child test; required in Mac job",
+    "additionalCoverage": [
+      "Six sequence-bound live held-child ACKs",
+      "Non-reaping child-exit observation repeats and exact reap",
+      "Streaming overflow closes pipes and reaps exact owned child",
+      "Unavailable BSD identity allowed only with intact live parent acknowledgments; unknown counters stay null",
+      "Pipe-gated live child waitid check without scheduling-duration assumption",
+      "Contradictory known BSD birth tags fail coverage"
+    ]
+  },
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+      "bytes": 16712,
+      "sha256": "2c3e93b58930b6536a11498a06242b8a173dec471906030c37b5ac6c78901eb4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+      "bytes": 6570,
+      "sha256": "b1268883e3975b13ef160fc6b918c896cf0df76f918a83c139611ceb7f7a9241"
+    }
+  ],
+  "evidenceLimit": "A successful synthetic reproduction is a possible mechanism for that exact new child. It cannot identify the historical denied generation, explain browser exit, or verify native authentication. Missing three-observation/identity coverage remains failed/inconclusive.",
+  "waitidBinding": {
+    "preferred": "Python os.waitid and platform constants",
+    "fallback": "Darwin64 libSystem waitid; P_PID=1,WNOHANG=1,WEXITED=4,WNOWAIT=32,siginfo bytes104,pid offset12,status offset20,pointer bytes8",
+    "gate": "Real-child live check, two repeated exit-pending observations without reaping, exact exit7 reap, then ECHILD; mandatory in Mac job. No child counter permission is changed.",
+    "sources": [
+      "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/wait.h",
+      "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/signal.h"
+    ]
+  },
+  "outerHelperProof": "Bounded ps PID/PGID inventory must contain its exact unreaped Popen PID with the monitor PGID; no post-exit getpgid assumption."
+}
