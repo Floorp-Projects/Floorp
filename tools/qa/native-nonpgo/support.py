@@ -8,6 +8,7 @@ import re
 import signal
 import shutil
 import subprocess
+import sys
 import tarfile
 import time
 import urllib.error
@@ -251,9 +252,14 @@ class Runner:
     def group_activity(pgid):
         partial = []
         for attempt in range(3):
-            result = subprocess.run(['/bin/ps', '-axo', 'pgid=,pid=,rss=,time=,stat='], capture_output=True,
+            columns = 'pgid=,pid=' if sys.platform == 'darwin' else 'pgid=,pid=,rss=,time=,stat='
+            result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
                                     check=True, timeout=3, text=True)
-            value = Runner.parse_group_activity(result.stdout, pgid)
+            if sys.platform == 'darwin':
+                from darwin_activity import probe
+                value = probe().group(result.stdout, pgid)
+            else:
+                value = Runner.parse_group_activity(result.stdout, pgid)
             if value['sampleComplete']:
                 break
             partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
@@ -297,6 +303,19 @@ class Runner:
                                 private_bytes += item.stat().st_size
                         except FileNotFoundError:
                             pass
+                    minimum_free = free if minimum_free is None else min(minimum_free, free)
+                    if elapsed > deadline_minutes * 60:
+                        reason = 'platform-job-limit'
+                    elif free < self.limits['minFreeDuringBuildGiB'] * 1024**3:
+                        reason = 'free-disk-reserve'
+                    elif size > limit:
+                        reason = 'private-log-limit'
+                    elif private_bytes > self.limits['maxNativePrivateBytes']:
+                        reason = 'native-private-size-limit'
+                    if reason:
+                        self.fail(stage, reason)
+                        self.stop(process)
+                        break
                     activity = self.group_activity(process.pid)
                     if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete']:
                         if len(self.monitor_diagnostics) < 16:
@@ -308,24 +327,21 @@ class Runner:
                     if not activity['sampleComplete']:
                         if process.poll() is not None:
                             break
+                        if activity.get('rssLowerBoundMiB', 0) > self.limits.get('maxOwnedRSSMiB', 10240):
+                            raise Failure('owned-process-memory-limit')
                         raise Failure('monitor-unavailable')
                     rss = activity['rssMiB']
                     if self.native_registry is not None:
                         self.native_registry.census()
                         rss += self.native_registry.outside_group_rss(process.pid)
+                    if activity.get('partialSamples'):
+                        # An unobserved interval cannot count as evidence of
+                        # unchanged CPU, memory, membership or runnable state.
+                        progress = ProgressWatch(self.limits['stallQuietMinutes'])
                     quiet, stalled = progress.observe(time.monotonic(), size, free, activity)
                     peak_rss = max(peak_rss, rss)
-                    minimum_free = free if minimum_free is None else min(minimum_free, free)
                     last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
-                    if elapsed > deadline_minutes * 60:
-                        reason = 'platform-job-limit'
-                    elif free < self.limits['minFreeDuringBuildGiB'] * 1024**3:
-                        reason = 'free-disk-reserve'
-                    elif size > limit:
-                        reason = 'private-log-limit'
-                    elif private_bytes > self.limits['maxNativePrivateBytes']:
-                        reason = 'native-private-size-limit'
-                    elif rss > self.limits.get('maxOwnedRSSMiB', 10240):
+                    if rss > self.limits.get('maxOwnedRSSMiB', 10240):
                         reason = 'owned-process-memory-limit'
                     elif stalled:
                         reason = 'stalled-no-progress'

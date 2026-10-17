@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY4_SHARED_DARWIN_TASK_COUNTERS_STATIC_AND_PORTABLE_REGRESSION_REVIEW",
+  "manifest": {
+    "path": "RECOVERY4_CODE_HASHES_FINAL.json",
+    "sha256": "1ecdc7990ceee730971b2a6c2e65ae68d3d0facdddbc84da9f128f82dac1c1d1",
+    "files": 13,
+    "allBytesAndSHA256Match": true
+  },
+  "decision": {
+    "staticPreparation": "GO",
+    "openP0": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "immutableRoute": "SEPARATE_REVIEW_REQUIRED",
+    "futureNativeDiagnosticDelta": "NOT_REVIEWED",
+    "nativeAuthenticationQualification": false,
+    "productQualification": false
+  },
+  "reviewedChanges": [
+    {
+      "area": "Darwin task probe",
+      "result": "PASS",
+      "evidence": "DarwinActivity validates the 136/96/232 natural layout, required identity and coherent user-task counters; it requires an exact full-sized result and a successful nonzero timebase ratio. Task RSS is measured in bytes and CPU Mach counters are converted by that ratio."
+    },
+    {
+      "area": "Missing versus measured zero",
+      "result": "PASS",
+      "evidence": "Short/zero/errno-zero responses and permission failure remain unavailable. A measured RSS zero requires an otherwise coherent live task. Gone requires explicit zombie, ESRCH from positive-PID signal-zero, or replacement of the expected generation; none is inferred merely from a missing RSS field."
+    },
+    {
+      "area": "Identity and cleanup",
+      "result": "PASS",
+      "evidence": "The native registry uses the shared strict BSD probe and expected-generation RSS query. Missing BSD info cannot silently remove a live identity; failed executable-path lookup also needs confirmed absence. Existing same-generation/argv ownership checks before cleanup signals remain."
+    },
+    {
+      "area": "Sampling and stall",
+      "result": "PASS",
+      "evidence": "Darwin ps supplies only PGID/PID inventory; RSS/CPU/runnable summary come from task-level measurements. Unknown aggregates stay null with explicit lower bounds and bounded retries. Recovered incomplete observations reset the stall clock. Derived R/S/T values are labeled libproc-runnable-summary."
+    },
+    {
+      "area": "Resource limits",
+      "result": "PASS",
+      "evidence": "Platform, free-disk, stage-log and private-native-size gates execute before process measurement. A known RSS lower-bound excess fails even when the total is unavailable. Complete group plus out-of-group owned RSS still enforces the memory limit."
+    },
+    {
+      "area": "Diagnostic privacy",
+      "result": "PASS",
+      "evidence": "PID/generation diagnostics use keyed run-local opaque tags, bounded examples and aggregate counters. The new probe does not publish process names, argv, raw PID/birth tuples, credentials or launch tokens."
+    },
+    {
+      "area": "Early target preflight",
+      "result": "STATIC_PASS_RUNTIME_PENDING",
+      "evidence": "Before Runtime source checkout, the workflow requires actual self measurement with positive RSS and a successful timebase/layout probe, then an owned churn stage with a completed libproc task-level sample. Portable mocks do not substitute for this future macOS gate."
+    }
+  ],
+  "resolvedDesignFindings": [
+    {
+      "priority": "P1",
+      "priorIssue": "All-row ps thread-state completeness could stop progressing builds.",
+      "resolution": "Darwin no longer depends on per-thread ps state or its zeroed unmeasured task fields. Unavailable task-level measurements still fail after bounded retries."
+    },
+    {
+      "priority": "P1",
+      "priorIssue": "Native RSS and liveness helpers could map unavailable measurements to zero or absence.",
+      "resolution": "Shared strict probes now preserve unknown status in info/path/RSS and fail closed."
+    },
+    {
+      "priority": "P2",
+      "priorIssue": "Normalized rows lost per-generation continuity.",
+      "resolution": "A process tag and identity tag remain stable across samples within the probe instance without publishing raw identity values."
+    }
+  ],
+  "tests": {
+    "command": "python3 -m unittest -v test_guards.py",
+    "independentRun": {
+      "methods": 45,
+      "seconds": 1.531,
+      "result": "PASS",
+      "failures": 0,
+      "errors": 0
+    },
+    "allHelperPythonAST": "PASS",
+    "focusedCoverage": [
+      "ABI and non-1 timebase conversion",
+      "coherent measured zero versus missing task information",
+      "permission failure and full-size zero-filled records",
+      "short BSD records versus independently confirmed disappearance",
+      "zombie and generation replacement",
+      "partial aggregate lower bounds and opaque tags",
+      "Darwin PGID/PID-only inventory",
+      "native registry unknown birth/RSS rejection",
+      "resource limits before an unavailable measurement"
+    ],
+    "darwinOrBrowserExecution": false
+  },
+  "provenance": {
+    "branch": "codex/mac-native-nonpgo-recovery4-20261017",
+    "priorFailedRunsRetained": [
+      39016143725,
+      39018277446,
+      39020119793,
+      39037341780
+    ],
+    "fixedRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixedSDKArtifact": 12074136738,
+    "fixedSDKZipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "platformMinutes": 360,
+    "unchangedFromReviewedRecovery3": [
+      "fetch_sdk.py",
+      "materialize.py",
+      "native_cause.py",
+      "native_suite.py",
+      "pipeline.py",
+      "preserve-shim-disconnect-cause.patch",
+      "launch-services-host.patch"
+    ],
+    "nativeCauseSHA256": "e42bc2911f3f8af3f7434efcb9ebb9c5aaa8eef316dde6e2a904f87b1122cc00",
+    "nativeSuiteSHA256": "f7ca85e795e27b604d33b74ccf78b68eda8e660959ff17627cbd687e72e70584",
+    "nativeFunctionalTimeouts": "UNCHANGED",
+    "authenticationAndOSProtectionAssertions": "UNCHANGED"
+  },
+  "causalDistinction": {
+    "recovery2": {
+      "run": 39020119793,
+      "fullHostTUAndXUL": "Successful evidence retained",
+      "nativeFailure": "Host-startup guard observed the LaunchServices launcher before adoption; real browser spontaneous exit remains UNKNOWN."
+    },
+    "recovery3": {
+      "run": 39037341780,
+      "result": "failure",
+      "stage": "full-build",
+      "reason": "monitor-unavailable",
+      "nativeTests": "NOT_RUN"
+    },
+    "recovery4Intent": "Remove the monitor reachability blocker so the separately reviewed native startup fix and evidence collection can run. This code review does not establish a browser-exit or authentication root cause.",
+    "originalAuthenticationTimeoutCause": "UNKNOWN"
+  },
+  "limitations": [
+    "The shared native API has not executed on macOS in this review; early native ABI/timebase/self/churn checks remain mandatory.",
+    "The inspected public kernel source supports the selected ABI and API semantics; exact source-to-binary identity for runner build 24G830 is unverified.",
+    "Task-level reads can still be unavailable during lifecycle or permission races. This design preserves bounded failure rather than promising all churn will be measurable.",
+    "Any later native diagnostic additions and final immutable fixture/caller binding need their own focused review."
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "ciRunsStarted": 0,
+    "pushes": 0,
+    "artifactPayloadDownloads": 0,
+    "nativeBrowserExecutions": 0,
+    "portableTestsOnly": true
+  },
+  "reviewedAtUTC": "2026-10-17T14:11:14.198971+00:00"
+}

@@ -1,7 +1,7 @@
 {
   "activation": {
     "allowInitialPushOnly": true,
-    "allowedBranch": "codex/mac-native-nonpgo-recovery3-20261017",
+    "allowedBranch": "codex/mac-native-nonpgo-recovery4-20261017",
     "approvalRequiredBeforeRuntimeBranchPush": true,
     "helperFixtureCommit": "BOUND_BY_WORKFLOW_ENV_FLOORP_FIXTURE_SHA",
     "runAttempt": 1
@@ -91,7 +91,7 @@
   "preparedAt": "2026-10-17",
   "recovery": {
     "actualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
-    "actualFailedMonitorField": "UNKNOWN_NOT_RECORDED",
+    "actualFailedMonitorField": "state-unavailable",
     "priorExecutions": [
       {
         "firstFailure": {
@@ -119,19 +119,28 @@
         "fullBuild": "passed",
         "run": 39020119793,
         "status": "failed"
+      },
+      {
+        "firstFailure": {
+          "code": "monitor-unavailable",
+          "stage": "full-build"
+        },
+        "harnessStartupPatch": "applied-and-hash-verified",
+        "nativeAuthentication": "NOT_RUN",
+        "run": 39037341780,
+        "status": "failed"
       }
     ],
     "priorFailure": {
-      "code": "nonzero-exit",
-      "nestedCode": "cause-host-exited",
-      "stage": "native-suite"
+      "code": "monitor-unavailable",
+      "stage": "full-build"
     },
-    "priorFixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+    "priorFixture": "69391c259358025ff2532d027b970e5babf43ec9",
     "priorResult": "failed",
-    "priorRun": 39020119793,
-    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39020119793",
+    "priorRun": 39037341780,
+    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39037341780",
     "recoveryExplicitlyAuthorized": true,
-    "repairScope": "Harness startup liveness and bounded before-cleanup diagnostics only; runtime C++/build/toolchain/protection/authentication pins unchanged.",
+    "repairScope": "Replace Darwin ps task/thread counters with identity-bound libproc task counters; preserve the already reviewed native startup diagnostics and all build/authentication pins.",
     "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
   },
   "runner": {
@@ -390,7 +399,7 @@
     "zipBytes": 105082683,
     "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
   },
-  "status": "RECOVERY3_AUTHORIZED_NATIVE_STARTUP_IDENTITY_FIX",
+  "status": "RECOVERY4_AUTHORIZED_DARWIN_TASK_COUNTER_FIX",
   "storage": {
     "cacheWrites": 0,
     "newActionsArtifacts": 0,
@@ -403,7 +412,7 @@
     "humanCumulativeLimitMinutes": null,
     "mode": "platform-limit-and-multiple-signal-anomaly",
     "normalProgressMayExceedOriginal210Minutes": true,
-    "partialSampling": "Unknown/missing data is incomplete, not zero; at most three ps snapshots 0.25 seconds apart; fail monitor-unavailable if unresolved for a live owned group.",
+    "partialSampling": "Darwin uses identity-bound libproc task counters and runnable-thread summary; only ps PGID/PID inventory. Unknown remains incomplete, at most three snapshots 0.25 seconds apart, with confirmed gone/replaced generations distinguished from unavailable. Recovered observation gaps reset stall accounting; resource limits still apply.",
     "platformJobMinutes": 360,
     "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
     "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"

@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY4_FINAL_NATIVE_DIAGNOSTIC_DELTA_REVIEW_WITH_PRESERVED_COUNTER_REVIEW",
+  "manifest": {
+    "path": "RECOVERY4_CODE_HASHES_FINAL.json",
+    "sha256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+    "files": 13,
+    "allByteLengthsAndSHA256Verified": true
+  },
+  "decision": {
+    "staticPreparation": "GO",
+    "openP0": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "immutableExecutionRoute": "SEPARATE_REVIEW_PENDING",
+    "nativeExecutionAndAuthentication": "NOT_VALIDATED_BY_THIS_REVIEW",
+    "productQualification": false
+  },
+  "preservedCounterSnapshot": {
+    "manifestPath": "RECOVERY4_COUNTER_CODE_HASHES_SNAPSHOT.json",
+    "manifestSHA256": "1ecdc7990ceee730971b2a6c2e65ae68d3d0facdddbc84da9f128f82dac1c1d1",
+    "reviewPath": "RECOVERY4_INDEPENDENT_REVIEW.json",
+    "reviewSHA256": "1f1046e5440078646c5302c2b06b65da2866c45db86686d22839edadb05f1dc2",
+    "priorReviewUnmodified": true,
+    "changesSinceCounterSnapshotOnly": [
+      "tools/qa/native-nonpgo/native_cause.py",
+      "tools/qa/native-nonpgo/native_suite.py",
+      "tools/qa/native-nonpgo/test_guards.py"
+    ]
+  },
+  "changedFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "bytes": 15294,
+      "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "bytes": 10768,
+      "sha256": "c25435f7c92605a311813056d58971c0a39c32abe699fba98dc0ca33d4655ab4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 46528,
+      "sha256": "41bda396e25c7785fa6dc63a2374a906af8b03ec9d89d377aa90a4efcf2c7137"
+    }
+  ],
+  "verifiedBehavior": [
+    {
+      "area": "Bounded startup streams",
+      "result": "PASS",
+      "evidence": "Each of launcher/stdout/stderr reads at most a 32768-byte head and 32768-byte tail. Noncontiguous partial boundary lines are discarded before fixed-marker and typed-number extraction. Raw text and paths are not projected."
+    },
+    {
+      "area": "OSStatus coverage",
+      "result": "PASS",
+      "evidence": "Collector and suite projection share the signed-32-bit range and an eight-code maximum. The regression retains a ten-digit negative value as well as the first and last sampled error codes."
+    },
+    {
+      "area": "Observed exit and requested cleanup signal",
+      "result": "PASS",
+      "evidence": "The actual negative kernel browser exit code produces browserSignal; requestedSignal is independently normalized from the requested integer/IntEnum. An open-helper status is kept separate. Pre-cleanup and post-cleanup scalar snapshots remain separate."
+    },
+    {
+      "area": "Snapshot consistency",
+      "result": "PASS",
+      "evidence": "Host.poll updates kernel state before reading plain host exit_code/exited. The state-changing host.returncode property is not used in the diagnostic snapshot. Existing alive/verified/no-exit/no-requested-signal pre-cleanup requirements remain."
+    },
+    {
+      "area": "Abnormal cleanup exit",
+      "result": "PASS",
+      "evidence": "A known browser code other than zero or the signal actually requested by this host wrapper marks the scenario failed. The new fixed error code is set only when there is no earlier errorCode. Unknown exit status remains explicitly unavailable, matching the existing harness's limitation."
+    },
+    {
+      "area": "Arguments and environment provenance",
+      "result": "PASS",
+      "evidence": "Only the configured switch allowlist, about:blank flag and actual exact-argv observation availability are published. Native probe environment entries report presence booleans only. The LaunchServices application's pre-Marionette environment stays explicitly UNVERIFIED."
+    },
+    {
+      "area": "Error classification and projection",
+      "result": "PASS",
+      "evidence": "Existing known timeout messages map to fixed stage codes; OSError contributes an integer errno. The suite retains allowed scalar fields, known marker labels, capped numeric OSStatus values and known switch labels without raw argv, token, nonce or environment values."
+    }
+  ],
+  "findingsResolved": [
+    {
+      "priority": "P1",
+      "title": "Known host crash during cleanup could leave status passed",
+      "independentReproduction": "Executing the actual post-close AST tail with browser exit -11 and no requested signal produced passed/cleanupComplete true in the earlier candidate.",
+      "resolution": "The final guard rejects known unexpected exit status while preserving the first failure. A main-level mock regression reaches authenticated controlled completion, then observes SIG11 during service cleanup and verifies final failure despite successful process cleanup."
+    },
+    {
+      "priority": "P2",
+      "title": "Nine-digit extraction omitted valid signed-32-bit OSStatus values",
+      "independentReproduction": "The earlier collector dropped -2147418113.",
+      "resolution": "Both extraction and projection now support the signed-32-bit domain; the existing stream regression verifies capture and projection of the large negative value."
+    }
+  ],
+  "regressionEvidence": {
+    "command": "python3 -m unittest -v test_guards.py",
+    "finalIndependentRun": {
+      "tests": 48,
+      "seconds": 1.552,
+      "result": "PASS",
+      "failures": 0,
+      "errors": 0
+    },
+    "allHelperPythonAST": "PASS",
+    "focusedRegressions": [
+      "bounded head/tail capture, early/late OSStatus and private-text exclusion",
+      "actual SIG11 versus requested SIGTERM15",
+      "actual main scenario cannot pass a host crash during cleanup",
+      "existing snapshot-state consistency and exception-safe cleanup",
+      "existing strict native task-counter, ownership, archive, config and resource guards"
+    ],
+    "earlierDiagnosticCandidate": {
+      "tests": 47,
+      "result": "PASS",
+      "newFinding": "Independent static/AST review still found the cleanup false-pass and prompted the additional regression."
+    },
+    "nativeOrBrowserExecution": false
+  },
+  "functionalComparison": {
+    "nativeCauseMainFunctionalTryBody": "AST-identical to the immutable reviewed Recovery3 provider source",
+    "nativeSuiteMain": "AST-identical to the immutable reviewed Recovery3 provider source",
+    "intentionalAdditionalAssertion": "Known abnormal browser exit during cleanup now fails, consistently with the pinned harness's existing abnormal-exit rule.",
+    "startupArgumentsEnvironmentSigningAndAuthenticationPredicates": "UNCHANGED",
+    "monitorPlanTemplatePipelineAndRuntimePatches": "Unchanged from the separately reviewed counter snapshot",
+    "functionalNativeTimeouts": "UNCHANGED"
+  },
+  "causalLimits": {
+    "recovery2Run": 39020119793,
+    "recovery2FullHostTUAndXUL": "Separate successful build evidence retained; the run itself remains failed.",
+    "recovery2RealBrowserSpontaneousExit": "UNKNOWN",
+    "recovery3Run": 39037341780,
+    "recovery3Failure": "full-build monitor-unavailable; native tests not reached",
+    "recovery4Intent": "Reach and diagnose the native startup/authentication scenario without weakening its functional assertions.",
+    "originalAuthenticationTimeoutCause": "UNKNOWN",
+    "futureMacPreflight": "Actual native ABI/timebase/self/churn measurements remain mandatory before heavy work."
+  },
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "ciRunsStarted": 0,
+    "pushes": 0,
+    "artifactPayloadDownloads": 0,
+    "nativeBrowserExecutions": 0,
+    "portableTestsAndMockDiagnosisOnly": true
+  },
+  "reviewedAtUTC": "2026-10-17T14:20:36.700276+00:00"
+}

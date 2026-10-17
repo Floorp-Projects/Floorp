@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "manifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+  "codeFiles": 13,
+  "rootGuards": {
+    "command": "python3 -m unittest discover -s tools/qa/native-nonpgo -p test_guards.py",
+    "rootPassed": 48,
+    "total": 48,
+    "elapsedSeconds": 1.544,
+    "compile": "PASS",
+    "nativeExecution": false
+  },
+  "unchangedPlanSections": [
+    "runtime",
+    "sdk",
+    "toolchains",
+    "limits",
+    "runner",
+    "criteria",
+    "baseline"
+  ],
+  "originalHarnessPinsUnchanged": true,
+  "nativeStartupPatchHashUnchanged": true,
+  "oldFullBuildSuccess": "RECOVERY2_FULL_BUILD_RECEIPT.json",
+  "newestFailure": "RECOVERY3_EXECUTION_RESULT.json",
+  "newCIStarted": false,
+  "productQualification": false
+}

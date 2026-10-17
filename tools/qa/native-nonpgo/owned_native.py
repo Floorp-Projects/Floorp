@@ -2,7 +2,6 @@
 import ctypes
 import errno
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -12,17 +11,15 @@ import signal
 import subprocess
 import time
 from support import Failure, require, write_json
+from darwin_activity import probe
 
 PASSIVE_SETTLE_SECONDS = 5
 
 
 class MacProcesses:
     def __init__(self, harness):
-        spec = importlib.util.spec_from_file_location('owned_lifecycle', harness / 'tools/app-shim/shim_lifecycle.py')
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        self.Info = module.BSDInfo
-        self.lib = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+        self.activity = probe()
+        self.lib = self.activity.lib
         self.lib.proc_pidpath.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32]
         self.lib.proc_pidpath.restype = ctypes.c_int
         self.lib.proc_pidinfo.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64,
@@ -37,17 +34,13 @@ class MacProcesses:
             return os.fsdecode(buffer.value)
         code = ctypes.get_errno()
         require(code in (0, errno.ESRCH, errno.ENOENT), 'native-path-unavailable')
-        require(code != 0 or self.info(pid) is None, 'native-live-path-unavailable')
+        require(self.info(pid) is None, 'native-live-path-unavailable')
         return None
 
     def info(self, pid):
-        value = self.Info()
-        ctypes.set_errno(0)
-        size = self.lib.proc_pidinfo(pid, 3, 0, ctypes.byref(value), ctypes.sizeof(value))
-        if size == ctypes.sizeof(value):
-            return None if value.status == 5 else value
-        require(ctypes.get_errno() in (0, errno.ESRCH, errno.ENOENT), 'native-birth-unavailable')
-        return None
+        status, value, reason = self.activity.bsd(pid)
+        require(status != 'unavailable', 'native-birth-unavailable')
+        return value if status == 'measured' else None
 
     def pids(self):
         value = subprocess.run(['/bin/ps', '-axo', 'pid=,uid='], capture_output=True, text=True,
@@ -81,11 +74,10 @@ class MacProcesses:
                 'pgid': after.pgid, 'ppid': after.ppid, 'exe': path, 'argv': command,
                 'argvSHA256': hashlib.sha256(command.encode()).hexdigest()}
 
-    def rss(self, pid):
-        process = subprocess.run(['/bin/ps', '-p', str(pid), '-o', 'rss='],
-                                  capture_output=True, text=True, timeout=3)
-        value = process.stdout.strip()
-        return int(value) / 1024 if value.isdecimal() else 0
+    def rss(self, pid, expected):
+        value = self.activity.read(pid, expected=expected)
+        require(value['status'] != 'unavailable', 'native-rss-unavailable')
+        return value['rssMiB'] if value['status'] == 'measured' else 0
 
 
 def identity(value):
@@ -192,7 +184,7 @@ class OwnedNative:
         return result
 
     def outside_group_rss(self, pgid):
-        return sum(self.system.rss(row['pid']) for row in self.live() if row['pgid'] != pgid)
+        return sum(self.system.rss(row['pid'], row) for row in self.live() if row['pgid'] != pgid)
 
     def finish(self):
         if self.finished:

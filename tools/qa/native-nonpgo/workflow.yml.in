@@ -1,7 +1,7 @@
 name: Isolated Intel non-PGO native recovery
 'on':
   push:
-    branches: [codex/mac-native-nonpgo-recovery3-20261017]
+    branches: [codex/mac-native-nonpgo-recovery4-20261017]
 permissions:
   contents: read
   actions: read
@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
-          test "$GITHUB_REF" = refs/heads/codex/mac-native-nonpgo-recovery3-20261017
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-nonpgo-recovery4-20261017
           test "$GITHUB_EVENT_NAME" = push
           test "$GITHUB_RUN_ATTEMPT" = 1
           test '${{ github.event.created }}' = true
@@ -54,6 +54,7 @@ jobs:
           helper=pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'fixture/tools/qa/native-nonpgo'
           sys.path.insert(0,str(helper))
           from support import Runner,clean_environment,write_json,require
+          from darwin_activity import probe
           task=pathlib.Path(os.environ['TASK_ROOT'])
           plan=json.loads((helper/'plan.json').read_text())
           runner=Runner(task,float((task/'started').read_text()),plan['limits'])
@@ -64,8 +65,15 @@ jobs:
           script="import subprocess\nfor _ in range(12): subprocess.run(['/bin/sh','-c','/bin/sleep 0.1'],check=True)"
           result={'status':'failed'}
           try:
+              native=probe()
+              own=native.read(os.getpid(),os.getpgrp())
+              require(own['status']=='measured' and own['rssMiB']>0,'monitor-native-self-unavailable')
+              result['nativeCounterSelf']={k:own[k] for k in ('status','rssMiB','cpuSeconds','state')}
+              result['nativeCounterSelf'].update(timebaseNumer=native.numer,timebaseDenom=native.denom,abiBytes=232)
               runner.run('monitor-preflight',[sys.executable,'-c',script],task,env,plan['limits']['jobMinutes'])
-              sampled=any((stage.get('lastActivity') or {}).get('sampleComplete') is True for stage in runner.records)
+              sampled=any((stage.get('lastActivity') or {}).get('sampleComplete') is True and
+                          (stage.get('lastActivity') or {}).get('counterSource')=='libproc-taskallinfo'
+                          for stage in runner.records)
               if not sampled:
                   runner.fail('monitor-preflight','monitor-preflight-no-complete-sample')
               require(sampled,'monitor-preflight-no-complete-sample')

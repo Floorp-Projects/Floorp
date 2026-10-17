@@ -2,8 +2,10 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import plistlib
+import re
 import sys
 import time
 import uuid
@@ -26,23 +28,40 @@ STREAM_MARKERS = {
 }
 
 
+def exit_snapshot(host):
+    code = host.exit_code if type(host.exit_code) is int else None
+    launcher = host.process.poll()
+    requested = host.requested_signal
+    return {'browserExitCode': code, 'browserSignal': -code if code is not None and code < 0 else None,
+            'browserExitStatusAvailable': code is not None,
+            'launcherExitCode': launcher if type(launcher) is int else None,
+            'requestedSignal': int(requested) if isinstance(requested, int) and not isinstance(requested, bool) else None}
+
+
 def startup_snapshot(host, output):
     snapshot = {'observedAtMs': int(time.time() * 1000), 'hostStartup': {'started': host is not None},
                 'streams': {}}
     if host is not None:
-        launcher_code = host.process.poll()
         host.poll()
         observed = host.pid is not None and host.identity is not None
         # This probe always uses LaunchServices. Read the exit code already
         # consumed by poll; returncode would consume a later event after the
         # liveness observation and could make the two fields contradictory.
-        browser_code = host.exit_code
+        exits = exit_snapshot(host)
         snapshot['hostStartup'].update({
             'browserIdentityObserved': observed, 'marionetteOwnershipVerified': host.verified,
             'browserLiveness': ('not-observed' if not observed else
                                 'exit-observed' if host.exited else 'alive'),
-            'browserExitCode': browser_code, 'launcherExitCode': launcher_code,
-            'requestedSignal': host.requested_signal})
+            **exits,
+            'launchServices': host.launch_services,
+            'configuredBrowserSwitches': [flag for flag in host.command if flag in
+                ('--no-remote', '--profile', '--marionette', '--remote-allow-system-access')],
+            'configuredAboutBlank': host.command[-1] == 'about:blank',
+            'browserArgvObservedMatches': True if observed and not host.exited else None})
+    snapshot['nativeProbeEnvironment'] = {name: name in os.environ for name in
+        ('GITHUB_TOKEN', 'SDK_READ_TOKEN', 'ACTIONS_RUNTIME_TOKEN', 'MOZ_DISABLE_CONTENT_SANDBOX',
+         'DYLD_LIBRARY_PATH', 'DYLD_INSERT_LIBRARIES')}
+    snapshot['applicationEnvironmentBeforeMarionette'] = 'UNVERIFIED_LAUNCHSERVICES_ENVIRONMENT'
     for label, name in (('launcher', 'browser.private.log'), ('stdout', 'browser.stdout.log'),
                          ('stderr', 'browser.stderr.log')):
         path = output / name
@@ -50,14 +69,22 @@ def startup_snapshot(host, output):
         if record['present']:
             with path.open('rb') as stream:
                 size = stream.seek(0, 2)
-                offset = max(0, size - 65536)
+                stream.seek(0)
+                head = stream.read(32768)
+                offset = max(len(head), size - 32768)
                 stream.seek(offset)
-                data = stream.read(65536)
-            text = data.decode('utf-8', errors='replace')
-            if offset and '\n' in text:
-                text = text.split('\n', 1)[1]
-            record.update({'bytesObserved': size, 'tailBytesRead': len(data),
-                           'tailTruncated': offset > 0,
+                tail = stream.read(32768)
+            head_count, tail_count = len(head), len(tail)
+            if offset > len(head):
+                head = head.rsplit(b'\n', 1)[0] if b'\n' in head else b''
+                tail = tail.split(b'\n', 1)[1] if b'\n' in tail else b''
+            separator = b'\n' if offset > head_count else b''
+            text = (head + separator + tail).decode('utf-8', errors='replace')
+            codes = list(dict.fromkeys(int(code) for code in re.findall(
+                r'Error Domain=NSOSStatusErrorDomain Code=(-?[0-9]{1,10})(?![0-9])', text)
+                if -(2**31) <= int(code) < 2**31))[:8]
+            record.update({'bytesObserved': size, 'headBytesRead': head_count, 'tailBytesRead': tail_count,
+                           'tailTruncated': offset > head_count, 'osStatusCodes': codes,
                            'markers': sorted({value for key, value in STREAM_MARKERS.items() if key in text})})
         snapshot['streams'][label] = record
     return snapshot
@@ -168,7 +195,15 @@ Services.obs.addObserver({state}.observer,'floorp-web-app-shim-event');
                        'connectedBeforeDisconnect': True, 'kernelExitObserved': True,
                        'hostOwnershipVerified': host.verified})
     except BaseException as error:
-        report['errorCode'] = str(error) if isinstance(error, Failure) else type(error).__name__
+        timeouts = {'Marionette': 'cause-marionette-timeout', 'Shim authentication': 'cause-shim-auth-timeout',
+                    'owned kernel monitor': 'cause-kernel-monitor-timeout',
+                    'controlled disconnect': 'cause-controlled-disconnect-timeout',
+                    'owned Shim exit': 'cause-owned-shim-exit-timeout'}
+        report['errorCode'] = str(error) if isinstance(error, Failure) else next(
+            (code for name, code in timeouts.items() if str(error) == 'Timed out waiting for ' + name),
+            type(error).__name__)
+        if isinstance(error, OSError) and type(error.errno) is int:
+            report['errorErrno'] = error.errno
         report['status'] = 'failed'
     finally:
         errors = []
@@ -207,6 +242,13 @@ Services.obs.addObserver({state}.observer,'floorp-web-app-shim-event');
             report['cleanupComplete'] = (not errors and host is not None and
                                          host.pid is not None and host.identity is not None and
                                          host.poll() is not None)
+            if host is not None:
+                report['afterCleanupHost'] = exit_snapshot(host)
+                terminal = report['afterCleanupHost']
+                code, requested = terminal['browserExitCode'], terminal['requestedSignal']
+                if code not in (None, 0, -(requested or 0)):
+                    report['status'] = 'failed'
+                    report.setdefault('errorCode', 'cause-host-abnormal-exit-during-cleanup')
         except BaseException as error:
             errors.append(type(error).__name__)
             report['cleanupComplete'] = False

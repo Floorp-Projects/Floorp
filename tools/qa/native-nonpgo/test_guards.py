@@ -1,12 +1,14 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
 import contextlib
+import ctypes
 import errno
 import io
 import json
 import os
 from pathlib import Path
 import plistlib
+import signal
 import struct
 import subprocess
 import sys
@@ -15,12 +17,14 @@ import tempfile
 import textwrap
 import time
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 import native_cause
+from darwin_activity import BSDInfo, DarwinActivity, TaskAllInfo, TaskInfo
 from support import Failure, ProgressWatch, Runner, clean_environment, extract_tar, scan_tar
 from native_suite import cause_failure_snapshot, context_result, failure_snapshot
 from pipeline import macho, prepare_harness, verify_config
-from owned_native import OwnedNative
+from owned_native import MacProcesses, OwnedNative
 
 
 class Guards(unittest.TestCase):
@@ -176,6 +180,86 @@ class Guards(unittest.TestCase):
         self.assertEqual(snapshot['hostStartup']['browserLiveness'], 'exit-observed')
         self.assertEqual(snapshot['hostStartup']['browserExitCode'], -11)
 
+    def test_startup_stream_codes_keep_first_and_last_failure_without_raw_text(self):
+        _, host = self.patched_host_class()
+        host.process.poll.return_value = 1
+        first = ('PRIVATE Error Domain=NSOSStatusErrorDomain Code=-10827\n'
+                 'PRIVATE Error Domain=NSOSStatusErrorDomain Code=-2147418113\n')
+        last = '\nPRIVATE Error Domain=NSOSStatusErrorDomain Code=-10673\n'
+        (self.root / 'browser.stderr.log').write_text(first + ('padding\n' * 15000) + last)
+        with mock.patch.object(host, '_process_rows', return_value=[]):
+            snapshot = native_cause.startup_snapshot(host, self.root)
+        stream = snapshot['streams']['stderr']
+        self.assertEqual(stream['osStatusCodes'], [-10827, -2147418113, -10673])
+        self.assertTrue(stream['tailTruncated'])
+        self.assertLessEqual(stream['headBytesRead'] + stream['tailBytesRead'], 65536)
+        projected = cause_failure_snapshot({'status': 'failed', 'beforeCleanup': snapshot})
+        self.assertEqual(projected['beforeCleanupStreams']['stderr']['osStatusCodes'], [-10827, -2147418113, -10673])
+        self.assertNotIn('PRIVATE', json.dumps(projected))
+        self.assertEqual(projected['applicationEnvironmentBeforeMarionette'], 'UNVERIFIED_LAUNCHSERVICES_ENVIRONMENT')
+
+    def test_cleanup_requested_signal_is_distinct_from_observed_browser_signal(self):
+        _, host = self.patched_host_class()
+        host.exit_code, host.requested_signal = -11, signal.SIGTERM
+        host.process.poll.return_value = 0
+        value = native_cause.exit_snapshot(host)
+        self.assertEqual(value['browserSignal'], 11)
+        self.assertEqual(value['requestedSignal'], 15)
+        self.assertTrue(value['browserExitStatusAvailable'])
+
+    def test_host_crash_during_cleanup_cannot_pass_authenticated_scenario(self):
+        browser, output = self.root / 'validation.app', self.root / 'cause'
+        (browser / 'Contents').mkdir(parents=True)
+        (browser / 'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleExecutable': 'browser'}))
+        host = SimpleNamespace(pid=42, identity=(42, 'birth', 'argv'), verified=False,
+            launch_services=True, exited=False, exit_code=None, requested_signal=None,
+            process=mock.Mock(), command=['browser', '--no-remote', '--profile', 'PRIVATE',
+                                         '--marionette', '--remote-allow-system-access', 'about:blank'])
+        host.process.poll.return_value = 0
+        host.poll = lambda: 0 if host.exited else None
+        host.close = mock.Mock()
+        host.verify_session = lambda session: setattr(host, 'verified', True)
+        monitor = SimpleNamespace(status='monitoring', pid=43, start=mock.Mock(), close=mock.Mock())
+        client = mock.Mock(session={'capabilities': {}})
+        protections = {'debug': True, 'level': 3, 'userOverride': False, 'disableEnv': '',
+                       'buildID': '20261017000000', 'version': '158.0.1', 'os': 'Darwin', 'is64Bit': True}
+        events = [{'type': 'connected', 'payload': {'pid': 43}},
+                  {'type': 'disconnected', 'time': 110, 'payload': {'pid': 43,
+                   'reason': 'process-exited', 'causeReason': 'launch-cancelled',
+                   'causeTimeMs': 105, 'connectedBeforeDisconnect': True}}]
+        def script(source, *args):
+            if 'AppConstants' in source: return protections
+            if 'hostIdentityJSON' in source: return '{}'
+            if source.endswith('.events;'): return events
+            if source == 'return Date.now();': return 100
+            if source.endswith('.count;'): return 2
+            if '.cancelLaunch(' in source: monitor.status = 'exit-observed'
+            if 'removeObserver' in source:
+                host.exited, host.exit_code = True, -11
+            return None
+        client.script.side_effect = script
+        harness, lifecycle = mock.Mock(SERVICE='service'), mock.Mock()
+        harness.HostProcess.return_value = host
+        harness.Marionette.return_value = client
+        harness.unused_port.return_value = 12345
+        harness.seal_bundle.return_value = self.root / 'shim.app'
+        harness.wait_for.side_effect = lambda description, callback, timeout: callback()
+        lifecycle.ShimMonitor.return_value = monitor
+        argv = ['native_cause.py', '--browser', str(browser), '--harness', str(self.root),
+                '--output', str(output), '--build-id', '20261017000000']
+        with mock.patch.object(sys, 'argv', argv), \
+                mock.patch('native_cause.load_module', side_effect=[harness, lifecycle]):
+            self.assertEqual(native_cause.main(), 1)
+        value = json.loads((output / 'result.json').read_text())
+        self.assertEqual(value['phase'], 'complete')
+        self.assertEqual(value['beforeCleanup']['hostStartup']['browserLiveness'], 'alive')
+        self.assertTrue(value['cleanupComplete'])
+        self.assertEqual(value['status'], 'failed')
+        self.assertEqual(value['errorCode'], 'cause-host-abnormal-exit-during-cleanup')
+        self.assertEqual(value['afterCleanupHost']['browserSignal'], 11)
+        self.assertIsNone(value['afterCleanupHost']['requestedSignal'])
+        self.assertNotIn('PRIVATE', json.dumps(cause_failure_snapshot(value)))
+
     def test_effective_config_uses_upstream_host_cpu_arch(self):
         tools, sdk = self.root / 'tools', self.root / 'sdk'
         substs = {'TARGET_CPU': 'x86_64', 'HOST_CPU_ARCH': 'x86_64', 'OS_ARCH': 'Darwin',
@@ -228,7 +312,8 @@ class Guards(unittest.TestCase):
 
     def test_process_activity_parses_darwin_and_linux_cpu_formats(self):
         output = '900 901 2048 0:01.25 S\n900 902 1024 01:00:00 R+\n900 903 1024 1-01:00:00 S\n901 999 999999 10:00 R\n'
-        with mock.patch('support.subprocess.run', return_value=mock.Mock(stdout=output)):
+        with mock.patch('support.sys.platform', 'linux'), \
+                mock.patch('support.subprocess.run', return_value=mock.Mock(stdout=output)):
             value = Runner.group_activity(900)
         self.assertEqual(value['cpuSeconds'], 93601.25)
         self.assertEqual(value['rssMiB'], 4)
@@ -255,7 +340,8 @@ class Guards(unittest.TestCase):
         self.assertEqual(value['rssLowerBoundMiB'], 2)
         self.assertEqual(value['cpuLowerBoundSeconds'], 1.25)
         self.assertIn('?', value['states'])
-        with mock.patch('support.subprocess.run', side_effect=[mock.Mock(stdout=unknown), mock.Mock(stdout=complete)]), \
+        with mock.patch('support.sys.platform', 'linux'), \
+                mock.patch('support.subprocess.run', side_effect=[mock.Mock(stdout=unknown), mock.Mock(stdout=complete)]), \
                 mock.patch('support.time.sleep'):
             recovered = Runner.group_activity(900)
         self.assertTrue(recovered['sampleComplete'])
@@ -275,7 +361,8 @@ class Guards(unittest.TestCase):
                 self.assertEqual(value['processes'], 1)
 
     def test_persistent_partial_observation_is_bounded(self):
-        with mock.patch('support.subprocess.run', return_value=mock.Mock(stdout='900 901 0 0:00.00 ?\n')) as command, \
+        with mock.patch('support.sys.platform', 'linux'), \
+                mock.patch('support.subprocess.run', return_value=mock.Mock(stdout='900 901 0 0:00.00 ?\n')) as command, \
                 mock.patch('support.time.sleep'):
             value = Runner.group_activity(900)
         self.assertFalse(value['sampleComplete'])
@@ -292,7 +379,10 @@ class Guards(unittest.TestCase):
         (workspace / 'fixture').symlink_to(Path(__file__).resolve().parents[3], target_is_directory=True)
         (self.root / 'started').write_text(str(time.time()))
         (self.root / 'started-monotonic').write_text(str(time.monotonic()))
+        native = mock.Mock(numer=1, denom=1)
+        native.read.return_value = {'status': 'measured', 'rssMiB': 10, 'cpuSeconds': 1, 'state': 'R'}
         with mock.patch.dict(os.environ, {'GITHUB_WORKSPACE': str(workspace), 'TASK_ROOT': str(self.root)}), \
+                mock.patch('darwin_activity.probe', return_value=native), \
                 mock.patch.object(Runner, 'run', return_value=None), contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaisesRegex(Failure, 'monitor-preflight-no-complete-sample'):
                 exec(compile(script, 'workflow-monitor-preflight', 'exec'), {})
@@ -594,6 +684,137 @@ class Guards(unittest.TestCase):
         path.write_bytes(data)
         with self.assertRaises(Failure):
             macho(path, 6)
+
+
+class DarwinCounterGuards(unittest.TestCase):
+    def sensor(self, rss=8 * 1024**2, user=2000000000, system_ticks=2000000000):
+        library, system = mock.Mock(), mock.Mock()
+        def timebase(pointer):
+            pointer._obj.numer, pointer._obj.denom = 3, 2
+            return 0
+        system.mach_timebase_info.side_effect = timebase
+        def query(pid, flavor, arg, pointer, size):
+            value = pointer._obj
+            bsd = value.bsd if flavor == 2 else value
+            bsd.pid, bsd.uid, bsd.pgid = pid, os.geteuid(), 900
+            bsd.start_sec, bsd.start_usec, bsd.status = 100, 7, 2
+            if flavor == 2:
+                task = value.task
+                task.virtual_size, task.resident_size = 4 * 1024**3, rss
+                task.total_user, task.total_system = user, system_ticks
+                task.policy, task.threadnum, task.numrunning = 1, 3, 1
+            return size
+        library.proc_pidinfo.side_effect = query
+        return DarwinActivity(library, system), library
+
+    def test_native_task_layout_and_mach_timebase_conversion(self):
+        sensor, _ = self.sensor()
+        self.assertEqual((ctypes.sizeof(BSDInfo), ctypes.sizeof(TaskInfo), ctypes.sizeof(TaskAllInfo)),
+                         (136, 96, 232))
+        value = sensor.read(42, 900)
+        self.assertEqual(value['status'], 'measured')
+        self.assertEqual(value['rssMiB'], 8)
+        self.assertEqual(value['cpuSeconds'], 6)
+        self.assertEqual(value['state'], 'R')
+        self.assertEqual(sensor.read(42, 900)['identityTag'], value['identityTag'])
+
+    def test_measured_zero_differs_from_missing_task_info(self):
+        sensor, library = self.sensor(rss=0)
+        self.assertEqual(sensor.read(42, 900)['rssMiB'], 0)
+        library.proc_pidinfo.side_effect = lambda *args: 0
+        with mock.patch('darwin_activity.os.kill'):
+            missing = sensor.read(42, 900)
+        self.assertEqual(missing['status'], 'unavailable')
+        self.assertNotIn('rssMiB', missing)
+
+    def test_permission_or_zero_filled_records_cannot_prove_safe_memory(self):
+        sensor, library = self.sensor()
+        def denied(*args):
+            ctypes.set_errno(errno.EPERM)
+            return 0
+        library.proc_pidinfo.side_effect = denied
+        with mock.patch('darwin_activity.os.kill') as signal:
+            self.assertEqual(sensor.read(42, 900)['reason'], 'permission')
+        signal.assert_not_called()
+        self.assertEqual(library.proc_pidinfo.call_count, 1)
+        library.proc_pidinfo.side_effect = lambda pid, flavor, arg, pointer, size: size
+        self.assertEqual(sensor.read(42, 900)['status'], 'unavailable')
+
+    def test_short_bsd_info_is_not_disappearance_without_independent_proof(self):
+        sensor, library = self.sensor()
+        library.proc_pidinfo.side_effect = lambda *args: 0
+        with mock.patch('darwin_activity.os.kill'):
+            self.assertEqual(sensor.bsd(42)[0], 'unavailable')
+        with mock.patch('darwin_activity.os.kill', side_effect=ProcessLookupError):
+            status, _, reason = sensor.bsd(42)
+            self.assertEqual((status, reason), ('gone', 'signal-zero-esrch'))
+
+    def test_confirmed_zombie_or_replaced_generation_is_distinct_from_unknown(self):
+        sensor, library = self.sensor()
+        original = library.proc_pidinfo.side_effect
+        def zombie(pid, flavor, arg, pointer, size):
+            if flavor == 2:
+                return 0
+            original(pid, flavor, arg, pointer, size)
+            pointer._obj.status = 5
+            return size
+        library.proc_pidinfo.side_effect = zombie
+        self.assertEqual(sensor.read(42, 900)['reason'], 'bsd-zombie')
+        library.proc_pidinfo.side_effect = original
+        expected = {'pid': 42, 'startSec': 99, 'startUsec': 7}
+        self.assertEqual(sensor.read(42, 900, expected)['reason'], 'generation-replaced')
+
+    def test_group_partial_totals_remain_unknown_and_tags_do_not_publish_names(self):
+        sensor, _ = self.sensor()
+        measured = sensor.read(42, 900)
+        unknown = {'status': 'unavailable', 'reason': 'short-task-info', 'pidTag': sensor.tag(43)}
+        with mock.patch.object(sensor, 'read', side_effect=[measured, unknown]):
+            value = sensor.group('900 42\n900 43\n901 99\n', 900)
+        self.assertFalse(value['sampleComplete'])
+        self.assertIsNone(value['rssMiB'])
+        self.assertIsNone(value['cpuSeconds'])
+        self.assertEqual(value['rssLowerBoundMiB'], 8)
+        self.assertEqual(value['unknownKinds'], {'short-task-info': 1})
+        self.assertEqual(value['statesSource'], 'libproc-runnable-summary')
+        self.assertEqual(value['formatExamples'][-1]['pidTag'], unknown['pidTag'])
+
+    def test_darwin_runner_inventory_does_not_depend_on_ps_thread_state(self):
+        sensor, _ = self.sensor()
+        with mock.patch('support.sys.platform', 'darwin'), \
+                mock.patch('darwin_activity.probe', return_value=sensor), \
+                mock.patch('support.subprocess.run', return_value=mock.Mock(stdout='900 42\n')) as ps:
+            value = Runner.group_activity(900)
+        self.assertEqual(ps.call_args.args[0][-1], 'pgid=,pid=')
+        self.assertTrue(value['sampleComplete'])
+        self.assertEqual(value['rssMiB'], 8)
+        self.assertEqual(value['counterSource'], 'libproc-taskallinfo')
+
+    def test_native_registry_cannot_hide_unknown_birth_or_memory(self):
+        system = MacProcesses.__new__(MacProcesses)
+        system.activity = mock.Mock()
+        system.activity.bsd.return_value = ('unavailable', None, 'short-bsd-info')
+        with self.assertRaisesRegex(Failure, 'native-birth-unavailable'):
+            system.info(42)
+        system.activity.read.return_value = {'status': 'unavailable'}
+        with self.assertRaisesRegex(Failure, 'native-rss-unavailable'):
+            system.rss(42, {'pid': 42})
+        system.activity.bsd.return_value = ('gone', None, 'signal-zero-esrch')
+        system.activity.read.return_value = {'status': 'gone', 'reason': 'signal-zero-esrch'}
+        self.assertIsNone(system.info(42))
+        self.assertEqual(system.rss(42, {'pid': 42}), 0)
+
+    def test_resource_reserve_is_checked_even_when_monitor_would_be_unavailable(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+            runner = Runner(temporary, time.time(), limits)
+            with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=1024**3)), \
+                    mock.patch.object(runner, 'group_activity') as sample:
+                with self.assertRaisesRegex(Failure, 'free-disk-reserve'):
+                    runner.run('low-disk', [sys.executable, '-c', 'import time; time.sleep(3)'],
+                               temporary, os.environ.copy(), 360)
+            sample.assert_not_called()
+            self.assertEqual(runner.failure['code'], 'free-disk-reserve')
+            self.assertFalse(runner.groups)
 
 
 if __name__ == '__main__':

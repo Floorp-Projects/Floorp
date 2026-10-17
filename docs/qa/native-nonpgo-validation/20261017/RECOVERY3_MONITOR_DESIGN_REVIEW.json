@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "scope": "READ_ONLY_RECOVERY3_MONITOR_SEMANTICS_AND_SHARED_DARWIN_PROBE_DESIGN",
+  "decision": {
+    "minimalImplementationPreparation": "GO_WITH_GATES",
+    "implementationReviewed": false,
+    "newCI": "NO_GO_UNTIL_NEW_SOURCE_AND_ROUTE_REVIEW",
+    "nativeAuthenticationQualification": false,
+    "productQualification": false
+  },
+  "reviewedFailure": {
+    "run": 39037341780,
+    "job": 117409729426,
+    "attempt": 1,
+    "terminalResult": "failure",
+    "firstFailure": "full-build/monitor-unavailable",
+    "elapsedSeconds": 803.59,
+    "terminalEvidenceSHA256": "685c2e759641230a4b5c4d37a784700d7e33a1264624fa2f46540e490ec90c24",
+    "nativeExecuted": false
+  },
+  "sourceBaseline": {
+    "codeManifestSHA256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+    "supportSHA256": "b6a198c0314be9069f0c1a3077c244aa1080993f314e0656d6b363e9608f845e",
+    "ownedNativeSHA256": "ff1ee4a405425ef7e41bd95998fca1a77ea38b1e0123843111d2bfa9c81d57f4"
+  },
+  "findings": [
+    {
+      "priority": "P1",
+      "title": "One aggregate completeness bit couples memory safety to transient ps task/thread data",
+      "evidence": "Runner.group_activity demands every row's RSS/CPU/state be complete in one of three closely spaced snapshots; Runner.run aborts otherwise. The observed failure retains rising known CPU/RSS lower bounds and recent log progress.",
+      "limit": "This proves an observation failure, not a stalled workload. Normalized IDs do not establish whether the three unknown rows represent one persistent process or different processes.",
+      "minimalChange": "Use task-level measurements bound to identity for every inventoried owned PID. Keep unknown values explicit and maintain bounded retry/failure; do not require ps thread-state collection for the memory gate."
+    },
+    {
+      "priority": "P1",
+      "title": "Existing out-of-group RSS and liveness helpers can silently turn unavailability into absence or zero",
+      "evidence": "MacProcesses.rss returns zero for empty/nondecimal ps output. MacProcesses.info returns None on some short/error returns, including errno zero; describe/live can then omit that process before RSS is probed.",
+      "minimalChange": "Use the shared probe for RSS with expected generation, and tighten BSD liveness so only proven gone/zombie generations disappear. Unsupported/permission/short results remain unavailable and prevent allOwnedGone or memory-complete success."
+    },
+    {
+      "priority": "P2",
+      "title": "Diagnostics lose per-generation continuity",
+      "evidence": "Every normalized example uses the same placeholder PID, so the failure does not distinguish churn from repeated unavailability for the same generation.",
+      "minimalChange": "Retain a bounded run-local opaque identity tag derived from PID plus precise birth, without raw arguments, private paths, nonce or token."
+    }
+  ],
+  "sharedProbeDesign": {
+    "flavor": 2,
+    "name": "PROC_PIDTASKALLINFO",
+    "layout": {
+      "bsdBytes": 136,
+      "taskBytes": 96,
+      "totalBytes": 232,
+      "taskOffset": 136,
+      "residentOffset": 144,
+      "birthSecOffset": 120,
+      "birthUsecOffset": 128,
+      "taskFields": "six uint64 plus twelve int32",
+      "alignment": "natural x86_64; no packed layout"
+    },
+    "returnContract": "Clear errno before the call. Accept only exactly 232 bytes plus matching PID/UID/PGID/birth and coherent valid user-task fields. A full zeroed or inconsistent record is unavailable; a short/zero return with errno zero is not a measured zero.",
+    "proposedValidLiveConditions": [
+      "expected PID/UID/PGID and precise generation match",
+      "user task policy 1",
+      "positive virtual size and thread count",
+      "0 <= running threads <= thread count",
+      "zero RSS accepted only as a field of an otherwise valid measured live task"
+    ],
+    "goneConditions": [
+      "A successful BSD record explicitly establishes zombie status or that the expected generation no longer occupies the PID.",
+      "A positive-PID kill(pid,0) check fails with ESRCH."
+    ],
+    "unavailableConditions": [
+      "EPERM/EACCES or other unsupported/error result",
+      "zero or short result without independent gone evidence",
+      "identity mismatch or malformed field/ABI record"
+    ],
+    "permissionPolicy": "No credentials, entitlement changes, task-for-pid authorization changes, sudo or additional control signals. Existing kernel same-user and MAC policy checks remain effective.",
+    "cpu": "The inspected kernel supplies Mach absolute-time counters. Convert with a successful positive numer/denom mach_timebase_info result, or compare raw same-generation counters without claiming seconds. Do not assume the counters are nanoseconds.",
+    "scheduling": "numrunning > 0 establishes runnable threads for the stall guard. An S value for zero runnable threads must be labeled a derived task scheduling summary, not an observed ps sleep state.",
+    "bounds": "Use bounded inventory size, bounded sampling attempts and a bounded diagnostic ring. Never sum unknown memory as zero.",
+    "safeguardsDuringUnknown": "Do not feed incomplete CPU/state into a stall decision. Do not accrue unknown intervals as demonstrated inactivity. Disk/log/platform limits, known-RSS lower-bound exceedance and owned cleanup must remain active."
+  },
+  "kernelValidityAssessment": {
+    "taskFiller": "The inspected Darwin-24-family implementation does not silently return an all-zero task record when task-port inspection fails; it locks the referenced task and fills map/ledger, policy, CPU and thread fields.",
+    "flavor4": "PROC_PIDTASKINFO uses the same internal task filler as TASKALLINFO, so changing flavors does not strengthen task-data validity.",
+    "limitation": "The RSS ledger read's return value is not exposed independently to the caller. Full returned size alone is therefore not an unconditional field-validity proof.",
+    "normalKernelInvariant": "The inspected task initializer requires creation of the physical-memory ledger entry and instantiates active entries; missing allocation prevents task creation. Coherent live-task fields and target preflight are required before treating RSS zero as measured zero.",
+    "exactRunnerKernelSourceMatch": "UNVERIFIED; the inspected public xnu-11417.140.69 release is a Darwin-24-family source reference, not a verified source-to-binary mapping for 24G830."
+  },
+  "requiredAcceptance": [
+    "Portable guards cover exact/full and short/zero/error responses, measured-zero versus unknown, permission failure, PID reuse, mismatched generation, lifecycle omission and missing RSS.",
+    "Early macOS preflight verifies 136/96/232 layout, identity/timebase/self RSS, and complete task-level observations during owned process churn before source checkout or build.",
+    "An unavailable live-process memory measurement still fails after bounded observation; task startup/exit races cannot be promised to vanish.",
+    "Old failed runs remain failures and prior Recovery2 Host TU/XUL build evidence remains separate. New source/immutable route must be reviewed before any additional execution."
+  ],
+  "sources": [
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "bsd/sys/proc_info.h",
+      "gitBlob": "55ed57e04d7a1bf6e8a84bc75575b9bed3039b81",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/bsd/sys/proc_info.h"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "bsd/kern/proc_info.c",
+      "gitBlob": "a018b1fb21cf6d808bb81152df0864217d7d9dc4",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/bsd/kern/proc_info.c"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "osfmk/kern/bsd_kern.c",
+      "gitBlob": "d6de990e9c0271bd8e763ee83396ea439f9ff570",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/osfmk/kern/bsd_kern.c"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "libsyscall/wrappers/libproc/libproc.c",
+      "gitBlob": "c3e7369f886fbb7bbc8d77f8fca9ecc943bb5f4e",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/libsyscall/wrappers/libproc/libproc.c"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "osfmk/kern/ledger.c",
+      "gitBlob": "50344425548f9ca6e65a4ef3dfcd397dccaca77e",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/osfmk/kern/ledger.c"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "commit": "43a90889846e00bfb5cf1d255cdc0a701a1e05a4",
+      "path": "osfmk/kern/task.c",
+      "gitBlob": "eb463346709a74bef6ad9f57fb84435aa836f9cb",
+      "readLines": [
+        1200,
+        1650
+      ],
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/43a90889846e00bfb5cf1d255cdc0a701a1e05a4/osfmk/kern/task.c"
+    },
+    {
+      "repository": "apple-oss-distributions/adv_cmds",
+      "refRead": "main",
+      "path": "ps/tasks.c",
+      "gitBlob": "d2fcb07b422cfbb12718f048856e0575eb0237d0",
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/tasks.c"
+    },
+    {
+      "repository": "apple-oss-distributions/adv_cmds",
+      "refRead": "main",
+      "path": "ps/print.c",
+      "gitBlob": "a6f02a86eb29dec5dc39e54ff3692f191c203879",
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/print.c"
+    }
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "nativeExecution": 0,
+    "ciRuns": 0,
+    "pushes": 0,
+    "artifactPayloadDownloads": 0,
+    "layoutCalculationOnly": true
+  },
+  "originalTimeoutCause": "UNKNOWN",
+  "reviewedAtUTC": "2026-10-17T14:04:16.647002+00:00"
+}

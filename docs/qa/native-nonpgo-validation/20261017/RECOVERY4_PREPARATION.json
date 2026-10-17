@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "preparedAtUTC": "2026-10-17T14:14:31.700514+00:00",
+  "scope": "Minimal repair of the failed Recovery3 monitor so native host diagnostics can execute",
+  "causalSeparation": [
+    {
+      "run": 39020119793,
+      "result": "full-build passed; native startup failed before Marionette",
+      "known": "cause-host-exited observed the open helper status before adopting a browser",
+      "unknown": "Actual browser spontaneous exit, exit code/signal and original timeout cause are UNKNOWN_NOT_RECORDED",
+      "evidence": "RECOVERY2_FULL_BUILD_RECEIPT.json"
+    },
+    {
+      "run": 39037341780,
+      "result": "full-build interrupted by monitor-unavailable at 803.59s; native NOT_RUN",
+      "known": "The already reviewed harness startup patch applied and its derived hash matched; configure passed; ps state was unavailable in three bounded samples.",
+      "causality": "This monitoring defect is a separate blocker to reaching the native diagnostics; no claim that it caused the earlier host failure.",
+      "evidence": "RECOVERY3_EXECUTION_RESULT.json"
+    }
+  ],
+  "monitorRepair": {
+    "source": "Darwin task-level libproc counters with exact-size232, PID/UID/PGID/birth and coherent live-task validation; ps is only a PGID/PID inventory.",
+    "cpu": "Mach absolute counters converted using the actual successful positive mach_timebase_info numerator/denominator.",
+    "state": "Derived libproc runnable-thread summary, labeled separately from ps sleep state.",
+    "missing": "Unknown remains incomplete; measured zero is accepted only in a coherent live record. GONE requires BSD zombie, independently observed ESRCH, or replacement of an expected precise generation.",
+    "bounds": "At most three measurements 0.25 seconds apart; unavailable live memory fails; recovered observation gaps reset stall accounting. Resource limits are checked even if counters fail.",
+    "nativeProcesses": "The same probe replaces RSS-missing-to-zero and BSD/path-missing-to-gone behavior for owned native processes."
+  },
+  "nativeDiagnosticAddition": {
+    "changedBehavior": "Capture startup diagnostics and reject a known unexpected host exit during cleanup, following the pinned harness rule; launch arguments/environment/signature/authentication conditions unchanged.",
+    "beforeCleanup": [
+      "Launcher status versus observed exact browser liveness/exit code/signal",
+      "Configured switch allowlist and actual argv observation status",
+      "Native probe environment booleans, with LaunchServices application environment explicitly unverified before Marionette",
+      "Separate stdout/stderr/launcher head+tail32KiB windows, fixed markers and at most eight numeric OSStatus codes"
+    ],
+    "afterCleanup": "Requested cleanup signal and observed termination are separate; a known nonzero exit other than the actually requested cleanup signal fails and preserves the first failure.",
+    "firstFailure": "Fixed timeout classifications and numeric OS errno preserve the first failure through diagnostic and cleanup errors."
+  },
+  "regression": {
+    "command": "python3 -m unittest discover -s tools/qa/native-nonpgo -p test_guards.py",
+    "rootPassed": 48,
+    "total": 48,
+    "elapsedSeconds": 1.544,
+    "compile": "PASS",
+    "nativeExecution": false
+  },
+  "gates": {
+    "earlyMac": "Require positive self RSS, actual timebase and coherent ABI plus a complete native counter sample during owned process churn before Runtime checkout/build.",
+    "runtimeSourceAndCppPatch": "UNCHANGED",
+    "sdkToolchainsMozconfigBuildArgs": "UNCHANGED",
+    "nativeAuthSandboxInputCriteria": "UNCHANGED",
+    "standardRunner": "macos-15-intel",
+    "jobs": 1,
+    "attempt": 1,
+    "platformMinutes": 360,
+    "humanCumulativeLimitMinutes": null,
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0
+  },
+  "codeManifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+  "initialMonitorReviewSHA256": "1f1046e5440078646c5302c2b06b65da2866c45db86686d22839edadb05f1dc2",
+  "finalCodeReview": "GO_STATIC_PREPARATION",
+  "immutableRouteReview": "PENDING",
+  "priorFailedRuns": [
+    39016143725,
+    39018277446,
+    39020119793,
+    39037341780
+  ],
+  "newCIStarted": false,
+  "originalDisconnectCause": "UNKNOWN",
+  "productQualification": false,
+  "completeMozillaDebugQualification": false,
+  "finalCodeReviewSHA256": "93e6ab2fdd1afd9fccbc50945850bd238a499156fa810498f57a5e883a349558",
+  "independentGuards": {
+    "passed": 48,
+    "total": 48,
+    "elapsedSeconds": 1.552
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "files": [
+    {
+      "bytes": 4264,
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "sha256": "da90adb513d25d847fc1571ea48a8bb92e22a1dbfc863c89915c5cded942a2c3"
+    },
+    {
+      "bytes": 2347,
+      "path": "tools/qa/native-nonpgo/materialize.py",
+      "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db"
+    },
+    {
+      "bytes": 12552,
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "sha256": "e42bc2911f3f8af3f7434efcb9ebb9c5aaa8eef316dde6e2a904f87b1122cc00"
+    },
+    {
+      "bytes": 9253,
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "sha256": "f7ca85e795e27b604d33b74ccf78b68eda8e660959ff17627cbd687e72e70584"
+    },
+    {
+      "bytes": 11810,
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "sha256": "6468bdea539f1cbb83852a82e7671a34f4ac157673bef4f319eb6c4a9bcd05c5"
+    },
+    {
+      "bytes": 27634,
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "0ca446c274f2d6c8df20b3b270ac6070e0d174e90ce168bc7cc57e7aac802510"
+    },
+    {
+      "bytes": 24311,
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "440f454946781300fc6cc9420d74fc345a25e048a198c1bc3574ab94324cfcf9"
+    },
+    {
+      "bytes": 19537,
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "e07b2f6d2d77b5d2850aee058e9aeeaf26183283880059980f0afcd4efc8f8ab"
+    },
+    {
+      "bytes": 41203,
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "sha256": "758344114bd22f35342a6db8a5ee3fafd0f3e134ad87204399d11f93ef42beb7"
+    },
+    {
+      "bytes": 6261,
+      "path": "tools/qa/native-nonpgo/workflow.yml.in",
+      "sha256": "e70b0126d12e54eda959e77eaa761dcf0a0d7ad9773fa85e24ae881f67c4f81a"
+    },
+    {
+      "bytes": 4264,
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+    },
+    {
+      "bytes": 1789,
+      "path": "tools/qa/native-nonpgo/launch-services-host.patch",
+      "sha256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80"
+    },
+    {
+      "bytes": 8806,
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "sha256": "ef7de4c6457b54773ad759cc0422cd239e388e60aa3646ac20e0554e5f3693ee"
+    }
+  ],
+  "schema": 1
+}

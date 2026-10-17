@@ -62,20 +62,35 @@ def cause_failure_snapshot(value):
               ('status', 'phase', 'causeReason', 'connectedBeforeDisconnect',
                'kernelExitObserved', 'cleanupComplete', 'errorCode', 'diagnosticsIncomplete',
                'snapshotErrorType') if key in value}
+    if type(value.get('errorErrno')) is int:
+        result['errorErrno'] = value['errorErrno']
     before = value.get('beforeCleanup', {})
     if type(before.get('observedAtMs')) is int:
         result['beforeCleanupObservedAtMs'] = before['observedAtMs']
     source = before.get('hostStartup', {})
     host = {}
-    for key in ('started', 'browserIdentityObserved', 'marionetteOwnershipVerified'):
+    for key in ('started', 'browserIdentityObserved', 'marionetteOwnershipVerified', 'launchServices',
+                'configuredAboutBlank', 'browserExitStatusAvailable'):
         if type(source.get(key)) is bool:
             host[key] = source[key]
     if source.get('browserLiveness') in ('not-observed', 'alive', 'exit-observed'):
         host['browserLiveness'] = source['browserLiveness']
-    for key in ('browserExitCode', 'launcherExitCode', 'requestedSignal'):
+    for key in ('browserExitCode', 'browserSignal', 'launcherExitCode', 'requestedSignal'):
         if source.get(key) is None or type(source.get(key)) is int:
             host[key] = source.get(key)
+    host['configuredBrowserSwitches'] = [flag for flag in source.get('configuredBrowserSwitches', [])
+        if flag in ('--no-remote', '--profile', '--marionette', '--remote-allow-system-access')]
+    if type(source.get('browserArgvObservedMatches')) is bool or source.get('browserArgvObservedMatches') is None:
+        host['browserArgvObservedMatches'] = source.get('browserArgvObservedMatches')
     result['beforeCleanupHostStartup'] = host
+    result['beforeCleanupNativeProbeEnvironment'] = {key: entry for key, entry in
+        before.get('nativeProbeEnvironment', {}).items() if key in
+        ('GITHUB_TOKEN', 'SDK_READ_TOKEN', 'ACTIONS_RUNTIME_TOKEN', 'MOZ_DISABLE_CONTENT_SANDBOX',
+         'DYLD_LIBRARY_PATH', 'DYLD_INSERT_LIBRARIES') and type(entry) is bool}
+    result['applicationEnvironmentBeforeMarionette'] = 'UNVERIFIED_LAUNCHSERVICES_ENVIRONMENT'
+    result['afterCleanupHost'] = {key: entry for key, entry in value.get('afterCleanupHost', {}).items()
+        if key in ('browserExitCode', 'browserSignal', 'launcherExitCode', 'requestedSignal',
+                   'browserExitStatusAvailable') and (entry is None or type(entry) in (int, bool))}
     result['beforeCleanupStreams'] = {}
     for label in ('launcher', 'stdout', 'stderr'):
         source = before.get('streams', {}).get(label, {})
@@ -84,9 +99,11 @@ def cause_failure_snapshot(value):
         for key in ('present', 'rawContentPublished', 'tailTruncated'):
             if type(source.get(key)) is bool:
                 record[key] = source[key]
-        for key in ('bytesObserved', 'tailBytesRead'):
+        for key in ('bytesObserved', 'headBytesRead', 'tailBytesRead'):
             if type(source.get(key)) is int and source[key] >= 0:
                 record[key] = source[key]
+        record['osStatusCodes'] = [code for code in source.get('osStatusCodes', [])
+                                    if type(code) is int and -(2**31) <= code < 2**31][:8]
         result['beforeCleanupStreams'][label] = record
     return result
 
