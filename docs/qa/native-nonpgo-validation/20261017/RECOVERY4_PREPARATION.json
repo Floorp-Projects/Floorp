@@ -61,7 +61,7 @@
   "codeManifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
   "initialMonitorReviewSHA256": "1f1046e5440078646c5302c2b06b65da2866c45db86686d22839edadb05f1dc2",
   "finalCodeReview": "GO_STATIC_PREPARATION",
-  "immutableRouteReview": "PENDING",
+  "immutableRouteReview": "GO_FIXED_REVIEWED_ROUTE",
   "priorFailedRuns": [
     39016143725,
     39018277446,
@@ -77,5 +77,6 @@
     "passed": 48,
     "total": 48,
     "elapsedSeconds": 1.552
-  }
+  },
+  "routeReviewSHA256": "f687d18b3d0b71e6ca7c664bbe484453c0e19023c7acbd8e921800e166610283"
 }

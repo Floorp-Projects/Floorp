@@ -1,0 +1,209 @@
+{
+  "schema": 1,
+  "decision": "GO_EXACT_RECOVERY4_INITIAL_PUSH_ROUTE",
+  "findings": [],
+  "scope": "Fixed single standard Intel native validation route under the existing authorization. This receipt does not assert native success or original root-cause resolution.",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+    "tree": "00aeb93076db104030b66417bd1293a182665d62",
+    "parent": "2e7e9ec9ee688c398b56ce23b8eb5dbaf26d2830",
+    "commitTreeAndParentIndependentlyRead": true,
+    "codeManifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+    "codeReviewSHA256": "93e6ab2fdd1afd9fccbc50945850bd238a499156fa810498f57a5e883a349558",
+    "counterReviewSHA256": "1f1046e5440078646c5302c2b06b65da2866c45db86686d22839edadb05f1dc2",
+    "all13RecordedProviderSourceBytesAndLocalHashesMatchManifest": true,
+    "helperReadbackSHA256": "a5055156714ac4db9353fdb6361ebd8a5940fb947db1d351810c5ed86713d9af",
+    "independentlyFetchedChangedSource": [
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 24311,
+        "sha256": "440f454946781300fc6cc9420d74fc345a25e048a198c1bc3574ab94324cfcf9",
+        "gitBlob": "3196dddd9ba8d21bc082bdfdcfe6e256183a8d2e",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/workflow.yml.in",
+        "bytes": 6261,
+        "sha256": "e70b0126d12e54eda959e77eaa761dcf0a0d7ad9773fa85e24ae881f67c4f81a",
+        "gitBlob": "f8f0ccb8cdd921e94b2b97a070193665ecc63f72",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_cause.py",
+        "bytes": 15294,
+        "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300",
+        "gitBlob": "959439b68d238f7a7896e0326ea42905913b260b",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_suite.py",
+        "bytes": 10768,
+        "sha256": "c25435f7c92605a311813056d58971c0a39c32abe699fba98dc0ca33d4655ab4",
+        "gitBlob": "0a27afd9db96c42cbc2098f6daa61161097d8c01",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/owned_native.py",
+        "bytes": 11810,
+        "sha256": "6468bdea539f1cbb83852a82e7671a34f4ac157673bef4f319eb6c4a9bcd05c5",
+        "gitBlob": "7d81286b2177b4aa67ab0b14e8e76bab8684c798",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 19537,
+        "sha256": "e07b2f6d2d77b5d2850aee058e9aeeaf26183283880059980f0afcd4efc8f8ab",
+        "gitBlob": "ecc0b7fb62b5dd713110ce2996d1e4235aa97577",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "bytes": 46528,
+        "sha256": "41bda396e25c7785fa6dc63a2374a906af8b03ec9d89d377aa90a4efcf2c7137",
+        "gitBlob": "a59ea412b6f087a13b2aacc98e0f266dfc87a813",
+        "providerBytesMatchReviewedLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "bytes": 8806,
+        "sha256": "ef7de4c6457b54773ad759cc0422cd239e388e60aa3646ac20e0554e5f3693ee",
+        "gitBlob": "c8da9e496d92c16b6aab41901a5212e2bd8587c6",
+        "providerBytesMatchReviewedLocal": true
+      }
+    ],
+    "portableTestsRetained": {
+      "tests": 48,
+      "result": "PASS",
+      "independentSeconds": 1.552,
+      "rerunForRouteReview": false
+    }
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "9b561d7df526a2cc40d0f4737d141039c713b6df",
+    "tree": "6fcd778892de302da67a38edadf47b7125ee5aa8",
+    "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "changes": [
+      {
+        "path": ".github/workflows/mac-native-nonpgo.yml",
+        "status": "added",
+        "gitBlob": "ebad5f5f18e501d62c3305bea24c7cdb43458fcf"
+      }
+    ],
+    "immutableWorkflowURL": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/9b561d7df526a2cc40d0f4737d141039c713b6df/.github/workflows/mac-native-nonpgo.yml",
+    "rawImmutableWorkflowURL": "https://raw.githubusercontent.com/Floorp-Projects/Floorp-Runtime/9b561d7df526a2cc40d0f4737d141039c713b6df/.github/workflows/mac-native-nonpgo.yml",
+    "providerWorkflowContentIndependentlyFetched": true,
+    "providerWorkflowEqualsReviewedRenderedBytes": true,
+    "workflowSHA256": "53fcd12970563036fce289e4c9a5aa2fec8241dfc5ac772eee25c0871c08e89f",
+    "workflowBytes": 6279
+  },
+  "delivery": {
+    "templateSHA256": "e70b0126d12e54eda959e77eaa761dcf0a0d7ad9773fa85e24ae881f67c4f81a",
+    "disabledDocument": "docs/qa/native-nonpgo-validation/20261017/RECOVERY4_WORKFLOW.yml.disabled",
+    "workflowSHA256": "53fcd12970563036fce289e4c9a5aa2fec8241dfc5ac772eee25c0871c08e89f",
+    "patchSHA256": "d1f4de13828ca55b34139764ef20b9f111f0affc7c3225beccf5a65665656b3a",
+    "patchBytes": 6607,
+    "onlyRenderChange": "Single fixture placeholder replaced with fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+    "independentScratchGitApplyCheckAndApplicationMatch": true,
+    "parsedYAMLConditionsMatchReviewedTemplate": true
+  },
+  "controls": {
+    "branch": "codex/mac-native-nonpgo-recovery4-20261017",
+    "repositoryGuard": "Floorp-Projects/Floorp-Runtime",
+    "event": "push",
+    "created": true,
+    "beforeSHA": "0000000000000000000000000000000000000000",
+    "attempt": 1,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "fixedRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixedHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "earlyNativeCounters": {
+      "beforeRuntimeSourceCheckout": true,
+      "beforeSDKAcquisition": true,
+      "actualSelfIdentityAndPositiveRSSRequired": true,
+      "actualTimebaseAndABIRequired": true,
+      "actualCompleteOwnedChurnSampleRequired": true,
+      "requiredCounterSource": "libproc-taskallinfo",
+      "missingObservationFails": true
+    },
+    "nativeScope": "Controlled first-cause authentication, trusted 20-iteration context-menu input, and GUI assertions with existing ownership/protection/timeouts; no successful skip.",
+    "credentialScope": "Only the existing read-only job token reaches the fixed SDK-reader step; checkout credentials are not persisted and native children receive the clean environment.",
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "newCredentials": false,
+    "productPublication": false,
+    "productSigning": false,
+    "merge": false,
+    "osPermissionOrProtectionChanges": false,
+    "disposableAdHocCopy": "Existing isolated test-copy permission only",
+    "failureEvidence": "First failure, typed pre/post-cleanup host versus launcher status, bounded stream markers and numeric error codes remain required. Known abnormal browser cleanup exit fails."
+  },
+  "preActivationChecks": {
+    "bothRepositoriesPublic": true,
+    "runtimeDefaultHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runtimeNewBranchAbsent": true,
+    "runtimeNewBranchRuns": 0,
+    "floorpSourceBranchRuns": 0,
+    "runtimeExistingWorkflowCount": 24,
+    "otherMatchingPushWorkflows": 0,
+    "createTriggers": 0,
+    "workflowRunTriggers": 0,
+    "triggerInventoryScope": "The pinned 7dd inventory was re-evaluated for the exact recovery4 branch. Floorp source pushes retain main-only filters; no Floorp run means the existing Floorp workflow_run notification is not triggered by this Runtime run."
+  },
+  "priorFailureDistinction": {
+    "nativeStartupRun": {
+      "id": 39020119793,
+      "head": "d86e63bc621d647efd8389fbf226f841ebb52501",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "note": "Host TU/XUL build succeeded, but native startup guard failed before verified browser adoption; actual spontaneous browser exit remains UNKNOWN."
+    },
+    "monitorRun": {
+      "id": 39037341780,
+      "head": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "note": "Full build was interrupted by monitor-unavailable; native tests were not reached."
+    },
+    "allFailedRunsRetained": [
+      39016143725,
+      39018277446,
+      39020119793,
+      39037341780
+    ]
+  },
+  "sdk": {
+    "artifact": 12074136738,
+    "sourceRun": 38963901545,
+    "expiresAt": "2026-10-17T20:41:19Z",
+    "expectedZipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "lastParentSupportedMetadataObservation": "2026-10-17T14:22:51Z; unexpired, expected digest, six-hour margin still available.",
+    "reviewerPayloadAcquisition": false,
+    "executionCondition": "The unchanged fixed SDK reader must satisfy its metadata, digest, size and expiry checks before any build. An expired or unavailable SDK stops this route; no substitute or alternate acquisition is included."
+  },
+  "limitations": {
+    "actualDarwinCounterPreflight": "NOT_EXECUTED_YET",
+    "newNativeAuthentication": "NOT_QUALIFIED_YET",
+    "originalTimeoutCause": "UNKNOWN",
+    "priorBrowserSpontaneousExitCause": "UNKNOWN",
+    "productQualification": false
+  },
+  "reviewerActions": {
+    "remoteMutations": 0,
+    "ciRunsStarted": 0,
+    "reruns": 0,
+    "artifactPayloadDownloads": 0,
+    "sourceEdits": 0,
+    "scratchDeliveryApplicationOnly": true
+  },
+  "reviewedAtUTC": "2026-10-17T14:24:50.098136+00:00"
+}

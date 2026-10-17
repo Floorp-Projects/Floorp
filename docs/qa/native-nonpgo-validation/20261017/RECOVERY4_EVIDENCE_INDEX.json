@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "preparedAtUTC": "2026-10-17T14:25:43.533657+00:00",
+  "status": "REVIEWED_PREACTIVATION_SEAL",
+  "codeFixture": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+  "fixtureTree": "00aeb93076db104030b66417bd1293a182665d62",
+  "runtimeCandidate": "9b561d7df526a2cc40d0f4737d141039c713b6df",
+  "runtimeCandidateTree": "6fcd778892de302da67a38edadf47b7125ee5aa8",
+  "runtimeParent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "branch": "codex/mac-native-nonpgo-recovery4-20261017",
+  "codeManifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+  "codeReviewSHA256": "93e6ab2fdd1afd9fccbc50945850bd238a499156fa810498f57a5e883a349558",
+  "routeReviewSHA256": "f687d18b3d0b71e6ca7c664bbe484453c0e19023c7acbd8e921800e166610283",
+  "workflowSHA256": "53fcd12970563036fce289e4c9a5aa2fec8241dfc5ac772eee25c0871c08e89f",
+  "deliveryPatchSHA256": "d1f4de13828ca55b34139764ef20b9f111f0affc7c3225beccf5a65665656b3a",
+  "helperProviderReadback": "13/13 bytes and hashes match",
+  "actualWorkflowProviderReadback": "matches rendered bytes",
+  "guards": {
+    "rootPassed": 48,
+    "independentPassed": 48
+  },
+  "priorFailedRuns": [
+    39016143725,
+    39018277446,
+    39020119793,
+    39037341780
+  ],
+  "cohorts": {
+    "39020119793": "Actual full build passed; native startup guard observed launcher exit; actual host exit cause unknown.",
+    "39037341780": "Full build interrupted by unavailable ps state; native NOT_RUN."
+  },
+  "qualification": {
+    "currentNativeAuthentication": "NOT_QUALIFIED",
+    "originalDisconnectCause": "UNKNOWN",
+    "priorActualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
+    "fullMozillaDebugQualification": false,
+    "productQualification": false
+  },
+  "activationRequirements": [
+    "Fresh exact new branch absence and zero runs.",
+    "Old executions remain terminal failures at attempt1.",
+    "Existing fixed SDK12074136738 unexpired with the unchanged reader margin gate.",
+    "Runtime default remains pinned7dd; create the reviewed commit as a new branch exactly once."
+  ],
+  "newCIStarted": false
+}
