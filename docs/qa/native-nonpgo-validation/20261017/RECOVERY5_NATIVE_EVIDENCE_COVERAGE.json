@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-17",
+  "reviewType": "Read-only review of existing native diagnostic coverage",
+  "fixtureCommit": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "appliesToRun": 39045848018,
+  "amendsFrozenPatchReview": false,
+  "runDisposition": "Continue the existing authorized run; this report does not request cancellation or an additional run.",
+  "overallConclusion": "Public failure evidence is asymmetric. A nonzero cause child has a detailed allowlisted startup/exit/stream projection. A nonzero context child has only a narrow authentication-event projection. A nonzero gui child has no failure snapshot. None of these paths retains the actual native-suite child return code as a numeric public field.",
+  "exitCodeLayers": [
+    {
+      "layer": "Browser process",
+      "source": "Pinned HostProcess kernel exit-status observation",
+      "publicAvailability": "Only the nonzero cause child projection retains browserExitCode/browserSignal plus an availability flag. Status can legitimately remain unavailable if no usable kernel status event was observed. Launcher exit status is not substituted."
+    },
+    {
+      "layer": "LaunchServices open helper",
+      "source": "host.process.poll()/returncode",
+      "publicAvailability": "Only the nonzero cause child projection retains launcherExitCode. It is a separate process from the browser."
+    },
+    {
+      "layer": "Individual cause/context/gui Python child",
+      "source": "native_suite.main child.wait() local variable code",
+      "publicAvailability": "A nonzero result chooses native-cause-exit/native-context-exit/native-gui-exit, but the integer return code is not stored. A child killed by a signal is therefore not distinguishable from a normal nonzero child exit using that field."
+    },
+    {
+      "layer": "native_suite.py wrapper",
+      "source": "Runner.run subprocess returncode",
+      "publicAvailability": "summary.stages entry stage=native-suite contains exitCode. Normal handled subtest failures make the wrapper return 1; this is neither the individual harness child code nor the browser code."
+    }
+  ],
+  "phaseCoverage": {
+    "cause": {
+      "configuredInvocation": "native_cause.py with the disposable browser, pinned harness, private/cause output and expected build ID; HostProcess launch_services=True.",
+      "childNonzero": {
+        "publicErrorCode": "native-cause-exit",
+        "publicSnapshot": "native.firstFailureSnapshot = cause_failure_snapshot(result.json), or {unavailable:true} if the result cannot be read/projected.",
+        "retained": [
+          "status and phase",
+          "allowlisted errorCode, optional numeric errno and diagnostic-incomplete metadata",
+          "before-cleanup observation time",
+          "browser started/identity/Marionette ownership/liveness status",
+          "browserExitCode, browserSignal, browserExitStatusAvailable",
+          "launcherExitCode and requestedSignal",
+          "LaunchServices flag, allowlisted configured switches, about:blank and observed argv-match boolean",
+          "environment-name presence booleans, with application environment explicitly UNVERIFIED",
+          "launcher/stdout/stderr presence, bytes, bounded head/tail read counts, fixed markers and up to eight numeric OSStatus codes",
+          "after-cleanup browser/helper exit fields"
+        ],
+        "notRetained": [
+          "numeric cause child return code/signal",
+          "raw output or raw environment/argv/profile values",
+          "complete private result or complete raw event history"
+        ],
+        "priorSuccessfulPhaseFields": "None; cause is the first subtest and firstCause stays null on this path."
+      },
+      "childZeroThenValidationFails": {
+        "publicErrorCode": "native-first-cause-result, a specific read_one failure, or a generic exception type such as KeyError",
+        "failureSnapshotCreated": false,
+        "firstCause": "Remains null unless assignment was reached after all validations.",
+        "limitation": "The detailed cause projection runs only when the child return code is nonzero; a zero-exit but rejected result does not enter it."
+      },
+      "onPass": "firstCause retains controlled launch-cancelled scenario proof, ownership, kernel Shim exit, cleanup and required build/sandbox identity checks. It does not retain startup streams or browser exit details."
+    },
+    "context": {
+      "configuredInvocation": "Pinned test-context-menu.py with the disposable browser, private/context output and iterations=20. The pinned harness uses LaunchServices and a new isolated profile.",
+      "childNonzero": {
+        "publicErrorCode": "native-context-exit",
+        "publicSnapshot": "native.firstFailureSnapshot = failure_snapshot(result.json), or {unavailable:true}.",
+        "retained": [
+          "last 16 beforeCleanup.shim connected/disconnected events, including typed PID/time/sequence/causeTime fields, allowlisted reason/causeReason and connectedBeforeDisconnect",
+          "upstream shim.truncated boolean",
+          "cleanupErrorsPresent boolean",
+          "nativeAuthenticationCompleted:null"
+        ],
+        "notRetained": [
+          "numeric context child return code/signal",
+          "harness phase and sanitized harness error/timeout/codes",
+          "beforeCleanup.host and afterCleanup.host, including browserExitCode/launcherExitCode/requestedSignal/launchServices/identityVerified",
+          "streams, including already-sanitized stdout/stderr/log markers and byte counts",
+          "kernel observation, Shim lifecycle, crash/system-log summaries and diagnostic errors",
+          "requested/attempted iteration counts and partial context-menu delivery results"
+        ],
+        "privateEvidenceIfWritten": "The pinned result.json has host process summaries before/after cleanup and sanitized stream/lifecycle data. Raw streams remain under .private-logs; the public wrapper does not copy those summaries.",
+        "signalLimitation": "The private browserExitCode may encode a signal as a negative integer; the context public snapshot discards it. The private Shim snapshot explicitly reports no wait-status exit code.",
+        "truncationLimitation": "The public projection keeps 16 events, while truncated reflects the upstream 64-event cap. Dropping events 17 through 64 is not separately marked truncated.",
+        "priorSuccessfulPhaseFields": "The earlier controlled firstCause proof remains, but it concerns a different host launch/profile and cannot establish this context host's liveness or exit status."
+      },
+      "childZeroThenValidationFails": {
+        "publicErrorCode": "context-menu-result, context-diagnostics, context-menu-trusted-events, context-shim-cleanup-exit, a read_one failure, or an exception type",
+        "failureSnapshotCreated": false,
+        "contextMenu": "Remains null because context_result assignment did not complete.",
+        "limitation": "Even a result containing detailed diagnostics is not projected on this path."
+      },
+      "onPass": "contextMenu retains status, attempted=20, trustedContextMenus=20, Shim PID and cleanupKernelExitObserved=true; streams, launch conditions and host exit details are omitted."
+    },
+    "gui": {
+      "configuredInvocation": "Pinned test-runtime.py with the disposable browser, private/gui output and --launch-services. No native-input skip, frontend-modules, capture-window or quit-all override is passed; the pinned timeout default is 90 seconds.",
+      "childNonzero": {
+        "publicErrorCode": "native-gui-exit",
+        "publicSnapshot": null,
+        "retained": [
+          "earlier firstCause success proof",
+          "earlier contextMenu success proof",
+          "gui:null"
+        ],
+        "notRetained": [
+          "numeric gui child return code/signal",
+          "report.json phase/error/cleanupError/hostCleanupError",
+          "hostExitCode, launcherExitCode and hostExitCodeUnavailable",
+          "launchMode, observed host identity/session and browser log locations",
+          "stdout/stderr bytes, markers or raw content",
+          "partial native-input/shared-session/window or lifecycle evidence"
+        ],
+        "privateEvidenceIfWritten": "Pinned report.json records phase/error, launchMode and browser log paths, observed host identity/session when reached, and post-cleanup hostExitCode/launcherExitCode or explicit unavailable status. Raw browser streams and child stdout/stderr remain private.",
+        "signalLimitation": "The private post-cleanup hostExitCode can encode a signal, but no separate browserSignal/requestedSignal pair is projected; the wrapper does not read the report at all when code is nonzero.",
+        "priorSuccessfulPhaseFields": "Earlier cause/context proofs belong to separate host launches/profiles and cannot be treated as diagnostics for this gui host."
+      },
+      "childZeroThenValidationFails": {
+        "publicErrorCode": "native-gui-result, a read_one failure, or an exception type",
+        "failureSnapshotCreated": false,
+        "gui": "Remains null.",
+        "limitation": "The report is read, but its phase/error/host/stream data is still not copied into public summary."
+      },
+      "onPass": "gui retains only status=passed and nativeInputSkipped=false after required native input match/event checks."
+    }
+  },
+  "crossPhaseLimits": [
+    "firstCause is a controlled authenticated Shim cancellation proof, not the root cause of a later context/gui failure.",
+    "Subtest stdout and stderr are merged into private cause/context/gui.private.log files. The wrapper does not publish their contents. summary.stages.native-suite.logBytes describes the wrapper log, not browser stdout/stderr.",
+    "If native-summary.json is missing or unreadable, or the outer wrapper is terminated before it can write the file, pipeline cannot reconstruct per-subtest diagnostics from private result files. It only conditionally loads native-summary.json below 65536 bytes.",
+    "Snapshot creation is limited to nonzero cause/context children. Early wrapper launch/environment/file errors and code-zero validation failures can retain only a coarse error code.",
+    "Missing diagnostic coverage is not an alternate success path: the existing validations still fail the wrapper when required subtests or result checks fail."
+  ],
+  "originalFailureReobservation": {
+    "originalObservedLabels": [
+      "native-cause-exit",
+      "cause-host-exited",
+      "firstCause=null"
+    ],
+    "sameCauseNonzeroPathCanRetainMoreEvidence": true,
+    "availablePublicEvidenceIfResultWritten": [
+      "native.errorCode=native-cause-exit",
+      "firstFailureSnapshot.errorCode=cause-host-exited and phase",
+      "browser/helper identity and liveness distinction",
+      "browser code/signal if a usable event was observed, otherwise explicit unavailable",
+      "configured startup flags and before/after requested-signal distinction",
+      "bounded allowlisted startup stream markers and OSStatus codes"
+    ],
+    "guaranteedRootCauseDiagnosis": false,
+    "whyNotGuaranteed": "A browser can exit before adoption or without an exit-status event, and arbitrary loader/assertion/error text is deliberately not published. Exit status alone also does not prove a root cause. The fixed marker set can identify only the covered failure signatures.",
+    "laterContextOrGuiHostExit": "Current public projections do not carry the browser exit/stream/launch evidence needed to diagnose an analogous host exit in those later phases.",
+    "terminalCollectionInterpretation": "Use the phase-specific native error/snapshot and outer stage/cleanup/monitor evidence as distinct layers. Report insufficient evidence when status or markers are unavailable; do not infer browser signal, authentication completion or a root cause from wrapper exitCode or from an earlier firstCause pass."
+  },
+  "sources": [
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "functions": [
+        "main",
+        "failure_snapshot",
+        "cause_failure_snapshot",
+        "context_result"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/ac273d616cb94347f122c7247f5e989aef7e13f1/tools/qa/native-nonpgo/native_suite.py"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "functions": [
+        "main",
+        "startup_snapshot",
+        "exit_snapshot"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/ac273d616cb94347f122c7247f5e989aef7e13f1/tools/qa/native-nonpgo/native_cause.py"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "functions": [
+        "main"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/ac273d616cb94347f122c7247f5e989aef7e13f1/tools/qa/native-nonpgo/pipeline.py"
+    },
+    {
+      "path": "tools/app-shim/test-context-menu.py",
+      "functions": [
+        "main",
+        "snapshot"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-context-menu.py"
+    },
+    {
+      "path": "tools/app-shim/shim_diagnostics.py",
+      "functions": [
+        "process_summary",
+        "save_streams",
+        "event_summary"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/shim_diagnostics.py"
+    },
+    {
+      "path": "tools/app-shim/test-runtime.py",
+      "functions": [
+        "HostProcess",
+        "main"
+      ],
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py"
+    }
+  ],
+  "reviewActions": {
+    "codeEdited": false,
+    "additionalTestsOrExecutions": false,
+    "externalWrites": false,
+    "runStopped": false
+  }
+}
