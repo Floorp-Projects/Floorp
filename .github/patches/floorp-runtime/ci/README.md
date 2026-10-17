@@ -7,7 +7,7 @@ This directory is separate from `common/`: the package workflow does not apply
 this CI patch. It must be reviewed and applied to a Runtime source branch.
 
 The verifier pins Floorp fixture commit
-`28592bd1956d74dc01a67898217e129306035aad`. That commit must be available
+`73c6d1e5326999adfceac2c2184e0b964938fcd4`. That commit must be available
 remotely before the patched workflow can use it. Record the actual fixture,
 workflow and producer commits separately in each diagnostic run.
 
@@ -79,3 +79,14 @@ uploaded. The separately maintained native cause-preservation patch in
 ../native-diagnostics/ requires recompilation and is not applied by this job.
 Each new push requires a distinct recorded diagnostic purpose; neither previous
 failed run is rerun. Authentication, waits, iterations and release gates remain.
+
+The next purpose-specific diagnostic also collects fixed OS-log marker labels for
+the verified host/Shim emitter PIDs and exact image paths, within launch-to-cleanup
+time. It queries at most the last two minutes with a ten-second command timeout,
+without privilege escalation. Published summaries read at most 1 MiB and retain
+64 matching events with explicit counts/truncation; raw temporary spool size is
+not given a hard total-disk bound. Raw messages and paths are not uploaded.
+Other daemon emitters and older history are outside this scope. Unavailable or
+empty results cannot exclude an OS/authentication cause, and markers alone do
+not establish causality. Record this as one additional attempt with new evidence,
+not as replacement of the two previous failed runs or the healthy observed run.
