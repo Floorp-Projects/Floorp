@@ -26,6 +26,7 @@ import {
   runTests,
 } from "../../../test/utils/test_harness.ts";
 
+/** Exposes startup settlement so each fixture window can become ready independently. */
 function deferred(): StartupDeferred {
   let resolve: StartupDeferred["resolve"] = () => {};
   let reject: StartupDeferred["reject"] = () => {};
@@ -36,10 +37,12 @@ function deferred(): StartupDeferred {
   return { promise, resolve, reject };
 }
 
+/** Flushes the startup continuation, its error handler, and queued Solid effects. */
 async function settle(): Promise<void> {
   for (let i = 0; i < 4; i++) await Promise.resolve();
 }
 
+/** Returns validated native chrome references without mounting another feature. */
 function chrome(): TabStacksChrome {
   const gb = getGBrowser();
   const head = document.head;
@@ -49,6 +52,7 @@ function chrome(): TabStacksChrome {
   return { gb, head, toolbox, navBar };
 }
 
+/** Records startup diagnostics for assertions without writing expected errors to the console. */
 function logs() {
   const messages: StartupLogs = { info: [], warn: [], error: [] };
   return {
@@ -61,6 +65,7 @@ function logs() {
   };
 }
 
+/** Gives one startup attempt a parent root tied to the fixture's unload and HMR lifetime. */
 function start(
   win: TabStacksStartupWindow,
   getChrome: () => TabStacksChrome | null,
@@ -84,6 +89,7 @@ function start(
   return { dispose, messages: output.messages };
 }
 
+/** Ready chrome must mount immediately and release reactive subscriptions exactly once. */
 async function testReadyStartupOwnsReactiveResources(): Promise<void> {
   const win = Object.assign(new EventTarget(), { closed: false });
   let mounted = 0;
@@ -118,6 +124,7 @@ async function testReadyStartupOwnsReactiveResources(): Promise<void> {
   }
 }
 
+/** Simulated recovery order must not let one window initialize or dispose another. */
 async function testIndependentRestoredWindowOrdering(): Promise<void> {
   // Simulates the ordering of normal and crash recovery startup. Native
   // SessionStore restoration is exercised separately in tabStacksSessionRestore.
@@ -177,6 +184,7 @@ async function testIndependentRestoredWindowOrdering(): Promise<void> {
   }
 }
 
+/** A promise retry must use fresh chrome and keep its reactive root owned by the parent. */
 async function testDeferredMountRetainsOwner(): Promise<void> {
   const pending = deferred();
   const win = Object.assign(new EventTarget(), {
@@ -215,6 +223,7 @@ async function testDeferredMountRetainsOwner(): Promise<void> {
   }
 }
 
+/** Late startup completion must not revive a disposed, unloaded, replaced, or closed owner. */
 async function testPendingDisposalCannotReviveWindow(): Promise<void> {
   for (const reason of ["manual", "unload", "hmr", "closed"]) {
     const pending = deferred();
@@ -250,6 +259,7 @@ async function testPendingDisposalCannotReviveWindow(): Promise<void> {
   }
 }
 
+/** Rejection or missing prerequisites must terminate without unbounded retries or partial mounts. */
 async function testRejectedAndIncompleteStartup(): Promise<void> {
   for (const rejected of [true, false]) {
     const pending = deferred();
@@ -288,6 +298,7 @@ async function testRejectedAndIncompleteStartup(): Promise<void> {
   }
 }
 
+/** Failed deferred mounting must release partial resources and retain its original diagnostic. */
 async function testDeferredFailureDisposesPartialMount(): Promise<void> {
   const pending = deferred();
   let ready = false;
@@ -330,6 +341,7 @@ async function testDeferredFailureDisposesPartialMount(): Promise<void> {
   }
 }
 
+/** Counts real delayed-startup registrations without notifying unrelated browser consumers. */
 function observerCount(): number {
   let count = 0;
   const observers = Services.obs.enumerateObservers(
@@ -342,6 +354,7 @@ function observerCount(): number {
   return count;
 }
 
+/** Fallback observers must follow parent disposal, while finished startup needs no observer. */
 function testObserverFallbackIsOwned(): void {
   const baseline = observerCount();
   // Count the real registrations without broadcasting synthetic window startup
@@ -406,6 +419,7 @@ function testObserverFallbackIsOwned(): void {
   }
 }
 
+/** Repeated feature calls must mount once and honor a preference disabled before the retry. */
 async function testFeatureGuardAndDisableBeforeRetry(): Promise<void> {
   const hadPref = Services.prefs.prefHasUserValue(ENABLED_PREF);
   const pref = Services.prefs.getBoolPref(ENABLED_PREF, false);
@@ -470,6 +484,7 @@ async function testFeatureGuardAndDisableBeforeRetry(): Promise<void> {
   }
 }
 
+/** The real deferred UI must render once and leave native chrome intact after disposal. */
 async function testMissingChromeRetriesRealPresentation(): Promise<void> {
   const hadPref = Services.prefs.prefHasUserValue(ENABLED_PREF);
   const pref = Services.prefs.getBoolPref(ENABLED_PREF, false);
@@ -622,6 +637,7 @@ async function testMissingChromeRetriesRealPresentation(): Promise<void> {
   }
 }
 
+/** Runs startup timing, ownership, and actual chrome regression cases in the browser harness. */
 export async function runAllTests(): Promise<void> {
   await runTests("tabStacksStartup.test.ts", [
     {

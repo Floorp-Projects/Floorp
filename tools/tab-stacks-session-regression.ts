@@ -71,10 +71,12 @@ assert(revision.success, "Source revision is available");
 evidence.sourceRevision = new TextDecoder().decode(revision.stdout).trim();
 const results = evidence.results as Record<string, unknown>[];
 
+/** Fail the regression run when a required invariant does not hold. */
 function assert(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
 
+/** Capture Windows process generations, terminating a stalled snapshot helper. */
 async function processes(): Promise<ProcessIdentity[]> {
   const controller = new AbortController();
   const timeoutMs = 20_000;
@@ -106,11 +108,13 @@ async function processes(): Promise<ProcessIdentity[]> {
   }
 }
 
+/** Match a captured process generation by PID, creation time, and executable. */
 function sameProcess(a: ProcessIdentity, b: ProcessIdentity): boolean {
   return a.pid === b.pid && a.created === b.created &&
     a.executable.toLowerCase() === b.executable.toLowerCase();
 }
 
+/** Probe the isolated profile's Marionette listener for startup or shutdown. */
 async function portOpen(): Promise<boolean> {
   try {
     const conn = await Deno.connect({ hostname: "127.0.0.1", port });
@@ -121,6 +125,7 @@ async function portOpen(): Promise<boolean> {
   }
 }
 
+/** Poll for a non-null result until the deadline, preserving the last failure. */
 async function until<T>(
   check: () => Promise<T | null> | T | null,
   description: string,
@@ -140,6 +145,10 @@ async function until<T>(
   throw new Error(`${description} timed out${last ? `: ${last}` : ""}`);
 }
 
+/**
+ * Bound a promise's wait and clear its deadline timer on every outcome.
+ * Callers remain responsible for canceling any timed-out underlying operation.
+ */
 async function within<T>(
   operation: Promise<T>,
   timeoutMs: number,
@@ -224,6 +233,7 @@ const windowSnapshot = `
     });
 `;
 
+/** Own the processes, Marionette connection, and log pipes for one scenario. */
 class Browser {
   readonly owned = new Map<number, ProcessIdentity>();
   client?: MarionetteClient;
@@ -261,6 +271,7 @@ class Browser {
     for (const log of this.logs) void log.catch(() => {});
   }
 
+  /** Capture the launcher's generation and verified descendants before teardown. */
   async capture(): Promise<void> {
     const snapshot = await processes();
     const root = snapshot.find((p) => p.pid === this.child.pid);
@@ -296,6 +307,7 @@ class Browser {
     }
   }
 
+  /** Attach to the owned browser and verify its PID, profile, and startup mode. */
   async connect(): Promise<void> {
     await this.capture();
     await until(async () => {
@@ -331,11 +343,13 @@ class Browser {
     await this.capture();
   }
 
+  /** Read native tab/group state and rendered stack geometry from every window. */
   async snapshot(): Promise<WindowState[]> {
     assert(this.client, "Browser is connected");
     return await this.client.executeScript(windowSnapshot);
   }
 
+  /** Await a chrome script through Marionette's explicit completion callback. */
   async asyncScript(script: string): Promise<unknown> {
     assert(this.client, "Browser is connected");
     const result = await this.client.send("WebDriver:ExecuteAsyncScript", {
@@ -350,6 +364,7 @@ class Browser {
     return result.value.value;
   }
 
+  /** Flush content state and write a native session checkpoint before restart. */
   async save(): Promise<void> {
     await this.asyncScript(`
       const { TabStateFlusher } = ChromeUtils.importESModule(
@@ -364,6 +379,7 @@ class Browser {
     `);
   }
 
+  /** Quit or crash the owned browser and verify shutdown before draining logs. */
   async stop(crash: boolean): Promise<void> {
     await this.capture();
     if (crash) {
@@ -397,6 +413,7 @@ class Browser {
     await this.drainLogs();
   }
 
+  /** Wait for captured process generations and the isolated listener to disappear. */
   private async verifyStopped(): Promise<void> {
     await until(
       async () => {
@@ -414,12 +431,14 @@ class Browser {
     );
   }
 
+  /** Close Marionette within its own deadline after releasing this reference. */
   private async closeClient(): Promise<void> {
     const client = this.client;
     this.client = undefined;
     if (client) await within(client.close(), 6_000, "Marionette cleanup");
   }
 
+  /** Drain captured output within a deadline, then cancel any remaining pipe reads. */
   private async drainLogs(): Promise<void> {
     try {
       const results = await within(
@@ -440,6 +459,7 @@ class Browser {
     }
   }
 
+  /** Terminate verified owned processes and collect failures across cleanup steps. */
   async abort(): Promise<void> {
     const failures: unknown[] = [];
     if (!this.exited) {
@@ -491,6 +511,7 @@ class Browser {
   }
 }
 
+/** Build a window-local script that creates native stack and plain-group fixtures. */
 function fixtureScript(windowIndex: number): string {
   return `
     const windows = Array.from(Services.wm.getEnumerator("navigator:browser"));
@@ -512,6 +533,7 @@ function fixtureScript(windowIndex: number): string {
   `;
 }
 
+/** Wait for complete stack layout and compare restored native state when provided. */
 async function checkedState(
   browser: Browser,
   count: number,

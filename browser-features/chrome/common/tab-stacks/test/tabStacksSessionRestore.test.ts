@@ -20,6 +20,7 @@ const { SessionStore } = ChromeUtils.importESModule(
   "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
 ) as { SessionStore: StackSessionStore };
 
+/** Polls native asynchronous state with a bounded wait and a labeled failure. */
 async function waitFor(check: () => boolean, label: string): Promise<void> {
   for (let i = 0; i < 400; i++) {
     if (check()) return;
@@ -28,15 +29,18 @@ async function waitFor(check: () => boolean, label: string): Promise<void> {
   throw new Error(`Timed out waiting for Tab Stacks session restore: ${label}`);
 }
 
+/** Resolves a restored group by its persisted identity within its owning window. */
 function group(win: SessionStackWindow, id: string): StackGroup | undefined {
   return win.gBrowser.tabGroups.find((item) => item.id === id);
 }
 
+/** Normalizes the native SessionStore return format to one window's serialized state. */
 function windowState(win: SessionStackWindow): StackSessionWindowState {
   const state = SessionStore.getWindowState(win);
   return (typeof state === "string" ? JSON.parse(state) : state).windows[0];
 }
 
+/** Waits for both native startup and the window's normal loader-owned Tab Stacks instance. */
 async function waitForLoadedWindow(win: SessionStackWindow): Promise<void> {
   await waitFor(
     () => !!win.gBrowserInit?.delayedStartupFinished,
@@ -51,6 +55,7 @@ async function waitForLoadedWindow(win: SessionStackWindow): Promise<void> {
   );
 }
 
+/** Completes native window unload and removes the temporary listener even on timeout. */
 async function closeWindow(win: SessionStackWindow): Promise<void> {
   if (win.closed) return;
   let unloaded = false;
@@ -64,6 +69,7 @@ async function closeWindow(win: SessionStackWindow): Promise<void> {
   }
 }
 
+/** Native two-window restoration must preserve group kinds, complete rows, and independent lifetimes. */
 async function testNativeTwoWindowRestorePreservesStacksAndGroups(): Promise<
   void
 > {
@@ -272,6 +278,7 @@ async function testNativeTwoWindowRestorePreservesStacksAndGroups(): Promise<
   }
 }
 
+/** Runs the real SessionStore roundtrip separately from simulated startup ordering. */
 export async function runAllTests(): Promise<void> {
   await runTests("tabStacksSessionRestore.test.ts", [
     {
