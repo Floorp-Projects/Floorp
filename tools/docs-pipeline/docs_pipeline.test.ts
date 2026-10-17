@@ -38,7 +38,8 @@ import { REQUIRED_GENERATED_PAGE_PATHS } from "./types.ts";
 import type { DocsInventory, GeneratedPage } from "./types.ts";
 
 Deno.test("workflow inventory preserves target PR, review and completion triggers", () => {
-  assertEquals(parseWorkflowTriggers(`
+  assertEquals(
+    parseWorkflowTriggers(`
 on:
   issues:
     types: [opened, reopened, edited]
@@ -50,7 +51,40 @@ on:
     types: [submitted, dismissed]
   workflow_run:
     types: [completed]
-`), ["issue_comment", "issues", "pull_request_review", "pull_request_target", "workflow_run"]);
+`),
+    [
+      "issue_comment",
+      "issues",
+      "pull_request_review",
+      "pull_request_target",
+      "workflow_run",
+    ],
+  );
+});
+
+Deno.test("workflow inventory ignores trigger-like fields and strings in inline code", () => {
+  assertEquals(
+    parseWorkflowTriggers(`
+on:
+  pull_request_target:
+    types: [opened]
+permissions: {}
+jobs:
+  notify:
+    steps:
+      - run: |
+          const data = { is_pull_request: true };
+          console.log("issues: workflow_run: pull_request_review:");
+`),
+    ["pull_request_target"],
+  );
+  assertEquals(parseWorkflowTriggers("on: [push, pull_request]\njobs: {}"), [
+    "pull_request",
+    "push",
+  ]);
+  assertEquals(parseWorkflowTriggers('"on": workflow_dispatch\njobs: {}'), [
+    "workflow_dispatch",
+  ]);
 });
 
 Deno.test("parseDenoTasksFromText reads sorted task entries", () => {
