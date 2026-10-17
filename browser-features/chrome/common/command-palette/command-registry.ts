@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  getAllGestureActions,
   getActionDescription,
   getActionDisplayName,
+  getAllGestureActions,
 } from "../mouse-gesture/utils/gestures.ts";
 import { fuzzySearch } from "./fuzzy.ts";
 import { getJapaneseReadings } from "./utils/getJapaneseReadings.ts";
@@ -18,24 +18,24 @@ import {
   closedWindowSwitcherCommand,
   historySwitcherCommand,
   openUrlCommand,
-  searchWebCommand,
   reopenInContainerCommand,
+  searchWebCommand,
   tabSwitcherCommand,
 } from "./multiInputCommand/index.ts";
-import { searchHistory, isHistoryCommand } from "./history-provider.ts";
-import { searchBookmarks, isBookmarkCommand } from "./bookmark-provider.ts";
+import { isHistoryCommand, searchHistory } from "./history-provider.ts";
+import { isBookmarkCommand, searchBookmarks } from "./bookmark-provider.ts";
 import type {
-  CommandStepChoice,
-  StepChoicesResult,
   CommandStep,
+  CommandStepChoice,
   PaletteCommand,
+  StepChoicesResult,
 } from "./types.ts";
 
 export type {
-  CommandStepChoice,
-  StepChoicesResult,
   CommandStep,
+  CommandStepChoice,
   PaletteCommand,
+  StepChoicesResult,
 };
 
 const ACTION_CATEGORY_MAP: Record<string, string> = {
@@ -311,7 +311,7 @@ export function searchCommands(query: string, win?: Window): PaletteCommand[] {
   return fuzzySearch(query, commands);
 }
 
-export { isHistoryCommand, isBookmarkCommand, isTabCommand };
+export { isBookmarkCommand, isHistoryCommand, isTabCommand };
 
 /**
  * Search browsing history for the given query.
@@ -354,13 +354,19 @@ export function getShortcutForAction(actionId: string): string | null {
   if (isTabCommand(actionId)) return null;
   try {
     const config = getConfig();
-    for (const shortcut of Object.values(config.shortcuts)) {
-      if (shortcut.action === actionId) {
-        return shortcutToString(shortcut);
+    for (const bindings of Object.values(config.shortcuts)) {
+      for (const shortcut of bindings) {
+        if (shortcut.action === actionId) {
+          return shortcutToString(shortcut);
+        }
       }
     }
   } catch (err) {
-    console.error("[CommandPalette]", "Failed to load keyboard shortcut config", err);
+    console.error(
+      "[CommandPalette]",
+      "Failed to load keyboard shortcut config",
+      err,
+    );
   }
   return null;
 }

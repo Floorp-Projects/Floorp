@@ -62,11 +62,11 @@ function applyShortcut(key: string, modifiers: Modifiers): void {
   const config: KeyboardShortcutConfig = {
     enabled: true,
     shortcuts: {
-      "typing-guard-test": {
+      "typing-guard-test": [{
         key,
         modifiers,
         action: "typing-guard-test",
-      },
+      }],
     },
   };
   setEnabled(true);

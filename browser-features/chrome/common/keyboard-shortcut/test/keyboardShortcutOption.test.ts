@@ -41,11 +41,11 @@ function testOptionAndAltGr(): void {
             setConfig({
               enabled: true,
               shortcuts: {
-                [action]: {
+                [action]: [{
                   key: code,
                   modifiers: { alt: true, ctrl, meta, shift },
                   action,
-                },
+                }],
               },
             });
             const win = new EventTarget() as unknown as Window;

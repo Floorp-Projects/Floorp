@@ -122,49 +122,49 @@ function createFakeWindow(): Window {
 const CTRL_T_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-ctrl-t": {
+    "test-ctrl-t": [{
       key: "T",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-ctrl-t",
-    },
+    }],
   },
 };
 
 const ALT_SHIFT_F_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-alt-shift-f": {
+    "test-alt-shift-f": [{
       key: "F",
       modifiers: { alt: true, ctrl: false, meta: false, shift: true },
       action: "test-alt-shift-f",
-    },
+    }],
   },
 };
 
 const DIGIT_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-digit-1": {
+    "test-digit-1": [{
       key: "1",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-digit-1",
-    },
+    }],
   },
 };
 
 const MULTI_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-ctrl-t": {
+    "test-ctrl-t": [{
       key: "T",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-ctrl-t",
-    },
-    "test-alt-shift-f": {
+    }],
+    "test-alt-shift-f": [{
       key: "F",
       modifiers: { alt: true, ctrl: false, meta: false, shift: true },
       action: "test-alt-shift-f",
-    },
+    }],
   },
 };
 
@@ -807,11 +807,11 @@ function testUppercaseKeyNormalization(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -895,11 +895,11 @@ function testKeySequenceDoesNotMatchPartialCombos(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -938,11 +938,11 @@ function testNumpadKeyMatching(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-numpad": {
+        "test-numpad": [{
           key: "1",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-numpad",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -971,11 +971,11 @@ function testFunctionKeyMatching(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-f5": {
+        "test-f5": [{
           key: "F5",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-f5",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1009,11 +1009,11 @@ function testLowercaseKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "t", // lowercase
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1045,11 +1045,11 @@ function testActionNotFoundNoError(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "non-existent-action": {
+        "non-existent-action": [{
           key: "X",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "this-action-does-not-exist",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1078,11 +1078,11 @@ function testSafeErrorHandlingExperimentEnabled(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "throwing-action": {
+        "throwing-action": [{
           key: "Z",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "__nonexistent_throwing__",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1112,11 +1112,11 @@ function testSafeErrorHandlingExperimentDisabled(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "safe-action": {
+        "safe-action": [{
           key: "Y",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "non-existent-safe-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1375,11 +1375,11 @@ function testEmptyKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "", // empty key
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1403,11 +1403,11 @@ function testVeryLongKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "verylongkeynamethatwontmatch",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1545,11 +1545,11 @@ function testWindowBlurClearsLostKeyUpState(): void {
     const CTRL_D_CONFIG: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-d": {
+        "test-ctrl-d": [{
           key: "D",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-ctrl-d",
-        },
+        }],
       },
     };
     applyTestConfig(CTRL_D_CONFIG);
@@ -1585,11 +1585,11 @@ function testCapturePhaseBlocksBubbleListener(): void {
     const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-shift-p": {
+        "test-ctrl-shift-p": [{
           key: "P",
           modifiers: { alt: false, ctrl: true, meta: false, shift: true },
           action: "test-ctrl-shift-p",
-        },
+        }],
       },
     };
     applyTestConfig(CTRL_SHIFT_P_CONFIG);
@@ -1631,11 +1631,11 @@ function testPhysicalCodeMatchesNonLatinKey(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-physical-code": {
+        "test-physical-code": [{
           key: "KeyZ",
           modifiers: { alt: true, ctrl: true, meta: false, shift: false },
           action: "test-physical-code",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1678,11 +1678,11 @@ function testAltGraphIsNotCtrlAlt(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-alt-z": {
+        "test-ctrl-alt-z": [{
           key: "KeyZ",
           modifiers: { alt: true, ctrl: true, meta: false, shift: false },
           action: "test-ctrl-alt-z",
-        },
+        }],
       },
     };
     applyTestConfig(config);

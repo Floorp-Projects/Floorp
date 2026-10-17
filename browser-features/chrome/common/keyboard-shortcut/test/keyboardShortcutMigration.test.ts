@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { clearLegacyConfig, migrateLegacyConfig } from "../migration.ts";
+import type { ShortcutConfig } from "../type.ts";
 import {
   assert,
   assertEquals,
@@ -24,9 +25,9 @@ function withStringPref(value: string, fn: () => void): void {
 // ---------------------------------------------------------------------------
 
 function firstBinding(
-  shortcuts: Record<string, { key: string }[]>,
+  shortcuts: Record<string, ShortcutConfig[]>,
   actionId: string,
-): { key: string } | undefined {
+): ShortcutConfig | undefined {
   return shortcuts[actionId]?.[0];
 }
 

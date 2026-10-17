@@ -83,11 +83,11 @@ function isAttached(win: Window): boolean {
 const TEST_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-ctrl-t": {
+    "test-ctrl-t": [{
       key: "T",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-ctrl-t",
-    },
+    }],
   },
 };
 
@@ -230,11 +230,11 @@ function testUpdateConfigDestroysAndReattaches(): void {
       const newConfig: KeyboardShortcutConfig = {
         enabled: true,
         shortcuts: {
-          "test-alt-shift-f": {
+          "test-alt-shift-f": [{
             key: "F",
             modifiers: { alt: true, ctrl: false, meta: false, shift: true },
             action: "test-alt-shift-f",
-          },
+          }],
         },
       };
       service.updateConfig(newConfig);

@@ -533,11 +533,11 @@ function testSetConfigUpdatesPref(): void {
     const testConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     setConfig(testConfig);
