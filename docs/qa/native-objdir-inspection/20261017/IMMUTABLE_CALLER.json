@@ -1,0 +1,56 @@
+{
+  "scope": "objdir-read-only-compatibility-inspection",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "a2e0eb0efc0c604982d0898a435b5e26880bf113",
+    "tree": "81f1cc1ffc8eddc4c42f6525063e213ec7ee3246",
+    "helpers": {
+      "contract.py": "5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412",
+      "scan.py": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"
+    }
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "ba20cf6707f56df6fd9b570241956576121e5c6d",
+    "tree": "a4bc17786c5f311b6e31dcd2d81e24e51c6d6ffe",
+    "base": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "path": ".github/workflows/inspect-native-objdir.yml",
+    "sha256": "91d355ca3ebceeecb9e00896206e277ee235c61a037ccb6651d93394b63e1e96",
+    "gitBlob": "e7a2cb2b0738aad9e0e5ec01c49498d94a489c49",
+    "onlyChangedFile": true,
+    "executionBranch": "codex/mac-native-objdir-inspect-20261017"
+  },
+  "maintainedPatch": {
+    "path": ".github/patches/floorp-runtime/ci/inspect-native-objdir.patch",
+    "sha256": "15a9be225204f28a98a62b283ca120ca4e03f934642569d945194198d653d625",
+    "gitApplyCheck": true
+  },
+  "route": {
+    "artifactSourceRepository": "Floorp-Projects/Floorp-Runtime",
+    "run": 38885821823,
+    "attempt": 1,
+    "artifact": 12047907028,
+    "action": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+    "permissions": {
+      "actions": "read",
+      "contents": "read"
+    },
+    "newPermissions": false,
+    "newPrincipal": false,
+    "runner": "ubuntu-24.04",
+    "maximumMinutes": 20,
+    "plannedRuns": 1,
+    "newActionsArtifacts": 0,
+    "alternateRouteAfterAccessDenial": false
+  },
+  "sourceDefaultHeads": {
+    "Floorp": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "Runtime": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "verification": {
+    "apiCommitParentsAndTrees": true,
+    "apiFileSHA256Readback": true,
+    "localFixtureTreeMatchesAPI": true
+  },
+  "executionRequested": false
+}

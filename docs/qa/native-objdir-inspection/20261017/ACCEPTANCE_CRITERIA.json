@@ -1,0 +1,38 @@
+{
+  "scope": "inspection-only-external-acceptance",
+  "workflow": {
+    "exactBranch": "codex/mac-native-objdir-inspect-20261017",
+    "attempt": 1,
+    "runCount": 1,
+    "jobs": 1,
+    "conclusion": "success",
+    "exactCallerCommitRequired": true
+  },
+  "transport": {
+    "actualCompleteZIPDigestFromOfficialActionLog": "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+    "providerDigestAloneSufficient": false,
+    "downloadWarningsAllowed": false,
+    "http401or403Allowed": false,
+    "downloadRetryErrorsAllowed": false
+  },
+  "proof": {
+    "exactFixturePinRequired": true,
+    "preflightStatus": "headers-verified",
+    "inspectionStatus": "inspected",
+    "entryCRCMatchesZIPDirectory": true,
+    "gzipConsumedToEOF": true,
+    "gzipCRCVerified": true,
+    "filesExtracted": false,
+    "fullHostTUCompiled": false,
+    "xulLinked": false,
+    "authenticationExecuted": false,
+    "signingPerformed": false,
+    "eligibleForIncrementalBuild": false
+  },
+  "postRun": {
+    "newActionsArtifacts": 0,
+    "sourceBranchRuns": 0,
+    "defaultsUnchanged": true
+  },
+  "qualificationClaimAllowed": false
+}

@@ -22,7 +22,8 @@
     "scan.py": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"
   },
   "codeDecision": "GO",
-  "executionDecision": "PENDING_FINAL_IMMUTABLE_PIN_AND_ROUTE_REVIEW",
+  "executionDecision": "GO_ONE_READ_ONLY_OBJDIR_INSPECTION",
   "independentReviewerMutationOrExecution": false,
-  "remainingGate": "Same run, attempt and head: verify complete ZIP digest and absence of download warnings, HTTP/retry errors from completed job log"
+  "remainingGate": "Same run, attempt and head: verify complete ZIP digest and absence of download warnings, HTTP/retry errors from completed job log",
+  "finalPinReview": "FINAL_PIN_REVIEW.json"
 }

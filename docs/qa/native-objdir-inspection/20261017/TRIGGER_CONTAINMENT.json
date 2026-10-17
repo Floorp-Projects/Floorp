@@ -1,0 +1,441 @@
+{
+  "scope": "trigger-containment-at-fixed-default-heads",
+  "floorp": {
+    "base": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "workflowCount": 21,
+    "expectedRunsForSourceBranchPush": 0,
+    "workflows": [
+      {
+        "path": ".github/workflows/assemble-release-bundle.yml",
+        "events": [
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/build_installers.yml",
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/collect_firefox_tests.yml",
+        "events": [
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/colocated_runner_test.yml",
+        "events": [
+          "workflow_dispatch",
+          "pull_request",
+          "push"
+        ],
+        "pushBranches": [
+          "main"
+        ]
+      },
+      {
+        "path": ".github/workflows/docs_pipeline.yml",
+        "events": [
+          "workflow_dispatch",
+          "schedule",
+          "pull_request",
+          "push"
+        ],
+        "pushBranches": [
+          "main"
+        ]
+      },
+      {
+        "path": ".github/workflows/firefox_runtime_candidate.yml",
+        "events": [
+          "workflow_dispatch",
+          "schedule"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/moderation.yml",
+        "events": [
+          "issues",
+          "pull_request",
+          "issue_comment",
+          "pull_request_review_comment",
+          "discussion",
+          "discussion_comment"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/openbot-events.yml",
+        "events": [
+          "issues",
+          "pull_request_target",
+          "workflow_run"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/organize_issue.yml",
+        "events": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/package.yml",
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/package_and_publish_alpha.yml",
+        "events": [
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/package_and_publish_release.yml",
+        "events": [
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/ppa_index_check.yml",
+        "events": [
+          "pull_request",
+          "push"
+        ],
+        "pushBranches": [
+          "main"
+        ]
+      },
+      {
+        "path": ".github/workflows/publish_alpha.yml",
+        "events": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/publish_ppa.yml",
+        "events": [
+          "workflow_call",
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/publish_release.yml",
+        "events": [
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/purge_ppa_cache.yml",
+        "events": [
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/update_lepton.yml",
+        "events": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/validate-final-package-qa.yml",
+        "events": [
+          "workflow_dispatch"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/validate-runtime-provenance.yml",
+        "events": [
+          "workflow_call"
+        ],
+        "pushBranches": []
+      },
+      {
+        "path": ".github/workflows/verify-release-artifact.yml",
+        "events": [
+          "workflow_call"
+        ],
+        "pushBranches": []
+      }
+    ]
+  },
+  "runtime": {
+    "base": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "workflowCount": 24,
+    "existingWorkflowMatchesForExecutionBranchPush": 0,
+    "workflowRunListeners": [],
+    "workflows": [
+      {
+        "path": ".github/workflows/android-build.yml",
+        "blobSHA": "12e096ea0e748da9fedb0bb6a5fed71514102293",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/autodiff-per-file-pr.yml",
+        "blobSHA": "d726399dc95ae9269dbf413536d676a9e3a791fc",
+        "eventNames": [
+          "issue_comment"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/cleanup-large-caches.yml",
+        "blobSHA": "d0a1b601a5e2aea9407008c0a0db793ee186e1b0",
+        "eventNames": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/common-build.yml",
+        "blobSHA": "ec902a7a04c662136a89972f42420d9a998fc0e9",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/daily-build.yml",
+        "blobSHA": "fef8955927c395543ee6f589d3cdc37320e12ebb",
+        "eventNames": [
+          "schedule",
+          "workflow_dispatch"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/generate-pgo-profile-linux.yml",
+        "blobSHA": "248327842980f6ae94d0735eda5efcf542ff4b1f",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/generate-pgo-profile-windows.yml",
+        "blobSHA": "4d7c5a5a0ca0b033282fe92b39675a22d67dc222",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/mac_integration.yml",
+        "blobSHA": "c0fdedbbf8f4d966eb27d8bcbdd1daca27469c5d",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/mac_pgo.yml",
+        "blobSHA": "41bbca531a004b3679c6e4984371d2ca11a2012f",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/misc-pull-upstream.yml",
+        "blobSHA": "5590756590818d032aa036184cedc355d91b1c68",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call",
+          "schedule"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/qa3-hosted-linux-debug.yml",
+        "blobSHA": "202d121ff593b03f0c5de09c2b2d69634d4062b4",
+        "eventNames": [
+          "push"
+        ],
+        "push": {
+          "branches": [
+            "codex/qa3-actions-native-proof-qa337-17"
+          ]
+        }
+      },
+      {
+        "path": ".github/workflows/qa3-linux-debug-proof.yml",
+        "blobSHA": "bee2fdb03333f38f077f67aa2fac7df6bd0d864b",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/qa3-shadow.yml",
+        "blobSHA": "a5e1621a8c7afc8c77bb11fdac31defa2714464c",
+        "eventNames": [
+          "pull_request",
+          "workflow_dispatch"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/recover-runtime-variants.yml",
+        "blobSHA": "1298a2b8168ecd008f7ee5f03bd30b997e8fdcf1",
+        "eventNames": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "push": {
+          "branches": [
+            "codex/runtime-variants/**/recovery",
+            "codex/runtime-variants/**/mac-debug-recovery"
+          ],
+          "paths": [
+            ".github/workflows/**"
+          ]
+        }
+      },
+      {
+        "path": ".github/workflows/resolve-build-context.yml",
+        "blobSHA": "159c6bf6f6d00813fbf30080cee42c30aef1369f",
+        "eventNames": [
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/validate-pwa-context-menu.yml",
+        "blobSHA": "1bdd9ef1fcf6e884ed601bd78be43ae5f570f296",
+        "eventNames": [
+          "workflow_dispatch"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/validate-runtime-debug.yml",
+        "blobSHA": "2514e71e1fe9f1f85017574673c79d0ad4d3b6a9",
+        "eventNames": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "push": {
+          "branches": [
+            "codex/runtime-variants/**/debug"
+          ],
+          "paths": [
+            ".github/runtime-upstream.json",
+            ".github/patches/upstream/**",
+            ".github/workflows/**"
+          ]
+        }
+      },
+      {
+        "path": ".github/workflows/validate-runtime-pgo.yml",
+        "blobSHA": "7180a2b4581209f66e3f60ebb6ba0132090f6e57",
+        "eventNames": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "push": {
+          "branches": [
+            "codex/runtime-variants/**/pgo"
+          ],
+          "paths": [
+            ".github/runtime-upstream.json",
+            ".github/patches/upstream/**",
+            ".github/workflows/**"
+          ]
+        }
+      },
+      {
+        "path": ".github/workflows/validate-runtime-source.yml",
+        "blobSHA": "89bc2dcaa98925c2657ec3a3bd79b5fbbd141e95",
+        "eventNames": [
+          "push",
+          "workflow_dispatch"
+        ],
+        "push": {
+          "branches": [
+            "codex/runtime-build/**"
+          ],
+          "paths": [
+            ".github/runtime-upstream.json",
+            ".github/patches/upstream/**",
+            ".github/workflows/**"
+          ]
+        }
+      },
+      {
+        "path": ".github/workflows/verify-runtime-artifact.yml",
+        "blobSHA": "8e7a1aa3f72d690febcd494f04c414614bfab635",
+        "eventNames": [
+          "workflow_call",
+          "workflow_dispatch"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/wrapper-build-android.yml",
+        "blobSHA": "230ac0382937ee2f7329d64dad630db234792f4c",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/wrapper-build-linux.yml",
+        "blobSHA": "9c9574be52c0b00d3ecf5992e1b7902982c7d771",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/wrapper-build-windows.yml",
+        "blobSHA": "dc3a0aa45cbe7ce922ecb0ff45c88402aa96dd0b",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "push": "absent"
+      },
+      {
+        "path": ".github/workflows/wrapper-mac-build.yml",
+        "blobSHA": "0b17a95c7b43fd227ecc4e5a3213f86cfa19a296",
+        "eventNames": [
+          "workflow_dispatch",
+          "workflow_call"
+        ],
+        "push": "absent"
+      }
+    ]
+  },
+  "newCaller": {
+    "pushBranch": "codex/mac-native-objdir-inspect-20261017",
+    "expectedRuns": 1
+  }
+}

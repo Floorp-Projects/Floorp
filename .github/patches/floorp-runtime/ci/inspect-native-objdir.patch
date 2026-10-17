@@ -1,0 +1,117 @@
+diff --git a/.github/workflows/inspect-native-objdir.yml b/.github/workflows/inspect-native-objdir.yml
+new file mode 100644
+index 0000000..e7a2cb2
+--- /dev/null
++++ b/.github/workflows/inspect-native-objdir.yml
+@@ -0,0 +1,111 @@
++---
++name: Read-only native objdir compatibility inspection
++run-name: Inspect existing Runtime7dd Intel profgen objdir
++
++'on':
++  push:
++    branches:
++      - codex/mac-native-objdir-inspect-20261017
++
++permissions:
++  contents: read
++  actions: read
++
++concurrency:
++  group: mac-native-objdir-inspect-20261017
++  cancel-in-progress: false
++
++jobs:
++  inspect:
++    if: >-
++      github.repository == 'Floorp-Projects/Floorp-Runtime' &&
++      github.event_name == 'push' &&
++      github.ref == 'refs/heads/codex/mac-native-objdir-inspect-20261017'
++    runs-on: ubuntu-24.04
++    timeout-minutes: 20
++    env:
++      PYTHONDONTWRITEBYTECODE: '1'
++    steps:
++      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
++        with:
++          repository: Floorp-Projects/Floorp
++          ref: 'a2e0eb0efc0c604982d0898a435b5e26880bf113'
++          path: inspection-fixture
++          persist-credentials: false
++          sparse-checkout-cone-mode: false
++          sparse-checkout: |
++            .github/qa/native_objdir/
++      - name: Verify immutable inspection helpers
++        run: |
++          python3 - <<'PY'
++          import hashlib
++          from pathlib import Path
++          root = Path('inspection-fixture/.github/qa/native_objdir')
++          expected = {"contract.py":"5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412","scan.py":"795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"}
++          assert {p.name for p in root.iterdir()} == set(expected), 'helper-files'
++          for name, digest in expected.items():
++              path = root / name
++              assert path.is_file() and not path.is_symlink(), 'helper-file'
++              assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'helper-digest'
++          PY
++      - name: Verify same-repository source and bounded ZIP headers
++        timeout-minutes: 2
++        env:
++          GITHUB_TOKEN: ${{ github.token }}
++        run: |
++          python3 inspection-fixture/.github/qa/native_objdir/contract.py \
++            --output "$RUNNER_TEMP/objdir-preflight.json" \
++            --payload "$RUNNER_TEMP/native-objdir-payload"
++      - name: Download one existing objdir with the official action
++        timeout-minutes: 7
++        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
++        with:
++          repository: Floorp-Projects/Floorp-Runtime
++          run-id: '38885821823'
++          artifact-ids: '12047907028'
++          github-token: ${{ github.token }}
++          merge-multiple: true
++          path: ${{ runner.temp }}/native-objdir-payload
++      - name: Recheck helpers before reading archive data
++        run: |
++          python3 - <<'PY'
++          import hashlib
++          from pathlib import Path
++          root = Path('inspection-fixture/.github/qa/native_objdir')
++          expected = {"contract.py":"5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412","scan.py":"795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"}
++          assert {p.name for p in root.iterdir()} == set(expected), 'helper-files'
++          for name, digest in expected.items():
++              path = root / name
++              assert path.is_file() and not path.is_symlink(), 'helper-file'
++              assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, 'helper-digest'
++          PY
++      - name: Read gzip and tar without extracting or executing archive code
++        timeout-minutes: 9
++        run: |
++          python3 inspection-fixture/.github/qa/native_objdir/scan.py \
++            --preflight "$RUNNER_TEMP/objdir-preflight.json" \
++            --payload "$RUNNER_TEMP/native-objdir-payload" \
++            --output "$RUNNER_TEMP/objdir-inspection.json"
++      - name: Record bounded public proof
++        if: always()
++        run: |
++          python3 - <<'PY'
++          import json, os
++          from pathlib import Path
++          result = {'scope': 'objdir-read-only-inspection', 'fixtureCommit': 'a2e0eb0efc0c604982d0898a435b5e26880bf113',
++                    'fullZIPDigestGate': 'requires-external-job-log-verification',
++                    'newActionsArtifacts': 0}
++          for key, name in [('preflight', 'objdir-preflight.json'), ('inspection', 'objdir-inspection.json')]:
++              path = Path(os.environ['RUNNER_TEMP']) / name
++              if not path.exists():
++                  result[key] = {'status': 'not-produced'}
++                  continue
++              data = path.read_bytes()
++              assert len(data) <= 65536, 'proof-size'
++              result[key] = json.loads(data)
++          text = json.dumps(result, sort_keys=True)
++          assert len(text.encode()) <= 98304, 'combined-proof-size'
++          print('OBJDIR_INSPECTION_BEGIN')
++          print(text)
++          print('OBJDIR_INSPECTION_END')
++          PY

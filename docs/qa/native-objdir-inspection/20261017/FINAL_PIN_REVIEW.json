@@ -1,0 +1,37 @@
+{
+  "verdict": "GO_ONE_READ_ONLY_OBJDIR_INSPECTION",
+  "floorpFixture": "a2e0eb0efc0c604982d0898a435b5e26880bf113",
+  "floorpTree": "81f1cc1ffc8eddc4c42f6525063e213ec7ee3246",
+  "runtimeCaller": "ba20cf6707f56df6fd9b570241956576121e5c6d",
+  "runtimeTree": "a4bc17786c5f311b6e31dcd2d81e24e51c6d6ffe",
+  "unresolvedFindings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "checks": {
+    "apiCommitTreeFileReadbackMatches": true,
+    "reviewedHelpersUnchanged": true,
+    "workflowDeltaIsFrozenPinOnly": true,
+    "runtimeAddsOneWorkflowOnly": true,
+    "maintainedPatchRecreatesExactCaller": true,
+    "otherPushTriggersDoNotMatch": true,
+    "runtimeWorkflowRunTriggers": 0,
+    "existingReadPermissionScope": true,
+    "repositoriesPublic": true,
+    "newBranchesAbsent": true,
+    "defaultRefsUnchanged": true,
+    "newActionsArtifacts": 0
+  },
+  "scope": {
+    "sourceRun": 38885821823,
+    "artifact": 12047907028,
+    "jobs": 1,
+    "runner": "ubuntu-24.04",
+    "maximumMinutes": 20,
+    "compileLinkSigningAuthentication": false,
+    "automaticFallbackOrRerun": false
+  },
+  "resultAcceptance": "Same run/attempt/head completed job log: exact complete ZIP digest, no download warning or HTTP/retry error. Job success alone is insufficient.",
+  "reviewerMutationCIOrPayloadAcquisition": false
+}
