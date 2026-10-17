@@ -1,0 +1,210 @@
+{
+  "causalAssessment": {
+    "historicalDeniedTargetIdentity": "UNKNOWN",
+    "historicalNativeExitCause": "UNKNOWN",
+    "historicalPermissionRootCause": "UNKNOWN",
+    "historicalRun": 39045848018,
+    "historicalThreeConsecutiveDenialsReproduced": false,
+    "reason": "A different short run cannot identify the old denied generation. The original run contains no denied PID birth/UID/type proof, and this run did not reproduce three consecutive denied attempts or a native browser exit.",
+    "representativePermissionClass": "OBSERVED_ONCE_AND_RECOVERED; consistent with the inherited harness ps hypothesis."
+  },
+  "cleanup": {
+    "groupPermissionFailureBranch": "NOT_EXERCISED_IN_THIS_MAC_RUN; no group cleanup EPERM was recorded. This run does not establish Mac behavior when group access is denied.",
+    "scope": "Both monitored stage process groups were verified gone by the pinned normal group-cleanup logic, and both exact Popen children were reaped with code zero. These codes belong to the diagnostic test/worker leaders, not a browser or Shim.",
+    "stages": [
+      {
+        "cleanupDiagnostics": [],
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "stage": "census-zombie-preflight"
+      },
+      {
+        "cleanupDiagnostics": [],
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "stage": "harness-census-preflight"
+      }
+    ]
+  },
+  "decision": "PASS_PROCESS_CENSUS_PREFLIGHT_ONLY",
+  "evidenceChecks": {
+    "privateDecodedLogBytes": 28700,
+    "privateDecodedLogMatchesReceipt": true,
+    "privateDecodedLogSHA256": "94391aef772d6900cd69695e002554de9d7af47a4f71746ca86183e860b0749d",
+    "providerRunJobsBranchAndArtifactsReadback": "PASS",
+    "publicSummaryFileSHA256": "f9e71c7c661c30bb9ce5b4c789c4bec33a93fcf59b5d243447bd76a4b4460c9c",
+    "publicSummaryMatchesSinglePrivateLogSummary": true,
+    "rawPrivateLogPublished": false,
+    "receiptCanonicalSummaryMatches": true,
+    "reviewActions": "Read provider metadata and immutable receipt/workflow bytes; compare summary/log extraction and inspect pinned code. No new execution, retry or code change was performed for this review.",
+    "summaryCanonicalSHA256": "d71b63bd8a9778db5c1b71da0d4ff0e4b75ed9eede1fd7826656a1635fe5a9ba"
+  },
+  "observedResults": {
+    "firstFailure": null,
+    "monitorFailure": null,
+    "observations": {
+      "completeSamples": 5,
+      "differentOwnerObserved": 1,
+      "psTaskDeniedSamples": 1,
+      "samples": 5,
+      "systemPsObserved": 1
+    },
+    "recoveredMonitorDiagnosticCount": 1,
+    "selfCounter": "PASS_MEASURED",
+    "systemPsFile": {
+      "ownedByRoot": true,
+      "setuidBit": true
+    },
+    "unreapedChildTest": "PASS",
+    "workload": {
+      "hostAll": 12,
+      "hostSingle": 12,
+      "shimPIDInventory": 12
+    }
+  },
+  "openBlockingFindings": [],
+  "qualificationLimits": [
+    "Success establishes only the pinned SDK-free process-census diagnostic on this runner. It is not a native browser/authentication or product qualification.",
+    "systemPsObserved and differentOwnerObserved count earlier inventory occurrences, not unique generation-bound tasks.",
+    "psTaskDeniedSamples derives from bounded examples and is a lower bound; zero in another result would not exclude ps-related denial.",
+    "The diagnostic recovered under an existing retry rule; it did not make denied counters readable or establish that the historical monitoring failure is fixed.",
+    "The prior fresh non-PGO host/XUL build evidence remains separate; this diagnostic performed no new build."
+  ],
+  "receipt": {
+    "bytes": 12444,
+    "commit": "2aff8afd957055b5c17c214a4f9ab36bad2da5a7",
+    "immutableProviderBytesMatch": true,
+    "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY6_MAC_EXECUTION_RESULT.json",
+    "repository": "Floorp-Projects/Floorp",
+    "sha256": "917c2a194d494beaf27e06fcdd8981b35106ae0bec2f759768d868482240f4e4",
+    "url": "https://github.com/Floorp-Projects/Floorp/blob/2aff8afd957055b5c17c214a4f9ab36bad2da5a7/docs/qa/native-nonpgo-validation/20261017/RECOVERY6_MAC_EXECUTION_RESULT.json"
+  },
+  "recoveredPermission": {
+    "attempts": 2,
+    "deniedPidTag": "00374ab06acacd06",
+    "earlierInventory": {
+      "available": true,
+      "identityBound": false,
+      "ownerRelation": "different",
+      "parentPidTag": "807fc62f94661d78",
+      "realOwnerRelation": "same",
+      "role": "system-ps"
+    },
+    "elapsedSeconds": 4.07,
+    "finalUnknownKinds": {},
+    "identityLimit": "The denied PID has no generation identity. Earlier inventory owner/role/parent metadata cannot establish identity continuity or the owner/type at the later task query. The separate root-owned setuid /bin/ps stat supports the hypothesis but does not close this race.",
+    "identityTag": null,
+    "interpretation": "A permission-denied task query occurred for a PID whose earlier inventory classified it as system-ps, with different effective owner, same real owner and a parent tag matching the observed worker. The next attempt completed under the unchanged bounded retry policy. No role/owner-based exclusion or permission-to-zero conversion is present in the pinned code.",
+    "nextAttemptComplete": true,
+    "partialAttempts": 1,
+    "partialKnownCPULowerBoundSeconds": 0.239,
+    "partialKnownRSSLowerBoundMiB": 21.39453125,
+    "partialUnknownKinds": {
+      "permission": 1
+    },
+    "reportedParentTagMatchesObservedWorkerTag": true,
+    "sameWorkerGenerationTagAcrossRecordedPartialAndFinal": true,
+    "stage": "harness-census-preflight",
+    "taskQuery": {
+      "bytes": 0,
+      "errno": 1,
+      "expectedBytes": 232
+    }
+  },
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent terminal review of Intel Mac process-census diagnostic",
+  "route": {
+    "callerCommit": "1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7",
+    "fixtureCommit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "immutableProviderWorkflowBytesMatch": true,
+    "jobId": 117511907398,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "runId": 39072187911,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39072187911",
+    "workflowBytes": 2944,
+    "workflowPath": ".github/workflows/mac-native-monitor-census.yml",
+    "workflowSHA256": "f0bc6933fb5c008dbccc11279e79f93787bbb004a54c9a794876889a77b48ebe"
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "browserStartup": "NOT_TESTED",
+    "fullBuild": false,
+    "manualCancellation": false,
+    "newArtifacts": 0,
+    "privilegeOrProtectionChange": false,
+    "processSelectionChanged": false,
+    "productSigning": false,
+    "reruns": 0,
+    "sdkAcquired": false,
+    "shimAuthentication": "NOT_TESTED"
+  },
+  "sources": [
+    {
+      "supports": "Immutable terminal receipt and exact digest.",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/2aff8afd957055b5c17c214a4f9ab36bad2da5a7/docs/qa/native-nonpgo-validation/20261017/RECOVERY6_MAC_EXECUTION_RESULT.json"
+    },
+    {
+      "supports": "Pinned single-job caller and SDK/build/sign/upload exclusions.",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7/.github/workflows/mac-native-monitor-census.yml"
+    },
+    {
+      "supports": "Independent terminal metadata readback.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39072187911"
+    },
+    {
+      "supports": "One successful job, labels, timestamps and steps.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39072187911/jobs?per_page=100"
+    },
+    {
+      "supports": "No stored Actions artifacts.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39072187911/artifacts?per_page=100"
+    },
+    {
+      "commit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "supports": "EPERM remains unavailable; inventory metadata is diagnostic only."
+    },
+    {
+      "commit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+      "path": "tools/qa/native-nonpgo/support.py",
+      "supports": "Bounded retries, retained partial evidence and separate group/leader cleanup records."
+    },
+    {
+      "commit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+      "supports": "Census-only workload, Mac observation gate and distinct browser/authentication limits."
+    }
+  ],
+  "technicalOutcome": {
+    "additionalExecutionPerformedForReview": false,
+    "historicalCauseAttribution": "UNRESOLVED",
+    "nativeAuthentication": "NOT_TESTED",
+    "processCensusDiagnostic": "GO_WITH_SCOPE_LIMITS"
+  },
+  "terminal": {
+    "allJobStepsSucceeded": true,
+    "artifactsAtReadback": 0,
+    "conclusion": "success",
+    "event": "push",
+    "jobConclusion": "success",
+    "jobDurationSeconds": 20.0,
+    "jobsAtReadback": 1,
+    "matchingBranchPushRunsAtReadback": 1,
+    "runAttempt": 1,
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "status": "completed"
+  }
+}
