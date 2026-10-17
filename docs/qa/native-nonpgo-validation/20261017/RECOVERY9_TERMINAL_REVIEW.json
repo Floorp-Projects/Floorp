@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "decision": "TARGETED_MAC_LIFECYCLE_AND_ORDINARY_CENSUS_VALIDATION_PASSED",
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "binding": {
+    "receiptCommit": "f15090fd9a1b753e50882be8a79b5431a311e375",
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY9_EXECUTION_RESULT.json",
+    "receiptBytes": 48503,
+    "receiptSHA256": "7e5abc0cf523bcae1fed9c62dfad78c2850859898375617a45209db5b44ced5e",
+    "fixtureCommit": "c127e001c5337e47a842c7453177da286bc02c54",
+    "callerCommit": "29695fa16f1842e0f436efb14489500e0cbf978c",
+    "workflowSHA256": "6bd1c3153e9b68649d2ed51ca22d22799a874d61dd69a405d499cc6b1dd9eb8b",
+    "runId": 39076694914,
+    "jobId": 117525203188,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39076694914",
+    "attempt": 1,
+    "preexecutionReviewSHA256": "ad5d2e145fed7c255202b7284e11843317c5e0373de965ccca8e4272e1290fc1",
+    "publicSummaryBytes": 38150,
+    "publicSummarySHA256": "b2eda9f5a411b9f08973c411860e0c8f2545e70d76e577e356d4c56a263acdc6",
+    "privateDecodedLogBytes": 75532,
+    "privateDecodedLogSHA256": "1dc47a23f5a41a54fc1c8aeac4f55e44a6d1db2307cdf0f60c2be8e9a0c53879",
+    "rawLogPublished": false
+  },
+  "independentEvidenceChecks": {
+    "providerRunAndJob": "Read-only API reports completed success, exact caller head and branch, push attempt 1, one macos-15-intel job lasting 34 seconds; all steps succeeded.",
+    "providerArtifacts": 0,
+    "providerByteReadback": [
+      {
+        "repository": "Floorp-Projects/Floorp-Runtime",
+        "commit": "29695fa16f1842e0f436efb14489500e0cbf978c",
+        "path": ".github/workflows/mac-native-ps-lifetime.yml",
+        "bytes": 3297,
+        "sha256": "6bd1c3153e9b68649d2ed51ca22d22799a874d61dd69a405d499cc6b1dd9eb8b",
+        "matches": true
+      },
+      {
+        "repository": "Floorp-Projects/Floorp",
+        "commit": "c127e001c5337e47a842c7453177da286bc02c54",
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 24899,
+        "sha256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+        "matches": true
+      },
+      {
+        "repository": "Floorp-Projects/Floorp",
+        "commit": "c127e001c5337e47a842c7453177da286bc02c54",
+        "path": "tools/qa/native-nonpgo/native_processes.py",
+        "bytes": 6111,
+        "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b",
+        "matches": true
+      },
+      {
+        "repository": "Floorp-Projects/Floorp",
+        "commit": "f15090fd9a1b753e50882be8a79b5431a311e375",
+        "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY9_EXECUTION_RESULT.json",
+        "bytes": 48503,
+        "sha256": "7e5abc0cf523bcae1fed9c62dfad78c2850859898375617a45209db5b44ced5e",
+        "matches": true
+      }
+    ],
+    "privateToPublic": "All three sanitized diagnostic objects extracted from the decoded job log equal the public summary; receipt evidence equals that same summary.",
+    "tests": "The decoded log contains 97 named tests, all three actual-Mac gate names, Ran 97 tests in 6.136s, and OK without a skip summary."
+  },
+  "macTests": {
+    "total": 97,
+    "passed": 97,
+    "skipped": 0,
+    "elapsedSeconds": 6.136,
+    "actualMacGates": [
+      "Owned zombie-only process group before and after exact child reap",
+      "Ordinary API live argv/candidate/environment exclusion and zombie absence",
+      "Unreaped-child resource query and signal-zero lifecycle"
+    ]
+  },
+  "ownedZombieResult": {
+    "sameBirthValidated": true,
+    "liveGroupBeforeExit": true,
+    "WNOWAITExitPending": true,
+    "rawKillPIDZeroSucceeded": true,
+    "rawKillGroupZeroErrno": 1,
+    "exactPopenReapExitCode": 0,
+    "freshPostReapGroupProbeErrno": 3,
+    "signalsSent": 0,
+    "conclusion": "The selected runner directly exhibits zombie-only group EPERM followed by ESRCH after exact child reap. The revised poll/reap ordering handles this expected lifecycle without translating arbitrary permission denial into absence.",
+    "limit": "This controlled child observation does not establish the process state at historical failed group probes."
+  },
+  "ordinaryAPIResult": {
+    "sameOwnedPID": true,
+    "fullBirthAvailable": true,
+    "exactArgvMatched": true,
+    "environmentExcluded": true,
+    "candidateMatched": true,
+    "validatedZombieNotLive": true,
+    "helperProcessesStarted": 0,
+    "privilegeChanges": false,
+    "identitySemantics": "Real argv tuples, full birth and executable/UID consistency were retained; the portable prepared-Shim test also rejects merged argument boundaries and mismatched full birth.",
+    "conclusion": "The ordinary read-only process APIs and their selected ABI are available for the tested current-user child and census workload on this Intel Mac image.",
+    "limit": "Availability for every future browser, Shim or protected process is not established. Permission failure must remain unavailable without escalation."
+  },
+  "heldNegativeControl": {
+    "synthetic": true,
+    "sameExactPopenChildAcrossThreeQueries": true,
+    "taskQueries": [
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 1
+      },
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 1
+      },
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 1
+      }
+    ],
+    "supplementaryBSDQueries": {
+      "count": 6,
+      "bytes": 0,
+      "expectedBytes": 136,
+      "errno": 1,
+      "birthIdentityAvailable": false
+    },
+    "WNOWAITAcknowledgements": {
+      "count": 6,
+      "sequence": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "sameExactChild": true,
+      "exitPending": false,
+      "reapedDuringQueries": false
+    },
+    "resourceSamples": {
+      "count": 3,
+      "complete": false,
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "lowerBoundsRetained": true
+    },
+    "firstFailure": {
+      "stage": "ps-held",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 1.7
+    },
+    "errorCode": "monitor-unavailable",
+    "monitorFailureRetained": true,
+    "psReap": {
+      "exitCode": 0,
+      "heldWithoutReapingWaitOrPoll": true,
+      "outputBytes": 98304,
+      "reaped": true,
+      "stderrBytes": 0
+    },
+    "workerReap": {
+      "status": "reaped",
+      "exitCode": 0
+    },
+    "groupCleanup": "verified-gone",
+    "cleanupFailure": null,
+    "conclusion": "The controlled denial still fails closed as monitor-unavailable with null totals; diagnostic success means the expected negative case and cleanup were verified, not that the denied resources became readable.",
+    "scope": "The ps is drained and exactly reaped before returning to Runner cleanup. This does not test signalling a live setuid ps, nor reproduce a long-lived real-harness stdout stall."
+  },
+  "normalDrainControl": {
+    "errorCode": null,
+    "firstFailure": null,
+    "monitorFailure": null,
+    "psReap": {
+      "exitCode": 0,
+      "heldWithoutReapingWaitOrPoll": false,
+      "outputBytes": 98304,
+      "reaped": true,
+      "stderrBytes": 0
+    },
+    "groupCleanup": "verified-gone",
+    "workerReapedExitCode": 0,
+    "limit": "No live-ps task-query observations were recorded in this control; its successful completion does not prove live privileged ps counters are readable."
+  },
+  "preparedNativeCensus": {
+    "status": "passed",
+    "rawHarnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "harnessHashesVerified": true,
+    "preparation": {
+      "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "patchSHA256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e",
+      "patchedSHA256": "e6cd34f8008a9a3f45496c4474de77552756aee7afc109b9ea745a07a6365c11"
+    },
+    "workload": {
+      "hostAll": 12,
+      "hostSingle": 12,
+      "shimPIDInventory": 12
+    },
+    "observations": {
+      "completeSamples": 4,
+      "differentOwnerObserved": 0,
+      "psTaskDeniedSamples": 0,
+      "samples": 4,
+      "systemPsObserved": 0
+    },
+    "allFourStages": {
+      "names": [
+        "harness-startup-check",
+        "harness-startup-apply",
+        "census-zombie-preflight",
+        "harness-census-preflight"
+      ],
+      "exitCode": 0,
+      "cleanupFailure": null,
+      "groupCleanup": "verified-gone",
+      "exactLeadersReaped": true
+    },
+    "conclusion": "The prepared all-process, single-PID and Shim PID-inventory census paths each ran 12 times with four complete worker samples and no sampled system-ps or different-owner process.",
+    "limit": "Zero sampled ps observations are limited to those snapshots. Source inspection independently establishes removal of the two census ps producers. Full Shim authentication and browser launch remain untested."
+  },
+  "monitorAndSafetyInvariants": {
+    "resourceAPISelectionLimitsRetriesAndNullSemanticsUnchanged": true,
+    "rolesExcludedFromResourceTargets": false,
+    "permissionExpansion": false,
+    "sdkAcquired": false,
+    "newArtifacts": 0,
+    "browserOrBuildExecuted": false,
+    "persistentUnknown": "A live stage with persistent unknown counters remains unqualified and stops. A normal expected child exit does not by itself establish product failure.",
+    "cleanup": "Verified disappearance follows a fresh group probe. Exact leader reaping alone is not whole-group proof; residual live or denied groups still require cleanup or error."
+  },
+  "nextExecutionAssessment": {
+    "targetedPrerequisites": "The owned-zombie cleanup ordering and ordinary-census availability now have direct Mac evidence, with the unchanged negative resource guard verified.",
+    "justifiedHypothesis": "One pinned full host/XUL/native-suite execution can test whether removing the two privileged census producers permits the native sequence to reach and complete actual authentication while maintaining complete owned-resource monitoring.",
+    "requiredConditions": [
+      "Bind the reviewed fixture and caller bytes.",
+      "Check current official SDK metadata and expiry at acquisition; retain the existing HTTP, deadline, ZIP/TAR/tree/version checks.",
+      "Retain unknown-resource stop semantics and safe ownership cleanup.",
+      "Require actual native evidence before claiming authentication, and preserve distinct host/browser/suite exit information."
+    ],
+    "notEstablished": [
+      "Original run 39045848018 denied generation or original native exit cause",
+      "Successful browser startup",
+      "Native Shim authentication",
+      "A new full-build qualification under this fixture"
+    ],
+    "additionalExecutionsPerformedByReviewer": 0
+  },
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39076694914",
+    "https://github.com/Floorp-Projects/Floorp/blob/f15090fd9a1b753e50882be8a79b5431a311e375/docs/qa/native-nonpgo-validation/20261017/RECOVERY9_EXECUTION_RESULT.json",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sig.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c"
+  ],
+  "reviewerActions": {
+    "method": "Read-only terminal API, immutable provider-byte, log/summary/receipt and static-code comparison.",
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "fullBuilds": 0,
+    "SDKDownloads": 0,
+    "externalWrites": 0
+  }
+}
