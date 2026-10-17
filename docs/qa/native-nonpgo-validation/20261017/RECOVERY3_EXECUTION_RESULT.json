@@ -1,0 +1,2122 @@
+{
+  "schema": 1,
+  "runId": 39037341780,
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39037341780",
+  "jobId": 117409729426,
+  "jobStartedAt": "2026-10-17T13:37:50Z",
+  "jobCompletedAt": "2026-10-17T13:51:50Z",
+  "attempt": 1,
+  "result": "failure",
+  "summaryFromJobLog": {
+    "status": "failed",
+    "newArtifacts": 0,
+    "retry": false,
+    "productQualification": false,
+    "priorExecution": {
+      "actualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
+      "actualFailedMonitorField": "UNKNOWN_NOT_RECORDED",
+      "priorExecutions": [
+        {
+          "firstFailure": {
+            "code": "KeyError",
+            "stage": "configure"
+          },
+          "run": 39016143725,
+          "status": "failed"
+        },
+        {
+          "firstFailure": {
+            "code": "process-activity-format",
+            "stage": "tools-materialize"
+          },
+          "run": 39018277446,
+          "status": "failed"
+        },
+        {
+          "actualBrowserExitCause": "UNKNOWN_NOT_RECORDED",
+          "firstFailure": {
+            "code": "nonzero-exit",
+            "nestedCode": "cause-host-exited",
+            "stage": "native-suite"
+          },
+          "fullBuild": "passed",
+          "run": 39020119793,
+          "status": "failed"
+        }
+      ],
+      "priorFailure": {
+        "code": "nonzero-exit",
+        "nestedCode": "cause-host-exited",
+        "stage": "native-suite"
+      },
+      "priorFixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+      "priorResult": "failed",
+      "priorRun": 39020119793,
+      "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39020119793",
+      "recoveryExplicitlyAuthorized": true,
+      "repairScope": "Harness startup liveness and bounded before-cleanup diagnostics only; runtime C++/build/toolchain/protection/authentication pins unchanged.",
+      "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
+    },
+    "timePolicy": {
+      "actualMonitorPreflightBeforeSourceCheckout": true,
+      "functionalNativeTimeouts": "unchanged",
+      "humanCumulativeLimitMinutes": null,
+      "mode": "platform-limit-and-multiple-signal-anomaly",
+      "normalProgressMayExceedOriginal210Minutes": true,
+      "partialSampling": "Unknown/missing data is incomplete, not zero; at most three ps snapshots 0.25 seconds apart; fail monitor-unavailable if unresolved for a live owned group.",
+      "platformJobMinutes": 360,
+      "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
+      "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"
+    },
+    "preflight": {
+      "host": "x86_64-apple-darwin",
+      "os": "15.7.9",
+      "image": "20260824.0482.1",
+      "python": "3.12.10",
+      "freeGiB": 101.93,
+      "nativeInputPreflight": true,
+      "sourceTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "fixture": "69391c259358025ff2532d027b970e5babf43ec9",
+      "newArtifacts": 0
+    },
+    "harness": {
+      "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "patchSHA256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+      "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e"
+    },
+    "buildDiagnosticMarkers": {},
+    "rustErrorCodes": [],
+    "monitorPreflight": {
+      "firstFailure": null,
+      "monitorDiagnostics": [],
+      "stages": [
+        {
+          "exitCode": 0,
+          "lastActivity": {
+            "cpuLowerBoundSeconds": 0.09,
+            "cpuSeconds": 0.09,
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 9472 0:00.08 S<s"
+              }
+            ],
+            "partialSamples": [],
+            "processes": 2,
+            "rssLowerBoundMiB": 9.7734375,
+            "rssMiB": 9.7734375,
+            "sampleAttempts": 1,
+            "sampleComplete": true,
+            "states": [
+              "S"
+            ],
+            "unknownKinds": {}
+          },
+          "logBytes": 0,
+          "minimumFreeGiB": 108.1,
+          "peakRSSMiB": 10,
+          "quietSeconds": 0,
+          "reason": null,
+          "stage": "monitor-preflight"
+        }
+      ],
+      "status": "passed"
+    },
+    "sdk": {
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "artifact": 12074136738,
+      "sourceRun": 38963901545,
+      "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+      "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+    },
+    "toolchains": [
+      {
+        "bytes": 446162417,
+        "name": "macosx64-clang-22",
+        "run": 0,
+        "sha256": "208106a2f7b577d7d082a75d10fe7e15e2beed7dd74d64e66639a9fbe7fbb7e6",
+        "task": "Ld8yp25XTD6R0KdDNdYnEw",
+        "tree": {
+          "canonicalSHA256": "8b93bc69b3620f1b581e5d00155e6bf2eff37299082549a35f30a51125e2419f",
+          "logicalBytes": 1435470493,
+          "members": 5027
+        }
+      },
+      {
+        "bytes": 1868481,
+        "name": "macosx64-cbindgen",
+        "run": 0,
+        "sha256": "533d61ca7bb2ec890a1b638231130ef37c0c9c16712c852ab00c24d54fa25f44",
+        "task": "HduedNRXSlyEwOgg8Wm5cw",
+        "tree": {
+          "canonicalSHA256": "a16628a959d2b6ab0a09ff5e3a928544a1c7173187a099db3eeb0d4412be3eff",
+          "logicalBytes": 4716392,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 4088102,
+        "name": "macosx64-dump_syms",
+        "run": 0,
+        "sha256": "9bbc811434207e78cdd7643e60df94859f2ba3c05b61a880b22429fa36aeeee1",
+        "task": "PubzlxOeREyQ9Ut0ktZD9Q",
+        "tree": {
+          "canonicalSHA256": "ea4ff476eb62b401e727cb3e9cbbc51b5f48172427a8986692c17ad9737b2b01",
+          "logicalBytes": 9703136,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 1410044,
+        "name": "macosx64-fix-stacks",
+        "run": 0,
+        "sha256": "f6039e2b679c7785323dba067f2c08b1d26367480dcd942a09c010ecb5427cc8",
+        "task": "QCb_JAgtS-m4kiZC7DLmsg",
+        "tree": {
+          "canonicalSHA256": "d6dc99ec714cb299982de64eec805f5d943e0fb0e5a91e675aa2a316874cce56",
+          "logicalBytes": 3496608,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 410844,
+        "name": "macosx64-nasm",
+        "run": 0,
+        "sha256": "0632372125ad611cb37f5a46d5fc9f130262ef21c1838cb1025228a47fa9e0aa",
+        "task": "LqZleUrdSxK0ROjmOYdOkQ",
+        "tree": {
+          "canonicalSHA256": "fdf10d234e41dfd5cd5cc3f07599fd57feee7eaf16fa1b18c83333c5da1847e3",
+          "logicalBytes": 1964752,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 38832558,
+        "name": "macosx64-node-22",
+        "run": 0,
+        "sha256": "f1e9b9adaaf288502bff046bdbdd749d0181e57c36b8a15fc452476bfce8b349",
+        "task": "bdl-YfjqRoOt4RfFAZkEhg",
+        "tree": {
+          "canonicalSHA256": "0f81444bdb752013ce50d1d7c4b78fd39f7c5be29819fa08e0f34f901fe5e040",
+          "logicalBytes": 178095092,
+          "members": 5928
+        }
+      },
+      {
+        "bytes": 3421269,
+        "name": "onnxruntime-x86_64-apple-darwin",
+        "run": 0,
+        "sha256": "f6f086e5066f84fd8016c911fcf69d536e4d244cb043ae601166d75815dd81e4",
+        "task": "HmSZzgp5TJ-szyUmVMMd7g",
+        "tree": {
+          "canonicalSHA256": "2170b176199abb419c823ddbdf2570624ff3a522cb8dc37f893cb06c8c259cd8",
+          "logicalBytes": 12197964,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 11909224,
+        "name": "sysroot-wasm32-wasi-clang-22",
+        "run": 0,
+        "sha256": "6d3fba5824b0c83c2115464dd18e5feb4d2d0c3092d4ad52add3be7e42addd7d",
+        "task": "SirUGMldT3uoFtKn74I9WQ",
+        "tree": {
+          "canonicalSHA256": "f2a0aa747e3f7ba77e8cc646573dccac0ba250b610052e1f81060bf99f07aa9e",
+          "logicalBytes": 51937588,
+          "members": 4158
+        }
+      },
+      {
+        "bytes": 9397524,
+        "name": "cargo",
+        "sha256": "e2e1131ade2dddc0d779e0ab3a6a990085c7a654951235742823c3a1ce0f190f",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "a1b450d82632ba461295bc755b51787171f1448938836bd5d289f7ebcfd47114",
+          "logicalBytes": 34374208,
+          "members": 68
+        },
+        "version": "0.96.0 (f2d3ce0bd 2026-03-21)"
+      },
+      {
+        "bytes": 28745188,
+        "name": "rust-std",
+        "sha256": "2be13c14122b8d4d09b7f7c434fca9ae7215ec72049944189c88c4d9128ce504",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "96a9e05afa5ba2ec991485ba09f57a3ccd19f8b7f22899da99e872f05fe58a3d",
+          "logicalBytes": 143792109,
+          "members": 78
+        },
+        "version": "1.95.0 (59807616e 2026-04-14)"
+      },
+      {
+        "bytes": 79765616,
+        "name": "rustc",
+        "sha256": "33db457715446a69ed6f69f78f5fbb9ca8e17a16585d1d7a0060479bfe4c7afc",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "60eaf51636cce381bf1ef6d85a679f981893ad4428349264e5baa756b519c798",
+          "logicalBytes": 463058386,
+          "members": 89
+        },
+        "version": "1.95.0 (59807616e 2026-04-14)"
+      }
+    ],
+    "effectiveConfig": {
+      "CC_TYPE": "clang",
+      "CC_VERSION": "22.1.8",
+      "ENABLE_TESTS": "1",
+      "HOST_CC_TYPE": "clang",
+      "HOST_CC_VERSION": "22.1.8",
+      "HOST_CPU_ARCH": "x86_64",
+      "MOZ_APP_VERSION": "158.0.1",
+      "MOZ_DEBUG": "1",
+      "MOZ_MACBUNDLE_NAME": "Floorp DaylightDebug.app",
+      "MOZ_PACKAGER_FORMAT": "flat",
+      "OS_ARCH": "Darwin",
+      "OS_TARGET": "Darwin",
+      "RUSTC_VERSION": "1.95.0",
+      "TARGET_CPU": "x86_64",
+      "allFourCompilerPathsPinned": true,
+      "artifact": false,
+      "compiledSandbox": true,
+      "debug": true,
+      "macOSMinimumFromFourCompilerFlags": "10.15",
+      "nativeHelpers": [
+        "Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container",
+        "Contents/MacOS/media-plugin-helper.app/Contents/MacOS/Floorp Daylight Media Plugin Helper",
+        "Contents/MacOS/gpu-helper.app/Contents/MacOS/Floorp Daylight GPU Helper"
+      ],
+      "onnxPathPinned": true,
+      "pgo": false,
+      "sdkPathPinned": true,
+      "wasiPathPinned": true
+    },
+    "source": {
+      "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+      "baselineProvenanceVerified": true,
+      "bootstrapLoaderChangedToFixedPaths": true,
+      "hostChangedFromOriginal": true,
+      "mozconfigSHA256": "501544b92cb62b34ba7591fe6bfb2d957b1bdb66d71bded2806bad74a89535c6",
+      "originalPatchCount": 30,
+      "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+      "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": "39037341780",
+      "attempt": "1",
+      "executionHead": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+      "fixture": "69391c259358025ff2532d027b970e5babf43ec9"
+    },
+    "planSHA256": "32fd745de1864e2a377aa062432d7b0a78b6d109309da2f9108a403531c79aaa",
+    "nativeCleanup": null,
+    "monitorDiagnostics": [
+      {
+        "stage": "tools-materialize",
+        "elapsedSeconds": 452.97,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 165428 1:01.27 S<s"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?<"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 163.73046875,
+            "knownCPULowerBoundSeconds": 61.68
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 620.31,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44144 0:00.99 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 854.62109375,
+            "knownCPULowerBoundSeconds": 7.17
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 651.46,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44208 0:01.21 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 359.26171875,
+            "knownCPULowerBoundSeconds": 25.03
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 663.02,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44220 0:01.47 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 141.19140625,
+            "knownCPULowerBoundSeconds": 5.74
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 695.21,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44276 0:01.76 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?N"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 578.44140625,
+            "knownCPULowerBoundSeconds": 41.27
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 699.05,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44276 0:01.91 RNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 126.4921875,
+            "knownCPULowerBoundSeconds": 4.52
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 798.28,
+        "sampleAttempts": 3,
+        "sampleComplete": true,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44948 0:03.70 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?N"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 1814.9375,
+            "knownCPULowerBoundSeconds": 45.46
+          },
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44956 0:03.75 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 1846.10546875,
+            "knownCPULowerBoundSeconds": 46.3
+          }
+        ],
+        "unknownKinds": {}
+      },
+      {
+        "stage": "full-build",
+        "elapsedSeconds": 802.62,
+        "sampleAttempts": 3,
+        "sampleComplete": false,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 44992 0:03.81 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 1823.2890625,
+            "knownCPULowerBoundSeconds": 49.38
+          },
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 45000 0:03.82 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?N"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 1830.2578125,
+            "knownCPULowerBoundSeconds": 50.12
+          },
+          {
+            "unknownKinds": {
+              "state-unavailable": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "complete",
+                "normalizedIds": true,
+                "row": "900 901 45004 0:03.83 SNs"
+              },
+              {
+                "kind": "state-unavailable",
+                "normalizedIds": true,
+                "row": "900 901 0 0:00.00 ?NE"
+              }
+            ],
+            "knownRSSLowerBoundMiB": 1831.765625,
+            "knownCPULowerBoundSeconds": 50.36
+          }
+        ],
+        "unknownKinds": {
+          "state-unavailable": 1
+        }
+      }
+    ],
+    "firstFailure": {
+      "stage": "full-build",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 803.59
+    },
+    "stages": [
+      {
+        "stage": "harness-startup-check",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 52,
+        "minimumFreeGiB": 101.93,
+        "lastActivity": {
+          "rssMiB": 52.11328125,
+          "cpuSeconds": 4.8,
+          "rssLowerBoundMiB": 52.11328125,
+          "cpuLowerBoundSeconds": 4.8,
+          "processes": 3,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 4028 0:00.03 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "harness-startup-apply",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 101.93,
+        "lastActivity": {
+          "rssMiB": 2.7421875,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.7421875,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2808 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "sdk-materialize",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 81,
+        "minimumFreeGiB": 101.19,
+        "lastActivity": {
+          "rssMiB": 50.91796875,
+          "cpuSeconds": 70.46,
+          "rssLowerBoundMiB": 50.91796875,
+          "cpuLowerBoundSeconds": 70.46,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 52140 1:10.46 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "tools-materialize",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 569,
+        "peakRSSMiB": 194,
+        "minimumFreeGiB": 98.05,
+        "lastActivity": {
+          "rssMiB": 163.47265625,
+          "cpuSeconds": 91.83,
+          "rssLowerBoundMiB": 163.47265625,
+          "cpuLowerBoundSeconds": 91.83,
+          "processes": 3,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 165476 1:31.17 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "version-clang",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 188,
+        "peakRSSMiB": 1,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 0.86328125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 0.86328125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 884 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "version-rust",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 36,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 0.17578125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 0.17578125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 180 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "version-node",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 9,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 0.2578125,
+          "cpuSeconds": 0.02,
+          "rssLowerBoundMiB": 0.2578125,
+          "cpuLowerBoundSeconds": 0.02,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 264 0:00.02 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "version-nasm",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 42,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 1,
+          "states": [
+            "Z"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 0 0:00.00 Z<"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-0",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.6015625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.6015625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2664 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-1",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.51953125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.51953125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2580 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-2",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.62109375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.62109375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2684 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-3",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.59375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.59375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2656 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-4",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.70703125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.70703125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2772 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-5",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.67578125,
+          "cpuSeconds": 0.05,
+          "rssLowerBoundMiB": 2.67578125,
+          "cpuLowerBoundSeconds": 0.05,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2740 0:00.05 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-6",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.94,
+        "lastActivity": {
+          "rssMiB": 2.7421875,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.7421875,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2808 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-7",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.93,
+        "lastActivity": {
+          "rssMiB": 3.02734375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 3.02734375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 3100 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-8",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 2,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.27734375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.27734375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2332 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-9",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.63671875,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.63671875,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2700 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-10",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.703125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.703125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2768 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-11",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.5390625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.5390625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2600 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-12",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.75,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.75,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2816 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-13",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.90625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.90625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2976 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-14",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.640625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.640625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2704 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-15",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2688 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-16",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 3.19921875,
+          "cpuSeconds": 0.02,
+          "rssLowerBoundMiB": 3.19921875,
+          "cpuLowerBoundSeconds": 0.02,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 3276 0:00.02 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-17",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.75390625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.75390625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2820 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-18",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.5234375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.5234375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2584 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-19",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.72265625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.72265625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2788 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-20",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 3.0078125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 3.0078125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 3080 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-21",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.83203125,
+          "cpuSeconds": 0.04,
+          "rssLowerBoundMiB": 2.83203125,
+          "cpuLowerBoundSeconds": 0.04,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2900 0:00.04 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-22",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.5078125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.5078125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2568 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-23",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.55078125,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.55078125,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2612 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-24",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.51171875,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.51171875,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2572 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-25",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.59375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.59375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2656 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-26",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.59375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.59375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2656 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-27",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.6640625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.6640625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2728 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-28",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 3.3984375,
+          "cpuSeconds": 0.02,
+          "rssLowerBoundMiB": 3.3984375,
+          "cpuLowerBoundSeconds": 0.02,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 3480 0:00.02 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "patch-29",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.71484375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.71484375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2780 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "baseline-provenance",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 103,
+        "peakRSSMiB": 2,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.24609375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.24609375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2300 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "first-cause-patch",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.625,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.625,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2688 0:00.01 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "apply-first-cause",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 3,
+        "minimumFreeGiB": 98.92,
+        "lastActivity": {
+          "rssMiB": 2.71484375,
+          "cpuSeconds": 0.01,
+          "rssLowerBoundMiB": 2.71484375,
+          "cpuLowerBoundSeconds": 0.01,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 2780 0:00.01 R<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "configure",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 13055,
+        "peakRSSMiB": 672,
+        "minimumFreeGiB": 98.76,
+        "lastActivity": {
+          "rssMiB": 492.55859375,
+          "cpuSeconds": 34.39,
+          "rssLowerBoundMiB": 492.55859375,
+          "cpuLowerBoundSeconds": 34.39,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 61624 0:01.86 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "effective-config",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 71761,
+        "peakRSSMiB": 50,
+        "minimumFreeGiB": 98.76,
+        "lastActivity": {
+          "rssMiB": 50.3515625,
+          "cpuSeconds": 0.75,
+          "rssLowerBoundMiB": 50.3515625,
+          "cpuLowerBoundSeconds": 0.75,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 50876 0:00.75 S<s"
+            }
+          ],
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 13.42
+  },
+  "lastProgress": [
+    {
+      "stage": "effective-config",
+      "elapsedMinutes": 10.1,
+      "freeGiB": 98.8,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 2,
+      "ownedGroupCPUSeconds": 0.01,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 10.1,
+      "freeGiB": 98.8,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 1,
+      "ownedGroupCPUSeconds": 0.01,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 10.6,
+      "freeGiB": 98.7,
+      "logBytes": 62687,
+      "ownedGroupRSSMiB": 177,
+      "ownedGroupCPUSeconds": 14.33,
+      "processes": 10,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 11.1,
+      "freeGiB": 98.7,
+      "logBytes": 244053,
+      "ownedGroupRSSMiB": 387,
+      "ownedGroupCPUSeconds": 15.98,
+      "processes": 15,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 11.6,
+      "freeGiB": 98.6,
+      "logBytes": 740026,
+      "ownedGroupRSSMiB": 121,
+      "ownedGroupCPUSeconds": 4.01,
+      "processes": 12,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 12.1,
+      "freeGiB": 98.6,
+      "logBytes": 2835693,
+      "ownedGroupRSSMiB": 663,
+      "ownedGroupCPUSeconds": 7.68,
+      "processes": 13,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 12.7,
+      "freeGiB": 98.6,
+      "logBytes": 2901029,
+      "ownedGroupRSSMiB": 1781,
+      "ownedGroupCPUSeconds": 48.47,
+      "processes": 13,
+      "states": [
+        "R",
+        "S",
+        "U"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "full-build",
+      "elapsedMinutes": 13.2,
+      "freeGiB": 98.5,
+      "logBytes": 3242991,
+      "ownedGroupRSSMiB": 1814,
+      "ownedGroupCPUSeconds": 39.82,
+      "processes": 14,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    }
+  ],
+  "observedScope": {
+    "monitorPreflight": "PASS",
+    "harnessStartupPatch": "APPLIED_HASH_VERIFIED",
+    "configure": "PASS",
+    "fullBuild": "FAILED_MONITORING_NOT_COMPLETED",
+    "fullHostTU": "NOT_VERIFIED",
+    "linkedXUL": "NOT_VERIFIED",
+    "nativeAuth": "NOT_RUN_NOT_QUALIFIED",
+    "context20": "NOT_RUN",
+    "nativeGUI": "NOT_RUN",
+    "productQualification": false
+  },
+  "monitorFailure": {
+    "actualFailedField": "state-unavailable",
+    "finalIncompleteSamples": {
+      "stage": "full-build",
+      "elapsedSeconds": 802.62,
+      "sampleAttempts": 3,
+      "sampleComplete": false,
+      "partialSamples": [
+        {
+          "unknownKinds": {
+            "state-unavailable": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 44992 0:03.81 SNs"
+            },
+            {
+              "kind": "state-unavailable",
+              "normalizedIds": true,
+              "row": "900 901 0 0:00.00 ?NE"
+            }
+          ],
+          "knownRSSLowerBoundMiB": 1823.2890625,
+          "knownCPULowerBoundSeconds": 49.38
+        },
+        {
+          "unknownKinds": {
+            "state-unavailable": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 45000 0:03.82 SNs"
+            },
+            {
+              "kind": "state-unavailable",
+              "normalizedIds": true,
+              "row": "900 901 0 0:00.00 ?N"
+            }
+          ],
+          "knownRSSLowerBoundMiB": 1830.2578125,
+          "knownCPULowerBoundSeconds": 50.12
+        },
+        {
+          "unknownKinds": {
+            "state-unavailable": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "complete",
+              "normalizedIds": true,
+              "row": "900 901 45004 0:03.83 SNs"
+            },
+            {
+              "kind": "state-unavailable",
+              "normalizedIds": true,
+              "row": "900 901 0 0:00.00 ?NE"
+            }
+          ],
+          "knownRSSLowerBoundMiB": 1831.765625,
+          "knownCPULowerBoundSeconds": 50.36
+        }
+      ],
+      "unknownKinds": {
+        "state-unavailable": 1
+      }
+    },
+    "unknownTotalsWereZero": false,
+    "realUnknownProcessIdentity": "NOT_RECORDED_NORMALIZED_IDS",
+    "sameUnknownPidAcrossSamples": "UNKNOWN",
+    "compileErrorObserved": false,
+    "actualMemoryLimitExceeded": "NOT_OBSERVED"
+  },
+  "artifactsAfterTerminal": [],
+  "previousFailedRuns": [
+    39016143725,
+    39018277446,
+    39020119793
+  ],
+  "priorIndependentFullBuildEvidence": "RECOVERY2_FULL_BUILD_RECEIPT.json",
+  "originalDisconnectCause": "UNKNOWN",
+  "priorBrowserSpontaneousExitCause": "UNKNOWN_NOT_RECORDED",
+  "newGitHubRerun": false
+}

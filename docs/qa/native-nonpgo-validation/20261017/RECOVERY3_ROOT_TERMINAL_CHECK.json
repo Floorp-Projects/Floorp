@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "runId": 39037341780,
+  "attempt": 1,
+  "executionHead": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+  "fixture": "69391c259358025ff2532d027b970e5babf43ec9",
+  "terminalStatus": "failure",
+  "firstFailure": {
+    "stage": "full-build",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 803.59
+  },
+  "harnessPatchAppliedAndHashVerified": true,
+  "actualFailedMonitorField": "state-unavailable",
+  "lastThreeStates": [
+    "?NE",
+    "?N",
+    "?NE"
+  ],
+  "persistentSamePidOrProcessChurn": "UNKNOWN_NORMALIZED_IDS",
+  "unknownRSSNotTreatedAsMeasuredZero": true,
+  "actualMemoryExcess": "NOT_OBSERVED",
+  "nativeAuthentication": "NOT_RUN_NOT_QUALIFIED",
+  "newActionsArtifacts": 0,
+  "previousFullBuildReceipt": "RECOVERY2_FULL_BUILD_RECEIPT.json",
+  "previousFullBuildSuccessUnchanged": true,
+  "resultBytes": 58700,
+  "resultSHA256": "685c2e759641230a4b5c4d37a784700d7e33a1264624fa2f46540e490ec90c24",
+  "newGitHubRerun": false,
+  "productQualification": false
+}

@@ -10,7 +10,11 @@
     "attempt": 1,
     "event": "push",
     "createdAt": "2026-10-17T13:37:44Z",
-    "status": "queued"
+    "status": "completed",
+    "conclusion": "failure",
+    "jobId": 117409729426,
+    "startedAt": "2026-10-17T13:37:50Z",
+    "completedAt": "2026-10-17T13:51:50Z"
   },
   "source": {
     "fixture": "69391c259358025ff2532d027b970e5babf43ec9",
@@ -46,6 +50,7 @@
     39018277446,
     39020119793
   ],
-  "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "terminalResultRequired": true
+  "result": "FAIL_MONITORING_NATIVE_NOT_RUN_NOT_QUALIFIED",
+  "terminalResultRequired": false,
+  "terminalEvidence": "RECOVERY3_EXECUTION_RESULT.json"
 }
