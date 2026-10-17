@@ -1,0 +1,167 @@
+{
+  "binding": {
+    "acquisitionInvestigationSHA256": "80fb8e1f03feb95cc521e9251989268dc6f80b0733e3e1940fbfd19872eb270c",
+    "baseCommit": "b48dd09514c6d02e177e7a4b791ae999f3107de3",
+    "comparisonPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_SDK_TRANSPORT_REFRESH.json",
+    "comparisonSHA256": "7627802cc95d9290a10f0445a75cdb14f293e9a7925662aceee42b899972d4ce",
+    "planPath": "tools/qa/native-nonpgo/plan.json",
+    "planSHA256": "5f2fd2ad3fd0f5e84f16c6b1603e6df00c5a8b63c7c53b8b264f8af41096a60a"
+  },
+  "canonicalContent": {
+    "canonicalName": "macosx26.5",
+    "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "canonicalScopeLimit": "Does not compare TAR/GZIP/ZIP header bytes, owner IDs, mode, mtime or extended metadata. Those container bytes differ.",
+    "comparisonBasis": "Recorded acquisition/comparison receipts reviewed; no additional SDK payload download or independent payload rehash occurred in this review. New ZIP digest/size were independently matched to live official artifact metadata.",
+    "legacyTreeField": "Legacy sdk.treeSHA256 remains unchanged. The unchanged materializer enforces sdk.draftReaderTreeSHA256 using scan_tar.",
+    "logicalBytes": 704719765,
+    "matchesOriginalReaderCanonicalTree": true,
+    "members": 49701,
+    "sdkVersion": "26.5",
+    "zipAndTarBytesIdenticalToOriginal": false
+  },
+  "decision": "GO_SAME_CANONICAL_SDK_CONTENT_TRANSPORT_REFRESH",
+  "diff": {
+    "allOtherSDKFieldsUnchanged": true,
+    "changedFieldCount": 5,
+    "guardCode": [
+      {
+        "bytes": 4204,
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff",
+        "unchangedFromBase": true
+      },
+      {
+        "bytes": 23156,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "81e3d34e2894008ac64b93c535f34fc164c353e53fa63dc7056c55ea05702dc1",
+        "unchangedFromBase": true
+      },
+      {
+        "bytes": 2347,
+        "path": "tools/qa/native-nonpgo/materialize.py",
+        "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db",
+        "unchangedFromBase": true
+      }
+    ],
+    "nonSDKPlanFieldsChanged": false,
+    "sdkFieldsChanged": {
+      "artifact": {
+        "after": 12096898807,
+        "before": 12074136738
+      },
+      "expiresObserved": {
+        "after": "2026-10-18T09:48:20Z",
+        "before": "2026-10-17T20:41:19Z"
+      },
+      "run": {
+        "after": 39022451582,
+        "before": 38963901545
+      },
+      "tarSHA256": {
+        "after": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+        "before": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+      },
+      "zipSHA256": {
+        "after": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+        "before": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+      }
+    }
+  },
+  "independentProviderChecks": {
+    "artifact": {
+      "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+      "expired": false,
+      "expires_at": "2026-10-18T09:48:20Z",
+      "id": 12096898807,
+      "name": "macos-sdk",
+      "size_in_bytes": 105082683
+    },
+    "run": {
+      "conclusion": "success",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "id": 39022451582,
+      "path": ".github/workflows/daily-build.yml",
+      "run_attempt": 1,
+      "status": "completed"
+    },
+    "sourceJob": {
+      "completed_at": "2026-10-17T09:48:26Z",
+      "conclusion": "success",
+      "id": 117366828342,
+      "labels": [
+        "macos-26"
+      ],
+      "name": "Mac build [PGO] / download-macos-sdk",
+      "started_at": "2026-10-17T09:47:40Z",
+      "status": "completed"
+    },
+    "sourceLogMarkers": {
+      "candidate": {
+        "SDKPath26_5": true,
+        "Xcode26_6": true,
+        "build17F113": true,
+        "decodedCharacters": 9436,
+        "image20261013_0424_1": true,
+        "retention1": true,
+        "sourceJobId": 117366828342,
+        "tarCommand": true
+      },
+      "original": {
+        "SDKPath26_5": true,
+        "Xcode26_6": true,
+        "build17F113": true,
+        "decodedCharacters": 9430,
+        "image20261013_0424_1": true,
+        "retention1": true,
+        "sourceJobId": 117185596422,
+        "tarCommand": true
+      }
+    }
+  },
+  "openBlockingFindings": [],
+  "retainedGuards": [
+    "Exact artifact ID/name/size/digest and containing run association",
+    "Exact run attempt and runtime source head; completed-run gate",
+    "Artifact expired flag and current expires_at check before official API download",
+    "HTTP errors fail closed; no expired-object or alternate credential retrieval path",
+    "HTTPS download; fixed byte count/hash; per-read timeout and 600-second deadline",
+    "Single expected unencrypted ZIP member, CRC and exact TAR size/hash",
+    "Safe TAR member/link checks, fixed current-reader canonical tree, Version26.5 validation",
+    "Unchanged token permissions, retention, resource limits and no build-duration/expiry coupling"
+  ],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent SDK transport-pin refresh review",
+  "schemaVersion": 1,
+  "scope": {
+    "additionalPayloadDownload": false,
+    "archivesMayDifferInHeadersAndMetadata": true,
+    "expiredPayloadRequest": false,
+    "newBuildOrMacRun": false,
+    "retentionOrPermissionsChanged": false,
+    "sourceOrSDKVersionChanged": false
+  },
+  "sourceCohort": {
+    "attempt": 1,
+    "buildModeLimit": "Containing candidate run is PGO, but the pinned wrapper collects the SDK in the same unconditional shared job before mode-specific consumers. No PGO profile or browser artifact is used as the SDK.",
+    "collectionJob": "download-macos-sdk",
+    "completedSuccess": true,
+    "originalAndCandidateImage": "macos-26-arm64/20261013.0424; image version 20261013.0424.1",
+    "originalAndCandidateSDKPath": "/Applications/Xcode_26.6.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+    "originalAndCandidateXcode": "26.6 (17F113)",
+    "runtimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "sources": [
+    {
+      "supports": "Candidate official artifact identity.",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39022451582/artifacts/12096898807"
+    },
+    {
+      "supports": "Independent source run metadata readback.",
+      "url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39022451582"
+    },
+    {
+      "supports": "Shared SDK collection job, archive command and one-day retention.",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/wrapper-mac-build.yml"
+    }
+  ]
+}

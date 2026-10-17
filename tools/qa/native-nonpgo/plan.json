@@ -384,20 +384,20 @@
   },
   "schema": 1,
   "sdk": {
-    "artifact": 12074136738,
+    "artifact": 12096898807,
     "attempt": 1,
     "draftReaderFormat": "sorted compact JSON [normalized POSIX path,file|dir|symlink|hardlink,header size,content or linkname SHA256]",
     "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
     "entry": "macos_sdk.tar.gz",
-    "expiresObserved": "2026-10-17T20:41:19Z",
+    "expiresObserved": "2026-10-18T09:48:20Z",
     "name": "macos-sdk",
-    "run": 38963901545,
+    "run": 39022451582,
     "tarBytes": 105567985,
-    "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929",
+    "tarSHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
     "treeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
     "version": "26.5",
     "zipBytes": 105082683,
-    "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+    "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4"
   },
   "status": "RECOVERY4_AUTHORIZED_DARWIN_TASK_COUNTER_FIX",
   "storage": {

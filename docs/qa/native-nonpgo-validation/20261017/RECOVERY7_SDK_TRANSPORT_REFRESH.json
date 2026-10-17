@@ -1,0 +1,93 @@
+{
+  "archiveComparison": {
+    "CRCVerified": true,
+    "SDKSettings": [
+      {
+        "canonicalName": "macosx26.5",
+        "displayName": "macOS 26.5",
+        "sha256": "e5c7c40b8c5dc1a9f99f8b9fa51870f8fe180421225b8201d0c4c826aad11bdc",
+        "version": "26.5"
+      }
+    ],
+    "archiveBytesIdentical": false,
+    "candidateDownloadedBeforeExpiry": true,
+    "candidateTAR_SHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+    "candidateZIP_SHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "originalTAR_SHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929",
+    "originalZIP_SHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+  },
+  "baseCommit": "b48dd09514c6d02e177e7a4b791ae999f3107de3",
+  "canonicalContentComparison": {
+    "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "logicalBytes": 704719765,
+    "members": 49701
+  },
+  "canonicalScope": "Does not compare TAR/GZIP/ZIP header bytes, owner IDs, mode, mtime or extended metadata. Those container bytes differ.",
+  "canonicalTreeMatchesOriginal": true,
+  "changedSDKFields": {
+    "artifact": {
+      "after": 12096898807,
+      "before": 12074136738
+    },
+    "expiresObserved": {
+      "after": "2026-10-18T09:48:20Z",
+      "before": "2026-10-17T20:41:19Z"
+    },
+    "run": {
+      "after": 39022451582,
+      "before": 38963901545
+    },
+    "tarSHA256": {
+      "after": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+      "before": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+    },
+    "zipSHA256": {
+      "after": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+      "before": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+    }
+  },
+  "classification": "SDK_TRANSPORT_COHORT_REFRESH_SAME_CANONICAL_CONTENT",
+  "newExecution": false,
+  "recordedAt": "2026-10-17T21:58:39.363425+00:00",
+  "remoteSettingsChanged": false,
+  "retainedChecks": [
+    "exact artifact/run/attempt/source head",
+    "unexpired at acquisition through official API",
+    "HTTP errors stop; no alternate credential or expired-object path",
+    "600-second download deadline and fixed ZIP byte count/hash",
+    "single ZIP entry, TAR byte count/hash and CRC",
+    "safe member/link validation and fixed canonical content tree",
+    "SDKSettings Version26.5",
+    "unchanged retention, token permissions and resource limits"
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "SDKJob": "download-macos-sdk",
+    "Xcode": "26.6",
+    "XcodeBuild": "17F113",
+    "attempt": 1,
+    "candidateArtifactURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39022451582/artifacts/12096898807",
+    "candidateConclusion": "success",
+    "candidateContainingRun": "PGO; SDK collection is the same shared job before build-mode-specific consumers",
+    "candidateRun": 39022451582,
+    "candidateSDKJob": 117366828342,
+    "candidateStatus": "completed",
+    "image": "macos-26-arm64/20261013.0424",
+    "officialWorkflowURL": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/wrapper-mac-build.yml",
+    "originalRun": 38963901545,
+    "runtimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "workflow": ".github/workflows/wrapper-mac-build.yml"
+  },
+  "sourceOrSDKVersionChanged": false,
+  "unchangedSDKFields": {
+    "attempt": 1,
+    "draftReaderFormat": "sorted compact JSON [normalized POSIX path,file|dir|symlink|hardlink,header size,content or linkname SHA256]",
+    "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "entry": "macos_sdk.tar.gz",
+    "name": "macos-sdk",
+    "tarBytes": 105567985,
+    "treeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+    "version": "26.5",
+    "zipBytes": 105082683
+  }
+}
