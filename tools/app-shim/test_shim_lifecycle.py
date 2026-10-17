@@ -127,5 +127,39 @@ class ExitObservation(unittest.TestCase):
             for pid,exe,start in [(43,"/private/unique/Shim",now),(42,"/other",now),(42,"/private/unique/Shim",now-10)]:
                 self.assertEqual(lifecycle.crash_summary(directory,pid,exe,now-1,start)["matchedReports"],[])
 
+class SystemLogPrivacy(unittest.TestCase):
+    def test_only_owned_pid_time_and_fixed_markers_are_published(self):
+        row={"processID":42,"processImagePath":"/private/unique/Shim","timestamp":"2026-10-17 02:00:00.123456+0000",
+             "eventMessage":"Code Signature Invalid token=PRIVATE user=PRIVATE profile=PRIVATE"}
+        stamp=datetime.datetime.fromisoformat(row["timestamp"]).timestamp()
+        content="[]\n"+json.dumps(row)
+        value=lifecycle.system_log_records(content,{42:"/private/unique/Shim"},stamp-1,stamp+1)
+        self.assertEqual(value["events"][0]["markers"],["invalid-code-signature"])
+        self.assertNotIn("PRIVATE",json.dumps(value))
+        self.assertEqual(lifecycle.system_log_records(content,{43:"/private/unique/Shim"},stamp-1,stamp+1)["events"],[])
+        self.assertEqual(lifecycle.system_log_records(content,{42:"/private/unique/Shim"},stamp+1,stamp+2)["events"],[])
+
+    def test_malformed_timestamp_and_limits_do_not_hide_later_markers(self):
+        valid={"processID":42,"processImagePath":"/private/Shim","timestamp":"2026-10-17 02:00:00+0000","eventMessage":"failed to launch PRIVATE"}
+        invalid={**valid,"timestamp":None}
+        stamp=datetime.datetime.fromisoformat(valid["timestamp"]).timestamp()
+        value=lifecycle.system_log_records(json.dumps(invalid)+"\n"+"{}\n"*4096+(json.dumps(valid)+"\n")*70,{42:"/private/Shim"},stamp-1,stamp+1)
+        self.assertEqual(value["matchingEventCount"],70)
+        self.assertEqual(len(value["events"]),64)
+        self.assertTrue(value["eventRingTruncated"])
+        self.assertNotIn("PRIVATE",json.dumps(value))
+
+    def test_permission_denial_is_reported_without_escalation_or_raw_stderr(self):
+        def run(_args, **kwargs):
+            kwargs["stderr"].write(b"operation not permitted PRIVATE")
+            return SimpleNamespace(returncode=1)
+        with tempfile.TemporaryDirectory() as directory, patch.object(lifecycle.sys,"platform","darwin"), patch.object(lifecycle.subprocess,"run",side_effect=run) as command:
+            value=lifecycle.system_log_summary(directory,{42:"/private/unique/Shim"},time.time()-10,time.time())
+        self.assertEqual(command.call_count,1)
+        self.assertEqual(value["status"],"unavailable")
+        self.assertTrue(value["accessDenied"])
+        self.assertFalse(value["permissionEscalated"])
+        self.assertNotIn("PRIVATE",json.dumps(value))
+
 if __name__ == "__main__":
     unittest.main()

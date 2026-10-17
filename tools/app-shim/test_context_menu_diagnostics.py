@@ -110,7 +110,7 @@ class DiagnosticTests(unittest.TestCase):
 class ProbeFailureTests(unittest.TestCase):
     def run_probe(self, *, shim_cleanup_fails=False, host_cleanup_fails=False, snapshot_fails=False,
                   client_cleanup_fails=False, ownership_fails=False, monitor_close_fails=False,
-                  monitor_snapshot_fails=False, lifecycle_write_fails=False):
+                  monitor_snapshot_fails=False, lifecycle_write_fails=False, system_log_fails=False):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
@@ -180,6 +180,7 @@ class ProbeFailureTests(unittest.TestCase):
         stdout = io.StringIO()
         with patch.object(Path, "write_text", new=write_text), patch.object(probe.h, "run"), patch.object(probe.h, "unused_port", return_value=12345), \
              patch.object(probe.lifecycle, "binary_summary", return_value={}), \
+             patch.object(probe.lifecycle, "system_log_summary", return_value={"status":"simulated","events":[]}, side_effect=RuntimeError("PRIVATE " + SECRET) if system_log_fails else None), \
              patch.object(probe.lifecycle, "ShimMonitor", return_value=monitor), \
              patch.object(probe.h, "HostProcess", side_effect=launch), \
              patch.object(probe.h, "Marionette", return_value=client), \
@@ -238,7 +239,7 @@ class ProbeFailureTests(unittest.TestCase):
         self.assertTrue(report["streams"]["browser.stderr.log"]["present"])
 
     def test_new_monitor_failures_do_not_prevent_primary_result_or_streams(self):
-        for options in [{"monitor_close_fails":True}, {"monitor_snapshot_fails":True}, {"lifecycle_write_fails":True}]:
+        for options in [{"monitor_close_fails":True}, {"monitor_snapshot_fails":True}, {"lifecycle_write_fails":True}, {"system_log_fails":True}]:
             report, first = self.run_probe(**options)
             self.assertEqual(report["error"], first["error"])
             self.assertTrue(report["diagnosticsIncomplete"])

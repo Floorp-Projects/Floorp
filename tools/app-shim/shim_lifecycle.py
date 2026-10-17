@@ -13,6 +13,7 @@ import stat
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 
 EXITSTATUS = 0x04000000
@@ -235,3 +236,71 @@ def binary_summary(executable):
                                   else "rpath" if value.startswith("@rpath/") else "other"})
         result[arch] = {"inspectionExitCode":process.returncode, "libraries":libraries[:32]}
     return {"libraries":result, "rawContentPublished":False}
+
+
+SYSTEM_MARKERS = {
+    "code signature invalid":"invalid-code-signature",
+    "failed to validate code signature":"code-signature-validation-failed",
+    "seccodecheckvalidity":"code-validity-call",
+    "bootstrap_look_up":"bootstrap-lookup-call",
+    "mach-lookup":"mach-lookup-mentioned",
+    "windowserver":"windowserver-mentioned",
+    "library not loaded:":"loader-library-not-loaded",
+    "failed to launch":"launch-failed",
+    "connection invalid":"connection-invalid",
+}
+
+
+def system_log_records(text, identities, start, end):
+    result=[]
+    matching_count=0
+    line_count=0
+    for line in text.splitlines():
+        line_count+=1
+        try:
+            row=json.loads(line)
+            if not isinstance(row,dict) or type(row.get("processID")) is not int or row["processID"] not in identities:
+                continue
+            if row.get("processImagePath") != identities[row["processID"]]:
+                continue
+            timestamp=row.get("timestamp")
+            if not isinstance(timestamp,str):
+                continue
+            stamp=datetime.datetime.fromisoformat(timestamp.replace(" +", "+").replace(" -", "-"))
+            if stamp.tzinfo is None or not start <= stamp.timestamp() <= end:
+                continue
+            message=row.get("eventMessage")
+            if not isinstance(message,str):
+                continue
+            markers=[name for literal,name in SYSTEM_MARKERS.items() if literal in message.lower()]
+            if markers:
+                matching_count+=1
+                result.append({"pid":row["processID"],"timeMs":int(stamp.timestamp()*1000),"markers":markers})
+                result=result[-64:]
+        except (ValueError,TypeError):
+            continue
+    return {"events":result,"matchingEventCount":matching_count,"inputLineCount":line_count,
+            "eventRingTruncated":matching_count>64}
+
+
+def system_log_summary(private_dir, identities, started_wall, ended_wall):
+    identities={pid:path for pid,path in identities.items() if type(pid) is int and pid > 0}
+    result={"rawContentPublished":False,"events":[],"permissionEscalated":False}
+    if sys.platform != "darwin" or not identities:
+        return {**result,"status":"unavailable"}
+    predicate=" OR ".join("processID == "+str(pid) for pid in sorted(identities))
+    try:
+        with tempfile.TemporaryFile(dir=private_dir) as output, tempfile.TemporaryFile(dir=private_dir) as errors:
+            process=subprocess.run(["/usr/bin/log","show","--last","2m","--style","ndjson", "--info", "--predicate",predicate],
+                                   stdout=output,stderr=errors,timeout=10,check=False)
+            output.seek(0);data=output.read(1048577)
+            errors.seek(0);error_data=errors.read(4096).decode("utf-8",errors="replace").lower()
+        result.update({"commandExitCode":process.returncode,"truncated":len(data)>1048576,
+                       "accessDenied":any(value in error_data for value in ("operation not permitted","permission denied","must be root","not authorized"))})
+        result["status"]="collected" if process.returncode==0 else "unavailable"
+        if process.returncode==0:
+            result.update(system_log_records(data[:1048576].decode("utf-8",errors="replace"),identities,started_wall,ended_wall))
+            result["truncated"] = result["truncated"] or result["eventRingTruncated"]
+    except Exception as error:
+        result.update({"status":"unavailable","errorType":type(error).__name__})
+    return result

@@ -267,8 +267,18 @@ if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.se
                 except Exception as error:
                     report['shimCrash'] = {'error':diagnostics.error_summary(error)}
                 try:
+                    cutoff = next((e['wallTimeNs']/1000000000 for e in report['shimLifecycle'].get('events', []) if e['kind']=='cleanup-start'), time.time())
+                    report['shimSystemLog'] = lifecycle.system_log_summary(
+                        private_logs, {monitor.pid:str(shim_executable.resolve()), host.pid:str(exe.resolve())},
+                        monitor.started_wall, cutoff)
+                except Exception as error:
+                    report['shimSystemLog'] = {'status':'unavailable','error':diagnostics.error_summary(error)}
+                    report['diagnosticsIncomplete'] = True
+                    report['status'] = 'failed'
+                    code = 1
+                try:
                     (output/'shim-lifecycle.json').write_text(json.dumps(
-                        {'kernel':report['shimLifecycle'],'crash':report['shimCrash']},indent=2)+'\n')
+                        {'kernel':report['shimLifecycle'],'crash':report['shimCrash'],'systemLog':report['shimSystemLog']},indent=2)+'\n')
                 except Exception as error:
                     report.setdefault('diagnosticErrors', []).append({'step':'lifecycle-write', **diagnostics.error_summary(error)})
                     report['diagnosticsIncomplete'] = True
