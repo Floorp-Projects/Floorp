@@ -293,7 +293,7 @@ export class FirefoxSidebarOverlayController {
       );
     });
     this.listen(window, "resize", () => this.scheduleGeometry());
-    this.listen(window, "blur", () => {
+    this.listen(window, "deactivate", () => {
       this.hovered = false;
       if (this.openTimer !== undefined) clearTimeout(this.openTimer);
       this.openTimer = undefined;
