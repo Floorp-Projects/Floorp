@@ -32,3 +32,13 @@ The probe workflow has one ten-minute Mac Intel job, a single exact push branch,
 read-only contents permission and no inherited secrets. It needs no browser,
 signing credentials, cache, dependency installation or settings change. A branch
 push is an execution request; record its distinct purpose before publishing.
+
+The published execution route is the Runtime companion workflow maintained in
+`../ci/mac-native-cocoa-probe.patch`, applied to Runtime7dd. It checks out the
+immutable Floorp fixture `8ad1a34400d6890b54098abb32c78ba4efb14b13`.
+The Runtime branch is `codex/mac-native-cocoa-probe-20261017`; the Floorp source
+branch is `codex/mac-native-cocoa-probe-source-20261017` and starts no job.
+The draft Floorp execution workflow is omitted from the published source tree.
+Both branches preserve existing workflows, gates and authentication settings.
+The single Runtime probe emits its bounded report to the job log and saves the
+same report as a one-day artifact. No old failed run is rerun or replaced.

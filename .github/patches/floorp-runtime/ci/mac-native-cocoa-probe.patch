@@ -1,0 +1,69 @@
+diff --git a/.github/workflows/mac-native-cocoa-probe.yml b/.github/workflows/mac-native-cocoa-probe.yml
+new file mode 100644
+index 0000000..ebac018
+--- /dev/null
++++ b/.github/workflows/mac-native-cocoa-probe.yml
+@@ -0,0 +1,63 @@
++---
++name: Native Cocoa cause component probe
++run-name: Foundation cause probe / existing Runtime7dd source
++
++'on':
++  push:
++    branches:
++      - codex/mac-native-cocoa-probe-20261017
++
++permissions:
++  contents: read
++
++concurrency:
++  group: mac-native-cocoa-probe-20261017
++  cancel-in-progress: false
++
++jobs:
++  cocoa-probe:
++    if: >-
++      github.repository == 'Floorp-Projects/Floorp-Runtime' &&
++      github.event_name == 'push' &&
++      github.ref == 'refs/heads/codex/mac-native-cocoa-probe-20261017'
++    runs-on: macos-15-intel
++    timeout-minutes: 10
++    steps:
++      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
++        with:
++          repository: Floorp-Projects/Floorp
++          ref: 8ad1a34400d6890b54098abb32c78ba4efb14b13
++          path: probe-fixture
++          persist-credentials: false
++          sparse-checkout-cone-mode: false
++          sparse-checkout: |
++            .github/patches/floorp-runtime/native-diagnostics/
++      - name: Compile and execute source-derived Foundation probe
++        env:
++          PYTHONDONTWRITEBYTECODE: '1'
++        run: |
++          python3 probe-fixture/.github/patches/floorp-runtime/native-diagnostics/cocoa_probe.py \
++            --work "$RUNNER_TEMP/cocoa-probe" \
++            --output "$RUNNER_TEMP/cocoa-probe-result.json"
++      - name: Record bounded JSON proof
++        if: always()
++        run: |
++          python3 - <<'PY'
++          import json, os
++          from pathlib import Path
++          data = (Path(os.environ['RUNNER_TEMP']) / 'cocoa-probe-result.json').read_bytes()
++          assert len(data) <= 16384, 'proof-size'
++          proof = json.loads(data)
++          assert proof.get('scope') == 'source-derived-foundation-smoke', 'proof-scope'
++          print('COCOA_PROBE_RESULT_BEGIN')
++          print(json.dumps({'fixtureCommit': '8ad1a34400d6890b54098abb32c78ba4efb14b13', 'report': proof}, sort_keys=True))
++          print('COCOA_PROBE_RESULT_END')
++          PY
++      - name: Save bounded proof
++        if: always()
++        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
++        with:
++          name: cocoa-cause-probe-x86_64-${{ github.run_id }}-${{ github.run_attempt }}
++          path: ${{ runner.temp }}/cocoa-probe-result.json
++          if-no-files-found: error
++          retention-days: 1
