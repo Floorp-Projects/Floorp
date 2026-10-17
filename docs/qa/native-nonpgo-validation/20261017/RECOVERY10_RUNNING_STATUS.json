@@ -1,0 +1,125 @@
+{
+  "observedAtUTC": "2026-10-17T23:18:54.530584+00:00",
+  "run": {
+    "id": 39077252234,
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39077252234",
+    "head_sha": "dbca173839e63b82fcca2f1a109dfd1ec671f0a3",
+    "run_attempt": 1,
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "independentLaunchReview": "GO_FOR_ONE_PINNED_INTEL_FULL_HOST_XUL_NATIVE_RUN",
+  "launchBlocked": false,
+  "jobCount": 1,
+  "job": {
+    "id": 117526865829,
+    "name": "validate",
+    "status": "in_progress",
+    "conclusion": null,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "started_at": "2026-10-17T22:59:36Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-17T22:59:37Z",
+        "completed_at": "2026-10-17T22:59:39Z"
+      },
+      {
+        "name": "Bound the initial authorized run",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-17T22:59:39Z",
+        "completed_at": "2026-10-17T22:59:39Z"
+      },
+      {
+        "name": "Checkout immutable preparation fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-17T22:59:39Z",
+        "completed_at": "2026-10-17T22:59:59Z"
+      },
+      {
+        "name": "Verify owned process sampling before source checkout",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-17T22:59:59Z",
+        "completed_at": "2026-10-17T23:00:05Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-17T23:00:05Z",
+        "completed_at": "2026-10-17T23:04:01Z"
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-10-17T23:04:01Z",
+        "completed_at": "2026-10-17T23:04:04Z"
+      },
+      {
+        "name": "Acquire only the existing fixed SDK",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-10-17T23:04:04Z",
+        "completed_at": "2026-10-17T23:04:13Z"
+      },
+      {
+        "name": "Compile full host and XUL then authenticate native Shim",
+        "status": "in_progress",
+        "conclusion": null,
+        "number": 8,
+        "started_at": "2026-10-17T23:04:13Z",
+        "completed_at": null
+      },
+      {
+        "name": "Confirm bounded result exists",
+        "status": "pending",
+        "conclusion": null,
+        "number": 9,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable native harness",
+        "status": "pending",
+        "conclusion": null,
+        "number": 16,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable Runtime source",
+        "status": "pending",
+        "conclusion": null,
+        "number": 17,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable preparation fixture",
+        "status": "pending",
+        "conclusion": null,
+        "number": 18,
+        "started_at": null,
+        "completed_at": null
+      }
+    ]
+  },
+  "individualBuildPackageNativeGUIResults": "PENDING_TERMINAL_EVIDENCE",
+  "manualCancellationRequested": false,
+  "newJobsSinceAuthorizedLaunch": 0
+}
