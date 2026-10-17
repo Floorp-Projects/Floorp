@@ -378,7 +378,8 @@ def main():
             except OSError:
                 report['buildDiagnosticUnavailable'] = True
     finally:
-        for key, path in (('sdk', 'sdk-materialized.json'), ('toolchains', 'toolchain-receipts.json'),
+        for key, path in (('monitorPreflight', 'monitor-preflight.json'),
+                           ('sdk', 'sdk-materialized.json'), ('toolchains', 'toolchain-receipts.json'),
                            ('effectiveConfig', 'effective-config.json'), ('source', 'source.json')):
             try:
                 candidate = task / path
@@ -397,11 +398,13 @@ def main():
              ('executionHead', 'GITHUB_SHA'), ('fixture', 'FLOORP_FIXTURE_SHA'))}
         report['planSHA256'] = plan_hash
         report['nativeCleanup'] = runner.native_cleanup
+        report['monitorDiagnostics'] = runner.monitor_diagnostics
         report['firstFailure'] = runner.failure
         report['stages'] = runner.records
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)
         if report['status'] == 'passed':
-            complete = (all(key in report for key in ('sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
+            complete = (all(key in report for key in ('monitorPreflight', 'sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
+                        report.get('monitorPreflight', {}).get('status') == 'passed' and
                         len(report.get('toolchains', [])) == 11 and runner.native_cleanup is not None and
                         runner.native_cleanup['allOwnedGone'] and runner.native_cleanup['censusComplete'] and
                         runner.native_cleanup['outlivedHarness'] == 0)

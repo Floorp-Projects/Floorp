@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39018277446",
+  "jobId": 117354765209,
+  "jobStartedAt": "2026-10-17T08:41:02Z",
+  "jobCompletedAt": "2026-10-17T08:50:11Z",
+  "result": "failure",
+  "attempt": 1,
+  "summaryFromJobLog": {
+    "status": "failed",
+    "newArtifacts": 0,
+    "retry": false,
+    "productQualification": false,
+    "priorExecution": {
+      "priorFailure": {
+        "code": "KeyError",
+        "stage": "configure"
+      },
+      "priorFixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+      "priorResult": "failed",
+      "priorRun": 39016143725,
+      "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+      "recoveryExplicitlyAuthorized": true,
+      "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
+    },
+    "timePolicy": {
+      "functionalNativeTimeouts": "unchanged",
+      "humanCumulativeLimitMinutes": null,
+      "mode": "platform-limit-and-multiple-signal-anomaly",
+      "normalProgressMayExceedOriginal210Minutes": true,
+      "platformJobMinutes": 360,
+      "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
+      "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"
+    },
+    "preflight": {
+      "host": "x86_64-apple-darwin",
+      "os": "15.7.9",
+      "image": "20260824.0482.1",
+      "python": "3.12.10",
+      "freeGiB": 101.16,
+      "nativeInputPreflight": true,
+      "sourceTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "fixture": "b00f0761850046de58f5186614e0d250973fa5ea",
+      "newArtifacts": 0
+    },
+    "buildDiagnosticMarkers": {},
+    "rustErrorCodes": [],
+    "sdk": {
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "artifact": 12074136738,
+      "sourceRun": 38963901545,
+      "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+      "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": "39018277446",
+      "attempt": "1",
+      "executionHead": "8c7e8b009020735a3d9fe4f477bc7d1ca0b7b685",
+      "fixture": "b00f0761850046de58f5186614e0d250973fa5ea"
+    },
+    "planSHA256": "cc0af8772c0ab770409731559a3c6a45e78845d0d94590c3f2e09e5dd9759946",
+    "nativeCleanup": null,
+    "firstFailure": {
+      "stage": "tools-materialize",
+      "code": "process-activity-format",
+      "elapsedSeconds": 520.39
+    },
+    "stages": [
+      {
+        "stage": "sdk-materialize",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0,
+        "peakRSSMiB": 80,
+        "minimumFreeGiB": 100.22,
+        "lastActivity": {
+          "rssMiB": 51.109375,
+          "cpuSeconds": 63.68,
+          "processes": 1,
+          "states": [
+            "R"
+          ]
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 8.68
+  },
+  "lastProgress": [
+    {
+      "stage": "sdk-materialize",
+      "elapsedMinutes": 6.2,
+      "freeGiB": 100.4,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 74,
+      "ownedGroupCPUSeconds": 55.42,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "tools-materialize",
+      "elapsedMinutes": 6.4,
+      "freeGiB": 100.4,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 2,
+      "ownedGroupCPUSeconds": 0.01,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "tools-materialize",
+      "elapsedMinutes": 6.9,
+      "freeGiB": 98.6,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 28,
+      "ownedGroupCPUSeconds": 15.17,
+      "processes": 1,
+      "states": [
+        "U"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "tools-materialize",
+      "elapsedMinutes": 7.4,
+      "freeGiB": 99.2,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 34,
+      "ownedGroupCPUSeconds": 38.94,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "tools-materialize",
+      "elapsedMinutes": 7.9,
+      "freeGiB": 98.2,
+      "logBytes": 362,
+      "ownedGroupRSSMiB": 163,
+      "ownedGroupCPUSeconds": 60.17,
+      "processes": 3,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    {
+      "stage": "tools-materialize",
+      "elapsedMinutes": 8.4,
+      "freeGiB": 97.9,
+      "logBytes": 388,
+      "ownedGroupRSSMiB": 161,
+      "ownedGroupCPUSeconds": 87.59,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    }
+  ],
+  "diagnosis": {
+    "class": "INSTRUMENTATION_FORMAT_FAILURE_BEFORE_BUILD",
+    "observedCode": "process-activity-format",
+    "actualFailedField": "UNKNOWN_NOT_RECORDED",
+    "primarySourceFinding": "Apple ps can display ? when task data is unavailable. In that state numeric RSS/CPU may be unmeasured zeros. The old parser rejected this valid unavailable-state representation and also assumed complete rows.",
+    "candidateCause": "Unknown/transient or missing ps fields are plausible; the particular failing row was not retained, so this is not claimed as the directly observed field.",
+    "primarySources": [
+      "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/tasks.c",
+      "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/print.c"
+    ],
+    "fix": "Represent partial totals as null with explicitly named known lower bounds. Record fixed field kinds and normalized-ID format examples, sample up to three times, never use partial data as memory-safe/stall proof, preserve monitor-unavailable and cleanup if unresolved.",
+    "preflight": "Run a short owned process-churn measurement in the same job before large Runtime checkout and require its proof."
+  },
+  "actualScope": {
+    "sdkSafeMaterialization": "PASS",
+    "toolchainMaterialization": "INTERRUPTED_BY_MONITOR_FAILURE",
+    "configure": "NOT_RUN",
+    "fullHostTU": "NOT_RUN",
+    "xulLink": "NOT_RUN",
+    "nativeAuth": "NOT_RUN",
+    "adHocSigning": "NOT_RUN",
+    "productQualification": false
+  },
+  "preservation": {
+    "priorRun": 39016143725,
+    "firstFailureUnchanged": true,
+    "githubRerunPerformed": false,
+    "newActionsArtifacts": 0
+  }
+}

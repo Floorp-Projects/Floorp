@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "preparedAtUTC": "2026-10-17T09:05:56.068455+00:00",
+  "status": "REVIEWED_CODE_PENDING_ROUTE",
+  "priorFailedRuns": [
+    {
+      "id": 39016143725,
+      "attempt": 1,
+      "failure": {
+        "stage": "configure",
+        "code": "KeyError"
+      },
+      "fullBuildReached": false
+    },
+    {
+      "id": 39018277446,
+      "attempt": 1,
+      "failure": {
+        "stage": "tools-materialize",
+        "code": "process-activity-format"
+      },
+      "actualFailedMonitorField": "UNKNOWN_NOT_RECORDED",
+      "fullBuildReached": false
+    }
+  ],
+  "causalRepair": {
+    "scope": "Bounded partial ps sampling and cheap real-monitor preflight only; prior configure schema repair retained.",
+    "unknownMeasurement": "Partial aggregate rssMiB/cpuSeconds null; known subset explicitly lower bounds.",
+    "sampling": "At most 3 snapshots, 0.25 seconds between; never retry a failed CI command.",
+    "failure": "Unresolved live owned process measurement fails monitor-unavailable, first failure saved before owned-group cleanup.",
+    "preflight": "Owned process churn before expensive Runtime checkout; at least one complete sample required."
+  },
+  "primarySourceEvidence": {
+    "actualFailedRow": "UNKNOWN_NOT_RECORDED",
+    "ApplePsUnavailableState": "? may carry unmeasured numeric zero fields; plausible candidate only, not claimed as observed failed row.",
+    "urls": [
+      "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/tasks.c",
+      "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/print.c"
+    ]
+  },
+  "codeManifestSHA256": "be8df96187d1830ec5ac02e1d9c74e48b0f855d6de5d5a4b03ecb9fbbeb7fbdf",
+  "localChecks": {
+    "guardTests": 28,
+    "guardResult": "PASS",
+    "pythonAST": "PASS",
+    "workflowYAML": "PASS",
+    "actualOwnedLinuxPreflight": "PASS",
+    "actualDarwinPreflight": "NOT_RUN"
+  },
+  "unchangedPinnedSections": {
+    "runtime": true,
+    "sdk": true,
+    "toolchains": true,
+    "harness": true,
+    "criteria": true,
+    "runner": true
+  },
+  "route": {
+    "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runtimeBranch": "codex/mac-native-nonpgo-recovery2-20261017",
+    "initialPushOnly": true,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "workflowOnlyNewFile": ".github/workflows/mac-native-nonpgo.yml",
+    "existingRuntimeWorkflowCount": 24,
+    "existingMatchingPushes": [],
+    "workflowRunTriggers": []
+  },
+  "timePolicy": {
+    "actualMonitorPreflightBeforeSourceCheckout": true,
+    "functionalNativeTimeouts": "unchanged",
+    "humanCumulativeLimitMinutes": null,
+    "mode": "platform-limit-and-multiple-signal-anomaly",
+    "normalProgressMayExceedOriginal210Minutes": true,
+    "partialSampling": "Unknown/missing data is incomplete, not zero; at most three ps snapshots 0.25 seconds apart; fail monitor-unavailable if unresolved for a live owned group.",
+    "platformJobMinutes": 360,
+    "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
+    "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"
+  },
+  "limits": {
+    "platformJobMinutes": 360,
+    "humanCumulativeMinutes": null,
+    "newActionsArtifacts": 0,
+    "newCaches": 0,
+    "productPublication": false,
+    "productSigning": false,
+    "nativeDebugQualification": "Pending full host TU / XUL / native authentication same job; product qualification remains false."
+  },
+  "sdkMetadataAtUTC": "2026-10-17T09:06:00Z",
+  "sdk": {
+    "artifactId": 12074136738,
+    "sourceRun": 38963901545,
+    "expiresAt": "2026-10-17T20:41:19Z",
+    "expired": false,
+    "payloadDownloadedForThisPreparation": false
+  },
+  "execution": "NOT_STARTED",
+  "independentReview": {
+    "path": "records/RECOVERY2_INDEPENDENT_REVIEW.json",
+    "sha256": "9c21bb8bfc6286c68aa9a826ac98e1089970e1b82e983186fabc040546d04e4d",
+    "decision": {
+      "recovery2Code": "GO",
+      "remainingP0": 0,
+      "remainingP1": 0,
+      "remainingP2": 0,
+      "immutableFixtureAndCallerRoute": "PENDING_FINAL_BINDING_REVIEW",
+      "dispatchPerformed": false,
+      "newCI": 0,
+      "sourceEditedByReviewer": false
+    },
+    "guardTests": 28
+  }
+}

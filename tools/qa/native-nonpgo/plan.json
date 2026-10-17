@@ -1,7 +1,7 @@
 {
   "activation": {
     "allowInitialPushOnly": true,
-    "allowedBranch": "codex/mac-native-nonpgo-recovery-20261017",
+    "allowedBranch": "codex/mac-native-nonpgo-recovery2-20261017",
     "approvalRequiredBeforeRuntimeBranchPush": true,
     "helperFixtureCommit": "BOUND_BY_WORKFLOW_ENV_FLOORP_FIXTURE_SHA",
     "runAttempt": 1
@@ -82,14 +82,33 @@
   },
   "preparedAt": "2026-10-17",
   "recovery": {
+    "actualFailedMonitorField": "UNKNOWN_NOT_RECORDED",
+    "priorExecutions": [
+      {
+        "firstFailure": {
+          "code": "KeyError",
+          "stage": "configure"
+        },
+        "run": 39016143725,
+        "status": "failed"
+      },
+      {
+        "firstFailure": {
+          "code": "process-activity-format",
+          "stage": "tools-materialize"
+        },
+        "run": 39018277446,
+        "status": "failed"
+      }
+    ],
     "priorFailure": {
-      "code": "KeyError",
-      "stage": "configure"
+      "code": "process-activity-format",
+      "stage": "tools-materialize"
     },
-    "priorFixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+    "priorFixture": "b00f0761850046de58f5186614e0d250973fa5ea",
     "priorResult": "failed",
-    "priorRun": 39016143725,
-    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+    "priorRun": 39018277446,
+    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39018277446",
     "recoveryExplicitlyAuthorized": true,
     "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
   },
@@ -349,7 +368,7 @@
     "zipBytes": 105082683,
     "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
   },
-  "status": "RECOVERY_AUTHORIZED_PLATFORM_LIMIT_AND_ANOMALY_POLICY",
+  "status": "RECOVERY2_AUTHORIZED_PARTIAL_MONITOR_SAMPLING_FIX",
   "storage": {
     "cacheWrites": 0,
     "newActionsArtifacts": 0,
@@ -357,10 +376,12 @@
     "signing": "ad hoc only on disposable app copy; no signing service or new credentials"
   },
   "timePolicy": {
+    "actualMonitorPreflightBeforeSourceCheckout": true,
     "functionalNativeTimeouts": "unchanged",
     "humanCumulativeLimitMinutes": null,
     "mode": "platform-limit-and-multiple-signal-anomaly",
     "normalProgressMayExceedOriginal210Minutes": true,
+    "partialSampling": "Unknown/missing data is incomplete, not zero; at most three ps snapshots 0.25 seconds apart; fail monitor-unavailable if unresolved for a live owned group.",
     "platformJobMinutes": 360,
     "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
     "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"

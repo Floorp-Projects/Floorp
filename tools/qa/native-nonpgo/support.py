@@ -161,6 +161,7 @@ class Runner:
         self.failure = None
         self.native_registry = None
         self.native_cleanup = None
+        self.monitor_diagnostics = []
 
     def elapsed(self):
         return max(0, time.monotonic() - self.monotonic_started)
@@ -199,33 +200,75 @@ class Runner:
             return False
 
     @staticmethod
-    def group_activity(pgid):
-        result = subprocess.run(['/bin/ps', '-axo', 'pgid=,pid=,rss=,time=,stat='], capture_output=True,
-                                check=True, timeout=3, text=True)
-        require(len(result.stdout) <= 1024**2, 'process-inventory-limit')
-        total, cpu, pids, states = 0, 0.0, [], set()
-        for line in result.stdout.splitlines():
+    def parse_group_activity(text, pgid):
+        require(len(text) <= 1024**2, 'process-inventory-limit')
+        total, cpu, pids, states, rows, unknown, examples = 0, 0.0, [], set(), 0, {}, []
+        for line in text.splitlines():
             fields = line.split()
-            if len(fields) != 5 or fields[0] != str(pgid):
+            if not fields or fields[0] != str(pgid):
                 continue
-            require(fields[1].isdecimal() and fields[2].isdecimal() and
-                    re.fullmatch(r'[0-9:-]+(?:\.[0-9]+)?', fields[3]) and
-                    re.fullmatch(r'[A-Za-z+<>0-9-]{1,16}', fields[4]),
-                    'process-activity-format')
+            rows += 1
+            reason = None
+            if len(fields) != 5:
+                reason = 'column-count'
+            elif not fields[1].isdecimal():
+                reason = 'pid-unavailable'
+            elif not fields[2].isdecimal():
+                reason = 'rss-unavailable'
+            elif not re.fullmatch(r'(?:[0-9]+-)?[0-9]+(?::[0-9]+){0,2}(?:\.[0-9]+)?', fields[3]):
+                reason = 'cpu-unavailable'
+            elif not re.fullmatch(r'[RSDTtWZXxKPIUH][A-Za-z+<>0-9-]{0,15}', fields[4]):
+                reason = 'state-unavailable'
+            if len(fields) > 1 and fields[1].isdecimal():
+                pids.append(int(fields[1]))
+            if reason:
+                unknown[reason] = unknown.get(reason, 0) + 1
+                states.add('?')
+                if len(examples) < 3:
+                    tokens = [value if re.fullmatch(r'[A-Za-z0-9?.:+<>-]{1,32}', value) else '<unavailable>'
+                              for value in fields[2:6]]
+                    examples.append({'kind': reason, 'normalizedIds': True,
+                                     'row': '900 901 ' + ' '.join(tokens)})
+                continue
             days, separator, clock = fields[3].partition('-')
             parts = (clock if separator else days).split(':')
-            require(1 <= len(parts) <= 3, 'process-cpu-time')
             seconds = sum(float(value) * 60**i for i, value in enumerate(reversed(parts)))
             cpu += seconds + (int(days) * 86400 if separator else 0)
             total += int(fields[2])
-            pids.append(int(fields[1]))
             states.add(fields[4][0])
-        return {'rssMiB': total / 1024, 'cpuSeconds': round(cpu, 3),
-                'processes': len(pids), 'states': sorted(states), '_pids': tuple(sorted(pids))}
+            if not examples:
+                examples.append({'kind': 'complete', 'normalizedIds': True,
+                                 'row': '900 901 ' + ' '.join(fields[2:])})
+        if not rows:
+            unknown['empty-group'] = 1
+        return {'rssMiB': total / 1024 if not unknown else None,
+                'cpuSeconds': round(cpu, 3) if not unknown else None,
+                'rssLowerBoundMiB': total / 1024, 'cpuLowerBoundSeconds': round(cpu, 3),
+                'processes': rows, 'states': sorted(states), '_pids': tuple(sorted(pids)),
+                'sampleComplete': not unknown, 'unknownKinds': unknown, 'formatExamples': examples}
+
+    @staticmethod
+    def group_activity(pgid):
+        partial = []
+        for attempt in range(3):
+            result = subprocess.run(['/bin/ps', '-axo', 'pgid=,pid=,rss=,time=,stat='], capture_output=True,
+                                    check=True, timeout=3, text=True)
+            value = Runner.parse_group_activity(result.stdout, pgid)
+            if value['sampleComplete']:
+                break
+            partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
+                            'knownRSSLowerBoundMiB': value['rssLowerBoundMiB'],
+                            'knownCPULowerBoundSeconds': value['cpuLowerBoundSeconds']})
+            if attempt < 2:
+                time.sleep(0.25)
+        value.update({'sampleAttempts': attempt + 1, 'partialSamples': partial})
+        return value
 
     @staticmethod
     def group_rss_mib(pgid):
-        return Runner.group_activity(pgid)['rssMiB']
+        value = Runner.group_activity(pgid)
+        require(value['sampleComplete'], 'monitor-unavailable')
+        return value['rssMiB']
 
     def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None):
         require(stage.replace('-', '').isalnum(), 'stage-name')
@@ -255,6 +298,17 @@ class Runner:
                         except FileNotFoundError:
                             pass
                     activity = self.group_activity(process.pid)
+                    if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete']:
+                        if len(self.monitor_diagnostics) < 16:
+                            self.monitor_diagnostics.append({'stage': stage, 'elapsedSeconds': round(elapsed, 2),
+                                'sampleAttempts': activity.get('sampleAttempts', 1),
+                                'sampleComplete': activity['sampleComplete'],
+                                'partialSamples': activity.get('partialSamples', []),
+                                'unknownKinds': activity.get('unknownKinds', {})})
+                    if not activity['sampleComplete']:
+                        if process.poll() is not None:
+                            break
+                        raise Failure('monitor-unavailable')
                     rss = activity['rssMiB']
                     if self.native_registry is not None:
                         self.native_registry.census()

@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17 09:06:10 UTC",
+  "decision": {
+    "recovery2Code": "GO",
+    "remainingP0": 0,
+    "remainingP1": 0,
+    "remainingP2": 0,
+    "immutableFixtureAndCallerRoute": "PENDING_FINAL_BINDING_REVIEW",
+    "dispatchPerformed": false,
+    "newCI": 0,
+    "sourceEditedByReviewer": false
+  },
+  "scope": "Minimal process-monitor recovery delta: incomplete observations, bounded resampling, first failure/cleanup, and the early monitor preflight. No broad QA redesign or native execution.",
+  "manifest": {
+    "path": "records/RECOVERY2_CODE_HASHES_FINAL.json",
+    "sha256": "be8df96187d1830ec5ac02e1d9c74e48b0f855d6de5d5a4b03ecb9fbbeb7fbdf",
+    "files": 11,
+    "allFileBytesAndSHA256MatchedBeforeAndAfterTests": true,
+    "pythonAST": {
+      "files": 8,
+      "result": "PASS"
+    }
+  },
+  "verification": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_guards -v",
+    "methods": 28,
+    "passed": 28,
+    "failed": 0,
+    "processExitCode": 0,
+    "reportedDurationSeconds": 1.326,
+    "priorSnapshotRun": {
+      "manifest": "1421b101fcf9c8ac8bfc526dc878e7ecaf81c5ffe872843d6a35e6dd66c55b8d",
+      "methods": 27,
+      "passed": 27,
+      "reportedDurationSeconds": 1.327
+    },
+    "nativeExecution": false,
+    "configureOrCompile": false,
+    "newArtifactPayloadAcquisition": false,
+    "remoteMutation": false
+  },
+  "findings": [],
+  "resolvedItems": [
+    {
+      "id": "PS-INCOMPLETE-NOT-ZERO",
+      "evidence": "parse_group_activity marks matching-group rows with missing/unknown columns, PID, RSS, CPU or state as incomplete. Such rows are not numerically summed. An incomplete sample reports rssMiB/cpuSeconds=null and separately names measured lower bounds. A group with no observed rows is incomplete."
+    },
+    {
+      "id": "PS-UNKNOWN-STATE",
+      "evidence": "A Darwin ? or ?E state becomes state-unavailable rather than a fatal parser-format exception or a valid zero measurement. This is consistent with Apple ps tasks.c's unknown-state initialization and early information-query failures. It is a supported failure hypothesis, not a reconstruction of the lost failed row."
+    },
+    {
+      "id": "BOUNDED-RESAMPLING",
+      "evidence": "group_activity performs at most three snapshots with at most two 0.25-second inter-snapshot delays. Each ps command retains a three-second subprocess timeout. Recovery history is preserved in bounded partialSamples and up to 16 runner monitorDiagnostics entries."
+    },
+    {
+      "id": "PARTIAL-GATE-AND-CLEANUP",
+      "evidence": "Runner.run checks sampleComplete before using RSS totals or ProgressWatch. A still-live leader after unsuccessful resampling produces monitor-unavailable; the first failure is fixed before finally cleanup. If the leader exited during observation, the existing owned-group completion/cleanup checks still apply. The regression exercises a real portable Python child and confirms failure preservation and owned-group reclamation."
+    },
+    {
+      "id": "PREFLIGHT-COMPLETE-SAMPLE",
+      "priority": "P1",
+      "status": "RESOLVED_IN_FINAL_FREEZE",
+      "evidence": "The inline preflight now requires at least one recorded lastActivity.sampleComplete=true before status can become passed. A no-record/quick Runner result creates a fixed monitor-preflight-no-complete-sample first failure and fails. A new guard executes the actual extracted inline script with the no-record Runner stub and verifies the failed proof."
+    },
+    {
+      "id": "EARLY-PLATFORM-PROBE",
+      "evidence": "The monitor churn probe is after the immutable helper fixture checkout and before Runtime source checkout, SDK acquisition or toolchain materialization. It uses an owned short-lived Python/sh/sleep process group, existing read-only permissions and no extra CI job. pipeline.py requires the successful preflight proof in its final completeness gate."
+    },
+    {
+      "id": "FAILURE-HISTORY",
+      "evidence": "The plan retains both prior failures: run 39016143725 KeyError/configure and run 39018277446 process-activity-format/tools-materialize. The actual lost monitor field remains UNKNOWN_NOT_RECORDED."
+    }
+  ],
+  "preservedControls": [
+    "Runtime source, SDK/toolchain/native harness pins and first-cause patch are unchanged.",
+    "Authentication conditions, native functional timeouts, sandbox/OS protection assertions, trusted native input and product qualification boundaries are unchanged.",
+    "CPU-active quiet linking and cumulative I/O continue to count as progress. No restored 195/210-minute human elapsed cutoff.",
+    "One standard macos-15-intel job, platform limit 360 minutes, initial exact-branch push/attempt 1, read-only contents/actions permissions.",
+    "No new Actions artifacts/cache uploads, product signing/publication/merge, new credentials or OS permission changes.",
+    "Only measured complete samples reach memory/stall decisions; incomplete observations cannot become proof of a safe zero total."
+  ],
+  "sourceEvidence": [
+    {
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/tasks.c",
+      "lines": "27-45,91-107,180-188",
+      "supports": "Unknown state is a supported observation failure; current public source does not identify the exact runner ps binary."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/main/ps/print.c",
+      "lines": "428-475,748-815",
+      "supports": "State and numeric fields come from separate process/task structures, so printed zero values accompanying an unknown state cannot be assumed to be measured zeros."
+    }
+  ],
+  "limitations": [
+    "The failed run's exact raw field was not retained; the ?/?E explanation remains a source-backed hypothesis.",
+    "Portable mocked-format and child-process regression checks do not prove Darwin ps behavior. The final early preflight must obtain an actual complete sample on the selected Mac runner.",
+    "The final immutable fixture, rendered caller bytes/provider readback and fresh trigger/ref preflight remain separate steps before any authorized activation.",
+    "No actual host TU, XUL build or native authentication has been executed by this review. Original timeout cause remains UNKNOWN and product qualification is false.",
+    "The preflight proves a bounded observed interval; it does not guarantee that a later process-information query cannot become unavailable. Persistent later monitoring failure still stops the run."
+  ]
+}

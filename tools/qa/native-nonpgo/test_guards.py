@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
+import contextlib
 import errno
 import io
 import json
@@ -10,6 +11,7 @@ import struct
 import sys
 import tarfile
 import tempfile
+import textwrap
 import time
 import unittest
 from unittest import mock
@@ -95,6 +97,78 @@ class Guards(unittest.TestCase):
         self.assertEqual(quiet, 0)
         self.assertFalse(stalled)
 
+    def test_unknown_darwin_process_state_is_partial_and_resampled(self):
+        unknown = '900 901 2048 0:01.25 S\n900 902 0 0:00.00 ?E\n'
+        complete = '900 901 2048 0:01.30 S\n'
+        value = Runner.parse_group_activity(unknown, 900)
+        self.assertFalse(value['sampleComplete'])
+        self.assertEqual(value['unknownKinds'], {'state-unavailable': 1})
+        self.assertIsNone(value['rssMiB'])
+        self.assertIsNone(value['cpuSeconds'])
+        self.assertEqual(value['rssLowerBoundMiB'], 2)
+        self.assertEqual(value['cpuLowerBoundSeconds'], 1.25)
+        self.assertIn('?', value['states'])
+        with mock.patch('support.subprocess.run', side_effect=[mock.Mock(stdout=unknown), mock.Mock(stdout=complete)]), \
+                mock.patch('support.time.sleep'):
+            recovered = Runner.group_activity(900)
+        self.assertTrue(recovered['sampleComplete'])
+        self.assertEqual(recovered['sampleAttempts'], 2)
+        self.assertEqual(recovered['partialSamples'][0]['unknownKinds'], {'state-unavailable': 1})
+
+    def test_missing_activity_columns_and_values_are_not_zero(self):
+        for line, kind in [('900 901 0 0:00.00', 'column-count'),
+                           ('900 901 ? 0:00.00 S', 'rss-unavailable'),
+                           ('900 901 2048 ? S', 'cpu-unavailable')]:
+            with self.subTest(kind=kind):
+                value = Runner.parse_group_activity(line, 900)
+                self.assertFalse(value['sampleComplete'])
+                self.assertIsNone(value['rssMiB'])
+                self.assertIsNone(value['cpuSeconds'])
+                self.assertEqual(value['unknownKinds'], {kind: 1})
+                self.assertEqual(value['processes'], 1)
+
+    def test_persistent_partial_observation_is_bounded(self):
+        with mock.patch('support.subprocess.run', return_value=mock.Mock(stdout='900 901 0 0:00.00 ?\n')) as command, \
+                mock.patch('support.time.sleep'):
+            value = Runner.group_activity(900)
+        self.assertFalse(value['sampleComplete'])
+        self.assertEqual(command.call_count, 3)
+        self.assertEqual(value['sampleAttempts'], 3)
+
+    def test_monitor_preflight_requires_a_complete_real_sample(self):
+        template = Path(__file__).with_name('workflow.yml.in').read_text()
+        block = template.split('- name: Verify owned process sampling before source checkout\n', 1)[1]
+        block = block.split('      - name: Checkout immutable Runtime source', 1)[0]
+        script = textwrap.dedent(block.split("<<'PY'\n", 1)[1].rsplit('          PY', 1)[0])
+        workspace = self.root / 'workspace'
+        workspace.mkdir()
+        (workspace / 'fixture').symlink_to(Path(__file__).resolve().parents[3], target_is_directory=True)
+        (self.root / 'started').write_text(str(time.time()))
+        (self.root / 'started-monotonic').write_text(str(time.monotonic()))
+        with mock.patch.dict(os.environ, {'GITHUB_WORKSPACE': str(workspace), 'TASK_ROOT': str(self.root)}), \
+                mock.patch.object(Runner, 'run', return_value=None), contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(Failure, 'monitor-preflight-no-complete-sample'):
+                exec(compile(script, 'workflow-monitor-preflight', 'exec'), {})
+        proof = json.loads((self.root / 'monitor-preflight.json').read_text())
+        self.assertEqual(proof['status'], 'failed')
+        self.assertEqual(proof['firstFailure']['code'], 'monitor-preflight-no-complete-sample')
+
+    def test_unavailable_monitor_preserves_failure_and_reclaims_owned_group(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        incomplete = {'sampleComplete': False, 'sampleAttempts': 3,
+                      'partialSamples': [{'unknownKinds': {'state-unavailable': 1}}],
+                      'unknownKinds': {'state-unavailable': 1}}
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch.object(runner, 'group_activity', return_value=incomplete):
+            with self.assertRaisesRegex(Failure, 'monitor-unavailable'):
+                runner.run('monitor-test', [sys.executable, '-c', 'import time; time.sleep(3)'],
+                           self.root, os.environ.copy(), 360)
+        self.assertEqual(runner.failure['code'], 'monitor-unavailable')
+        self.assertEqual(json.loads((self.root / 'first-failure.json').read_text())['code'], 'monitor-unavailable')
+        self.assertFalse(runner.groups)
+        self.assertEqual(runner.monitor_diagnostics[0]['unknownKinds'], {'state-unavailable': 1})
+
     def test_stall_requires_multiple_stable_signals(self):
         activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
         for changed in ('none', 'log', 'cpu', 'disk', 'rss', 'process', 'runnable'):
@@ -121,7 +195,8 @@ class Guards(unittest.TestCase):
         self.assertIn('timeout-minutes: 360', Path(__file__).with_name('workflow.yml.in').read_text())
         (self.root / 'started-monotonic').write_text(str(time.monotonic() - 211 * 60))
         runner = Runner(self.root, time.time() - 211 * 60, limits)
-        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
+        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S'],
+                    'sampleComplete': True}
         with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
                 mock.patch.object(runner, 'group_activity', return_value=activity):
             runner.run('healthy-long-job', [sys.executable, '-c', 'import time; time.sleep(0.02)'],
