@@ -37,6 +37,20 @@ jobs:
           python3 .github/patches/floorp-runtime/native-diagnostics/cocoa_probe.py \
             --work "$RUNNER_TEMP/cocoa-probe" \
             --output "$RUNNER_TEMP/cocoa-probe-result.json"
+      - name: Record bounded JSON proof
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          data = (Path(os.environ['RUNNER_TEMP']) / 'cocoa-probe-result.json').read_bytes()
+          assert len(data) <= 16384, 'proof-size'
+          proof = json.loads(data)
+          assert proof.get('scope') == 'source-derived-foundation-smoke', 'proof-scope'
+          print('COCOA_PROBE_RESULT_BEGIN')
+          print(json.dumps(proof, sort_keys=True))
+          print('COCOA_PROBE_RESULT_END')
+          PY
       - name: Save bounded proof
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
