@@ -1,0 +1,11 @@
+{
+  "scope": "inspection-reader-utility-guards",
+  "checks": {
+    "gzip_tar_reader_reaches_eof_without_extraction": true,
+    "parent_traversal_rejected": true,
+    "config_is_data_and_unknown_value_is_not_published": true,
+    "zip_extra_rejects_unicode_duplicate_malformed": true,
+    "selected_paths_reject_unknown_intermediate_names": true
+  },
+  "nativeAuthenticationTest": false
+}

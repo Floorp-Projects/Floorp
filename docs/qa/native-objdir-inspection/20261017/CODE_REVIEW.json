@@ -1,0 +1,28 @@
+{
+  "scope": "bounded inspection scripts and workflow draft",
+  "unresolvedFindings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "fixedFindings": [
+    {
+      "severity": "P1",
+      "finding": "ZIP Unicode path extra could override the raw name during official action extraction",
+      "fix": "strict local and central ZIP64-only TLV parsing including descriptor branch"
+    },
+    {
+      "severity": "P2",
+      "finding": "selected-file prefixes could disclose unexpected intermediate path values",
+      "fix": "exact known configuration paths and limited object/archive dependency regex"
+    }
+  ],
+  "helperSHA256": {
+    "contract.py": "5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412",
+    "scan.py": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"
+  },
+  "codeDecision": "GO",
+  "executionDecision": "PENDING_FINAL_IMMUTABLE_PIN_AND_ROUTE_REVIEW",
+  "independentReviewerMutationOrExecution": false,
+  "remainingGate": "Same run, attempt and head: verify complete ZIP digest and absence of download warnings, HTTP/retry errors from completed job log"
+}

@@ -1,0 +1,60 @@
+{
+  "scope": "objdir-read-only-compatibility-inspection",
+  "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "floorpBase": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "source": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "runId": 38885821823,
+    "attempt": 1,
+    "artifactId": 12047907028,
+    "name": "floorp-mac-x86_64-build-with-profgen",
+    "zipBytes": 5470281993,
+    "zipSHA256": "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d"
+  },
+  "execution": {
+    "branch": "codex/mac-native-objdir-inspect-20261017",
+    "runner": "ubuntu-24.04",
+    "jobs": 1,
+    "maximumMinutes": 20,
+    "rerunsPlanned": 0,
+    "permissions": {
+      "actions": "read",
+      "contents": "read"
+    },
+    "newActionsArtifacts": 0
+  },
+  "helperSHA256": {
+    "contract.py": "5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412",
+    "scan.py": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"
+  },
+  "readOrder": [
+    "same-repository run/artifact metadata",
+    "bounded outer ZIP headers, at most 1 MiB, no Authorization forwarded to storage",
+    "official pinned download-artifact action for the complete existing ZIP",
+    "entry CRC32 plus gzip EOF/CRC and non-extracting tar inspection",
+    "external completed-job-log gate for the complete ZIP SHA256"
+  ],
+  "stopConditions": [
+    "HTTP 401 or 403",
+    "unsupported Range response",
+    "unexpected ZIP header, path, or metadata",
+    "digest mismatch or download warning/error",
+    "resource or deadline limit"
+  ],
+  "configComparison": {
+    "candidate": "PGO-generate intended configuration; compiled values must be observed",
+    "originalFailure": "non-PGO intended debug configuration; compiledDebug previously unverified",
+    "configurationsInterchangeable": false
+  },
+  "resultLimits": {
+    "incrementalBuildAuthorized": false,
+    "compile": false,
+    "link": false,
+    "signing": false,
+    "authentication": false,
+    "productQualification": false,
+    "originalFailureCauseResolved": false
+  },
+  "signingScopeClarification": "Ad-hoc signing of disposable isolated test copies remains permitted in a later separately authorized test phase; product signing and publication are outside this inspection.",
+  "publicEvidencePolicy": "Public source, workflow, run and artifact identities plus bounded typed configuration summaries and hashes. No credentials, signed download URLs or raw configuration."
+}
