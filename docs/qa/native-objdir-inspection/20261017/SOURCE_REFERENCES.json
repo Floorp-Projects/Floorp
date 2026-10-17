@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/build-and-package.sh",
+      "gitBlob": "26924747288446db5ada3084f4354c06823998b9",
+      "sha256": "6d197665b610eabf11ac857a9758b3b2aadb03004aeae2dbb205ece79ca50555"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/common-build.yml",
+      "gitBlob": "ec902a7a04c662136a89972f42420d9a998fc0e9",
+      "sha256": "c239db5d9a1ab32de58eeb1031195efe2830067e8aa89a5636f692994d520a34"
+    },
+    {
+      "repository": "actions/toolkit",
+      "ref": "930c89072712a3aac52d74b23338f00bb0cfcb24",
+      "path": "packages/artifact/src/internal/download/download-artifact.ts",
+      "gitBlob": "4a735bb8fa079cc36e156f653113130b9db6bdcc",
+      "sha256": "628e9bd263b1b3d52fce009291dea25b934243f9088e9fb211d1e63dcb9cbe0a"
+    }
+  ],
+  "priorSourceIndex": "https://github.com/Floorp-Projects/Floorp/blob/7f59596d75f80d4489ac01627c1877aa2c52e368/docs/qa/native-objdir-reuse/20261017/SOURCE_INDEX.json"
+}

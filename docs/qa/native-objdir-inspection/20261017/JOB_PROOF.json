@@ -1,0 +1,489 @@
+{
+  "fixtureCommit": "a2e0eb0efc0c604982d0898a435b5e26880bf113",
+  "fullZIPDigestGate": "requires-external-job-log-verification",
+  "inspection": {
+    "archive": {
+      "configuration": {
+        "config.status": {
+          "MOZ_BUILD_APP": "browser",
+          "MOZ_PROFILE_GENERATE": true,
+          "topobjdir": {
+            "githubRuntimeWorkspaceLayout": true,
+            "valueSHA256": "0ec8a7cab2df22cf67d9c15ce4e7f81b112e83f4bccac30df8e74a1078cb732b"
+          },
+          "topsrcdir": {
+            "githubRuntimeWorkspaceLayout": true,
+            "valueSHA256": "494d964e33ffc3966474c10a8b549f8f7f44b8a84e8731906615eff1c1a7afce"
+          }
+        },
+        "config.statusd/defines/MOZ_BUILD_APP": {
+          "MOZ_BUILD_APP": "browser"
+        },
+        "config.statusd/defines/MOZ_PROFILE_GENERATE": {
+          "MOZ_PROFILE_GENERATE": true
+        },
+        "config.statusd/substs/CC": {
+          "CC": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "d07585efb5c671adce1296e1464e51516e4d29e1baf8c10a2c219b0986ccc80b"
+          }
+        },
+        "config.statusd/substs/CC_TYPE": {
+          "CC_TYPE": "clang"
+        },
+        "config.statusd/substs/CC_VERSION": {
+          "CC_VERSION": "22.1.8"
+        },
+        "config.statusd/substs/CPU_ARCH": {
+          "CPU_ARCH": {
+            "valuePublished": false,
+            "valueSHA256": "7986a3eef8453abcffb44d0f6d0838339938030ca696ecf854095d31deca6b02"
+          }
+        },
+        "config.statusd/substs/CXX": {
+          "CXX": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "fc3517befd5078beb0168d1f562942fb1fed112630162fc5aa0ed318505c6bf9"
+          }
+        },
+        "config.statusd/substs/HOST_CC": {
+          "HOST_CC": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "164582167b6c24a6ed5e4b693d9041fdb960558d643f183e538e053d13090a2c"
+          }
+        },
+        "config.statusd/substs/HOST_CXX": {
+          "HOST_CXX": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "c5c9460843a7a94f13a242699eb8795159babc161aac0a6ffb808bf971e4f4b6"
+          }
+        },
+        "config.statusd/substs/MOZ_BUILD_APP": {
+          "MOZ_BUILD_APP": "browser"
+        },
+        "config.statusd/substs/MOZ_DEBUG_SYMBOLS": {
+          "MOZ_DEBUG_SYMBOLS": true
+        },
+        "config.statusd/substs/MOZ_PROFILE_GENERATE": {
+          "MOZ_PROFILE_GENERATE": true
+        },
+        "config.statusd/substs/OS_TARGET": {
+          "OS_TARGET": "Darwin"
+        },
+        "config.statusd/substs/RUSTC": {
+          "RUSTC": {
+            "locationClass": "other-or-relative",
+            "valueSHA256": "95fd8e0d5eea841db8e36a0e6d0d898b6ee9097fd76e622402feca58e74c3f8f"
+          }
+        },
+        "config.statusd/substs/RUSTC_VERSION": {
+          "RUSTC_VERSION": "1.95.0"
+        },
+        "config.statusd/substs/RUST_TARGET": {
+          "RUST_TARGET": "x86_64-apple-darwin"
+        },
+        "config.statusd/substs/host": {
+          "host": "x86_64-pc-linux-gnu"
+        },
+        "config.statusd/substs/target": {
+          "target": "x86_64-apple-darwin"
+        },
+        "config/autoconf.mk": {
+          "CC": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "392877a15a024473283440f525def31381abed49c4e841b610b3191f69e4cedd"
+          },
+          "CC_TYPE": "clang",
+          "CC_VERSION": "22.1.8",
+          "CPU_ARCH": {
+            "valuePublished": false,
+            "valueSHA256": "7986a3eef8453abcffb44d0f6d0838339938030ca696ecf854095d31deca6b02"
+          },
+          "CXX": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "1b8438e9276a0fe8fdae120ae216fe7bef75bd219c5d0bead9509688cf942d60"
+          },
+          "HOST_CC": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "372ac381ff9950b6e366fc500c0689ec067fbf84b35085edf0457b056f8e18fe"
+          },
+          "HOST_CXX": {
+            "locationClass": "mozbuild",
+            "valueSHA256": "1eb1b5aceb60ccb987390f41ffe99babbd43f3347bb2e5774c2648e4950f837c"
+          },
+          "MOZ_BUILD_APP": "browser",
+          "MOZ_DEBUG_SYMBOLS": true,
+          "MOZ_PROFILE_GENERATE": true,
+          "OS_TARGET": "Darwin",
+          "RUSTC": {
+            "locationClass": "other-or-relative",
+            "valueSHA256": "95fd8e0d5eea841db8e36a0e6d0d898b6ee9097fd76e622402feca58e74c3f8f"
+          },
+          "RUSTC_VERSION": "1.95.0",
+          "RUST_TARGET": "x86_64-apple-darwin",
+          "host": "x86_64-pc-linux-gnu",
+          "target": "x86_64-apple-darwin"
+        },
+        "dist/bin/application.ini": {
+          "BuildID": "20261016101342",
+          "Version": "158.0.1"
+        },
+        "dist/bin/platform.ini": {
+          "BuildID": "20261016101342"
+        },
+        "dist/include/mozilla-config.h": {
+          "ENABLE_TESTSDefined": false,
+          "MOZ_ASANDefined": false,
+          "MOZ_DEBUGDefined": false,
+          "MOZ_DEBUG_SYMBOLSDefined": false,
+          "MOZ_LTODefined": false,
+          "MOZ_PROFILE_GENERATEDefined": true,
+          "MOZ_PROFILE_USEDefined": false,
+          "MOZ_TSANDefined": false
+        },
+        "mozinfo.json": {
+          "appname": "floorp",
+          "artifact": false,
+          "asan": false,
+          "bits": 64,
+          "debug": false,
+          "os": "mac",
+          "pgo": true,
+          "processor": "x86_64",
+          "tsan": false
+        }
+      },
+      "counts": {
+        "directories": 7326,
+        "hardlinks": 96,
+        "members": 64982,
+        "regularFiles": 35138,
+        "symlinks": 22422
+      },
+      "expandedBytesRead": 17650944000,
+      "filesExtracted": false,
+      "gzipCRCVerified": true,
+      "gzipConsumedToEOF": true,
+      "headerInventory": {
+        "entries": 8456,
+        "externalSymlinkContentsResolved": false,
+        "sha256": "2623b251fdfa2929210cce66b1c8484407a74eb3fe618e74081de96e97651788"
+      },
+      "selectedFiles": [
+        {
+          "bytes": 282745,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "backend.RecursiveMakeBackend",
+          "sha256": "0c2c714acbeb2c90edd00ca5a654a63e842bb264e7ffcf44a74eb02e308cf4cb"
+        },
+        {
+          "bytes": 472,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "toolkit/library/build/Makefile",
+          "sha256": "b26d65a810e07357e9c045130d8154d9d5a597af815b97206785f93f24751e71"
+        },
+        {
+          "bytes": 164928,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "toolkit/library/build/backend.mk",
+          "sha256": "23ba134b748c770c3e7168e20df60806f2e0cc38c8c485e8e0614c414107fb33"
+        },
+        {
+          "bytes": 0,
+          "kind": "regular",
+          "mtime": 1792146172,
+          "path": "dist/include/source-repo.h",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "bytes": 6253,
+          "kind": "regular",
+          "mtime": 1792146172,
+          "path": "dist/include/mozilla-config.h",
+          "sha256": "04b3dada3ce813d73b48db101b623fd55191d075d755fe8020ee4fe42e7ce75c"
+        },
+        {
+          "binary": {
+            "architecture": "x86_64",
+            "fileType": 6,
+            "format": "Mach-O64"
+          },
+          "bytes": 449098336,
+          "kind": "regular",
+          "mtime": 1792155020,
+          "path": "dist/bin/XUL",
+          "sha256": "34e7490e24b0ad0dfe55cf9f23b573cf6956ce92bf52440c5789d6e8f534fdf0"
+        },
+        {
+          "bytes": 488,
+          "kind": "regular",
+          "mtime": 1792155062,
+          "path": "dist/bin/application.ini",
+          "sha256": "49f55a0984a55fe31142e879841c3e358f5b1d312d521241912b08a4467df73a"
+        },
+        {
+          "bytes": 49,
+          "kind": "regular",
+          "mtime": 1792155086,
+          "path": "dist/bin/platform.ini",
+          "sha256": "e3d816ed1bdfa90a6a374efeaad115ae8530797ef20a068bee0aeff2b0cffd1f"
+        },
+        {
+          "bytes": 1367,
+          "kind": "regular",
+          "mtime": 1792146113,
+          "path": ".mozconfig.json",
+          "sha256": "4be972a0b0246c0691f854138f126de95620dbcb01e7d0b70f248d5121b6f9ed"
+        },
+        {
+          "bytes": 29309,
+          "kind": "regular",
+          "mtime": 1792146166,
+          "path": "config/autoconf.mk",
+          "sha256": "94341c40162bba9deb559ee9c9a32b0be3a6ad05aa8c92989cd4fbd5ce703fcb"
+        },
+        {
+          "bytes": 385595,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "backend.RecursiveMakeBackend.in",
+          "sha256": "4568240b60c4ea40e0811bf13b551f60254957b810acae1a268e90cc90ed9e84"
+        },
+        {
+          "bytes": 550098,
+          "kind": "regular",
+          "mentionsMozillaConfigHeader": true,
+          "mtime": 1792153685,
+          "path": "widget/cocoa/.deps/MacWebAppService.o.pp",
+          "sha256": "c8d75572e996d5e4bc59f2b7932135f6e38ddf540ec145747a7a009ac1327b45"
+        },
+        {
+          "bytes": 439,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "widget/cocoa/Makefile",
+          "sha256": "c642b43e9c776a77d595a87a470daa76d996b892d1a41c91dfb112cd37f0a720"
+        },
+        {
+          "binary": {
+            "architecture": "x86_64",
+            "fileType": 1,
+            "format": "Mach-O64"
+          },
+          "bytes": 2211984,
+          "kind": "regular",
+          "mtime": 1792153685,
+          "path": "widget/cocoa/MacWebAppService.o",
+          "sha256": "bdc8ab5072aac57b1df7ab6d2f4d77e7185c517fe20e75f9273fa547adcd2a5b"
+        },
+        {
+          "bytes": 10514,
+          "kind": "regular",
+          "mtime": 1792146169,
+          "path": "widget/cocoa/backend.mk",
+          "sha256": "000a909b249275c96fb931a77bdb016bba6f4cbd1e4c83dfeb1a5ee374a709e0"
+        },
+        {
+          "bytes": 1177,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "mozinfo.json",
+          "sha256": "11052f99baa897033f786c35cb10979bc5dbeb270f13941cd47caf16e28d2e6b"
+        },
+        {
+          "bytes": 3,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/defines/MOZ_PROFILE_GENERATE",
+          "sha256": "391552c099c101b131feaf24c5795a6a15bc8ec82015424e0d2b4274a369a0bf"
+        },
+        {
+          "bytes": 9,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/defines/MOZ_BUILD_APP",
+          "sha256": "1f045eb0c10376bc8c09d8890dc96aa5afda8a435c766e180847c76fdb61f03d"
+        },
+        {
+          "bytes": 3,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/MOZ_DEBUG_SYMBOLS",
+          "sha256": "391552c099c101b131feaf24c5795a6a15bc8ec82015424e0d2b4274a369a0bf"
+        },
+        {
+          "bytes": 75,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/RUSTC",
+          "sha256": "610eb5c0914b621efc13e948b8cce2c19acd864944507abfcac9516db30c70d2"
+        },
+        {
+          "bytes": 3,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/MOZ_PROFILE_GENERATE",
+          "sha256": "391552c099c101b131feaf24c5795a6a15bc8ec82015424e0d2b4274a369a0bf"
+        },
+        {
+          "bytes": 21,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/RUST_TARGET",
+          "sha256": "96f11e14921c0de28fa35d58166bdf87f89ac8f30672c6b6b7f4d2e9940cc67a"
+        },
+        {
+          "bytes": 220,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/CC",
+          "sha256": "43bd323f6b2e6571ec7fd19c732c871991b465ba01ce81cb2f698af341da52bc"
+        },
+        {
+          "bytes": 47,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/CPU_ARCH",
+          "sha256": "7c8e7b06bb870248b83d59b768b99e995f20658001dad1d5cf8ca006f7bb67ab"
+        },
+        {
+          "bytes": 9,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/MOZ_BUILD_APP",
+          "sha256": "1f045eb0c10376bc8c09d8890dc96aa5afda8a435c766e180847c76fdb61f03d"
+        },
+        {
+          "bytes": 7,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/CC_TYPE",
+          "sha256": "d9bc0a315065c53426d35c94fe0dcabb221918da51a4b4b1b8dd9397363df5da"
+        },
+        {
+          "bytes": 8,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/RUSTC_VERSION",
+          "sha256": "f57180769737e75f3fb9c285b5250ee3f6f431570c98e96e480a19b79204ca30"
+        },
+        {
+          "bytes": 175,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/HOST_CC",
+          "sha256": "6c0eb10a6387106eb619fb582abb2527f9f4b3f7d57a83cc92daae1a98c571d4"
+        },
+        {
+          "bytes": 264,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/CXX",
+          "sha256": "267aaa59e916f4eb6a424b83ce68c2384c8729cae683cbcfec7412ec1fbc8373"
+        },
+        {
+          "bytes": 8,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/CC_VERSION",
+          "sha256": "adc7e4ea9a1957056103c42f29cbdf9ec9b4aad8ad8ef3dc72888eea3bf3661f"
+        },
+        {
+          "bytes": 21,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/target",
+          "sha256": "96f11e14921c0de28fa35d58166bdf87f89ac8f30672c6b6b7f4d2e9940cc67a"
+        },
+        {
+          "bytes": 8,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/OS_TARGET",
+          "sha256": "cca5b7fd203b833302095748e85f34e65f288b33d991d458be69dfd2a081ac18"
+        },
+        {
+          "bytes": 21,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/host",
+          "sha256": "3720144e529032a8f7e78a026bf6c2ba03ced12d3453fb3df83bcf94aa0df0e1"
+        },
+        {
+          "bytes": 197,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.statusd/substs/HOST_CXX",
+          "sha256": "48ed363cb82a784d1ec2de0b59914e165f2f518b80a5ef7a9d162ecf603def21"
+        },
+        {
+          "bytes": 48089,
+          "kind": "regular",
+          "mtime": 1792146161,
+          "path": "config.status",
+          "sha256": "1e0edde2b06edc4c3e4e91405210cf94353351bb70d1ed415eaeac9c5940e6a9"
+        }
+      ],
+      "tarHeadersParsed": true
+    },
+    "artifactId": 12047907028,
+    "authenticationExecuted": false,
+    "compatibilityVerdict": "NO_GO_PENDING_CONFIG_DEPENDENCY_AND_TRANSPORT_REVIEW",
+    "completeHostTUCompiled": false,
+    "elapsedSeconds": 73.731884552,
+    "eligibleForIncrementalBuild": false,
+    "fullZIPDigestRequiresActionLogGate": true,
+    "inspectorSHA256": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513",
+    "originalFailureCauseResolved": false,
+    "productOrDebugQualification": false,
+    "scope": "objdir-read-only-inspection",
+    "signingPerformed": false,
+    "sourceAttempt": 1,
+    "sourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceRun": 38885821823,
+    "status": "inspected",
+    "workflow": {
+      "GITHUB_RUN_ATTEMPT": "1",
+      "GITHUB_RUN_ID": "39003241957",
+      "GITHUB_SHA": "ba20cf6707f56df6fd9b570241956576121e5c6d"
+    },
+    "xulLinked": false,
+    "zipEntry": {
+      "bytes": 5522162304,
+      "crc32": 1658511703,
+      "crcMatchesZIPDirectory": true,
+      "sha256": "45cc947544eac908e7735d99f8be84b2f1d6239c4c940c4e10f967e972b19ae4"
+    }
+  },
+  "newActionsArtifacts": 0,
+  "preflight": {
+    "artifactId": 12047907028,
+    "authorization": "same-repository-read-token",
+    "freeBytesBeforeDownload": 92116865024,
+    "fullZIPDigestRequiresActionLogGate": true,
+    "payloadDownloadedByPreflight": false,
+    "providerZIPBytes": 5470281993,
+    "providerZIPDigest": "sha256:de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "scope": "objdir-read-only-inspection",
+    "sourceAttempt": 1,
+    "sourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceRun": 38885821823,
+    "status": "headers-verified",
+    "zipHeaders": {
+      "compressionMethod": 8,
+      "entryBytes": 5522162304,
+      "entryCRC32": 1658511703,
+      "entryName": "floorp-mac-x86_64-moz-artifact.tar.gz",
+      "headerBytesRead": 367,
+      "headerRequests": 9,
+      "localCentralNamesMatch": true,
+      "physicalSingleEntryLayoutVerified": true,
+      "singleRegularEntry": true
+    }
+  },
+  "scope": "objdir-read-only-inspection"
+}

@@ -1,0 +1,40 @@
+{
+  "completeZIPActualDigests": [
+    "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d"
+  ],
+  "expected": "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+  "globalWarningCount": 1,
+  "http401or403Count": 0,
+  "downloadRetryErrorCount": 0,
+  "jobLogSHA256": "03de06a7e7d2458c06f87e0863e6346977f26b5fabacedf590f981dce5949187",
+  "jobLogBytes": 33806,
+  "sameFixture": true,
+  "preflight": "headers-verified",
+  "inspection": "inspected",
+  "deprecationWarnings": {
+    "githubRunnerNode20ForcedTo24": 1,
+    "downloadDependencyWarnings": [
+      "DEP0040",
+      "DEP0169",
+      "DEP0005"
+    ]
+  },
+  "noWarningsClaimPermitted": false,
+  "strictWarningFreeAcceptance": false,
+  "completeZIPDigestVerified": true,
+  "transportIntegrityFailureObserved": false,
+  "formalExternalAcceptance": "NO_GO_DOWNLOAD_WARNINGS",
+  "readOnlyInspectionProcessCompleted": true,
+  "observationsMayBeRetainedAsReferenceOnly": true,
+  "noRerunOrAlternativeRoute": true,
+  "incrementalBuildApproved": false,
+  "compatibleWithOriginalNonPGOConfiguration": false,
+  "newActionsArtifacts": 0,
+  "proofJSONLineSHA256": "8706c7b845a69ed739c94406313a9607407da794e7caa08098633555ea12abf2",
+  "proofJSONLineBytes": 12509,
+  "proofCompactJSONSHA256": "fdbbebe4f5d9d1bc1c9dcba00f9b35efa8edad666deaaa0fc67bc9603904dbad",
+  "visibleRetryErrorsOnly": true,
+  "zeroInternalRetriesProven": false,
+  "observationRetention": "REFERENCE_ONLY_WITH_DEPRECATION_WARNINGS",
+  "downloadDependencyWarningCount": 3
+}

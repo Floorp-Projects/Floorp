@@ -1,0 +1,169 @@
+{
+  "schema": "floorp.native-objdir-inspection-assessment.v1",
+  "decision": {
+    "inspectionProcess": "COMPLETED",
+    "observedIntegrity": "PASS",
+    "formalExternalAcceptance": "NO_GO_DOWNLOAD_WARNINGS",
+    "incrementalBuild": "NO_GO",
+    "authentication": "NOT_EXECUTED",
+    "qualification": "NOT_ESTABLISHED",
+    "originalFailureCause": "UNKNOWN"
+  },
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39003241957,
+    "attempt": 1,
+    "head": "ba20cf6707f56df6fd9b570241956576121e5c6d",
+    "job": 117310380175,
+    "runner": "ubuntu-24.04",
+    "durationSeconds": 154,
+    "conclusion": "success",
+    "runsOnBranch": 1,
+    "newActionsArtifacts": 0
+  },
+  "artifact": {
+    "sourceRun": 38885821823,
+    "sourceAttempt": 1,
+    "providerHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "id": 12047907028,
+    "zipBytes": 5470281993,
+    "zipSHA256": "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+    "entry": {
+      "bytes": 5522162304,
+      "crc32": 1658511703,
+      "crcMatchesZIPDirectory": true,
+      "sha256": "45cc947544eac908e7735d99f8be84b2f1d6239c4c940c4e10f967e972b19ae4"
+    },
+    "archiveInnerTarExtracted": false
+  },
+  "observedConfiguration": {
+    "debug": false,
+    "pgo": true,
+    "profileGenerate": true,
+    "host": "x86_64-pc-linux-gnu",
+    "target": "x86_64-apple-darwin",
+    "clang": "22.1.8",
+    "rust": "1.95.0",
+    "buildID": "20261016101342",
+    "version": "158.0.1",
+    "testsDefinePresent": false,
+    "debugSymbolsSubstitution": true,
+    "debugSymbolsDoNotEstablishDebugBuild": true
+  },
+  "materialObserved": {
+    "hostObject": {
+      "binary": {
+        "architecture": "x86_64",
+        "fileType": 1,
+        "format": "Mach-O64"
+      },
+      "bytes": 2211984,
+      "kind": "regular",
+      "mtime": 1792153685,
+      "path": "widget/cocoa/MacWebAppService.o",
+      "sha256": "bdc8ab5072aac57b1df7ab6d2f4d77e7185c517fe20e75f9273fa547adcd2a5b"
+    },
+    "hostDependencyFile": {
+      "bytes": 550098,
+      "kind": "regular",
+      "mentionsMozillaConfigHeader": true,
+      "mtime": 1792153685,
+      "path": "widget/cocoa/.deps/MacWebAppService.o.pp",
+      "sha256": "c8d75572e996d5e4bc59f2b7932135f6e38ddf540ec145747a7a009ac1327b45"
+    },
+    "xul": {
+      "binary": {
+        "architecture": "x86_64",
+        "fileType": 6,
+        "format": "Mach-O64"
+      },
+      "bytes": 449098336,
+      "kind": "regular",
+      "mtime": 1792155020,
+      "path": "dist/bin/XUL",
+      "sha256": "34e7490e24b0ad0dfe55cf9f23b573cf6956ce92bf52440c5789d6e8f534fdf0"
+    },
+    "headerInventory": {
+      "entries": 8456,
+      "externalSymlinkContentsResolved": false,
+      "sha256": "2623b251fdfa2929210cce66b1c8484407a74eb3fe618e74081de96e97651788"
+    },
+    "members": 64982,
+    "decompressedStreamBytesRead": 17650944000
+  },
+  "findings": [
+    {
+      "id": "P1-CONFIG-COHORT",
+      "severity": "P1",
+      "status": "BLOCKING_INCREMENTAL_REUSE",
+      "evidence": "mozinfo debug=false/pgo=true and MOZ_PROFILE_GENERATE=true in the generated configuration.",
+      "impact": "This candidate cannot establish compatibility with the original non-PGO intended-debug failure cohort.",
+      "remedy": "Use a separately approved non-PGO source/configuration cohort with observed compiled settings. Preserve PGO-generate as a separate cohort."
+    },
+    {
+      "id": "P1-PROVENANCE-DEPENDENCIES",
+      "severity": "P1",
+      "status": "BLOCKING_INCREMENTAL_REUSE",
+      "evidence": "Empty source-repo.h; no SourceStamp in emitted INI summaries; Linux host/Darwin target; external header symlinks unresolved; SDK, complete flags, LTO and link closure unverified.",
+      "impact": "The saved object/header set does not establish a reproducible complete host TU build or XUL relink.",
+      "remedy": "Before a separately authorized compile, prove source+patch bytes, exact SDK/compiler/Rust identity and paths, complete command line, header contents, link inputs and resource capacity."
+    },
+    {
+      "id": "P2-DOWNLOAD-DEPRECATIONS",
+      "severity": "P2",
+      "status": "BLOCKING_FORMAL_EXTERNAL_ACCEPTANCE",
+      "evidence": "DEP0040, DEP0169 and DEP0005 during download; pinned Node20 actions forced onto Node24 produced a runner warning.",
+      "impact": "ACCEPTANCE_CRITERIA.json forbids download warnings. Digest/CRC agreement remains a separate reference observation.",
+      "remedy": "Retain NO_GO. Independently audit a compatible supported action pin and its extraction/digest behavior before any future separately authorized acquisition; do not relax the criterion retrospectively."
+    }
+  ],
+  "limitations": [
+    "Provider run/head binding was verified; archive-internal source revision was not independently established.",
+    "Known static-archive and Rust paths were not emitted by the selected-path collector. This does not establish absence at other paths.",
+    "The header inventory hashes symlink targets without resolving their contents.",
+    "17.65 GB denotes decompressed bytes read without inner extraction. Capacity for a future source+SDK+toolchain+link workload was not measured.",
+    "No visible retry errors were observed; zero internal action retries was not proved.",
+    "The observed clang 22.1.8 is not interchangeable with LLVM 19.1.7 discussed as a prior source reference.",
+    "ARM objdir payload was not acquired or inspected."
+  ],
+  "originalFailureComparison": {
+    "run": 38963901545,
+    "attempt": 1,
+    "providerHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "workflowIntent": {
+      "debug": true,
+      "pgo": false
+    },
+    "compiledDebug": "UNVERIFIED",
+    "intentBasis": "Pinned daily/common workflow and schedule/job graph, not observed mozinfo from the original artifact.",
+    "nonPGOFullObjdir": "Not retained by the examined packager; its non-PGO path saves dist only.",
+    "candidateInterchangeable": false
+  },
+  "signingScope": {
+    "disposableCopyAdHocSigningPermitted": true,
+    "productSigningPublicationAuthorized": false,
+    "signingExecutedInThisInspection": false,
+    "signingBanUsedAsBlocker": false
+  },
+  "executionLimits": {
+    "completePatchedHostTUCompiled": false,
+    "xulLinked": false,
+    "authenticationExecuted": false,
+    "fullBuildLaunched": false,
+    "additionalExecutionPlanned": false,
+    "newPermissionsOrPaidRunner": false,
+    "productReleaseApprovalOrPublication": false
+  },
+  "nextPhaseConditions": [
+    "Parent selects and authorizes a configuration cohort and bounded compile plan; this inspection does not authorize compile or authentication.",
+    "A PGO-only translation-unit check would be additional observability evidence and would not qualify the original non-PGO failure.",
+    "Original-cohort validation needs a matching non-PGO objdir or a separately authorized new non-PGO build, with its actual settings and artifact provenance recorded.",
+    "Disposable-copy ad-hoc signing can be used in a later authorized native test phase with unchanged authentication predicates and OS protections."
+  ],
+  "nativePatchReference": {
+    "floorpCommit": "77de64d89ae6f2f44e5fca8ce71eb9d550981663",
+    "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+    "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "modifiedOrCompiledInThisInspection": false
+  }
+}

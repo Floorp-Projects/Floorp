@@ -1,0 +1,33 @@
+{
+  "schema": "floorp.native-objdir-inspection-handoff.v1",
+  "execution": {
+    "run": 39003241957,
+    "attempt": 1,
+    "runtimeHead": "ba20cf6707f56df6fd9b570241956576121e5c6d",
+    "job": 117310380175,
+    "conclusion": "success",
+    "durationSeconds": 154,
+    "runner": "ubuntu-24.04"
+  },
+  "pins": {
+    "floorpFixture": "a2e0eb0efc0c604982d0898a435b5e26880bf113",
+    "floorpPlanParent": "1a7f697c5878b4f5219b2378382fc480b8206b08",
+    "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceArtifactRun": 38885821823,
+    "sourceArtifactAttempt": 1,
+    "sourceArtifactId": 12047907028
+  },
+  "decisions": {
+    "integrity": "PASS",
+    "formalExternalAcceptance": "NO_GO_DOWNLOAD_WARNINGS",
+    "incrementalBuild": "NO_GO",
+    "originalFailureCause": "UNKNOWN",
+    "productOrDebugQualification": false
+  },
+  "reportSHA256": "5da46e381643974171dd90ba4a0bf0ae30f47912446b421eb4c1f078e3601f91",
+  "evidenceIndexSHA256": "b3c930adf50a5e4aa84f237ed4b4b74c89838b7d90a312ac280c0da25dc5ce2b",
+  "independentResultReviewSHA256": "f46dee54556c9ee9a59fecf007311d952fbd0baf7df29f8bfe1d857f6b12cd5e",
+  "newActionsArtifacts": 0,
+  "runtimeExecutionBranchMustRemainUnmodified": "codex/mac-native-objdir-inspect-20261017",
+  "additionalExecutionInThisPhase": false
+}

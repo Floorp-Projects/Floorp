@@ -1,0 +1,91 @@
+{
+  "decision": {
+    "integrity": "PASS",
+    "externalAcceptance": "NO_GO_DOWNLOAD_WARNINGS",
+    "incrementalBuild": "NO_GO",
+    "observationsUsableWithLimits": true,
+    "additionalExecutionAuthorizedByReview": false
+  },
+  "run": {
+    "id": 39003241957,
+    "attempt": 1,
+    "head": "ba20cf6707f56df6fd9b570241956576121e5c6d",
+    "job": 117310380175,
+    "runner": "ubuntu-24.04",
+    "conclusion": "success",
+    "durationSeconds": 154,
+    "jobs": 1
+  },
+  "independentlyVerified": {
+    "fixtureAndInspectorHashes": true,
+    "exactlyOneBoundedProofMarkerPair": true,
+    "fullZIPComputedDigestMatchesExpected": true,
+    "entrySizeAndCRCMatchZIPDirectory": true,
+    "gzipEOFAndCRC": true,
+    "noInnerTarExtraction": true,
+    "resourceBoundsSatisfied": true,
+    "newActionsArtifacts": 0,
+    "sourceBranchRuns": 0,
+    "runtimeBranchRuns": 1,
+    "defaultRefsUnchanged": true
+  },
+  "integrityEvidence": {
+    "fullZIP_SHA256": "de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+    "innerTarGzip_SHA256": "45cc947544eac908e7735d99f8be84b2f1d6239c4c940c4e10f967e972b19ae4",
+    "innerTarGzipBytes": 5522162304,
+    "innerCRC32": 1658511703,
+    "decodedJobLogUTF8_SHA256": "03de06a7e7d2458c06f87e0863e6346977f26b5fabacedf590f981dce5949187",
+    "proofJSONLine_SHA256": "8706c7b845a69ed739c94406313a9607407da794e7caa08098633555ea12abf2",
+    "proofJSONLineBytes": 12509,
+    "headerReadBytes": 367,
+    "headerRequests": 9,
+    "tarMembers": 64982,
+    "expandedBytesRead": 17650944000,
+    "selectedFiles": 35,
+    "headerInventoryEntries": 8456
+  },
+  "acceptanceBlocker": {
+    "criterion": "ACCEPTANCE_CRITERIA.json: transport.downloadWarningsAllowed=false",
+    "downloadDependencyDeprecations": [
+      "DEP0040",
+      "DEP0169",
+      "DEP0005"
+    ],
+    "globalWarningCount": 1,
+    "globalWarning": "Pinned Node20 actions were forced to execute on Node24",
+    "visibleDigestMismatchOrHTTP401403OrRetryErrors": 0,
+    "assessment": "Do not waive warnings retrospectively or describe this result as warning-free."
+  },
+  "observedArchiveConfiguration": {
+    "mozinfo.debug": false,
+    "mozinfo.pgo": true,
+    "MOZ_PROFILE_GENERATE": true,
+    "host": "x86_64-pc-linux-gnu",
+    "target": "x86_64-apple-darwin",
+    "clangVersion": "22.1.8",
+    "rustVersion": "1.95.0",
+    "hostObject": "Mach-O x86_64 MH_OBJECT",
+    "XUL": "Mach-O x86_64"
+  },
+  "remainingBlockers": [
+    "Archive-internal source revision remains unproven: source-repo.h is empty and emitted INI summaries contain no SourceStamp.",
+    "Exact SDK, complete compiler/linker flags, LTO state and dependency closure remain unverified.",
+    "External header symlink contents were not resolved.",
+    "Known archive/Rust paths were not emitted; this does not establish their absence elsewhere.",
+    "This PGO-generate configuration does not establish compatibility with the original non-PGO failure cohort.",
+    "The 17.65GB decompressed stream and observed free disk do not establish capacity for source, SDK, extraction and linking on every standard runner."
+  ],
+  "scope": {
+    "completeHostTUCompiled": false,
+    "xulLinked": false,
+    "authenticationExecuted": false,
+    "signingPerformed": false,
+    "productOrDebugQualification": false,
+    "originalFailureCause": "UNKNOWN"
+  },
+  "reviewLimits": [
+    "Reviewer inspected immutable source, provider metadata and decoded job logs; no artifact payload was downloaded independently.",
+    "Absence of visible retry errors does not prove that the action performed zero internal retries.",
+    "No new source defect requiring repair was identified."
+  ]
+}

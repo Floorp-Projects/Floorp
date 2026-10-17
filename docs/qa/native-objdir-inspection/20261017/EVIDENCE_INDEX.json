@@ -1,0 +1,102 @@
+{
+  "schema": "floorp.native-objdir-inspection-evidence-index.v1",
+  "scope": "read-only inspection; formal external acceptance NO_GO; reference observations only",
+  "files": [
+    {
+      "path": ".github/patches/floorp-runtime/ci/inspect-native-objdir.patch",
+      "bytes": 5123,
+      "sha256": "15a9be225204f28a98a62b283ca120ca4e03f934642569d945194198d653d625"
+    },
+    {
+      "path": ".github/qa/native_objdir/contract.py",
+      "bytes": 10334,
+      "sha256": "5232213fa18851a5452c6e6e066ca50517e32f990d885b7a41f07dbe40e87412"
+    },
+    {
+      "path": ".github/qa/native_objdir/scan.py",
+      "bytes": 15690,
+      "sha256": "795ea5239b749f1410af637ee4eeaced26bc9977f18bece0f11b901770e6a513"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/ACCEPTANCE_CRITERIA.json",
+      "bytes": 1130,
+      "sha256": "99f2a58e8b8a2309a346f0ffd2debe6a6c2d80506c75a2a2065dc2597615f11d"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/CODE_REVIEW.json",
+      "bytes": 1139,
+      "sha256": "98f613b771f945c6c18ed0b4c47be08b4a414017b20ec0ba3f02fc5ab0c7bf17"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/COMPATIBILITY_ASSESSMENT.json",
+      "bytes": 7394,
+      "sha256": "e73afe4df2906f1a05e871181962c75e6f287648ce450e92844cdb7017c3d66b"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/EXECUTION_INTENT.json",
+      "bytes": 2450,
+      "sha256": "0155375d42608bc914a07aa0ec310b5167c5f1dbf4d62c2d9c993c487af95681"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/FINAL_PIN_REVIEW.json",
+      "bytes": 1302,
+      "sha256": "812f1fc7dc37f403045c97ff5eda1d6a0a75f2066d8e116522414723c5e127ec"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/IMMUTABLE_CALLER.json",
+      "bytes": 2023,
+      "sha256": "c2435066257eb349f82a3a6d7ae2f321168612db612dd60f03d14bb6954d1b76"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/INDEPENDENT_RESULT_REVIEW.json",
+      "bytes": 3630,
+      "sha256": "f46dee54556c9ee9a59fecf007311d952fbd0baf7df29f8bfe1d857f6b12cd5e"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/JOB_PROOF.json",
+      "bytes": 16960,
+      "sha256": "f661ad018352ea4716400113bf2f3d0d0d579b6f885dac96cea0a08f909bbdc8"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/LOCAL_READER_GUARDS.json",
+      "bytes": 388,
+      "sha256": "64a9b113d554b7449fd946ac8286174709f746d5e5ca5a6c45ca0e60d10d1027"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/POST_RUN_INVARIANTS.json",
+      "bytes": 591,
+      "sha256": "8003b353af243fa6b63a83c0f8de66f4adb58a87daaa2cb510da40ad63b74edf"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/README.ja.md",
+      "bytes": 1610,
+      "sha256": "ad63ff23ff94a1e658856f74274887a39ee5a1a2e27b65489ad948c131777615"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/REPORT.ja.md",
+      "bytes": 4605,
+      "sha256": "5da46e381643974171dd90ba4a0bf0ae30f47912446b421eb4c1f078e3601f91"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/SOURCE_REFERENCES.json",
+      "bytes": 1171,
+      "sha256": "e8048382f4f72f368eab64523402daf8032125e9da3af0fb593450fd268d2f72"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/TRANSPORT_GATE.json",
+      "bytes": 1510,
+      "sha256": "1b85edef296f7e3c65fd5ce152eb505501b760c7bc191b13ef7b56827fe840bc"
+    },
+    {
+      "path": "docs/qa/native-objdir-inspection/20261017/TRIGGER_CONTAINMENT.json",
+      "bytes": 11431,
+      "sha256": "708597a3bc894afacbb0485cb1639da55562fe806d40ce38aa7528a070caf14a"
+    }
+  ],
+  "excludes": [
+    "EVIDENCE_INDEX.json",
+    "FINAL_HANDOFF.json"
+  ],
+  "rawJobLogRetainedInPublicGit": false,
+  "jobLogSHA256": "03de06a7e7d2458c06f87e0863e6346977f26b5fabacedf590f981dce5949187"
+}
