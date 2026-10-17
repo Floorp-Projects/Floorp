@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "floorpBase": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "path": ".github/workflows/package.yml",
+  "sha256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+  "bytes": 121845,
+  "trackedWorkflowMatchesBase": true,
+  "productionPatchPatterns": [
+    "noraneko/.github/patches/floorp-runtime/common/*.patch",
+    "noraneko/.github/patches/floorp-runtime/*.patch"
+  ],
+  "loaderLines": [
+    673,
+    691
+  ],
+  "diagnosticDeliveryDirectory": ".github/patches/floorp-runtime/native-diagnostics",
+  "diagnosticDeliveryPatchesAutomaticallyAppliedByThoseLoops": false,
+  "newActiveFloorpWorkflow": false,
+  "newCITriggeredByThisCheck": false
+}

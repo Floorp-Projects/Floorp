@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "runId": 39020119793,
+  "attempt": 1,
+  "verifiedTerminalHead": "d86e63bc621d647efd8389fbf226f841ebb52501",
+  "localResultBytes": 65766,
+  "localResultSHA256": "39c0ee6f2c84dac2c2bd77d9b012c7ac5b43c9aca9d35466285bfacc3f03cbf1",
+  "checks": [
+    "Actual full build, host MH_OBJECT, linked XUL MH_DYLIB, disposable ad hoc copy and verify passed.",
+    "XUL UUID and section bytes match across signing.",
+    "Native cause failed before authentication; context and GUI remain NOT_RUN.",
+    "Launcher status cannot establish actual browser exit cause.",
+    "Historical failures retained, no GitHub rerun, no new Actions artifacts."
+  ],
+  "qualification": "NOT_QUALIFIED",
+  "productQualification": false
+}

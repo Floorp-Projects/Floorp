@@ -9,7 +9,11 @@
     "executionTree": "241e516eb4f1c537842485403d329c7ce6e8c130",
     "attempt": 1,
     "event": "push",
-    "createdAt": "2026-10-17T09:10:33Z"
+    "createdAt": "2026-10-17T09:10:33Z",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobId": 117360090798,
+    "completedAt": "2026-10-17T13:10:19Z"
   },
   "source": {
     "fixture": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
@@ -43,81 +47,7 @@
     39016143725,
     39018277446
   ],
-  "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "terminalResultRequired": true,
-  "latestConfirmedStatus": {
-    "at": "2026-10-17 09:41:13 UTC",
-    "id": 39020119793,
-    "status": "in_progress",
-    "conclusion": null,
-    "attempt": 1,
-    "head": "d86e63bc621d647efd8389fbf226f841ebb52501",
-    "jobs": [
-      {
-        "id": 117360090798,
-        "status": "in_progress",
-        "conclusion": null,
-        "runner": "GitHub Actions 1000045570",
-        "labels": [
-          "macos-15-intel"
-        ],
-        "started": "2026-10-17T09:10:37Z",
-        "completed": null,
-        "current": [
-          {
-            "name": "Compile full host and XUL then authenticate native Shim",
-            "status": "in_progress"
-          },
-          {
-            "name": "Confirm bounded result exists",
-            "status": "pending"
-          },
-          {
-            "name": "Post Checkout immutable native harness",
-            "status": "pending"
-          },
-          {
-            "name": "Post Checkout immutable Runtime source",
-            "status": "pending"
-          },
-          {
-            "name": "Post Checkout immutable preparation fixture",
-            "status": "pending"
-          }
-        ],
-        "done": [
-          {
-            "name": "Set up job",
-            "conclusion": "success"
-          },
-          {
-            "name": "Bound the initial authorized run",
-            "conclusion": "success"
-          },
-          {
-            "name": "Checkout immutable preparation fixture",
-            "conclusion": "success"
-          },
-          {
-            "name": "Verify owned process sampling before source checkout",
-            "conclusion": "success"
-          },
-          {
-            "name": "Checkout immutable Runtime source",
-            "conclusion": "success"
-          },
-          {
-            "name": "Checkout immutable native harness",
-            "conclusion": "success"
-          },
-          {
-            "name": "Acquire only the existing fixed SDK",
-            "conclusion": "success"
-          }
-        ]
-      }
-    ]
-  },
-  "existingRunContinues": true,
-  "newDuplicateRunsStarted": 0
+  "result": "FAIL_NATIVE_STARTUP_NOT_QUALIFIED",
+  "terminalResultRequired": false,
+  "terminalEvidence": "RECOVERY2_EXECUTION_RESULT.json"
 }
