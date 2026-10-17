@@ -11,6 +11,11 @@
 
 import { sleep } from "./async_utils.ts";
 import { PATHS } from "./defines.ts";
+import type { TestSourceProof } from "../../libs/test-inventory/source-types.ts";
+import type {
+  TestExecutionKind,
+  TestOrigin,
+} from "../../libs/test-inventory/types.ts";
 
 // Polling intervals for file-based collection.
 const PREFS_FILE_POLL_INTERVAL_MS = 1_000;
@@ -18,6 +23,10 @@ const PREFS_FILE_DEFAULT_TIMEOUT_MS = 300_000;
 
 export interface BrowserTestResult {
   file: string;
+  sourceProof?: TestSourceProof;
+  inventoryVersion?: number;
+  origin?: TestOrigin;
+  executionKind?: TestExecutionKind;
   ok: boolean;
   durationMs: number;
   mode: "import" | "runAllTests" | "mozillaTasks";

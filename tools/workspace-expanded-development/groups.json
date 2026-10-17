@@ -1,0 +1,19 @@
+{
+  "preservation": {
+    "target": "browser-features/chrome/common/workspaces/test/workspaceLastTabPreservation.test.ts",
+    "names": [
+      "last visible tab switches to preserved workspace (native false, workspace exit false)",
+      "last visible tab switches to preserved workspace (native false, workspace exit true)",
+      "last visible tab switches to preserved workspace (native true, workspace exit false)",
+      "workspace exit preserves hidden tabs in the closed window's session"
+    ]
+  },
+  "flows": {
+    "target": "browser-features/chrome/common/workspaces/test/workspaceDevelopmentFlows.test.ts",
+    "names": [
+      "A-B-A restores selected tabs and workspace visibility",
+      "native TabOpen assigns new tabs to the active workspace",
+      "tab context menu moves a native tab to another workspace"
+    ]
+  }
+}

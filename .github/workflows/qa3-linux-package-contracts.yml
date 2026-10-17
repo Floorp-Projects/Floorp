@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 Linux package contracts
+
+"on":
+  pull_request:
+    paths:
+      - tools/linux-package-qa/**
+      - tools/linux-l2/**
+      - .github/workflows/validate-final-package-qa.yml
+      - tools/qa3-publish-contract/**
+      - tools/qa3/**
+      - tools/agentic_qa/**
+      - tools/final_web_panel_http.py
+      - tools/src/release_provenance.ts
+      - tools/src/release_provenance.test.ts
+      - .github/workflows/qa3-linux-package-*.yml
+      - .github/workflows/package.yml
+      - .github/workflows/validate-runtime-provenance.yml
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - name: Verify bounded intake and synthetic-provider integration
+        run: |
+          export QA3_DENO_FOR_CONTRACTS="$(command -v deno)"
+          python3 -B -m unittest discover -s tools/linux-package-qa -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/linux-l2 -p 'test_*.py' -v
+          node --test tools/linux-l2/test_selection.mjs
+          python3 -B -m unittest discover -s tools/qa3-publish-contract -p 'test_*.py' -v
+          python3 -B -m unittest discover -s tools/agentic_qa -p 'test_*.py' -v
+          deno fmt --check tools/linux-package-qa/*.ts tools/src/release_provenance.ts tools/src/release_provenance.test.ts
+          deno lint --no-config tools/linux-package-qa/*.ts tools/src/release_provenance.ts tools/src/release_provenance.test.ts
+          deno check --no-config --no-lock tools/linux-package-qa/validate.ts
+          deno test --no-config --import-map=tools/qa3/deno-host-imports.json \
+            --lock=tools/qa3/deno-host.lock --frozen-lockfile --no-npm \
+            --allow-read --allow-write tools/src/release_provenance.test.ts

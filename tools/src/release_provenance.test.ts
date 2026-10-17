@@ -14,6 +14,7 @@ import {
   parseFullVersionOutput,
   ProvenanceError,
   TARGETS,
+  validateLinuxPackageRecord,
   validateNativeVerificationSet,
   validateReleaseBundle,
   validateRuntimeProvenance,
@@ -105,6 +106,77 @@ function restSnapshot() {
 function normalizedRuntime() {
   return validateRuntimeProvenance(runtimeManifest(), restSnapshot());
 }
+
+Deno.test("single Linux package record stays distinct from the five-target release set", () => {
+  const record = nativeRecord("linux", "x86_64", 3001);
+  const runtime = normalizedRuntime();
+  assertEquals(
+    validateLinuxPackageRecord(
+      record,
+      runtime,
+      record.floorp,
+      record.floorp_package,
+    ),
+    record,
+  );
+  assertThrows(
+    () => validateNativeVerificationSet([record], runtime),
+    ProvenanceError,
+  );
+  for (
+    const mutate of [
+      (r: typeof record) => {
+        r.floorp.head_sha = "c".repeat(40);
+      },
+      (r: typeof record) => {
+        r.floorp.workflow_run_id++;
+      },
+      (r: typeof record) => {
+        r.floorp_package.artifact_id++;
+      },
+      (r: typeof record) => {
+        r.floorp_package.artifact_digest = `sha256:${"e".repeat(64)}`;
+      },
+      (r: typeof record) => {
+        r.floorp_package.unsigned = true;
+        r.floorp_package.artifact_name += "-unsigned";
+      },
+      (r: typeof record) => {
+        r.runtime.head_sha = "c".repeat(40);
+      },
+      (r: typeof record) => {
+        r.runtime.artifact_id++;
+      },
+      (r: typeof record) => {
+        r.target_key = "windows";
+        r.floorp_package.artifact_name = "noraneko-windows-x86_64-installer";
+      },
+    ]
+  ) {
+    const changed = structuredClone(record);
+    mutate(changed);
+    assertThrows(
+      () =>
+        validateLinuxPackageRecord(
+          changed,
+          runtime,
+          record.floorp,
+          record.floorp_package,
+        ),
+      ProvenanceError,
+    );
+  }
+  assertThrows(
+    () =>
+      validateLinuxPackageRecord(
+        record,
+        { ...runtime, run_attempt: 2 },
+        record.floorp,
+        record.floorp_package,
+      ),
+    ProvenanceError,
+  );
+});
 
 function nativeRecord(
   targetKey: "windows" | "linux" | "linuxAarch64" | "mac",

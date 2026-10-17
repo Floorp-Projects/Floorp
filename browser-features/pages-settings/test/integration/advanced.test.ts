@@ -574,7 +574,11 @@ export async function runAdvancedTests() {
   tests.push({
     name: "Account sync and profile manager links call browser actions",
     fn: async () => {
-      await route("features/accounts", "main a");
+      // The overview also contains links while the lazy account route loads.
+      await route(
+        "features/accounts",
+        'main a[href="https://accounts.firefox.com/signin"]',
+      );
       for (
         const [text, target] of [[
           "Manage Firefox Feature Sync",

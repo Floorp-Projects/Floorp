@@ -165,10 +165,10 @@ async function cmdStart() {
       PLATFORM === "windows" ? "tasklist" : "ps",
       PLATFORM === "windows"
         ? {
-            args: ["/FI", `PID eq ${existingPid}`, "/NH"],
-            stdout: "piped",
-            stderr: "null",
-          }
+          args: ["/FI", `PID eq ${existingPid}`, "/NH"],
+          stdout: "piped",
+          stderr: "null",
+        }
         : { args: ["-p", existingPid], stdout: "piped", stderr: "null" },
     );
     const out = await check.output();
@@ -424,10 +424,12 @@ async function cmdStop() {
   }
 
   // Clean up state files
-  for (const f of [
-    PID_FILE,
-    path.join(PROJECT_ROOT, "_dist", "marionette-port.txt"),
-  ]) {
+  for (
+    const f of [
+      PID_FILE,
+      path.join(PROJECT_ROOT, "_dist", "marionette-port.txt"),
+    ]
+  ) {
     try {
       Deno.removeSync(f);
     } catch {
@@ -559,7 +561,7 @@ async function cmdConsole() {
 
   await withBrowser(async (client) => {
     await client.setContext("chrome");
-    const raw = await client.executeScript(`
+    const raw = await client.executeScript<string>(`
       const messages = Services.console.getMessageArray();
       return JSON.stringify(messages.slice(-${limit * 3}).map(m => {
         if (m instanceof Ci.nsIScriptError) {
@@ -628,7 +630,7 @@ async function cmdConsole() {
 async function cmdStatus() {
   await withBrowser(async (client) => {
     await client.setContext("chrome");
-    const info = await client.executeScript(`
+    const info = await client.executeScript<string>(`
       return JSON.stringify({
         title: document.title,
         url: document.documentURI,
@@ -654,8 +656,8 @@ async function cmdTitle() {
 }
 
 async function cmdScreenshot() {
-  const outputPath =
-    args.output ?? path.join(PROJECT_ROOT, "_dist", "screenshot.png");
+  const outputPath = args.output ??
+    path.join(PROJECT_ROOT, "_dist", "screenshot.png");
 
   await withBrowser(async (client) => {
     await client.setContext(context);
@@ -731,7 +733,7 @@ async function cmdDom() {
     console.log(`Found ${elementIds.length} element(s):\n`);
 
     for (const [i, id] of elementIds.entries()) {
-      const info = await client.executeScript(
+      const info = await client.executeScript<string>(
         `
         const el = arguments[0];
         return JSON.stringify({

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 source shadow
+
+"on":
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.9.6
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Test source executor and coverage contracts
+        run: |
+          mkdir -p "$RUNNER_TEMP/qa3-source"
+          set +e
+          python3 -B -m unittest discover -s tools/qa3 -p 'test_*.py' -v > "$RUNNER_TEMP/qa3-source/contracts.log" 2>&1
+          status=$?
+          printf '%s\n' "$status" > "$RUNNER_TEMP/qa3-source/contracts.exit-code"
+          cat "$RUNNER_TEMP/qa3-source/contracts.log"
+          exit "$status"
+      - name: Execute the fixed source-only plan once
+        if: always()
+        env:
+          QA3_SOURCE_HEAD: ${{ github.sha }}
+        run: >-
+          python3 -B tools/qa3/source.py run "$RUNNER_TEMP/qa3-source/source"
+          --expected-head "$QA3_SOURCE_HEAD"
+      - name: Preserve the raw shadow outcome
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qa3-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa3-source
+          if-no-files-found: error
+          retention-days: 14

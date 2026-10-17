@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "stage": "shadow",
+  "publicationAuthorized": false,
+  "artifacts": [
+    {
+      "kind": "installer",
+      "targets": [
+        "windows-x86_64",
+        "linux-x86_64",
+        "linux-aarch64",
+        "mac-x86_64",
+        "mac-aarch64"
+      ],
+      "verdict": "UNVERIFIED",
+      "requires": [
+        "exact signed final digest",
+        "native launch and feature scenarios per target"
+      ],
+      "producer": "package.yml; source unit tests do not execute its final product"
+    },
+    {
+      "kind": "mar",
+      "targets": [
+        "windows-x86_64",
+        "linux-x86_64",
+        "linux-aarch64",
+        "mac-x86_64",
+        "mac-aarch64"
+      ],
+      "verdict": "UNVERIFIED",
+      "requires": [
+        "from/to artifact and MAR digests",
+        "real update application",
+        "post-update native identity"
+      ],
+      "producer": "package.yml and Updates; installer launch cannot substitute for MAR apply"
+    },
+    {
+      "kind": "deb-ppa",
+      "targets": ["linux-x86_64"],
+      "verdict": "UNVERIFIED",
+      "requires": [
+        "approved bundle DEB digest",
+        "install/upgrade",
+        "PPA exact bytes and index"
+      ],
+      "producer": "package.yml and publish_ppa.yml"
+    },
+    {
+      "kind": "portable",
+      "targets": ["windows-x86_64"],
+      "verdict": "UNVERIFIED",
+      "requires": [
+        "input/transform/output digests",
+        "exact producer run",
+        "portable launcher and profile persistence"
+      ],
+      "producer": "downstream Portable workflow after Updates; pre-publication candidate production is deferred"
+    },
+    {
+      "kind": "stub",
+      "targets": ["windows-x86_64"],
+      "verdict": "UNVERIFIED",
+      "requires": [
+        "stub signature and digest",
+        "downloaded payload identity",
+        "install outcome"
+      ],
+      "producer": "Windows installer assembly"
+    }
+  ],
+  "deferred": [
+    "QA3-02/03 native Debug harness qualification for the exact current Runtime cohort; historical 157 L1 evidence does not qualify the current 158 product",
+    "QA3-06 full feature/target migration catalog; the connected 252-file development origin inventory remains not-onboarded for packaged execution",
+    "QA3-07 all five native GUI targets",
+    "QA3-08 trusted qualification, first-FAIL history and revocation/expiry",
+    "QA3-09 dedicated publisher and approval-bound revalidation",
+    "QA3-10 credential-free Agent worker and deterministic regression promotion",
+    "QA3-11 native known-bad coverage, quarantine, retention and resource measurements",
+    "Official Firefox Git/Hg mapping remains unverified/advisory",
+    "Implementation kit v0.3.0 was reviewed from immutable GitHub input 87311566; original 114, repaired 130 and historical 106 source tests remain separate from this fixed 109-case source plan"
+  ]
+}

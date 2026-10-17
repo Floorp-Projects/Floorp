@@ -18,6 +18,11 @@ name: Validate Runtime Provenance v2
         type: boolean
         required: false
         default: false
+      require_original_attempt:
+        description: Reject Runtime reruns before acquiring any manifest bytes
+        type: boolean
+        required: false
+        default: false
     secrets:
       runtime_artifact_token:
         description: Token with Actions read access to Floorp-Runtime
@@ -119,6 +124,7 @@ jobs:
           RUNTIME_WORKFLOW_RUN_ID: ${{ inputs.runtime_workflow_run_id }}
           RUNTIME_MANIFEST_ARTIFACT_ID: ${{ inputs.runtime_manifest_artifact_id }}
           VALIDATION_ONLY: ${{ inputs.validation_only }}
+          REQUIRE_ORIGINAL_ATTEMPT: ${{ inputs.require_original_attempt }}
         with:
           github-token: ${{ secrets.runtime_artifact_token }}
           script: |
@@ -179,6 +185,10 @@ jobs:
             }
             if (!Number.isSafeInteger(run.run_attempt) || run.run_attempt < 1) {
               throw new Error("Runtime run attempt must be a positive integer");
+            }
+            if (!["true", "false"].includes(process.env.REQUIRE_ORIGINAL_ATTEMPT) ||
+                (process.env.REQUIRE_ORIGINAL_ATTEMPT === "true" && run.run_attempt !== 1)) {
+              throw new Error("This consumer requires the original Runtime attempt");
             }
             if (!validationOnly) {
               if (run.head_sha !== runtimeLock.source.commit) {

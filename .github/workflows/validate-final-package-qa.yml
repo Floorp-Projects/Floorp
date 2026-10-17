@@ -23,35 +23,93 @@ name: Validate final Floorp package regressions
         required: false
         type: boolean
         default: false
+      linux_l2_blacksmith:
+        description: Observe only the two Linux x64 production probes on the existing Blacksmith label (no publication)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   actions: read
   contents: read
 
 jobs:
+  l2-selection:
+    if: inputs.linux_l2_blacksmith == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Reject unsigned or repeated L2 selection before allocating Blacksmith
+        uses: actions/github-script@v7
+        env:
+          UNSIGNED: ${{ inputs.validation_only }}
+          PACKAGE_RUN: ${{ inputs.package_run_id }}
+          FLOORP_HEAD: ${{ inputs.floorp_head_sha }}
+          PRE_PUBLICATION: ${{ inputs.pre_publication }}
+        with:
+          script: |
+            const {validateSourceIdentity,validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
+            if (process.env.UNSIGNED !== 'false' || process.env.GITHUB_RUN_ATTEMPT !== '1' ||
+                !/^[1-9][0-9]*$/.test(process.env.PACKAGE_RUN || '') ||
+                !Number.isSafeInteger(Number(process.env.PACKAGE_RUN)) ||
+                !/^[0-9a-f]{40}$/.test(process.env.FLOORP_HEAD || '')) {
+              throw new Error('Linux L2 requires production inputs and original consumer attempt 1');
+            }
+            const {data: run} = await github.rest.actions.getWorkflowRun(
+              {...context.repo,run_id:Number(process.env.PACKAGE_RUN)});
+            validateSourceIdentity(run,process.env.FLOORP_HEAD);
+            if (run.run_attempt !== 1) throw new Error('Original package attempt 1 required');
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt,
+              {...context.repo,run_id:run.id,attempt_number:1,per_page:100});
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo,run_id:run.id,per_page:100});
+            let extra = {};
+            if (process.env.PRE_PUBLICATION === 'true') {
+              const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+                {...context.repo,run_id:run.id});
+              const {data: pkg} = await github.rest.repos.getContent(
+                {...context.repo,path:'package.json',ref:run.head_sha});
+              const version = JSON.parse(Buffer.from(pkg.content,'base64').toString()).version;
+              if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(version || '')) {
+                throw new Error('Invalid production version');
+              }
+              let release = null;
+              try { ({data: release} = await github.rest.repos.getReleaseByTag(
+                {...context.repo,tag:`v${version}`})); }
+              catch (error) { if (error.status !== 404) throw error; }
+              extra = {pendingDeployments,release,
+                bundleArtifacts:artifacts.filter(artifact => artifact.name === 'floorp-release-bundle-v2')};
+            }
+            validateFinalPackageSource({run,headSha:process.env.FLOORP_HEAD,jobs,
+              prePublication:process.env.PRE_PUBLICATION === 'true',unsigned:false,...extra});
+            for (const name of ['noraneko-linux-x86_64-installer',
+                                'floorp-native-verification-linux-x86_64-v2']) {
+              const found = artifacts.filter(artifact => artifact.name === name && artifact.expired === false);
+              if (found.length !== 1 || !Number.isSafeInteger(found[0].id) || found[0].id <= 0 ||
+                  !/^sha256:[0-9a-f]{64}$/.test(found[0].digest || '') ||
+                  found[0].workflow_run?.id !== run.id || found[0].workflow_run?.head_sha !== run.head_sha) {
+                throw new Error('Missing original production Linux artifact metadata');
+              }
+            }
+
   final-package:
+    needs: l2-selection
+    if: ${{ always() && !cancelled() && (!inputs.linux_l2_blacksmith || needs.l2-selection.result == 'success') }}
     name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    outputs:
+      evidence_id: ${{ steps.evidence.outputs.artifact-id }}
+    concurrency:
+      group: ${{ inputs.linux_l2_blacksmith && format('qa3-l2-{0}-{1}-{2}', github.repository_id, inputs.package_run_id, inputs.floorp_head_sha) || format('final-qa-{0}-{1}-{2}', github.run_id, matrix.platform, matrix.arch) }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux
-            arch: x86_64
-            runner: ubuntu-24.04
-            package: noraneko-linux-x86_64-installer
-            file: floorp-linux-x86_64.tar.xz
-          - platform: mac
-            arch: x86_64
-            runner: macos-15-intel
-            package: noraneko-mac-universal-installer
-            file: floorp-macOS-universal.dmg
-          - platform: mac
-            arch: aarch64
-            runner: macos-14
-            package: noraneko-mac-universal-installer
-            file: floorp-macOS-universal.dmg
+      matrix: ${{ fromJSON(inputs.linux_l2_blacksmith && '{"include":[{"platform":"linux","arch":"x86_64","runner":"blacksmith-8vcpu-ubuntu-2404","package":"noraneko-linux-x86_64-installer","file":"floorp-linux-x86_64.tar.xz"}]}' || '{"include":[{"platform":"linux","arch":"x86_64","runner":"ubuntu-24.04","package":"noraneko-linux-x86_64-installer","file":"floorp-linux-x86_64.tar.xz"},{"platform":"mac","arch":"x86_64","runner":"macos-15-intel","package":"noraneko-mac-universal-installer","file":"floorp-macOS-universal.dmg"},{"platform":"mac","arch":"aarch64","runner":"macos-14","package":"noraneko-mac-universal-installer","file":"floorp-macOS-universal.dmg"}]}') }}
     steps:
       - name: Checkout regression probes
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
@@ -69,6 +127,7 @@ jobs:
           FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
           VALIDATION_ONLY: ${{ inputs.validation_only }}
           PRE_PUBLICATION: ${{ inputs.pre_publication }}
+          LINUX_L2: ${{ inputs.linux_l2_blacksmith }}
           PACKAGE_NAME: ${{ matrix.package }}
           TARGET_PLATFORM: ${{ matrix.platform }}
           TARGET_ARCH: ${{ matrix.arch }}
@@ -89,6 +148,9 @@ jobs:
             const runId = Number(process.env.SOURCE_RUN_ID);
             const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: runId});
             validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
+            if (process.env.LINUX_L2 === 'true' && run.run_attempt !== 1) {
+              throw new Error('Original package attempt changed before intake');
+            }
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
               {...context.repo, run_id: runId, per_page: 100});
             for (const target of ['windows/x86_64', 'linux/x86_64', 'linuxAarch64/aarch64',
@@ -159,7 +221,7 @@ jobs:
             }
             fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
-              JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
+              JSON.stringify({runId, sourceAttempt:run.run_attempt, floorpHead:run.head_sha, floorpVersion:version,
                 firefoxVersion, runtimeBuildId,
                 sourceEligibility, probeHead:context.sha,
                 platform:process.env.TARGET_PLATFORM, arch:process.env.TARGET_ARCH,
@@ -230,7 +292,7 @@ jobs:
               output.write(f'QA_BROWSER={binaries[0]}\n')
           PY
           command -v Xvfb
-          Xvfb :99 -screen 0 1280x1024x24 > "$RUNNER_TEMP/final-package-qa/xvfb.log" 2>&1 &
+          Xvfb :99 -nolisten tcp -screen 0 1280x1024x24 > "$RUNNER_TEMP/final-package-qa/xvfb.log" 2>&1 &
           for attempt in {1..50}; do
             [[ -S /tmp/.X11-unix/X99 ]] && break
             sleep 0.1
@@ -307,20 +369,40 @@ jobs:
           echo "QA_BROWSER=$RUNNER_TEMP/Floorp-final-qa.app" >> "$GITHUB_ENV"
 
       - name: Verify shipped Web Panel HTTP User-Agent behavior
+        timeout-minutes: 10
         shell: bash
+        env:
+          LINUX_L2: ${{ inputs.linux_l2_blacksmith }}
         run: |
           set -euo pipefail
-          python3 tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
+          launch=(python3)
+          if [[ "$LINUX_L2" == true ]]; then
+            mkdir -m 700 "$RUNNER_TEMP/l2-ua-home" "$RUNNER_TEMP/l2-ua-tmp"
+            launch=(env -i PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1
+              HOME="$RUNNER_TEMP/l2-ua-home" TMPDIR="$RUNNER_TEMP/l2-ua-tmp" DISPLAY="${DISPLAY:?}")
+            launch+=(python3)
+          fi
+          "${launch[@]}" tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
             --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
             --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
 
       - name: Verify shipped Fluent lookup and Flasco context-menu availability
         if: inputs.validation_only == false
+        timeout-minutes: 10
         shell: bash
+        env:
+          LINUX_L2: ${{ inputs.linux_l2_blacksmith }}
         run: |
           set -euo pipefail
-          python3 tools/test-final-context-menu.py --browser "$QA_BROWSER" \
+          launch=(python3)
+          if [[ "$LINUX_L2" == true ]]; then
+            mkdir -m 700 "$RUNNER_TEMP/l2-fluent-home" "$RUNNER_TEMP/l2-fluent-tmp"
+            launch=(env -i PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 PYTHONNOUSERSITE=1
+              HOME="$RUNNER_TEMP/l2-fluent-home" TMPDIR="$RUNNER_TEMP/l2-fluent-tmp" DISPLAY="${DISPLAY:?}")
+            launch+=(python3)
+          fi
+          "${launch[@]}" tools/test-final-context-menu.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
             --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
             --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
@@ -373,10 +455,11 @@ jobs:
               JSON.stringify({sourceEligibility:after,checkedAt:new Date().toISOString()},null,2));
 
       - name: Upload compact final package regression evidence
+        id: evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/final-package-qa/*.json
             ${{ runner.temp }}/final-package-qa/*.txt
@@ -393,5 +476,90 @@ jobs:
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/fixture-window.png
-          if-no-files-found: warn
+          if-no-files-found: error
+          retention-days: 14
+
+  linux-l2-observation:
+    name: Observe original Linux L2 outcome (no publication)
+    if: ${{ always() && inputs.linux_l2_blacksmith == true }}
+    needs: [l2-selection, final-package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retain original provider metadata and exact raw artifact
+        uses: actions/github-script@v7
+        env:
+          RAW_ARTIFACT: ${{ needs.final-package.outputs.evidence_id }}
+          PACKAGE_RUN: ${{ inputs.package_run_id }}
+          FLOORP_HEAD: ${{ inputs.floorp_head_sha }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const errors = [];
+            async function observe(name, action) {
+              try { return await action(); }
+              catch (error) { errors.push(`${name}: ${error.status || 'unavailable'}`); return null; }
+            }
+            const current = await observe('consumer', async () =>
+              (await github.rest.actions.getWorkflowRun({...context.repo,run_id:context.runId})).data);
+            const originalJobs = await observe('original consumer jobs', () => github.paginate(
+              github.rest.actions.listJobsForWorkflowRunAttempt,
+              {...context.repo,run_id:context.runId,attempt_number:1,per_page:100}));
+            const packageRunId = Number(process.env.PACKAGE_RUN);
+            const packageRun = await observe('package', async () =>
+              (await github.rest.actions.getWorkflowRun({...context.repo,run_id:packageRunId})).data);
+            const packageJobs = await observe('original package jobs', () => github.paginate(
+              github.rest.actions.listJobsForWorkflowRunAttempt,
+              {...context.repo,run_id:packageRunId,attempt_number:1,per_page:100}));
+            const packageArtifacts = await observe('package artifacts', () => github.paginate(
+              github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo,run_id:packageRunId,per_page:100}));
+            const rawId = Number(process.env.RAW_ARTIFACT);
+            const rawArtifact = Number.isSafeInteger(rawId) && rawId > 0 ?
+              await observe('raw artifact', async () =>
+                (await github.rest.actions.getArtifact({...context.repo,artifact_id:rawId})).data) : null;
+            if (!rawArtifact) errors.push('original raw artifact missing');
+            const rawMatches = rawArtifact && rawArtifact.id === rawId && rawArtifact.expired === false &&
+              Number.isSafeInteger(rawArtifact.size_in_bytes) && rawArtifact.size_in_bytes > 0 &&
+              rawArtifact.size_in_bytes <= 64 * 1024 * 1024 &&
+              rawArtifact.name === `final-package-qa-linux-x86_64-${context.runId}-1` &&
+              rawArtifact.workflow_run?.id === context.runId && rawArtifact.workflow_run?.head_sha === context.sha &&
+              /^sha256:[0-9a-f]{64}$/.test(rawArtifact.digest || '');
+            if (rawArtifact && !rawMatches) errors.push('original raw artifact identity mismatch');
+            if (rawMatches) {
+              const downloaded = await observe('raw bytes', async () =>
+                (await github.rest.actions.downloadArtifact(
+                  {...context.repo,artifact_id:rawId,archive_format:'zip'})).data);
+              if (downloaded) {
+                const bytes = Buffer.from(downloaded);
+                if (bytes.length !== rawArtifact.size_in_bytes) errors.push('original raw byte size mismatch');
+                else fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'l2-original.zip'),bytes);
+              }
+            }
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'l2-context.json'),JSON.stringify({
+              selection:{executionRunId:context.runId,executionAttempt:Number(process.env.GITHUB_RUN_ATTEMPT),
+                packageRunId,floorpHead:process.env.FLOORP_HEAD,probeHead:context.sha},
+              run:current,originalJobs,packageRun,packageJobs,packageArtifacts,
+              rawArtifact,rawArtifactIdExpected:rawId,collectionErrors:errors},null,2));
+      - name: Observe both probes without promoting publication or Agent qualification
+        if: always()
+        run: |
+          python3 -B tools/linux-l2/collect.py --context "$RUNNER_TEMP/l2-context.json" \
+            --archive "$RUNNER_TEMP/l2-original.zip" --output "$RUNNER_TEMP/l2-observation"
+      - name: Retain scoped observation including BLOCK or FAIL
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qa3-linux-l2-observation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/l2-context.json
+            ${{ runner.temp }}/l2-observation/observation.json
+          if-no-files-found: error
           retention-days: 14

@@ -1,0 +1,4 @@
+{
+  "normal": "same-profile normal restart restores active workspace, selection and visibility",
+  "workspace-exit": "same-profile workspace exit restart restores hidden tabs without duplicate startup tabs"
+}

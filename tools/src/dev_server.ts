@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import { PROJECT_ROOT, DEV_SERVER } from "./defines.ts";
+import { DEV_SERVER, PROJECT_ROOT } from "./defines.ts";
 import { Logger } from "./utils.ts";
 import { sleep } from "./async_utils.ts";
+import type { DevServerOptions, DevServerWriter } from "./dev_server_types.ts";
 
 const logger = new Logger("dev-server");
 
@@ -25,8 +26,26 @@ async function detectEarlyExit(
   ]);
 }
 
-// deno-lint-ignore no-explicit-any
-export async function run(writer: any): Promise<void> {
+export function viteServerArguments(
+  server: string,
+  options: DevServerOptions = {},
+): string[] {
+  return [
+    "run",
+    "-A",
+    "npm:vite",
+    "--port",
+    String(getPortFor(server)),
+    ...(server === "main" && options.testSourceBinding
+      ? ["--mode", "test"]
+      : []),
+  ];
+}
+
+export async function run(
+  writer: DevServerWriter,
+  options: DevServerOptions = {},
+): Promise<void> {
   logger.info("Starting Vite dev servers...");
 
   const servers = [
@@ -66,7 +85,7 @@ export async function run(writer: any): Promise<void> {
   const logsDir = path.join(PROJECT_ROOT, "logs");
   try {
     Deno.mkdirSync(logsDir, { recursive: true });
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.warn(`Failed to create logs dir ${logsDir}: ${e?.message ?? e}`);
   }
@@ -75,7 +94,7 @@ export async function run(writer: any): Promise<void> {
     const port = getPortFor(server.name);
     // Run Vite via Deno's npm compatibility (Deno-only)
     const cmd = "deno";
-    const args = ["run", "-A", "npm:vite", "--port", String(port)];
+    const args = viteServerArguments(server.name, options);
 
     const child = new Deno.Command(cmd, {
       args,
@@ -93,7 +112,7 @@ export async function run(writer: any): Promise<void> {
         create: true,
         truncate: true,
       });
-    // deno-lint-ignore no-explicit-any
+      // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       logger.warn(`Failed to open log file ${logFilePath}: ${e?.message ?? e}`);
     }
@@ -112,7 +131,7 @@ export async function run(writer: any): Promise<void> {
             await file.write(value);
           }
         }
-      // deno-lint-ignore no-explicit-any
+        // deno-lint-ignore no-explicit-any
       } catch (e: any) {
         logger.warn(`Error piping to file ${logFilePath}: ${e?.message ?? e}`);
       }
@@ -144,7 +163,9 @@ export async function run(writer: any): Promise<void> {
   if (startupFailures.length > 0) {
     shutdown();
     throw new Error(
-      `One or more Vite dev servers failed to start:\n${startupFailures.join("\n")}`,
+      `One or more Vite dev servers failed to start:\n${
+        startupFailures.join("\n")
+      }`,
     );
   }
 
@@ -152,7 +173,9 @@ export async function run(writer: any): Promise<void> {
   await sleep(3_000);
 
   try {
-    if (typeof writer?.write === "function") {
+    if (
+      writer && typeof writer === "object" && typeof writer.write === "function"
+    ) {
       // prefer direct write
       writer.write(`${DEV_SERVER.ready_string}\n`);
     } else if (typeof writer === "function") {
@@ -163,10 +186,12 @@ export async function run(writer: any): Promise<void> {
       console.log(DEV_SERVER.ready_string);
     }
 
-    if (typeof writer?.end === "function") {
+    if (
+      writer && typeof writer === "object" && typeof writer.end === "function"
+    ) {
       writer.end();
     }
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   } catch (e: any) {
     logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
   }
@@ -183,7 +208,7 @@ export function shutdown(): void {
           // ignore
         }
       }
-    // deno-lint-ignore no-explicit-any
+      // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       logger.warn(
         `Failed to stop process ${proc.child?.pid}: ${e?.message ?? e}`,

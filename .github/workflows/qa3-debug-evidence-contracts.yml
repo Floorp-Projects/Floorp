@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 Mozilla Debug evidence intake
+
+"on":
+  pull_request:
+    paths:
+      - tools/mozilla-debug-qa/**
+      - tools/linux-l2/collect.py
+      - tools/linux-package-qa/intake.py
+      - tools/linux-package-qa/producer.py
+      - tools/final-workspace-qa/prepare.py
+      - tools/qa3/source.py
+      - .github/workflows/qa3-debug-evidence-contracts.yml
+
+permissions:
+  contents: read
+
+jobs:
+  host-intake:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Read the public pinned Runtime verifier source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          repository: Floorp-Projects/Floorp-Runtime
+          ref: 7dd619742b25567e479eeda97ae071d10542ad0b
+          path: .qa3-runtime-recipe
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/workflows/scripts/qa3_mozlog.py
+            /.github/workflows/scripts/runtime_build_context.py
+            /.github/workflows/scripts/qa3_source_cohort.py
+            /.github/workflows/scripts/qa3_build_profile.py
+            /.github/workflows/scripts/qa3_xpcshell_entry.py
+            /.github/qa/hosted-linux-debug-plan.json
+      - name: Replay original-shaped exports with the pinned Mozilla parser on host
+        env:
+          QA3_RUNTIME_RECIPE: ${{ github.workspace }}/.qa3-runtime-recipe
+        run: python3.12 -B -m unittest discover -s tools/mozilla-debug-qa -p 'test_*.py' -v

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MPL-2.0
+name: QA3 Linux metadata intake (no archive or native execution)
+
+"on":
+  workflow_dispatch:
+    inputs:
+      request_json:
+        description: Run-neutral P/cohort/index request without executionRun; C is bound from active GitHub context
+        type: string
+        required: true
+      index_json:
+        description: Declared index used to select metadata; original bytes still required later
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Capture authenticated original metadata without archive requests
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+          QA3_INTAKE_REQUEST: ${{ inputs.request_json }}
+          QA3_INDEX: ${{ inputs.index_json }}
+        run: timeout --signal=TERM --kill-after=5s 150s python3 -B tools/linux-package-qa/capture.py --output "$RUNNER_TEMP/qa3-metadata"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: qa3-linux-metadata-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa3-metadata
+          if-no-files-found: error
+          retention-days: 14

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { MarionetteClient } from "./browser_connector.ts";
+import { finishBrowserCleanup, MarionetteClient } from "./browser_connector.ts";
+import type { BrowserOperationFailure } from "./browser_connector_types.ts";
 
 const ENABLED_PREF = "floorp.mousegesture.enabled";
 const CONFIG_PREF = "floorp.mousegesture.config";
@@ -117,7 +118,7 @@ async function resetPageState(): Promise<void> {
 
 async function readPageState(): Promise<PageState> {
   await client.setContext("content");
-  const raw = await client.executeScript(`
+  const raw = await client.executeScript<string>(`
     return JSON.stringify(window.__floorpRockerE2E);
   `);
   return JSON.parse(raw) as PageState;
@@ -263,6 +264,8 @@ async function assertRocker(
 
   await assertOrdinaryClick(x, y, `${label} follow-up`);
 }
+
+let failure: BrowserOperationFailure = { failed: false };
 
 try {
   originalHandle = extractHandle(
@@ -413,17 +416,27 @@ try {
     ],
     false,
   );
+} catch (error) {
+  failure = { failed: true, error };
+}
 
-  console.log("Mouse gesture rocker W3C E2E passed");
-} finally {
+const cleanupErrors: unknown[] = [];
+try {
+  await client.send("WebDriver:ReleaseActions", {});
+} catch (error) {
+  cleanupErrors.push(error);
+}
+
+if (testHandle) {
+  let selected = false;
   try {
-    await client.send("WebDriver:ReleaseActions", {});
-  } catch {
-    // The session may not own any active actions after a successful test.
+    await client.send("WebDriver:SwitchToWindow", { handle: testHandle });
+    selected = true;
+  } catch (error) {
+    cleanupErrors.push(error);
   }
-  try {
-    if (testHandle) {
-      await client.send("WebDriver:SwitchToWindow", { handle: testHandle });
+  if (selected) {
+    try {
       await client.setContext("chrome");
       await client.executeScript(`
         const enabledPref = ${JSON.stringify(ENABLED_PREF)};
@@ -445,14 +458,24 @@ try {
           delete window[stateKey];
         }
       `);
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+    try {
       await client.send("WebDriver:CloseWindow", {});
+    } catch (error) {
+      cleanupErrors.push(error);
     }
-    if (originalHandle) {
-      await client.send("WebDriver:SwitchToWindow", {
-        handle: originalHandle,
-      });
-    }
-  } finally {
-    await client.close();
   }
 }
+
+if (originalHandle) {
+  try {
+    await client.send("WebDriver:SwitchToWindow", { handle: originalHandle });
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
+}
+
+await finishBrowserCleanup(client, failure, cleanupErrors);
+console.log("Mouse gesture rocker W3C E2E passed");

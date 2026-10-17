@@ -4,7 +4,6 @@
 
 import argparse
 import base64
-import http.server
 import importlib.util
 import json
 import logging
@@ -17,6 +16,10 @@ import tempfile
 import threading
 from pathlib import Path
 
+from final_web_panel_http import (
+    EchoServer, validate_redirect_trace, validate_ua_values,
+)
+
 MOBILE_UA = (
     "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 "
@@ -24,44 +27,18 @@ MOBILE_UA = (
 )
 STATE = "window.wrappedJSObject.__floorpFinalUAProbe"
 LOGGER = logging.getLogger(__name__)
+PANEL_NAVIGATION_SCRIPT = f"""
+    const host={STATE}.main.document.getElementById('sidebar-panel-'+arguments[0]);
+    host.browsingContext.associatedWindow.floorpWebPanelContentBrowser.loadURI(
+        Services.io.newURI(arguments[1]),
+        {{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()}});
+"""
+REDIRECT_IDS = ("web-panel-ua.redirect.mobile-on", "web-panel-ua.redirect.mobile-off")
 
 
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
-
-
-class EchoServer(http.server.ThreadingHTTPServer):
-    def __init__(self):
-        super().__init__(("127.0.0.1", 0), EchoPage)
-        self.received = {}
-        self.lock = threading.Lock()
-
-    def requests(self, key):
-        with self.lock:
-            return list(self.received.get(key, []))
-
-
-class EchoPage(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        key = self.path.split("?", 1)[1] if self.path.startswith("/ua?") else None
-        if key is not None:
-            with self.server.lock:
-                self.server.received.setdefault(key, []).append(self.headers.get("User-Agent", ""))
-        body = (
-            b'<!doctype html><meta charset="utf-8"><title>Final Web Panel UA regression</title>'
-            b'<link rel="icon" href="data:,"><style>body{font:20px system-ui;padding:30px}</style>'
-            b'<h1>Web Panel HTTP regression</h1><p id="loaded">Real HTTP document loaded.</p>'
-        )
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def log_message(self, *_args):
-        pass
 
 
 def main():
@@ -117,7 +94,9 @@ def main():
         for key, value in preferences.items()
     ) + "\n")
     report = {"status": "failed", "browser": str(browser), "nativeRecord": record,
-              "profilePreferences": preferences, "checks": [], "method": "bundled UI and HTTP"}
+              "profilePreferences": preferences, "checks": [], "method": "bundled UI and HTTP",
+              "redirectChecks": [{"caseId": case_id, "status": "NOT_EXECUTED"}
+                                 for case_id in REDIRECT_IDS]}
     server = EchoServer()
     base = f"http://127.0.0.1:{server.server_port}/ua"
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -186,8 +165,9 @@ def main():
             values = h.wait_for(f"HTTP {key}", received, 35)
             actual = values[0]
             expected = expected or actual
-            require(actual and all(value == expected for value in values),
-                    f"Wrong HTTP UA for {key}: {values}")
+            server.expect_direct(key, expected, previous)
+            validate_ua_values(values, expected, key)
+            server.assert_healthy()
             return actual
 
         desktop_ua = request("normal")
@@ -245,27 +225,43 @@ def main():
                     uri:browser.currentURI?.spec, loading:!!browser.webProgress?.isLoadingDocument}};
             """, identifier)
 
-        def ready(identifier, mobile, key):
+        def ready_url(identifier, mobile, url):
             state = h.wait_for(f"panel {identifier} mobile={mobile}", lambda: (value
                 if (value := panel_state(identifier)) and value["id"] > 0 and
                 value["mobile"] == mobile and value["connected"] and not value["loading"] and
-                value["uri"] == base + "?" + key else None), 35)
+                value["uri"] == url else None), 35)
             require(state["id"] != state["outerId"], "Content browser identity equals its outer host")
             return state
 
+        def ready(identifier, mobile, key):
+            return ready_url(identifier, mobile, base + "?" + key)
+
         def navigate(identifier, key, expected):
-            client.script(f"""
-                const host={STATE}.main.document.getElementById('sidebar-panel-'+arguments[0]);
-                host.browsingContext.associatedWindow.floorpWebPanelContentBrowser.loadURI(
-                    Services.io.newURI(arguments[1]),
-                    {{triggeringPrincipal:Services.scriptSecurityManager.getSystemPrincipal()}});
-            """, identifier, base + "?" + key)
+            client.script(PANEL_NAVIGATION_SCRIPT, identifier, base + "?" + key)
             request(key, expected)
             state = ready(identifier, expected == MOBILE_UA, key)
             channel_id = client.script(f"return {STATE}.ids[arguments[0]];", base + "?" + key)
             require(channel_id == state["id"], f"HTTP channel did not identify the inner browser for {key}")
             report["checks"].append({"key": key, "browserId": state["id"], "httpBrowserId": channel_id})
             return state
+
+        def redirect_panel(identifier, case_id, expected):
+            case = server.register_redirect(case_id, expected)
+            result = next(item for item in report["redirectChecks"] if item["caseId"] == case_id)
+            result["status"] = "failed"
+            result["runNonce"] = case.nonce
+            client.script(PANEL_NAVIGATION_SCRIPT, identifier, case.url(0))
+            h.wait_for(case_id, lambda: len(server.redirect_trace(case_id)) >= 3, 35)
+            state = ready_url(identifier, expected == MOBILE_UA, case.url(2))
+            trace = server.redirect_trace(case_id)
+            validate_redirect_trace(case, trace)
+            server.assert_healthy()
+            ids = [client.script(f"return {STATE}.ids[arguments[0]];", case.url(hop))
+                   for hop in range(3)]
+            require(all(type(value) is int and value == state["id"] for value in ids),
+                    "Redirect HTTP channels did not retain the inner panel identity")
+            result.update({"status": "passed", "browserId": state["id"],
+                           "httpBrowserIds": ids, "requests": trace})
 
         def reload_panel(identifier, key, expected):
             previous = len(server.requests(key))
@@ -328,6 +324,9 @@ def main():
         ready(other_id, False, "initial-other")
         navigate(other_id, "other-panel", desktop_ua)
         navigate(panel_id, "hidden-mobile", MOBILE_UA)
+        redirect_panel(panel_id, REDIRECT_IDS[0], MOBILE_UA)
+        reload_normal("normal-after-mobile-redirect")
+        navigate(other_id, "other-after-mobile-redirect", desktop_ua)
 
         previous = len(server.requests("initial-mobile"))
         menu_command(panel_id, "changeUAWebpanelMenu")
@@ -337,6 +336,9 @@ def main():
         reload_normal("normal-while-mobile-off")
         navigate(panel_id, "disabled", desktop_ua)
         reload_panel(panel_id, "disabled", desktop_ua)
+        redirect_panel(panel_id, REDIRECT_IDS[1], desktop_ua)
+        reload_normal("normal-after-desktop-redirect")
+        navigate(other_id, "other-after-desktop-redirect", desktop_ua)
         settings = client.script("return JSON.parse(Services.prefs.getStringPref('floorp.panelSidebar.data')).data;")
         require(next(panel for panel in settings if panel["id"] == panel_id)["userAgent"] is False,
                 "Mobile OFF was not saved in real panel settings")
@@ -361,13 +363,14 @@ def main():
         settings = client.script("return JSON.parse(Services.prefs.getStringPref('floorp.panelSidebar.data')).data;")
         require(all(panel["id"] != panel_id for panel in settings), "Deleted panel remains in saved settings")
         require(host.poll() is None, "Browser exited during the HTTP regression")
+        require(all(item["status"] == "passed" for item in report["redirectChecks"]),
+                "Required redirect cases did not complete")
+        server.assert_healthy()
         report["status"] = "passed"
     except Exception as error:
         LOGGER.exception("Final package Web Panel HTTP regression failed")
         report["error"] = str(error)
     finally:
-        with server.lock:
-            report["httpRequests"] = dict(server.received)
         if client:
             try:
                 client.context("chrome")
@@ -381,9 +384,21 @@ def main():
             except (OSError, RuntimeError) as error:
                 report["cleanupError"] = str(error)
                 report["status"] = "failed"
-            client.close()
+            try:
+                client.close()
+            except (OSError, RuntimeError) as error:
+                report["sessionCleanupError"] = str(error)
+                report["status"] = "failed"
         server.shutdown()
         server.server_close()
+        report.update(server.snapshot())
+        if report["httpFixtureError"] is not None:
+            report["status"] = "failed"
+        try:
+            server.validate_registered_requests()
+        except RuntimeError as error:
+            report["redirectFinalizationError"] = str(error)
+            report["status"] = "failed"
         if host:
             if host.poll() is not None:
                 report["unexpectedHostExit"] = host.returncode
