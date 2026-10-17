@@ -1,0 +1,46 @@
+{
+  "schema": "floorp.native-objdir-evidence-index.v1",
+  "files": [
+    {
+      "name": "OBJDIR_ASSESSMENT.json",
+      "bytes": 5601,
+      "sha256": "eefb6816386cff4ee6a56c944dcbf362021c77b3dff0d4c3d15a4390bff5f271",
+      "gitBlob": "cae2d68e931d000965a61da1e2a13a70566faadb"
+    },
+    {
+      "name": "SOURCE_INDEX.json",
+      "bytes": 7055,
+      "sha256": "5e557b93cd88e9175556460a387796540ad792514129d47bcf8221154fb0ca59",
+      "gitBlob": "42dbb4ef2c2d40de711d29c186f969b1b9a45ee2"
+    },
+    {
+      "name": "CONDITIONAL_EXECUTION_PLAN.json",
+      "bytes": 7142,
+      "sha256": "289d4a29e8d7a15190a9cac3e1f06cc515a5a35e6a5e840e827d29eca5c250fc",
+      "gitBlob": "ab438d0fd1e0700230bbfcae55b214568f8cca2e"
+    },
+    {
+      "name": "INDEPENDENT_REVIEW.json",
+      "bytes": 2885,
+      "sha256": "668b51e93869d00439d2e68bdc229797c1ed45d69005ca4017eed022d143922f",
+      "gitBlob": "db32341d87e383a0c31a9562b2ae46c1976195bb"
+    },
+    {
+      "name": "PROBE_ZIP_VERIFICATION.json",
+      "bytes": 757,
+      "sha256": "2dc934f2d73c81efd6cd2c592fc81883dcbdb0170ac73dc516e9b5db2f909bf2",
+      "gitBlob": "519124502b7a176dee6b332168b4c20e34818ab0"
+    },
+    {
+      "name": "REPORT.ja.md",
+      "bytes": 5762,
+      "sha256": "93e3ec15827b0c91c74ad337e0c1faead280b1333c419db8743fe6b9349f3c69",
+      "gitBlob": "03b187094290a8d5410aae26122206406745a2de"
+    }
+  ],
+  "fileCount": 6,
+  "excludes": [
+    "EVIDENCE_INDEX.json",
+    "FINAL_HANDOFF.json"
+  ]
+}

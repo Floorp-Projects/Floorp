@@ -1,0 +1,114 @@
+{
+  "schema": "floorp.native-objdir-conditional-plan.v1",
+  "status": "NOT_EXECUTABLE_UNTIL_PREREQUISITES_PASS",
+  "currentDecision": "NO_GO",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "nativePatch": {
+    "sourceCommit": "5439b3fa38179018db013067cd12781b37476fbe",
+    "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+    "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "purpose": "Observability only, not an original-cause fix"
+  },
+  "conditionalIncremental": {
+    "targetArchitecture": "x86_64",
+    "buildHost": "same Linux cross-build host family as saved objects",
+    "runner": "standard public ubuntu runner only after actual compatibility/resource checks",
+    "maximumJobs": 1,
+    "matrix": false,
+    "maximumJobMinutes": 20,
+    "stageTimeoutSeconds": {
+      "payloadAndMetadataVerification": 300,
+      "oneHostTranslationUnit": 120,
+      "declaredOwnerArchiveUpdates": 60,
+      "isolatedXulLink": 600
+    },
+    "resourceConditions": {
+      "memoryLimitGiB": 10,
+      "memoryEnforcementValidated": false,
+      "diskBudgetFormula": "archive + expanded objdir + checkout + SDK/toolchains + output + link temporaries + existing swap + 8GiB reserve; compare against actual free space",
+      "expandedBytesKnown": false,
+      "actualRunnerFreeSpaceObserved": false,
+      "workerCount": 1,
+      "processGroupTimeoutAndChildReapingRequired": true
+    },
+    "preconditions": [
+      "Obtain and verify the required payload through an authorized supported route; verify provider digest, ZIP CRC and safe archive layout.",
+      "Verify Runtime source and every pre-existing source patch, original generated headers, backend, config.status data, mozinfo, target, deployment target, PGO/Debug/test flags and source/objdir path compatibility.",
+      "Read config.status as data; do not execute it during eligibility inspection.",
+      "Verify exact compiler, linker, plugin, Rust and SDK identities and full recorded argv; configuration must match the saved variant.",
+      "Resolve the one host-object target and every owner archive/response file from the saved backend. The exact target and argv are currently UNRESOLVED.",
+      "Verify all xul link input hashes, including Rust archives and profile-runtime dependencies; resource enforcement must be demonstrably effective.",
+      "Independently review the final exact commands, flags, inputs, outputs and time/resource limits before any execution."
+    ],
+    "permittedIfEligible": [
+      "Compile the complete real MacWebAppService.mm translation unit using the exact saved compiler argv.",
+      "Update only declared owner archives or object lists if required by the saved graph.",
+      "Link xul outside any app bundle using a verified signature-free linker invocation."
+    ],
+    "hardStops": [
+      "Any missing/changed dependency, incompatible header, compiler, SDK, flag or path",
+      "Any configure or backend regeneration",
+      "Any other TU or Rust compilation",
+      "Any dependency installation, global toolchain/settings change or swap reconfiguration",
+      "Any timestamp manipulation to suppress rebuilds",
+      "Any signing or implicit linker code-signing requirement",
+      "Any unexplained process, memory, disk or time-budget excess"
+    ],
+    "prohibitedEntrypoints": [
+      "Normal common-build/wrapper invocation as an incremental shortcut",
+      "Unrestricted mach build, mach build binaries, or fallback full build",
+      "make -n as proof that evaluating the build graph is read-only"
+    ],
+    "packageOrExistingAppModification": false,
+    "authenticationExecution": false,
+    "automaticRetry": false,
+    "automaticFullBuildFallback": false
+  },
+  "authenticationGate": {
+    "currentDecision": "NO_GO_WITH_SIGNING_EXCLUDED",
+    "publicSourceFacts": [
+      "Runtime verify-runtime-artifact.yml signs the test host copy ad hoc.",
+      "Floorp test-context-menu.py calls seal_bundle, whose test-runtime.py implementation signs a newly created Shim.app ad hoc.",
+      "Removing only the host signing step does not remove signing from the existing authentication fixture."
+    ],
+    "requirementsForAnyLaterAuthenticationRun": [
+      "A new package with the changed xul and verified native/source provenance",
+      "A permitted package/fixture signature path; do not reuse stale signature claims",
+      "Unchanged code-signature, audit PID/UID, cdHash, designated-requirement, nonce and ownership predicates",
+      "Bounded native-run evidence tied to the exact new package and attempt"
+    ],
+    "authenticationChecksRelaxed": false,
+    "existingSignedPackageProvesChangedXul": false,
+    "linkerCaveat": "LLVM19.1.7 Mach-O lld defaults to ad-hoc signing on macOS arm64/arm64e. x64 default is false but actual linker and all argv are unverified, so linking is not presumed signature-free."
+  },
+  "minimumFullAlternative": {
+    "executed": false,
+    "automaticFallback": false,
+    "scope": "One x86_64 Linux-to-macOS native dependency build: configure/generated headers plus all native and Rust inputs needed for the real host TU and xul. Preserve the normal source fixes and upstream tests for canonical Debug. No ARM/universal merge, package signing, authentication harness, release or publish.",
+    "configuration": "Use Runtime7dd plus the reviewed diagnostic patch before configure. The old non-PGO run is intended Debug by workflow inference; verify compiled Debug/test flags independently. Preserve PGO generate/use in regular pipelines; do not convert the saved profgen objdir into a non-PGO objdir.",
+    "time": {
+      "originalX64ReferenceJob": 117185970899,
+      "observedMinutes": 172.05,
+      "referenceIncludesNormalPackaging": true,
+      "planningRangeMinutes": [
+        150,
+        210
+      ],
+      "proposedHardJobCapMinutes": 210,
+      "guaranteed": false,
+      "cacheHitAssumed": false,
+      "tuOnlyConfigureExportTiming": "UNMEASURED"
+    },
+    "signingConstraint": "Before running a full compile/link recipe, prove every invoked build rule and linker is within the signature-free scope; stop if signing or an unknown post-link step is required.",
+    "cost": {
+      "publicStandardRunnerComputeUSD": 0,
+      "paidRunnerAllowed": false,
+      "artifactStorage": "Separate, depends on quota, bytes and retention; no invoice total is claimed.",
+      "storageOverAllowanceUSDPerGiBMonth": 0.25,
+      "reference": "https://docs.github.com/en/billing/concepts/product-billing/github-actions"
+    },
+    "capacity": "Published standard Ubuntu SSD is 14GB; a full Gecko build needs more space than this published baseline. Require observed free space and validated complete build/link budget before any job. Do not assume a larger disk or silently select a paid runner.",
+    "regularBuildAlternative": "A future separately authorized regular native build can apply the patch before compilation and emit compact provenance/configuration/dependency metadata. Preserve PGO profiling/optimization and existing publication gates."
+  },
+  "originalFailureCause": "UNKNOWN"
+}

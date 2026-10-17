@@ -1,0 +1,152 @@
+{
+  "schema": "floorp.native-objdir-public-source-index.v1",
+  "method": "Pinned public source read and SHA-256 calculation; source inference is distinct from archive-content validation.",
+  "files": [
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/setup-floorp.sh",
+      "gitBlob": "f0ac55081b68a0a10986b9498faf0f80c9f6752a",
+      "sha256": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/setup-mac-cross.sh",
+      "gitBlob": "45720204fef8050e4116261523b4676737bdddac",
+      "sha256": "1a95ba1c068428e9b8c8a1b2065a32c35cdce3be321f95b62fe485ecf54e107f"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/setup-rust.sh",
+      "gitBlob": "8706168decc415c49f5803a90b5f18fa8bcb467f",
+      "sha256": "318a2e995951b923ac5f15bf5f8dd9bcc9143d874e52e0e1861298429b7c937a"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/allocate-swap.sh",
+      "gitBlob": "5acc75f9f90254e1290d8324f5fb48c4f4e73262",
+      "sha256": "f28014ba791cf6eacb5dfa22f847b6cf4e07f2be61c63ac01d1be809affa071a"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/mozconfigs/macosx64-x86_64.mozconfig",
+      "gitBlob": "32a3f523456ba71deaaa067765ef711987696183",
+      "sha256": "8997298667a649ab55f413dfce16a19dbcd4d763536c1dea3ad7a4c49604ecb4"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/mozconfigs/macosx64-aarch64.mozconfig",
+      "gitBlob": "6b9435b6373a23d4fd7a8a9d11154f70fe0b3cdd",
+      "sha256": "bd2c84f30569724bf0ddeba3201c6f4ad1336c0f453a3374aef4b32826600efa"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/qa3_build_profile.py",
+      "gitBlob": "a54e3ae9006f52b51aaa0b37f736d463d536cba9",
+      "sha256": "5ad51570597e9435134c5e97754041b9bfa6e859390093990263084dbf09b624"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/record_runtime_source.py",
+      "gitBlob": "497390796a72d28916166e504a95616930e1f49f",
+      "sha256": "d505442ebeb2ed3c929b6dc8b5b42cb15191141f61215fef8cca1da8d630b47d"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/verify-runtime-artifact.yml",
+      "gitBlob": "8e7a1aa3f72d690febcd494f04c414614bfab635",
+      "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "python/mozbuild/mozbuild/controller/building.py",
+      "gitBlob": "a3f46359c8773a1c46c9b178e73f40b039e193f0",
+      "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "widget/cocoa/moz.build",
+      "gitBlob": "e315639883f7ffb447639e4a50a89362d611a26a",
+      "sha256": "209d892533eeb7eb7e72d3a3c3109bc248ebec84764cea177456459b83132613"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "widget/cocoa/appshim/shim/moz.build",
+      "gitBlob": "616e823ca83d262111330ae65994c770c67d1d4b",
+      "sha256": "a86a79f81237300ccf46f804c5e6c064034a14549862416dbccebc6e4b5e5e05"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/build-and-package.sh",
+      "gitBlob": "26924747288446db5ada3084f4354c06823998b9",
+      "sha256": "6d197665b610eabf11ac857a9758b3b2aadb03004aeae2dbb205ece79ca50555"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/common-build.yml",
+      "gitBlob": "ec902a7a04c662136a89972f42420d9a998fc0e9",
+      "sha256": "c239db5d9a1ab32de58eeb1031195efe2830067e8aa89a5636f692994d520a34"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/daily-build.yml",
+      "gitBlob": "fef8955927c395543ee6f589d3cdc37320e12ebb",
+      "sha256": "d14c6b15be1680f7c8fefa9f90823ec1b0b9135cf9a16d64e600cb5efdbed273"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/mac_pgo.yml",
+      "gitBlob": "41bbca531a004b3679c6e4984371d2ca11a2012f",
+      "sha256": "910e53d9ab5b3e64f084475be994b373e1ef7b82c7d626e3c2af8a75e572e98c"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/mac_integration.yml",
+      "gitBlob": "c0fdedbbf8f4d966eb27d8bcbdd1daca27469c5d",
+      "sha256": "7a8ff89c0096a804e28436932ee1926d536fb03a7415547f6918caee2dcb893e"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/wrapper-mac-build.yml",
+      "gitBlob": "0b17a95c7b43fd227ecc4e5a3213f86cfa19a296",
+      "sha256": "1c92a789dba7281226256ea963a8ce642131d8ef26822348eeae64e845cdd862"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp",
+      "ref": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "path": "tools/app-shim/test-runtime.py",
+      "gitBlob": "de54988b914645657b11222c6a6141f4f1380c2d",
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp",
+      "ref": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "path": "tools/app-shim/test-context-menu.py",
+      "gitBlob": "835bb30ecfb16c05a592ad03d8f0310a0865116d",
+      "sha256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911"
+    }
+  ],
+  "references": [
+    "https://docs.github.com/en/actions/reference/runners/github-hosted-runners",
+    "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "https://firefox-source-docs.mozilla.org/setup/macos_build.html",
+    "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.7/lld/MachO/Driver.cpp"
+  ]
+}

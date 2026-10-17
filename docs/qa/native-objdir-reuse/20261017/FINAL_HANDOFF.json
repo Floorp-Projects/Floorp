@@ -1,0 +1,55 @@
+{
+  "schema": "floorp.native-objdir-handoff.v1",
+  "verdict": "NO_GO_CURRENT_INCREMENTAL_EXECUTION",
+  "documentPublication": "GO",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "floorpDocumentationBase": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+  "candidateRun": 38885821823,
+  "candidateArtifacts": [
+    12047907028,
+    12044965771
+  ],
+  "candidateContentsOrCRCVerified": false,
+  "originalRun": 38963901545,
+  "originalFailureCause": "UNKNOWN",
+  "smallProofZip": {
+    "artifact": 12089125335,
+    "run": 38999883111,
+    "attempt": 1,
+    "bytesSHA256AndCRCVerified": true,
+    "parsedReportMatchesPinnedJobLog": true
+  },
+  "indexSHA256": "a45a95fb610c5be4b672259e07cb50e99c21ca807f2c6fa6aba6ec097c47613e",
+  "indexedFiles": 6,
+  "totalEvidenceFiles": 8,
+  "unresolvedDocumentReviewFindings": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "incrementalBuildStarted": false,
+  "fullBuildStarted": false,
+  "newStandaloneMockTests": false,
+  "newCIRequested": false,
+  "signing": false,
+  "merge": false,
+  "publishProduct": false,
+  "settingsOrCredentialChanges": false,
+  "authenticationExecuted": false,
+  "completeHostTUCompiled": false,
+  "xulLinked": false,
+  "compiledDebugOrProductQualification": false,
+  "minimumAlternative": {
+    "architecture": "x86_64 only",
+    "scope": "configure/generated headers and real host TU/xul native and Rust dependencies, with no package signing or authentication harness",
+    "referenceMinutes": 172.05,
+    "planningRangeMinutes": [
+      150,
+      210
+    ],
+    "proposedJobCapMinutes": 210,
+    "publicStandardComputeUSD": 0,
+    "artifactStorageCost": "separate, not verified",
+    "executed": false
+  }
+}

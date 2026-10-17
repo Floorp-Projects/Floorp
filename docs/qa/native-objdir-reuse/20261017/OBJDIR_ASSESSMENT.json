@@ -1,0 +1,132 @@
+{
+  "schema": "floorp.native-objdir-assessment.v1",
+  "verdict": "NO_GO_CURRENT_INCREMENTAL_EXECUTION",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "metadataSource": {
+    "runId": 38885821823,
+    "attempt": 1,
+    "event": "schedule",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-16T10:13:42Z"
+  },
+  "candidates": [
+    {
+      "artifactId": 12047907028,
+      "name": "floorp-mac-x86_64-build-with-profgen",
+      "providerZipBytes": 5470281993,
+      "providerZipDigest": "sha256:de764486eb0cbcbde256fcdce4b666408a6f4badfa1e9b5f21aad121976d911d",
+      "expiredAtMetadataRead": false,
+      "expiresAt": "2027-01-14T10:13:43Z",
+      "runId": 38885821823,
+      "runAttempt": 1,
+      "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "targetArchitectureFromPublicJobAndPackagingGraph": "x86_64",
+      "buildHostFromPinnedWorkflow": "Linux cross build",
+      "stageFromPinnedWorkflow": "PGO generate",
+      "intendedDebugFromScheduledWorkflowInference": false,
+      "compiledDebugState": "UNVERIFIED",
+      "archiveContentIntentFromPinnedPackager": "whole objdir, unlike non-generate packages which save dist only",
+      "actualArchiveContentsVerified": false,
+      "consumerZipBytesVerified": false,
+      "consumerZipCRCVerified": false,
+      "generatedHeadersVerified": false,
+      "configurationVerified": false,
+      "actualToolchainVerified": false,
+      "linkInputGraphVerified": false,
+      "expandedBytesVerified": false,
+      "incrementalCompatibility": "UNKNOWN"
+    },
+    {
+      "artifactId": 12044965771,
+      "name": "floorp-mac-aarch64-build-with-profgen",
+      "providerZipBytes": 5482659552,
+      "providerZipDigest": "sha256:91a07ca4a23ebcd8907528082ce59e126a86b1e06005af9ab6f507ab7206d650",
+      "expiredAtMetadataRead": false,
+      "expiresAt": "2027-01-14T10:13:43Z",
+      "runId": 38885821823,
+      "runAttempt": 1,
+      "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "targetArchitectureFromPublicJobAndPackagingGraph": "aarch64",
+      "buildHostFromPinnedWorkflow": "Linux cross build",
+      "stageFromPinnedWorkflow": "PGO generate",
+      "intendedDebugFromScheduledWorkflowInference": false,
+      "compiledDebugState": "UNVERIFIED",
+      "archiveContentIntentFromPinnedPackager": "whole objdir, unlike non-generate packages which save dist only",
+      "actualArchiveContentsVerified": false,
+      "consumerZipBytesVerified": false,
+      "consumerZipCRCVerified": false,
+      "generatedHeadersVerified": false,
+      "configurationVerified": false,
+      "actualToolchainVerified": false,
+      "linkInputGraphVerified": false,
+      "expandedBytesVerified": false,
+      "incrementalCompatibility": "UNKNOWN"
+    }
+  ],
+  "originalComparison": {
+    "runId": 38963901545,
+    "attempt": 1,
+    "event": "schedule",
+    "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "conclusion": "failure",
+    "pgoFromJobGraph": false,
+    "intendedDebugFromScheduledWorkflowInference": true,
+    "compiledDebugState": "UNVERIFIED",
+    "packageContentIntent": "dist only; no whole non-PGO objdir saved by this packager"
+  },
+  "inferenceLimit": "Intended Debug values are inferred from the pinned daily workflow schedule expressions, schedule events and PGO/non-PGO job graphs; they are not observations of compiled mozinfo or original event input bytes.",
+  "sdkObservations": [
+    {
+      "runId": 38885821823,
+      "jobId": 116923264296,
+      "artifactId": 12039473382,
+      "providerZipBytes": 105082683,
+      "providerZipDigest": "sha256:24aad0211e078ce6e47a5b358c55d0cc27ee80bf4044b8e2ece042b2e5e13435",
+      "sdkVersionFromJobLog": "26.5",
+      "xcodeVersionFromJobLog": "26.6",
+      "sdkArchiveBytesVerified": false
+    },
+    {
+      "runId": 38963901545,
+      "jobId": 117185596422,
+      "artifactId": 12074136738,
+      "providerZipBytes": 105082683,
+      "providerZipDigest": "sha256:bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+      "sdkVersionFromJobLog": "26.5",
+      "xcodeVersionFromJobLog": "26.6",
+      "sdkArchiveBytesVerified": false
+    }
+  ],
+  "sdkTreeEquality": "UNPROVEN; equal version and size do not establish equal content",
+  "stageCompatibility": "The available whole-objdir candidates are PGO-generate objects, whereas the old failed run was non-PGO. Do not silently change mozconfig or treat the variants as interchangeable.",
+  "knownSourceRequirements": {
+    "hostTranslationUnit": "widget/cocoa/appshim/MacWebAppService.mm",
+    "registeredBy": "widget/cocoa/moz.build",
+    "unified": false,
+    "objcArc": true,
+    "finalLibrary": "xul",
+    "standaloneShimDoesNotContainHostTU": true,
+    "actualObjectTarget": "UNRESOLVED until actual saved backend and dependency files are verified"
+  },
+  "unverifiedDependencies": [
+    "config.status/config.statusd and config_status_deps.in",
+    "mozinfo.json/config/autoconf.mk and backend inputs",
+    "generated dist/include headers and their source binding",
+    "compiler/linker/plugin/Rust identities and full flags",
+    "SDK and deployment target",
+    "source/object absolute-path and timestamp compatibility",
+    "host object owner archive, if any",
+    "xul response files, all objects and gkrust inputs",
+    "expanded archive and link temporary storage budgets"
+  ],
+  "execution": {
+    "incrementalBuildStarted": false,
+    "fullBuildStarted": false,
+    "newStandaloneMockTests": false,
+    "signing": false,
+    "publishing": false,
+    "settingsChanges": false
+  },
+  "originalFailureCause": "UNKNOWN"
+}

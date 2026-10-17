@@ -1,0 +1,55 @@
+{
+  "schema": "floorp.native-objdir-independent-public-review.v1",
+  "recordKind": "Public source and validation-condition summary; acquisition operational notes are excluded.",
+  "verdict": "NO_GO_CURRENT_INCREMENTAL_EXECUTION",
+  "reviewedRuntimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "verifiedSourceFacts": [
+    "Only PGO-generate Mac packages are intended to save the whole objdir; other packages save dist.",
+    "Saved candidate build host is Linux cross compilation.",
+    "Mac profiling consumes the saved bundle but does not recompile the host service.",
+    "The real host TU is non-unified, ARC, and belongs to xul.",
+    "Partial-target mach invocation may configure or regenerate the backend.",
+    "The existing Darwin authentication workflow and Shim fixture perform ad-hoc signing."
+  ],
+  "blockingValidationGaps": [
+    "Actual candidate archive/source/config/header/toolchain/dependency/link-input compatibility is not verified.",
+    "Expanded archive and actual runner capacity budgets are not verified.",
+    "Full target/argv graph has not been resolved.",
+    "Existing authentication path requires signing outside the reviewed signature-free scope."
+  ],
+  "requiredStops": [
+    "No broad build graph or configure/backend regeneration",
+    "No extra TU/Rust compile or dependency installation",
+    "No signature or authentication-predicate relaxation",
+    "No automatic full-build fallback"
+  ],
+  "reviewerActions": {
+    "publicSourceAndDocumentationRead": true,
+    "artifactPayloadDownload": false,
+    "compileOrTests": false,
+    "signing": false,
+    "sourceMutation": false,
+    "ciMutation": false
+  },
+  "originalFailureCause": "UNKNOWN",
+  "references": [
+    "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/scripts/build-and-package.sh",
+    "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/python/mozbuild/mozbuild/controller/building.py",
+    "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/verify-runtime-artifact.yml",
+    "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py",
+    "https://github.com/llvm/llvm-project/blob/llvmorg-19.1.7/lld/MachO/Driver.cpp"
+  ],
+  "documentReview": {
+    "verdict": "GO_PUBLIC_DOCUMENTS",
+    "executionVerdict": "NO_GO",
+    "unresolvedFindings": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    },
+    "resolvedP2": "The report now uses intended debug=false / PGO generate, without inferring Release configuration.",
+    "verifiedReportSHA256": "93e3ec15827b0c91c74ad337e0c1faead280b1333c419db8743fe6b9349f3c69",
+    "allTwentyPinnedSourceHashesIndependentlyMatched": true,
+    "consumerZipBytesIndependentlyReverified": false
+  }
+}

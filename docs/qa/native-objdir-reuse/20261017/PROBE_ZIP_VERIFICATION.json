@@ -1,0 +1,21 @@
+{
+  "artifactId": 12089125335,
+  "runId": 38999883111,
+  "attempt": 1,
+  "status": "passed",
+  "zipBytes": 1248,
+  "zipSHA256": "39c850fa15d7d61b8a8ca01470a2f5e301063b09f5cf3e0381304d3f05677ffe",
+  "zipDigestMatchesProvider": true,
+  "crcVerified": true,
+  "safeSingleEntry": true,
+  "entryName": "cocoa-probe-result.json",
+  "entryBytes": 2027,
+  "entrySHA256": "ea455d1104cb2f20bafe1c6e3c86b1ebb2d72c3648152c8eb661f74fcdd6d525",
+  "parsedArtifactReportEqualsPinnedJobLogReport": true,
+  "fixture": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "runtimeHead": "d49872d2a8d70884d670fc9132728944baa4147b",
+  "completeHostTranslationUnitCompiled": false,
+  "xulLinked": false,
+  "originalFailureCauseResolved": false,
+  "productOrDebugQualification": false
+}
