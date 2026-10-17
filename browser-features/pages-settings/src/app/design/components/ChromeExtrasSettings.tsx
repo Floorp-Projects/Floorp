@@ -167,7 +167,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.autohide.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="autohide-tab">
                 {t("design.chrome-extras.autohide.tab")}
@@ -248,7 +248,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.hidden.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="hidden-tab-icon">
                 {t("design.chrome-extras.hidden.tabIcon")}
@@ -427,7 +427,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.icon.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="icon-disabled">
                 {t("design.chrome-extras.icon.disabled")}
@@ -461,7 +461,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.centered.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="centered-tab">
                 {t("design.chrome-extras.centered.tab")}
@@ -506,7 +506,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.urlView.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="url-view-move-icon-to-left">
                 {t("design.chrome-extras.urlView.moveIconToLeft")}
@@ -560,7 +560,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.tabbar.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="tabbar-as-titlebar">
                 {t("design.chrome-extras.tabbar.asTitlebar")}
@@ -594,7 +594,7 @@ export function ChromeExtrasSettings({ onClose }: ChromeExtrasSettingsProps) {
               {t("design.chrome-extras.sidebar.title")}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <label htmlFor="sidebar-overlap">
                 {t("design.chrome-extras.sidebar.overlap")}
