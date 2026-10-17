@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "observedAtUTC": "2026-10-17 14:33:03 UTC",
+  "currentExecution": {
+    "atUTC": "2026-10-17 14:33:03 UTC",
+    "runId": 39040773718,
+    "status": "in_progress",
+    "conclusion": null,
+    "attempt": 1,
+    "job": {
+      "id": 117419664787,
+      "status": "in_progress",
+      "conclusion": null,
+      "startedAt": "2026-10-17T14:26:44Z",
+      "completedAt": null,
+      "runner": "GitHub Actions 1000045675",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "inProgressSteps": [
+        "Compile full host and XUL then authenticate native Shim"
+      ],
+      "failedSteps": []
+    }
+  },
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39040773718",
+  "branch": "codex/mac-native-nonpgo-recovery4-20261017",
+  "executionCommit": "9b561d7df526a2cc40d0f4737d141039c713b6df",
+  "executionTree": "6fcd778892de302da67a38edadf47b7125ee5aa8",
+  "fixture": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
+  "codeManifestSHA256": "ffa55267577f69d50cb845eb6040618e18e35559137ea400c7171be80f8264bd",
+  "codeReviewSHA256": "93e6ab2fdd1afd9fccbc50945850bd238a499156fa810498f57a5e883a349558",
+  "routeReviewSHA256": "f687d18b3d0b71e6ca7c664bbe484453c0e19023c7acbd8e921800e166610283",
+  "seal": "ea42076caaf35c8ad98274c5d9f519e2db361c5c",
+  "launchRecordCommit": "f2b7d020b5c1f8e73ec1b27e6803e0968aef0d30",
+  "actualNativeCounterPreflight": {
+    "status": "passed",
+    "startedAt": "2026-10-17T14:26:55Z",
+    "completedAt": "2026-10-17T14:26:59Z",
+    "evidence": "Completed successful required Actions step; numeric log receipt pending terminal log retrieval."
+  },
+  "workspace": {
+    "readRequest": "timed-out-after-18-seconds",
+    "patchStateRequest": "stopped-while-unresponsive",
+    "recoveryConfirmed": false,
+    "codeAtRisk": false,
+    "reason": "All13 frozen code files, independent receipts and route were published and provider readback matched before activation. Latest launch record is published. Only the local scratch resume-file write outcome is unconfirmed."
+  },
+  "savedCodeProviderFiles": 13,
+  "priorFailedRuns": [
+    39016143725,
+    39018277446,
+    39020119793,
+    39037341780
+  ],
+  "cohorts": {
+    "39020119793": "Full build/hostTU/XUL/adHoc copy PASS; native startup guard observed launcher status, actual browser exit UNKNOWN.",
+    "39037341780": "Full build interrupted by unavailable ps state at803.59s; native NOT_RUN."
+  },
+  "scope": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "attempt": 1,
+    "platformMinutes": 360,
+    "humanCumulativeLimitMinutes": null,
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "productQualification": false
+  },
+  "monitoring": {
+    "ownUntilTerminal": true,
+    "pollMinutes": 5,
+    "commentary": "phase/failure/completion only",
+    "noAutomaticRerunOrBranchRepush": true,
+    "noElapsedTimeCancellation": true
+  },
+  "originalDisconnectCause": "UNKNOWN"
+}
