@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "createdAtUTC": "2026-10-17T09:08:50.494791+00:00",
+  "status": "SEALED_PAYLOAD_AWAITING_AUTHORIZED_INITIAL_PUSH",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+    "tree": "b90d7c6f6e7daa6a6cfe50fc41ac55ba9e5f6837"
+  },
+  "execution": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "d86e63bc621d647efd8389fbf226f841ebb52501",
+    "tree": "241e516eb4f1c537842485403d329c7ce6e8c130",
+    "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "branch": "codex/mac-native-nonpgo-recovery2-20261017",
+    "initialPushOnly": true,
+    "attempt": 1,
+    "expectedJobs": 1
+  },
+  "files": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_CODE_HASHES.json",
+      "bytes": 1971,
+      "sha256": "be8df96187d1830ec5ac02e1d9c74e48b0f855d6de5d5a4b03ecb9fbbeb7fbdf"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_INDEPENDENT_REVIEW.json",
+      "bytes": 6491,
+      "sha256": "9c21bb8bfc6286c68aa9a826ac98e1089970e1b82e983186fabc040546d04e4d"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_PREPARATION.json",
+      "bytes": 4295,
+      "sha256": "828cf91b51bbab2c16f83942347ce2e67c0ae8524826823b92b3ea1f6b5d037b"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_EXECUTION_RESULT.json",
+      "bytes": 6430,
+      "sha256": "a8322187a079337e46da5fca83db02a7cd84e55f969daf20e98c9ee2c23b9d6b"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_WORKFLOW.yml.disabled",
+      "bytes": 5693,
+      "sha256": "2e03547cd12a7c5414199661db04c19fff09ca5c36b0cf08da1a45fcc5e17409"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_HANDOFF.ja.md",
+      "bytes": 2873,
+      "sha256": "a29c24cf1edd8c5bc2985c17184110dc86f186c0d0151cdd2df79dda9633539d"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_HELPER_READBACK.json",
+      "bytes": 3182,
+      "sha256": "c4dc9f30df402ccc7b81b188c4e0e85c9c1fd5eb63f6bcb66aadeac8ad0e4b73"
+    },
+    {
+      "path": ".github/patches/floorp-runtime/native-diagnostics/isolated-intel-nonpgo-recovery2-workflow.patch",
+      "bytes": 6013,
+      "sha256": "9ed218d935a7f0c6b233b96300817c716b27d66b6e265a9fb94f14504cbb5e51"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_ROUTE_REVIEW.json",
+      "bytes": 5988,
+      "sha256": "4b1480db096dfec506ebe86f765b2058fdb408a158ff967cf3df26b9704fea34"
+    }
+  ],
+  "historicalFailures": [
+    39016143725,
+    39018277446
+  ],
+  "productQualification": false,
+  "newActionsArtifacts": 0
+}

@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17T09:08:52Z",
+  "decision": "GO_FIXED_RECOVERY2_ROUTE",
+  "findings": [],
+  "scope": "Final immutable source/caller binding and pre-activation state only; the focused code review and 28 passing portable guards are retained.",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+    "tree": "b90d7c6f6e7daa6a6cfe50fc41ac55ba9e5f6837",
+    "parent": "8f1ddedbbf51343905fac2bfc73fe5282bf778b3",
+    "changedFiles": 9,
+    "commitTreeAndParentIndependentlyRead": true,
+    "codeManifestSHA256": "be8df96187d1830ec5ac02e1d9c74e48b0f855d6de5d5a4b03ecb9fbbeb7fbdf",
+    "codeReviewSHA256": "9c21bb8bfc6286c68aa9a826ac98e1089970e1b82e983186fabc040546d04e4d",
+    "parentReadbackRecord": {
+      "path": "records/RECOVERY2_HELPER_READBACK.json",
+      "sha256": "c4dc9f30df402ccc7b81b188c4e0e85c9c1fd5eb63f6bcb66aadeac8ad0e4b73",
+      "all11LocalBytesHashesAndGitBlobsMatchRecordedProviderReadback": true
+    },
+    "independentlyReadProviderChangedHelperGitBlobs": [
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "gitBlob": "565e416a4c30f024b781626cb6f8bc4b7e07bd05",
+        "providerGitBlob": "565e416a4c30f024b781626cb6f8bc4b7e07bd05",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "gitBlob": "304f3c0af73f74d58f19e45245d909eab5be177a",
+        "providerGitBlob": "304f3c0af73f74d58f19e45245d909eab5be177a",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "gitBlob": "ddf4db84cfe4d2fc65127169027fd522143f8ec5",
+        "providerGitBlob": "ddf4db84cfe4d2fc65127169027fd522143f8ec5",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "gitBlob": "414d38f6191df1893aaee8e2d059f9f56465d2ec",
+        "providerGitBlob": "414d38f6191df1893aaee8e2d059f9f56465d2ec",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/workflow.yml.in",
+        "gitBlob": "18c6bcc1223822527dca74867f77b634a1a81b4d",
+        "providerGitBlob": "18c6bcc1223822527dca74867f77b634a1a81b4d",
+        "match": true
+      }
+    ],
+    "providerTemplateContentRead": true
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "d86e63bc621d647efd8389fbf226f841ebb52501",
+    "tree": "241e516eb4f1c537842485403d329c7ce6e8c130",
+    "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "onlyChange": {
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "status": "added",
+      "gitBlob": "6b4bdfd36737004b59b4112057a3fb28d147a0ff"
+    },
+    "providerCommitAndWorkflowContentIndependentlyRead": true,
+    "providerWorkflowEqualsRenderedProviderTemplate": true,
+    "localRenderedGitBlobEqualsProvider": true
+  },
+  "delivery": {
+    "templateSHA256": "d8e5ef6a5e8388373bfab7c566a64cbbce84f5017f8d2ca48ca671b37ae1b2bc",
+    "renderedWorkflowSHA256": "2e03547cd12a7c5414199661db04c19fff09ca5c36b0cf08da1a45fcc5e17409",
+    "patchSHA256": "9ed218d935a7f0c6b233b96300817c716b27d66b6e265a9fb94f14504cbb5e51",
+    "placeholderCount": 1,
+    "onlyRenderChange": "__FLOORP_FIXTURE_SHA__ -> 518a54ea05e406f6e244a6a7d465f9118fe3c7e1",
+    "patchNewFileBytesEqualRenderedWorkflow": true,
+    "activeFloorpWorkflowAdded": false
+  },
+  "controls": {
+    "branch": "codex/mac-native-nonpgo-recovery2-20261017",
+    "event": "initial exact-branch push",
+    "beforeSHA": "0000000000000000000000000000000000000000",
+    "attempt": 1,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "platformJobMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "fixedSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixedHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "earlyPreflightBeforeRuntimeSourceAndSDK": true,
+    "preflightRequiresObservedCompleteSample": true,
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "productSigning": false,
+    "productPublication": false,
+    "newCredentials": false,
+    "osProtectionChanges": false
+  },
+  "freshChecks": {
+    "runtimeRecovery2BranchAbsent": true,
+    "runtimeRecovery2Runs": 0,
+    "previousRecoveryRun": {
+      "id": 39018277446,
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 1,
+      "head": "8c7e8b009020735a3d9fe4f477bc7d1ca0b7b685"
+    },
+    "runtimeDefaultHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "floorpSourceBranchRuns": 0,
+    "floorpMainToFixture": {
+      "base": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+      "changedFiles": 42,
+      "activeWorkflowChanges": 0
+    },
+    "existingWorkflowInventory": "Pinned Runtime 7dd existing 24-workflow inventory was re-evaluated by parent with zero matching push filters and no workflow_run trigger. The immutable inventory was not downloaded again for this final pin check."
+  },
+  "sdk": {
+    "artifact": 12074136738,
+    "expectedZipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "expiresObserved": "2026-10-17T20:41:19Z",
+    "availability": "Parent supported-metadata preflight reports unexpired and expected digest; more than six hours remain at this review time.",
+    "independentPayloadAcquisition": false,
+    "executionGate": "The existing fixed SDK reader rechecks source/digest/expiry margin and stops on failure; no substitute is authorized by this receipt."
+  },
+  "limitations": {
+    "darwinMonitorPreflightExecuted": false,
+    "hostTUCompiled": false,
+    "xulLinked": false,
+    "nativeAuthenticationValidated": false,
+    "actualPriorFailedMonitorField": "UNKNOWN_NOT_RECORDED",
+    "originalTimeoutCause": "UNKNOWN",
+    "productQualification": false
+  },
+  "reviewerActions": {
+    "newCI": 0,
+    "dispatch": false,
+    "rerun": false,
+    "branchMutation": false,
+    "sourceEdits": false,
+    "sdkPayloadAcquisition": false,
+    "onlyOutput": "records/RECOVERY2_ROUTE_REVIEW.json"
+  }
+}
