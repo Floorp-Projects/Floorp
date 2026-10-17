@@ -143,7 +143,7 @@ def run(work, output):
         stage = "compile"
         code, diagnostics = capture([compiler.strip(), *flags, "-isysroot", sysroot.strip(), "-I", str(include),
                                     str(generated / "Probe.mm"), str(include / "Protocol.mm"),
-                                    "-framework", "Foundation", "-o", str(generated / "probe")], work, 90)
+                                    "-framework", "Foundation", "-framework", "CoreFoundation", "-o", str(generated / "probe")], work, 90)
         report["compileExitCode"] = code
         report["compilerMarkers"] = [s for s in ["error:", "warning:", "not found", "undeclared identifier",
                                                  "cannot initialize", "no member", "unused"] if s in diagnostics]
