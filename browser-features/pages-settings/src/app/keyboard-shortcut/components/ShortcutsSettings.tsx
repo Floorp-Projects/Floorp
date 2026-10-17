@@ -1,4 +1,5 @@
 import styles from "@/components/common/settings-sections.module.css";
+import shortcutStyles from "./keyboard-shortcut.module.css";
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,7 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/card.tsx";
-import { Keyboard, Search } from "lucide-react";
+import { ArrowDown, Keyboard, LockKeyhole, Search } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
 import { keySync } from "../../../lib/rpc/keysync.ts";
 import { formatModifierSymbol } from "../platform.ts";
@@ -179,7 +180,8 @@ export const ShortcutsSettings = ({
           </span>
         )}
         {entry.internal && (
-          <span className="badge badge-error badge-outline badge-sm">
+          <span className={shortcutStyles.readOnlyStatus}>
+            <LockKeyhole aria-hidden="true" />
             {t("keyboardShortcut.firefoxKeyInternal")}
           </span>
         )}
@@ -284,8 +286,17 @@ export const ShortcutsSettings = ({
       tabIndex={-1}
     >
       <tr>
-        <th colSpan={4}>
-          {t(`keyboardShortcut.categories.${category.id}`)}
+        <th className={shortcutStyles.categoryHeader} colSpan={4}>
+          <span className={shortcutStyles.categoryHeaderInner}>
+            <span
+              className={shortcutStyles.categoryMarker}
+              aria-hidden="true"
+            />
+            {t(`keyboardShortcut.categories.${category.id}`)}
+            <span className={shortcutStyles.categoryCount}>
+              {category.actions.length}
+            </span>
+          </span>
         </th>
       </tr>
       {category.actions.map(renderRow)}
@@ -315,7 +326,9 @@ export const ShortcutsSettings = ({
             type="search"
             className="min-w-0 grow"
             aria-label={t("keyboardShortcut.searchLabel")}
-            placeholder={t("keyboardShortcut.searchPlaceholder")}
+            placeholder={t("keyboardShortcut.searchPlaceholder", {
+              defaultValue: "Search shortcuts",
+            })}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.currentTarget.value)}
           />
@@ -325,12 +338,12 @@ export const ShortcutsSettings = ({
             aria-label={t("keyboardShortcut.categoryContents")}
             className="mb-4"
           >
-            <ul className="flex flex-wrap gap-2">
+            <ul className={shortcutStyles.categoryNav}>
               {visibleCategories.map((category) => (
                 <li key={category.id}>
                   <button
                     type="button"
-                    className="text-sm text-[var(--link-text-color)] hover:underline"
+                    className={shortcutStyles.categoryJumpButton}
                     onClick={() => {
                       document
                         .getElementById(
@@ -342,7 +355,20 @@ export const ShortcutsSettings = ({
                         });
                     }}
                   >
-                    {t(`keyboardShortcut.categories.${category.id}`)}
+                    <span
+                      className={shortcutStyles.categoryMarker}
+                      aria-hidden="true"
+                    />
+                    <span className={shortcutStyles.categoryName}>
+                      {t(`keyboardShortcut.categories.${category.id}`)}
+                    </span>
+                    <span className={shortcutStyles.categoryCount}>
+                      {category.actions.length}
+                    </span>
+                    <ArrowDown
+                      className={shortcutStyles.categoryArrow}
+                      aria-hidden="true"
+                    />
                   </button>
                 </li>
               ))}
