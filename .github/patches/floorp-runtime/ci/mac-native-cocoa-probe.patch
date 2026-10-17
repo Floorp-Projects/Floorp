@@ -1,6 +1,6 @@
 diff --git a/.github/workflows/mac-native-cocoa-probe.yml b/.github/workflows/mac-native-cocoa-probe.yml
 new file mode 100644
-index 0000000..ebac018
+index 0000000..7c290e5
 --- /dev/null
 +++ b/.github/workflows/mac-native-cocoa-probe.yml
 @@ -0,0 +1,63 @@
@@ -32,7 +32,7 @@ index 0000000..ebac018
 +      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 +        with:
 +          repository: Floorp-Projects/Floorp
-+          ref: 8ad1a34400d6890b54098abb32c78ba4efb14b13
++          ref: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
 +          path: probe-fixture
 +          persist-credentials: false
 +          sparse-checkout-cone-mode: false
@@ -56,7 +56,7 @@ index 0000000..ebac018
 +          proof = json.loads(data)
 +          assert proof.get('scope') == 'source-derived-foundation-smoke', 'proof-scope'
 +          print('COCOA_PROBE_RESULT_BEGIN')
-+          print(json.dumps({'fixtureCommit': '8ad1a34400d6890b54098abb32c78ba4efb14b13', 'report': proof}, sort_keys=True))
++          print(json.dumps({'fixtureCommit': 'cbe45a7d7480d713b2c40a9ed348420126e6ccb0', 'report': proof}, sort_keys=True))
 +          print('COCOA_PROBE_RESULT_END')
 +          PY
 +      - name: Save bounded proof

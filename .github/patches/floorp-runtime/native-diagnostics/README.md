@@ -35,7 +35,7 @@ push is an execution request; record its distinct purpose before publishing.
 
 The published execution route is the Runtime companion workflow maintained in
 `../ci/mac-native-cocoa-probe.patch`, applied to Runtime7dd. It checks out the
-immutable Floorp fixture `8ad1a34400d6890b54098abb32c78ba4efb14b13`.
+immutable Floorp fixture `cbe45a7d7480d713b2c40a9ed348420126e6ccb0`.
 The Runtime branch is `codex/mac-native-cocoa-probe-20261017`; the Floorp source
 branch is `codex/mac-native-cocoa-probe-source-20261017` and starts no job.
 The draft Floorp execution workflow is omitted from the published source tree.
