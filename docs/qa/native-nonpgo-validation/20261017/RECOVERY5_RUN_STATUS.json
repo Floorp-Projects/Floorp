@@ -1,60 +1,48 @@
 {
-  "schema": 1,
-  "observed": {
-    "atUTC": "2026-10-17T15:44:23.290005+00:00",
-    "run": 39045848018,
-    "status": "in_progress",
-    "conclusion": null,
-    "attempt": 1,
-    "job": {
-      "id": 117434289619,
-      "status": "in_progress",
-      "conclusion": null,
-      "labels": [
-        "macos-15-intel"
-      ],
-      "active": [
-        "Compile full host and XUL then authenticate native Shim"
-      ],
-      "completed": [
-        {
-          "name": "Set up job",
-          "conclusion": "success"
-        },
-        {
-          "name": "Bound the initial authorized run",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout immutable preparation fixture",
-          "conclusion": "success"
-        },
-        {
-          "name": "Verify owned process sampling before source checkout",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout immutable Runtime source",
-          "conclusion": "success"
-        },
-        {
-          "name": "Checkout immutable native harness",
-          "conclusion": "success"
-        },
-        {
-          "name": "Acquire only the existing fixed SDK",
-          "conclusion": "success"
-        }
-      ]
-    }
+  "deniedTaskQuery": {
+    "attempts": 3,
+    "bytes": 0,
+    "errno": 1,
+    "expectedBytes": 232,
+    "processIdentity": "UNKNOWN",
+    "sameOpaquePIDTag": true
+  },
+  "firstFailure": {
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 20599.72,
+    "stage": "native-suite"
+  },
+  "fullHostAndXULBuild": "PASS_THIS_RUN",
+  "groupCleanup": "NOT_VERIFIED_PERMISSION_ERROR",
+  "job": {
+    "completedAt": "2026-10-17T21:21:35Z",
+    "conclusion": "failure",
+    "id": 117434289619,
+    "status": "completed"
+  },
+  "mandatoryMacPreflight": "PASS",
+  "manualCancellation": false,
+  "nativeAuthentication": "NOT_VERIFIED",
+  "nativeEvidenceCoverage": "RECOVERY5_NATIVE_EVIDENCE_COVERAGE.json",
+  "newArtifacts": 0,
+  "observedAtUTC": "2026-10-17T21:23:34.798694+00:00",
+  "packageAndAdHocCopy": "PASS",
+  "reruns": 0,
+  "result": "FAILED_NOT_QUALIFIED",
+  "run": {
+    "conclusion": "failure",
+    "created_at": "2026-10-17T15:37:16Z",
+    "event": "push",
+    "head_branch": "codex/mac-native-nonpgo-recovery5-20261017",
+    "head_sha": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+    "id": 39045848018,
+    "run_attempt": 1,
+    "status": "completed",
+    "updated_at": "2026-10-17T21:21:35Z"
   },
   "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
-  "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "mandatoryMacPreflightStep": "SUCCESS_PROVIDER_CONFIRMED",
-  "sdkAcquisitionStep": "SUCCESS_PROVIDER_CONFIRMED",
-  "fullBuildAndNative": "IN_PROGRESS",
-  "numericTerminalEvidence": "PENDING",
-  "noAutomaticRerun": true,
-  "noElapsedTimeCancellation": true,
-  "terminalResultRequired": true
+  "schema": 1,
+  "terminalEvidence": "RECOVERY5_EXECUTION_RESULT.json",
+  "terminalResultRequired": false
 }

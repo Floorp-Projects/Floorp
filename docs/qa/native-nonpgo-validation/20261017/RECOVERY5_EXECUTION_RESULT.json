@@ -1,0 +1,3539 @@
+{
+  "artifacts": [],
+  "buildDiagnosticMarkers": null,
+  "caller": "67ddd03975f02936ceff311a5d5639dee585792d",
+  "configuration": {
+    "CC_TYPE": "clang",
+    "CC_VERSION": "22.1.8",
+    "ENABLE_TESTS": "1",
+    "HOST_CC_TYPE": "clang",
+    "HOST_CC_VERSION": "22.1.8",
+    "HOST_CPU_ARCH": "x86_64",
+    "MOZ_APP_VERSION": "158.0.1",
+    "MOZ_DEBUG": "1",
+    "MOZ_MACBUNDLE_NAME": "Floorp DaylightDebug.app",
+    "MOZ_PACKAGER_FORMAT": "flat",
+    "OS_ARCH": "Darwin",
+    "OS_TARGET": "Darwin",
+    "RUSTC_VERSION": "1.95.0",
+    "TARGET_CPU": "x86_64",
+    "allFourCompilerPathsPinned": true,
+    "artifact": false,
+    "compiledSandbox": true,
+    "debug": true,
+    "macOSMinimumFromFourCompilerFlags": "10.15",
+    "nativeHelpers": [
+      "Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container",
+      "Contents/MacOS/media-plugin-helper.app/Contents/MacOS/Floorp Daylight Media Plugin Helper",
+      "Contents/MacOS/gpu-helper.app/Contents/MacOS/Floorp Daylight GPU Helper"
+    ],
+    "onnxPathPinned": true,
+    "pgo": false,
+    "sdkPathPinned": true,
+    "wasiPathPinned": true
+  },
+  "exactlyOneJob": true,
+  "exactlyOneSummary": true,
+  "firstFailure": {
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 20599.72,
+    "stage": "native-suite"
+  },
+  "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "harness": {
+    "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+    "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "patchSHA256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+    "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e"
+  },
+  "hostObject": {
+    "bytes": 2187728,
+    "filetype": 1,
+    "sections": 30,
+    "sectionsSHA256": "4c69a7e38520c69364d9c9fbc08e9a6978b1bb7d52abb929bd5c26c88089e165",
+    "sha256": "e38371ec181175e8cd94ac319fd53047c33328ca4d82414b5b2515abd1f814e2",
+    "uuid": null
+  },
+  "interpretation": {
+    "actualHostTU": "PASS_FRESH_OBJECT_THIS_RUN",
+    "actualMacZombieAndCounterPreflight": "PASS",
+    "denialUnderlyingPolicyOrOwnership": "UNKNOWN",
+    "deniedProcessIdentity": "UNKNOWN: no full BSD identity/birth/UID/PGID was retained for the denied query; it cannot be attributed to browser, helper or system process.",
+    "diagnosticRetention": "Recent diagnostics and separate fatal sample retain the native-stage query details and final exception-stage record.",
+    "disposableAdHocCopyAndCodeBinding": "PASS",
+    "fullHostBuild": "PASS_THIS_RUN",
+    "groupCleanup": "NOT_VERIFIED: native-suite stage cleanup raised PermissionError and its process exit code is unavailable.",
+    "linkedXUL": "PASS_THIS_RUN",
+    "memorySafety": "Unmeasured RSS/CPU remained null; known RSS lower bound was 42.23828125 MiB. No unavailable value was accepted as zero.",
+    "nativeAuthentication": "NOT_VERIFIED",
+    "nativeRegistryCleanup": "The registry returned allOwnedGone/censusComplete=true with zero observed hosts, Shims and helpers; this does not establish successful cleanup of the whole process group.",
+    "nativeSummary": "KeyboardInterrupt is compatible with monitor-triggered cleanup interruption. It is not evidence that the historical spontaneous cause-host-exited failure recurred.",
+    "originalNativeExitCause": "UNKNOWN",
+    "primaryFailure": "Native-stage task measurement denied: full task-info query returned 0 of 232 bytes with errno=EPERM in all three attempts for the same opaque PID tag.",
+    "qualification": "NO_GO_NATIVE_AUTHENTICATION",
+    "stagePackage": "PASS",
+    "timePolicy": "No manual time-based cancellation. Failure preceded the unchanged 360-minute service budget."
+  },
+  "job": {
+    "completed_at": "2026-10-17T21:21:35Z",
+    "conclusion": "failure",
+    "id": 117434289619,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "name": "validate",
+    "runner_name": "GitHub Actions 1000045685",
+    "started_at": "2026-10-17T15:37:21Z",
+    "status": "completed",
+    "steps": [
+      {
+        "completed_at": "2026-10-17T15:37:24Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-10-17T15:37:23Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:37:24Z",
+        "conclusion": "success",
+        "name": "Bound the initial authorized run",
+        "number": 2,
+        "started_at": "2026-10-17T15:37:24Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:37:32Z",
+        "conclusion": "success",
+        "name": "Checkout immutable preparation fixture",
+        "number": 3,
+        "started_at": "2026-10-17T15:37:24Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:37:37Z",
+        "conclusion": "success",
+        "name": "Verify owned process sampling before source checkout",
+        "number": 4,
+        "started_at": "2026-10-17T15:37:32Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:43:26Z",
+        "conclusion": "success",
+        "name": "Checkout immutable Runtime source",
+        "number": 5,
+        "started_at": "2026-10-17T15:37:37Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:43:28Z",
+        "conclusion": "success",
+        "name": "Checkout immutable native harness",
+        "number": 6,
+        "started_at": "2026-10-17T15:43:26Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T15:43:47Z",
+        "conclusion": "success",
+        "name": "Acquire only the existing fixed SDK",
+        "number": 7,
+        "started_at": "2026-10-17T15:43:29Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:49Z",
+        "conclusion": "failure",
+        "name": "Compile full host and XUL then authenticate native Shim",
+        "number": 8,
+        "started_at": "2026-10-17T15:43:47Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:51Z",
+        "conclusion": "failure",
+        "name": "Confirm bounded result exists",
+        "number": 9,
+        "started_at": "2026-10-17T21:20:49Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:53Z",
+        "conclusion": "success",
+        "name": "Post Checkout immutable native harness",
+        "number": 16,
+        "started_at": "2026-10-17T21:20:52Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:56Z",
+        "conclusion": "success",
+        "name": "Post Checkout immutable Runtime source",
+        "number": 17,
+        "started_at": "2026-10-17T21:20:53Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:57Z",
+        "conclusion": "success",
+        "name": "Post Checkout immutable preparation fixture",
+        "number": 18,
+        "started_at": "2026-10-17T21:20:56Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:59Z",
+        "conclusion": "success",
+        "name": "Complete job",
+        "number": 19,
+        "started_at": "2026-10-17T21:20:57Z",
+        "status": "completed"
+      }
+    ]
+  },
+  "limits": [
+    "Historical native root cause remains unknown unless supported by the new observation.",
+    "cause/context/gui proofs belong to separate launches; interpret diagnostics by phase.",
+    "Raw native streams were private on the runner; public evidence retains only the documented projections."
+  ],
+  "linkedXUL": {
+    "bytes": 253796292,
+    "filetype": 6,
+    "sections": 35,
+    "sectionsSHA256": "608a8516c86a23fc405e325d316e74655c2602607481669a45ee7bb7397899f5",
+    "sha256": "11c1803c14b85f02ec5bd2f25414780a6740e6d84f3ed77e98bad978a9d3ff64",
+    "uuid": "4c4c44ce55553144a1d16a24829551b8"
+  },
+  "logAcquisition": {
+    "localCLIJobLogRead": "UNAVAILABLE",
+    "method": "GitHub connector decoded workflow-job log",
+    "rawLogPublished": false
+  },
+  "logBytes": 298907,
+  "logSHA256": "34a41af9a844112c579078fbe5aa3c53d751b0e38593c52bd53640be4f455f89",
+  "monitorDiagnostics": [
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 245.647,
+      "cpuSeconds": 245.647,
+      "elapsedSeconds": 17458.63,
+      "formatExamples": [
+        {
+          "cpuSeconds": 131.110015992,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 176.1953125,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 131.091992646,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 176.19140625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "f536e022ad85dd83",
+              "kind": "short-task-info",
+              "pidTag": "88c38362d83c4ee1",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 244.526,
+          "knownRSSLowerBoundMiB": 1119.42578125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 1162.44140625,
+      "rssMiB": 1162.44140625,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 207.511,
+      "cpuSeconds": 207.511,
+      "elapsedSeconds": 17592.98,
+      "formatExamples": [
+        {
+          "cpuSeconds": 131.85906054,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 177.28125,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 131.856278533,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 177.28125,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "901ca56398df5ebe",
+              "kind": "short-task-info",
+              "pidTag": "0db5065a1667ae05",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 206.823,
+          "knownRSSLowerBoundMiB": 668.41796875,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 702.61328125,
+      "rssMiB": 702.61328125,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 215.038,
+      "cpuSeconds": 215.038,
+      "elapsedSeconds": 17598.99,
+      "formatExamples": [
+        {
+          "cpuSeconds": 131.892801516,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 177.33203125,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 131.885281523,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 177.328125,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "be990bf069d6af92",
+              "kind": "short-task-info",
+              "pidTag": "1be105451dd4afe1",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 213.903,
+          "knownRSSLowerBoundMiB": 772.375,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 823.796875,
+      "rssMiB": 823.796875,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 189.483,
+      "cpuSeconds": 189.483,
+      "elapsedSeconds": 17807.65,
+      "formatExamples": [
+        {
+          "cpuSeconds": 132.943860861,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 179.046875,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 132.937995612,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 179.0390625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "92f4ce30c127a01d",
+              "kind": "short-task-info",
+              "pidTag": "9e4735e7e4d42cf4",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 188.323,
+          "knownRSSLowerBoundMiB": 360.30078125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 448.5625,
+      "rssMiB": 448.5625,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 214.498,
+      "cpuSeconds": 214.498,
+      "elapsedSeconds": 17890.33,
+      "formatExamples": [
+        {
+          "cpuSeconds": 133.434284268,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 179.72265625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 133.431415648,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 179.71875,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "8d0f94e0b61b1b3f",
+              "kind": "short-task-info",
+              "pidTag": "0442941f6a5aaafa",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 213.301,
+          "knownRSSLowerBoundMiB": 613.86328125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 661.4453125,
+      "rssMiB": 661.4453125,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 202.253,
+      "cpuSeconds": 202.253,
+      "elapsedSeconds": 18031.8,
+      "formatExamples": [
+        {
+          "cpuSeconds": 134.186762811,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 180.8828125,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 134.177762724,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 180.875,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "ea0ad9ca054f97ee",
+              "kind": "short-task-info",
+              "pidTag": "ce9d3320309ecec2",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 200.953,
+          "knownRSSLowerBoundMiB": 577.3828125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 626.74609375,
+      "rssMiB": 626.74609375,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 195.798,
+      "cpuSeconds": 195.798,
+      "elapsedSeconds": 18195.14,
+      "formatExamples": [
+        {
+          "cpuSeconds": 135.100684706,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 182.23046875,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 135.093763504,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 182.23046875,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "235bce24d9bed338",
+              "kind": "short-task-info",
+              "pidTag": "55ffda2994d31a6b",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 194.931,
+          "knownRSSLowerBoundMiB": 464.42578125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 515.42578125,
+      "rssMiB": 515.42578125,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 236.133,
+      "cpuSeconds": 236.133,
+      "elapsedSeconds": 18300.92,
+      "formatExamples": [
+        {
+          "cpuSeconds": 138.265876032,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 184.24609375,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 138.265049392,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 184.24609375,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "07f37adf91a06b93",
+              "kind": "short-task-info",
+              "pidTag": "f6149227eaa5a1b6",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 235.045,
+          "knownRSSLowerBoundMiB": 2461.3359375,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 14,
+      "rssLowerBoundMiB": 2526.83984375,
+      "rssMiB": 2526.83984375,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 213.022,
+      "cpuSeconds": 213.022,
+      "elapsedSeconds": 18817.24,
+      "formatExamples": [
+        {
+          "cpuSeconds": 0.116586468,
+          "identityTag": "a259e6d4cbe3ff9e",
+          "kind": "measured",
+          "pidTag": "f96f15ce7d7ef41f",
+          "rssMiB": 1.48046875,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "d21d52411516707c",
+              "kind": "short-task-info",
+              "pidTag": "e177dd4e90e05972",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 211.944,
+          "knownRSSLowerBoundMiB": 1020.84375,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 12,
+      "rssLowerBoundMiB": 1090.8359375,
+      "rssMiB": 1090.8359375,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 232.311,
+      "cpuSeconds": 232.311,
+      "elapsedSeconds": 19391.08,
+      "formatExamples": [
+        {
+          "cpuSeconds": 0.091610621,
+          "identityTag": "bed3edac54cccf12",
+          "kind": "measured",
+          "pidTag": "04bdc600373ad6b5",
+          "rssMiB": 1.8515625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.091610621,
+              "identityTag": "bed3edac54cccf12",
+              "kind": "measured",
+              "pidTag": "04bdc600373ad6b5",
+              "rssMiB": 1.8515625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "a21099d0f8cfa7df",
+              "kind": "short-task-info",
+              "pidTag": "a80a047e0a8f3db2",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 231.433,
+          "knownRSSLowerBoundMiB": 902.609375,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 12,
+      "rssLowerBoundMiB": 953.94921875,
+      "rssMiB": 953.94921875,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 222.575,
+      "cpuSeconds": 222.575,
+      "elapsedSeconds": 19392.58,
+      "formatExamples": [
+        {
+          "cpuSeconds": 0.093706121,
+          "identityTag": "bed3edac54cccf12",
+          "kind": "measured",
+          "pidTag": "04bdc600373ad6b5",
+          "rssMiB": 1.8515625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.091610621,
+              "identityTag": "bed3edac54cccf12",
+              "kind": "measured",
+              "pidTag": "04bdc600373ad6b5",
+              "rssMiB": 1.8515625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "97ac5f4985a529d0",
+              "kind": "short-task-info",
+              "pidTag": "56ae374be55de20e",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 221.425,
+          "knownRSSLowerBoundMiB": 731.73828125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 13,
+      "rssLowerBoundMiB": 777.3203125,
+      "rssMiB": 777.3203125,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 244.441,
+      "cpuSeconds": 244.441,
+      "elapsedSeconds": 20019.63,
+      "formatExamples": [
+        {
+          "cpuSeconds": 149.780982738,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 199.4140625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 149.780302771,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 199.4140625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "1e31368436e5d7d1",
+              "kind": "short-task-info",
+              "pidTag": "8027d39899672727",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 243.441,
+          "knownRSSLowerBoundMiB": 2087.70703125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 14,
+      "rssLowerBoundMiB": 2130.05859375,
+      "rssMiB": 2130.05859375,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 209.227,
+      "cpuSeconds": 209.227,
+      "elapsedSeconds": 20267.42,
+      "formatExamples": [
+        {
+          "cpuSeconds": 151.771502611,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 201.57421875,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 151.7156378,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 201.5703125,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "13b30b7cfa7d6b0f",
+              "kind": "short-task-info",
+              "pidTag": "184ac9924f9ad1d2",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 209.207,
+          "knownRSSLowerBoundMiB": 212.14453125,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        },
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 151.771502611,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 201.57421875,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "3da0c1a4ce33a660",
+              "kind": "short-task-info",
+              "pidTag": "ff8fc8303f5f30ce",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 209.098,
+          "knownRSSLowerBoundMiB": 211.796875,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 6,
+      "rssLowerBoundMiB": 215.58203125,
+      "rssMiB": 215.58203125,
+      "sampleAttempts": 3,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 230.96,
+      "cpuSeconds": 230.96,
+      "elapsedSeconds": 20339.88,
+      "formatExamples": [
+        {
+          "cpuSeconds": 152.493532193,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 202.1953125,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 152.490414735,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 202.1953125,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "b81e2466ac1da98b",
+              "kind": "short-task-info",
+              "pidTag": "8309466883d7aa81",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 230.264,
+          "knownRSSLowerBoundMiB": 283.1796875,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 10,
+      "rssLowerBoundMiB": 301.24609375,
+      "rssMiB": 301.24609375,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 3,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 215.978,
+      "cpuSeconds": 215.978,
+      "elapsedSeconds": 20448.24,
+      "formatExamples": [
+        {
+          "cpuSeconds": 153.992424766,
+          "identityTag": "644478f5768fa03a",
+          "kind": "measured",
+          "pidTag": "04172fa9a568b59e",
+          "rssMiB": 203.31640625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 153.985025357,
+              "identityTag": "644478f5768fa03a",
+              "kind": "measured",
+              "pidTag": "04172fa9a568b59e",
+              "rssMiB": 203.30859375,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "fallbackReason": "measured",
+              "identityTag": "ab479b691d1cd866",
+              "kind": "short-task-info",
+              "pidTag": "bd05d5081d192f6d",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 216.152,
+          "knownRSSLowerBoundMiB": 263.62109375,
+          "unknownKinds": {
+            "short-task-info": 1
+          }
+        }
+      ],
+      "processes": 10,
+      "rssLowerBoundMiB": 249.75390625,
+      "rssMiB": 249.75390625,
+      "sampleAttempts": 2,
+      "sampleComplete": true,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {}
+    },
+    {
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "cpuLowerBoundSeconds": 0.558,
+      "cpuSeconds": null,
+      "elapsedSeconds": 20599.72,
+      "formatExamples": [
+        {
+          "cpuSeconds": 0.210715491,
+          "identityTag": "121397f73ec897cf",
+          "kind": "measured",
+          "pidTag": "1e0fe230686b739c",
+          "rssMiB": 17.1640625,
+          "source": "libproc-taskallinfo",
+          "state": "S"
+        },
+        {
+          "identityTag": null,
+          "kind": "permission",
+          "pidTag": "1b22bd369cbdaba0",
+          "source": "libproc-taskallinfo",
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 1,
+            "expectedBytes": 232
+          }
+        }
+      ],
+      "partialSamples": [
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.210715491,
+              "identityTag": "121397f73ec897cf",
+              "kind": "measured",
+              "pidTag": "1e0fe230686b739c",
+              "rssMiB": 17.1640625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "identityTag": null,
+              "kind": "permission",
+              "pidTag": "1b22bd369cbdaba0",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 1,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 0.558,
+          "knownRSSLowerBoundMiB": 42.23828125,
+          "unknownKinds": {
+            "permission": 1
+          }
+        },
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.210715491,
+              "identityTag": "121397f73ec897cf",
+              "kind": "measured",
+              "pidTag": "1e0fe230686b739c",
+              "rssMiB": 17.1640625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "identityTag": null,
+              "kind": "permission",
+              "pidTag": "1b22bd369cbdaba0",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 1,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 0.558,
+          "knownRSSLowerBoundMiB": 42.23828125,
+          "unknownKinds": {
+            "permission": 1
+          }
+        },
+        {
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.210715491,
+              "identityTag": "121397f73ec897cf",
+              "kind": "measured",
+              "pidTag": "1e0fe230686b739c",
+              "rssMiB": 17.1640625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            },
+            {
+              "identityTag": null,
+              "kind": "permission",
+              "pidTag": "1b22bd369cbdaba0",
+              "source": "libproc-taskallinfo",
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 1,
+                "expectedBytes": 232
+              }
+            }
+          ],
+          "knownCPULowerBoundSeconds": 0.558,
+          "knownRSSLowerBoundMiB": 42.23828125,
+          "unknownKinds": {
+            "permission": 1
+          }
+        }
+      ],
+      "processes": 3,
+      "rssLowerBoundMiB": 42.23828125,
+      "rssMiB": null,
+      "sampleAttempts": 3,
+      "sampleComplete": false,
+      "stage": "native-suite",
+      "states": [
+        "?",
+        "S"
+      ],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1,
+      "unknownKinds": {
+        "permission": 1
+      }
+    }
+  ],
+  "monitorFailure": {
+    "confirmedGone": 0,
+    "counterSource": "libproc-taskallinfo",
+    "cpuLowerBoundSeconds": 0.558,
+    "cpuSeconds": null,
+    "elapsedSeconds": 20599.72,
+    "formatExamples": [
+      {
+        "cpuSeconds": 0.210715491,
+        "identityTag": "121397f73ec897cf",
+        "kind": "measured",
+        "pidTag": "1e0fe230686b739c",
+        "rssMiB": 17.1640625,
+        "source": "libproc-taskallinfo",
+        "state": "S"
+      },
+      {
+        "identityTag": null,
+        "kind": "permission",
+        "pidTag": "1b22bd369cbdaba0",
+        "source": "libproc-taskallinfo",
+        "taskQuery": {
+          "bytes": 0,
+          "errno": 1,
+          "expectedBytes": 232
+        }
+      }
+    ],
+    "partialSamples": [
+      {
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.210715491,
+            "identityTag": "121397f73ec897cf",
+            "kind": "measured",
+            "pidTag": "1e0fe230686b739c",
+            "rssMiB": 17.1640625,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          },
+          {
+            "identityTag": null,
+            "kind": "permission",
+            "pidTag": "1b22bd369cbdaba0",
+            "source": "libproc-taskallinfo",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 1,
+              "expectedBytes": 232
+            }
+          }
+        ],
+        "knownCPULowerBoundSeconds": 0.558,
+        "knownRSSLowerBoundMiB": 42.23828125,
+        "unknownKinds": {
+          "permission": 1
+        }
+      },
+      {
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.210715491,
+            "identityTag": "121397f73ec897cf",
+            "kind": "measured",
+            "pidTag": "1e0fe230686b739c",
+            "rssMiB": 17.1640625,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          },
+          {
+            "identityTag": null,
+            "kind": "permission",
+            "pidTag": "1b22bd369cbdaba0",
+            "source": "libproc-taskallinfo",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 1,
+              "expectedBytes": 232
+            }
+          }
+        ],
+        "knownCPULowerBoundSeconds": 0.558,
+        "knownRSSLowerBoundMiB": 42.23828125,
+        "unknownKinds": {
+          "permission": 1
+        }
+      },
+      {
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.210715491,
+            "identityTag": "121397f73ec897cf",
+            "kind": "measured",
+            "pidTag": "1e0fe230686b739c",
+            "rssMiB": 17.1640625,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          },
+          {
+            "identityTag": null,
+            "kind": "permission",
+            "pidTag": "1b22bd369cbdaba0",
+            "source": "libproc-taskallinfo",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 1,
+              "expectedBytes": 232
+            }
+          }
+        ],
+        "knownCPULowerBoundSeconds": 0.558,
+        "knownRSSLowerBoundMiB": 42.23828125,
+        "unknownKinds": {
+          "permission": 1
+        }
+      }
+    ],
+    "processes": 3,
+    "rssLowerBoundMiB": 42.23828125,
+    "rssMiB": null,
+    "sampleAttempts": 3,
+    "sampleComplete": false,
+    "stage": "native-suite",
+    "states": [
+      "?",
+      "S"
+    ],
+    "statesSource": "libproc-runnable-summary",
+    "timebaseDenom": 1,
+    "timebaseNumer": 1,
+    "unknownKinds": {
+      "permission": 1
+    }
+  },
+  "monitorPreflight": {
+    "firstFailure": null,
+    "monitorDiagnostics": [],
+    "monitorFailure": null,
+    "nativeCounterSelf": {
+      "abiBytes": 232,
+      "cpuSeconds": 0.29816583,
+      "rssMiB": 18.7421875,
+      "state": "R",
+      "status": "measured",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1
+    },
+    "nativeZombiePreflight": "passed",
+    "stages": [
+      {
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "failurePhase": null,
+        "lastActivity": {
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "cpuLowerBoundSeconds": 0.043,
+          "cpuSeconds": 0.043,
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.043171656,
+              "identityTag": "6ca433d7d852cc3a",
+              "kind": "measured",
+              "pidTag": "f40ef3e531347c98",
+              "rssMiB": 6.34765625,
+              "source": "libproc-taskallinfo",
+              "state": "R"
+            }
+          ],
+          "partialSamples": [],
+          "processes": 1,
+          "rssLowerBoundMiB": 6.34765625,
+          "rssMiB": 6.34765625,
+          "sampleAttempts": 1,
+          "sampleComplete": true,
+          "states": [
+            "R"
+          ],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseDenom": 1,
+          "timebaseNumer": 1,
+          "unknownKinds": {}
+        },
+        "logBytes": 98,
+        "minimumFreeGiB": 107.13,
+        "peakRSSMiB": 6,
+        "quietSeconds": 0,
+        "reason": null,
+        "stage": "monitor-zombie-preflight"
+      },
+      {
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "failurePhase": null,
+        "lastActivity": {
+          "confirmedGone": 2,
+          "counterSource": "libproc-taskallinfo",
+          "cpuLowerBoundSeconds": 0.0,
+          "cpuSeconds": 0.0,
+          "formatExamples": [],
+          "partialSamples": [],
+          "processes": 0,
+          "rssLowerBoundMiB": 0.0,
+          "rssMiB": 0.0,
+          "sampleAttempts": 1,
+          "sampleComplete": true,
+          "states": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseDenom": 1,
+          "timebaseNumer": 1,
+          "unknownKinds": {}
+        },
+        "logBytes": 0,
+        "minimumFreeGiB": 107.13,
+        "peakRSSMiB": 10,
+        "quietSeconds": 0,
+        "reason": null,
+        "stage": "monitor-preflight"
+      }
+    ],
+    "status": "passed"
+  },
+  "monitoring": {
+    "GitHubAPIResumedUTC": "2026-10-17T19:16:33Z",
+    "manualCancellationRequested": false,
+    "newRunStartedDuringReconnect": false,
+    "shellJournalLastObservationUTC": "2026-10-17T19:09:20.498142Z",
+    "terminalObservedUTC": "2026-10-17T21:22:06Z"
+  },
+  "native": {
+    "contextMenu": null,
+    "errorCode": "KeyboardInterrupt",
+    "firstCause": null,
+    "gui": null,
+    "status": "failed"
+  },
+  "nativeCleanup": {
+    "allOwnedGone": true,
+    "censusComplete": true,
+    "errors": [],
+    "helpersObserved": 0,
+    "hostsObserved": 0,
+    "outlivedHarness": 0,
+    "pendingAtHarnessReturn": 0,
+    "privateIdentitiesPublished": false,
+    "shimsObserved": 0,
+    "signalsToVerifiedOwnedInstances": 0
+  },
+  "nativeEvidenceCoverage": "RECOVERY5_NATIVE_EVIDENCE_COVERAGE.json",
+  "observedAtUTC": "2026-10-17T21:23:34.798694+00:00",
+  "preflight": {
+    "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+    "freeGiB": 100.98,
+    "host": "x86_64-apple-darwin",
+    "image": "20260824.0482.1",
+    "nativeInputPreflight": true,
+    "newArtifacts": 0,
+    "os": "15.7.9",
+    "python": "3.12.10",
+    "sourceTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123"
+  },
+  "priorFailedRunsRemainFailures": [
+    39016143725,
+    39018277446,
+    39020119793,
+    39037341780,
+    39040773718
+  ],
+  "progress": {
+    "first": {
+      "elapsedMinutes": 12.3,
+      "freeGiB": 98.8,
+      "logBytes": 0,
+      "ownedGroupCPUSeconds": 0.041,
+      "ownedGroupRSSMiB": 6,
+      "processes": 1,
+      "quietSeconds": 0,
+      "stage": "full-build",
+      "states": [
+        "R"
+      ]
+    },
+    "last": {
+      "elapsedMinutes": 341.9,
+      "freeGiB": 77.9,
+      "logBytes": 28242365,
+      "ownedGroupCPUSeconds": 168.549,
+      "ownedGroupRSSMiB": 534,
+      "processes": 2,
+      "quietSeconds": 0,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ]
+    },
+    "maximumObservedRSSMiB": 7238,
+    "minimumObservedFreeGiB": 77.9,
+    "records": 648
+  },
+  "run": {
+    "conclusion": "failure",
+    "created_at": "2026-10-17T15:37:16Z",
+    "event": "push",
+    "head_branch": "codex/mac-native-nonpgo-recovery5-20261017",
+    "head_sha": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+    "id": 39045848018,
+    "run_attempt": 1,
+    "status": "completed",
+    "updated_at": "2026-10-17T21:21:35Z"
+  },
+  "runIdentityBound": true,
+  "rustErrorCodes": null,
+  "schema": 1,
+  "scope": {
+    "blacksmithAccess": false,
+    "merge": false,
+    "newArtifacts": 0,
+    "permissionsChanged": false,
+    "productQualification": false,
+    "productSigning": false,
+    "publication": false,
+    "reruns": 0
+  },
+  "sdk": {
+    "artifact": 12074136738,
+    "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "logicalBytes": 704719765,
+    "members": 49701,
+    "sourceRun": 38963901545,
+    "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929",
+    "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
+  },
+  "sdkLaterStatus": "RECOVERY5_SDK_LATER_STATUS.json",
+  "signedCopyXUL": {
+    "bytes": 255797344,
+    "filetype": 6,
+    "sections": 35,
+    "sectionsSHA256": "608a8516c86a23fc405e325d316e74655c2602607481669a45ee7bb7397899f5",
+    "sha256": "82f3500b47dbfc16ab69e17fb5e65774af1044192c667f476366ecc7aa441000",
+    "uuid": "4c4c44ce55553144a1d16a24829551b8"
+  },
+  "source": {
+    "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+    "baselineProvenanceVerified": true,
+    "bootstrapLoaderChangedToFixedPaths": true,
+    "hostChangedFromOriginal": true,
+    "mozconfigSHA256": "501544b92cb62b34ba7591fe6bfb2d957b1bdb66d71bded2806bad74a89535c6",
+    "originalPatchCount": 30,
+    "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+    "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+  },
+  "stages": [
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 3.715,
+        "cpuSeconds": 3.715,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.032073432,
+            "identityTag": "978b4d8f7cb66d21",
+            "kind": "measured",
+            "pidTag": "c5c6f6eb73f93e33",
+            "rssMiB": 3.86328125,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 3,
+        "rssLowerBoundMiB": 63.734375,
+        "rssMiB": 63.734375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R",
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 100.98,
+      "peakRSSMiB": 64,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "harness-startup-check"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 100.99,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "harness-startup-apply"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 81.182,
+        "cpuSeconds": 81.182,
+        "formatExamples": [
+          {
+            "cpuSeconds": 81.182426425,
+            "identityTag": "5edd2166427d17be",
+            "kind": "measured",
+            "pidTag": "01b55546b023b73a",
+            "rssMiB": 48.734375,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 48.734375,
+        "rssMiB": 48.734375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 100.01,
+      "peakRSSMiB": 79,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "sdk-materialize"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 86.256,
+        "cpuSeconds": 86.256,
+        "formatExamples": [
+          {
+            "cpuSeconds": 85.572734254,
+            "identityTag": "a1afc585813d6a06",
+            "kind": "measured",
+            "pidTag": "043a52351d18a45d",
+            "rssMiB": 161.9609375,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 2,
+        "rssLowerBoundMiB": 163.453125,
+        "rssMiB": 163.453125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 569,
+      "minimumFreeGiB": 97.05,
+      "peakRSSMiB": 195,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "tools-materialize"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.042,
+        "cpuSeconds": 0.042,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.042431918,
+            "identityTag": "b0364b61cd182d7f",
+            "kind": "measured",
+            "pidTag": "7d3479429a662f58",
+            "rssMiB": 2.46484375,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.46484375,
+        "rssMiB": 2.46484375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 188,
+      "minimumFreeGiB": 97.86,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "version-clang"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 36,
+      "minimumFreeGiB": 97.86,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "version-rust"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.047,
+        "cpuSeconds": 0.047,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.046635298,
+            "identityTag": "db545e395270cca1",
+            "kind": "measured",
+            "pidTag": "fe7ebbf1db8f30ae",
+            "rssMiB": 1.578125,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 1.578125,
+        "rssMiB": 1.578125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 9,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "version-node"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 42,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "version-nasm"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-0"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.037,
+        "cpuSeconds": 0.037,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.036723622,
+            "identityTag": "f3380c36d54550a1",
+            "kind": "measured",
+            "pidTag": "6e83c35f8b2175a8",
+            "rssMiB": 2.19140625,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.19140625,
+        "rssMiB": 2.19140625,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-1"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-2"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-3"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.033,
+        "cpuSeconds": 0.033,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.033456993,
+            "identityTag": "53fe481d051871f6",
+            "kind": "measured",
+            "pidTag": "775ffba9a3481cba",
+            "rssMiB": 2.3515625,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.3515625,
+        "rssMiB": 2.3515625,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-4"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.039,
+        "cpuSeconds": 0.039,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.039085755,
+            "identityTag": "0c551b16a92834a5",
+            "kind": "measured",
+            "pidTag": "4b00c20170ec120d",
+            "rssMiB": 2.984375,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.984375,
+        "rssMiB": 2.984375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 3,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-5"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-6"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [
+          {
+            "formatExamples": [
+              {
+                "bsdQuery": {
+                  "bytes": 136,
+                  "errno": 0,
+                  "expectedBytes": 136
+                },
+                "fallbackReason": "measured",
+                "identityTag": "f5dc0afd471164bb",
+                "kind": "short-task-info",
+                "pidTag": "d9e0b7749aea2f3d",
+                "source": "libproc-taskallinfo",
+                "taskQuery": {
+                  "bytes": 0,
+                  "errno": 3,
+                  "expectedBytes": 232
+                }
+              }
+            ],
+            "knownCPULowerBoundSeconds": 0.0,
+            "knownRSSLowerBoundMiB": 0.0,
+            "unknownKinds": {
+              "short-task-info": 1
+            }
+          }
+        ],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-7"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-8"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.036,
+        "cpuSeconds": 0.036,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.035708945,
+            "identityTag": "24b091e2e0670481",
+            "kind": "measured",
+            "pidTag": "45a325cbfb796f1f",
+            "rssMiB": 2.3125,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.3125,
+        "rssMiB": 2.3125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-9"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-10"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-11"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.033,
+        "cpuSeconds": 0.033,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.032513022,
+            "identityTag": "d65b8894f3b8bbdd",
+            "kind": "measured",
+            "pidTag": "777e9f1e986e491d",
+            "rssMiB": 1.921875,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 1.921875,
+        "rssMiB": 1.921875,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 2,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-12"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-13"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-14"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-15"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-16"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 97.85,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-17"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-18"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.036,
+        "cpuSeconds": 0.036,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.035593727,
+            "identityTag": "1d2c3daf50ab7162",
+            "kind": "measured",
+            "pidTag": "72d40ac906abc0c3",
+            "rssMiB": 2.70703125,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.70703125,
+        "rssMiB": 2.70703125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 3,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-19"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-20"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-21"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-22"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-23"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.035,
+        "cpuSeconds": 0.035,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.035222839,
+            "identityTag": "e05e26dee99b03fb",
+            "kind": "measured",
+            "pidTag": "b0c6048f37f5c017",
+            "rssMiB": 2.66796875,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 2.66796875,
+        "rssMiB": 2.66796875,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 3,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-24"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.04,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-25"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.03,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-26"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.03,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-27"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.27,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-28"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.25,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "patch-29"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.05,
+        "cpuSeconds": 0.05,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.049761092,
+            "identityTag": "3f2697793815e805",
+            "kind": "measured",
+            "pidTag": "03b55668ccbb956a",
+            "rssMiB": 6.55859375,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 6.55859375,
+        "rssMiB": 6.55859375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 103,
+      "minimumFreeGiB": 98.9,
+      "peakRSSMiB": 7,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "baseline-provenance"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.9,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "first-cause-patch"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 1,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [],
+        "partialSamples": [],
+        "processes": 0,
+        "rssLowerBoundMiB": 0.0,
+        "rssMiB": 0.0,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 98.9,
+      "peakRSSMiB": 0,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "apply-first-cause"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 46.651,
+        "cpuSeconds": 46.651,
+        "formatExamples": [
+          {
+            "cpuSeconds": 2.093576327,
+            "identityTag": "974731eae77c411c",
+            "kind": "measured",
+            "pidTag": "6caa23307d301284",
+            "rssMiB": 60.1875,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 2,
+        "rssLowerBoundMiB": 500.15234375,
+        "rssMiB": 500.15234375,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R",
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 13056,
+      "minimumFreeGiB": 98.77,
+      "peakRSSMiB": 566,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "configure"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.953,
+        "cpuSeconds": 0.953,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.953169641,
+            "identityTag": "516fd6f01c33be31",
+            "kind": "measured",
+            "pidTag": "44fe749f2815656e",
+            "rssMiB": 47.21875,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 47.21875,
+        "rssMiB": 47.21875,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 71761,
+      "minimumFreeGiB": 98.77,
+      "peakRSSMiB": 47,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "effective-config"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 173.969,
+        "cpuSeconds": 173.969,
+        "formatExamples": [
+          {
+            "cpuSeconds": 173.844252318,
+            "identityTag": "644478f5768fa03a",
+            "kind": "measured",
+            "pidTag": "04172fa9a568b59e",
+            "rssMiB": 318.26953125,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 2,
+        "rssLowerBoundMiB": 322.17578125,
+        "rssMiB": 322.17578125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R",
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 28242506,
+      "minimumFreeGiB": 77.72,
+      "peakRSSMiB": 7246,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "full-build"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 17.713,
+        "cpuSeconds": 17.713,
+        "formatExamples": [
+          {
+            "cpuSeconds": 1.863468033,
+            "identityTag": "8ccfcd4ef818f7c2",
+            "kind": "measured",
+            "pidTag": "d0be8b425498c90e",
+            "rssMiB": 43.85546875,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 5,
+        "rssLowerBoundMiB": 107.37890625,
+        "rssMiB": 107.37890625,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R",
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 6792,
+      "minimumFreeGiB": 77.24,
+      "peakRSSMiB": 869,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "stage-package"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 13.699,
+        "cpuSeconds": 13.699,
+        "formatExamples": [
+          {
+            "cpuSeconds": 13.698636723,
+            "identityTag": "586e44b329ce3e8d",
+            "kind": "measured",
+            "pidTag": "5a260f5b33efef8c",
+            "rssMiB": 13.1328125,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 13.1328125,
+        "rssMiB": 13.1328125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 76.74,
+      "peakRSSMiB": 487,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "adhoc-copy"
+    },
+    {
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 3.433,
+        "cpuSeconds": 3.433,
+        "formatExamples": [
+          {
+            "cpuSeconds": 3.433138758,
+            "identityTag": "41cf772a0e788bce",
+            "kind": "measured",
+            "pidTag": "78879c7386762b4c",
+            "rssMiB": 19.05078125,
+            "source": "libproc-taskallinfo",
+            "state": "R"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 19.05078125,
+        "rssMiB": 19.05078125,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "R"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 76.98,
+      "peakRSSMiB": 19,
+      "quietSeconds": 0,
+      "reason": null,
+      "stage": "verify-copy"
+    },
+    {
+      "cleanupFailure": "PermissionError",
+      "exitCode": null,
+      "failurePhase": "group-activity",
+      "lastActivity": {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.558,
+        "cpuSeconds": null,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.210715491,
+            "identityTag": "121397f73ec897cf",
+            "kind": "measured",
+            "pidTag": "1e0fe230686b739c",
+            "rssMiB": 17.1640625,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          },
+          {
+            "identityTag": null,
+            "kind": "permission",
+            "pidTag": "1b22bd369cbdaba0",
+            "source": "libproc-taskallinfo",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 1,
+              "expectedBytes": 232
+            }
+          }
+        ],
+        "partialSamples": [
+          {
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.210715491,
+                "identityTag": "121397f73ec897cf",
+                "kind": "measured",
+                "pidTag": "1e0fe230686b739c",
+                "rssMiB": 17.1640625,
+                "source": "libproc-taskallinfo",
+                "state": "S"
+              },
+              {
+                "identityTag": null,
+                "kind": "permission",
+                "pidTag": "1b22bd369cbdaba0",
+                "source": "libproc-taskallinfo",
+                "taskQuery": {
+                  "bytes": 0,
+                  "errno": 1,
+                  "expectedBytes": 232
+                }
+              }
+            ],
+            "knownCPULowerBoundSeconds": 0.558,
+            "knownRSSLowerBoundMiB": 42.23828125,
+            "unknownKinds": {
+              "permission": 1
+            }
+          },
+          {
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.210715491,
+                "identityTag": "121397f73ec897cf",
+                "kind": "measured",
+                "pidTag": "1e0fe230686b739c",
+                "rssMiB": 17.1640625,
+                "source": "libproc-taskallinfo",
+                "state": "S"
+              },
+              {
+                "identityTag": null,
+                "kind": "permission",
+                "pidTag": "1b22bd369cbdaba0",
+                "source": "libproc-taskallinfo",
+                "taskQuery": {
+                  "bytes": 0,
+                  "errno": 1,
+                  "expectedBytes": 232
+                }
+              }
+            ],
+            "knownCPULowerBoundSeconds": 0.558,
+            "knownRSSLowerBoundMiB": 42.23828125,
+            "unknownKinds": {
+              "permission": 1
+            }
+          },
+          {
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.210715491,
+                "identityTag": "121397f73ec897cf",
+                "kind": "measured",
+                "pidTag": "1e0fe230686b739c",
+                "rssMiB": 17.1640625,
+                "source": "libproc-taskallinfo",
+                "state": "S"
+              },
+              {
+                "identityTag": null,
+                "kind": "permission",
+                "pidTag": "1b22bd369cbdaba0",
+                "source": "libproc-taskallinfo",
+                "taskQuery": {
+                  "bytes": 0,
+                  "errno": 1,
+                  "expectedBytes": 232
+                }
+              }
+            ],
+            "knownCPULowerBoundSeconds": 0.558,
+            "knownRSSLowerBoundMiB": 42.23828125,
+            "unknownKinds": {
+              "permission": 1
+            }
+          }
+        ],
+        "processes": 3,
+        "rssLowerBoundMiB": 42.23828125,
+        "rssMiB": null,
+        "sampleAttempts": 3,
+        "sampleComplete": false,
+        "states": [
+          "?",
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {
+          "permission": 1
+        }
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 76.98,
+      "peakRSSMiB": 6,
+      "quietSeconds": 0,
+      "reason": "monitor-unavailable",
+      "stage": "native-suite"
+    }
+  ],
+  "summaryMissing": false,
+  "summarySHA256": "990c8786cc996248251a1e5713276e7c46c7190edbec75681856ed19d74de916",
+  "summaryStatus": "failed",
+  "toolchainsVerified": 11
+}

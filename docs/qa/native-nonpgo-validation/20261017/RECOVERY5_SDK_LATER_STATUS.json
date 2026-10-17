@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "observedAtUTC": "2026-10-17T20:41:52Z",
+  "sdkArtifact": 12074136738,
+  "sdkSourceRun": 38963901545,
+  "expiresAtObservedBeforeAcquisition": "2026-10-17T20:41:19Z",
+  "expiryTimestampPassed": true,
+  "matchingArtifactsReturned": 0,
+  "payloadRequestedAtThisObservation": false,
+  "currentRun": 39045848018,
+  "currentRunAcquisitionStep": "SUCCESS_BEFORE_EXPIRY",
+  "currentRunUses": "already acquired local files subject to fixed TAR/tree/version validation",
+  "policy": "No new acquisition request or expired-artifact bypass."
+}

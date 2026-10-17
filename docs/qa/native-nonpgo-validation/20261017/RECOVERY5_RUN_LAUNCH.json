@@ -1,148 +1,174 @@
 {
-  "schema": 1,
-  "observedAtUTC": "2026-10-17T15:38:20.165934+00:00",
-  "run": {
-    "id": 39045848018,
-    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
-    "head_sha": "67ddd03975f02936ceff311a5d5639dee585792d",
-    "head_branch": "codex/mac-native-nonpgo-recovery5-20261017",
-    "event": "push",
-    "status": "in_progress",
-    "conclusion": null,
-    "run_attempt": 1,
-    "created_at": "2026-10-17T15:37:16Z"
+  "callerReadback": "RECOVERY5_CALLER_READBACK.json",
+  "firstFailure": {
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 20599.72,
+    "stage": "native-suite"
   },
+  "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
   "job": {
+    "completed_at": "2026-10-17T21:21:35Z",
+    "conclusion": "failure",
     "id": 117434289619,
-    "name": "validate",
-    "status": "in_progress",
-    "conclusion": null,
     "labels": [
       "macos-15-intel"
     ],
+    "name": "validate",
     "runner_name": "GitHub Actions 1000045685",
     "started_at": "2026-10-17T15:37:21Z",
-    "completed_at": null,
+    "status": "completed",
     "steps": [
       {
-        "name": "Set up job",
-        "status": "completed",
+        "completed_at": "2026-10-17T15:37:24Z",
         "conclusion": "success",
+        "name": "Set up job",
         "number": 1,
         "started_at": "2026-10-17T15:37:23Z",
-        "completed_at": "2026-10-17T15:37:24Z"
+        "status": "completed"
       },
       {
-        "name": "Bound the initial authorized run",
-        "status": "completed",
+        "completed_at": "2026-10-17T15:37:24Z",
         "conclusion": "success",
+        "name": "Bound the initial authorized run",
         "number": 2,
         "started_at": "2026-10-17T15:37:24Z",
-        "completed_at": "2026-10-17T15:37:24Z"
+        "status": "completed"
       },
       {
-        "name": "Checkout immutable preparation fixture",
-        "status": "completed",
+        "completed_at": "2026-10-17T15:37:32Z",
         "conclusion": "success",
+        "name": "Checkout immutable preparation fixture",
         "number": 3,
         "started_at": "2026-10-17T15:37:24Z",
-        "completed_at": "2026-10-17T15:37:32Z"
+        "status": "completed"
       },
       {
-        "name": "Verify owned process sampling before source checkout",
-        "status": "completed",
+        "completed_at": "2026-10-17T15:37:37Z",
         "conclusion": "success",
+        "name": "Verify owned process sampling before source checkout",
         "number": 4,
         "started_at": "2026-10-17T15:37:32Z",
-        "completed_at": "2026-10-17T15:37:37Z"
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T15:43:26Z",
+        "conclusion": "success",
         "name": "Checkout immutable Runtime source",
-        "status": "in_progress",
-        "conclusion": null,
         "number": 5,
         "started_at": "2026-10-17T15:37:37Z",
-        "completed_at": null
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T15:43:28Z",
+        "conclusion": "success",
         "name": "Checkout immutable native harness",
-        "status": "pending",
-        "conclusion": null,
         "number": 6,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T15:43:26Z",
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T15:43:47Z",
+        "conclusion": "success",
         "name": "Acquire only the existing fixed SDK",
-        "status": "pending",
-        "conclusion": null,
         "number": 7,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T15:43:29Z",
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T21:20:49Z",
+        "conclusion": "failure",
         "name": "Compile full host and XUL then authenticate native Shim",
-        "status": "pending",
-        "conclusion": null,
         "number": 8,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T15:43:47Z",
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T21:20:51Z",
+        "conclusion": "failure",
         "name": "Confirm bounded result exists",
-        "status": "pending",
-        "conclusion": null,
         "number": 9,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T21:20:49Z",
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T21:20:53Z",
+        "conclusion": "success",
+        "name": "Post Checkout immutable native harness",
+        "number": 16,
+        "started_at": "2026-10-17T21:20:52Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:56Z",
+        "conclusion": "success",
         "name": "Post Checkout immutable Runtime source",
-        "status": "pending",
-        "conclusion": null,
         "number": 17,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T21:20:53Z",
+        "status": "completed"
       },
       {
+        "completed_at": "2026-10-17T21:20:57Z",
+        "conclusion": "success",
         "name": "Post Checkout immutable preparation fixture",
-        "status": "pending",
-        "conclusion": null,
         "number": 18,
-        "started_at": null,
-        "completed_at": null
+        "started_at": "2026-10-17T21:20:56Z",
+        "status": "completed"
+      },
+      {
+        "completed_at": "2026-10-17T21:20:59Z",
+        "conclusion": "success",
+        "name": "Complete job",
+        "number": 19,
+        "started_at": "2026-10-17T21:20:57Z",
+        "status": "completed"
       }
     ]
   },
-  "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
-  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
-  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
-  "review": "RECOVERY5_ROUTE_REVIEW.json",
-  "sourceReadback": "RECOVERY5_SOURCE_READBACK.json",
-  "callerReadback": "RECOVERY5_CALLER_READBACK.json",
-  "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "terminalResultRequired": true,
+  "launchObservationUTC": "2026-10-17T15:38:20.165934+00:00",
   "monitoring": {
-    "ownUntilTerminal": true,
     "noAutomaticRerunOrBranchRepush": true,
-    "noElapsedTimeCancellation": true
+    "noElapsedTimeCancellation": true,
+    "ownUntilTerminal": true
   },
-  "scope": {
-    "standardPublicRunner": true,
-    "newArtifacts": 0,
-    "productSigning": false,
-    "publication": false,
-    "merge": false,
-    "permissionChanges": false,
-    "blacksmithAccess": false
-  },
+  "nativeAuthentication": "NOT_VERIFIED",
   "nativeFailureEvidence": {
     "browserAndLauncherExitSeparate": true,
     "browserExitCodeAndSignal": true,
+    "launchConditions": "LaunchServices/switch/about:blank/ownership/liveness flags; no raw argv/profile/env values",
+    "publicStreams": "bounded size/presence/marker/numeric OSStatus projection; raw not published",
     "requestedCleanupSignalSeparate": true,
     "stdoutStderrSeparatePrivateFiles": true,
-    "publicStreams": "bounded size/presence/marker/numeric OSStatus projection; raw not published",
-    "launchConditions": "LaunchServices/switch/about:blank/ownership/liveness flags; no raw argv/profile/env values",
     "unobservedBrowserExit": "null with availability=false; never infer from launcher"
-  }
+  },
+  "observedAtUTC": "2026-10-17T21:23:34.798694+00:00",
+  "productQualification": false,
+  "result": "FAILED_NOT_QUALIFIED",
+  "review": "RECOVERY5_ROUTE_REVIEW.json",
+  "run": {
+    "conclusion": "failure",
+    "created_at": "2026-10-17T15:37:16Z",
+    "event": "push",
+    "head_branch": "codex/mac-native-nonpgo-recovery5-20261017",
+    "head_sha": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+    "id": 39045848018,
+    "run_attempt": 1,
+    "status": "completed",
+    "updated_at": "2026-10-17T21:21:35Z"
+  },
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 1,
+  "scope": {
+    "blacksmithAccess": false,
+    "merge": false,
+    "newArtifacts": 0,
+    "permissionChanges": false,
+    "productSigning": false,
+    "publication": false,
+    "standardPublicRunner": true
+  },
+  "sourceReadback": "RECOVERY5_SOURCE_READBACK.json",
+  "terminalEvidence": "RECOVERY5_EXECUTION_RESULT.json",
+  "terminalResultRequired": false
 }
