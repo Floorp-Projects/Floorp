@@ -76,7 +76,7 @@ index 0000000..78cf1ac
 +      runner: macos-15-intel
 +      debug: true
 diff --git a/.github/workflows/verify-runtime-artifact.yml b/.github/workflows/verify-runtime-artifact.yml
-index 8e7a1aa..c5982d1 100644
+index 8e7a1aa..e0b84c4 100644
 --- a/.github/workflows/verify-runtime-artifact.yml
 +++ b/.github/workflows/verify-runtime-artifact.yml
 @@ -36,7 +36,7 @@ name: Verify Final Runtime Artifact
@@ -102,7 +102,7 @@ index 8e7a1aa..c5982d1 100644
          with:
            repository: Floorp-Projects/Floorp
 -          ref: e1da5a98af5fa72065994514dc9618f2a38ba338
-+          ref: 7b13484a3102861bf34af7f4b0d57fdfa787d3cd
++          ref: 28592bd1956d74dc01a67898217e129306035aad
            path: floorp-native-tests
            persist-credentials: false
            sparse-checkout-cone-mode: false

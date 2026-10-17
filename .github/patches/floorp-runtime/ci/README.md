@@ -7,7 +7,7 @@ This directory is separate from `common/`: the package workflow does not apply
 this CI patch. It must be reviewed and applied to a Runtime source branch.
 
 The verifier pins Floorp fixture commit
-`7b13484a3102861bf34af7f4b0d57fdfa787d3cd`. That commit must be available
+`28592bd1956d74dc01a67898217e129306035aad`. That commit must be available
 remotely before the patched workflow can use it. Record the actual fixture,
 workflow and producer commits separately in each diagnostic run.
 
@@ -69,3 +69,13 @@ Runtime build push filters do not match this branch. A push to this branch is
 an execution request; do not repush to retry a failed diagnostic. Record any
 new run separately from original attempt 1. The caller has no schedule, manual
 dispatch, matrix, build, signing credential, publication or approval job.
+
+The follow-up fixture adds a passive, owned-instance Shim exit watcher and
+scoped OS crash/dependency summaries for the same original artifact. It records
+actual returned kernel wait status and observation times; missing observations
+remain unknown. No connected notification does not prove native authentication
+never completed. Raw argv/tokens, raw crash reports and private streams are not
+uploaded. The separately maintained native cause-preservation patch in
+../native-diagnostics/ requires recompilation and is not applied by this job.
+Each new push requires a distinct recorded diagnostic purpose; neither previous
+failed run is rerun. Authentication, waits, iterations and release gates remain.
