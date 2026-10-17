@@ -1,0 +1,1192 @@
+{
+  "schemaVersion": 1,
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "run": 39075099849,
+  "job": 117520498246,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39075099849",
+  "caller": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+  "fixture": "82414aa914508516c2735b32e7d9536effa69a18",
+  "workflowSHA256": "bc2888c523c84a2e41f9470544c09bd5f4e71a432d1ac39cca6b57d2340e1614",
+  "attempt": 1,
+  "status": "completed",
+  "conclusion": "failure",
+  "runnerLabels": [
+    "macos-15-intel"
+  ],
+  "startedAt": "2026-10-17T22:26:53Z",
+  "completedAt": "2026-10-17T22:27:25Z",
+  "durationSeconds": 32.0,
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Bound the initial diagnostic execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout reviewed monitor fixture",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout fixed native harness",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate diagnostic guards",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Observe one owned ps across three task queries",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Confirm bounded diagnostic result",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Post Checkout fixed native harness",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Checkout reviewed monitor fixture",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "focusedMacGuards": {
+    "total": 6,
+    "passed": 6,
+    "skipped": 0,
+    "elapsedSeconds": 1.607,
+    "allNamesAndPassesPresentInDecodedLog": true
+  },
+  "newArtifacts": 0,
+  "sdkAcquired": false,
+  "browserOrBuildExecuted": false,
+  "securityOrPrivilegeChanges": false,
+  "rawLogPublished": false,
+  "privateDecodedLogSHA256": "5e27f3736b05f111eb8cdf3ba1e2e61a1ee0f032ce2f97d5b166cdb6e0979f99",
+  "publicSummarySHA256": "76f004fee25718517db51dbb92b66ba9c485d75edeb545ee52b8b9ccae027730",
+  "diagnostic": {
+    "status": "failed",
+    "sdkAcquired": false,
+    "newArtifacts": 0,
+    "scope": "CONTROLLED_PS_LIFETIME_AND_PINNED_HARNESS_CENSUS",
+    "nativeAuthentication": "NOT_TESTED",
+    "historicalCause": "UNKNOWN",
+    "securityOrPrivilegeChanges": false,
+    "productionSamplerSourceChanged": false,
+    "observationTiming": "Diagnostic before/after BSD reads and parent WNOWAIT ACKs add timing overhead; retry count and sleep spacing are unchanged.",
+    "systemPsFile": {
+      "ownedByRoot": true,
+      "setuidBit": true
+    },
+    "outerHelperReaped": true,
+    "outerSamplerGroupInherited": true,
+    "held": {
+      "mode": "held",
+      "synthetic": true,
+      "errorCode": "PermissionError",
+      "pidTag": "e3068537f5fff503",
+      "workerPidTag": "3dfe2497e56e946a",
+      "parentPopenLifetimeBinding": true,
+      "bsdSameIdentityAllObservations": false,
+      "sameChildThreeEPERM": true,
+      "observations": [
+        {
+          "elapsedSeconds": 0.587937,
+          "pidTag": "e3068537f5fff503",
+          "parentBefore": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 1,
+            "samePopenChild": true
+          },
+          "bsdBefore": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "query": {
+            "status": "unavailable",
+            "pidTag": "e3068537f5fff503",
+            "taskQuery": {
+              "bytes": 0,
+              "expectedBytes": 232,
+              "errno": 1
+            },
+            "reason": "permission"
+          },
+          "bsdAfter": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "parentAfter": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 2,
+            "samePopenChild": true
+          }
+        },
+        {
+          "elapsedSeconds": 0.990367,
+          "pidTag": "e3068537f5fff503",
+          "parentBefore": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 3,
+            "samePopenChild": true
+          },
+          "bsdBefore": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "query": {
+            "status": "unavailable",
+            "pidTag": "e3068537f5fff503",
+            "taskQuery": {
+              "bytes": 0,
+              "expectedBytes": 232,
+              "errno": 1
+            },
+            "reason": "permission"
+          },
+          "bsdAfter": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "parentAfter": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 4,
+            "samePopenChild": true
+          }
+        },
+        {
+          "elapsedSeconds": 1.401092,
+          "pidTag": "e3068537f5fff503",
+          "parentBefore": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 5,
+            "samePopenChild": true
+          },
+          "bsdBefore": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "query": {
+            "status": "unavailable",
+            "pidTag": "e3068537f5fff503",
+            "taskQuery": {
+              "bytes": 0,
+              "expectedBytes": 232,
+              "errno": 1
+            },
+            "reason": "permission"
+          },
+          "bsdAfter": {
+            "status": "unavailable",
+            "reason": "permission",
+            "query": {
+              "bytes": 0,
+              "expectedBytes": 136,
+              "errno": 1
+            }
+          },
+          "parentAfter": {
+            "api": "darwin64-waitid-WNOWAIT",
+            "errno": 0,
+            "exitPending": false,
+            "matchingChild": true,
+            "noReapingWaitOrPoll": true,
+            "sequence": 6,
+            "samePopenChild": true
+          }
+        }
+      ],
+      "samples": [
+        {
+          "rssMiB": null,
+          "cpuSeconds": null,
+          "rssLowerBoundMiB": 17.80078125,
+          "cpuLowerBoundSeconds": 0.223,
+          "processes": 1,
+          "states": [
+            "?",
+            "S"
+          ],
+          "sampleComplete": false,
+          "unknownKinds": {
+            "permission": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.80078125,
+              "cpuSeconds": 0.223180526,
+              "state": "S",
+              "pidTag": "3dfe2497e56e946a",
+              "identityTag": "be34dcdd7a4e86cf"
+            },
+            {
+              "kind": "permission",
+              "pidTag": "e3068537f5fff503",
+              "identityTag": null,
+              "source": "libproc-taskallinfo",
+              "inventory": {
+                "identityBound": false,
+                "available": true,
+                "ownerRelation": "different",
+                "realOwnerRelation": "same",
+                "parentPidTag": "3dfe2497e56e946a",
+                "role": "system-ps"
+              },
+              "taskQuery": {
+                "bytes": 0,
+                "expectedBytes": 232,
+                "errno": 1
+              }
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 1,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1,
+              "system-ps": 1
+            }
+          },
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1
+        },
+        {
+          "rssMiB": null,
+          "cpuSeconds": null,
+          "rssLowerBoundMiB": 17.86328125,
+          "cpuLowerBoundSeconds": 0.244,
+          "processes": 1,
+          "states": [
+            "?",
+            "S"
+          ],
+          "sampleComplete": false,
+          "unknownKinds": {
+            "permission": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.86328125,
+              "cpuSeconds": 0.244468211,
+              "state": "S",
+              "pidTag": "3dfe2497e56e946a",
+              "identityTag": "be34dcdd7a4e86cf"
+            },
+            {
+              "kind": "permission",
+              "pidTag": "e3068537f5fff503",
+              "identityTag": null,
+              "source": "libproc-taskallinfo",
+              "inventory": {
+                "identityBound": false,
+                "available": true,
+                "ownerRelation": "different",
+                "realOwnerRelation": "same",
+                "parentPidTag": "3dfe2497e56e946a",
+                "role": "system-ps"
+              },
+              "taskQuery": {
+                "bytes": 0,
+                "expectedBytes": 232,
+                "errno": 1
+              }
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 1,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1,
+              "system-ps": 1
+            }
+          },
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1
+        },
+        {
+          "rssMiB": null,
+          "cpuSeconds": null,
+          "rssLowerBoundMiB": 17.890625,
+          "cpuLowerBoundSeconds": 0.257,
+          "processes": 1,
+          "states": [
+            "?",
+            "S"
+          ],
+          "sampleComplete": false,
+          "unknownKinds": {
+            "permission": 1
+          },
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.890625,
+              "cpuSeconds": 0.256916479,
+              "state": "S",
+              "pidTag": "3dfe2497e56e946a",
+              "identityTag": "be34dcdd7a4e86cf"
+            },
+            {
+              "kind": "permission",
+              "pidTag": "e3068537f5fff503",
+              "identityTag": null,
+              "source": "libproc-taskallinfo",
+              "inventory": {
+                "identityBound": false,
+                "available": true,
+                "ownerRelation": "different",
+                "realOwnerRelation": "same",
+                "parentPidTag": "3dfe2497e56e946a",
+                "role": "system-ps"
+              },
+              "taskQuery": {
+                "bytes": 0,
+                "expectedBytes": 232,
+                "errno": 1
+              }
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 1,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1,
+              "system-ps": 1
+            }
+          },
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1
+        }
+      ],
+      "childReap": {
+        "exitCode": 0,
+        "heldWithoutReapingWaitOrPoll": true,
+        "outputBytes": 98304,
+        "reaped": true,
+        "stderrBytes": 0
+      },
+      "stages": [
+        {
+          "stage": "ps-held",
+          "exitCode": 0,
+          "reason": "monitor-unavailable",
+          "failurePhase": "group-activity",
+          "cleanupFailure": "PermissionError",
+          "cleanupDiagnostics": [
+            {
+              "operation": "group-probe",
+              "signal": 0,
+              "errorType": "PermissionError",
+              "errno": 1
+            }
+          ],
+          "groupCleanup": "unverified",
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "logBytes": 0,
+          "peakRSSMiB": null,
+          "minimumFreeGiB": 107.41,
+          "lastActivity": {
+            "rssMiB": null,
+            "cpuSeconds": null,
+            "rssLowerBoundMiB": 17.890625,
+            "cpuLowerBoundSeconds": 0.257,
+            "processes": 1,
+            "states": [
+              "?",
+              "S"
+            ],
+            "sampleComplete": false,
+            "unknownKinds": {
+              "permission": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "measured",
+                "source": "libproc-taskallinfo",
+                "rssMiB": 17.890625,
+                "cpuSeconds": 0.256916479,
+                "state": "S",
+                "pidTag": "3dfe2497e56e946a",
+                "identityTag": "be34dcdd7a4e86cf"
+              },
+              {
+                "kind": "permission",
+                "pidTag": "e3068537f5fff503",
+                "identityTag": null,
+                "source": "libproc-taskallinfo",
+                "inventory": {
+                  "identityBound": false,
+                  "available": true,
+                  "ownerRelation": "different",
+                  "realOwnerRelation": "same",
+                  "parentPidTag": "3dfe2497e56e946a",
+                  "role": "system-ps"
+                },
+                "taskQuery": {
+                  "bytes": 0,
+                  "expectedBytes": 232,
+                  "errno": 1
+                }
+              }
+            ],
+            "confirmedGone": 0,
+            "counterSource": "libproc-taskallinfo",
+            "inventorySummary": {
+              "identityBound": false,
+              "sameOwner": 1,
+              "differentOwner": 1,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1,
+                "system-ps": 1
+              }
+            },
+            "statesSource": "libproc-runnable-summary",
+            "timebaseNumer": 1,
+            "timebaseDenom": 1,
+            "sampleAttempts": 3,
+            "partialSamples": [
+              {
+                "unknownKinds": {
+                  "permission": 1
+                },
+                "formatExamples": [
+                  {
+                    "kind": "measured",
+                    "source": "libproc-taskallinfo",
+                    "rssMiB": 17.80078125,
+                    "cpuSeconds": 0.223180526,
+                    "state": "S",
+                    "pidTag": "3dfe2497e56e946a",
+                    "identityTag": "be34dcdd7a4e86cf"
+                  },
+                  {
+                    "kind": "permission",
+                    "pidTag": "e3068537f5fff503",
+                    "identityTag": null,
+                    "source": "libproc-taskallinfo",
+                    "inventory": {
+                      "identityBound": false,
+                      "available": true,
+                      "ownerRelation": "different",
+                      "realOwnerRelation": "same",
+                      "parentPidTag": "3dfe2497e56e946a",
+                      "role": "system-ps"
+                    },
+                    "taskQuery": {
+                      "bytes": 0,
+                      "expectedBytes": 232,
+                      "errno": 1
+                    }
+                  }
+                ],
+                "inventorySummary": {
+                  "identityBound": false,
+                  "sameOwner": 1,
+                  "differentOwner": 1,
+                  "metadataUnavailable": 0,
+                  "roles": {
+                    "other": 1,
+                    "system-ps": 1
+                  }
+                },
+                "knownRSSLowerBoundMiB": 17.80078125,
+                "knownCPULowerBoundSeconds": 0.223
+              },
+              {
+                "unknownKinds": {
+                  "permission": 1
+                },
+                "formatExamples": [
+                  {
+                    "kind": "measured",
+                    "source": "libproc-taskallinfo",
+                    "rssMiB": 17.86328125,
+                    "cpuSeconds": 0.244468211,
+                    "state": "S",
+                    "pidTag": "3dfe2497e56e946a",
+                    "identityTag": "be34dcdd7a4e86cf"
+                  },
+                  {
+                    "kind": "permission",
+                    "pidTag": "e3068537f5fff503",
+                    "identityTag": null,
+                    "source": "libproc-taskallinfo",
+                    "inventory": {
+                      "identityBound": false,
+                      "available": true,
+                      "ownerRelation": "different",
+                      "realOwnerRelation": "same",
+                      "parentPidTag": "3dfe2497e56e946a",
+                      "role": "system-ps"
+                    },
+                    "taskQuery": {
+                      "bytes": 0,
+                      "expectedBytes": 232,
+                      "errno": 1
+                    }
+                  }
+                ],
+                "inventorySummary": {
+                  "identityBound": false,
+                  "sameOwner": 1,
+                  "differentOwner": 1,
+                  "metadataUnavailable": 0,
+                  "roles": {
+                    "other": 1,
+                    "system-ps": 1
+                  }
+                },
+                "knownRSSLowerBoundMiB": 17.86328125,
+                "knownCPULowerBoundSeconds": 0.244
+              },
+              {
+                "unknownKinds": {
+                  "permission": 1
+                },
+                "formatExamples": [
+                  {
+                    "kind": "measured",
+                    "source": "libproc-taskallinfo",
+                    "rssMiB": 17.890625,
+                    "cpuSeconds": 0.256916479,
+                    "state": "S",
+                    "pidTag": "3dfe2497e56e946a",
+                    "identityTag": "be34dcdd7a4e86cf"
+                  },
+                  {
+                    "kind": "permission",
+                    "pidTag": "e3068537f5fff503",
+                    "identityTag": null,
+                    "source": "libproc-taskallinfo",
+                    "inventory": {
+                      "identityBound": false,
+                      "available": true,
+                      "ownerRelation": "different",
+                      "realOwnerRelation": "same",
+                      "parentPidTag": "3dfe2497e56e946a",
+                      "role": "system-ps"
+                    },
+                    "taskQuery": {
+                      "bytes": 0,
+                      "expectedBytes": 232,
+                      "errno": 1
+                    }
+                  }
+                ],
+                "inventorySummary": {
+                  "identityBound": false,
+                  "sameOwner": 1,
+                  "differentOwner": 1,
+                  "metadataUnavailable": 0,
+                  "roles": {
+                    "other": 1,
+                    "system-ps": 1
+                  }
+                },
+                "knownRSSLowerBoundMiB": 17.890625,
+                "knownCPULowerBoundSeconds": 0.257
+              }
+            ]
+          },
+          "quietSeconds": 0
+        }
+      ],
+      "monitorFailure": {
+        "stage": "ps-held",
+        "elapsedSeconds": 1.48,
+        "rssMiB": null,
+        "cpuSeconds": null,
+        "rssLowerBoundMiB": 17.890625,
+        "cpuLowerBoundSeconds": 0.257,
+        "processes": 1,
+        "states": [
+          "?",
+          "S"
+        ],
+        "sampleComplete": false,
+        "unknownKinds": {
+          "permission": 1
+        },
+        "formatExamples": [
+          {
+            "kind": "measured",
+            "source": "libproc-taskallinfo",
+            "rssMiB": 17.890625,
+            "cpuSeconds": 0.256916479,
+            "state": "S",
+            "pidTag": "3dfe2497e56e946a",
+            "identityTag": "be34dcdd7a4e86cf"
+          },
+          {
+            "kind": "permission",
+            "pidTag": "e3068537f5fff503",
+            "identityTag": null,
+            "source": "libproc-taskallinfo",
+            "inventory": {
+              "identityBound": false,
+              "available": true,
+              "ownerRelation": "different",
+              "realOwnerRelation": "same",
+              "parentPidTag": "3dfe2497e56e946a",
+              "role": "system-ps"
+            },
+            "taskQuery": {
+              "bytes": 0,
+              "expectedBytes": 232,
+              "errno": 1
+            }
+          }
+        ],
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "inventorySummary": {
+          "identityBound": false,
+          "sameOwner": 1,
+          "differentOwner": 1,
+          "metadataUnavailable": 0,
+          "roles": {
+            "other": 1,
+            "system-ps": 1
+          }
+        },
+        "statesSource": "libproc-runnable-summary",
+        "timebaseNumer": 1,
+        "timebaseDenom": 1,
+        "sampleAttempts": 3,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "permission": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "measured",
+                "source": "libproc-taskallinfo",
+                "rssMiB": 17.80078125,
+                "cpuSeconds": 0.223180526,
+                "state": "S",
+                "pidTag": "3dfe2497e56e946a",
+                "identityTag": "be34dcdd7a4e86cf"
+              },
+              {
+                "kind": "permission",
+                "pidTag": "e3068537f5fff503",
+                "identityTag": null,
+                "source": "libproc-taskallinfo",
+                "inventory": {
+                  "identityBound": false,
+                  "available": true,
+                  "ownerRelation": "different",
+                  "realOwnerRelation": "same",
+                  "parentPidTag": "3dfe2497e56e946a",
+                  "role": "system-ps"
+                },
+                "taskQuery": {
+                  "bytes": 0,
+                  "expectedBytes": 232,
+                  "errno": 1
+                }
+              }
+            ],
+            "inventorySummary": {
+              "identityBound": false,
+              "sameOwner": 1,
+              "differentOwner": 1,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1,
+                "system-ps": 1
+              }
+            },
+            "knownRSSLowerBoundMiB": 17.80078125,
+            "knownCPULowerBoundSeconds": 0.223
+          },
+          {
+            "unknownKinds": {
+              "permission": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "measured",
+                "source": "libproc-taskallinfo",
+                "rssMiB": 17.86328125,
+                "cpuSeconds": 0.244468211,
+                "state": "S",
+                "pidTag": "3dfe2497e56e946a",
+                "identityTag": "be34dcdd7a4e86cf"
+              },
+              {
+                "kind": "permission",
+                "pidTag": "e3068537f5fff503",
+                "identityTag": null,
+                "source": "libproc-taskallinfo",
+                "inventory": {
+                  "identityBound": false,
+                  "available": true,
+                  "ownerRelation": "different",
+                  "realOwnerRelation": "same",
+                  "parentPidTag": "3dfe2497e56e946a",
+                  "role": "system-ps"
+                },
+                "taskQuery": {
+                  "bytes": 0,
+                  "expectedBytes": 232,
+                  "errno": 1
+                }
+              }
+            ],
+            "inventorySummary": {
+              "identityBound": false,
+              "sameOwner": 1,
+              "differentOwner": 1,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1,
+                "system-ps": 1
+              }
+            },
+            "knownRSSLowerBoundMiB": 17.86328125,
+            "knownCPULowerBoundSeconds": 0.244
+          },
+          {
+            "unknownKinds": {
+              "permission": 1
+            },
+            "formatExamples": [
+              {
+                "kind": "measured",
+                "source": "libproc-taskallinfo",
+                "rssMiB": 17.890625,
+                "cpuSeconds": 0.256916479,
+                "state": "S",
+                "pidTag": "3dfe2497e56e946a",
+                "identityTag": "be34dcdd7a4e86cf"
+              },
+              {
+                "kind": "permission",
+                "pidTag": "e3068537f5fff503",
+                "identityTag": null,
+                "source": "libproc-taskallinfo",
+                "inventory": {
+                  "identityBound": false,
+                  "available": true,
+                  "ownerRelation": "different",
+                  "realOwnerRelation": "same",
+                  "parentPidTag": "3dfe2497e56e946a",
+                  "role": "system-ps"
+                },
+                "taskQuery": {
+                  "bytes": 0,
+                  "expectedBytes": 232,
+                  "errno": 1
+                }
+              }
+            ],
+            "inventorySummary": {
+              "identityBound": false,
+              "sameOwner": 1,
+              "differentOwner": 1,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1,
+                "system-ps": 1
+              }
+            },
+            "knownRSSLowerBoundMiB": 17.890625,
+            "knownCPULowerBoundSeconds": 0.257
+          }
+        ]
+      },
+      "firstFailure": {
+        "stage": "ps-held",
+        "code": "monitor-unavailable",
+        "elapsedSeconds": 1.48
+      }
+    },
+    "heldQualificationError": "ps-fail-closed-missing",
+    "draining": {
+      "mode": "draining",
+      "synthetic": true,
+      "errorCode": null,
+      "pidTag": "009e2464a384345e",
+      "workerPidTag": "ea99421e1e8a5e73",
+      "parentPopenLifetimeBinding": false,
+      "bsdSameIdentityAllObservations": false,
+      "sameChildThreeEPERM": false,
+      "observations": [],
+      "samples": [
+        {
+          "rssMiB": 17.828125,
+          "cpuSeconds": 0.646,
+          "rssLowerBoundMiB": 17.828125,
+          "cpuLowerBoundSeconds": 0.646,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.828125,
+              "cpuSeconds": 0.645845053,
+              "state": "S",
+              "pidTag": "ea99421e1e8a5e73",
+              "identityTag": "a8e914af8287b263"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1
+        },
+        {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1
+        }
+      ],
+      "childReap": {
+        "exitCode": 0,
+        "heldWithoutReapingWaitOrPoll": false,
+        "outputBytes": 98304,
+        "reaped": true,
+        "stderrBytes": 0
+      },
+      "stages": [
+        {
+          "stage": "ps-draining",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "cleanupFailure": null,
+          "cleanupDiagnostics": [],
+          "groupCleanup": "verified-gone",
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "logBytes": 0,
+          "peakRSSMiB": 18,
+          "minimumFreeGiB": 107.41,
+          "lastActivity": {
+            "rssMiB": 0,
+            "cpuSeconds": 0,
+            "rssLowerBoundMiB": 0,
+            "cpuLowerBoundSeconds": 0,
+            "processes": 0,
+            "states": [],
+            "sampleComplete": true,
+            "unknownKinds": {},
+            "formatExamples": [],
+            "confirmedGone": 1,
+            "counterSource": "libproc-taskallinfo",
+            "inventorySummary": {
+              "identityBound": false,
+              "sameOwner": 1,
+              "differentOwner": 0,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1
+              }
+            },
+            "statesSource": "libproc-runnable-summary",
+            "timebaseNumer": 1,
+            "timebaseDenom": 1,
+            "sampleAttempts": 1,
+            "partialSamples": []
+          },
+          "quietSeconds": 0
+        }
+      ],
+      "monitorFailure": null,
+      "firstFailure": null
+    },
+    "realHarness": {
+      "browserStartup": "NOT_TESTED",
+      "firstFailure": null,
+      "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "harnessHashesVerified": true,
+      "monitorDiagnostics": [],
+      "monitorFailure": null,
+      "nativeZombiePreflight": "passed",
+      "newArtifacts": 0,
+      "observations": {
+        "completeSamples": 6,
+        "differentOwnerObserved": 2,
+        "psTaskDeniedSamples": 0,
+        "samples": 6,
+        "systemPsObserved": 1
+      },
+      "platform": "darwin",
+      "processSelectionChanged": false,
+      "scope": "PINNED_NATIVE_HARNESS_PROCESS_CENSUS_ONLY",
+      "sdkAcquired": false,
+      "selfCounter": {
+        "cpuSeconds": 0.295990431,
+        "rssMiB": 20.4921875,
+        "state": "R",
+        "status": "measured"
+      },
+      "shimAuthentication": "NOT_TESTED",
+      "stages": [
+        {
+          "cleanupDiagnostics": [],
+          "cleanupFailure": null,
+          "exitCode": 0,
+          "failurePhase": null,
+          "groupCleanup": "verified-gone",
+          "lastActivity": {
+            "confirmedGone": 0,
+            "counterSource": "libproc-taskallinfo",
+            "cpuLowerBoundSeconds": 0.089,
+            "cpuSeconds": 0.089,
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.089307093,
+                "identityTag": "9e268e8b8d9aa1e1",
+                "kind": "measured",
+                "pidTag": "289cfd41ef5ccb12",
+                "rssMiB": 8.890625,
+                "source": "libproc-taskallinfo",
+                "state": "R"
+              }
+            ],
+            "inventorySummary": {
+              "differentOwner": 0,
+              "identityBound": false,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1
+              },
+              "sameOwner": 1
+            },
+            "partialSamples": [],
+            "processes": 1,
+            "rssLowerBoundMiB": 8.890625,
+            "rssMiB": 8.890625,
+            "sampleAttempts": 1,
+            "sampleComplete": true,
+            "states": [
+              "R"
+            ],
+            "statesSource": "libproc-runnable-summary",
+            "timebaseDenom": 1,
+            "timebaseNumer": 1,
+            "unknownKinds": {}
+          },
+          "leaderReap": {
+            "exitCode": 0,
+            "status": "reaped"
+          },
+          "logBytes": 98,
+          "minimumFreeGiB": 107.41,
+          "peakRSSMiB": 9,
+          "quietSeconds": 0,
+          "reason": null,
+          "stage": "census-zombie-preflight"
+        },
+        {
+          "cleanupDiagnostics": [],
+          "cleanupFailure": null,
+          "exitCode": 0,
+          "failurePhase": null,
+          "groupCleanup": "verified-gone",
+          "lastActivity": {
+            "confirmedGone": 0,
+            "counterSource": "libproc-taskallinfo",
+            "cpuLowerBoundSeconds": 0.468,
+            "cpuSeconds": 0.468,
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.468157993,
+                "identityTag": "054c189421e64f52",
+                "kind": "measured",
+                "pidTag": "f32183b0466bcab9",
+                "rssMiB": 21.4296875,
+                "source": "libproc-taskallinfo",
+                "state": "S"
+              }
+            ],
+            "inventorySummary": {
+              "differentOwner": 0,
+              "identityBound": false,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1
+              },
+              "sameOwner": 1
+            },
+            "partialSamples": [],
+            "processes": 1,
+            "rssLowerBoundMiB": 21.4296875,
+            "rssMiB": 21.4296875,
+            "sampleAttempts": 1,
+            "sampleComplete": true,
+            "states": [
+              "S"
+            ],
+            "statesSource": "libproc-runnable-summary",
+            "timebaseDenom": 1,
+            "timebaseNumer": 1,
+            "unknownKinds": {}
+          },
+          "leaderReap": {
+            "exitCode": 0,
+            "status": "reaped"
+          },
+          "logBytes": 0,
+          "minimumFreeGiB": 107.41,
+          "peakRSSMiB": 21,
+          "quietSeconds": 0,
+          "reason": null,
+          "stage": "harness-census-preflight"
+        }
+      ],
+      "status": "passed",
+      "systemPsFile": {
+        "ownedByRoot": true,
+        "setuidBit": true
+      },
+      "workload": {
+        "hostAll": 12,
+        "hostSingle": 12,
+        "shimPIDInventory": 12
+      }
+    },
+    "errorCode": "ps-fail-closed-missing"
+  },
+  "interpretation": {
+    "sameKnownLiveChildThreeEPERM": "ESTABLISHED_FOR_CONTROLLED_CHILD: exact unreaped parent-child lifetime plus six non-reaping live ACKs; all three task queries zero/232 EPERM. BSD zero/136 EPERM remains unknown.",
+    "syntheticDifference": "Repeated PID columns and intentionally undrained stdout differ from the real harness. ACK/BSD instrumentation adds timing overhead. This proves a possible lifetime mechanism, not a real-harness stall or the historical target.",
+    "realHarness": "Pinned actual census completed; six complete final samples, system ps observed once, no task-denied samples captured in this run. No browser or Shim authentication occurred.",
+    "cleanup": "Known ps and exact worker both reaped exit0. Group-probe EPERM remains an unverified whole-group cleanup result, never converted to gone.",
+    "validatorLabel": "Top ps-fail-closed-missing is inaccurate as a description of primary behavior: validator demanded errorCode==monitor-unavailable, while later cleanup PermissionError became the terminal exception. firstFailure and stage reason explicitly retain monitor-unavailable. Raw reported status/error are retained without relabeling the job as passed.",
+    "remainingBlockers": [
+      "Historical denied generation and native exit cause unknown",
+      "Actual long-lived native-harness ps behavior not reproduced",
+      "Group cleanup EPERM unresolved",
+      "Full Mac 82-test suite not green in preceding preparation run",
+      "Native authentication not verified"
+    ]
+  }
+}

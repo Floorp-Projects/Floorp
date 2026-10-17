@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "PROPOSED_NOT_IMPLEMENTED_OR_EXECUTED",
+  "basisRun": 39075099849,
+  "conclusion": "A controlled owned live ps can deny all three queries; normally draining and pinned harness controls passed. This supports a permission/lifetime mechanism, not historical causality or native authentication.",
+  "immediateMinimalStep": {
+    "scope": "One owned-child group cleanup regression and a narrowly scoped exact-leader reap ordering repair, without changing permission semantics or adding monitoring infrastructure.",
+    "hypothesis": "On Darwin, an exited unreaped leader can leave a zombie-only group for which killpg(pgid,0) reports EPERM before exact Popen.wait reaps it. The observed cleanup failure and public XNU code are consistent with this; process state at the failed probe was not retained, so attribution remains unproven.",
+    "reproduction": "Known same-UID child in its dedicated group; retain exact Popen child unreaped, confirm exit-pending with WNOWAIT, record kill(pid,0) and killpg(pgid,0), exact reap, then repeat read-only group probe. Include a still-live child and injected EPERM/unknown membership controls.",
+    "candidateRepair": "Poll/reap the exact owned Popen leader before successive group probes. A remaining group probe denial stays an error; never turn EPERM into gone or change group/per-PID selection. Keep descendant verification and independent exact-child wait.",
+    "gate": "Real Mac regression must reproduce and then remove only the proven zombie ordering failure; live/foreign/unavailable cases retain fail-closed behavior. The currently failed broad Mac suite must not be reported green."
+  },
+  "nativeHarnessFollowThrough": {
+    "scope": "If proceeding to prevent ps-derived task denials, change only HostProcess._process_rows and ShimMonitor PID enumeration, preserving the existing exact process identity checks.",
+    "candidate": "Use ordinary read-only process-list/BSD-generation/argv APIs instead of creating setuid /bin/ps descendants; retain PID+birth, executable/argv/profile binding, size/deadline limits, ambiguous/missing/permission failures, and generation recheck before any signal. Verify API availability and behavior first; no production monitor or permission relaxation.",
+    "smallGate": "SDK-free fixed-harness census on standard macos-15-intel must exercise the replacement paths, complete under unchanged counter sampling, and prove cleanup. A unit test alone is insufficient.",
+    "longRunCondition": "Only after the applicable Mac cleanup and harness gates pass, pin the reviewed fixture and refresh official SDK transport pins if still needed, then justify one full host/XUL/native-suite execution. Do not repeat an unchanged full build.",
+    "nativeAuthentication": "NOT_VERIFIED; only the actual built host/Shim native suite can establish this."
+  },
+  "primarySource": {
+    "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sig.c",
+    "function": "killpg1",
+    "supports": "The explicit-group filter excludes SZOMB and no eligible process yields POSIX EPERM. This is source evidence for a candidate mechanism, not proof of the old runner process state."
+  },
+  "executionThisStep": {
+    "additionalMacJobs": 0,
+    "fullBuilds": 0,
+    "newArtifacts": 0,
+    "privilegeOrSecurityChanges": false
+  }
+}
