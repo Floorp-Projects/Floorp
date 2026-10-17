@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39072187911,
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39072187911",
+    "head_sha": "1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7",
+    "head_branch": "codex/mac-native-monitor-preflight-recovery6-20261017",
+    "event": "push",
+    "run_attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-17T21:44:10Z",
+    "updated_at": "2026-10-17T21:44:35Z"
+  },
+  "job": {
+    "id": 117511907398,
+    "name": "native-monitor",
+    "status": "completed",
+    "conclusion": "success",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "started_at": "2026-10-17T21:44:15Z",
+    "completed_at": "2026-10-17T21:44:35Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-17T21:44:15Z",
+        "completed_at": "2026-10-17T21:44:17Z"
+      },
+      {
+        "name": "Bound the initial diagnostic execution",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-17T21:44:17Z",
+        "completed_at": "2026-10-17T21:44:17Z"
+      },
+      {
+        "name": "Checkout reviewed monitor fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-17T21:44:17Z",
+        "completed_at": "2026-10-17T21:44:21Z"
+      },
+      {
+        "name": "Checkout fixed native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-17T21:44:21Z",
+        "completed_at": "2026-10-17T21:44:23Z"
+      },
+      {
+        "name": "Sample native harness census descendants",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-17T21:44:23Z",
+        "completed_at": "2026-10-17T21:44:31Z"
+      },
+      {
+        "name": "Confirm bounded diagnostic result",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-10-17T21:44:31Z",
+        "completed_at": "2026-10-17T21:44:32Z"
+      },
+      {
+        "name": "Post Checkout fixed native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11,
+        "started_at": "2026-10-17T21:44:32Z",
+        "completed_at": "2026-10-17T21:44:32Z"
+      },
+      {
+        "name": "Post Checkout reviewed monitor fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12,
+        "started_at": "2026-10-17T21:44:32Z",
+        "completed_at": "2026-10-17T21:44:33Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 13,
+        "started_at": "2026-10-17T21:44:33Z",
+        "completed_at": "2026-10-17T21:44:33Z"
+      }
+    ]
+  },
+  "durationSeconds": 20.0,
+  "exactlyOneDiagnosticRun": true,
+  "exactlyOneJob": true,
+  "caller": "1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7",
+  "fixture": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "workflow": {
+    "path": ".github/workflows/mac-native-monitor-census.yml",
+    "sha256": "f0bc6933fb5c008dbccc11279e79f93787bbb004a54c9a794876889a77b48ebe",
+    "bytes": 2944,
+    "providerReadbackExact": true
+  },
+  "summary": {
+    "browserStartup": "NOT_TESTED",
+    "firstFailure": null,
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "harnessHashesVerified": true,
+    "monitorDiagnostics": [
+      {
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "cpuLowerBoundSeconds": 0.251,
+        "cpuSeconds": 0.251,
+        "elapsedSeconds": 4.07,
+        "formatExamples": [
+          {
+            "cpuSeconds": 0.250901736,
+            "identityTag": "e21eb8b0cd7bb51d",
+            "kind": "measured",
+            "pidTag": "807fc62f94661d78",
+            "rssMiB": 21.39453125,
+            "source": "libproc-taskallinfo",
+            "state": "S"
+          }
+        ],
+        "inventorySummary": {
+          "differentOwner": 0,
+          "identityBound": false,
+          "metadataUnavailable": 0,
+          "roles": {
+            "other": 1
+          },
+          "sameOwner": 1
+        },
+        "partialSamples": [
+          {
+            "formatExamples": [
+              {
+                "cpuSeconds": 0.238997698,
+                "identityTag": "e21eb8b0cd7bb51d",
+                "kind": "measured",
+                "pidTag": "807fc62f94661d78",
+                "rssMiB": 21.39453125,
+                "source": "libproc-taskallinfo",
+                "state": "S"
+              },
+              {
+                "identityTag": null,
+                "inventory": {
+                  "available": true,
+                  "identityBound": false,
+                  "ownerRelation": "different",
+                  "parentPidTag": "807fc62f94661d78",
+                  "realOwnerRelation": "same",
+                  "role": "system-ps"
+                },
+                "kind": "permission",
+                "pidTag": "00374ab06acacd06",
+                "source": "libproc-taskallinfo",
+                "taskQuery": {
+                  "bytes": 0,
+                  "errno": 1,
+                  "expectedBytes": 232
+                }
+              }
+            ],
+            "inventorySummary": {
+              "differentOwner": 1,
+              "identityBound": false,
+              "metadataUnavailable": 0,
+              "roles": {
+                "other": 1,
+                "system-ps": 1
+              },
+              "sameOwner": 1
+            },
+            "knownCPULowerBoundSeconds": 0.239,
+            "knownRSSLowerBoundMiB": 21.39453125,
+            "unknownKinds": {
+              "permission": 1
+            }
+          }
+        ],
+        "processes": 1,
+        "rssLowerBoundMiB": 21.39453125,
+        "rssMiB": 21.39453125,
+        "sampleAttempts": 2,
+        "sampleComplete": true,
+        "stage": "harness-census-preflight",
+        "states": [
+          "S"
+        ],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1,
+        "unknownKinds": {}
+      }
+    ],
+    "monitorFailure": null,
+    "nativeZombiePreflight": "passed",
+    "newArtifacts": 0,
+    "observations": {
+      "completeSamples": 5,
+      "differentOwnerObserved": 1,
+      "psTaskDeniedSamples": 1,
+      "samples": 5,
+      "systemPsObserved": 1
+    },
+    "platform": "darwin",
+    "processSelectionChanged": false,
+    "scope": "PINNED_NATIVE_HARNESS_PROCESS_CENSUS_ONLY",
+    "sdkAcquired": false,
+    "selfCounter": {
+      "cpuSeconds": 0.316949448,
+      "rssMiB": 20.03515625,
+      "state": "R",
+      "status": "measured"
+    },
+    "shimAuthentication": "NOT_TESTED",
+    "stages": [
+      {
+        "cleanupDiagnostics": [],
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "lastActivity": {
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "cpuLowerBoundSeconds": 0.18,
+          "cpuSeconds": 0.18,
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.179695802,
+              "identityTag": "88cec497e216fdc1",
+              "kind": "measured",
+              "pidTag": "ec9d218eac468786",
+              "rssMiB": 18.734375,
+              "source": "libproc-taskallinfo",
+              "state": "R"
+            }
+          ],
+          "inventorySummary": {
+            "differentOwner": 0,
+            "identityBound": false,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            },
+            "sameOwner": 1
+          },
+          "partialSamples": [],
+          "processes": 1,
+          "rssLowerBoundMiB": 18.734375,
+          "rssMiB": 18.734375,
+          "sampleAttempts": 1,
+          "sampleComplete": true,
+          "states": [
+            "R"
+          ],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseDenom": 1,
+          "timebaseNumer": 1,
+          "unknownKinds": {}
+        },
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "logBytes": 98,
+        "minimumFreeGiB": 108.06,
+        "peakRSSMiB": 19,
+        "quietSeconds": 0,
+        "reason": null,
+        "stage": "census-zombie-preflight"
+      },
+      {
+        "cleanupDiagnostics": [],
+        "cleanupFailure": null,
+        "exitCode": 0,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "lastActivity": {
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "cpuLowerBoundSeconds": 0.313,
+          "cpuSeconds": 0.313,
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.312594759,
+              "identityTag": "e21eb8b0cd7bb51d",
+              "kind": "measured",
+              "pidTag": "807fc62f94661d78",
+              "rssMiB": 21.4140625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            }
+          ],
+          "inventorySummary": {
+            "differentOwner": 0,
+            "identityBound": false,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            },
+            "sameOwner": 1
+          },
+          "partialSamples": [],
+          "processes": 1,
+          "rssLowerBoundMiB": 21.4140625,
+          "rssMiB": 21.4140625,
+          "sampleAttempts": 1,
+          "sampleComplete": true,
+          "states": [
+            "S"
+          ],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseDenom": 1,
+          "timebaseNumer": 1,
+          "unknownKinds": {}
+        },
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "logBytes": 0,
+        "minimumFreeGiB": 108.06,
+        "peakRSSMiB": 21,
+        "quietSeconds": 0,
+        "reason": null,
+        "stage": "harness-census-preflight"
+      }
+    ],
+    "status": "passed",
+    "systemPsFile": {
+      "ownedByRoot": true,
+      "setuidBit": true
+    },
+    "workload": {
+      "hostAll": 12,
+      "hostSingle": 12,
+      "shimPIDInventory": 12
+    }
+  },
+  "log": {
+    "method": "GitHub connector decoded UTF-8 job text; local literal heredoc preserves the decoded text with a final newline",
+    "bytes": 28700,
+    "sha256": "94391aef772d6900cd69695e002554de9d7af47a4f71746ca86183e860b0749d",
+    "rawContentPublished": false
+  },
+  "summaryCanonicalSHA256": "d71b63bd8a9778db5c1b71da0d4ff0e4b75ed9eede1fd7826656a1635fe5a9ba",
+  "artifacts": [],
+  "interpretation": {
+    "qualification": "PASS_PROCESS_CENSUS_PREFLIGHT_ONLY",
+    "actualMacSelfAndUnreapedChild": "PASS",
+    "censusExecution": "All three pinned census patterns executed twelve times each; five final complete samples.",
+    "observedDenial": "One partial attempt recorded task query 0/232 bytes errno=EPERM for a PID whose earlier inventory entry had role system-ps, different effective owner, same real owner and the worker as parent.",
+    "identityLimit": "Inventory identityBound=false. The denied task has no generation identity; owner/role at query time and identity continuity are unproven.",
+    "recovery": "The next attempt yielded a complete sample under the unchanged bounded retry policy; no denied process was excluded or treated as measured zero.",
+    "systemPsFile": "The current Mac runner reported /bin/ps root-owned with the setuid bit.",
+    "oldFailureAttribution": "UNKNOWN: this supports a harness ps explanation but does not identify the denied PID in run 39045848018 or reproduce its three consecutive denials.",
+    "cleanup": "Both stage group probes confirmed disappearance and both exact Popen children were reaped with code zero; no cleanup permission error occurred here.",
+    "browserStartup": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "historicalNativeExitCause": "UNKNOWN"
+  },
+  "scope": {
+    "sdkAcquired": false,
+    "fullBuild": false,
+    "browserLaunch": false,
+    "productSigning": false,
+    "artifactUploads": 0,
+    "reruns": 0,
+    "manualCancellation": false,
+    "privilegeOrProtectionChange": false,
+    "publicationOrMerge": false,
+    "additionalExecutionPlanned": false
+  }
+}
