@@ -112,6 +112,7 @@ export interface ContextMenuCatalogSnapshot {
 /** Privileged process-wide catalog sink. Runtime loading is optional. */
 export interface ContextMenuCatalogReporter {
   report(ownerId: string, snapshot: ContextMenuCatalogSnapshot): void;
+  registerRefresh?(ownerId: string, refresh: () => void): void;
   removeOwner(ownerId: string): void;
 }
 

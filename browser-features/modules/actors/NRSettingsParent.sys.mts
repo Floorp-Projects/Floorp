@@ -47,7 +47,7 @@ import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
-    getSnapshot(): ContextMenuCatalogSnapshot;
+    refresh(): ContextMenuCatalogSnapshot;
     getRevision(): number;
   };
 }
@@ -67,7 +67,7 @@ export class NRSettingsParent extends JSWindowActorParent {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
       case "getContextMenuCatalog":
-        return ContextMenuCatalogService.getSnapshot();
+        return ContextMenuCatalogService.refresh();
       case "getContextMenuCatalogRevision":
         return ContextMenuCatalogService.getRevision();
       case "openExternalLink": {
