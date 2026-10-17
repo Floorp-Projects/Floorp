@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "fixtureCommit": "b00f0761850046de58f5186614e0d250973fa5ea",
+  "fixtureTree": "26fabae0fc1b9f7404fbfd41c74a213dc0ee2b27",
+  "codeManifestSHA256": "29c8e059b6695732c8424b151b6b13e56c851e45b8216615cd24ed7d1d3941ac",
+  "providerHelperFileHashesMatched": 11,
+  "executionCommit": "8c7e8b009020735a3d9fe4f477bc7d1ca0b7b685",
+  "executionTree": "6a0b0f29ebd7d02e6c06fab257a30d4608aceaff",
+  "runtimeParentAndSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "runtimeFilesAdded": [
+    ".github/workflows/mac-native-nonpgo.yml"
+  ],
+  "workflowSHA256": "9fbc21231626e050131b8765a87c8c3338922ee430c887bd9d66fe907ac2bc10",
+  "workflowProviderReadback": "BYTE_MATCH",
+  "newExecutionBranch": "codex/mac-native-nonpgo-recovery-20261017",
+  "priorFailedRun": 39016143725,
+  "humanTimeBudget": null,
+  "platformJobMinutes": 360,
+  "codeAndRouteReview": "GO",
+  "newActionsArtifacts": 0,
+  "finalAdditionalFiles": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_WORKFLOW.yml.disabled",
+      "bytes": 4035,
+      "sha256": "9fbc21231626e050131b8765a87c8c3338922ee430c887bd9d66fe907ac2bc10"
+    },
+    {
+      "path": ".github/patches/floorp-runtime/native-diagnostics/isolated-intel-nonpgo-recovery-workflow.patch",
+      "bytes": 4325,
+      "sha256": "a7cc6dac36f04c213aeab8e652dbc9ae9f8c60778a8ce0b6c2a782bd5380ba74"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_HANDOFF.ja.md",
+      "bytes": 3890,
+      "sha256": "c79c25b81ad0c6799a999b3f141af81676242b8cf31a3b8839c74d8624d27241"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_ROUTE_REVIEW.json",
+      "bytes": 6356,
+      "sha256": "29e517ecba45f1c0e4c3fb030eff315584f16041bf779536feb048d657894a61"
+    }
+  ]
+}

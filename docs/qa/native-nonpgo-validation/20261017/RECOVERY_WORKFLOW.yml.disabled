@@ -1,0 +1,97 @@
+name: Isolated Intel non-PGO native recovery
+'on':
+  push:
+    branches: [codex/mac-native-nonpgo-recovery-20261017]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: isolated-intel-nonpgo-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+    env:
+      FLOORP_FIXTURE_SHA: b00f0761850046de58f5186614e0d250973fa5ea
+      HARNESS_SHA: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
+      RUNTIME_SHA: 7dd619742b25567e479eeda97ae071d10542ad0b
+    steps:
+      - name: Bound the initial authorized run
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-nonpgo-recovery-20261017
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test '${{ github.event.created }}' = true
+          test '${{ github.event.before }}' = 0000000000000000000000000000000000000000
+          TASK_PYTHON="$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3"
+          test -x "$TASK_PYTHON"
+          "$TASK_PYTHON" - <<'PY'
+          import os,pathlib,time
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'floorp-native-nonpgo'
+          p.mkdir(mode=0o700,exist_ok=False)
+          (p/'started').write_text(str(time.time()))
+          (p/'started-monotonic').write_text(str(time.monotonic()))
+          PY
+          echo "TASK_PYTHON=$TASK_PYTHON" >> "$GITHUB_ENV"
+          echo "TASK_ROOT=$RUNNER_TEMP/floorp-native-nonpgo" >> "$GITHUB_ENV"
+      - name: Checkout immutable preparation fixture
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.FLOORP_FIXTURE_SHA }}
+          path: fixture
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Checkout immutable Runtime source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ env.RUNTIME_SHA }}
+          path: source
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+      - name: Checkout immutable native harness
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.HARNESS_SHA }}
+          path: harness
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: tools/app-shim
+      - name: Acquire only the existing fixed SDK
+        env:
+          SDK_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/fetch_sdk.py \
+            --plan fixture/tools/qa/native-nonpgo/plan.json --output "$TASK_ROOT/sdk-download"
+      - name: Compile full host and XUL then authenticate native Shim
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/pipeline.py \
+            --source "$GITHUB_WORKSPACE/source" --fixture "$GITHUB_WORKSPACE/fixture" \
+            --harness "$GITHUB_WORKSPACE/harness" --task "$TASK_ROOT"
+      - name: Confirm bounded result exists
+        if: always()
+        shell: bash
+        run: |
+          if [[ ! -x "${TASK_PYTHON:-}" || -z "${TASK_ROOT:-}" ]]; then
+            echo '{"status":"failed","code":"initial-setup-incomplete","execution":"not-produced","newArtifacts":0}'
+            exit 1
+          fi
+          "$TASK_PYTHON" - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path(os.environ['TASK_ROOT'])/'summary.json'
+          if not p.is_file():
+              f=p.with_name('first-failure.json')
+              first=json.loads(f.read_text()) if f.is_file() else None
+              print(json.dumps({'status':'failed','code':'summary-missing','firstFailure':first,'newArtifacts':0}))
+              raise SystemExit(1)
+          v=json.loads(p.read_text())
+          if v.get('status')!='passed': raise SystemExit(1)
+          PY

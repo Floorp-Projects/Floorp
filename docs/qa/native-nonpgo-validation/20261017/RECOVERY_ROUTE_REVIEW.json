@@ -1,0 +1,140 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17T08:39:36Z",
+  "decision": "GO_REVIEWED_IMMUTABLE_RECOVERY_PAYLOAD_ROUTE",
+  "findings": [],
+  "scope": "Final immutable fixture, rendered workflow and delivery patch only. Prior focused code review and 23 passing portable guards are retained; no native/CI work was repeated.",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "b00f0761850046de58f5186614e0d250973fa5ea",
+    "tree": "26fabae0fc1b9f7404fbfd41c74a213dc0ee2b27",
+    "parent": "b8707b7119e20365659c348179e8ccd20d84faed",
+    "providerCommitTreeVerified": true,
+    "all8ChangedProviderGitBlobsMatchLocalPayload": true,
+    "providerTemplateContentBytesMatch": true,
+    "files": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_CODE_HASHES.json",
+        "gitBlob": "f7f38fc50fee683f31402daca85251e94c23673f",
+        "sha256": "29c8e059b6695732c8424b151b6b13e56c851e45b8216615cd24ed7d1d3941ac",
+        "providerGitBlob": "f7f38fc50fee683f31402daca85251e94c23673f",
+        "match": true
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_INDEPENDENT_REVIEW.json",
+        "gitBlob": "c028e7ad432c8c3106c3cc85f71a0ae86e9ce81a",
+        "sha256": "7bcfec822a8f18cc469298a600d84419e6b70a1e6366362306cfabe2b2e3a84d",
+        "providerGitBlob": "c028e7ad432c8c3106c3cc85f71a0ae86e9ce81a",
+        "match": true
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY_PREPARATION.json",
+        "gitBlob": "207784428f9524090ffb793794f7e3acc9f71dab",
+        "sha256": "056c32d99397cbe7e849e09b1d0825040eb18dfccde6b0c08df95c71116c187d",
+        "providerGitBlob": "207784428f9524090ffb793794f7e3acc9f71dab",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "gitBlob": "2057fcc0eae494b85cda19ab69b84795a30377a2",
+        "sha256": "8956b30dc5e66c5305fd18897793d808df1b1ea6308630a2daa5b7b6920a2fa1",
+        "providerGitBlob": "2057fcc0eae494b85cda19ab69b84795a30377a2",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "gitBlob": "d2254a9cdd580ac6ab5b7c7e4445d11163eb8cee",
+        "sha256": "cc0af8772c0ab770409731559a3c6a45e78845d0d94590c3f2e09e5dd9759946",
+        "providerGitBlob": "d2254a9cdd580ac6ab5b7c7e4445d11163eb8cee",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "gitBlob": "c833dff3018ceabba151e89b2f7363e59e18dd1c",
+        "sha256": "7a82e5361023c0dc13065a682a53aed8edbac2959a8a6df76fb0aec866477263",
+        "providerGitBlob": "c833dff3018ceabba151e89b2f7363e59e18dd1c",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "gitBlob": "6682d3906323bfbb99791bd6c2edf3201c7720be",
+        "sha256": "18f275db40cebcca167251fdb0a4012addb62fd5398435963a166de9dfd9db43",
+        "providerGitBlob": "6682d3906323bfbb99791bd6c2edf3201c7720be",
+        "match": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/workflow.yml.in",
+        "gitBlob": "880fba2267d2e35d7d0677857bd76b394f9a091a",
+        "sha256": "720d83d800cec09d105c0d6c895bc6510a808155e0688cb507b0b0efc7fc5077",
+        "providerGitBlob": "880fba2267d2e35d7d0677857bd76b394f9a091a",
+        "match": true
+      }
+    ]
+  },
+  "binding": {
+    "codeManifestSHA256": "29c8e059b6695732c8424b151b6b13e56c851e45b8216615cd24ed7d1d3941ac",
+    "codeReviewSHA256": "7bcfec822a8f18cc469298a600d84419e6b70a1e6366362306cfabe2b2e3a84d",
+    "templateSHA256": "720d83d800cec09d105c0d6c895bc6510a808155e0688cb507b0b0efc7fc5077",
+    "placeholderCount": 1,
+    "onlyRenderChange": "__FLOORP_FIXTURE_SHA__ -> b00f0761850046de58f5186614e0d250973fa5ea",
+    "renderedWorkflowSHA256": "9fbc21231626e050131b8765a87c8c3338922ee430c887bd9d66fe907ac2bc10",
+    "deliveryPatchSHA256": "a7cc6dac36f04c213aeab8e652dbc9ae9f8c60778a8ce0b6c2a782bd5380ba74",
+    "patchTarget": ".github/workflows/mac-native-nonpgo.yml",
+    "patchNewFileBytesEqualRenderedWorkflow": true,
+    "activeWorkflowAbsentInFloorp": true
+  },
+  "route": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "base": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "branch": "codex/mac-native-nonpgo-recovery-20261017",
+    "trigger": "initial push only",
+    "expectedBefore": "0000000000000000000000000000000000000000",
+    "runAttempt": 1,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "platformJobMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "fixedHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "persistCheckoutCredentials": false,
+    "secretScope": "Only existing github.token in SDK read step; no new credentials.",
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "productPublication": false,
+    "productSigning": false
+  },
+  "freshReadOnlyChecks": {
+    "runtimeRecoveryBranchAbsent": true,
+    "runtimeRecoveryBranchRunCount": 0,
+    "runtimeDefaultHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "floorpSourceBranchRunCount": 0,
+    "floorpCompareFromMain": {
+      "base": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+      "head": "b00f0761850046de58f5186614e0d250973fa5ea",
+      "changedFiles": 32,
+      "activeWorkflowChanges": 0
+    },
+    "existingRuntimeWorkflowCoverage": "The prior pinned-7dd inventory reported 24 existing workflows, zero matching pushes and no workflow_run trigger. That immutable inventory was not fetched again in this short final route check."
+  },
+  "executionBoundary": "The authorized parent may materialize the Runtime caller from pinned base 7dd with only the reviewed new workflow payload and bind the resulting commit/tree before the single initial branch activation. A different payload or base is outside this receipt.",
+  "limitations": {
+    "nativeHostTUCompiled": false,
+    "xulLinked": false,
+    "nativeAuthenticationValidated": false,
+    "originalTimeoutCause": "UNKNOWN",
+    "productQualification": false,
+    "platformTerminationMayPreventFinalProof": true
+  },
+  "reviewerActions": {
+    "repositoryMutation": false,
+    "newCI": false,
+    "dispatch": false,
+    "rerun": false,
+    "artifactPayloadAcquisition": false,
+    "nativeExecution": false,
+    "sourceEdits": false,
+    "onlyOutput": "records/RECOVERY_ROUTE_REVIEW.json"
+  }
+}
