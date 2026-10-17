@@ -87,6 +87,37 @@ jobs:
   ]);
 });
 
+Deno.test("workflow inventory accepts four-space events without inferring nested permission or input names", () => {
+  assertEquals(
+    parseWorkflowTriggers(`
+on:
+    issues:
+        types: [opened]
+    pull_request:
+        types: [opened]
+    issue_comment:
+        types: [created]
+permissions:
+    workflow_call: write
+jobs: {}
+`),
+    ["issue_comment", "issues", "pull_request"],
+  );
+  assertEquals(
+    parseWorkflowTriggers(`
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_artifact_workflow_call:
+        type: string
+permissions:
+  issues: write
+jobs: {}
+`),
+    ["workflow_dispatch"],
+  );
+});
+
 Deno.test("parseDenoTasksFromText reads sorted task entries", () => {
   const tasks = parseDenoTasksFromText(
     JSON.stringify({

@@ -451,6 +451,7 @@ export function parseWorkflowTriggers(workflowText: string): string[] {
     "issue_comment",
   ]);
   let inEventBlock = false;
+  let eventIndent: number | null = null;
   for (const line of workflowText.split(/\r?\n/)) {
     const header = line.match(/^(?:on|"on"|'on'):[ \t]*(.*)$/);
     if (header) {
@@ -469,8 +470,13 @@ export function parseWorkflowTriggers(workflowText: string): string[] {
     if (/^\S/.test(line) && !line.startsWith("#")) break;
     // Only the direct event keys under on:, never fields or strings in a
     // job's inline code (for example data.is_pull_request), are triggers.
-    const child = line.match(/^ {2}([a-z_]+):(?:[ \t]|$)/);
-    if (child && knownTriggers.has(child[1])) triggers.add(child[1]);
+    const child = line.match(/^( +)([a-z_]+):(?:[ \t]|$)/);
+    if (child) {
+      eventIndent ??= child[1].length;
+      if (child[1].length === eventIndent && knownTriggers.has(child[2])) {
+        triggers.add(child[2]);
+      }
+    }
   }
   return [...triggers].sort();
 }

@@ -5,39 +5,103 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 // Test exactly the privileged inline code, rather than a second implementation.
-const workflow = readFileSync(new URL("../.github/workflows/openbot-events.yml", import.meta.url), "utf8");
-const match = workflow.match(/ {10}node --input-type=module <<'NODE'\r?\n([\s\S]*?) {10}NODE(?:\r?\n|$)/);
+const workflow = readFileSync(
+  new URL("../.github/workflows/openbot-events.yml", import.meta.url),
+  "utf8",
+);
+const match = workflow.match(
+  / {10}node --input-type=module <<'NODE'\r?\n([\s\S]*?) {10}NODE(?:\r?\n|$)/,
+);
 assert.ok(match, "the sender must remain an inline, quoted heredoc");
 const source = match[1].replace(/^ {10}/gm, "");
 const { formatEvent, deliveryIdFor, sendEvent, main, automationMarker } =
-  await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+  await import(
+    `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`
+  );
 const repository = { id: 437505831, full_name: "Floorp-Projects/Floorp" };
 const time = "2026-10-18T01:00:00Z";
 const sha = "a".repeat(40);
-const base = () => ({ repository: { ...repository }, sender: { login: "contributor", type: "User" } });
-const issue = () => ({ number: 42, html_url: "https://github.com/Floorp-Projects/Floorp/issues/42",
-  state: "open", title: "A bug", body: "Reproduction steps", updated_at: time });
-const pr = () => ({ ...issue(), html_url: "https://github.com/Floorp-Projects/Floorp/pull/42",
-  head: { sha }, base: { ref: "main", repo: { ...repository } }, draft: false });
-const issueEvent = action => ({ ...base(), action, issue: issue() });
-const prEvent = action => ({ ...base(), action, pull_request: pr() });
-const commentEvent = () => ({ ...issueEvent("created"), comment: { id: 71,
-  html_url: `${issue().html_url}#issuecomment-71`, created_at: time, body: "Here are more steps" } });
-const reviewEvent = action => ({ ...prEvent(action), review: { id: 72, state: "approved",
-  html_url: `${pr().html_url}#pullrequestreview-72`, commit_id: sha, submitted_at: time, body: "Looks good" } });
-const runEvent = conclusion => ({ ...base(), action: "completed", workflow_run: {
-  id: 73, run_attempt: 1, html_url: "https://github.com/Floorp-Projects/Floorp/actions/runs/73",
-  name: "Unit tests", path: ".github/workflows/colocated_runner_test.yml", status: "completed",
-  conclusion, event: "pull_request", head_sha: sha, head_branch: "fix/42", updated_at: time,
-  pull_requests: [{ number: 42 }],
-} });
+const base = () => ({
+  repository: { ...repository },
+  sender: { login: "contributor", type: "User" },
+});
+/** @typedef {{number:number, html_url:string, state:string, title:string, body:string, updated_at:string, pull_request?:Record<string, never>}} Issue */
+/** @typedef {{body:string, headers:Record<string, string>, redirect:string}} TransportOptions */
+/** @returns {Issue} */
+const issue = () => ({
+  number: 42,
+  html_url: "https://github.com/Floorp-Projects/Floorp/issues/42",
+  state: "open",
+  title: "A bug",
+  body: "Reproduction steps",
+  updated_at: time,
+});
+const pr = () => ({
+  ...issue(),
+  html_url: "https://github.com/Floorp-Projects/Floorp/pull/42",
+  head: { sha },
+  base: { ref: "main", repo: { ...repository } },
+  draft: false,
+});
+/** @param {string} action */
+const issueEvent = (action) => ({ ...base(), action, issue: issue() });
+/** @param {string} action */
+const prEvent = (action) => ({ ...base(), action, pull_request: pr() });
+const commentEvent = () => ({
+  ...issueEvent("created"),
+  comment: {
+    id: 71,
+    html_url: `${issue().html_url}#issuecomment-71`,
+    created_at: time,
+    body: "Here are more steps",
+  },
+});
+/** @param {string} action */
+const reviewEvent = (action) => ({
+  ...prEvent(action),
+  review: {
+    id: 72,
+    state: "approved",
+    html_url: `${pr().html_url}#pullrequestreview-72`,
+    commit_id: sha,
+    submitted_at: time,
+    body: "Looks good",
+  },
+});
+/** @param {string} conclusion */
+const runEvent = (conclusion) => ({
+  ...base(),
+  action: "completed",
+  workflow_run: {
+    id: 73,
+    run_attempt: 1,
+    html_url: "https://github.com/Floorp-Projects/Floorp/actions/runs/73",
+    name: "Unit tests",
+    path: ".github/workflows/colocated_runner_test.yml",
+    status: "completed",
+    conclusion,
+    event: "pull_request",
+    head_sha: sha,
+    head_branch: "fix/42",
+    updated_at: time,
+    pull_requests: [{ number: 42 }],
+  },
+});
 
 test("the privileged workflow only runs inline Node without repository checkout", () => {
   assert.match(workflow, /^permissions: \{\}$/m);
   assert.doesNotMatch(workflow, /^\s*uses:/m);
   assert.doesNotMatch(match[1], /\$\{\{/);
   assert.equal((workflow.match(/\brun: \|/g) ?? []).length, 1);
-  for (const trigger of ["issues", "issue_comment", "pull_request_target", "pull_request_review", "workflow_run"]) {
+  for (
+    const trigger of [
+      "issues",
+      "issue_comment",
+      "pull_request_target",
+      "pull_request_review",
+      "workflow_run",
+    ]
+  ) {
     assert.match(workflow, new RegExp(`^  ${trigger}:`, "m"));
   }
 });
@@ -53,7 +117,15 @@ for (const action of ["opened", "reopened", "edited"]) {
     assert.equal(event.data.body, undefined);
   });
 }
-for (const action of ["opened", "reopened", "synchronize", "ready_for_review", "edited"]) {
+for (
+  const action of [
+    "opened",
+    "reopened",
+    "synchronize",
+    "ready_for_review",
+    "edited",
+  ]
+) {
   test(`PR ${action} records the exact head for independent verification`, () => {
     const event = formatEvent(prEvent(action), "pull_request_target");
     assert.equal(event.data.kind, "pull_request");
@@ -70,7 +142,17 @@ for (const action of ["submitted", "dismissed"]) {
     assert.equal(event.data.body, undefined);
   });
 }
-for (const conclusion of ["success", "failure", "cancelled", "skipped", "timed_out", "neutral", "action_required"]) {
+for (
+  const conclusion of [
+    "success",
+    "failure",
+    "cancelled",
+    "skipped",
+    "timed_out",
+    "neutral",
+    "action_required",
+  ]
+) {
   test(`completed CI ${conclusion} wakes reevaluation`, () => {
     const event = formatEvent(runEvent(conclusion), "workflow_run");
     assert.equal(event.data.kind, "workflow_run");
@@ -93,64 +175,120 @@ test("extra issue and PR comments include the exact source comment reference", (
   assert.equal(formatEvent(input, "issue_comment").data.is_pull_request, true);
 });
 test("known OpenBot, blank and punctuation-only comments do not cause loops", () => {
-  for (const change of [
-    x => { x.sender.login = "openbotgit[bot]"; x.sender.type = "Bot"; },
-    x => { x.sender.login = "OpenBotGit[Bot]"; x.comment.body = "Unmarked reply"; },
-    x => { x.comment.body = " <!-- only a hidden comment --> "; },
-    x => { x.comment.body = "👍 +1!!!".replace("1", ""); },
-  ]) {
-    const input = commentEvent(); change(input);
+  /** @type {Array<(input: ReturnType<typeof commentEvent>) => void>} */
+  const changes = [
+    (x) => {
+      x.sender.login = "openbotgit[bot]";
+      x.sender.type = "Bot";
+    },
+    (x) => {
+      x.sender.login = "OpenBotGit[Bot]";
+      x.comment.body = "Unmarked reply";
+    },
+    (x) => {
+      x.comment.body = " <!-- only a hidden comment --> ";
+    },
+    (x) => {
+      x.comment.body = "👍 +1!!!".replace("1", "");
+    },
+  ];
+  for (const change of changes) {
+    const input = commentEvent();
+    change(input);
     assert.equal(formatEvent(input, "issue_comment"), null);
   }
 });
 test("known OpenBot reviews are excluded with or without a content marker", () => {
   for (const body of [automationMarker, "Unmarked review"]) {
     const input = reviewEvent("submitted");
-    input.sender.login = "openbotgit[bot]"; input.review.body = body;
+    input.sender.login = "openbotgit[bot]";
+    input.review.body = body;
     assert.equal(formatEvent(input, "pull_request_review"), null);
   }
 });
 test("human marker quotations and other bots' additional information are retained", () => {
-  for (const sender of [
-    { login: "contributor", type: "User" },
-    { login: "coderabbitai[bot]", type: "Bot" },
-  ]) {
-    const comment = commentEvent(); comment.sender = sender;
-    comment.comment.body = `The bot wrote ${automationMarker}, but here are new reproduction steps.`;
+  for (
+    const sender of [
+      { login: "contributor", type: "User" },
+      { login: "coderabbitai[bot]", type: "Bot" },
+    ]
+  ) {
+    const comment = commentEvent();
+    comment.sender = sender;
+    comment.comment.body =
+      `The bot wrote ${automationMarker}, but here are new reproduction steps.`;
     assert.equal(formatEvent(comment, "issue_comment").data.comment_id, 71);
-    const review = reviewEvent("submitted"); review.sender = sender;
-    review.review.body = `Quoting ${automationMarker}; this change still has a defect.`;
+    const review = reviewEvent("submitted");
+    review.sender = sender;
+    review.review.body =
+      `Quoting ${automationMarker}; this change still has a defect.`;
     assert.equal(formatEvent(review, "pull_request_review").data.review_id, 72);
   }
 });
 test("notifier completion is excluded by immutable workflow path as well as name", () => {
-  for (const change of [
-    x => { x.workflow_run.name = "OpenBot event notification"; },
-    x => { x.workflow_run.path = ".github/workflows/openbot-events.yml@main"; },
-  ]) {
-    const input = runEvent("success"); change(input);
+  /** @type {Array<(input: ReturnType<typeof runEvent>) => void>} */
+  const changes = [
+    (x) => {
+      x.workflow_run.name = "OpenBot event notification";
+    },
+    (x) => {
+      x.workflow_run.path = ".github/workflows/openbot-events.yml@main";
+    },
+  ];
+  for (const change of changes) {
+    const input = runEvent("success");
+    change(input);
     assert.equal(formatEvent(input, "workflow_run"), null);
   }
 });
 test("repository ID, name, source URLs, state, timestamps and head are validated", () => {
-  for (const change of [
-    x => { x.repository.id++; }, x => { x.repository.full_name = "other/Floorp"; },
-    x => { x.issue.html_url = "https://attacker.invalid/issues/42"; },
-    x => { x.issue.number = -1; }, x => { x.issue.state = "closed"; },
-    x => { x.issue.updated_at = "not a date"; }, x => { x.issue.pull_request = {}; },
-  ]) {
-    const input = issueEvent("edited"); change(input);
+  /** @type {Array<(input: ReturnType<typeof issueEvent>) => void>} */
+  const changes = [
+    (x) => {
+      x.repository.id++;
+    },
+    (x) => {
+      x.repository.full_name = "other/Floorp";
+    },
+    (x) => {
+      x.issue.html_url = "https://attacker.invalid/issues/42";
+    },
+    (x) => {
+      x.issue.number = -1;
+    },
+    (x) => {
+      x.issue.state = "closed";
+    },
+    (x) => {
+      x.issue.updated_at = "not a date";
+    },
+    (x) => {
+      x.issue.pull_request = {};
+    },
+  ];
+  for (const change of changes) {
+    const input = issueEvent("edited");
+    change(input);
     assert.equal(formatEvent(input, "issues"), null);
   }
-  const input = prEvent("synchronize"); input.pull_request.head.sha = "invalid";
+  const input = prEvent("synchronize");
+  input.pull_request.head.sha = "invalid";
   assert.equal(formatEvent(input, "pull_request_target"), null);
 });
 test("Actions reruns and object key reordering preserve event bytes and delivery ID", () => {
   const input = issueEvent("edited");
   const first = formatEvent(input, "issues");
-  const reverseKeys = value => Array.isArray(value) ? value.map(reverseKeys) :
-    value && typeof value === "object" ? Object.fromEntries(
-      Object.entries(value).reverse().map(([key, child]) => [key, reverseKeys(child)])) : value;
+  /** @param {unknown} value @returns {unknown} */
+  const reverseKeys = (value) =>
+    Array.isArray(value)
+      ? value.map(reverseKeys)
+      : value && typeof value === "object"
+      ? Object.fromEntries(
+        Object.entries(value).reverse().map((
+          [key, child],
+        ) => [key, reverseKeys(child)]),
+      )
+      : value;
   const second = formatEvent(reverseKeys(input), "issues");
   assert.equal(JSON.stringify(first), JSON.stringify(second));
   assert.equal(deliveryIdFor(first), deliveryIdFor(second));
@@ -158,17 +296,24 @@ test("Actions reruns and object key reordering preserve event bytes and delivery
 });
 test("body edits in the same timestamp, new heads and rerun attempts get new IDs", () => {
   const input = issueEvent("edited");
-  const before = deliveryIdFor(formatEvent(input, "issues")); input.issue.body += "new steps";
+  const before = deliveryIdFor(formatEvent(input, "issues"));
+  input.issue.body += "new steps";
   assert.notEqual(before, deliveryIdFor(formatEvent(input, "issues")));
-  const p = prEvent("synchronize"); const oldHead = deliveryIdFor(formatEvent(p, "pull_request_target"));
+  const p = prEvent("synchronize");
+  const oldHead = deliveryIdFor(formatEvent(p, "pull_request_target"));
   p.pull_request.head.sha = "b".repeat(40);
-  assert.notEqual(oldHead, deliveryIdFor(formatEvent(p, "pull_request_target")));
-  const run = runEvent("success"); const attempt1 = deliveryIdFor(formatEvent(run, "workflow_run"));
+  assert.notEqual(
+    oldHead,
+    deliveryIdFor(formatEvent(p, "pull_request_target")),
+  );
+  const run = runEvent("success");
+  const attempt1 = deliveryIdFor(formatEvent(run, "workflow_run"));
   run.workflow_run.run_attempt++;
   assert.notEqual(attempt1, deliveryIdFor(formatEvent(run, "workflow_run")));
 });
 test("untrusted shell content stays bounded JSON data", () => {
-  const input = issueEvent("opened"); input.issue.title = "$(touch secret); `evil`\n" + "x".repeat(5000);
+  const input = issueEvent("opened");
+  input.issue.title = "$(touch secret); `evil`\n" + "x".repeat(5000);
   const event = formatEvent(input, "issues");
   assert.equal(event.data.title.length, 1024);
   assert.ok(event.data.title.startsWith("$(touch secret); `evil`\n"));
@@ -176,44 +321,108 @@ test("untrusted shell content stays bounded JSON data", () => {
 });
 test("HTTP retry keeps immutable bytes and ID and recomputes the correct signature", async () => {
   const event = formatEvent(issueEvent("opened"), "issues");
-  const calls = []; const waits = []; let clock = 1000;
-  const status = await sendEvent(event, { url: "https://example.invalid/hook", secret: "synthetic",
-    now: () => clock++, wait: async delay => { waits.push(delay); },
-    fetchImpl: async (_url, options) => {
-      calls.push(options);
-      if (calls.length === 1) throw new Error("synthetic timeout");
-      return { status: calls.length === 2 ? 503 : 202 };
-    } });
-  assert.equal(status, 202); assert.equal(calls.length, 3); assert.deepEqual(waits, [2000, 4000]);
-  assert.equal(new Set(calls.map(x => x.body)).size, 1);
-  assert.equal(new Set(calls.map(x => x.headers["X-OpenBot-Delivery-Id"])).size, 1);
+  /** @type {TransportOptions[]} */
+  const calls = [];
+  /** @type {number[]} */
+  const waits = [];
+  let clock = 1000;
+  /** @type {(delay:number) => Promise<void>} */
+  const wait = (delay) => {
+    waits.push(delay);
+    return Promise.resolve();
+  };
+  /** @type {(url:string, options:TransportOptions) => Promise<{status:number}>} */
+  const fetchImpl = (_url, options) => {
+    calls.push(options);
+    if (calls.length === 1) {
+      return Promise.reject(new Error("synthetic timeout"));
+    }
+    return Promise.resolve({ status: calls.length === 2 ? 503 : 202 });
+  };
+  const status = await sendEvent(event, {
+    url: "https://example.invalid/hook",
+    secret: "synthetic",
+    now: () => clock++,
+    wait,
+    fetchImpl,
+  });
+  assert.equal(status, 202);
+  assert.equal(calls.length, 3);
+  assert.deepEqual(waits, [2000, 4000]);
+  assert.equal(new Set(calls.map((x) => x.body)).size, 1);
+  assert.equal(
+    new Set(calls.map((x) => x.headers["X-OpenBot-Delivery-Id"])).size,
+    1,
+  );
   for (const call of calls) {
     assert.equal(call.redirect, "manual");
     const h = call.headers;
-    assert.equal(h["X-OpenBot-Signature"], "sha256=" + createHmac("sha256", "synthetic")
-      .update(`${h["X-OpenBot-Timestamp"]}.${h["X-OpenBot-Delivery-Id"]}.${call.body}`).digest("hex"));
+    assert.equal(
+      h["X-OpenBot-Signature"],
+      "sha256=" + createHmac("sha256", "synthetic")
+        .update(
+          `${h["X-OpenBot-Timestamp"]}.${
+            h["X-OpenBot-Delivery-Id"]
+          }.${call.body}`,
+        ).digest("hex"),
+    );
   }
 });
 test("duplicates finish without retry; permanent rejects never retry", async () => {
   const event = formatEvent(issueEvent("opened"), "issues");
   for (const status of [200, 400, 401, 403, 404, 409, 413, 302]) {
     let calls = 0;
-    const pending = sendEvent(event, { url: "https://example.invalid/hook", secret: "synthetic",
-      wait: async () => assert.fail("must not wait"), fetchImpl: async () => { calls++; return { status }; } });
+    const pending = sendEvent(event, {
+      url: "https://example.invalid/hook",
+      secret: "synthetic",
+      wait: () => assert.fail("must not wait"),
+      fetchImpl: () => {
+        calls++;
+        return Promise.resolve({ status });
+      },
+    });
     if (status === 200) assert.equal(await pending, 200);
     else await assert.rejects(pending, /rejected/);
     assert.equal(calls, 1);
   }
 });
 test("transient errors exhaust bounded retries; invalid URLs never reach transport", async () => {
-  const event = formatEvent(issueEvent("opened"), "issues"); let calls = 0;
-  await assert.rejects(sendEvent(event, { url: "https://example.invalid/hook", secret: "synthetic", attempts: 2,
-    wait: async () => {}, fetchImpl: async () => { calls++; return { status: 429 }; } }), /after retries/);
+  const event = formatEvent(issueEvent("opened"), "issues");
+  let calls = 0;
+  await assert.rejects(
+    sendEvent(event, {
+      url: "https://example.invalid/hook",
+      secret: "synthetic",
+      attempts: 2,
+      wait: () => Promise.resolve(),
+      fetchImpl: () => {
+        calls++;
+        return Promise.resolve({ status: 429 });
+      },
+    }),
+    /after retries/,
+  );
   assert.equal(calls, 2);
-  for (const url of ["http://example.invalid", "https://user:pass@example.invalid", "https://example.invalid/#x"]) {
-    await assert.rejects(sendEvent(event, { url, secret: "synthetic", fetchImpl: async () => assert.fail("invalid URL") }), /Invalid/);
+  for (
+    const url of [
+      "http://example.invalid",
+      "https://user:pass@example.invalid",
+      "https://example.invalid/#x",
+    ]
+  ) {
+    await assert.rejects(
+      sendEvent(event, {
+        url,
+        secret: "synthetic",
+        fetchImpl: () => assert.fail("invalid URL"),
+      }),
+      /Invalid/,
+    );
   }
 });
 test("fork event without secrets exits before reading an event file or sending", async () => {
-  await main({ GITHUB_EVENT_PATH: "does-not-exist", GITHUB_EVENT_NAME: "pull_request_review" });
+  await main({
+    GITHUB_EVENT_PATH: "does-not-exist",
+    GITHUB_EVENT_NAME: "pull_request_review",
+  });
 });
