@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "observedAtUTC": "2026-10-17T15:38:20.165934+00:00",
+  "run": {
+    "id": 39045848018,
+    "html_url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+    "head_sha": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "head_branch": "codex/mac-native-nonpgo-recovery5-20261017",
+    "event": "push",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_attempt": 1,
+    "created_at": "2026-10-17T15:37:16Z"
+  },
+  "job": {
+    "id": 117434289619,
+    "name": "validate",
+    "status": "in_progress",
+    "conclusion": null,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "runner_name": "GitHub Actions 1000045685",
+    "started_at": "2026-10-17T15:37:21Z",
+    "completed_at": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-17T15:37:23Z",
+        "completed_at": "2026-10-17T15:37:24Z"
+      },
+      {
+        "name": "Bound the initial authorized run",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-17T15:37:24Z",
+        "completed_at": "2026-10-17T15:37:24Z"
+      },
+      {
+        "name": "Checkout immutable preparation fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-17T15:37:24Z",
+        "completed_at": "2026-10-17T15:37:32Z"
+      },
+      {
+        "name": "Verify owned process sampling before source checkout",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-17T15:37:32Z",
+        "completed_at": "2026-10-17T15:37:37Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "status": "in_progress",
+        "conclusion": null,
+        "number": 5,
+        "started_at": "2026-10-17T15:37:37Z",
+        "completed_at": null
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "status": "pending",
+        "conclusion": null,
+        "number": 6,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Acquire only the existing fixed SDK",
+        "status": "pending",
+        "conclusion": null,
+        "number": 7,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Compile full host and XUL then authenticate native Shim",
+        "status": "pending",
+        "conclusion": null,
+        "number": 8,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Confirm bounded result exists",
+        "status": "pending",
+        "conclusion": null,
+        "number": 9,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable Runtime source",
+        "status": "pending",
+        "conclusion": null,
+        "number": 17,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable preparation fixture",
+        "status": "pending",
+        "conclusion": null,
+        "number": 18,
+        "started_at": null,
+        "completed_at": null
+      }
+    ]
+  },
+  "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "review": "RECOVERY5_ROUTE_REVIEW.json",
+  "sourceReadback": "RECOVERY5_SOURCE_READBACK.json",
+  "callerReadback": "RECOVERY5_CALLER_READBACK.json",
+  "result": "IN_PROGRESS_NOT_QUALIFIED",
+  "terminalResultRequired": true,
+  "monitoring": {
+    "ownUntilTerminal": true,
+    "noAutomaticRerunOrBranchRepush": true,
+    "noElapsedTimeCancellation": true
+  },
+  "scope": {
+    "standardPublicRunner": true,
+    "newArtifacts": 0,
+    "productSigning": false,
+    "publication": false,
+    "merge": false,
+    "permissionChanges": false,
+    "blacksmithAccess": false
+  },
+  "nativeFailureEvidence": {
+    "browserAndLauncherExitSeparate": true,
+    "browserExitCodeAndSignal": true,
+    "requestedCleanupSignalSeparate": true,
+    "stdoutStderrSeparatePrivateFiles": true,
+    "publicStreams": "bounded size/presence/marker/numeric OSStatus projection; raw not published",
+    "launchConditions": "LaunchServices/switch/about:blank/ownership/liveness flags; no raw argv/profile/env values",
+    "unobservedBrowserExit": "null with availability=false; never infer from launcher"
+  }
+}

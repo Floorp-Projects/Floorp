@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-17",
+  "decision": "GO",
+  "openP1": 0,
+  "openP2": 0,
+  "scope": "Independent read-only review of the one-job caller and existing native failure evidence path",
+  "runtimeCallerCommit": "67ddd03975f02936ceff311a5d5639dee585792d",
+  "runtimeSourceParent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "fixtureCommit": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "branch": "codex/mac-native-nonpgo-recovery5-20261017",
+  "workflow": {
+    "path": ".github/workflows/mac-native-nonpgo.yml",
+    "bytes": 6747,
+    "sha256": "30ce9df0b51cbbff3b3a34a9544b933dbcc7d9fa36424a6df97a267c33ec6476",
+    "matchesFrozenTemplateWithOnlyThreeSubstitutions": true
+  },
+  "callerChecks": {
+    "changedFiles": [
+      ".github/workflows/mac-native-nonpgo.yml"
+    ],
+    "oneJob": true,
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "initialBranchCreationPushOnly": true,
+    "runAttemptOneOnly": true,
+    "allCheckoutsImmutable": true,
+    "realMacZombieAndCompleteSampleBeforeSDKOrFullBuild": true,
+    "newArtifactUpload": false,
+    "productSigningOrPublicationOrMerge": false,
+    "permissionSettingsChanged": false,
+    "adhocSigningScope": "Existing disposable validation copy only"
+  },
+  "triggerAudit": {
+    "runtimeExistingWorkflowCount": 24,
+    "runtimeMatchingPush": [],
+    "runtimeCreateOrWorkflowRun": [],
+    "floorpExistingWorkflowCount": 21,
+    "floorpMatchingSourceBranchPush": [],
+    "floorpCreate": [],
+    "floorpWorkflowRunScope": "The existing openbot-events workflow_run trigger is scoped to Floorp, not the Runtime caller run.",
+    "floorpSourceBranch": "codex/qa-recovery5-monitor"
+  },
+  "nativeEvidence": {
+    "failurePath": [
+      "native_cause.startup_snapshot",
+      "native_suite.cause_failure_snapshot",
+      "native-summary.json.firstFailureSnapshot",
+      "pipeline summary.native"
+    ],
+    "retained": [
+      "Observed browser exit code and signal or explicit unavailable/null",
+      "Separate launcher exit code and requested cleanup signal",
+      "Before-cleanup timestamp, liveness and identity/Marionette ownership status",
+      "LaunchServices mode and allowlisted startup switches/about:blank",
+      "Launcher/stdout/stderr presence, sizes, bounded head/tail read counts, fixed markers and numeric OSStatus codes"
+    ],
+    "rawPrivatePublished": false,
+    "environmentValuesPublished": false,
+    "launchServicesApplicationEnvironment": "Explicitly UNVERIFIED before Marionette",
+    "limitation": "Browser exit status can remain unavailable when the browser is never adopted or the kernel exit event has no status. The launcher status is never substituted."
+  },
+  "providerHarnessReadback": {
+    "allFourPinnedFileHashesMatched": true,
+    "files": [
+      "tools/app-shim/test-runtime.py",
+      "tools/app-shim/test-context-menu.py",
+      "tools/app-shim/shim_diagnostics.py",
+      "tools/app-shim/shim_lifecycle.py"
+    ]
+  },
+  "remainingExecutionGates": [
+    "Run real Mac zombie and complete-sample preflights; continue only after success.",
+    "Observe the authorized one job to its terminal result; full host/XUL and native authentication remain unverified.",
+    "The original native host exit cause remains unknown until actual runtime evidence identifies it."
+  ],
+  "reviewActions": {
+    "codeEdited": false,
+    "externalWrites": false,
+    "ciStarted": false
+  },
+  "fixtureBranch": "codex/qa-recovery5-monitor",
+  "sourceFixtureReadback": {
+    "path": "/tmp/floorp-recovery5-source-readback.json",
+    "sha256": "5af319e7de8a32c85a438bf5d90a0012e1f63c94216264b4502d434efb189cdc",
+    "providerRefMatches": true,
+    "all13ProviderFilesMatchLocalBytesAndHashes": true,
+    "sourceBranchWorkflowRuns": 0
+  },
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py",
+    "https://github.com/Floorp-Projects/Floorp/blob/ac273d616cb94347f122c7247f5e989aef7e13f1/tools/qa/native-nonpgo/native_cause.py",
+    "https://github.com/Floorp-Projects/Floorp/blob/ac273d616cb94347f122c7247f5e989aef7e13f1/tools/qa/native-nonpgo/native_suite.py"
+  ]
+}

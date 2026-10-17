@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "commit": "67ddd03975f02936ceff311a5d5639dee585792d",
+  "parent": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "tree": "154d895a831b4ef6fea10312d0f5839927918e5c",
+  "workflowBlob": "98ad125ad0f37d2a2b91dc336cd0b360b57eddf0",
+  "workflowBytes": 6747,
+  "workflowSHA256": "30ce9df0b51cbbff3b3a34a9544b933dbcc7d9fa36424a6df97a267c33ec6476",
+  "providerBytesMatch": true,
+  "branchActivated": false
+}
