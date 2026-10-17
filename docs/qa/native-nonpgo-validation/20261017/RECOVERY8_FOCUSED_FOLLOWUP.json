@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "reason": "The previous job stopped before the focused experiment in an overly broad Mac test gate. Keep that failure record; run only experiment-specific guards and the required actual Mac zombie guard before reaching the experiment.",
+  "previousRun": 39074746800,
+  "previousReceipt": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_PREPARATION_RESULT.json",
+  "newCaller": "2a2b78012a70a5cdd291a860b3cd9e7c33622b26",
+  "newBranch": "codex/mac-native-ps-lifetime-recovery8b-20261017",
+  "fixture": "82414aa914508516c2735b32e7d9536effa69a18",
+  "fixtureAndProductionChanged": false,
+  "newGate": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_ps_lifetime test_guards.DarwinCounterGuards.test_real_mac_unreaped_child_is_gone_while_signal_zero_succeeds -v",
+    "total": 6,
+    "localPlatform": "Linux",
+    "localPassed": 5,
+    "localMacOnlySkipped": 1,
+    "elapsedSeconds": 0.775
+  },
+  "unchanged": [
+    "All five focused diagnostic tests including actual child WNOWAIT and six ACKs",
+    "Actual Mac unreaped-child requirement",
+    "Same held experiment and unchanged three-attempt sampler",
+    "Known ownership and unavailable counters semantics",
+    "Normal-drain and pinned real-harness controls",
+    "Existing fail-closed, resource limits and cleanup",
+    "One standard public macos-15-intel job, initial push/attempt1",
+    "No SDK, browser/build, upload, privilege/protection change"
+  ],
+  "remainingLimit": "The earlier full Mac suite is not green. Three group cleanup EPERM errors remain observed and unresolved; this follow-up neither masks them as gone nor claims the complete suite passed. The focused experiment still records and rejects unverified group cleanup."
+}

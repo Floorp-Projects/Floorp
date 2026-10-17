@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "phase": "TERMINAL_BEFORE_DIAGNOSTIC",
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "run": 39074746800,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39074746800",
+  "caller": "ae47a2baf6a96ead6f8797c659f22090850f1066",
+  "fixture": "82414aa914508516c2735b32e7d9536effa69a18",
+  "attempt": 1,
+  "job": 117519463251,
+  "runnerLabels": [
+    "macos-15-intel"
+  ],
+  "status": "completed",
+  "conclusion": "failure",
+  "startedAt": "2026-10-17T22:21:44Z",
+  "completedAt": "2026-10-17T22:22:09Z",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Bound the initial diagnostic execution",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout reviewed monitor fixture",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout fixed native harness",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate diagnostic guards",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Observe one owned ps across three task queries",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Confirm bounded diagnostic result",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Post Checkout fixed native harness",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Checkout reviewed monitor fixture",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "tests": {
+    "total": 82,
+    "errors": 12,
+    "failures": 1,
+    "elapsedSeconds": 5.441,
+    "failureNames": [
+      "test_resource_reserve_is_checked_even_when_monitor_would_be_unavailable",
+      "test_cleanup_requested_signal_is_distinct_from_observed_browser_signal",
+      "test_early_browser_identity_cannot_be_rebound_by_marionette",
+      "test_launcher_exit_is_not_unobserved_browser_exit",
+      "test_no_browser_identity_cleanup_only_reaps_owned_launcher",
+      "test_observed_browser_exit_is_not_hidden_by_running_launcher",
+      "test_poll_passively_adopts_exact_browser_before_session",
+      "test_sampler_exception_records_stage_and_reaps_owned_process",
+      "test_snapshot_liveness_and_exit_code_use_the_same_kernel_observation",
+      "test_startup_snapshot_keeps_codes_and_markers_without_private_text",
+      "test_startup_stream_codes_keep_first_and_last_failure_without_raw_text",
+      "test_unavailable_monitor_preserves_failure_and_reclaims_owned_group",
+      "test_native_census_binds_profile_and_never_persists_nonce"
+    ],
+    "classification": {
+      "missingSourceFixture": "Nine host startup tests expected tools/app-shim/test-runtime.py in the sparse fixture checkout; it was not included.",
+      "groupCleanupPermission": "Three tests starting owned Python children received EPERM from existing killpg(pgid,0) during cleanup. This is unresolved real Mac behavior; no unavailable-to-gone conversion is made.",
+      "platformMock": "Native-census mock expectation failed (records 0 rather than 3). MacProcesses is mocked directly; the platform-specific assumption causing this is unresolved."
+    }
+  },
+  "diagnosticStarted": false,
+  "observations": [],
+  "sameChildThreeEPERM": "NOT_TESTED",
+  "nativeAuthentication": "NOT_TESTED",
+  "sdkAcquired": false,
+  "newArtifacts": 0,
+  "rawLogPublished": false,
+  "privateDecodedLogSHA256": "9cbdd5994aae81af4cdef38bb73b044374aa0218f2aaf8df6a7d90318854c2da",
+  "sourceReadback": [
+    {
+      "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+      "sha256": "2c3e93b58930b6536a11498a06242b8a173dec471906030c37b5ac6c78901eb4",
+      "bytes": 16712,
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+      "sha256": "b1268883e3975b13ef160fc6b918c896cf0df76f918a83c139611ceb7f7a9241",
+      "bytes": 6570,
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_EXPERIMENT.json",
+      "sha256": "b27243196f43ae320b4f3af41719c4873fc74e8456a93d5f18d73f32b575be61",
+      "bytes": 4714,
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_PREEXECUTION_REVIEW.json",
+      "sha256": "1f82b9b9df394b368b2f85c430609b35c7b04219126f87c72d8cde882ceedee5",
+      "bytes": 9836,
+      "providerBytesMatch": true
+    }
+  ],
+  "nextExperimentChange": "Keep fixture and production byte-identical; use explicit focused ps-lifetime guards plus actual Mac unreaped-child gate, preserve full-suite failures as a separate limitation. No build or framework change."
+}
