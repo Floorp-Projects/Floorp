@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39037341780,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39037341780",
+    "branch": "codex/mac-native-nonpgo-recovery3-20261017",
+    "executionCommit": "be9eadeb6deccb3bcb879ce29acf6f9219687171",
+    "executionTree": "81944a6bd1de995bb9514635863a4ad977410d79",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-17T13:37:44Z",
+    "status": "queued"
+  },
+  "source": {
+    "fixture": "69391c259358025ff2532d027b970e5babf43ec9",
+    "sealedEvidence": "e8c51ae768734849cf315d06f3953a70adc5ce66",
+    "codeManifestSHA256": "901a07e32065b2731b5fbb4ea3bd867950741ac20ac76809fbb7ddb88ed0bee4",
+    "codeReviewSHA256": "0bab974dd4947f1039746248864c5812d22d684569253babd89e1c584c583494",
+    "routeReviewSHA256": "50653283c486d9a11cf9dea7bcb723dd483883561e534fc6ab3c2b421fc5ce5f"
+  },
+  "checks": {
+    "freshBranchAbsentBeforeActivation": true,
+    "freshBranchRunCountBeforeActivation": 0,
+    "oneRunAfterActivation": true,
+    "priorRunTerminalFailureAttempt1": 39020119793,
+    "sdkId": 12074136738,
+    "sdkExpired": false,
+    "sdkExpiresAt": "2026-10-17T20:41:19Z",
+    "sdkRemainingHoursAtActivation": 7.06,
+    "helper12CodeReadback": true,
+    "workflowReadback": true,
+    "seal9FileReadback": true
+  },
+  "scope": {
+    "standardRunner": "macos-15-intel",
+    "jobs": 1,
+    "platformMinutes": 360,
+    "humanCumulativeLimitMinutes": null,
+    "newActionsArtifacts": 0,
+    "newCacheUploads": 0,
+    "productQualification": false
+  },
+  "historicalFailures": [
+    39016143725,
+    39018277446,
+    39020119793
+  ],
+  "result": "IN_PROGRESS_NOT_QUALIFIED",
+  "terminalResultRequired": true
+}
