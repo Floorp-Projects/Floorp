@@ -1,0 +1,436 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent terminal evidence and static cleanup review",
+  "run": {
+    "id": 39045848018,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39045848018",
+    "jobId": 117434289619,
+    "status": "completed",
+    "conclusion": "failure",
+    "attempt": 1,
+    "durationSeconds": 20654,
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "caller": "67ddd03975f02936ceff311a5d5639dee585792d",
+    "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "receipt": {
+    "path": "/workspace/Floorp-qa-recovery5/docs/qa/native-nonpgo-validation/20261017/RECOVERY5_EXECUTION_RESULT.json",
+    "sha256": "e2f82e5d5a0f9b786cef8f409cc8003178fdec2f84847a6c15e7994621c6fa29",
+    "exactHashVerified": true
+  },
+  "inputIntegrity": {
+    "publicSummaryFileSHA256": "7b64f0102d00a20dd67bc1f558b24dbffcad0e58e57a8a77a89ee1965b3166e1",
+    "publicSummaryCanonicalSHA256": "990c8786cc996248251a1e5713276e7c46c7190edbec75681856ed19d74de916",
+    "canonicalSerialization": "UTF-8 json.dumps(parsed, sort_keys=True, separators=(comma, colon)), no trailing newline",
+    "canonicalHashMatchesReceipt": true,
+    "summaryExtractedFromPrivateLogEqualsParsedPublicSummary": true,
+    "privateLogBytes": 298907,
+    "privateLogSHA256": "34a41af9a844112c579078fbe5aa3c53d751b0e38593c52bd53640be4f455f89",
+    "privateLogHashMatchesReceipt": true,
+    "rawPrivateLogPublished": false,
+    "sharedObservedFieldsMatchReceipt": [
+      "firstFailure",
+      "monitorFailure",
+      "monitorDiagnostics",
+      "monitorPreflight",
+      "native",
+      "nativeCleanup",
+      "stages",
+      "hostObject",
+      "linkedXUL",
+      "signedCopyXUL",
+      "sdk",
+      "source",
+      "harness",
+      "preflight"
+    ],
+    "runIdentityMatches": true
+  },
+  "decisions": {
+    "terminalReceipt": {
+      "decision": "GO",
+      "meaning": "Accept the bounded failure receipt and its scoped success claims."
+    },
+    "freshIntelNonPGOFullBuild": {
+      "decision": "GO",
+      "meaning": "This run produced the fresh required host object and linked XUL, and passed stage-package plus disposable ad-hoc copy verification."
+    },
+    "nativeAuthenticationAndOverallGoal": {
+      "decision": "NO_GO",
+      "meaning": "The native suite was interrupted by its monitor and did not produce the required authenticated cause/context/gui proofs."
+    },
+    "wholeProcessGroupCleanup": {
+      "decision": "NOT_VERIFIED",
+      "meaning": "PermissionError interrupted group cleanup and no suite process return code was retained."
+    },
+    "anotherMacExecution": {
+      "decision": "NO_GO",
+      "meaning": "No additional run or acquisition is performed. The fixed SDK is now expired and absent from the reported artifact listing."
+    },
+    "readOnlyInvestigationDesign": {
+      "decision": "GO",
+      "meaning": "The hypotheses below can be reviewed statically; no implementation, probe or CI execution was performed."
+    }
+  },
+  "verifiedSuccesses": {
+    "realMacPreflight": {
+      "status": "passed",
+      "nativeCounterSelf": {
+        "abiBytes": 232,
+        "cpuSeconds": 0.29816583,
+        "rssMiB": 18.7421875,
+        "state": "R",
+        "status": "measured",
+        "timebaseDenom": 1,
+        "timebaseNumer": 1
+      },
+      "nativeZombiePreflight": "passed",
+      "stages": [
+        {
+          "stage": "monitor-zombie-preflight",
+          "exitCode": 0,
+          "completeLibprocSample": true
+        },
+        {
+          "stage": "monitor-preflight",
+          "exitCode": 0,
+          "completeLibprocSample": true
+        }
+      ]
+    },
+    "effectiveConfig": {
+      "target": "x86_64",
+      "host": "x86_64",
+      "os": "Darwin",
+      "debug": true,
+      "pgo": false,
+      "artifactBuild": false,
+      "tests": "1",
+      "compiledSandbox": true
+    },
+    "successfulStages": [
+      {
+        "stage": "configure",
+        "exitCode": 0
+      },
+      {
+        "stage": "full-build",
+        "exitCode": 0
+      },
+      {
+        "stage": "stage-package",
+        "exitCode": 0
+      },
+      {
+        "stage": "adhoc-copy",
+        "exitCode": 0
+      },
+      {
+        "stage": "verify-copy",
+        "exitCode": 0
+      }
+    ],
+    "freshHostTranslationUnit": {
+      "status": "passed",
+      "object": {
+        "bytes": 2187728,
+        "sha256": "e38371ec181175e8cd94ac319fd53047c33328ca4d82414b5b2515abd1f814e2",
+        "filetype": 1,
+        "uuid": null,
+        "sectionsSHA256": "4c69a7e38520c69364d9c9fbc08e9a6978b1bb7d52abb929bd5c26c88089e165",
+        "sections": 30
+      },
+      "staticBasis": "pipeline.main rejects a pre-existing objdir, performs full mach build, validates MacWebAppService.o as an x86_64 object and requires its mtime >= this task start."
+    },
+    "linkedXUL": {
+      "bytes": 253796292,
+      "sha256": "11c1803c14b85f02ec5bd2f25414780a6740e6d84f3ed77e98bad978a9d3ff64",
+      "filetype": 6,
+      "uuid": "4c4c44ce55553144a1d16a24829551b8",
+      "sectionsSHA256": "608a8516c86a23fc405e325d316e74655c2602607481669a45ee7bb7397899f5",
+      "sections": 35
+    },
+    "disposableSignedCopyXUL": {
+      "bytes": 255797344,
+      "sha256": "82f3500b47dbfc16ab69e17fb5e65774af1044192c667f476366ecc7aa441000",
+      "filetype": 6,
+      "uuid": "4c4c44ce55553144a1d16a24829551b8",
+      "sectionsSHA256": "608a8516c86a23fc405e325d316e74655c2602607481669a45ee7bb7397899f5",
+      "sections": 35
+    },
+    "codeBinding": {
+      "sameUUID": true,
+      "sameCodeSectionsSHA256": true,
+      "wholeFileHashesDifferAsExpectedForAdhocSignature": true
+    },
+    "fullBuildResources": {
+      "peakRSSMiB": 7246,
+      "minimumFreeGiB": 77.72
+    }
+  },
+  "primaryFailure": {
+    "firstFailure": {
+      "stage": "native-suite",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 20599.72
+    },
+    "sampleAttempts": 3,
+    "unknownKinds": {
+      "permission": 1
+    },
+    "deniedPidTag": "1b22bd369cbdaba0",
+    "sameOpaquePIDTagInAllThreeSamples": true,
+    "sameGenerationProven": false,
+    "query": {
+      "flavor": 2,
+      "name": "PROC_PIDTASKALLINFO",
+      "arg": 0,
+      "bytes": 0,
+      "expectedBytes": 232,
+      "errno": 1,
+      "errnoName": "EPERM"
+    },
+    "bsdQueryRecorded": false,
+    "whyNoBSDQuery": "DarwinActivity.read immediately returns unavailable/permission on EPERM/EACCES before calling bsd(). This is an existing explicit branch, not evidence of a failed zombie-enabled BSD query.",
+    "identity": {
+      "identityTag": null,
+      "uid": "UNKNOWN",
+      "birth": "UNKNOWN",
+      "executableOrRole": "UNKNOWN",
+      "policyOrOwnershipReason": "UNKNOWN",
+      "generation": "UNKNOWN"
+    },
+    "rssMiB": null,
+    "cpuSeconds": null,
+    "knownRSSLowerBoundMiB": 42.23828125,
+    "knownCPULowerBoundSeconds": 0.558,
+    "confirmedGone": 0,
+    "interpretation": "Task measurement was denied. The evidence does not identify a browser, Shim, helper or system process as the denied member, and does not prove natural browser exit or a stable denied generation."
+  },
+  "interruptionAndNativeEvidence": {
+    "nativeSummary": {
+      "contextMenu": null,
+      "errorCode": "KeyboardInterrupt",
+      "firstCause": null,
+      "gui": null,
+      "status": "failed"
+    },
+    "stage": {
+      "stage": "native-suite",
+      "exitCode": null,
+      "reason": "monitor-unavailable",
+      "failurePhase": "group-activity",
+      "cleanupFailure": "PermissionError",
+      "logBytes": 0,
+      "peakRSSMiB": 6,
+      "minimumFreeGiB": 76.98,
+      "quietSeconds": 0
+    },
+    "keyboardInterruptInterpretation": "Compatible with the monitor-triggered stop path, which starts with SIGINT to the suite group. This is an inference from ordering and code; no syscall trace proves the signal delivery sequence.",
+    "notEstablished": [
+      "A spontaneous native browser exit in this run",
+      "Recurrence of the historical cause-host-exited failure",
+      "Browser exit status or signal",
+      "Completed native Shim authentication",
+      "cause/context/gui pass results"
+    ],
+    "firstCauseNullMeaning": "No completed controlled authenticated-cancellation proof was copied into native.firstCause. Null does not identify a root cause.",
+    "historicalOriginalNativeCause": "UNKNOWN; historical labels in summary.priorExecution are not new observations."
+  },
+  "diagnosticRetentionAssessment": {
+    "improvementObserved": true,
+    "recentDiagnosticCount": 16,
+    "recoveredRetriedFullBuildDiagnostics": 15,
+    "terminalIncompleteNativeDiagnosticCount": 1,
+    "terminalSampleSeparatelyRetained": true,
+    "terminalSampleMatchesLastRecentDiagnostic": true,
+    "stageLastActivityMatchesTerminalSample": true,
+    "initialFailurePreservedThroughCleanupError": true,
+    "unknownTotalsNotZero": true,
+    "remainingLimits": [
+      "Permission return contains no UID, birth or role because the early branch precedes BSD identity retrieval.",
+      "A stable pidTag identifies the same PID value under the probe key; it is not a process-generation identifier.",
+      "The stage records only the cleanup exception type. It does not identify whether PermissionError came from killpg with signal zero or a nonzero cleanup signal.",
+      "No raw native stdout/stderr was published. Existing per-phase projection limits remain as documented in the separate native evidence coverage review."
+    ]
+  },
+  "cleanupAssessment": {
+    "nativeRegistryProof": {
+      "hostsObserved": 0,
+      "shimsObserved": 0,
+      "helpersObserved": 0,
+      "pendingAtHarnessReturn": 0,
+      "outlivedHarness": 0,
+      "signalsToVerifiedOwnedInstances": 0,
+      "allOwnedGone": true,
+      "censusComplete": true,
+      "errors": [],
+      "privateIdentitiesPublished": false
+    },
+    "registryGuarantee": "No registered, recognized owned host/Shim/helper remained and registry census raised no recorded errors. All three observed category counts were zero.",
+    "doesNotGuarantee": [
+      "Whole suite process group disappearance",
+      "Reaping of the suite leader",
+      "Successful cleanup of the denied process",
+      "Absence of unregistered or different-UID group members",
+      "Absence of zombies or system-marked group members"
+    ],
+    "staticBasis": [
+      "Runner.group_alive catches only ProcessLookupError from killpg(pgid,0); PermissionError propagates.",
+      "Runner.stop invokes group_alive before signalling and during each grace loop. A permission failure interrupts this sequence.",
+      "Runner.run discards its local group-set entry in finally even on cleanup exceptions; an empty tracking set is not proof of OS process termination.",
+      "The stage exitCode reads process.returncode; it does not perform an unconditional wait/reap after cleanup errors.",
+      "MacProcesses.pids limits registry candidates to the current effective UID; OwnedNative.census then restricts recognized executable/profile/generation identities.",
+      "OwnedNative.finish computes allOwnedGone from an empty remaining registered set plus no census errors. Zero observed instances makes this a limited registry result."
+    ],
+    "xnuNuance": "The reference XNU process-group signal path excludes SZOMB/system processes and can return EPERM when no eligible member is found. PermissionError alone therefore proves neither a live privileged survivor nor successful cleanup.",
+    "observedClaim": "Whole group cleanup remains unverified; no stronger completion claim is supported."
+  },
+  "timeAndScope": {
+    "firstFailureElapsedSeconds": 20599.72,
+    "platformJobLimitSeconds": 21600,
+    "secondsBeforePlatformLimit": 1000.28,
+    "jobDurationSeconds": 20654,
+    "manualCancellationRequested": false,
+    "retry": false,
+    "reruns": 0,
+    "newArtifacts": 0,
+    "artifactRecords": [],
+    "productQualification": false,
+    "productSigning": false,
+    "publication": false,
+    "merge": false,
+    "permissionsChanged": false,
+    "blacksmithAccess": false,
+    "interpretation": "Failure occurred before the unchanged six-hour platform budget; there is no time-only manual cancellation in the receipt."
+  },
+  "sdkAssessment": {
+    "acquisitionStepSucceeded": "2026-10-17T15:43:47Z",
+    "expiryPreviouslyObserved": "2026-10-17T20:41:19Z",
+    "acquiredBeforeExpiry": true,
+    "validatedLocalReceipt": {
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "artifact": 12074136738,
+      "sourceRun": 38963901545,
+      "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+      "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+    },
+    "laterListingObservedAt": "2026-10-17T20:41:52Z",
+    "matchingArtifactsReturnedLater": 0,
+    "payloadRequestedAtLaterObservation": false,
+    "localUseAfterServiceExpiry": "Allowed by the existing fixed TAR/tree/version validation; the later listing does not invalidate already acquired bytes.",
+    "anotherAcquisition": "NOT_PERFORMED; do not try to retrieve or bypass the expired fixed artifact."
+  },
+  "nextNoninvasiveHypotheses": [
+    {
+      "id": "H1",
+      "hypothesis": "A group member had different credentials, potentially after an exec transition.",
+      "status": "UNPROVEN",
+      "staticBasis": "The reference XNU task-info path requires same-user authorization; proc_security_policy can return EPERM for a UID mismatch. Group inventory records PGID/PID only.",
+      "discriminatingReadOnlyEvidence": "In a separately reviewed future diagnostic path, retain only same/different/unknown UID relation, PPID/PGID membership, bounded allowed executable-role classification, numeric per-flavor return/errno and identity availability. Keep raw argv/tokens private and all unknown measurements unavailable.",
+      "currentLimit": "The denied UID, birth and role were not recorded; neither browser nor privileged-helper attribution is justified."
+    },
+    {
+      "id": "H2",
+      "hypothesis": "A platform/MAC policy denied task information even if UID matched.",
+      "status": "UNPROVEN",
+      "staticBasis": "The reference XNU proc_security_policy calls mac_proc_check_proc_info before its same-user check, so EPERM alone cannot distinguish policy from ownership.",
+      "discriminatingReadOnlyEvidence": "Compare permitted identity-only metadata calls and their per-flavor byte/errno results under unchanged credentials. A short BSD-info read may expose diagnostic metadata where allowed, but must not authorize resource counters or replace ownership/birth checks. Do not change entitlements, signing or permissions.",
+      "currentLimit": "No supplementary BSD query was attempted on the EPERM branch; the actual runner kernel/policy was not pinned by this source comparison."
+    },
+    {
+      "id": "H3",
+      "hypothesis": "After interrupting eligible children, the remaining group state became non-signalable, zombie-only or otherwise had no eligible member for killpg(0).",
+      "status": "UNPROVEN",
+      "staticBasis": "Runner.stop starts with SIGINT and later probes the group. Reference XNU killpg1 filters zombies/system members and may return EPERM when none are eligible.",
+      "discriminatingReadOnlyEvidence": "Record allowlisted cleanup operation name, signal number, errno, fresh membership/status availability, and the verified Popen child poll/wait result separately. Preserve unavailable group state instead of calling it gone.",
+      "currentLimit": "KeyboardInterrupt plus PermissionError is compatible with this sequence but does not prove it; no per-operation cleanup journal or reap result exists."
+    },
+    {
+      "id": "H4",
+      "hypothesis": "Nested harness or launcher activity introduced the first denied group member before a matching native instance was registered.",
+      "status": "UNPROVEN",
+      "staticBasis": "native_suite spawns each harness without a new session, and HostProcess similarly spawns open without a new session. The group monitor and recognized-native registry therefore cover different sets and times.",
+      "discriminatingReadOnlyEvidence": "Review the fixed subprocess graph offline; design opaque role/phase and parent-generation correlation for existing permitted metadata. Portable mocked checks can exercise EPERM and reaping paths before any future Mac execution.",
+      "currentLimit": "These are investigation designs only. No code change, test execution, Mac probe, CI retry or new SDK acquisition is part of this review."
+    }
+  ],
+  "sources": [
+    {
+      "type": "local-static",
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "functions": [
+        "DarwinActivity.query",
+        "DarwinActivity.read",
+        "DarwinActivity.group"
+      ]
+    },
+    {
+      "type": "local-static",
+      "path": "tools/qa/native-nonpgo/support.py",
+      "functions": [
+        "Runner.group_alive",
+        "Runner.group_activity",
+        "Runner.record_monitor",
+        "Runner.run",
+        "Runner.stop"
+      ]
+    },
+    {
+      "type": "local-static",
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "functions": [
+        "MacProcesses.pids",
+        "OwnedNative.census",
+        "OwnedNative.finish"
+      ]
+    },
+    {
+      "type": "local-static",
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "functions": [
+        "main",
+        "verify_config"
+      ]
+    },
+    {
+      "type": "local-static",
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "type": "official-reference",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+      "functions": [
+        "proc_pidinfo",
+        "proc_security_policy"
+      ],
+      "supports": "Per-flavor same-user policy and MAC hook; static hypothesis support rather than proof of the actual denied process."
+    },
+    {
+      "type": "official-reference",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sig.c",
+      "functions": [
+        "killpg1",
+        "killpg1_callback"
+      ],
+      "supports": "Group member eligibility, zombie/system filtering and EPERM return; does not prove actual cleanup syscall ordering."
+    }
+  ],
+  "reviewActions": {
+    "codeChanged": false,
+    "additionalTestsOrCI": false,
+    "externalWrites": false,
+    "rawPrivateLogPublished": false,
+    "newArtifactUpload": false,
+    "sdkFetchedAgain": false
+  }
+}
