@@ -358,7 +358,7 @@ class Runner:
                     phase = 'native-census'
                     if self.native_registry is not None:
                         self.native_registry.census()
-                        rss += self.native_registry.outside_group_rss(process.pid)
+                        rss += self.native_registry.outside_group_rss(activity['_pids'])
                     if activity.get('partialSamples'):
                         # An unobserved interval cannot count as evidence of
                         # unchanged CPU, memory, membership or runnable state.

@@ -183,8 +183,12 @@ class OwnedNative:
                 errors.add(str(error) if isinstance(error, Failure) else type(error).__name__)
         return result
 
-    def outside_group_rss(self, pgid):
-        return sum(self.system.rss(row['pid'], row) for row in self.live() if row['pgid'] != pgid)
+    def outside_group_rss(self, measured_births):
+        measured = set(measured_births)
+        # Group membership can change after sampling. Only the exact births
+        # already counted in that sample may be omitted here.
+        return sum(self.system.rss(row['pid'], row) for row in self.live()
+                   if (row['pid'], row['startSec'], row['startUsec']) not in measured)
 
     def finish(self):
         if self.finished:

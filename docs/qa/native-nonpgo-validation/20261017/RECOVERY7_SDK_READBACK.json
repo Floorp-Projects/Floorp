@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "589d49fc64e97409c450e9213da90c8d0b132f14",
+  "providerHeadExact": true,
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "5f2fd2ad3fd0f5e84f16c6b1603e6df00c5a8b63c7c53b8b264f8af41096a60a"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_SDK_TRANSPORT_REFRESH.json",
+      "sha256": "7627802cc95d9290a10f0445a75cdb14f293e9a7925662aceee42b899972d4ce"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_SDK_REVIEW.json",
+      "sha256": "16e60f3703c5a189d29984a9c7eb484934dc451ead4334ecef182454221a74f5"
+    }
+  ]
+}

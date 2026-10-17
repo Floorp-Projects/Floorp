@@ -1,0 +1,70 @@
+{
+  "baseCommit": "589d49fc64e97409c450e9213da90c8d0b132f14",
+  "codeFiles": [
+    {
+      "bytes": 12062,
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "sha256": "9b677774f13ce368bb59945659c4a5f9c71d59102e6692bd691a05d8b5dee2b3"
+    },
+    {
+      "bytes": 23162,
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "f5201d07cb122c80d527b0b30f97f04c713a2f89e559e41d8721524026e26b1d"
+    },
+    {
+      "bytes": 80133,
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "sha256": "f5d28b9d53d585d41b3bbd206b94b3b34bb32cb12c295b9dc2c156b6c10041ff"
+    }
+  ],
+  "generationAssessment": {
+    "groupInventory": "Full measured births are collected for each sample; unavailable group samples fail before owned-native census/accounting.",
+    "nativeRSS": "An extra read for a verified registered instance retains its expected PID/startSec/startUsec. Unknown identity/RSS raises; only proven gone/replaced generations yield zero.",
+    "originalDeniedPID": "Same opaque PID tag in all three partial attempts, no full identity/birth. Same process generation and role are unproven.",
+    "permissionHandling": "read returns unavailable immediately on denied task query. PID tags, earlier ps owner/role metadata and expected old birth cannot synthesize a current generation or zero counters."
+  },
+  "historicalNativeExitCause": "UNKNOWN",
+  "nativeAuthentication": "NOT_VERIFIED",
+  "newBuildOrCI": false,
+  "originalFailureStage": "group-activity before native-census",
+  "originalReceiptSHA256": "e2f82e5d5a0f9b786cef8f409cc8003178fdec2f84847a6c15e7994621c6fa29",
+  "originalRun": 39045848018,
+  "originalThreeDenialFailureFixed": false,
+  "processBoundary": {
+    "assessment": "The outer monitor ps is outside the target group under this launch invariant. The native harness ps remains a distinct supported denial hypothesis.",
+    "harnessSampler": "native_suite subprocesses, HostProcess._process_rows ps and ShimMonitor ps inherit the target group.",
+    "monitorSampler": "Runner.group_activity subprocess.run(ps) inherits the monitor parent PGID.",
+    "monitoredStage": "Runner.run Popen(start_new_session=True) creates a distinct target PGID equal to its child PID.",
+    "selection": "DarwinActivity.group selects only exact target PGID inventory rows; libproc validates live membership/UID and full identity."
+  },
+  "regressions": [
+    "Group moves in both directions with measured/unmeasured births",
+    "Same PID with another birth is not deduplicated",
+    "Unavailable native identity/counters remain errors",
+    "Runner passes the complete sampled birth roster; incomplete sample skips native census/accounting",
+    "Outer ps inherits monitor group while real spawned target has its own session",
+    "Outer ps communication timeout reaps both exact children and closes pipes",
+    "Three repeated denied same-PID samples remain incomplete/null with generation unknown; outer helper PGID is filtered out"
+  ],
+  "runtimeOrSecuritySettingsChanged": false,
+  "schemaVersion": 1,
+  "scope": "OWNED_NATIVE_RSS_ACCOUNTING_AND_SAMPLER_BOUNDARY_REGRESSIONS",
+  "supportedDefect": {
+    "description": "Registered PGID was used to choose extra native RSS after a fresh identity check. PGID can move without changing identity tuple.",
+    "notOriginalCause": "The original run failed earlier and its native registry observed zero hosts/Shims/helpers. This defect is not attributed as the original EPERM or native-exit cause.",
+    "portableBeforeFix": "Registered900/current901 wrongly skipped64MiB; registered901/current900 could add64MiB even when already measured in the group.",
+    "repair": "Use the exact (PID,startSec,startUsec) roster already measured in the complete group sample to deduplicate owned-native RSS. Registered/current PGID no longer controls inclusion.",
+    "snapshotLimit": "Measurements remain sequential snapshots; this change does not make census atomic or prove a real native process moved groups."
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_guards -q",
+    "elapsedSeconds": 3.014,
+    "newMacExecution": false,
+    "passed": 76,
+    "platform": "linux",
+    "python": "3.12.14",
+    "skip": "real macOS unreaped-child/libproc test",
+    "skipped": 1,
+    "total": 77
+  }
+}

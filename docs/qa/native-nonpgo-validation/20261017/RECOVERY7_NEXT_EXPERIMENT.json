@@ -1,0 +1,24 @@
+{
+  "currentBlocker": "The old denied process had no retained generation/owner/role. The current APIs still deny task counters for a live different-effective-UID helper. A safe permission-preserving remedy for that path is not established.",
+  "environment": "SDK-free standard macos-15-intel process diagnostic, no browser or full build",
+  "evidenceLimit": "If it reproduces three denials, it establishes a possible helper-lifetime mechanism for the new controlled child, not the old denied generation, browser exit cause or native authentication.",
+  "invariants": [
+    "No privilege, entitlement, OS protection or signing changes",
+    "No role/owner exclusion and no unknown-to-zero conversion",
+    "No retry-window widening",
+    "No new SDK/artifact acquisition/upload/full build",
+    "No raw argv, private paths or authentication tokens in published evidence"
+  ],
+  "name": "Known-child ps lifetime across unchanged monitor retry window",
+  "purpose": "Discriminate outer monitor helper contamination from a native-harness child ps that survives all three denied samples.",
+  "schemaVersion": 1,
+  "stages": [
+    "Verify actual monitor/helper/target PGIDs with the existing new-session launch and opaque tags. Outer sampler must stay outside target group.",
+    "Start one exact worker-owned /bin/ps child in the target group and keep its lifetime observable through that parent Popen object until reaping. Retain only bounded private output.",
+    "Use controlled bounded stdout backpressure to hold that known census child across the existing three task samples. This is a mechanism test, not proof of the historical stall cause.",
+    "Run the unchanged sampler (three attempts, existing spacing, same API and limits). Record per-attempt query bytes/errno, opaque PID tags, identity availability and permitted owner/parent/group metadata.",
+    "Verify that three incomplete permission samples cause the existing fail-closed stop. Release/drain the controlled output and reap exact children, separately retaining group cleanup and signal/probe errno.",
+    "Include a normally draining control; partial denial may recover through the unchanged retry rule. Missing target overlap must remain an inconclusive/failed coverage result."
+  ],
+  "status": "DESIGN_ONLY_NOT_EXECUTED"
+}

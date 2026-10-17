@@ -466,6 +466,8 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.failure['code'], 'monitor-unavailable')
         self.assertEqual(runner.records[0]['reason'], 'monitor-unavailable')
         self.assertEqual(runner.records[0]['cleanupFailure'], 'owned-native-cleanup-incomplete')
+        runner.native_registry.census.assert_not_called()
+        runner.native_registry.outside_group_rss.assert_not_called()
         self.assertIsNone(runner.records[0]['peakRSSMiB'])
         self.assertFalse(runner.groups)
 
@@ -676,6 +678,63 @@ class Guards(unittest.TestCase):
             result = registry.finish()
         send.assert_not_called()
         self.assertTrue(result['allOwnedGone'])
+
+    def test_native_rss_uses_sampled_births_when_owned_process_changes_group(self):
+        for registered, current_group, sampled, expected_rss in (
+                (900, 901, True, 0), (901, 900, False, 64),
+                (900, 900, True, 0), (901, 901, False, 64)):
+            with self.subTest(registered=registered, current=current_group, sampled=sampled):
+                current = [None]
+                registry, original = self.owned_registry(current)
+                original['pgid'] = registered
+                current[0] = {**original, 'pgid': current_group}
+                registry.system.rss.return_value = 64
+                birth = (original['pid'], original['startSec'], original['startUsec'])
+                measured = (birth,) if sampled else ()
+                self.assertEqual(registry.outside_group_rss(measured), expected_rss)
+                if sampled:
+                    registry.system.rss.assert_not_called()
+                else:
+                    registry.system.rss.assert_called_once_with(original['pid'], original)
+                self.assertEqual(original['pgid'], registered)
+
+    def test_native_rss_does_not_deduplicate_by_pid_without_matching_birth(self):
+        current = [None]
+        registry, original = self.owned_registry(current)
+        original['pgid'] = 900
+        current[0] = dict(original)
+        registry.system.rss.return_value = 64
+        old_birth = (original['pid'], original['startSec'], original['startUsec'] - 1)
+        self.assertEqual(registry.outside_group_rss((old_birth,)), 64)
+        registry.system.rss.assert_called_once_with(original['pid'], original)
+
+    def test_native_rss_keeps_unavailable_identity_or_counters_as_failure(self):
+        current = [None]
+        registry, original = self.owned_registry(current)
+        original['pgid'] = 901
+        current[0] = dict(original)
+        registry.system.rss.side_effect = Failure('native-rss-unavailable')
+        with self.assertRaisesRegex(Failure, 'native-rss-unavailable'):
+            registry.outside_group_rss(())
+        registry.system.describe.side_effect = Failure('native-birth-unavailable')
+        birth = (original['pid'], original['startSec'], original['startUsec'])
+        with self.assertRaisesRegex(Failure, 'native-birth-unavailable'):
+            registry.outside_group_rss((birth,))
+
+    def test_runner_passes_complete_sample_births_to_native_rss_accounting(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        runner.native_registry = mock.Mock()
+        runner.native_registry.outside_group_rss.return_value = 0
+        runner.native_registry.finish.return_value = {'outlivedHarness': 0, 'allOwnedGone': True}
+        births = ((42, 100, 7),)
+        activity = {'sampleComplete': True, 'rssMiB': 8, 'cpuSeconds': 1,
+                    'processes': 1, 'states': ['S'], '_pids': births}
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch.object(runner, 'group_activity', return_value=activity):
+            runner.run('native-rss', [sys.executable, '-c', 'import time; time.sleep(0.1)'],
+                       self.root, os.environ.copy(), 360)
+        runner.native_registry.outside_group_rss.assert_called_once_with(births)
 
     def test_native_cleanup_signals_only_matching_owned_generation(self):
         current = [None]
@@ -903,6 +962,84 @@ class DarwinCounterGuards(unittest.TestCase):
         self.assertEqual(library.proc_pidinfo.call_count, 1)
         library.proc_pidinfo.side_effect = lambda pid, flavor, arg, pointer, size: size
         self.assertEqual(sensor.read(42, 900)['status'], 'unavailable')
+
+    def test_repeated_permission_keeps_generation_unknown_and_skips_outer_sampler(self):
+        sensor, library = self.sensor()
+        original = library.proc_pidinfo.side_effect
+        def query(pid, *args):
+            if pid == 43:
+                ctypes.set_errno(errno.EPERM)
+                return 0
+            return original(pid, *args)
+        library.proc_pidinfo.side_effect = query
+        rows = (f'800 41 10 {os.geteuid()} {os.getuid()} /bin/ps\n'
+                f'900 42 10 {os.geteuid()} {os.getuid()} /python\n'
+                f'900 43 42 0 {os.getuid()} /bin/ps\n')
+        with mock.patch('support.sys.platform', 'darwin'), \
+                mock.patch('darwin_activity.probe', return_value=sensor), \
+                mock.patch('support.subprocess.run', return_value=mock.Mock(stdout=rows)) as ps, \
+                mock.patch('support.time.sleep'):
+            value = Runner.group_activity(900)
+        self.assertEqual(ps.call_count, 3)
+        self.assertFalse(value['sampleComplete'])
+        self.assertIsNone(value['rssMiB'])
+        self.assertIsNone(value['cpuSeconds'])
+        denied = [next(row for row in sample['formatExamples'] if row['kind'] == 'permission')
+                  for sample in value['partialSamples']]
+        self.assertEqual(len(denied), 3)
+        self.assertEqual(len({row['pidTag'] for row in denied}), 1)
+        self.assertTrue(all(row['identityTag'] is None for row in denied))
+        self.assertTrue(all(row['inventory']['identityBound'] is False for row in denied))
+        queried = [call.args[0] for call in library.proc_pidinfo.call_args_list]
+        self.assertEqual(queried, [42, 43] * 3)
+
+    def test_outer_ps_inherits_monitor_group_while_target_has_new_session(self):
+        target = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'],
+                                  start_new_session=True)
+        helper = None
+        try:
+            helper = subprocess.Popen(['/bin/ps', '-axo', 'pgid=,pid='], stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE, text=True)
+            stdout, _ = helper.communicate(timeout=3)
+            self.assertEqual(helper.returncode, 0)
+            rows = {int(parts[1]): int(parts[0]) for line in stdout.splitlines()
+                    if len(parts := line.split()) == 2 and all(x.isdecimal() for x in parts)}
+            self.assertEqual(rows[target.pid], target.pid)
+            self.assertEqual(rows[helper.pid], os.getpgrp())
+            self.assertNotEqual(rows[helper.pid], rows[target.pid])
+        finally:
+            try:
+                if helper is not None:
+                    try:
+                        if helper.poll() is None:
+                            helper.kill()
+                    finally:
+                        try:
+                            helper.wait(timeout=3)
+                        finally:
+                            for stream in (helper.stdout, helper.stderr):
+                                if stream is not None:
+                                    stream.close()
+            finally:
+                target.terminate()
+                target.wait(timeout=3)
+
+    def test_outer_sampler_timeout_reaps_both_exact_children(self):
+        children, popen = [], subprocess.Popen
+        def launch(*args, **kwargs):
+            child = popen(*args, **kwargs)
+            children.append(child)
+            if len(children) == 2:
+                child.communicate = mock.Mock(side_effect=subprocess.TimeoutExpired('ps', 3))
+            return child
+        with mock.patch('test_guards.subprocess.Popen', side_effect=launch):
+            with self.assertRaises(subprocess.TimeoutExpired):
+                self.test_outer_ps_inherits_monitor_group_while_target_has_new_session()
+        self.assertEqual(len(children), 2)
+        for child in children:
+            self.assertIsNotNone(child.poll())
+            with self.assertRaises(ChildProcessError):
+                os.waitpid(child.pid, os.WNOHANG)
 
     def test_short_bsd_info_is_not_disappearance_without_independent_proof(self):
         sensor, library = self.sensor()
