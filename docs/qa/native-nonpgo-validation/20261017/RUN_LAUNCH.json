@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "recordedAtUTC": "2026-10-17 08:16:57 UTC",
+  "authorization": {
+    "approvedAtUTC": "2026-10-17 08:04 UTC",
+    "userText": "実行OK進めて",
+    "scope": "standard public macos-15-intel; one job; hard cap 210 minutes; no new large Actions artifacts; existing disposable ad-hoc signing only"
+  },
+  "run": {
+    "id": 39016143725,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+    "event": "push",
+    "attempt": 1,
+    "createdAt": "2026-10-17T08:06:50Z",
+    "jobId": 117348535832,
+    "jobStartedAt": "2026-10-17T08:06:56Z",
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "runnerGroup": "GitHub Actions",
+    "statusAtRecord": "in_progress",
+    "currentStep": "Compile full host and XUL then authenticate native Shim",
+    "currentStepStartedAt": "2026-10-17T08:14:29Z",
+    "innerStageStatus": "Not exposed by the aggregate Actions step; final proof required"
+  },
+  "execution": {
+    "commit": "1dfc3b6443c75a0c7f4bc11da5deed1544e10198",
+    "tree": "c6e33d53fb57fdb5f48ed3db68288c9d2d146aa2",
+    "parentAndBuildSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "onlyAddedFile": ".github/workflows/mac-native-nonpgo.yml",
+    "workflowSHA256": "ff4589f9c8c33a6595cb11bb8f19e2bebb2e332a0d94c3e1e50d57cdf18de0dc",
+    "fixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+    "preparationSeal": "57a51933a06c7cc973f83cd871ca784a76277fc0"
+  },
+  "preflight": {
+    "providerFileHashesMatched": 26,
+    "existingRuntimeWorkflows": 24,
+    "existingPushMatches": 0,
+    "workflowRunListeners": 0,
+    "sdkArtifact": 12074136738,
+    "sdkExpired": false,
+    "sdkExpiresAt": "2026-10-17T20:41:19Z",
+    "sdkSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "defaultHeadsUnchanged": true
+  },
+  "qualification": {
+    "fullHostTU": "NOT_YET_PROVEN",
+    "xulLink": "NOT_YET_PROVEN",
+    "nativeAuth": "NOT_YET_PROVEN",
+    "productQualification": false,
+    "originalTimeoutCause": "UNKNOWN"
+  },
+  "constraints": {
+    "newActionsArtifacts": 0,
+    "cacheUploads": 0,
+    "productSigning": false,
+    "notarization": false,
+    "merge": false,
+    "releasePublication": false,
+    "newCredentials": false,
+    "productionSettings": false
+  }
+}
