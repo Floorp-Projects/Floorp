@@ -12,6 +12,8 @@ import tempfile
 import threading
 import uuid
 
+import shim_diagnostics as diagnostics
+
 PROJECT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('helpers', PROJECT / 'tools/app-shim/test-runtime.py')
 h = importlib.util.module_from_spec(spec)
@@ -61,13 +63,37 @@ def main():
              'floorp.browser.nativeApp.appShim.enabled':True,'browser.sessionstore.resume_from_crash':False,
              'app.update.enabled':False,'datareporting.policy.dataSubmissionEnabled':False}
     (profile / 'user.js').write_text('\n'.join(f'user_pref({json.dumps(k)}, {json.dumps(v)});' for k,v in prefs.items())+'\n')
-    report = {'status':'failed','browser':str(browser),'output':str(output),'requestedIterations':args.iterations}
+    report = {'status':'failed','browser':str(browser),'output':str(output),
+              'requestedIterations':args.iterations,'attemptedIterations':0,'phase':'launch-host'}
     app_id = '{'+str(uuid.uuid4())+'}'
     host = client = server = None
-    log = (output / 'browser.log').open('w')
+    private_logs = output / '.private-logs'
+    private_logs.mkdir(mode=0o700)
+    log = (private_logs / 'browser.log').open('w')
     code = 1
+
+    def snapshot():
+        result = {'phase':report['phase'],'host':diagnostics.process_summary(host),
+                  'shimExitCode':None,'shimExitCodeUnavailable':'No kernel exit status is exposed by the observer API'}
+        if client and host and host.verified:
+            try:
+                client.context('chrome')
+                state = client.script(f'''return {{events:{STATE}?.authEvents ?? [],authCount:{STATE}?.authCount ?? 0,
+crashCount:{STATE}?.crashes?.length ?? 0,failureCount:{STATE}?.failures?.length ?? 0}};''')
+                result['shim'] = diagnostics.event_summary(state['events'])
+                result['shim']['authEventCount'] = state['authCount']
+                result['shim']['truncated'] = state['authCount'] > 64
+                result['crashCount'] = state['crashCount']
+                result['failureCount'] = state['failureCount']
+            except Exception as error:
+                result['stateError'] = diagnostics.error_summary(error)
+        elif client:
+            result['stateUnavailable'] = 'Host process ownership was not verified'
+        return result
+
     try:
-        host = h.HostProcess(browser, exe, profile, output, log, launch_services=True)
+        host = h.HostProcess(browser, exe, profile, private_logs, log, launch_services=True)
+        report['phase'] = 'connect-marionette'
         def connect():
             if host.poll() is not None:raise RuntimeError('Test host exited')
             try:return h.Marionette(port)
@@ -75,16 +101,25 @@ def main():
         client = h.wait_for('Marionette', connect, 35)
         host.verify_session(client.session)
         client.context('chrome')
+        report['phase'] = 'seal-shim'
         identity = json.loads(client.script(f'return {h.SERVICE}.hostIdentityJSON;'))
         profile_id = 'context-menu-'+uuid.uuid4().hex
         bundle = h.seal_bundle(output,browser/'Contents/MacOS/floorp-app-shim',identity,profile,app_id,profile_id)
-        client.script(f'''{STATE}={{events:[],failures:[],crashes:[]}};
+        report['phase'] = 'launch-shim'
+        client.script(f'''{STATE}={{events:[],failures:[],crashes:[],authEvents:[],authCount:0}};
 {STATE}.observer={{observe(s,t,d){{if(t==='floorp-web-app-shim-event'){{const e=JSON.parse(d);
-if(e.type!==111){STATE}.events.push(e);}}else if(t==='oop-frameloader-crashed'){{
+if(e.type==='connected'||e.type==='disconnected'){{const p=e.payload??{{}};{STATE}.authCount++;
+{STATE}.authEvents.push({{type:e.type,diagnosticTime:Date.now(),payload:{{
+pid:Number.isSafeInteger(p.pid)&&p.pid>0?p.pid:null,
+reason:{json.dumps(sorted(diagnostics.REASONS))}.includes(p.reason)?p.reason:'other'}}}});
+if({STATE}.authEvents.length>64){STATE}.authEvents.shift();}}
+if(e.type!==111){{e.diagnosticTime=Date.now();{STATE}.events.push(e);}}}}else if(t==='oop-frameloader-crashed'){{
 {STATE}.crashes.push({{time:Date.now(),data:d}});}}else {STATE}.failures.push(d);}}}};
 for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.addObserver({STATE}.observer,t);
 {h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);{h.SERVICE}.launchApp(arguments[0]);''',app_id,profile_id,str(bundle))
+        report['phase'] = 'authenticate-shim'
         connected = h.wait_for('Shim authentication',lambda:next((e for e in client.script(f'return {STATE}.events;') if e['type']=='connected'),None),20)
+        report['phase'] = 'create-pwa-window'
         server = http.server.ThreadingHTTPServer(('127.0.0.1',0),Page)
         threading.Thread(target=server.serve_forever,daemon=True).start()
         client.script(f'''const {{BrowserWindowTracker}}=ChromeUtils.importESModule('resource:///modules/BrowserWindowTracker.sys.mjs');
@@ -105,7 +140,9 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         geometry = client.script(f'const b={STATE}.window.gBrowser.selectedBrowser;const r=b.getBoundingClientRect();return {{x:r.x,y:r.y,remote:b.isRemoteBrowser,remoteType:b.remoteType,pid:b.frameLoader.remoteTab.osPid}};')
         if not geometry['remote']:raise RuntimeError('Fixture must use a remote content process')
         report.update({'hostPid':host.pid,'shimPid':connected['payload']['pid'],'contentProcess':geometry,'results':[]})
+        report['phase'] = 'context-menu'
         for iteration in range(args.iterations):
+            report['attemptedIterations'] += 1
             client.context('chrome')
             for kind in ('mouseDown','mouseUp'):
                 packet = {'windowId':root_id,'kind':kind,'x':geometry['x']+rect['x'],'y':geometry['y']+rect['y'],'modifiers':0,'button':1,'clickCount':1}
@@ -133,30 +170,62 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         if final['crashes'] or final['failures'] or final['closed'] or final['pid']!=geometry['pid']:
             raise RuntimeError('PWA or its content process did not survive')
         report['status']='passed'
+        report['phase']='completed'
         code=0
     except Exception as error:
-        report['error']=str(error)
-        if client:
-            try:
-                client.context('chrome')
-                report['nativeState']=client.script(f'return {{crashes:{STATE}?.crashes,failures:{STATE}?.failures}};')
-            except Exception as inner:report['stateError']=str(inner)
+        report['error']=diagnostics.error_summary(error)
+        report.pop('nativeState', None)
+        report.pop('finalState', None)
+        diagnostics.write_first_failure(output, report)
     finally:
-        if client:
-            try:
-                client.context('chrome')
-                client.script(f'''for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.removeObserver({STATE}.observer,t);
+        report.pop('nativeState', None)
+        if report['status'] != 'passed':
+            report.pop('finalState', None)
+        report['beforeCleanup'] = snapshot()
+        if 'stateError' in report['beforeCleanup']:
+            report['status']='failed'
+            code=1
+        try:
+            (output/'before-cleanup.json').write_text(json.dumps(report,indent=2)+'\n')
+            if report['status'] != 'passed':
+                diagnostics.write_first_failure(output, report)
+        finally:
+            actions = []
+            if client:
+                def stop_shim():
+                    client.context('chrome')
+                    client.script(f'''for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.removeObserver({STATE}.observer,t);
 if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.sendControl(arguments[0],40,'{{}}');''',app_id)
+                if host and host.verified:
+                    actions.append(('shim', stop_shim))
+                actions.append(('client', client.close if host and host.verified else client.socket.close))
+            if server:
+                actions.extend([('server', server.shutdown), ('server-socket', server.server_close)])
+            if host:
+                actions.append(('host', host.close))
+            actions.append(('log', log.close))
+            for name, action in actions:
+                try:
+                    action()
+                except Exception as error:
+                    report.setdefault('cleanupErrors', []).append({'step':name, **diagnostics.error_summary(error)})
+                    report['status']='failed'
+                    code=1
+            report['afterCleanup'] = {'host':diagnostics.process_summary(host)}
+            try:
+                report['streams'] = diagnostics.save_streams(private_logs, output)
+                if any(not item['present'] or 'error' in item for item in report['streams'].values()):
+                    report['diagnosticsIncomplete'] = True
+                    report['status']='failed'
+                    code=1
             except Exception as error:
-                report['cleanupError']=str(error)
+                report['streamError'] = diagnostics.error_summary(error)
                 report['status']='failed'
                 code=1
-            client.close()
-        if server:server.shutdown();server.server_close()
-        if host:host.close()
-        log.close()
-        (output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
-        print(json.dumps(report,indent=2))
+            if report['status'] != 'passed':
+                diagnostics.write_first_failure(output, report)
+            (output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
+            print(json.dumps(report,indent=2))
     return code
 
 
