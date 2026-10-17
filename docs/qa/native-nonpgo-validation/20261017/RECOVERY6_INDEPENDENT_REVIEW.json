@@ -1,0 +1,278 @@
+{
+  "commit": "10d64da5a1d8d7bf3268bef0a5ef0734a9d7a464",
+  "decisions": {
+    "additionalFullBuild": "NOT_PERFORMED_AND_OUT_OF_CURRENT_SCOPE",
+    "browserStartupAndShimAuthentication": "NOT_VERIFIED",
+    "macExecution": "NOT_EXECUTED in these results; development environment is Linux",
+    "macExecutionReady": false,
+    "openP1": [],
+    "openP2": [],
+    "originalNativeCause": "UNKNOWN",
+    "permissionFailureFixed": "NOT_CLAIMED",
+    "selectionOrLaunchModification": "NO_GO_PENDING_ACTUAL_IDENTITY_AND_ACCOUNTING_EVIDENCE",
+    "staticDecision": "GO_FOR_DIAGNOSTIC_AND_CHILD_REAP_PREPARATION",
+    "staticReady": true
+  },
+  "diagnosticLimits": [
+    "Role, owner relation and parent tag describe an earlier PID inventory snapshot with identityBound=false. They do not prove the generation, owner or type at the later denied task query.",
+    "systemPsObserved is a count of inventory occurrences, not unique process generations and not proof that a live ps was measured at the task-query instant. Confirmed-gone or later-replaced members can still have appeared in an earlier inventory.",
+    "differentOwnerObserved counts owner-relation inventory occurrences; it is not a proof that a particular denied task had that owner.",
+    "psTaskDeniedSamples is derived from bounded examples (up to three per snapshot) and is a lower bound. Zero does not exclude ps-related permission denial. Multiple matching denied tasks within one attempt count as one attempt.",
+    "A recovered partial permission failure remains diagnostic evidence while a subsequent complete sample may allow progress under unchanged existing retry policy.",
+    "Exact Popen child exit code is the monitored worker/suite leader code; it is distinct from a browser or Shim exit code. Reaping this child does not prove all group members or native processes were cleaned up.",
+    "A successful short census preflight cannot establish browser startup, native Shim authentication, historical cause-host-exited root cause, or the absence of a rare later permission race."
+  ],
+  "findings": [],
+  "parentCommit": "dae9d1e16370f9b7d851fafbc27df245ef085df3",
+  "receipts": {
+    "portablePreflight": {
+      "bytes": 1759,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY6_PORTABLE_PREFLIGHT.json",
+      "sha256": "4095b8a877a9fc71be7982a8f23b919bed62c1c845cdb55dabfb4163ee2ca99b"
+    },
+    "preparation": {
+      "bytes": 3180,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY6_PREPARATION.json",
+      "sha256": "a6eebbb6a02cac6beb931fbe99cdcd01414e3a9e96a7594c52b6929b69173eea"
+    },
+    "priorTerminalReview": {
+      "bytes": 18627,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY5_TERMINAL_REVIEW.json",
+      "sha256": "84609d7407de4a51589126656510255f68bdff70cf82078994455a35f3f2d869"
+    },
+    "unchangedRecovery5TerminalReceiptSHA256": "e2f82e5d5a0f9b786cef8f409cc8003178fdec2f84847a6c15e7994621c6fa29"
+  },
+  "repository": "Floorp-Projects/Floorp",
+  "resolvedDuringReview": [
+    {
+      "issue": "A representative Mac preflight could pass without the sampler seeing any ps helper.",
+      "resolution": "Require systemPsObserved>0 on Darwin, retain partial inventory evidence, and add missing-target/recovered-partial tests."
+    },
+    {
+      "issue": "Missing diagnostic-only metadata initially could alter the existing valid-PID measurement decision.",
+      "resolution": "Keep metadataUnavailable separate and continue original task query; regression test preserves a measured result."
+    },
+    {
+      "issue": "The last incomplete retry could be included both as activity and as the final partial sample.",
+      "resolution": "When final activity is incomplete and partials exist, aggregate partials only. Three denied retries are now counted as three; dedicated test added."
+    }
+  ],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent read-only static review of recovery6 diagnostic and exact-child reap changes",
+  "schemaVersion": 1,
+  "scope": {
+    "codeDiffBytes": 31968,
+    "codeDiffSHA256": "5f14a4a65287bdace8c9b19a9a42b5f9e91d797bb0bbd28246fead60b62b7aa1",
+    "codeFiles": [
+      {
+        "bytes": 11249,
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "sha256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e"
+      },
+      {
+        "bytes": 23156,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "81e3d34e2894008ac64b93c535f34fc164c353e53fa63dc7056c55ea05702dc1"
+      },
+      {
+        "bytes": 72620,
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "sha256": "01131e5a5f4bf9f39928e029f72401473b7d79c5b8acf8f5450d3d23e07edc08"
+      },
+      {
+        "bytes": 6429,
+        "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+        "sha256": "4948100e6c81f68c8d82e980806202c7bc0e31cad7efd137c66052128a69d18c"
+      }
+    ],
+    "fullCommitDiffBytes": 49277,
+    "fullCommitDiffSHA256": "6674b0d902ee50b39145a7b62bf5c7234ea8f9a75aa424b8dbef82d22a5eb794",
+    "note": "The immutable code binding includes all four code files, including the SDK-free preflight script."
+  },
+  "sources": [
+    {
+      "functions": [
+        "DarwinActivity.read",
+        "DarwinActivity.group"
+      ],
+      "path": "tools/qa/native-nonpgo/darwin_activity.py"
+    },
+    {
+      "functions": [
+        "Runner.group_activity",
+        "Runner.group_alive",
+        "Runner.run",
+        "Runner.stop"
+      ],
+      "path": "tools/qa/native-nonpgo/support.py"
+    },
+    {
+      "functions": [
+        "verify_harness",
+        "workload",
+        "record_observation",
+        "require_observation",
+        "main"
+      ],
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py"
+    },
+    {
+      "functions": [
+        "Guards.test_group_permission_failure_still_reaps_exact_child_and_keeps_denial",
+        "Guards.test_denied_group_and_live_child_remain_unverified_after_bounded_wait",
+        "DarwinCounterGuards"
+      ],
+      "path": "tools/qa/native-nonpgo/test_guards.py"
+    },
+    {
+      "supports": "Pinned HostProcess process inventory subprocess pattern.",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py"
+    },
+    {
+      "supports": "Pinned ShimMonitor PID enumeration subprocess pattern.",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/shim_lifecycle.py"
+    },
+    {
+      "supports": "Official root:wheel mode-4755 install source supports ps as a hypothesis, not an attribution to the recovery5 denied PID.",
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/6bed8737a34dbb54782a18f47dccf933a9967a12/xcodescripts/install-ps.sh"
+    },
+    {
+      "supports": "Task/BSD query permission behavior in the official reference implementation; actual denial policy remains unidentified.",
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c"
+    },
+    {
+      "supports": "Bounded wait on the exact Popen child; this is separate from process-group signaling.",
+      "url": "https://docs.python.org/3.12/library/subprocess.html#subprocess.Popen.wait"
+    }
+  ],
+  "staticChecks": [
+    {
+      "assessment": "Only fixed role values system-ps/system-open/other, same/different owner relations, random-key opaque parent/PID tags and counts are serialized. Raw comm, argv, paths, UID/RUID/PPID are not published by the new metadata fields. identityBound is explicitly false.",
+      "evidence": [
+        "darwin_activity.py:140",
+        "darwin_activity.py:158",
+        "darwin_activity.py:176"
+      ],
+      "subject": "Public inventory allowlist"
+    },
+    {
+      "assessment": "Every valid PID in the selected PGID still reaches read(pid, pgid). No role/owner exclusion is added. Original libproc identity/birth/state/membership/counter checks and permission early return remain unchanged. EPERM totals stay null, unknown is retained, and no measurement/gone/signal decision uses supplemental ps metadata.",
+      "evidence": [
+        "darwin_activity.py:145",
+        "darwin_activity.py:172",
+        "darwin_activity.py:197"
+      ],
+      "subject": "Selection and measurement remain fail-closed"
+    },
+    {
+      "assessment": "A valid PGID/PID with missing extra owner/comm metadata still uses the original task query and can be measured. metadataUnavailable cannot itself create a monitor failure. Malformed actual target PID remains unknown.",
+      "evidence": [
+        "darwin_activity.py:159",
+        "darwin_activity.py:170",
+        "test_guards.py:test_missing_diagnostic_metadata_cannot_change_task_measurement_decision"
+      ],
+      "subject": "Metadata absence is diagnostic only"
+    },
+    {
+      "assessment": "Probe/signal OSError diagnostics keep operation, signal, error type and errno without exception text; denial is re-raised and not converted to gone. groupCleanup starts unverified after launch and reaches verified-gone only after normal group cleanup succeeds. The exact Popen child independently receives wait(timeout=5) even after group EPERM. Reaped/still-running/unavailable child status does not change unverified group status. No additional signal or privilege is added.",
+      "evidence": [
+        "support.py:197",
+        "support.py:405",
+        "support.py:424",
+        "support.py:442",
+        "support.py:450"
+      ],
+      "subject": "Cleanup group and exact child are distinct"
+    },
+    {
+      "assessment": "Four pinned harness file hashes are verified before import/use. The worker executes HostProcess._process_rows all-PID and single-PID calls and the ShimMonitor PID enumeration command, each 12 times, retaining inherited worker PGID. Each loop pauses 0.25 seconds; this is not a guaranteed 30-second workload. No SDK, browser, Shim authentication, build, permission, signing, or session-selection change is performed.",
+      "evidence": [
+        "monitor_native_preflight.py:20",
+        "monitor_native_preflight.py:25",
+        "monitor_native_preflight.py:31",
+        "monitor_native_preflight.py:94",
+        "monitor_native_preflight.py:111"
+      ],
+      "subject": "SDK-free representative workload"
+    },
+    {
+      "assessment": "Mac pass additionally requires at least two complete samples and system-ps observed in an inventory. Missing ps fails with census-system-ps-not-observed. Recovered and final-failure partial inventory summaries are retained. Final failed attempt is counted once, rather than once as final activity plus once as partial.",
+      "evidence": [
+        "support.py:273",
+        "monitor_native_preflight.py:45",
+        "monitor_native_preflight.py:62",
+        "test_guards.py:821",
+        "test_guards.py:832",
+        "test_guards.py:843"
+      ],
+      "subject": "Observation coverage and retry retention"
+    },
+    {
+      "assessment": "Existing job limit, disk/log/memory guards, owned-native registry and signal sequence are retained. This change adds diagnostics and a bounded exact-child wait; it does not relax EPERM, ownership validation, API access, OS protection, entitlements, retention, authentication or token permissions.",
+      "subject": "Resource/ownership/permission controls"
+    }
+  ],
+  "technicalExecutionScope": {
+    "macPlatformValidation": "Not included in these results. The development environment is Linux.",
+    "notInScope": [
+      "another full build",
+      "expired SDK acquisition",
+      "privilege escalation",
+      "OS protection/entitlement relaxation",
+      "EPERM bypass",
+      "role/owner-based exclusion",
+      "unaccounted helper session move",
+      "product signing",
+      "large artifact upload",
+      "publication",
+      "merge"
+    ],
+    "representativeDiagnosticConditions": "Immutable reviewed revision on standard macos-15-intel with existing process permissions; retain unknown/null on denial, operation/errno diagnostics and distinct child/group cleanup status; missing system-ps observation fails the coverage requirement."
+  },
+  "validation": {
+    "actualMacTests": "NOT_EXECUTED for recovery6; one real-Mac unit test skipped on Linux. Prior recovery5 real-Mac self/zombie/churn success does not establish recovery6 census or native authentication success.",
+    "diffCheck": {
+      "exitCode": 0,
+      "output": ""
+    },
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "portableActualSpawn": {
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "exitCode": 0,
+        "status": "reaped"
+      },
+      "limits": "PORTABLE_ONLY_NO_MAC_PROOF; systemPsObserved=0 on Linux does not validate the Darwin metadata or permission path.",
+      "observations": {
+        "completeSamples": 4,
+        "differentOwnerObserved": 0,
+        "psTaskDeniedSamples": 0,
+        "samples": 4,
+        "systemPsObserved": 0
+      },
+      "platform": "linux",
+      "provenance": "Final-script Linux workload execution recorded in committed result; not rerun by reviewer",
+      "qualification": "PORTABLE_ONLY_NO_MAC_PROOF",
+      "status": "passed",
+      "workload": {
+        "hostAll": 12,
+        "hostSingle": 12,
+        "shimPIDInventory": 12
+      }
+    },
+    "reviewerActions": "Read code/diff, manifests and portable evidence; verified committed file bytes/hashes, clean working tree, commit ancestry and diff check. No tests, CI, browser or SDK acquisition were executed during this review.",
+    "unitTests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 python -m unittest test_guards -q",
+      "elapsedSeconds": 2.015,
+      "passed": 69,
+      "platform": "linux",
+      "provenance": "Execution recorded in committed preparation manifest; not rerun by reviewer",
+      "python": "3.12.14",
+      "skipReason": "real macOS libproc unreaped-child test; not executed in this Linux environment",
+      "skipped": 1,
+      "total": 70
+    }
+  },
+  "workingTreeClean": true
+}
