@@ -11,6 +11,7 @@ import {
   parseDenoTasksFromText,
   parseFelesCommandsFromText,
   parseWorkflowRunCommands,
+  parseWorkflowTriggers,
 } from "./collector.ts";
 import {
   codexAuditSchema,
@@ -35,6 +36,22 @@ import {
 import { verifyDocsPipeline } from "./verifier.ts";
 import { REQUIRED_GENERATED_PAGE_PATHS } from "./types.ts";
 import type { DocsInventory, GeneratedPage } from "./types.ts";
+
+Deno.test("workflow inventory preserves target PR, review and completion triggers", () => {
+  assertEquals(parseWorkflowTriggers(`
+on:
+  issues:
+    types: [opened, reopened, edited]
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize]
+  pull_request_review:
+    types: [submitted, dismissed]
+  workflow_run:
+    types: [completed]
+`), ["issue_comment", "issues", "pull_request_review", "pull_request_target", "workflow_run"]);
+});
 
 Deno.test("parseDenoTasksFromText reads sorted task entries", () => {
   const tasks = parseDenoTasksFromText(

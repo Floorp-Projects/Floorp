@@ -436,12 +436,15 @@ function buildFloorpOsApiInventory(
   };
 }
 
-function parseWorkflowTriggers(workflowText: string): string[] {
+export function parseWorkflowTriggers(workflowText: string): string[] {
   const triggers = new Set<string>();
   for (
     const trigger of [
       "workflow_dispatch",
       "pull_request",
+      "pull_request_target",
+      "pull_request_review",
+      "workflow_run",
       "push",
       "schedule",
       "workflow_call",
