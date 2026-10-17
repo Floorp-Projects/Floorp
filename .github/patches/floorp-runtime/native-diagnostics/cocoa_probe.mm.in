@@ -1,0 +1,87 @@
+#import <Foundation/Foundation.h>
+#include "DisconnectCause.h"
+#include "Protocol.h"
+#include <cstdio>
+#include <cstdlib>
+#include <sys/types.h>
+
+struct Probe {
+  struct App {
+    floorp::shim::DisconnectCause disconnectCause;
+    bool connected = false;
+  };
+@@REMEMBER_CAUSE@@
+};
+
+NSDictionary* Payload(Probe::App& aApp, NSString* aReason, pid_t exitedPID) {
+  return @@PAYLOAD@@;
+}
+
+unsigned checks = 0;
+void Check(bool value, const char* code) {
+  ++checks;
+  if (!value) {
+    std::fprintf(stderr, "%s\n", code);
+    std::exit(1);
+  }
+}
+
+int main() {
+  @autoreleasepool {
+    Probe probe;
+    Probe::App app;
+    app.connected = true;
+    const int64_t before = NSDate.date.timeIntervalSince1970 * 1000;
+    @autoreleasepool {
+      NSString* temporary = [NSString stringWithFormat:@"%@", @"send-failed"];
+      probe.RememberCause(app, temporary);
+    }
+    const int64_t after = NSDate.date.timeIntervalSince1970 * 1000;
+    const int64_t first = app.disconnectCause.wallTimeMs;
+    Check(app.disconnectCause.reason == "send-failed", "first-cause");
+    Check(first >= before && first <= after, "cause-wall-time");
+    app.connected = false;
+    probe.RememberCause(app, @"process-exited");
+    Check(app.disconnectCause.reason == "send-failed", "cause-not-overwritten");
+    Check(app.disconnectCause.wallTimeMs == first, "time-not-overwritten");
+    Check(app.disconnectCause.connected, "first-host-state");
+
+    NSDictionary* payload = Payload(app, @"process-exited", 42);
+    Check(payload.count == 5, "payload-key-count");
+    Check([payload[@"reason"] isEqual:@"process-exited"], "terminal-reason");
+    Check([payload[@"causeReason"] isEqual:@"send-failed"], "cause-string-lifetime");
+    Check([payload[@"causeTimeMs"] longLongValue] == first, "boxed-time");
+    Check(CFGetTypeID((__bridge CFTypeRef)payload[@"connectedBeforeDisconnect"]) ==
+          CFBooleanGetTypeID(), "boxed-bool-type");
+    NSData* encoded = floorp::shim::EncodePayload(payload);
+    Check(encoded.length > 0, "real-codec-encode");
+    NSDictionary* decoded = floorp::shim::DecodePayload(encoded);
+    Check(decoded != nil, "real-codec-decode");
+    Check([decoded isEqualToDictionary:payload], "real-codec-roundtrip");
+    uint32_t pid = 0;
+    Check(floorp::shim::ReadUInt(decoded, @"pid", &pid) && pid == 42, "pid-type");
+    Check(CFGetTypeID((__bridge CFTypeRef)decoded[@"connectedBeforeDisconnect"]) ==
+          CFBooleanGetTypeID(), "roundtrip-bool-type");
+    Check([decoded[@"causeTimeMs"] longLongValue] == first, "roundtrip-time");
+
+    app.disconnectCause.Reset();
+    Check(app.disconnectCause.reason.empty(), "reset-reason");
+    Check(app.disconnectCause.wallTimeMs == 0, "reset-time");
+    Check(!app.disconnectCause.connected, "reset-host-state");
+    probe.RememberCause(app, @"hello-timeout");
+    Check(app.disconnectCause.reason == "hello-timeout", "new-launch-cause");
+    Check(!app.disconnectCause.connected, "new-launch-host-state");
+    decoded = floorp::shim::DecodePayload(
+        floorp::shim::EncodePayload(Payload(app, @"process-exited", 43)));
+    Check([decoded[@"causeReason"] isEqual:@"hello-timeout"], "new-launch-roundtrip");
+    Check(![decoded[@"connectedBeforeDisconnect"] boolValue], "new-launch-bool");
+
+    NSString* oversized = [@"x" stringByPaddingToLength:
+        floorp::shim::kMaxPayloadBytes + 1 withString:@"x" startingAtIndex:0];
+    Check(floorp::shim::EncodePayload(@{@"value":oversized}) == nil,
+          "real-codec-size-limit");
+    NSData* array = [@"[]" dataUsingEncoding:NSUTF8StringEncoding];
+    Check(floorp::shim::DecodePayload(array) == nil, "real-codec-dictionary-only");
+    std::printf("{\"status\":\"passed\",\"checks\":%u,\"scope\":\"source-derived-foundation-smoke\"}\n", checks);
+  }
+}

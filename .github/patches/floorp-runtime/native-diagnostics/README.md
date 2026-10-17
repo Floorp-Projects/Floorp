@@ -11,4 +11,24 @@ c++ -std=c++17 -Wall -Wextra -Werror -I <patched-runtime>/widget/cocoa/appshim t
 /tmp/test-disconnect-cause
 ```
 
-This checks the actual portable state helper, including overwrite prevention and relaunch reset. Cocoa integration is independently reviewed but is not compiled or executed by this Linux test or an existing-artifact diagnostic. The Python regression separately demonstrates the existing collector dropping cause/order fields. No native build is performed in this scope.
+This checks the actual portable state helper, including overwrite prevention and relaunch reset. Cocoa integration is independently reviewed but is not compiled or executed by this Linux test or an existing-artifact diagnostic. The Python regression separately demonstrates the existing collector dropping cause/order fields. These portable tests and the existing-artifact diagnostic do not perform native builds.
+
+`cocoa_probe.py` provides a separate, limited native Foundation check. It pins
+three Runtime7dd source files and the maintained patch by SHA-256, applies the
+patch in an isolated temporary source tree, and extracts the exact changed
+RememberCause method and disconnect payload expression. It compiles them and
+the actual Protocol.mm codec with Objective-C++/ARC on a standard Mac Intel
+runner, then checks first-cause/time/host-state preservation, NSString lifetime,
+NSNumber/JSON round trips, reset, and codec rejection boundaries.
+
+This probe does not compile the complete MacWebAppService translation unit or
+link xul. It does not execute Disconnect, Stop, the watchdogs or authentication
+and cannot establish the cause of either old failed run. Its SDK/compiler/flags
+are recorded independently from the original build. Real host execution still
+needs compatible generated headers/objects, a changed xul link and a new test
+package. A small probe pass is neither compiled Debug nor product qualification.
+
+The probe workflow has one ten-minute Mac Intel job, a single exact push branch,
+read-only contents permission and no inherited secrets. It needs no browser,
+signing credentials, cache, dependency installation or settings change. A branch
+push is an execution request; record its distinct purpose before publishing.
