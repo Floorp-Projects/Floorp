@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17 08:25:11 UTC",
+  "reviewer": "/root/mac_shim_diagnostics_review",
+  "decision": "REPAIR_DIFF_GO",
+  "blockingFindings": 0,
+  "scope": "Only the HOST_CPU_ARCH schema correction and its regression guard",
+  "earlierReviewLimitation": "The source-only preparation review did not detect the upstream host-architecture schema mismatch.",
+  "sourceConfirmed": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "path": "build/moz.configure/init.configure",
+    "export": "set_config(\"HOST_CPU_ARCH\", host.cpu)"
+  },
+  "verification": {
+    "testMethods": 18,
+    "independentResult": "PASS",
+    "reportedDurationSeconds": 0.215,
+    "exitCode": 0,
+    "negativeCases": [
+      "missing host architecture",
+      "different host architecture"
+    ]
+  },
+  "codeFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "d226549b30df946b2f02c4eeaf064b5f8ec804fee16311146ade9b9be7c60178"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "sha256": "1a77a49c7bc35ca231715e4a83ac63e0bb38c9ab535393d9fe5e79f356e53946"
+    }
+  ],
+  "notPerformed": [
+    "full build",
+    "native authentication",
+    "new CI execution",
+    "Runtime branch push"
+  ]
+}

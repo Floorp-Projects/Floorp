@@ -166,10 +166,10 @@ def verify_config(plan, task, tools, sdk):
             'compiled-debug-tests')
     require(all(not substs.get(key) for key in
                 ('MOZ_PROFILE_GENERATE', 'MOZ_PROFILE_USE', 'MOZ_PGO', 'MOZ_LTO')), 'compiled-pgo-or-lto')
-    for key, expected in {'TARGET_CPU': 'x86_64', 'HOST_CPU': 'x86_64', 'OS_ARCH': 'Darwin',
+    for key, expected in {'TARGET_CPU': 'x86_64', 'HOST_CPU_ARCH': 'x86_64', 'OS_ARCH': 'Darwin',
                            'OS_TARGET': 'Darwin', 'CC_TYPE': 'clang', 'CC_VERSION': '22.1.8',
                            'MOZ_APP_VERSION': '158.0.1'}.items():
-        require(str(substs[key]) == expected, 'compiled-config-' + key.lower())
+        require(str(substs.get(key)) == expected, 'compiled-config-' + key.lower())
     for key, value in (('CC', tools / 'clang/bin/clang'), ('CXX', tools / 'clang/bin/clang++'),
                        ('HOST_CC', tools / 'clang/bin/clang'), ('HOST_CXX', tools / 'clang/bin/clang++'),
                        ('RUSTC', tools / 'rust/bin/rustc'),
@@ -185,7 +185,7 @@ def verify_config(plan, task, tools, sdk):
                        ('ONNX_RUNTIME', tools / 'onnxruntime-x86_64-apple-darwin/libonnxruntime.dylib')):
         require(Path(substs[key]).resolve() == value.resolve(), 'compiled-input-path-' + key.lower())
     require(substs.get('MOZ_SANDBOX') in (True, 1, '1'), 'compiled-sandbox')
-    record = {key: substs.get(key) for key in ('MOZ_DEBUG', 'ENABLE_TESTS', 'TARGET_CPU', 'HOST_CPU',
+    record = {key: substs.get(key) for key in ('MOZ_DEBUG', 'ENABLE_TESTS', 'TARGET_CPU', 'HOST_CPU_ARCH',
               'OS_ARCH', 'OS_TARGET', 'CC_TYPE', 'CC_VERSION', 'HOST_CC_TYPE', 'HOST_CC_VERSION',
               'RUSTC_VERSION', 'CARGO_VERSION', 'MOZ_APP_VERSION', 'MOZ_MACBUNDLE_NAME',
               'MOZ_PACKAGER_FORMAT', 'MACOSX_DEPLOYMENT_TARGET')}

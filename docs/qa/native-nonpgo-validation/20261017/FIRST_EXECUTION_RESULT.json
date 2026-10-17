@@ -1,0 +1,492 @@
+{
+  "schema": 1,
+  "recordedAtUTC": "2026-10-17 08:24:36 UTC",
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+  "jobId": 117348535832,
+  "runConclusion": "failure",
+  "attempt": 1,
+  "summaryFromJobLog": {
+    "status": "failed",
+    "newArtifacts": 0,
+    "retry": false,
+    "productQualification": false,
+    "preflight": {
+      "host": "x86_64-apple-darwin",
+      "os": "15.7.9",
+      "image": "20260824.0482.1",
+      "python": "3.12.10",
+      "freeGiB": 101,
+      "nativeInputPreflight": true,
+      "sourceTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "fixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+      "newArtifacts": 0
+    },
+    "buildDiagnosticMarkers": {},
+    "rustErrorCodes": [],
+    "sdk": {
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "artifact": 12074136738,
+      "sourceRun": 38963901545,
+      "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+      "tarSHA256": "2041751e0d1f04f69dc237983378ce5251a2a9ef0d081d5728f213b2bf425929"
+    },
+    "toolchains": [
+      {
+        "bytes": 446162417,
+        "name": "macosx64-clang-22",
+        "run": 0,
+        "sha256": "208106a2f7b577d7d082a75d10fe7e15e2beed7dd74d64e66639a9fbe7fbb7e6",
+        "task": "Ld8yp25XTD6R0KdDNdYnEw",
+        "tree": {
+          "canonicalSHA256": "8b93bc69b3620f1b581e5d00155e6bf2eff37299082549a35f30a51125e2419f",
+          "logicalBytes": 1435470493,
+          "members": 5027
+        }
+      },
+      {
+        "bytes": 1868481,
+        "name": "macosx64-cbindgen",
+        "run": 0,
+        "sha256": "533d61ca7bb2ec890a1b638231130ef37c0c9c16712c852ab00c24d54fa25f44",
+        "task": "HduedNRXSlyEwOgg8Wm5cw",
+        "tree": {
+          "canonicalSHA256": "a16628a959d2b6ab0a09ff5e3a928544a1c7173187a099db3eeb0d4412be3eff",
+          "logicalBytes": 4716392,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 4088102,
+        "name": "macosx64-dump_syms",
+        "run": 0,
+        "sha256": "9bbc811434207e78cdd7643e60df94859f2ba3c05b61a880b22429fa36aeeee1",
+        "task": "PubzlxOeREyQ9Ut0ktZD9Q",
+        "tree": {
+          "canonicalSHA256": "ea4ff476eb62b401e727cb3e9cbbc51b5f48172427a8986692c17ad9737b2b01",
+          "logicalBytes": 9703136,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 1410044,
+        "name": "macosx64-fix-stacks",
+        "run": 0,
+        "sha256": "f6039e2b679c7785323dba067f2c08b1d26367480dcd942a09c010ecb5427cc8",
+        "task": "QCb_JAgtS-m4kiZC7DLmsg",
+        "tree": {
+          "canonicalSHA256": "d6dc99ec714cb299982de64eec805f5d943e0fb0e5a91e675aa2a316874cce56",
+          "logicalBytes": 3496608,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 410844,
+        "name": "macosx64-nasm",
+        "run": 0,
+        "sha256": "0632372125ad611cb37f5a46d5fc9f130262ef21c1838cb1025228a47fa9e0aa",
+        "task": "LqZleUrdSxK0ROjmOYdOkQ",
+        "tree": {
+          "canonicalSHA256": "fdf10d234e41dfd5cd5cc3f07599fd57feee7eaf16fa1b18c83333c5da1847e3",
+          "logicalBytes": 1964752,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 38832558,
+        "name": "macosx64-node-22",
+        "run": 0,
+        "sha256": "f1e9b9adaaf288502bff046bdbdd749d0181e57c36b8a15fc452476bfce8b349",
+        "task": "bdl-YfjqRoOt4RfFAZkEhg",
+        "tree": {
+          "canonicalSHA256": "0f81444bdb752013ce50d1d7c4b78fd39f7c5be29819fa08e0f34f901fe5e040",
+          "logicalBytes": 178095092,
+          "members": 5928
+        }
+      },
+      {
+        "bytes": 3421269,
+        "name": "onnxruntime-x86_64-apple-darwin",
+        "run": 0,
+        "sha256": "f6f086e5066f84fd8016c911fcf69d536e4d244cb043ae601166d75815dd81e4",
+        "task": "HmSZzgp5TJ-szyUmVMMd7g",
+        "tree": {
+          "canonicalSHA256": "2170b176199abb419c823ddbdf2570624ff3a522cb8dc37f893cb06c8c259cd8",
+          "logicalBytes": 12197964,
+          "members": 2
+        }
+      },
+      {
+        "bytes": 11909224,
+        "name": "sysroot-wasm32-wasi-clang-22",
+        "run": 0,
+        "sha256": "6d3fba5824b0c83c2115464dd18e5feb4d2d0c3092d4ad52add3be7e42addd7d",
+        "task": "SirUGMldT3uoFtKn74I9WQ",
+        "tree": {
+          "canonicalSHA256": "f2a0aa747e3f7ba77e8cc646573dccac0ba250b610052e1f81060bf99f07aa9e",
+          "logicalBytes": 51937588,
+          "members": 4158
+        }
+      },
+      {
+        "bytes": 9397524,
+        "name": "cargo",
+        "sha256": "e2e1131ade2dddc0d779e0ab3a6a990085c7a654951235742823c3a1ce0f190f",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "a1b450d82632ba461295bc755b51787171f1448938836bd5d289f7ebcfd47114",
+          "logicalBytes": 34374208,
+          "members": 68
+        },
+        "version": "0.96.0 (f2d3ce0bd 2026-03-21)"
+      },
+      {
+        "bytes": 28745188,
+        "name": "rust-std",
+        "sha256": "2be13c14122b8d4d09b7f7c434fca9ae7215ec72049944189c88c4d9128ce504",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "96a9e05afa5ba2ec991485ba09f57a3ccd19f8b7f22899da99e872f05fe58a3d",
+          "logicalBytes": 143792109,
+          "members": 78
+        },
+        "version": "1.95.0 (59807616e 2026-04-14)"
+      },
+      {
+        "bytes": 79765616,
+        "name": "rustc",
+        "sha256": "33db457715446a69ed6f69f78f5fbb9ca8e17a16585d1d7a0060479bfe4c7afc",
+        "sourceManifestSHA256": "821ff14e4c4a1cbe1e8915f35aff0a3fbbdf8d293ad48ab8f31e3b0440c581f9",
+        "tree": {
+          "canonicalSHA256": "60eaf51636cce381bf1ef6d85a679f981893ad4428349264e5baa756b519c798",
+          "logicalBytes": 463058386,
+          "members": 89
+        },
+        "version": "1.95.0 (59807616e 2026-04-14)"
+      }
+    ],
+    "source": {
+      "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+      "baselineProvenanceVerified": true,
+      "bootstrapLoaderChangedToFixedPaths": true,
+      "hostChangedFromOriginal": true,
+      "mozconfigSHA256": "501544b92cb62b34ba7591fe6bfb2d957b1bdb66d71bded2806bad74a89535c6",
+      "originalPatchCount": 30,
+      "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+      "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": "39016143725",
+      "attempt": "1",
+      "executionHead": "1dfc3b6443c75a0c7f4bc11da5deed1544e10198",
+      "fixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e"
+    },
+    "planSHA256": "800709ef7342dd85be253e2c1880e8848374b7313e6643abc23d7c2e8510a17e",
+    "nativeCleanup": null,
+    "firstFailure": {
+      "stage": "configure",
+      "code": "KeyError",
+      "elapsedSeconds": 858.83
+    },
+    "stages": [
+      {
+        "stage": "sdk-materialize",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "tools-materialize",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 569
+      },
+      {
+        "stage": "version-clang",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 188
+      },
+      {
+        "stage": "version-rust",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 36
+      },
+      {
+        "stage": "version-node",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 9
+      },
+      {
+        "stage": "version-nasm",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 42
+      },
+      {
+        "stage": "patch-0",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-1",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-2",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-3",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-4",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-5",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-6",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-7",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-8",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-9",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-10",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-11",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-12",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-13",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-14",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-15",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-16",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-17",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-18",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-19",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-20",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-21",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-22",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-23",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-24",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-25",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-26",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-27",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-28",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "patch-29",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "baseline-provenance",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 103
+      },
+      {
+        "stage": "first-cause-patch",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "apply-first-cause",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 0
+      },
+      {
+        "stage": "configure",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 13055
+      },
+      {
+        "stage": "effective-config",
+        "exitCode": 0,
+        "reason": null,
+        "logBytes": 71761
+      }
+    ],
+    "elapsedMinutes": 14.31
+  },
+  "diagnosis": {
+    "classification": "QA_CONFIG_SCHEMA_MISMATCH_BEFORE_FULL_BUILD",
+    "observedFailure": "configure/KeyError; exception key was not included in first-failure proof",
+    "sourceEvidence": {
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "build/moz.configure/init.configure",
+      "export": "set_config(\"HOST_CPU_ARCH\", host.cpu)",
+      "obsoleteConsumer": "verify_config requires substs[\"HOST_CPU\"]",
+      "sourceURL": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/build/moz.configure/init.configure"
+    },
+    "inference": "Unsupported HOST_CPU is the first unsupported key in the successful configure output validation path. This explains the observed KeyError; the raw effective-config file was private and not uploaded.",
+    "repair": "Require HOST_CPU_ARCH == x86_64, record that exact upstream key, and reject an absent/wrong value with the fixed compiled-config-host_cpu_arch Failure code.",
+    "regression": {
+      "testMethods": 18,
+      "result": "PASS",
+      "newTestCases": [
+        "upstream HOST_CPU_ARCH schema accepted",
+        "missing host architecture rejected",
+        "aarch64 host rejected"
+      ]
+    },
+    "acceptanceCriteriaWeakened": false
+  },
+  "actualQualification": {
+    "fullHostTUCompiled": false,
+    "xulLinked": false,
+    "nativeAuthExecuted": false,
+    "adHocSigningExecuted": false,
+    "productQualification": false
+  },
+  "artifacts": {
+    "newActionsArtifacts": 0,
+    "verifiedWith": "github_fetch_workflow_run_artifacts returned an empty artifact list"
+  },
+  "runPolicy": {
+    "secondRunStarted": false,
+    "runtimeExecutionBranchUpdated": false,
+    "retryPerformed": false,
+    "remainingAuthorizationQuestion": "A repaired execution needs a new fixed helper and initial-push route. The first job consumed about 14.5 minutes; retain this failure and bind any additional job to an explicit remaining execution budget before launch.",
+    "jobStartedAt": "2026-10-17T08:06:56Z",
+    "jobCompletedAt": "2026-10-17T08:21:35Z",
+    "firstJobDurationSeconds": 879,
+    "conservativeConsumedMinutes": 15,
+    "remainingMinutesUnder210Total": 195
+  }
+}

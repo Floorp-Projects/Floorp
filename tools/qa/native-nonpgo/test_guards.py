@@ -15,7 +15,7 @@ import unittest
 from unittest import mock
 from support import Failure, Runner, clean_environment, extract_tar, scan_tar
 from native_suite import context_result, failure_snapshot
-from pipeline import macho
+from pipeline import macho, verify_config
 from owned_native import OwnedNative
 
 
@@ -26,6 +26,42 @@ class Guards(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def test_effective_config_uses_upstream_host_cpu_arch(self):
+        tools, sdk = self.root / 'tools', self.root / 'sdk'
+        substs = {'TARGET_CPU': 'x86_64', 'HOST_CPU_ARCH': 'x86_64', 'OS_ARCH': 'Darwin',
+                  'OS_TARGET': 'Darwin', 'CC_TYPE': 'clang', 'CC_VERSION': '22.1.8',
+                  'MOZ_APP_VERSION': '158.0.1', 'MOZ_DEBUG': '1', 'ENABLE_TESTS': '1',
+                  'MOZ_SANDBOX': '1', 'MACOSX_DEPLOYMENT_TARGET': '10.15',
+                  'MOZ_APP_DISPLAYNAME': 'Floorp', 'MOZ_CHILD_PROCESS_NAME': 'plugin-container',
+                  'MOZ_CHILD_PROCESS_BUNDLENAME': 'plugin-container.app'}
+        for key, path in (('CC', 'clang/bin/clang'), ('CXX', 'clang/bin/clang++'),
+                          ('HOST_CC', 'clang/bin/clang'), ('HOST_CXX', 'clang/bin/clang++'),
+                          ('RUSTC', 'rust/bin/rustc'), ('CARGO', 'rust/bin/cargo'),
+                          ('NODEJS', 'node/bin/node'), ('WASI_SYSROOT', 'sysroot-wasm32-wasi'),
+                          ('ONNX_RUNTIME', 'onnxruntime-x86_64-apple-darwin/libonnxruntime.dylib')):
+            substs[key] = str(tools / path)
+        substs['MACOS_SDK_DIR'] = str(sdk)
+        (self.root / 'obj').mkdir()
+        (self.root / 'obj/mozinfo.json').write_text(json.dumps(
+            {'debug': True, 'pgo': False, 'artifact': False}))
+        plan = {'criteria': {'macOSMin': '10.15'}}
+        for state in ('valid', 'missing', 'wrong-architecture'):
+            with self.subTest(state=state):
+                current = dict(substs)
+                if state == 'missing':
+                    current.pop('HOST_CPU_ARCH')
+                elif state == 'wrong-architecture':
+                    current['HOST_CPU_ARCH'] = 'aarch64'
+                (self.root / 'effective-config.private.log').write_text(json.dumps({'substs': current}))
+                if state == 'valid':
+                    verify_config(plan, self.root, tools, sdk)
+                    record = json.loads((self.root / 'effective-config.json').read_text())
+                    self.assertEqual(record['HOST_CPU_ARCH'], 'x86_64')
+                    self.assertNotIn('HOST_CPU', record)
+                else:
+                    with self.assertRaisesRegex(Failure, 'compiled-config-host_cpu_arch'):
+                        verify_config(plan, self.root, tools, sdk)
 
     def archive(self, entries):
         path = self.root / 'input.tar.gz'
