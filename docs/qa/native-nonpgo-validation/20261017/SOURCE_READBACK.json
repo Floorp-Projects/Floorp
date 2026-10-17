@@ -1,0 +1,116 @@
+{
+  "checkedAtUTC": "2026-10-17 05:53:31 UTC",
+  "repository": "Floorp-Projects/Floorp",
+  "fixtureCommit": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+  "fixtureTree": "fb30e577172a8cddbceef9b492fa2493497b2607",
+  "files": [
+    {
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "sha256": "da90adb513d25d847fc1571ea48a8bb92e22a1dbfc863c89915c5cded942a2c3",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/materialize.py",
+      "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "sha256": "e207e18d619b0b2611ea2ef70b54d8780733fee2cac683037d4b0bae657211ca",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "sha256": "bcad9d92f1ac9e28daff9f1665964097cb9e122a92ac063dc7ef75daa32b4754",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "sha256": "ff1ee4a405425ef7e41bd95998fca1a77ea38b1e0123843111d2bfa9c81d57f4",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "abd94edf8f31a3c9b30173efb1e496e61abc054912f88f3697406c630683c31d",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "800709ef7342dd85be253e2c1880e8848374b7313e6643abc23d7c2e8510a17e",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "a5d904a72a1b955f466cdc8bc0810a9b7d8c8c7db56193499b29bf535872237b",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "sha256": "254bba026c0912317badf745e855bc5f977418f4b34ffd21aae8cce61823e323",
+      "status": "MATCH"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/workflow.yml.in",
+      "sha256": "e4c5f6cdf23b6a77536edfc06b0d83d718ddd7051e44f39ce85860a901126a1c",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/CHECKS.json",
+      "sha256": "f6abb8c4677c1be35291ef31774f742fa506ade8fc4a7d24737af1b2ebf17b9e",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/CODE_HASHES.json",
+      "sha256": "dde56ae406043fb9d0760551dc795ee2582d610cd1fcc7fd5848f68a948592a1",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/INDEPENDENT_REVIEW.json",
+      "sha256": "1a75fe47bb749cea0197f1ff3947c49bf38caa3e53700572952ac326cf244fc9",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/ORIGINAL_TARGET_TASK_REVIEW.json",
+      "sha256": "09f4b60e4abac14d94065d4fa63358a22f80978cae8ec23d433d85dbf1636688",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/README.ja.md",
+      "sha256": "892ae007a5a60901c86efda9d7e848769c1192c4998f05b07ad09fe0243e1ef1",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/SDK_MATERIALIZATION.json",
+      "sha256": "6e1f4967d744b94ba4db610a5563944bfc8e874d2c120105d7aa2bfa2ca56147",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/SIDE_EFFECTS.json",
+      "sha256": "f86e18cae14cc6b0ff9e872fbc966293b2616aa7935d81e347684e347cae526d",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/TRIGGER_CONTAINMENT.json",
+      "sha256": "53748345c9bb96791574d4e1ce83d0688d8476ffa6f3c163470168c6febc815b",
+      "status": "MATCH"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/WARNING_ASSESSMENT.ja.md",
+      "sha256": "5a05b2e8d4e01b8b4808f6e8247c38838469a5344a8c114fe45e888dcc4dc304",
+      "status": "MATCH"
+    }
+  ],
+  "all20Matched": true,
+  "defaultHeadsUnchanged": {
+    "floorp": "576bc4bbca058e4c24dc5bd2c7526d64cedc94cc",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "sourceBranchRuns": 0,
+  "runtimeBranchExists": false,
+  "runtimeRuns": 0
+}

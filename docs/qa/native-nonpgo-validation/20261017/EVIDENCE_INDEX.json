@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "sealedAtUTC": "2026-10-17 05:53:31 UTC",
+  "fixtureCommit": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+  "fixtureTree": "fb30e577172a8cddbceef9b492fa2493497b2607",
+  "fixtureFiles": [
+    {
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "bytes": 4264,
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4264,
+      "sha256": "da90adb513d25d847fc1571ea48a8bb92e22a1dbfc863c89915c5cded942a2c3"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/materialize.py",
+      "bytes": 2347,
+      "sha256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "bytes": 8643,
+      "sha256": "e207e18d619b0b2611ea2ef70b54d8780733fee2cac683037d4b0bae657211ca"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "bytes": 7488,
+      "sha256": "bcad9d92f1ac9e28daff9f1665964097cb9e122a92ac063dc7ef75daa32b4754"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "bytes": 12279,
+      "sha256": "ff1ee4a405425ef7e41bd95998fca1a77ea38b1e0123843111d2bfa9c81d57f4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 25742,
+      "sha256": "abd94edf8f31a3c9b30173efb1e496e61abc054912f88f3697406c630683c31d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 21083,
+      "sha256": "800709ef7342dd85be253e2c1880e8848374b7313e6643abc23d7c2e8510a17e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 12586,
+      "sha256": "a5d904a72a1b955f466cdc8bc0810a9b7d8c8c7db56193499b29bf535872237b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 13252,
+      "sha256": "254bba026c0912317badf745e855bc5f977418f4b34ffd21aae8cce61823e323"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/workflow.yml.in",
+      "bytes": 4001,
+      "sha256": "e4c5f6cdf23b6a77536edfc06b0d83d718ddd7051e44f39ce85860a901126a1c"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/CHECKS.json",
+      "bytes": 1269,
+      "sha256": "f6abb8c4677c1be35291ef31774f742fa506ade8fc4a7d24737af1b2ebf17b9e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/CODE_HASHES.json",
+      "bytes": 1829,
+      "sha256": "dde56ae406043fb9d0760551dc795ee2582d610cd1fcc7fd5848f68a948592a1"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/INDEPENDENT_REVIEW.json",
+      "bytes": 7433,
+      "sha256": "1a75fe47bb749cea0197f1ff3947c49bf38caa3e53700572952ac326cf244fc9"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/ORIGINAL_TARGET_TASK_REVIEW.json",
+      "bytes": 3482,
+      "sha256": "09f4b60e4abac14d94065d4fa63358a22f80978cae8ec23d433d85dbf1636688"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/README.ja.md",
+      "bytes": 6114,
+      "sha256": "892ae007a5a60901c86efda9d7e848769c1192c4998f05b07ad09fe0243e1ef1"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/SDK_MATERIALIZATION.json",
+      "bytes": 141,
+      "sha256": "6e1f4967d744b94ba4db610a5563944bfc8e874d2c120105d7aa2bfa2ca56147"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/SIDE_EFFECTS.json",
+      "bytes": 1999,
+      "sha256": "f86e18cae14cc6b0ff9e872fbc966293b2616aa7935d81e347684e347cae526d"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/TRIGGER_CONTAINMENT.json",
+      "bytes": 629,
+      "sha256": "53748345c9bb96791574d4e1ce83d0688d8476ffa6f3c163470168c6febc815b"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/WARNING_ASSESSMENT.ja.md",
+      "bytes": 1906,
+      "sha256": "5a05b2e8d4e01b8b4808f6e8247c38838469a5344a8c114fe45e888dcc4dc304"
+    }
+  ],
+  "finalAdditionalFiles": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/WORKFLOW.yml.disabled",
+      "sha256": "ff4589f9c8c33a6595cb11bb8f19e2bebb2e332a0d94c3e1e50d57cdf18de0dc"
+    },
+    {
+      "path": ".github/patches/floorp-runtime/native-diagnostics/isolated-intel-nonpgo-workflow.patch",
+      "sha256": "469f191440fc610e5557897d308cf66f9213b5ae477d1a1353c3ad679913d219"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/SOURCE_READBACK.json",
+      "sha256": "6cb2bf392950b4a7556c10ef7a87f36eb0eb9426b3cf8e2a60d8a8afb0ac4807"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/FINAL_HANDOFF.ja.md",
+      "sha256": "782760d37a2e8113ba84694d70f60a3968093f0467788a08d54b0d27b4c8f406"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261017/ROUTE_REVIEW.json",
+      "sha256": "59244dcc6260ddf117116e3b7c172d0d14a7ff91c2e534def8583afe491ee799"
+    }
+  ],
+  "execution": {
+    "status": "NOT_AUTHORIZED_NOT_RUN",
+    "runtimeBranchCreated": false,
+    "ciRuns": 0,
+    "newActionsArtifacts": 0
+  },
+  "decisions": {
+    "staticPreparation": "GO",
+    "dispatch": "NO_GO_PENDING_EXPLICIT_APPROVAL"
+  },
+  "selfHashExcluded": true
+}

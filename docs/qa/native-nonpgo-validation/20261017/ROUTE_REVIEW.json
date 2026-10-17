@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "checkedAtUTC": "2026-10-17 05:54:53 UTC",
+  "scope": "Disabled workflow rendering and delivery documentation; no additional helper change",
+  "independentReviewer": "/root/mac_shim_diagnostics_review",
+  "review": {
+    "staticPreparation": "GO",
+    "execution": "NO_GO_PENDING_EXPLICIT_APPROVAL",
+    "remainingBlockingFindings": 0,
+    "templateChange": "Exactly one fixture SHA placeholder substitution",
+    "deliveryPatchByteMatch": true,
+    "evidenceHashesMatched": 24,
+    "remoteSourceRuns": 0,
+    "remoteRuntimeBranchExists": false,
+    "remoteRuntimeRuns": 0
+  },
+  "rootVerification": {
+    "renderedYAML": "PASS_SINGLE_MACOS_15_INTEL_JOB_210_MINUTES",
+    "deliveryPatchCheckApply": "PASS",
+    "renderedBytesAfterPatch": "MATCH",
+    "fixtureAndFinalAdditionalFileHashes": 24
+  },
+  "sdkFreshMetadata": {
+    "tool": "github_fetch_workflow_run_artifacts",
+    "runId": 38963901545,
+    "id": 12074136738,
+    "name": "macos-sdk",
+    "sizeBytes": 105082683,
+    "digest": "sha256:bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51",
+    "expired": false,
+    "expiresAt": "2026-10-17T20:41:19Z",
+    "sourceSHA": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "payloadDownloadedAgain": false,
+    "executionMustRecheckExpiryMargin": true
+  },
+  "sdkMetadataReadHistory": [
+    {
+      "tool": "github_fetch",
+      "result": "400_INVALID_ARGUMENT_UNSUPPORTED_ARTIFACT_ENDPOINT",
+      "authenticationDenial": false
+    },
+    {
+      "tool": "github_fetch_workflow_run_artifacts",
+      "result": "PASS_SUPPORTED_READ_ONLY_ACTION"
+    }
+  ],
+  "notPerformed": [
+    "Runtime branch creation/push/dispatch",
+    "CI run or rerun",
+    "Darwin build/link/native authentication",
+    "new artifact upload",
+    "product signing/notarization/release/merge/publication",
+    "new credentials or production settings"
+  ]
+}
