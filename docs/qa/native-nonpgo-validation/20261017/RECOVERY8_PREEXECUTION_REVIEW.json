@@ -1,0 +1,223 @@
+{
+  "bindings": {
+    "bothTreesClean": true,
+    "callerCommit": "ae47a2baf6a96ead6f8797c659f22090850f1066",
+    "callerParentCommit": "1620e4ea519cfdcb7b45f8acf24b6e7ff62961e7",
+    "callerRepository": "Floorp-Projects/Floorp-Runtime",
+    "differenceFromRuntimeBase": [
+      {
+        "path": ".github/workflows/mac-native-ps-lifetime.yml",
+        "status": "added"
+      }
+    ],
+    "experimentRecord": {
+      "bytes": 4714,
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY8_EXPERIMENT.json",
+      "sha256": "b27243196f43ae320b4f3af41719c4873fc74e8456a93d5f18d73f32b575be61"
+    },
+    "fixtureBaseCommit": "477b9b0c8a12f7e712dd9209dee493617ab34196",
+    "fixtureCommit": "82414aa914508516c2735b32e7d9536effa69a18",
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "newCodeFiles": [
+      {
+        "bytes": 16712,
+        "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py",
+        "sha256": "2c3e93b58930b6536a11498a06242b8a173dec471906030c37b5ac6c78901eb4"
+      },
+      {
+        "bytes": 6570,
+        "path": "tools/qa/native-nonpgo/test_ps_lifetime.py",
+        "sha256": "b1268883e3975b13ef160fc6b918c896cf0df76f918a83c139611ceb7f7a9241"
+      }
+    ],
+    "productionMonitorFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "f5201d07cb122c80d527b0b30f97f04c713a2f89e559e41d8721524026e26b1d",
+        "unchangedFromBase": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "sha256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e",
+        "unchangedFromBase": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/owned_native.py",
+        "sha256": "9b677774f13ce368bb59945659c4a5f9c71d59102e6692bd691a05d8b5dee2b3",
+        "unchangedFromBase": true
+      }
+    ],
+    "runtimeBaseCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "workflowBytes": 3208,
+    "workflowSHA256": "a7969a224113dc33e9b1f19722a5c28db6de84b8eff05035298e4a7deffc3a9f"
+  },
+  "boundsAndCleanup": {
+    "cleanup": "Release/drain and reap exact ps child before returning to unchanged Runner guard. Exception paths close pipes and perform bounded exact waits. Group cleanup and leader reap remain separate and unverified cleanup fails coverage.",
+    "drainDeadlineSeconds": 5,
+    "limit": "This sequence does not reproduce signalling a still-live setuid ps in group cleanup. Uninterruptible/denied cleanup cannot be guaranteed; its failure is not represented as success.",
+    "outerInventoryCapBytes": 1048576,
+    "output": "Counts/discards chunks; outer capture occurs only within its cap. No synthetic stdout is published.",
+    "parentAckWaitSeconds": 2,
+    "readChunkBytes": 65536,
+    "readyWaitSeconds": 5,
+    "reapWaitSeconds": 5,
+    "stderrStreamingCapBytes": 1048576,
+    "stdoutStreamingCapBytes": 2097152,
+    "workerReleaseWaitSeconds": 15
+  },
+  "controlsAndScope": {
+    "artifactUpload": false,
+    "browserStartup": "NOT_TESTED",
+    "build": false,
+    "drainingControl": "Same synthetic command with normal pipe drain.",
+    "fixedHarnessControl": "Separate pinned native census preflight; four harness hashes and actual Mac unreaped-child guard retained.",
+    "historicalCause": "UNKNOWN: new controlled-child evidence cannot identify the old denied generation or original native browser exit.",
+    "nativeAuthentication": "NOT_TESTED",
+    "privilegeOrProtectionChanges": false,
+    "sdkAcquisition": false,
+    "signing": false,
+    "synthetic": "16384 repeated PID fields plus intentionally undrained stdout differ from actual native harness command and normal capture_output consumption."
+  },
+  "decision": "GO_FOR_SINGLE_INITIAL_PUSH_DIAGNOSTIC_JOB",
+  "openBlockingFindings": [],
+  "ownershipAndGeneration": {
+    "bsd": "Full BSD is supplemental and may remain permission-denied/unknown. Any obtained identity must be live and match parent/group before and after the query; available birth tags must all agree. Unknown BSD never establishes measured counters.",
+    "outerGroup": "Bounded PID/PGID inventory must contain the helper exact Popen PID in the monitor group. Worker target has a separate session/PGID; outer proof does not use post-exit getpgid.",
+    "primary": "A dedicated worker retains one exact unreaped Popen ps child. Each of three target reads is bracketed by sequence-matched worker WNOWAIT acknowledgments; all six must report same exact child, no reaping wait/poll, no pending exit, matching child and errno zero.",
+    "waitidABI": {
+      "P_PID": 1,
+      "WEXITED": 4,
+      "WNOHANG": 1,
+      "WNOWAIT": 32,
+      "fallback": "Darwin64 libSystem waitid",
+      "mandatoryMacGate": "Pipe-gated live child, two exit-pending non-reaping observations, exact exit7 reap, then ECHILD; guard failure stops before experiment.",
+      "officialHeaderCheck": "PASS",
+      "pidOffset": 12,
+      "pointerBytes": 8,
+      "preferred": "os.waitid platform constants",
+      "siginfoBytes": 104,
+      "statusOffset": 20
+    }
+  },
+  "resolvedIssues": [
+    "Replaced mandatory readable BSD birth with non-reaping known-child lifetime ACKs; unknown BSD remains unknown.",
+    "Added streaming cap and bounded outer/helper cleanup.",
+    "Checked both before/after BSD state/parent/group and rejected contradictory known birth tags.",
+    "Removed live-test sleep race with parent-controlled stdin gate.",
+    "Removed outer post-exit group lookup race.",
+    "Retained primary query evidence through auxiliary failures and documented synthetic/timing differences."
+  ],
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent pre-execution review",
+  "route": {
+    "alwaysFinalSummaryCheck": true,
+    "branch": "codex/mac-native-ps-lifetime-recovery8-20261017",
+    "cancelInProgress": false,
+    "checkoutAction": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+    "createOrWorkflowRunTriggers": 0,
+    "existingWorkflowCount": 24,
+    "guardTestsBeforeExperiment": true,
+    "guardsBeforeCheckout": true,
+    "initialGuards": [
+      "exact repository and ref",
+      "event push",
+      "attempt 1",
+      "created true",
+      "before 40 zeroes"
+    ],
+    "jobCount": 1,
+    "limit": "Initial-ref/attempt guards are not a permanent one-shot ledger against ref deletion and recreation.",
+    "otherMatchingPushWorkflows": 0,
+    "permissions": {
+      "contents": "read"
+    },
+    "persistCredentials": false,
+    "pythonExecutable": "$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3",
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 360,
+    "trigger": {
+      "push": {
+        "branches": [
+          "codex/mac-native-ps-lifetime-recovery8-20261017"
+        ]
+      }
+    }
+  },
+  "samplingAndEvidence": {
+    "attempts": 3,
+    "incompleteSpacingSeconds": 0.25,
+    "originalReturnValuesAndRetriesRetained": true,
+    "productionSourceChanged": false,
+    "retention": "Append each target row first, preserve actual task result before optional after-diagnostics, retain every full per-attempt sample. Auxiliary errors remain failed coverage without erasing query bytes/errno.",
+    "timingLimit": "Additional ACK/BSD calls add timing overhead; original native timing is not reproduced.",
+    "tripleDenialQualification": "Three observed queries/samples and intact live-child proof are required. Three actual zero-byte EPERM queries require monitor-unavailable, saved monitorFailure and null incomplete totals. Missing overlap or identity evidence is failed/inconclusive."
+  },
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "commit": "82414aa914508516c2735b32e7d9536effa69a18",
+      "path": "tools/qa/native-nonpgo/monitor_ps_lifetime.py"
+    },
+    {
+      "commit": "82414aa914508516c2735b32e7d9536effa69a18",
+      "path": "tools/qa/native-nonpgo/test_ps_lifetime.py"
+    },
+    {
+      "commit": "ae47a2baf6a96ead6f8797c659f22090850f1066",
+      "path": ".github/workflows/mac-native-ps-lifetime.yml"
+    },
+    {
+      "supports": "Public waitid constants and signature.",
+      "url": "https://raw.githubusercontent.com/apple-oss-distributions/xnu/xnu-11417.101.15/bsd/sys/wait.h"
+    },
+    {
+      "supports": "Darwin64 siginfo layout.",
+      "url": "https://raw.githubusercontent.com/apple-oss-distributions/xnu/xnu-11417.101.15/bsd/sys/signal.h"
+    }
+  ],
+  "validation": {
+    "committedByteHashChecks": "PASS",
+    "macExperimentExecutedAtReview": false,
+    "productionByteComparison": "PASS",
+    "providerPushOrReadbackAttested": false,
+    "routeAndDiffChecks": "PASS",
+    "syntaxChecks": [
+      {
+        "bash": "PASS",
+        "step": 1
+      },
+      {
+        "bash": "PASS",
+        "step": 4
+      },
+      {
+        "bash": "PASS",
+        "step": 5
+      },
+      {
+        "bash": "PASS",
+        "pythonHeredoc": "PASS",
+        "step": 6
+      }
+    ],
+    "testProvenance": "Execution recorded in committed experiment manifest; full suite not rerun during independent review.",
+    "tests": {
+      "additionalCoverage": [
+        "Six sequence-bound live held-child ACKs",
+        "Non-reaping child-exit observation repeats and exact reap",
+        "Streaming overflow closes pipes and reaps exact owned child",
+        "Unavailable BSD identity allowed only with intact live parent acknowledgments; unknown counters stay null",
+        "Pipe-gated live child waitid check without scheduling-duration assumption",
+        "Contradictory known BSD birth tags fail coverage"
+      ],
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_ps_lifetime test_guards -q",
+      "elapsedSeconds": 3.798,
+      "passed": 81,
+      "platform": "Linux",
+      "skip": "Real Mac unreaped-child test; required in Mac job",
+      "skipped": 1,
+      "total": 82
+    }
+  }
+}
