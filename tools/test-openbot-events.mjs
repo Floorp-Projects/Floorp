@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 // Test exactly the privileged inline code, rather than a second implementation.
@@ -39,7 +41,7 @@ const issue = () => ({
 const pr = () => ({
   ...issue(),
   html_url: "https://github.com/Floorp-Projects/Floorp/pull/42",
-  head: { sha },
+  head: { sha, repo: { ...repository, fork: false } },
   base: { ref: "main", repo: { ...repository } },
   draft: false,
 });
@@ -133,7 +135,7 @@ for (
     assert.equal(event.data.head_sha, sha);
   });
 }
-for (const action of ["submitted", "dismissed"]) {
+for (const action of ["submitted", "edited", "dismissed"]) {
   test(`review ${action} wakes reevaluation without forwarding its body`, () => {
     const event = formatEvent(reviewEvent(action), "pull_request_review");
     assert.equal(event.data.kind, "pull_request_review");
@@ -311,6 +313,21 @@ test("body edits in the same timestamp, new heads and rerun attempts get new IDs
   run.workflow_run.run_attempt++;
   assert.notEqual(attempt1, deliveryIdFor(formatEvent(run, "workflow_run")));
 });
+
+test("editing a review body produces a new stable revision without changing its head or timestamps", () => {
+  const input = reviewEvent("edited");
+  const before = formatEvent(input, "pull_request_review");
+  input.review.body = "An additional reproduction shows a regression";
+  const after = formatEvent(input, "pull_request_review");
+  assert.equal(after.data.action, "edited");
+  assert.equal(after.data.head_sha, before.data.head_sha);
+  assert.equal(after.occurredAt, before.occurredAt);
+  assert.notEqual(deliveryIdFor(after), deliveryIdFor(before));
+  assert.equal(
+    deliveryIdFor(after),
+    deliveryIdFor(formatEvent(input, "pull_request_review")),
+  );
+});
 test("untrusted shell content stays bounded JSON data", () => {
   const input = issueEvent("opened");
   input.issue.title = "$(touch secret); `evil`\n" + "x".repeat(5000);
@@ -420,9 +437,67 @@ test("transient errors exhaust bounded retries; invalid URLs never reach transpo
     );
   }
 });
-test("fork event without secrets exits before reading an event file or sending", async () => {
-  await main({
-    GITHUB_EVENT_PATH: "does-not-exist",
-    GITHUB_EVENT_NAME: "pull_request_review",
-  });
+/** @param {unknown} input @param {string} eventName @param {Record<string, string>} [configuration] */
+async function runMainFixture(input, eventName, configuration = {}) {
+  const folder = mkdtempSync(join(tmpdir(), "floorp-openbot-event-"));
+  const file = join(folder, "event.json");
+  try {
+    writeFileSync(file, JSON.stringify(input));
+    await main({
+      ...configuration,
+      GITHUB_EVENT_PATH: file,
+      GITHUB_EVENT_NAME: eventName,
+    });
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
+}
+
+test("verified fork review with both secrets withheld is the only allowed configuration skip", async () => {
+  const input = reviewEvent("edited");
+  input.pull_request.head.repo = {
+    id: 123,
+    full_name: "contributor/Floorp",
+    fork: true,
+  };
+  await runMainFixture(input, "pull_request_review");
+  for (
+    const configuration of [
+      {
+        OPENBOT_WEBHOOK_URL: "https://example.invalid/hook",
+        OPENBOT_WEBHOOK_SECRET: "",
+      },
+      { OPENBOT_WEBHOOK_URL: "", OPENBOT_WEBHOOK_SECRET: "synthetic" },
+    ]
+  ) {
+    await assert.rejects(
+      runMainFixture(input, "pull_request_review", configuration),
+      /OpenBot signing configuration is required/,
+    );
+  }
+});
+
+test("missing configuration fails loudly for ordinary issue, PR, CI and same-repository review events", async () => {
+  /** @type {Array<[string, unknown]>} */
+  const cases = [
+    ["issues", issueEvent("opened")],
+    ["pull_request_target", prEvent("opened")],
+    ["workflow_run", runEvent("success")],
+    ["pull_request_review", reviewEvent("edited")],
+  ];
+  for (const [eventName, input] of cases) {
+    await assert.rejects(
+      runMainFixture(input, eventName),
+      /OpenBot signing configuration is required/,
+    );
+  }
+});
+
+test("a fork flag without a distinct valid head repository cannot hide missing configuration", async () => {
+  const input = reviewEvent("edited");
+  input.pull_request.head.repo.fork = true;
+  await assert.rejects(
+    runMainFixture(input, "pull_request_review"),
+    /OpenBot signing configuration is required/,
+  );
 });

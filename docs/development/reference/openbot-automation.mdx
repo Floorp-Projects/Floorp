@@ -17,7 +17,7 @@ Those operations belong to the separately configured Debian agent and its policy
 | Issue | opened, reopened, edited | Triage current evidence and investigate a reproducible fix. |
 | Issue/PR comment | created | Revisit a report when a person supplies additional information. |
 | PR | opened, reopened, synchronize, ready_for_review, edited | Review the current head and invalidate conclusions about an earlier head. |
-| PR review | submitted, dismissed | Reevaluate outstanding review conditions. |
+| PR review | submitted, edited, dismissed | Reevaluate outstanding review conditions and new evidence in edited reviews. |
 | Workflow run | completed, including success and failure | Reevaluate PRs after CI settles; successful CI must wake the agent too. |
 
 Comments with no visible letters or numbers and comments/reviews sent by the
@@ -61,9 +61,12 @@ text into shell code. The sender verifies both repository name and numeric ID,
 source URLs, numeric identifiers, timestamps and head SHAs before forwarding.
 `permissions: {}` is deliberate.
 
-GitHub can withhold secrets for fork-origin `pull_request_review` events. When
-signing configuration is unavailable, the sender records a generic skip and
-performs no request. The Debian agent's existing 15-minute reconciliation is the
+GitHub withholds repository secrets for fork-origin `pull_request_review` events.
+Only a review whose payload identifies a distinct fork head and this repository
+as its base may skip delivery when both signing settings are absent. Other events,
+same-repository reviews and partial signing configurations fail the Actions job
+with a fixed error message containing no secret values, so broken configuration
+cannot silently disable monitoring. The Debian agent's existing 15-minute reconciliation is the
 fallback for those review events, missing deliveries and runs without an associated
 PR. It must independently recheck the latest PR head, CI, protections, unresolved
 reviews and the owner-approved small-change policy before any merge. Notifier
@@ -75,6 +78,7 @@ Run `node --test tools/test-openbot-events.mjs`. The tests import the workflow's
 actual inline code and use synthetic payloads and a stub transport: no webhook,
 GitHub mutation, secret or real agent is involved. They cover all event actions,
 successful CI wakeups, fork/no-PR metadata, bot loops, source validation, stable
-revisions, HMAC bytes, retries, permanent rejection and missing secrets. The docs
+revisions, edited review body changes, HMAC bytes, retries, permanent rejection
+and fork-specific versus erroneous missing secrets. The docs
 inventory parser also recognizes all five trigger kinds; run the docs-pipeline
 unit suite when modifying its collector.

@@ -8,7 +8,7 @@ on:
   pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review, edited]
   pull_request_review:
-    types: [submitted, dismissed]
+    types: [submitted, edited, dismissed]
   workflow_run:
     workflows: ["*"]
     types: [completed]
@@ -104,7 +104,7 @@ jobs:
                 base_ref: bounded(pr.base.ref), updated_at: timestamp(pr.updated_at) });
               occurredAt = data.updated_at;
               revision = { body: digest(String(pr.body ?? "")) };
-            } else if (eventName === "pull_request_review" && ["submitted", "dismissed"].includes(input.action)) {
+            } else if (eventName === "pull_request_review" && ["submitted", "edited", "dismissed"].includes(input.action)) {
               const pr = input.pull_request;
               const review = input.review;
               const identity = numberAndUrl(pr, "pull");
@@ -191,14 +191,24 @@ jobs:
           }
 
           export async function main(env = process.env) {
-            // GitHub withholds repository secrets from some fork review events.
-            // The existing reconciliation routine covers those missed wakeups.
-            if (!env.OPENBOT_WEBHOOK_URL || !env.OPENBOT_WEBHOOK_SECRET) {
-              console.log("OpenBot signing configuration unavailable; periodic reconciliation will cover this event");
-              return;
-            }
-            const event = formatEvent(JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8")), env.GITHUB_EVENT_NAME);
+            const input = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, "utf8"));
+            const event = formatEvent(input, env.GITHUB_EVENT_NAME);
             if (!event) return;
+            if (!env.OPENBOT_WEBHOOK_URL || !env.OPENBOT_WEBHOOK_SECRET) {
+              const headRepo = input.pull_request?.head?.repo;
+              const baseRepo = input.pull_request?.base?.repo;
+              const expectedForkReview = env.GITHUB_EVENT_NAME === "pull_request_review" &&
+                headRepo?.fork === true && positiveInteger(headRepo.id) && headRepo.id !== repositoryId &&
+                baseRepo?.id === repositoryId && baseRepo.full_name === repository;
+              // Both repository secrets are normally withheld for fork reviews.
+              // Partial configuration, or missing config on any other event,
+              // must fail visibly instead of silently disabling monitoring.
+              if (expectedForkReview && !env.OPENBOT_WEBHOOK_URL && !env.OPENBOT_WEBHOOK_SECRET) {
+                console.log("OpenBot signing configuration withheld for a fork review; periodic reconciliation will cover this event");
+                return;
+              }
+              throw new Error("OpenBot signing configuration is required for this event");
+            }
             const result = await sendEvent(event, { url: env.OPENBOT_WEBHOOK_URL, secret: env.OPENBOT_WEBHOOK_SECRET });
             console.log(result === 200 ? "OpenBot already accepted this event" : "OpenBot accepted this event");
           }
