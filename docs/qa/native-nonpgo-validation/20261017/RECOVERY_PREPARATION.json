@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "recordedAtUTC": "2026-10-17 08:35:34 UTC",
+  "decision": "CODE_GO_AWAITING_FINAL_IMMUTABLE_ROUTE_BINDING",
+  "authorization": {
+    "firstExecutionApprovedAtUTC": "2026-10-17 08:04 UTC",
+    "repairExecutionExplicitlyAuthorized": true,
+    "timePolicyChangeAtUTC": "2026-10-17 08:28 UTC",
+    "userTimePolicyText": "\u3044\u3084\u3001\u6642\u9593\u306f\u7121\u9650\u306b\u4f7f\u3063\u3066\u7d50\u69cb\u3002\u7570\u5e38\u3060\u306a\u3068\u601d\u3063\u305f\u3089\u6b62\u3081\u308b\u3001\u3068\u3044\u3046\u904b\u7528\u3067",
+    "previousHuman210And195Limits": "SUPERSEDED",
+    "platformMaximumMinutes": 360,
+    "platformLimitSource": "https://docs.github.com/en/actions/reference/limits"
+  },
+  "priorExecution": {
+    "runId": 39016143725,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobStartedAt": "2026-10-17T08:06:56Z",
+    "jobCompletedAt": "2026-10-17T08:21:35Z",
+    "firstFailure": {
+      "stage": "configure",
+      "code": "KeyError"
+    },
+    "fullBuildAndNativeNotExecuted": true
+  },
+  "repair": {
+    "hostArchitecture": "Use exported HOST_CPU_ARCH, require x86_64",
+    "deploymentTarget": "Validate exactly one -mmacosx-version-min=10.15 in all four actual compiler commands; record an explicitly derived value; do not assume an unexported MACOSX_DEPLOYMENT_TARGET field",
+    "cargoVersion": "Remove unexported optional CARGO_VERSION record",
+    "criteriaWeakened": false
+  },
+  "sourceContracts": {
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "evidence": [
+      {
+        "path": "build/moz.configure/init.configure",
+        "keys": [
+          "TARGET_CPU",
+          "HOST_CPU_ARCH",
+          "OS_ARCH",
+          "OS_TARGET",
+          "MOZ_APP_VERSION"
+        ]
+      },
+      {
+        "path": "moz.configure",
+        "keys": [
+          "MOZ_DEBUG",
+          "ENABLE_TESTS"
+        ]
+      },
+      {
+        "path": "build/moz.configure/toolchain.configure",
+        "keys": [
+          "CC",
+          "CXX",
+          "HOST_CC",
+          "HOST_CXX",
+          "CC_TYPE",
+          "CC_VERSION",
+          "HOST_CC_TYPE",
+          "HOST_CC_VERSION",
+          "MACOS_SDK_DIR"
+        ],
+        "deploymentFlag": "-mmacosx-version-min=<macos_target>"
+      },
+      {
+        "path": "build/moz.configure/rust.configure",
+        "keys": [
+          "RUSTC",
+          "CARGO",
+          "RUSTC_VERSION"
+        ]
+      },
+      {
+        "path": "build/moz.configure/node.configure",
+        "keys": [
+          "NODEJS"
+        ]
+      },
+      {
+        "path": "toolkit/moz.configure",
+        "keys": [
+          "WASI_SYSROOT",
+          "ONNX_RUNTIME",
+          "MOZ_SANDBOX",
+          "MOZ_MACBUNDLE_NAME",
+          "MOZ_PACKAGER_FORMAT",
+          "MOZ_APP_DISPLAYNAME",
+          "MOZ_CHILD_PROCESS_NAME/BUNDLENAME",
+          "MOZ_EME_PROCESS_NAME_BRANDED/BUNDLENAME",
+          "MOZ_GPU_PROCESS_NAME_BRANDED/BUNDLENAME",
+          "MOZ_PKCS11_PROCESS_NAME_BRANDED/BUNDLENAME"
+        ]
+      }
+    ],
+    "unchangedPinnedPlanSections": [
+      "runtime",
+      "sdk",
+      "toolchains",
+      "harness",
+      "criteria",
+      "runner"
+    ],
+    "allUnchangedComparedToOriginalFixture": true
+  },
+  "timeAndProgress": {
+    "allWholeRunOrPhaseDeadlineMinutes": 360,
+    "independentEarlierPhaseCutoffs": false,
+    "progressSampling": "each second; allowlisted status each 30 seconds",
+    "stall": "20 minutes without change in log bytes, aggregate CPU time, process roster, cumulative RSS by at least 1 MiB or disk free by at least 8 MiB, and no runnable owned process",
+    "quietCpuBusyLink": "continues",
+    "functionalNativeTimeouts": "unchanged",
+    "existingResourceLimits": "unchanged",
+    "automaticRetry": false
+  },
+  "route": {
+    "plannedNewRuntimeBranch": "codex/mac-native-nonpgo-recovery-20261017",
+    "runtimeBase": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "newRuntimeFiles": 1,
+    "plannedWorkflow": ".github/workflows/mac-native-nonpgo.yml",
+    "initialPushOnly": true,
+    "attemptOneOnly": true,
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "newActionsArtifacts": 0,
+    "cacheUploads": 0
+  },
+  "verification": {
+    "rootGuardMethods": 23,
+    "rootResult": "PASS",
+    "pythonAST": "PASS",
+    "remaining": "Immutable fixture/rendered workflow/provider readback/fresh metadata/trigger inventory before push",
+    "independentGuardMethods": 23,
+    "independentResult": "PASS",
+    "independentReviewSHA256": "7bcfec822a8f18cc469298a600d84419e6b70a1e6366362306cfabe2b2e3a84d"
+  },
+  "unchangedProhibitions": [
+    "product signing/notarization/merge/release/publication",
+    "new credentials/settings/permissions",
+    "paid or larger runner",
+    "Blacksmith alternate login",
+    "large artifact upload"
+  ]
+}

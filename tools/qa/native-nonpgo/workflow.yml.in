@@ -1,7 +1,7 @@
-name: Isolated Intel non-PGO native validation
+name: Isolated Intel non-PGO native recovery
 'on':
   push:
-    branches: [codex/mac-native-nonpgo-20261017]
+    branches: [codex/mac-native-nonpgo-recovery-20261017]
 permissions:
   contents: read
   actions: read
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   validate:
     runs-on: macos-15-intel
-    timeout-minutes: 210
+    timeout-minutes: 360
     env:
       FLOORP_FIXTURE_SHA: __FLOORP_FIXTURE_SHA__
       HARNESS_SHA: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
@@ -22,7 +22,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
-          test "$GITHUB_REF" = refs/heads/codex/mac-native-nonpgo-20261017
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-nonpgo-recovery-20261017
           test "$GITHUB_EVENT_NAME" = push
           test "$GITHUB_RUN_ATTEMPT" = 1
           test '${{ github.event.created }}' = true

@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import signal
 import shutil
 import subprocess
@@ -128,6 +129,28 @@ def clean_environment(task, tools=None):
     return result
 
 
+class ProgressWatch:
+    def __init__(self, quiet_minutes):
+        self.limit = quiet_minutes * 60
+        self.previous = None
+        self.last_progress = None
+
+    def observe(self, now, log_bytes, free_bytes, activity):
+        current = (log_bytes, free_bytes, activity['cpuSeconds'], activity['rssMiB'], activity['_pids'])
+        previous = self.previous
+        changed = (previous is None or current[0] != previous[0] or
+                   abs(current[1] - previous[1]) >= 8 * 1024**2 or
+                   current[2] != previous[2] or abs(current[3] - previous[3]) >= 1 or
+                   current[4] != previous[4])
+        if changed:
+            self.last_progress = now
+            self.previous = current
+        quiet = now - self.last_progress
+        stalled = (quiet >= self.limit and activity['processes'] > 0 and
+                   'R' not in activity['states'])
+        return quiet, stalled
+
+
 class Runner:
     def __init__(self, task, started, limits):
         self.task, self.started, self.limits = Path(task), started, limits
@@ -176,23 +199,43 @@ class Runner:
             return False
 
     @staticmethod
-    def group_rss_mib(pgid):
-        result = subprocess.run(['/bin/ps', '-axo', 'pgid=,rss='], capture_output=True,
+    def group_activity(pgid):
+        result = subprocess.run(['/bin/ps', '-axo', 'pgid=,pid=,rss=,time=,stat='], capture_output=True,
                                 check=True, timeout=3, text=True)
         require(len(result.stdout) <= 1024**2, 'process-inventory-limit')
-        total = 0
+        total, cpu, pids, states = 0, 0.0, [], set()
         for line in result.stdout.splitlines():
             fields = line.split()
-            if len(fields) == 2 and fields[0] == str(pgid) and fields[1].isdecimal():
-                total += int(fields[1])
-        return total / 1024
+            if len(fields) != 5 or fields[0] != str(pgid):
+                continue
+            require(fields[1].isdecimal() and fields[2].isdecimal() and
+                    re.fullmatch(r'[0-9:-]+(?:\.[0-9]+)?', fields[3]) and
+                    re.fullmatch(r'[A-Za-z+<>0-9-]{1,16}', fields[4]),
+                    'process-activity-format')
+            days, separator, clock = fields[3].partition('-')
+            parts = (clock if separator else days).split(':')
+            require(1 <= len(parts) <= 3, 'process-cpu-time')
+            seconds = sum(float(value) * 60**i for i, value in enumerate(reversed(parts)))
+            cpu += seconds + (int(days) * 86400 if separator else 0)
+            total += int(fields[2])
+            pids.append(int(fields[1]))
+            states.add(fields[4][0])
+        return {'rssMiB': total / 1024, 'cpuSeconds': round(cpu, 3),
+                'processes': len(pids), 'states': sorted(states), '_pids': tuple(sorted(pids))}
+
+    @staticmethod
+    def group_rss_mib(pgid):
+        return Runner.group_activity(pgid)['rssMiB']
 
     def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None):
         require(stage.replace('-', '').isalnum(), 'stage-name')
+        require(deadline_minutes == self.limits['jobMinutes'], 'platform-budget-binding')
         path = self.task / (stage + '.private.log')
         limit = log_limit or self.limits['maxStageLogBytes']
         reason = None
         process = None
+        progress = ProgressWatch(self.limits['stallQuietMinutes'])
+        peak_rss, minimum_free, last_activity, quiet = 0, None, None, 0
         try:
             with path.open('xb') as output:
                 process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
@@ -211,12 +254,17 @@ class Runner:
                                 private_bytes += item.stat().st_size
                         except FileNotFoundError:
                             pass
-                    rss = self.group_rss_mib(process.pid)
+                    activity = self.group_activity(process.pid)
+                    rss = activity['rssMiB']
                     if self.native_registry is not None:
                         self.native_registry.census()
                         rss += self.native_registry.outside_group_rss(process.pid)
+                    quiet, stalled = progress.observe(time.monotonic(), size, free, activity)
+                    peak_rss = max(peak_rss, rss)
+                    minimum_free = free if minimum_free is None else min(minimum_free, free)
+                    last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
                     if elapsed > deadline_minutes * 60:
-                        reason = 'deadline'
+                        reason = 'platform-job-limit'
                     elif free < self.limits['minFreeDuringBuildGiB'] * 1024**3:
                         reason = 'free-disk-reserve'
                     elif size > limit:
@@ -225,6 +273,8 @@ class Runner:
                         reason = 'native-private-size-limit'
                     elif rss > self.limits.get('maxOwnedRSSMiB', 10240):
                         reason = 'owned-process-memory-limit'
+                    elif stalled:
+                        reason = 'stalled-no-progress'
                     if reason:
                         self.fail(stage, reason)
                         self.stop(process)
@@ -232,7 +282,10 @@ class Runner:
                     if elapsed >= next_status:
                         print(json.dumps({'stage': stage, 'elapsedMinutes': round(elapsed / 60, 1),
                                           'freeGiB': round(free / 1024**3, 1), 'logBytes': size,
-                                          'ownedGroupRSSMiB': round(rss)}), flush=True)
+                                          'ownedGroupRSSMiB': round(rss),
+                                          'ownedGroupCPUSeconds': activity['cpuSeconds'],
+                                          'processes': activity['processes'], 'states': activity['states'],
+                                          'quietSeconds': round(quiet)}), flush=True)
                         next_status = elapsed + 30
                     time.sleep(1)
             code = process.wait(timeout=5)
@@ -241,7 +294,9 @@ class Runner:
                 self.fail(stage, reason)
                 self.stop(process)
             self.records.append({'stage': stage, 'exitCode': code, 'reason': reason,
-                                 'logBytes': path.stat().st_size})
+                                 'logBytes': path.stat().st_size, 'peakRSSMiB': round(peak_rss),
+                                 'minimumFreeGiB': round(minimum_free / 1024**3, 2) if minimum_free else None,
+                                 'lastActivity': last_activity, 'quietSeconds': round(quiet)})
             if code or reason:
                 self.fail(stage, reason or 'nonzero-exit')
                 raise Failure(reason or 'nonzero-exit')

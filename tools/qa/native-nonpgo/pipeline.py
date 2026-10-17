@@ -104,7 +104,7 @@ def prepare_tools(plan, task, runner, env):
         roots = list(staging.iterdir())
         require(len(roots) == 1 and (roots[0] / 'install.sh').is_file(), 'rust-installer-layout')
         runner.run('install-' + name, ['/bin/sh', str(roots[0] / 'install.sh'),
-                   '--prefix=' + str(tools / 'rust'), '--disable-ldconfig'], roots[0], env, 35)
+                   '--prefix=' + str(tools / 'rust'), '--disable-ldconfig'], roots[0], env, plan['limits']['jobMinutes'])
         shutil.rmtree(staging)
         path.unlink()
         receipts.append({'name': name, 'version': row['version'], **receipt, 'tree': tree,
@@ -118,12 +118,12 @@ def prepare_source(plan, source, fixture, task, tools, sdk, runner, env):
         for i, row in enumerate(plan['runtime']['patches']):
             if row['phase'] == phase:
                 runner.run('patch-' + str(i), ['git', 'apply', '--ignore-space-change',
-                           '--ignore-whitespace', row['path']], source, env, 40)
+                           '--ignore-whitespace', row['path']], source, env, plan['limits']['jobMinutes'])
     runner.run('baseline-provenance', [sys.executable, '.github/workflows/scripts/record_runtime_source.py',
-               '--output', str(task / 'baseline-source.json')], source, env, 40)
+               '--output', str(task / 'baseline-source.json')], source, env, plan['limits']['jobMinutes'])
     pin = plan['runtime']['firstCausePatch']
-    runner.run('first-cause-patch', ['git', 'apply', '--check', str(fixture / pin['path'])], source, env, 40)
-    runner.run('apply-first-cause', ['git', 'apply', str(fixture / pin['path'])], source, env, 40)
+    runner.run('first-cause-patch', ['git', 'apply', '--check', str(fixture / pin['path'])], source, env, plan['limits']['jobMinutes'])
+    runner.run('apply-first-cause', ['git', 'apply', str(fixture / pin['path'])], source, env, plan['limits']['jobMinutes'])
     require(digest(source / pin['hostFile']) == pin['patchedHostSHA256'], 'patched-host-hash')
     branding = source / '.github/assets/branding'
     require(branding.is_dir(), 'branding-missing')
@@ -175,21 +175,22 @@ def verify_config(plan, task, tools, sdk):
                        ('RUSTC', tools / 'rust/bin/rustc'),
                        ('CARGO', tools / 'rust/bin/cargo'), ('NODEJS', tools / 'node/bin/node')):
         actual = substs[key]
-        if isinstance(actual, list):
-            require(bool(actual), 'compiler-command-missing')
-            actual = actual[0]
-        else:
-            actual = shlex.split(actual)[0]
-        require(Path(actual).resolve() == value.resolve(), 'compiled-tool-path-' + key.lower())
+        command = actual if isinstance(actual, list) else shlex.split(actual)
+        require(bool(command) and all(isinstance(item, str) for item in command),
+                'compiler-command-missing')
+        require(Path(command[0]).resolve() == value.resolve(), 'compiled-tool-path-' + key.lower())
+        if key in ('CC', 'CXX', 'HOST_CC', 'HOST_CXX'):
+            target_flags = [item for item in command[1:] if item.startswith('-mmacosx-version-min=')]
+            require(target_flags == ['-mmacosx-version-min=' + plan['criteria']['macOSMin']],
+                    'compiled-deployment-target-' + key.lower())
     for key, value in (('MACOS_SDK_DIR', sdk), ('WASI_SYSROOT', tools / 'sysroot-wasm32-wasi'),
                        ('ONNX_RUNTIME', tools / 'onnxruntime-x86_64-apple-darwin/libonnxruntime.dylib')):
         require(Path(substs[key]).resolve() == value.resolve(), 'compiled-input-path-' + key.lower())
     require(substs.get('MOZ_SANDBOX') in (True, 1, '1'), 'compiled-sandbox')
     record = {key: substs.get(key) for key in ('MOZ_DEBUG', 'ENABLE_TESTS', 'TARGET_CPU', 'HOST_CPU_ARCH',
               'OS_ARCH', 'OS_TARGET', 'CC_TYPE', 'CC_VERSION', 'HOST_CC_TYPE', 'HOST_CC_VERSION',
-              'RUSTC_VERSION', 'CARGO_VERSION', 'MOZ_APP_VERSION', 'MOZ_MACBUNDLE_NAME',
-              'MOZ_PACKAGER_FORMAT', 'MACOSX_DEPLOYMENT_TARGET')}
-    require(str(record['MACOSX_DEPLOYMENT_TARGET']) == plan['criteria']['macOSMin'], 'deployment-target')
+              'RUSTC_VERSION', 'MOZ_APP_VERSION', 'MOZ_MACBUNDLE_NAME', 'MOZ_PACKAGER_FORMAT')}
+    record['macOSMinimumFromFourCompilerFlags'] = plan['criteria']['macOSMin']
     record.update({'debug': True, 'pgo': False, 'artifact': False})
     record.update({'allFourCompilerPathsPinned': True, 'sdkPathPinned': True,
                    'onnxPathPinned': True, 'wasiPathPinned': True, 'compiledSandbox': True})
@@ -274,7 +275,8 @@ def main():
     require((task / 'started-monotonic').is_file(), 'monotonic-origin-missing')
     started = float((task / 'started').read_text())
     runner = Runner(task, started, plan['limits'])
-    report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False}
+    report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
+              'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
     stage = 'preflight'
     try:
         (task / 'tmp').mkdir(mode=0o700)
@@ -283,12 +285,12 @@ def main():
         report['preflight'] = preflight(plan, args.source, args.fixture, args.harness, task)
         stage = 'sdk'
         runner.run('sdk-materialize', [sys.executable, str(HERE / 'materialize.py'), 'sdk',
-                   '--task', str(task)], task, basic_env, 35)
+                   '--task', str(task)], task, basic_env, plan['limits']['jobMinutes'])
         sdk = Path(json.loads((task / 'sdk-materialized.json').read_text())['path'])
         require(sdk.resolve().is_relative_to(task), 'sdk-materialized-path')
         stage = 'toolchains'
         runner.run('tools-materialize', [sys.executable, str(HERE / 'materialize.py'), 'tools',
-                   '--task', str(task)], task, basic_env, 35)
+                   '--task', str(task)], task, basic_env, plan['limits']['jobMinutes'])
         tools = task / 'tools'
         env = clean_environment(task, tools)
         env['PATH'] += ':/usr/local/bin'
@@ -298,15 +300,15 @@ def main():
             ('rust', [str(tools / 'rust/bin/rustc'), '--version'], 'rustc 1.95.0 (59807616e 2026-04-14)'),
             ('node', [str(tools / 'node/bin/node'), '--version'], 'v22.16.0'),
             ('nasm', [str(tools / 'nasm/nasm'), '-v'], 'NASM version 3.02')):
-            path = runner.run('version-' + name, command, task, env, 35)
+            path = runner.run('version-' + name, command, task, env, plan['limits']['jobMinutes'])
             require(expected in path.read_text(), 'tool-version-' + name)
         stage = 'prepare-source'
         prepare_source(plan, args.source, args.fixture, task, tools, sdk, runner, env)
         require(not (task / 'obj').exists(), 'objdir-not-fresh')
         stage = 'configure'
-        runner.run('configure', [sys.executable, 'mach', 'configure'], args.source, env, 45)
+        runner.run('configure', [sys.executable, 'mach', 'configure'], args.source, env, plan['limits']['jobMinutes'])
         runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
-                   args.source, env, 45)
+                   args.source, env, plan['limits']['jobMinutes'])
         verify_config(plan, task, tools, sdk)
         stage = 'full-build'
         runner.run('full-build', [sys.executable, 'mach', 'build', '-j', '3'], args.source, env,
@@ -328,9 +330,9 @@ def main():
         shutil.copytree(app, disposable, symlinks=True)
         require(digest(disposable / 'Contents/MacOS/XUL') == report['linkedXUL']['sha256'], 'copy-xul-binding')
         runner.run('adhoc-copy', ['/usr/bin/codesign', '--force', '--deep', '--timestamp=none',
-                   '--sign', '-', str(disposable)], task, basic_env, 190)
+                   '--sign', '-', str(disposable)], task, basic_env, plan['limits']['jobMinutes'])
         runner.run('verify-copy', ['/usr/bin/codesign', '--verify', '--deep', '--strict', str(disposable)],
-                   task, basic_env, 190)
+                   task, basic_env, plan['limits']['jobMinutes'])
         report['signedCopyXUL'] = macho(disposable / 'Contents/MacOS/XUL', 6)
         require(report['signedCopyXUL']['sectionsSHA256'] == report['linkedXUL']['sectionsSHA256'] and
                 report['signedCopyXUL']['uuid'] == report['linkedXUL']['uuid'] and

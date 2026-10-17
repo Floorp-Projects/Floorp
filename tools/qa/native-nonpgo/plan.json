@@ -1,9 +1,9 @@
 {
   "activation": {
     "allowInitialPushOnly": true,
-    "allowedBranch": "codex/mac-native-nonpgo-20261017",
+    "allowedBranch": "codex/mac-native-nonpgo-recovery-20261017",
     "approvalRequiredBeforeRuntimeBranchPush": true,
-    "helperFixtureCommit": "UNSET_UNTIL_LOCAL_REVIEW_SEAL",
+    "helperFixtureCommit": "BOUND_BY_WORKFLOW_ENV_FLOORP_FIXTURE_SHA",
     "runAttempt": 1
   },
   "baseline": {
@@ -64,22 +64,35 @@
     "repository": "Floorp-Projects/Floorp"
   },
   "limits": {
-    "buildDeadlineMinutes": 185,
-    "cleanupDeadlineMinutes": 205,
-    "configureDeadlineMinutes": 45,
-    "jobMinutes": 210,
+    "buildDeadlineMinutes": 360,
+    "cleanupDeadlineMinutes": 360,
+    "configureDeadlineMinutes": 360,
+    "jobMinutes": 360,
     "maxNativePrivateBytes": 134217728,
     "maxOwnedRSSMiB": 10240,
     "maxStageLogBytes": 268435456,
     "minFreeBeforeBuildGiB": 40,
     "minFreeDuringBuildGiB": 8,
-    "nativeDeadlineMinutes": 200,
-    "prepareDeadlineMinutes": 35,
+    "nativeDeadlineMinutes": 360,
+    "prepareDeadlineMinutes": 360,
     "processCleanupGraceSeconds": 90,
-    "signDeadlineMinutes": 190,
-    "sourceDeadlineMinutes": 40
+    "signDeadlineMinutes": 360,
+    "sourceDeadlineMinutes": 360,
+    "stallQuietMinutes": 20
   },
   "preparedAt": "2026-10-17",
+  "recovery": {
+    "priorFailure": {
+      "code": "KeyError",
+      "stage": "configure"
+    },
+    "priorFixture": "505f52245287fbb1e60a00c3b60788d0ca91f51e",
+    "priorResult": "failed",
+    "priorRun": 39016143725,
+    "priorRunURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39016143725",
+    "recoveryExplicitlyAuthorized": true,
+    "timePolicyChangedAtUTC": "2026-10-17 08:28 UTC"
+  },
   "runner": {
     "capacityValidated": false,
     "coldBuildDurationValidated": false,
@@ -336,12 +349,21 @@
     "zipBytes": 105082683,
     "zipSHA256": "bcc4c789510c08aa3e24ecba425c1b55781b7f3d8b2623c8efcd88fc7d951c51"
   },
-  "status": "PREPARATION_ONLY_NO_CI_APPROVAL",
+  "status": "RECOVERY_AUTHORIZED_PLATFORM_LIMIT_AND_ANOMALY_POLICY",
   "storage": {
     "cacheWrites": 0,
     "newActionsArtifacts": 0,
     "rawLogs": "ephemeral runner private task directory; bounded allowlisted summary only in existing job log",
     "signing": "ad hoc only on disposable app copy; no signing service or new credentials"
+  },
+  "timePolicy": {
+    "functionalNativeTimeouts": "unchanged",
+    "humanCumulativeLimitMinutes": null,
+    "mode": "platform-limit-and-multiple-signal-anomaly",
+    "normalProgressMayExceedOriginal210Minutes": true,
+    "platformJobMinutes": 360,
+    "platformLimitSource": "https://docs.github.com/en/actions/reference/limits",
+    "stallRequires": "20 minutes with unchanged log, CPU time, process roster, stable RSS and disk space, and no runnable owned process"
   },
   "toolchains": {
     "cotSignaturesVerified": false,

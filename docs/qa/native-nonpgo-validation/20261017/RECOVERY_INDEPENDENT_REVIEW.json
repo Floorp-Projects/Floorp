@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "reviewedAtUTC": "2026-10-17 08:36:46 UTC",
+  "scope": "Focused independent recovery delta review and portable guard validation; no new functionality or broad QA redesign.",
+  "decision": {
+    "recoveryCode": "GO",
+    "remainingP0": 0,
+    "remainingP1": 0,
+    "remainingP2": 0,
+    "executionAuthorization": "Explicit recovery authorization reported by parent; the earlier 195/210-minute human budget has been superseded.",
+    "finalImmutableFixtureAndCallerReview": "PENDING",
+    "dispatchPerformed": false,
+    "newCI": 0,
+    "sourceEditedByReviewer": false
+  },
+  "manifest": {
+    "path": "records/RECOVERY_CODE_HASHES_FINAL.json",
+    "sha256": "29c8e059b6695732c8424b151b6b13e56c851e45b8216615cd24ed7d1d3941ac",
+    "files": 11,
+    "allFileBytesAndSHA256Matched": true,
+    "pythonASTFiles": 8,
+    "pythonASTResult": "PASS"
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_guards -v",
+    "methods": 23,
+    "passed": 23,
+    "failed": 0,
+    "processExitCode": 0,
+    "reportedDurationSeconds": 1.22,
+    "testedManifestBeforeMetadataCorrection": "d85c52678b14a9999d37850f6f5a84ce69bd5e9d2790813865aa630530f363b1",
+    "finalSourceEquivalence": "All executable Python and workflow source hashes are unchanged from the tested snapshot. Only three plan metadata values changed. Reversing those values reconstructs the exact tested plan SHA256 dcffa53b6f36efc8b4942822b6047955217279ea7341c6ae2d2fbef60f243e55.",
+    "finalPlanSHA256": "cc0af8772c0ab770409731559a3c6a45e78845d0d94590c3f2e09e5dd9759946"
+  },
+  "findings": [],
+  "resolvedItems": [
+    {
+      "id": "CONFIG-HOST-SCHEMA",
+      "evidence": "HOST_CPU_ARCH is required and recorded. Missing or wrong host architecture produces a fixed Failure. Runtime 7dd init.configure:841 exports HOST_CPU_ARCH."
+    },
+    {
+      "id": "CONFIG-MACOS-MINIMUM",
+      "evidence": "All four actual compiler command lists must contain exactly one -mmacosx-version-min=10.15. Missing, wrong or conflicting values fail. The derived record is explicitly named macOSMinimumFromFourCompilerFlags. No MACOSX_DEPLOYMENT_TARGET substitution export is assumed. This matches Runtime 7dd toolchain.configure:1523-1524."
+    },
+    {
+      "id": "CONFIG-OPTIONAL-CARGO",
+      "evidence": "The unsupported nullable CARGO_VERSION substitution record is removed; RUSTC_VERSION remains. Compiler/path/SDK/WASI/ONNX/native helper checks are retained."
+    },
+    {
+      "id": "TIME-POLICY",
+      "evidence": "Every Runner.run deadline is bound to plan jobMinutes=360, including phase aliases. There is no remaining 185/195/210-minute elapsed cutoff in the runner path. The template uses one macos-15-intel job with timeout-minutes 360. Existing functional authentication/native timeouts and resource/transport/cleanup guards remain unchanged."
+    },
+    {
+      "id": "STALL-DETECTION",
+      "evidence": "A 20-minute window considers log bytes, cumulative disk-space movement, owned-group CPU seconds, RSS and process roster; the no-progress decision also requires no runnable owned process. Quiet CPU-active linking and slow cumulative I/O are covered by passing regression cases. A portable runner test continues after an elapsed 211 minutes and rejects an obsolete phase budget."
+    },
+    {
+      "id": "RECOVERY-PROVENANCE",
+      "evidence": "Final proof retains the prior failed run 39016143725 and its KeyError/configure result through priorExecution. It does not relabel the failed execution as a success or retry attempt."
+    },
+    {
+      "id": "ACTIVATION-METADATA",
+      "priority": "P2",
+      "status": "RESOLVED_BEFORE_FINAL_RECEIPT",
+      "evidence": "allowedBranch now matches codex/mac-native-nonpgo-recovery-20261017; status states RECOVERY_AUTHORIZED_PLATFORM_LIMIT_AND_ANOMALY_POLICY; the fixture binding is described by the immutable workflow environment."
+    }
+  ],
+  "preservedControls": [
+    "Exact-branch initial push only, attempt 1, zero-before-SHA, fixed source and harness; no workflow_dispatch trigger.",
+    "Read-only contents/actions permissions, no extra runner, artifact/cache upload, product signing, publication, merge or new credentials.",
+    "Disposable ad-hoc test copy only; authentication predicates, OS protection checks, trusted native assertions and cleanup ownership checks are unchanged.",
+    "First failure is preserved before cleanup; missing/failed/skip/incomplete evidence cannot qualify.",
+    "Source/toolchain provenance and source-only versus actual native validation remain separate."
+  ],
+  "platformLimit": {
+    "minutes": 360,
+    "source": "https://docs.github.com/en/actions/reference/limits",
+    "verifiedFromOfficialDocumentation": true,
+    "meaning": "GitHub-hosted job execution limit. This is not a promise of completion or evidence that final cleanup/proof will run after platform termination."
+  },
+  "limitsAndNextGate": [
+    "Final immutable fixture/tree, rendered caller source, source readback and trigger containment still require pin/route review before the parent performs any authorized branch activation.",
+    "Darwin host TU compilation, XUL linkage and native authentication with this candidate remain unexecuted.",
+    "Original build used a Linux host; this is a new Darwin-host cohort. Original binary compiledDebug is UNVERIFIED, original timeout cause is UNKNOWN, and product qualification is false.",
+    "Process/disk/RSS progress metrics are sampled indicators; a quiet-but-active link is not classified as stalled solely because its log is silent.",
+    "No new CI, native build, signing, artifact payload acquisition, branch mutation or credential inspection was performed by this review."
+  ]
+}

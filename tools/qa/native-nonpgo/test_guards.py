@@ -13,7 +13,7 @@ import tempfile
 import time
 import unittest
 from unittest import mock
-from support import Failure, Runner, clean_environment, extract_tar, scan_tar
+from support import Failure, ProgressWatch, Runner, clean_environment, extract_tar, scan_tar
 from native_suite import context_result, failure_snapshot
 from pipeline import macho, verify_config
 from owned_native import OwnedNative
@@ -32,7 +32,7 @@ class Guards(unittest.TestCase):
         substs = {'TARGET_CPU': 'x86_64', 'HOST_CPU_ARCH': 'x86_64', 'OS_ARCH': 'Darwin',
                   'OS_TARGET': 'Darwin', 'CC_TYPE': 'clang', 'CC_VERSION': '22.1.8',
                   'MOZ_APP_VERSION': '158.0.1', 'MOZ_DEBUG': '1', 'ENABLE_TESTS': '1',
-                  'MOZ_SANDBOX': '1', 'MACOSX_DEPLOYMENT_TARGET': '10.15',
+                  'MOZ_SANDBOX': '1',
                   'MOZ_APP_DISPLAYNAME': 'Floorp', 'MOZ_CHILD_PROCESS_NAME': 'plugin-container',
                   'MOZ_CHILD_PROCESS_BUNDLENAME': 'plugin-container.app'}
         for key, path in (('CC', 'clang/bin/clang'), ('CXX', 'clang/bin/clang++'),
@@ -41,27 +41,105 @@ class Guards(unittest.TestCase):
                           ('NODEJS', 'node/bin/node'), ('WASI_SYSROOT', 'sysroot-wasm32-wasi'),
                           ('ONNX_RUNTIME', 'onnxruntime-x86_64-apple-darwin/libonnxruntime.dylib')):
             substs[key] = str(tools / path)
+            if key in ('CC', 'CXX', 'HOST_CC', 'HOST_CXX'):
+                substs[key] = [substs[key], '-mmacosx-version-min=10.15']
         substs['MACOS_SDK_DIR'] = str(sdk)
         (self.root / 'obj').mkdir()
         (self.root / 'obj/mozinfo.json').write_text(json.dumps(
             {'debug': True, 'pgo': False, 'artifact': False}))
         plan = {'criteria': {'macOSMin': '10.15'}}
-        for state in ('valid', 'missing', 'wrong-architecture'):
+        for state in ('valid', 'missing', 'wrong-architecture', 'missing-target-flag',
+                      'wrong-target-flag', 'conflicting-target-flags'):
             with self.subTest(state=state):
                 current = dict(substs)
                 if state == 'missing':
                     current.pop('HOST_CPU_ARCH')
                 elif state == 'wrong-architecture':
                     current['HOST_CPU_ARCH'] = 'aarch64'
+                elif state == 'missing-target-flag':
+                    current['CC'] = current['CC'][:1]
+                elif state == 'wrong-target-flag':
+                    current['CXX'] = current['CXX'][:1] + ['-mmacosx-version-min=11.0']
+                elif state == 'conflicting-target-flags':
+                    current['HOST_CC'] = current['HOST_CC'] + ['-mmacosx-version-min=11.0']
                 (self.root / 'effective-config.private.log').write_text(json.dumps({'substs': current}))
                 if state == 'valid':
                     verify_config(plan, self.root, tools, sdk)
                     record = json.loads((self.root / 'effective-config.json').read_text())
                     self.assertEqual(record['HOST_CPU_ARCH'], 'x86_64')
                     self.assertNotIn('HOST_CPU', record)
+                    self.assertEqual(record['macOSMinimumFromFourCompilerFlags'], '10.15')
+                    self.assertNotIn('MACOSX_DEPLOYMENT_TARGET', record)
+                    self.assertNotIn('CARGO_VERSION', record)
                 else:
-                    with self.assertRaisesRegex(Failure, 'compiled-config-host_cpu_arch'):
+                    code = ('compiled-deployment-target-' if 'flag' in state else
+                            'compiled-config-host_cpu_arch')
+                    with self.assertRaisesRegex(Failure, code):
                         verify_config(plan, self.root, tools, sdk)
+
+    def test_process_activity_parses_darwin_and_linux_cpu_formats(self):
+        output = '900 901 2048 0:01.25 S\n900 902 1024 01:00:00 R+\n900 903 1024 1-01:00:00 S\n901 999 999999 10:00 R\n'
+        with mock.patch('support.subprocess.run', return_value=mock.Mock(stdout=output)):
+            value = Runner.group_activity(900)
+        self.assertEqual(value['cpuSeconds'], 93601.25)
+        self.assertEqual(value['rssMiB'], 4)
+        self.assertEqual(value['processes'], 3)
+        self.assertEqual(value['states'], ['R', 'S'])
+
+    def test_quiet_link_with_cpu_progress_is_not_a_stall(self):
+        watch = ProgressWatch(20)
+        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
+        watch.observe(0, 0, 64 * 1024**3, activity)
+        activity['cpuSeconds'] = 3600
+        quiet, stalled = watch.observe(7200, 0, 64 * 1024**3, activity)
+        self.assertEqual(quiet, 0)
+        self.assertFalse(stalled)
+
+    def test_stall_requires_multiple_stable_signals(self):
+        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
+        for changed in ('none', 'log', 'cpu', 'disk', 'rss', 'process', 'runnable'):
+            with self.subTest(changed=changed):
+                watch = ProgressWatch(20)
+                watch.observe(0, 0, 64 * 1024**3, activity)
+                current, log, free = dict(activity), 0, 64 * 1024**3
+                if changed == 'log': log = 100
+                elif changed == 'cpu': current['cpuSeconds'] = 2
+                elif changed == 'disk': free -= 16 * 1024**2
+                elif changed == 'rss': current['rssMiB'] = 12
+                elif changed == 'process': current['_pids'] = (1, 2)
+                elif changed == 'runnable': current['states'] = ['R']
+                _, stalled = watch.observe(1201, log, free, current)
+                self.assertEqual(stalled, changed == 'none')
+
+    def test_elapsed_policy_uses_platform_limit_without_early_phase_deadline(self):
+        plan = json.loads(Path(__file__).with_name('plan.json').read_text())
+        limits = plan['limits']
+        self.assertEqual(limits['jobMinutes'], 360)
+        for key, value in limits.items():
+            if key.endswith('DeadlineMinutes'):
+                self.assertEqual(value, 360)
+        self.assertIn('timeout-minutes: 360', Path(__file__).with_name('workflow.yml.in').read_text())
+        (self.root / 'started-monotonic').write_text(str(time.monotonic() - 211 * 60))
+        runner = Runner(self.root, time.time() - 211 * 60, limits)
+        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch.object(runner, 'group_activity', return_value=activity):
+            runner.run('healthy-long-job', [sys.executable, '-c', 'import time; time.sleep(0.02)'],
+                       self.root, os.environ.copy(), 360)
+        self.assertIsNone(runner.failure)
+        with self.assertRaisesRegex(Failure, 'platform-budget-binding'):
+            runner.run('old-budget', [sys.executable, '-c', 'pass'], self.root, os.environ.copy(), 185)
+
+    def test_slow_cumulative_io_progress_resets_stall_window(self):
+        watch = ProgressWatch(20)
+        activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
+        free = 64 * 1024**3
+        watch.observe(0, 0, free, activity)
+        watch.observe(600, 0, free - 4 * 1024**2, activity)
+        watch.observe(1199, 0, free - 8 * 1024**2, activity)
+        quiet, stalled = watch.observe(1201, 0, free - 8 * 1024**2, activity)
+        self.assertEqual(quiet, 2)
+        self.assertFalse(stalled)
 
     def archive(self, entries):
         path = self.root / 'input.tar.gz'
