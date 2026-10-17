@@ -1,0 +1,252 @@
+{
+  "binding": {
+    "baseCommit": "589d49fc64e97409c450e9213da90c8d0b132f14",
+    "codeDiffBytes": 10719,
+    "codeDiffSHA256": "cefa8f3ca9d5aa92777d440de72f4a7860a757d0a93323bc0e2652e619d22e24",
+    "codeFiles": [
+      {
+        "bytes": 12062,
+        "path": "tools/qa/native-nonpgo/owned_native.py",
+        "sha256": "9b677774f13ce368bb59945659c4a5f9c71d59102e6692bd691a05d8b5dee2b3"
+      },
+      {
+        "bytes": 23162,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "f5201d07cb122c80d527b0b30f97f04c713a2f89e559e41d8721524026e26b1d"
+      },
+      {
+        "bytes": 80133,
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "sha256": "f5d28b9d53d585d41b3bbd206b94b3b34bb32cb12c295b9dc2c156b6c10041ff"
+      }
+    ],
+    "commit": "496356d8684702c71f324c1c1897384d54c65d33",
+    "committedBytesMatch": true,
+    "darwinActivitySHA256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e",
+    "diffCheckExitCode": 0,
+    "fullCommitDiffBytes": 19025,
+    "fullCommitDiffSHA256": "9d1716337f39e37dbf7a0c9c7cda9612fd676e0a8689ba0a5e78454821a104fc",
+    "nextExperimentRecord": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_NEXT_EXPERIMENT.json",
+      "sha256": "ae0aa49c5439d9c83fbe3e1709c6b02c4b28258f0366de77a3103354853cfedc"
+    },
+    "originalFixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+    "queryBsdReadASTUnchangedFromOriginalFixture": true,
+    "repairRecord": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_MONITOR_REPAIR.json",
+      "sha256": "ac1446709a57e0ed20a4b70b7d0398bdf37665dad6896f92b373f41372bc5567"
+    },
+    "sdkReviewPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY7_SDK_REVIEW.json",
+    "sdkReviewSHA256": "16e60f3703c5a189d29984a9c7eb484934dc451ead4334ecef182454221a74f5",
+    "workingTreeClean": true
+  },
+  "decision": {
+    "historicalThreeEPERMCause": "UNKNOWN",
+    "nativeAuthentication": "NOT_VERIFIED",
+    "newMacOrFullBuildExecution": false,
+    "openP1": [],
+    "openP2": [],
+    "qualification": "GO_TARGETED_ACCOUNTING_REPAIR_ONLY",
+    "staticReady": true
+  },
+  "generationContracts": [
+    {
+      "contract": "DarwinActivity.group calls read(pid,pgid) without expected old birth. A newly discovered current member may be measured only after full PID/birth/state/effective-owner/PGID/counter validation. It is not correct to discard a new member solely for reusing a prior PID.",
+      "path": "Fresh PGID resource census"
+    },
+    {
+      "contract": "EPERM returns unavailable before BSD fallback or expected-generation resolution. Repeated PID-only tags cannot manufacture generation proof. Unknown remains unknown and totals remain null.",
+      "path": "Task query permission denial"
+    },
+    {
+      "contract": "MacProcesses.rss calls read(pid,expected=record). A validated different birth or independently confirmed exit is gone only for that expected old generation. Permission, malformed identity and unavailable counters fail closed.",
+      "path": "Owned-native RSS"
+    },
+    {
+      "contract": "live compares current PID/birth then UID/executable/argv hash identity. finish re-describes and rechecks the full owned identity before its per-PID signal; replaced/changed/unknown identities are not accepted as owned.",
+      "path": "Owned-native live selection and signals"
+    },
+    {
+      "contract": "Incomplete group activity fails before normal native_registry.census/outside RSS accounting. Registry finish may still run during cleanup. Therefore the sampled-RSS defect below cannot explain the original earlier group-activity EPERM.",
+      "path": "Failure ordering"
+    }
+  ],
+  "nextExperimentDesign": {
+    "evidenceLimit": "Even a controlled reproduction would identify only a mechanism for that new exact child; it cannot identify the old denied generation or establish browser/native authentication.",
+    "implementationOrExecutionReviewed": false,
+    "note": "The committed record is a design only. No experiment code or additional run is part of this repair.",
+    "scope": "SDK-free controlled known-child ps lifetime across the unchanged three-attempt census window, plus normally draining control.",
+    "status": "DESIGN_ONLY_NOT_EXECUTED"
+  },
+  "originalEvidence": {
+    "allIdentityTags": null,
+    "allTaskQueries": {
+      "bytes": 0,
+      "errno": 1,
+      "expectedBytes": 232
+    },
+    "attempts": 3,
+    "cleanup": "PermissionError, group cleanup unverified, stage exit code unavailable; no denied PID UID/type/birth was retained.",
+    "cpuSeconds": null,
+    "deniedPidTag": "1b22bd369cbdaba0",
+    "firstFailure": {
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 20599.72,
+      "stage": "native-suite"
+    },
+    "knownRSSLowerBoundMiB": 42.23828125,
+    "phase": "group-activity",
+    "privateDecodedLogSHA256": "34a41af9a844112c579078fbe5aa3c53d751b0e38593c52bd53640be4f455f89",
+    "rawContentPublished": false,
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY5_EXECUTION_RESULT.json",
+    "receiptSHA256": "e2f82e5d5a0f9b786cef8f409cc8003178fdec2f84847a6c15e7994621c6fa29",
+    "registryObservedCounts": {
+      "helpersObserved": 0,
+      "hostsObserved": 0,
+      "shimsObserved": 0
+    },
+    "rssMiB": null,
+    "run": 39045848018,
+    "structuredLogSummaryMatchesSavedSummary": true
+  },
+  "processGraph": [
+    {
+      "child": "Outer Runner.group_activity /bin/ps",
+      "group": "Inherits monitor group; no session/group override. It is not in the separately created target stage group.",
+      "parent": "pipeline monitor"
+    },
+    {
+      "child": "native_suite stage leader",
+      "group": "Popen(start_new_session=True): dedicated target session/PGID.",
+      "parent": "pipeline Runner.run"
+    },
+    {
+      "child": "cause/context/gui harness child",
+      "group": "Inherits target PGID; no session/group override.",
+      "parent": "native_suite"
+    },
+    {
+      "child": "HostProcess._process_rows /bin/ps",
+      "group": "Inherits target PGID; eligible for the outer target-group census.",
+      "parent": "native harness"
+    },
+    {
+      "child": "ShimMonitor PID enumeration /bin/ps and process_rows calls",
+      "group": "Inherits target PGID; eligible for the outer target-group census.",
+      "parent": "native harness/observer thread"
+    },
+    {
+      "child": "MacProcesses inventory/argv /bin/ps",
+      "group": "Inherits outer monitor group, not the target stage PGID.",
+      "parent": "pipeline native registry"
+    },
+    {
+      "child": "Actual browser/Shim launched through LaunchServices",
+      "group": "Actual group/session is not assumed; known owned native generations are handled separately.",
+      "parent": "LaunchServices launch path"
+    }
+  ],
+  "remainingLimits": [
+    "The census and native registry are separate non-atomic snapshots. Birth-based accounting avoids PGID-staleness decisions; it does not make process state atomic across reads.",
+    "Per-PID identity checks and subsequent signal syscalls are not an atomic birth-locked operation. Group signals address a PGID. No evidence in the old logs demonstrates PID/PGID reuse or a wrong-target signal.",
+    "Old cleanup EPERM and unavailable stage exit code remain unresolved; zero registered native records cannot prove whole-group cleanup.",
+    "The short Mac census did not reproduce the old three consecutive denials, a native browser exit or Shim authentication.",
+    "No EPERM target exclusion, extra retry, session relocation, privilege/protection change, unavailable-to-zero conversion or resource-limit relaxation is included."
+  ],
+  "repairValidation": {
+    "independentPortableMock": "PASS: exact sampled birth omitted, unsampled birth added for both movement directions, same-PID older birth does not exclude current generation, unavailable RSS propagates. No process was spawned or signalled by these independent mocks.",
+    "regressionCoverage": [
+      "POSIX actual outer ps group differs from new-session target group",
+      "Repeated three-attempt EPERM queries only target-group members; same PID tag retains null generation",
+      "Sampled-birth RSS matrix covering group movement and unchanged membership",
+      "Same PID with different sampled birth remains measurable",
+      "Unavailable identity/counters propagate even when a birth appears in the sample",
+      "Runner passes complete sample births; incomplete sample blocks normal native-census accounting",
+      "Injected helper communicate timeout reaps both exact children; stdout/stderr close in finally"
+    ],
+    "suite": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_guards -q",
+      "elapsedSeconds": 3.014,
+      "passed": 76,
+      "platform": "Linux",
+      "provenance": "Execution recorded in the committed repair record and bound to exact reviewed file hashes; full suite not rerun during this independent review.",
+      "skipReason": "Real Mac unreaped-child test; no new Mac execution in this change.",
+      "skipped": 1,
+      "total": 77
+    }
+  },
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent process-graph, generation-handling and sampled-RSS analysis",
+  "schemaVersion": 1,
+  "selfHelperHypothesis": {
+    "historicalLimit": "The old three opaque PID tags match, but identityTag is null. This does not establish a stable generation, owner/type, three distinct short-lived helpers or a match to the short-run helper. The old raw log contains no additional retained target identity proof.",
+    "nativeHarnessSampler": "SUPPORTED_CANDIDATE, NOT_PROVEN_HISTORICAL_CAUSE. The representative Mac run observed one EPERM for a PID whose earlier inventory named system-ps with a parent tag matching its worker, and the runner ps file was root-owned/setuid.",
+    "outerRunnerSampler": "NOT_SUPPORTED_BY_PINNED_LAUNCH_GRAPH. Matching-PGID filtering excludes a sampler that remains in the monitor parent group.",
+    "shortDiagnosticRun": 39072187911
+  },
+  "sources": [
+    {
+      "functions": [
+        "Runner.run",
+        "Runner.group_activity",
+        "Runner.stop"
+      ],
+      "path": "tools/qa/native-nonpgo/support.py"
+    },
+    {
+      "functions": [
+        "DarwinActivity.read",
+        "DarwinActivity.group",
+        "DarwinActivity.tag"
+      ],
+      "path": "tools/qa/native-nonpgo/darwin_activity.py"
+    },
+    {
+      "functions": [
+        "MacProcesses.describe",
+        "MacProcesses.rss",
+        "OwnedNative.live",
+        "OwnedNative.outside_group_rss",
+        "OwnedNative.finish"
+      ],
+      "path": "tools/qa/native-nonpgo/owned_native.py"
+    },
+    {
+      "supports": "Pinned HostProcess launch and process_rows calls.",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py"
+    },
+    {
+      "supports": "Pinned observer PID inventory and per-PID discovery.",
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/shim_lifecycle.py"
+    },
+    {
+      "supports": "start_new_session sets a new POSIX session; omitted session/group controls retain normal inheritance.",
+      "url": "https://docs.python.org/3.12/library/subprocess.html#subprocess.Popen"
+    }
+  ],
+  "validatedFinding": {
+    "executionLimit": "Method-level behavior was reproduced with synthetic same-identity process records. Actual PGID migration was not observed in either Mac run; no historical-cause attribution follows.",
+    "id": "stale-registered-pgid-rss",
+    "location": "owned_native.py:OwnedNative.outside_group_rss",
+    "originalMockReproduction": [
+      {
+        "actualOutsideRSSMiB": 0,
+        "currentPGID": 901,
+        "expectedOutsideRSSMiB": 64,
+        "registeredPGID": 900,
+        "targetPGID": 900
+      },
+      {
+        "actualOutsideRSSMiB": 64,
+        "currentPGID": 900,
+        "expectedOutsideRSSMiB": 0,
+        "registeredPGID": 901,
+        "targetPGID": 900
+      }
+    ],
+    "problem": "live verifies a current owned identity but returns the stored record. The old outside_group_rss classified inside/outside using the record PGID saved at registration. If the same owned generation changes group, it can omit unmeasured RSS or double-add RSS already sampled.",
+    "repair": "Runner passes the exact complete group sample birth tuples. The registry excludes only a full (pid,startSec,startUsec) already counted, independently of stored/current PGID. Uncounted owned generations retain expected-record RSS validation.",
+    "severity": "P2",
+    "status": "FIXED_IN_REVIEWED_COMMIT"
+  }
+}
