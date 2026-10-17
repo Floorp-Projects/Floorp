@@ -44,5 +44,80 @@
     39018277446
   ],
   "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "terminalResultRequired": true
+  "terminalResultRequired": true,
+  "latestConfirmedStatus": {
+    "at": "2026-10-17 09:41:13 UTC",
+    "id": 39020119793,
+    "status": "in_progress",
+    "conclusion": null,
+    "attempt": 1,
+    "head": "d86e63bc621d647efd8389fbf226f841ebb52501",
+    "jobs": [
+      {
+        "id": 117360090798,
+        "status": "in_progress",
+        "conclusion": null,
+        "runner": "GitHub Actions 1000045570",
+        "labels": [
+          "macos-15-intel"
+        ],
+        "started": "2026-10-17T09:10:37Z",
+        "completed": null,
+        "current": [
+          {
+            "name": "Compile full host and XUL then authenticate native Shim",
+            "status": "in_progress"
+          },
+          {
+            "name": "Confirm bounded result exists",
+            "status": "pending"
+          },
+          {
+            "name": "Post Checkout immutable native harness",
+            "status": "pending"
+          },
+          {
+            "name": "Post Checkout immutable Runtime source",
+            "status": "pending"
+          },
+          {
+            "name": "Post Checkout immutable preparation fixture",
+            "status": "pending"
+          }
+        ],
+        "done": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Bound the initial authorized run",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout immutable preparation fixture",
+            "conclusion": "success"
+          },
+          {
+            "name": "Verify owned process sampling before source checkout",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout immutable Runtime source",
+            "conclusion": "success"
+          },
+          {
+            "name": "Checkout immutable native harness",
+            "conclusion": "success"
+          },
+          {
+            "name": "Acquire only the existing fixed SDK",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  "existingRunContinues": true,
+  "newDuplicateRunsStarted": 0
 }
