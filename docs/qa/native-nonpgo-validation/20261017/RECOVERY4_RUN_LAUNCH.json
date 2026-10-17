@@ -12,7 +12,9 @@
     "createdAt": "2026-10-17T14:26:40Z",
     "jobId": 117419664787,
     "startedAt": "2026-10-17T14:26:44Z",
-    "status": "in_progress"
+    "status": "completed",
+    "conclusion": "failure",
+    "completedAt": "2026-10-17T15:07:11Z"
   },
   "source": {
     "fixture": "fa68751b34b6c4d62b5e0ea30e052bbe8e33d603",
@@ -49,6 +51,14 @@
     39020119793,
     39037341780
   ],
-  "result": "IN_PROGRESS_NOT_QUALIFIED",
-  "terminalResultRequired": true
+  "result": "FAILED_NOT_QUALIFIED",
+  "terminalResultRequired": false,
+  "terminalEvidence": "RECOVERY4_EXECUTION_RESULT.json",
+  "firstFailure": {
+    "stage": "full-build",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 2393.52
+  },
+  "native": "NOT_RUN",
+  "productQualification": false
 }

@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "checkedAtUTC": "2026-10-17 15:10:30 UTC",
+  "runIdentityBound": true,
+  "exactlyOneJob": true,
+  "runnerTarget": "macos-15-intel",
+  "exactlyOneSummary": true,
+  "providerRunAttempt": 1,
+  "summaryRunAttempt": "1",
+  "fixtureMatches": true,
+  "configuration": {
+    "debug": true,
+    "enableTests": "1",
+    "pgo": false,
+    "target": "x86_64",
+    "os": "Darwin"
+  },
+  "sourceAndHarnessVerified": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runtimeTree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+    "upstream": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181",
+    "patchCount": 30,
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "harness": {
+      "commit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "patchSHA256": "f2e69a9521d76ffd14ff74ef8d387f94b49764c8e4028dc25f4ccd2980c6be80",
+      "baseSHA256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "patchedSHA256": "24e92eb8615eabc111ba1d795dcc7d156402d14d1e00ca01694651381fac5a6e"
+    },
+    "toolchains": 11
+  },
+  "actualCounterPreflight": {
+    "firstFailure": null,
+    "monitorDiagnostics": [],
+    "nativeCounterSelf": {
+      "abiBytes": 232,
+      "cpuSeconds": 0.452046367,
+      "rssMiB": 18.578125,
+      "state": "R",
+      "status": "measured",
+      "timebaseDenom": 1,
+      "timebaseNumer": 1
+    },
+    "stages": [
+      {
+        "exitCode": 0,
+        "lastActivity": {
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "cpuLowerBoundSeconds": 0.162,
+          "cpuSeconds": 0.162,
+          "formatExamples": [
+            {
+              "cpuSeconds": 0.15283873,
+              "identityTag": "8d2047a9e380874b",
+              "kind": "measured",
+              "pidTag": "c6822735a70e1370",
+              "rssMiB": 9.15625,
+              "source": "libproc-taskallinfo",
+              "state": "S"
+            }
+          ],
+          "partialSamples": [],
+          "processes": 2,
+          "rssLowerBoundMiB": 9.671875,
+          "rssMiB": 9.671875,
+          "sampleAttempts": 1,
+          "sampleComplete": true,
+          "states": [
+            "S"
+          ],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseDenom": 1,
+          "timebaseNumer": 1,
+          "unknownKinds": {}
+        },
+        "logBytes": 0,
+        "minimumFreeGiB": 108.13,
+        "peakRSSMiB": 10,
+        "quietSeconds": 0,
+        "reason": null,
+        "stage": "monitor-preflight"
+      }
+    ],
+    "status": "passed"
+  },
+  "firstFailure": {
+    "stage": "full-build",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 2393.52
+  },
+  "progressEvidence": {
+    "fullBuildRecords": 59,
+    "first": {
+      "stage": "full-build",
+      "elapsedMinutes": 9.7,
+      "freeGiB": 98.8,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 6,
+      "ownedGroupCPUSeconds": 0.054,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    "last": {
+      "stage": "full-build",
+      "elapsedMinutes": 39.4,
+      "freeGiB": 95.9,
+      "logBytes": 7141721,
+      "ownedGroupRSSMiB": 6481,
+      "ownedGroupCPUSeconds": 397.794,
+      "processes": 13,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    "maximumObservedProgressRSSMiB": 6851,
+    "minimumObservedProgressFreeGiB": 95.9,
+    "wholeBuildResourcePeak": "UNKNOWN_BUILD_EXCEPTION_HAS_NO_FINAL_STAGE_RECORD",
+    "compilerDiagnosticTailMarkers": {},
+    "rustErrorCodes": [],
+    "compilerFullLog": "PRIVATE_NOT_PUBLISHED"
+  },
+  "diagnosticRetention": {
+    "policy": "first16",
+    "count": 16,
+    "lastRetainedElapsedSeconds": 481.03,
+    "containsFailingStage": false,
+    "fatalQueryDetails": "UNKNOWN_NOT_RECORDED",
+    "repairNeeded": "Retain bounded recent ring and fatal sample, including size/errno/fallback classification; do not weaken unknown/failure gates."
+  },
+  "qualification": {
+    "fullBuildComplete": false,
+    "nativeRun": false,
+    "productQualification": false,
+    "goNoGo": "NO_GO_NATIVE_VALIDATION"
+  },
+  "limitsAndFollowup": {
+    "observedAtUTC": "2026-10-17 15:09:40 UTC",
+    "sdk": {
+      "id": 12074136738,
+      "expired": false,
+      "expiresAt": "2026-10-17T20:41:19Z",
+      "remainingHours": 5.5275,
+      "currentJobMarginHours": 6,
+      "newExecutionAllowedByUnchangedReader": false,
+      "alreadyMaterializedCurrentRun": true
+    },
+    "defaults": {
+      "floorp": "main",
+      "runtime": "nora-0.2.0"
+    },
+    "productPackage": {
+      "fixedSHA256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+      "currentMainSHA256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+      "byteEqual": true,
+      "activeWorkflowEdited": false,
+      "publicationOrSigningPerformed": false
+    }
+  },
+  "workspace": {
+    "status": "timeout",
+    "seconds": 18,
+    "recoveryConfirmed": false,
+    "codeAtRisk": false
+  },
+  "review": "Independent terminal diagnosis requested; pending at initial evidence save."
+}

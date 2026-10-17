@@ -1,26 +1,27 @@
 {
   "schema": 1,
-  "observedAtUTC": "2026-10-17 14:33:03 UTC",
+  "observedAtUTC": "2026-10-17 15:10:30 UTC",
   "currentExecution": {
-    "atUTC": "2026-10-17 14:33:03 UTC",
+    "atUTC": "2026-10-17 15:07:18 UTC",
     "runId": 39040773718,
-    "status": "in_progress",
-    "conclusion": null,
+    "status": "completed",
+    "conclusion": "failure",
     "attempt": 1,
     "job": {
       "id": 117419664787,
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "failure",
       "startedAt": "2026-10-17T14:26:44Z",
-      "completedAt": null,
+      "completedAt": "2026-10-17T15:07:11Z",
       "runner": "GitHub Actions 1000045675",
       "labels": [
         "macos-15-intel"
       ],
-      "inProgressSteps": [
-        "Compile full host and XUL then authenticate native Shim"
-      ],
-      "failedSteps": []
+      "inProgressSteps": [],
+      "failedSteps": [
+        "Compile full host and XUL then authenticate native Shim",
+        "Confirm bounded result exists"
+      ]
     }
   },
   "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39040773718",
@@ -40,7 +41,7 @@
     "evidence": "Completed successful required Actions step; numeric log receipt pending terminal log retrieval."
   },
   "workspace": {
-    "readRequest": "timed-out-after-18-seconds",
+    "readRequest": "timed-out-again-after-terminal",
     "patchStateRequest": "stopped-while-unresponsive",
     "recoveryConfirmed": false,
     "codeAtRisk": false,
@@ -51,7 +52,8 @@
     39016143725,
     39018277446,
     39020119793,
-    39037341780
+    39037341780,
+    39040773718
   ],
   "cohorts": {
     "39020119793": "Full build/hostTU/XUL/adHoc copy PASS; native startup guard observed launcher status, actual browser exit UNKNOWN.",
@@ -68,11 +70,32 @@
     "productQualification": false
   },
   "monitoring": {
-    "ownUntilTerminal": true,
+    "ownUntilTerminal": false,
     "pollMinutes": 5,
     "commentary": "phase/failure/completion only",
     "noAutomaticRerunOrBranchRepush": true,
     "noElapsedTimeCancellation": true
   },
-  "originalDisconnectCause": "UNKNOWN"
+  "originalDisconnectCause": "UNKNOWN",
+  "result": "FAILED_NOT_QUALIFIED",
+  "firstFailure": {
+    "stage": "full-build",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 2393.52
+  },
+  "native": "NOT_RUN",
+  "exactFailedMonitorReason": "UNKNOWN_NOT_RECORDED",
+  "terminalEvidence": "RECOVERY4_EXECUTION_RESULT.json",
+  "followupBlockers": {
+    "workspace": "READ_WRITE_UNRESPONSIVE",
+    "sdkReaderSixHourMargin": {
+      "id": 12074136738,
+      "expired": false,
+      "expiresAt": "2026-10-17T20:41:19Z",
+      "remainingHours": 5.5275,
+      "currentJobMarginHours": 6,
+      "newExecutionAllowedByUnchangedReader": false,
+      "alreadyMaterializedCurrentRun": true
+    }
+  }
 }

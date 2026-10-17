@@ -1,0 +1,23 @@
+{
+  "observedAtUTC": "2026-10-17 15:09:40 UTC",
+  "sdk": {
+    "id": 12074136738,
+    "expired": false,
+    "expiresAt": "2026-10-17T20:41:19Z",
+    "remainingHours": 5.5275,
+    "currentJobMarginHours": 6,
+    "newExecutionAllowedByUnchangedReader": false,
+    "alreadyMaterializedCurrentRun": true
+  },
+  "defaults": {
+    "floorp": "main",
+    "runtime": "nora-0.2.0"
+  },
+  "productPackage": {
+    "fixedSHA256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+    "currentMainSHA256": "7686cdb5d4088fbc8aeb304fd851f091ead59063b9755b2550dbb3c6bc20874f",
+    "byteEqual": true,
+    "activeWorkflowEdited": false,
+    "publicationOrSigningPerformed": false
+  }
+}
