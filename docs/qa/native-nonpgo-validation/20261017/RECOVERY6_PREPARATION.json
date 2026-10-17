@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "dae9d1e16370f9b7d851fafbc27df245ef085df3",
+  "runUnchanged": 39045848018,
+  "classification": "DIAGNOSTIC_AND_CHILD_REAP_REPAIR; NOT_A_PERMISSION_FIX",
+  "changes": [
+    "Add only allowlisted diagnostic metadata from the earlier ps inventory; identityBound=false. Keep PGID/PID selection and all libproc identity/counter/permission gates.",
+    "Record cleanup operation/signal/errno without exception messages. Preserve permission errors and unknown group state.",
+    "Independently wait at most five seconds on the exact Popen child after cleanup, with no extra signal. Reaping does not prove group disappearance.",
+    "Provide SDK-free pinned harness process-census preflight. Mac success requires both complete samples and observing system-ps. Missing target is a failure, not a passing hypothesis test."
+  ],
+  "codeFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "bytes": 11249,
+      "sha256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 23156,
+      "sha256": "81e3d34e2894008ac64b93c535f34fc164c353e53fa63dc7056c55ea05702dc1"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 72620,
+      "sha256": "01131e5a5f4bf9f39928e029f72401473b7d79c5b8acf8f5450d3d23e07edc08"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+      "bytes": 6429,
+      "sha256": "4948100e6c81f68c8d82e980806202c7bc0e31cad7efd137c66052128a69d18c"
+    }
+  ],
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python -m unittest test_guards -q",
+    "platform": "linux",
+    "python": "3.12.14",
+    "total": 70,
+    "passed": 69,
+    "skipped": 1,
+    "skipReason": "real macOS libproc unreaped-child test; not executed in this Linux environment",
+    "elapsedSeconds": 2.015
+  },
+  "preservedInvariants": [
+    "No process excluded on owner or role metadata.",
+    "No measurement/ownership/signal decision uses ps diagnostic metadata.",
+    "Unavailable totals remain null; EPERM remains fail-closed.",
+    "No privilege, OS protection, entitlement, signing, token or retention changes.",
+    "No new full build, CI retry, artifact upload, SDK acquisition, product signing, publication or merge."
+  ],
+  "rootCause": "UNKNOWN: ps is a statically supported hypothesis, not identified as the denied process in run 39045848018.",
+  "nativeAuthentication": "NOT_VERIFIED",
+  "macPreflight": "NOT_EXECUTED; the development environment is Linux. No Mac diagnostic run is included in these results.",
+  "diagnosticLimits": [
+    "Inventory owner/role/parent metadata is an earlier PID snapshot, not a birth-validated identity. It cannot establish the owner or role at the later denied task query.",
+    "systemPsObserved establishes overlap with inventory only; it does not prove a live ps was measured at the task-query instant.",
+    "psTaskDeniedSamples uses bounded examples and is a lower bound; zero cannot exclude ps-related denial.",
+    "Portable Linux success does not validate macOS permissions, browser startup or native authentication."
+  ]
+}

@@ -194,12 +194,18 @@ class Runner:
                     pass
 
     @staticmethod
-    def group_alive(pgid):
+    def group_alive(pgid, diagnostics=None):
         try:
             os.killpg(pgid, 0)
             return True
         except ProcessLookupError:
             return False
+        except OSError as error:
+            if diagnostics is not None:
+                diagnostics.append({'operation': 'group-probe', 'signal': 0,
+                                    'errorType': type(error).__name__, 'errno': error.errno})
+                del diagnostics[:-16]
+            raise
 
     @staticmethod
     def parse_group_activity(text, pgid):
@@ -253,7 +259,8 @@ class Runner:
     def group_activity(pgid):
         partial = []
         for attempt in range(3):
-            columns = 'pgid=,pid=' if sys.platform == 'darwin' else 'pgid=,pid=,rss=,time=,stat='
+            columns = ('pgid=,pid=,ppid=,uid=,ruid=,comm=' if sys.platform == 'darwin'
+                       else 'pgid=,pid=,rss=,time=,stat=')
             result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
                                     check=True, timeout=3, text=True)
             if sys.platform == 'darwin':
@@ -264,6 +271,8 @@ class Runner:
             if value['sampleComplete']:
                 break
             partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
+                            **({'inventorySummary': value['inventorySummary']}
+                               if 'inventorySummary' in value else {}),
                             'knownRSSLowerBoundMiB': value['rssLowerBoundMiB'],
                             'knownCPULowerBoundSeconds': value['cpuLowerBoundSeconds']})
             if attempt < 2:
@@ -296,10 +305,14 @@ class Runner:
         phase = 'launch'
         failure_phase = None
         cleanup_failure = None
+        cleanup_diagnostics = []
+        leader_reap = {'status': 'not-launched'}
+        group_cleanup = 'not-launched'
         try:
             with path.open('xb') as output:
                 process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
                                            stderr=subprocess.STDOUT, start_new_session=True)
+                group_cleanup = 'unverified'
                 self.groups.add(process.pid)
                 next_status = 0
                 while process.poll() is None:
@@ -326,7 +339,7 @@ class Runner:
                         reason = 'native-private-size-limit'
                     if reason:
                         self.fail(stage, reason)
-                        self.stop(process)
+                        self.stop(process, cleanup_diagnostics)
                         break
                     phase = 'group-activity'
                     activity = self.group_activity(process.pid)
@@ -359,7 +372,7 @@ class Runner:
                         reason = 'stalled-no-progress'
                     if reason:
                         self.fail(stage, reason)
-                        self.stop(process)
+                        self.stop(process, cleanup_diagnostics)
                         break
                     if elapsed >= next_status:
                         print(json.dumps({'stage': stage, 'elapsedMinutes': round(elapsed / 60, 1),
@@ -372,10 +385,10 @@ class Runner:
                     time.sleep(1)
             phase = 'wait'
             code = process.wait(timeout=5)
-            if self.group_alive(process.pid):
+            if self.group_alive(process.pid, cleanup_diagnostics):
                 reason = reason or 'owned-descendants-outlived-leader'
                 self.fail(stage, reason)
-                self.stop(process)
+                self.stop(process, cleanup_diagnostics)
             if code or reason:
                 self.fail(stage, reason or 'nonzero-exit')
                 raise Failure(reason or 'nonzero-exit')
@@ -391,8 +404,9 @@ class Runner:
             try:
                 if process is not None:
                     try:
-                        if self.group_alive(process.pid):
-                            self.stop(process)
+                        if self.group_alive(process.pid, cleanup_diagnostics):
+                            self.stop(process, cleanup_diagnostics)
+                        group_cleanup = 'verified-gone'
                     finally:
                         self.groups.discard(process.pid)
                         if self.native_registry is not None:
@@ -407,6 +421,18 @@ class Runner:
                 self.fail(stage, reason)
                 raise
             finally:
+                # Reaping this exact Popen child needs no group access. A
+                # denied group probe must remain an error, but must not skip
+                # the independent bounded wait. No extra signal is sent.
+                if process is not None:
+                    try:
+                        code = process.wait(timeout=5)
+                        leader_reap = {'status': 'reaped', 'exitCode': code}
+                    except subprocess.TimeoutExpired:
+                        leader_reap = {'status': 'still-running', 'exitCode': None}
+                    except OSError as error:
+                        leader_reap = {'status': 'unavailable', 'exitCode': None,
+                                       'errorType': type(error).__name__, 'errno': error.errno}
                 try:
                     log_bytes = path.stat().st_size
                 except OSError:
@@ -414,22 +440,31 @@ class Runner:
                 self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
                                      'reason': reason, 'failurePhase': failure_phase,
                                      'cleanupFailure': cleanup_failure,
+                                     'cleanupDiagnostics': cleanup_diagnostics,
+                                     'groupCleanup': group_cleanup,
+                                     'leaderReap': leader_reap,
                                      'logBytes': log_bytes, 'peakRSSMiB': round(peak_rss) if peak_rss is not None else None,
                                      'minimumFreeGiB': round(minimum_free / 1024**3, 2) if minimum_free is not None else None,
                                      'lastActivity': last_activity, 'quietSeconds': round(quiet)})
 
-    def stop(self, process):
+    def stop(self, process, diagnostics=None):
         for value, grace in ((signal.SIGINT, self.limits['processCleanupGraceSeconds']),
                              (signal.SIGTERM, 10), (signal.SIGKILL, 5)):
-            if not self.group_alive(process.pid):
+            if not self.group_alive(process.pid, diagnostics):
                 process.poll()
                 return
             try:
                 os.killpg(process.pid, value)
             except ProcessLookupError:
                 break
+            except OSError as error:
+                if diagnostics is not None:
+                    diagnostics.append({'operation': 'group-signal', 'signal': int(value),
+                                        'errorType': type(error).__name__, 'errno': error.errno})
+                    del diagnostics[:-16]
+                raise
             deadline = time.monotonic() + grace
-            while self.group_alive(process.pid) and time.monotonic() < deadline:
+            while self.group_alive(process.pid, diagnostics) and time.monotonic() < deadline:
                 process.poll()
                 time.sleep(0.05)
-        require(not self.group_alive(process.pid), 'owned-process-cleanup-timeout')
+        require(not self.group_alive(process.pid, diagnostics), 'owned-process-cleanup-timeout')

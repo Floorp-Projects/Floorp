@@ -137,12 +137,14 @@ class DarwinActivity:
         if len(inventory) > 1024**2:
             raise RuntimeError('process-inventory-limit')
         pids, unknown, examples = [], {}, []
+        inventory_summary = {'identityBound': False, 'sameOwner': 0, 'differentOwner': 0,
+                             'metadataUnavailable': 0, 'roles': {}}
         rss, cpu, states, births, gone = 0.0, 0.0, set(), [], 0
         for line in inventory.splitlines():
-            fields = line.split()
+            fields = line.split(None, 5)
             if not fields or fields[0] != str(pgid):
                 continue
-            if len(fields) != 2 or not fields[1].isdecimal() or int(fields[1]) <= 0:
+            if len(fields) < 2 or not fields[1].isdecimal() or int(fields[1]) <= 0:
                 unknown['inventory-format'] = unknown.get('inventory-format', 0) + 1
                 continue
             pid = int(fields[1])
@@ -150,6 +152,23 @@ class DarwinActivity:
                 unknown['duplicate-pid'] = unknown.get('duplicate-pid', 0) + 1
                 continue
             pids.append(pid)
+            # This is an earlier ps snapshot, not a generation-bound identity.
+            # It helps diagnose denied task queries but never authorizes a
+            # measurement, exclusion, signal or ownership claim.
+            inventory_details = {'identityBound': False, 'available': False}
+            if len(fields) == 6 and all(item.isdecimal() for item in fields[2:5]):
+                inventory_details.update(
+                    available=True,
+                    ownerRelation='same' if int(fields[3]) == os.geteuid() else 'different',
+                    realOwnerRelation='same' if int(fields[4]) == os.getuid() else 'different',
+                    parentPidTag=self.tag(int(fields[2])),
+                    role={'/bin/ps': 'system-ps', '/usr/bin/open': 'system-open'}.get(fields[5], 'other'))
+                inventory_summary['sameOwner' if inventory_details['ownerRelation'] == 'same'
+                                  else 'differentOwner'] += 1
+                role = inventory_details['role']
+                inventory_summary['roles'][role] = inventory_summary['roles'].get(role, 0) + 1
+            else:
+                inventory_summary['metadataUnavailable'] += 1
             value = self.read(pid, pgid)
             if value['status'] == 'unavailable':
                 reason = value['reason']
@@ -157,6 +176,7 @@ class DarwinActivity:
                 if len(examples) < 3:
                     examples.append({'kind': reason, 'pidTag': value['pidTag'],
                                      'identityTag': value.get('identityTag'), 'source': 'libproc-taskallinfo',
+                                     'inventory': inventory_details,
                                      **{key: value[key] for key in ('taskQuery', 'bsdQuery', 'fallbackReason')
                                         if key in value}})
             elif value['status'] == 'gone':
@@ -179,6 +199,7 @@ class DarwinActivity:
                 'processes': len(births), 'states': sorted(states | ({'?'} if unknown else set())),
                 '_pids': tuple(sorted(births)), 'sampleComplete': complete, 'unknownKinds': unknown,
                 'formatExamples': examples, 'confirmedGone': gone, 'counterSource': 'libproc-taskallinfo',
+                'inventorySummary': inventory_summary,
                 'statesSource': 'libproc-runnable-summary',
                 'timebaseNumer': self.numer, 'timebaseDenom': self.denom}
 

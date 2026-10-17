@@ -25,6 +25,7 @@ from unittest import mock
 import native_cause
 import fetch_sdk
 import materialize
+import monitor_native_preflight
 from darwin_activity import BSDInfo, DarwinActivity, TaskAllInfo, TaskInfo
 from support import Failure, ProgressWatch, Runner, clean_environment, digest, extract_tar, scan_tar
 from native_suite import cause_failure_snapshot, context_result, failure_snapshot
@@ -427,6 +428,7 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.records[0]['reason'], 'monitor-unavailable')
         self.assertIsNone(runner.records[0]['peakRSSMiB'])
         self.assertIsNotNone(runner.records[0]['exitCode'])
+        self.assertEqual(runner.records[0]['groupCleanup'], 'verified-gone')
 
     def test_sampler_exception_records_stage_and_reaps_owned_process(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
@@ -477,6 +479,63 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.records[0]['failurePhase'], 'launch')
         self.assertIsNone(runner.records[0]['exitCode'])
         self.assertIsNone(runner.records[0]['peakRSSMiB'])
+
+    def test_group_permission_failure_still_reaps_exact_child_and_keeps_denial(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        incomplete = {'sampleComplete': False, 'rssMiB': None, 'rssLowerBoundMiB': 0}
+        for denied_signal, operation in ((0, 'group-probe'), (signal.SIGINT, 'group-signal')):
+            with self.subTest(denied_signal=denied_signal), tempfile.TemporaryDirectory() as directory:
+                runner = Runner(directory, time.time(), limits)
+                children, popen = [], subprocess.Popen
+                def launch(*args, **kwargs):
+                    child = popen(*args, **kwargs)
+                    children.append(child)
+                    return child
+                def killpg(_pid, sig):
+                    if sig == denied_signal:
+                        raise PermissionError(errno.EPERM, 'private denied process identity')
+                with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                        mock.patch('support.subprocess.Popen', side_effect=launch), \
+                        mock.patch.object(runner, 'group_activity', return_value=incomplete), \
+                        mock.patch('support.os.killpg', side_effect=killpg):
+                    with self.assertRaises(PermissionError):
+                        runner.run('denied-cleanup', [sys.executable, '-c',
+                                   'import time; time.sleep(0.1); raise SystemExit(7)'],
+                                   directory, os.environ.copy(), 360)
+                record = runner.records[0]
+                self.assertEqual(runner.failure['code'], 'monitor-unavailable')
+                self.assertEqual(record['reason'], 'monitor-unavailable')
+                self.assertEqual(record['cleanupFailure'], 'PermissionError')
+                self.assertEqual(record['groupCleanup'], 'unverified')
+                self.assertEqual(record['cleanupDiagnostics'][-1], {
+                    'operation': operation, 'signal': int(denied_signal),
+                    'errorType': 'PermissionError', 'errno': errno.EPERM})
+                self.assertEqual(record['leaderReap'], {'status': 'reaped', 'exitCode': 7})
+                self.assertEqual(record['exitCode'], 7)
+                self.assertIsNone(record['peakRSSMiB'])
+                with self.assertRaises(ChildProcessError):
+                    os.waitpid(children[0].pid, os.WNOHANG)
+                self.assertNotIn('private denied', json.dumps(record))
+
+    def test_denied_group_and_live_child_remain_unverified_after_bounded_wait(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        child = mock.Mock(pid=99999, returncode=None)
+        child.poll.return_value = None
+        child.wait.side_effect = subprocess.TimeoutExpired('private argv', 5)
+        incomplete = {'sampleComplete': False, 'rssMiB': None, 'rssLowerBoundMiB': 0}
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch('support.subprocess.Popen', return_value=child), \
+                mock.patch.object(runner, 'group_activity', return_value=incomplete), \
+                mock.patch('support.os.killpg', side_effect=PermissionError(errno.EPERM, 'denied')):
+            with self.assertRaises(PermissionError):
+                runner.run('denied-live', ['unused'], self.root, os.environ.copy(), 360)
+        self.assertEqual(runner.records[0]['leaderReap'], {'status': 'still-running', 'exitCode': None})
+        self.assertEqual(runner.records[0]['cleanupFailure'], 'PermissionError')
+        self.assertEqual(runner.records[0]['groupCleanup'], 'unverified')
+        self.assertIsNone(runner.records[0]['exitCode'])
+        child.wait.assert_called_once_with(timeout=5)
+        self.assertEqual(runner.failure['code'], 'monitor-unavailable')
 
     def test_stall_requires_multiple_stable_signals(self):
         activity = {'cpuSeconds': 1, 'rssMiB': 10, '_pids': (1,), 'processes': 1, 'states': ['S']}
@@ -759,6 +818,38 @@ class Guards(unittest.TestCase):
 
 
 class DarwinCounterGuards(unittest.TestCase):
+    def test_native_census_cannot_pass_when_system_ps_was_never_sampled(self):
+        observations = {'samples': 4, 'completeSamples': 4, 'systemPsObserved': 0}
+        with self.assertRaisesRegex(Failure, 'census-system-ps-not-observed'):
+            monitor_native_preflight.require_observation(observations, 'darwin')
+        monitor_native_preflight.require_observation(observations, 'linux')
+        observations['systemPsObserved'] = 1
+        monitor_native_preflight.require_observation(observations, 'darwin')
+        observations['completeSamples'] = 0
+        with self.assertRaisesRegex(Failure, 'census-insufficient-complete-samples'):
+            monitor_native_preflight.require_observation(observations, 'darwin')
+
+    def test_native_census_retains_denied_ps_from_retried_partial_samples(self):
+        observations = dict.fromkeys(('samples', 'completeSamples', 'systemPsObserved',
+                                     'differentOwnerObserved', 'psTaskDeniedSamples'), 0)
+        activity = {'sampleComplete': True, 'inventorySummary': {'roles': {'other': 1}},
+                    'partialSamples': [{'inventorySummary': {'roles': {'system-ps': 1}, 'differentOwner': 1},
+                                        'formatExamples': [{'kind': 'permission',
+                                                            'inventory': {'role': 'system-ps'}}]}]}
+        monitor_native_preflight.record_observation(activity, observations)
+        self.assertEqual(observations, {'samples': 1, 'completeSamples': 1, 'systemPsObserved': 1,
+                                        'differentOwnerObserved': 1, 'psTaskDeniedSamples': 1})
+
+    def test_native_census_counts_three_denied_attempts_without_counting_last_twice(self):
+        observations = dict.fromkeys(('samples', 'completeSamples', 'systemPsObserved',
+                                     'differentOwnerObserved', 'psTaskDeniedSamples'), 0)
+        denied = {'inventorySummary': {'roles': {'system-ps': 1}, 'differentOwner': 1},
+                  'formatExamples': [{'kind': 'permission', 'inventory': {'role': 'system-ps'}}]}
+        activity = {**denied, 'sampleComplete': False, 'partialSamples': [denied, denied, denied]}
+        monitor_native_preflight.record_observation(activity, observations)
+        self.assertEqual(observations, {'samples': 1, 'completeSamples': 0, 'systemPsObserved': 3,
+                                        'differentOwnerObserved': 3, 'psTaskDeniedSamples': 3})
+
     def sensor(self, rss=8 * 1024**2, user=2000000000, system_ticks=2000000000):
         library, system = mock.Mock(), mock.Mock()
         def timebase(pointer):
@@ -908,7 +999,7 @@ class DarwinCounterGuards(unittest.TestCase):
         sensor, library = self.sensor()
         library.proc_pidinfo.side_effect = lambda *args: 0
         with mock.patch('darwin_activity.os.kill'):
-            value = sensor.group('900 42\n', 900)
+            value = sensor.group(f'900 42 10 {os.geteuid()} {os.getuid()} /private/hidden\n', 900)
         example = value['formatExamples'][0]
         self.assertEqual(example['taskQuery'], {'bytes': 0, 'expectedBytes': 232, 'errno': 0})
         self.assertEqual(example['bsdQuery'], {'bytes': 0, 'expectedBytes': 136, 'errno': 0})
@@ -962,7 +1053,8 @@ class DarwinCounterGuards(unittest.TestCase):
         measured = sensor.read(42, 900)
         unknown = {'status': 'unavailable', 'reason': 'short-task-info', 'pidTag': sensor.tag(43)}
         with mock.patch.object(sensor, 'read', side_effect=[measured, unknown]):
-            value = sensor.group('900 42\n900 43\n901 99\n', 900)
+            value = sensor.group(f'900 42 10 {os.geteuid()} {os.getuid()} /python\n'
+                                 '900 43 42 0 501 /bin/ps\n901 99 1 0 0 /other\n', 900)
         self.assertFalse(value['sampleComplete'])
         self.assertIsNone(value['rssMiB'])
         self.assertIsNone(value['cpuSeconds'])
@@ -975,12 +1067,62 @@ class DarwinCounterGuards(unittest.TestCase):
         sensor, _ = self.sensor()
         with mock.patch('support.sys.platform', 'darwin'), \
                 mock.patch('darwin_activity.probe', return_value=sensor), \
-                mock.patch('support.subprocess.run', return_value=mock.Mock(stdout='900 42\n')) as ps:
+                mock.patch('support.subprocess.run', return_value=mock.Mock(
+                    stdout=f'900 42 10 {os.geteuid()} {os.getuid()} /python\n')) as ps:
             value = Runner.group_activity(900)
-        self.assertEqual(ps.call_args.args[0][-1], 'pgid=,pid=')
+        self.assertEqual(ps.call_args.args[0][-1], 'pgid=,pid=,ppid=,uid=,ruid=,comm=')
         self.assertTrue(value['sampleComplete'])
         self.assertEqual(value['rssMiB'], 8)
         self.assertEqual(value['counterSource'], 'libproc-taskallinfo')
+
+    def test_denied_inventory_metadata_is_diagnostic_only_and_never_excluded(self):
+        sensor, library = self.sensor()
+        def denied(*args):
+            ctypes.set_errno(errno.EPERM)
+            return 0
+        library.proc_pidinfo.side_effect = denied
+        with mock.patch('darwin_activity.os.geteuid', return_value=501), \
+                mock.patch('darwin_activity.os.getuid', return_value=501):
+            value = sensor.group('900 42 10 0 501 /bin/ps\n901 99 1 0 0 /secret\n', 900)
+        self.assertEqual(value['unknownKinds'], {'permission': 1})
+        self.assertFalse(value['sampleComplete'])
+        self.assertIsNone(value['rssMiB'])
+        self.assertIsNone(value['cpuSeconds'])
+        self.assertEqual(value['confirmedGone'], 0)
+        inventory = value['formatExamples'][0]['inventory']
+        self.assertEqual(inventory['ownerRelation'], 'different')
+        self.assertEqual(inventory['realOwnerRelation'], 'same')
+        self.assertEqual(inventory['role'], 'system-ps')
+        self.assertFalse(inventory['identityBound'])
+        self.assertEqual(value['inventorySummary'], {
+            'identityBound': False, 'sameOwner': 0, 'differentOwner': 1, 'metadataUnavailable': 0,
+            'roles': {'system-ps': 1}})
+        self.assertNotIn('/secret', json.dumps(value))
+        self.assertNotIn('/bin/ps', json.dumps(value))
+        self.assertEqual(library.proc_pidinfo.call_count, 1)
+
+    def test_inventory_metadata_cannot_supply_generation_or_hide_malformed_member(self):
+        sensor, library = self.sensor()
+        def denied(*args):
+            ctypes.set_errno(errno.EPERM)
+            return 0
+        library.proc_pidinfo.side_effect = denied
+        inventory = (f'900 42 10 {os.geteuid()} {os.getuid()} /private/secret profile/host\n'
+                     '900 43x 42 ? 501 /bin/ps\n900 ?\n')
+        value = sensor.group(inventory, 900)
+        self.assertEqual(value['unknownKinds'], {'permission': 1, 'inventory-format': 2})
+        self.assertIsNone(value['formatExamples'][0]['identityTag'])
+        self.assertEqual(value['formatExamples'][0]['inventory']['role'], 'other')
+        self.assertNotIn('secret', json.dumps(value))
+        self.assertNotIn('host', json.dumps(value))
+        self.assertFalse(value['sampleComplete'])
+
+    def test_missing_diagnostic_metadata_cannot_change_task_measurement_decision(self):
+        sensor, _ = self.sensor()
+        value = sensor.group('900 42 10 ? ?\n', 900)
+        self.assertTrue(value['sampleComplete'])
+        self.assertEqual(value['rssMiB'], 8)
+        self.assertEqual(value['inventorySummary']['metadataUnavailable'], 1)
 
     def test_native_registry_cannot_hide_unknown_birth_or_memory(self):
         system = MacProcesses.__new__(MacProcesses)

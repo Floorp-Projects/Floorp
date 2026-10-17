@@ -1,0 +1,72 @@
+{
+  "browserStartup": "NOT_TESTED",
+  "firstFailure": null,
+  "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "harnessHashesVerified": true,
+  "monitorDiagnostics": [],
+  "monitorFailure": null,
+  "newArtifacts": 0,
+  "observations": {
+    "completeSamples": 4,
+    "differentOwnerObserved": 0,
+    "psTaskDeniedSamples": 0,
+    "samples": 4,
+    "systemPsObserved": 0
+  },
+  "platform": "linux",
+  "processSelectionChanged": false,
+  "qualification": "PORTABLE_ONLY_NO_MAC_PROOF",
+  "scope": "PINNED_NATIVE_HARNESS_PROCESS_CENSUS_ONLY",
+  "sdkAcquired": false,
+  "shimAuthentication": "NOT_TESTED",
+  "stages": [
+    {
+      "cleanupDiagnostics": [],
+      "cleanupFailure": null,
+      "exitCode": 0,
+      "failurePhase": null,
+      "groupCleanup": "verified-gone",
+      "lastActivity": {
+        "cpuLowerBoundSeconds": 0.0,
+        "cpuSeconds": 0.0,
+        "formatExamples": [
+          {
+            "kind": "complete",
+            "normalizedIds": true,
+            "row": "900 901 18552 00:00:00 Ss"
+          }
+        ],
+        "partialSamples": [],
+        "processes": 1,
+        "rssLowerBoundMiB": 18.1171875,
+        "rssMiB": 18.1171875,
+        "sampleAttempts": 1,
+        "sampleComplete": true,
+        "states": [
+          "S"
+        ],
+        "unknownKinds": {}
+      },
+      "leaderReap": {
+        "exitCode": 0,
+        "status": "reaped"
+      },
+      "logBytes": 0,
+      "minimumFreeGiB": 24.67,
+      "peakRSSMiB": 18,
+      "quietSeconds": 2,
+      "reason": null,
+      "stage": "harness-census-preflight"
+    }
+  ],
+  "status": "passed",
+  "systemPsFile": {
+    "ownedByRoot": false,
+    "setuidBit": false
+  },
+  "workload": {
+    "hostAll": 12,
+    "hostSingle": 12,
+    "shimPIDInventory": 12
+  }
+}

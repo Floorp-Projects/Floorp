@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-10-17",
+  "reviewType": "Independent read-only process-group and ownership diagnosis",
+  "fixture": "ac273d616cb94347f122c7247f5e989aef7e13f1",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "run": 39045848018,
+  "terminalReceiptSHA256": "e2f82e5d5a0f9b786cef8f409cc8003178fdec2f84847a6c15e7994621c6fa29",
+  "terminalReceiptChanged": false,
+  "classification": "Monitoring/ownership-or-platform-policy permission failure. The actual denied process and underlying denial reason remain unidentified.",
+  "decisions": {
+    "selectionOrLaunchChangeNow": "NO_GO_PENDING_ACTUAL_IDENTITY_EVIDENCE",
+    "permissionDiagnosticOnlyCandidate": "REVIEWABLE_WITH_REQUIRED_INVARIANTS_AND_PORTABLE_TESTS; not an implemented or Mac-verified fix",
+    "sdkFreeRepresentativeMacPreflightDesign": "JUSTIFIED_AS_A_FUTURE_SDK_FREE_DIAGNOSTIC; no current Mac execution",
+    "privilegeElevationProtectionRelaxationOrEPERMBypass": "NOT_PERMITTED",
+    "additionalFullBuild": "NOT_PERFORMED"
+  },
+  "processGraph": [
+    {
+      "parent": "pipeline Runner.run",
+      "child": "native_suite.py",
+      "session": "new session via start_new_session=True",
+      "monitorGroup": "suite PID/PGID"
+    },
+    {
+      "parent": "native_suite.py",
+      "child": "cause/context/gui harness child",
+      "session": "inherits suite session/PGID; no group/session/user override"
+    },
+    {
+      "parent": "native_cause / pinned harness HostProcess",
+      "child": "/usr/bin/open",
+      "session": "inherits suite session/PGID; no group/session/user override"
+    },
+    {
+      "parent": "pinned HostProcess._process_rows",
+      "child": "/bin/ps -ww -ax or -p PID -o pid=,lstart=,command=",
+      "session": "inherits harness and suite PGID"
+    },
+    {
+      "parent": "pinned ShimMonitor._run",
+      "child": "/bin/ps -axo pid= and calls through process_rows",
+      "session": "inherits harness and suite PGID"
+    },
+    {
+      "parent": "pipeline Runner.group_activity",
+      "child": "/bin/ps -axo pgid=,pid=",
+      "session": "inherits pipeline group, not the separately created suite group"
+    },
+    {
+      "parent": "pipeline MacProcesses registry methods",
+      "child": "/bin/ps inventory/command queries",
+      "session": "inherits pipeline group, not the suite group"
+    },
+    {
+      "parent": "LaunchServices",
+      "child": "actual browser and Shim",
+      "session": "not assumed to share the suite group; independently recognized native instances are covered by OwnedNative registry checks"
+    }
+  ],
+  "selectionAndOwnershipAnalysis": {
+    "groupInventory": "PGID/PID only. DarwinActivity.group selects matching PGID and attempts every listed PID.",
+    "measuredMembership": "Successful full records are checked for PID, birth, valid BSD state, current effective UID and requested PGID.",
+    "deniedMembership": "On task-info EPERM/EACCES, read returns before BSD identity/UID/PGID checks. The denied member is therefore unknown rather than confirmed owned or confirmed unrelated.",
+    "registryCoverage": "MacProcesses.pids filters current-effective-UID candidates, then OwnedNative recognizes executable/profile/argument/birth identities. Its set differs from the PGID inventory.",
+    "unrelatedProcessHypothesis": "No evidence currently proves an unrelated process was included. A dedicated suite session and explicit descendant spawns make an inherited harness utility a concrete candidate. Snapshot staleness/PID reuse cannot be excluded without identity data.",
+    "importantDistinction": "A helper launched by the harness is part of its subprocess graph even if a setuid exec changes its effective owner. Calling it unrelated solely because libproc denies counters would be unsupported."
+  },
+  "psCandidate": {
+    "staticEvidence": "The pinned harness starts /bin/ps inside the suite PGID. The official Apple adv_cmds install script at the recorded commit installs ps outputs as root:wheel mode 4755.",
+    "appleSourceCommit": "6bed8737a34dbb54782a18f47dccf933a9967a12",
+    "sourceSupportsCandidate": true,
+    "actualRunnerPsModeObserved": false,
+    "deniedPidMatchedToPs": false,
+    "deniedUidObserved": false,
+    "deniedBirthObserved": false,
+    "conclusion": "A setuid or protected ps descendant can explain the permission class in principle. It is not a proven attribution for this run.",
+    "otherPossibleCandidates": "open, another native harness utility, or a changing/stale PID remain possible until actual identity evidence discriminates them."
+  },
+  "whyNoSelectionOrSessionMoveYet": [
+    "Filtering out EPERM members on presumed role or owner would turn an unknown resource/ownership interval into an accepted interval without evidence.",
+    "Moving a helper into a separate session would remove it from suite group accounting/cleanup unless a separately reviewed bounded accounting and exact ownership lifecycle were added.",
+    "Changing only HostProcess._process_rows would not cover the separate ps calls in ShimMonitor._run.",
+    "Normal harness subprocesses inherit the suite group deliberately; the new group itself does not prove every later member remains measurable under the original UID.",
+    "No observed denied PID role, UID or birth exists to validate the proposed target of a launch/selection change."
+  ],
+  "diagnosticOnlyCandidateRequirements": [
+    "Retain original flavor-2 bytes/expectedBytes/errno and primary permission status before doing any supplementary read.",
+    "A supplementary full BSD-info query uses only the existing normal API. It must require exact response length, requested PID, valid birth time and valid state before trusting identity metadata.",
+    "Publish only allowlisted relation/status booleans and opaque tags, such as same/different/unknown UID or PGID, plus per-query numeric return/errno. Keep raw argv, tokens, paths and identity values private.",
+    "A later BSD snapshot describes that query time. Without a prior/expected birth match it cannot retrospectively identify the generation denied by flavor 2.",
+    "Always retain status unavailable on the permission branch. Do not synthesize measured/gone, zero RSS/CPU, an accepted resource sample or a cleanup authorization from the diagnostic read.",
+    "Full BSD flavor 3 is also CHECK_SAME_USER in the reference XNU implementation. A genuine different-UID ps can deny both flavor 2 and flavor 3; complete diagnostics are not guaranteed.",
+    "Where already permitted, inventory UID/PPID/PGID or standard short BSD metadata can be separate diagnostic evidence. Short BSD lacks the full birth tuple and must not replace complete generation validation.",
+    "A supplementary query failure must not replace the original permission failure or suppress its first-failure evidence.",
+    "No entitlement, signing, permission, user identity or resource-limit change is justified by this diagnosis."
+  ],
+  "portableTestsToReviewBeforeAnyFutureMacProbe": [
+    "Task EPERM plus valid BSD identity still returns unavailable and null group totals.",
+    "Task EPERM plus BSD EPERM keeps both query details and the original reason.",
+    "Short, oversized, wrong-PID, invalid-birth and invalid-state BSD responses cannot create trusted identity metadata.",
+    "Different UID/PGID and expected-generation mismatch are diagnostic-only on this branch.",
+    "Per-query errno is preserved independently; supplementary exceptions do not overwrite task EPERM.",
+    "Serialization contains only permitted relation flags/tags and no raw identity or command data.",
+    "Mocked group_alive PermissionError and child reap ordering keep first failure, incomplete cleanup and unknown group state distinct."
+  ],
+  "representativeMacPreflightDesign": {
+    "needsSDK": false,
+    "needsFullBuild": false,
+    "whyRelevant": "Current successful self/zombie/churn preflight did not contain the pinned native harness ps subprocess pattern inside the monitored group.",
+    "representativeOperations": [
+      "Pinned HostProcess._process_rows full inventory and single-PID queries inside the monitored child group",
+      "Equivalent bounded PID-enumeration pattern used by ShimMonitor",
+      "Read-only stat of /bin/ps owner/mode and allowlisted denied-member metadata where permitted",
+      "Per-operation cleanup signal-zero/nonzero errno and verified child poll/wait result"
+    ],
+    "restrictions": "No current CI/probe is started. A future probe must preserve existing permissions, unknown values and ownership checks, and publish no raw argv/private streams."
+  },
+  "sources": [
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "functions": [
+        "Runner.run",
+        "Runner.group_activity",
+        "Runner.group_alive",
+        "Runner.stop"
+      ]
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "functions": [
+        "main"
+      ]
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "functions": [
+        "DarwinActivity.read",
+        "DarwinActivity.group"
+      ]
+    },
+    {
+      "path": "tools/qa/native-nonpgo/owned_native.py",
+      "functions": [
+        "MacProcesses.pids",
+        "OwnedNative.census",
+        "OwnedNative.finish"
+      ]
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/test-runtime.py",
+      "functions": [
+        "HostProcess.__init__",
+        "HostProcess._process_rows"
+      ]
+    },
+    {
+      "url": "https://github.com/Floorp-Projects/Floorp/blob/cbe45a7d7480d713b2c40a9ed348420126e6ccb0/tools/app-shim/shim_lifecycle.py",
+      "functions": [
+        "ShimMonitor._run"
+      ]
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/adv_cmds/blob/6bed8737a34dbb54782a18f47dccf933a9967a12/xcodescripts/install-ps.sh",
+      "supports": "Explicit root:wheel mode-4755 installation in official source; not a stat result from the actual runner."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+      "functions": [
+        "proc_pidinfo",
+        "proc_security_policy"
+      ],
+      "supports": "Same-user requirement for full task/BSD info and separate metadata flavors; actual denied kernel policy remains unknown."
+    },
+    {
+      "url": "https://docs.python.org/3.12/library/subprocess.html#popen-constructor",
+      "supports": "Explicit start_new_session creates a new session; omitted group/session controls inherit normal process context."
+    },
+    {
+      "url": "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/setpgid.2.html",
+      "supports": "Process-group membership is session constrained; arbitrary unrelated external membership should not be asserted without identity evidence."
+    }
+  ],
+  "reviewActions": {
+    "codeChanged": false,
+    "additionalTestsRun": false,
+    "newMacProbeOrCI": false,
+    "externalWrites": false,
+    "privilegesChanged": false,
+    "SDKAcquired": false,
+    "receiptChanged": false
+  }
+}
