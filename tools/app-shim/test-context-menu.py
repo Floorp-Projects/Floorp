@@ -10,9 +10,11 @@ from pathlib import Path
 import plistlib
 import tempfile
 import threading
+import time
 import uuid
 
 import shim_diagnostics as diagnostics
+import shim_lifecycle as lifecycle
 
 PROJECT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('helpers', PROJECT / 'tools/app-shim/test-runtime.py')
@@ -66,7 +68,7 @@ def main():
     report = {'status':'failed','browser':str(browser),'output':str(output),
               'requestedIterations':args.iterations,'attemptedIterations':0,'phase':'launch-host'}
     app_id = '{'+str(uuid.uuid4())+'}'
-    host = client = server = None
+    host = client = server = monitor = None
     private_logs = output / '.private-logs'
     private_logs.mkdir(mode=0o700)
     log = (private_logs / 'browser.log').open('w')
@@ -74,7 +76,13 @@ def main():
 
     def snapshot():
         result = {'phase':report['phase'],'host':diagnostics.process_summary(host),
-                  'shimExitCode':None,'shimExitCodeUnavailable':'No kernel exit status is exposed by the observer API'}
+                  'shimExitCode':None,'shimExitCodeUnavailable':'Native observer does not expose wait status; see kernelObservation'}
+        result['collectionStartMonotonicNs'] = time.monotonic_ns()
+        if monitor:
+            try:
+                result['kernelObservation'] = monitor.snapshot()
+            except Exception as error:
+                result['kernelObservationError'] = diagnostics.error_summary(error)
         if client and host and host.verified:
             try:
                 client.context('chrome')
@@ -83,12 +91,15 @@ crashCount:{STATE}?.crashes?.length ?? 0,failureCount:{STATE}?.failures?.length 
                 result['shim'] = diagnostics.event_summary(state['events'])
                 result['shim']['authEventCount'] = state['authCount']
                 result['shim']['truncated'] = state['authCount'] > 64
+                if state['authCount'] > 64 and result['shim']['authenticationState'] != 'connection-observed':
+                    result['shim']['authenticationState'] = 'unknown-truncated'
                 result['crashCount'] = state['crashCount']
                 result['failureCount'] = state['failureCount']
             except Exception as error:
                 result['stateError'] = diagnostics.error_summary(error)
         elif client:
             result['stateUnavailable'] = 'Host process ownership was not verified'
+        result['collectionEndMonotonicNs'] = time.monotonic_ns()
         return result
 
     try:
@@ -106,19 +117,29 @@ crashCount:{STATE}?.crashes?.length ?? 0,failureCount:{STATE}?.failures?.length 
         profile_id = 'context-menu-'+uuid.uuid4().hex
         bundle = h.seal_bundle(output,browser/'Contents/MacOS/floorp-app-shim',identity,profile,app_id,profile_id)
         report['phase'] = 'launch-shim'
+        shim_executable = bundle / 'Contents/MacOS/floorp-app-shim'
+        (output/'binary-inspection.json').write_text(json.dumps(lifecycle.binary_summary(shim_executable),indent=2)+'\n')
+        monitor = lifecycle.ShimMonitor(shim_executable, host.pid, h.HostProcess._process_rows)
+        monitor.start()
+        monitor.mark('launch-call-start')
         client.script(f'''{STATE}={{events:[],failures:[],crashes:[],authEvents:[],authCount:0}};
 {STATE}.observer={{observe(s,t,d){{if(t==='floorp-web-app-shim-event'){{const e=JSON.parse(d);
 if(e.type==='connected'||e.type==='disconnected'){{const p=e.payload??{{}};{STATE}.authCount++;
-{STATE}.authEvents.push({{type:e.type,diagnosticTime:Date.now(),payload:{{
+{STATE}.authEvents.push({{type:e.type,diagnosticTime:Date.now(),sequence:{STATE}.authCount,payload:{{
 pid:Number.isSafeInteger(p.pid)&&p.pid>0?p.pid:null,
-reason:{json.dumps(sorted(diagnostics.REASONS))}.includes(p.reason)?p.reason:'other'}}}});
+reason:{json.dumps(sorted(diagnostics.REASONS))}.includes(p.reason)?p.reason:'other',
+causeReason:{json.dumps(sorted(diagnostics.REASONS))}.includes(p.causeReason)?p.causeReason:null,
+causeTimeMs:Number.isSafeInteger(p.causeTimeMs)?p.causeTimeMs:null,
+connectedBeforeDisconnect:typeof p.connectedBeforeDisconnect==='boolean'?p.connectedBeforeDisconnect:null}}}});
 if({STATE}.authEvents.length>64){STATE}.authEvents.shift();}}
 if(e.type!==111){{e.diagnosticTime=Date.now();{STATE}.events.push(e);}}}}else if(t==='oop-frameloader-crashed'){{
 {STATE}.crashes.push({{time:Date.now(),data:d}});}}else {STATE}.failures.push(d);}}}};
 for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.addObserver({STATE}.observer,t);
 {h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);{h.SERVICE}.launchApp(arguments[0]);''',app_id,profile_id,str(bundle))
+        monitor.mark('launch-call-returned')
         report['phase'] = 'authenticate-shim'
         connected = h.wait_for('Shim authentication',lambda:next((e for e in client.script(f'return {STATE}.events;') if e['type']=='connected'),None),20)
+        monitor.mark('connection-observed-by-test')
         report['phase'] = 'create-pwa-window'
         server = http.server.ThreadingHTTPServer(('127.0.0.1',0),Page)
         threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -173,6 +194,8 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         report['phase']='completed'
         code=0
     except Exception as error:
+        if monitor:
+            monitor.mark('first-test-failure')
         report['error']=diagnostics.error_summary(error)
         report.pop('nativeState', None)
         report.pop('finalState', None)
@@ -181,6 +204,8 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         report.pop('nativeState', None)
         if report['status'] != 'passed':
             report.pop('finalState', None)
+        if monitor:
+            monitor.mark('before-cleanup-snapshot')
         report['beforeCleanup'] = snapshot()
         if 'stateError' in report['beforeCleanup']:
             report['status']='failed'
@@ -190,6 +215,8 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
             if report['status'] != 'passed':
                 diagnostics.write_first_failure(output, report)
         finally:
+            if monitor:
+                monitor.mark('cleanup-start')
             actions = []
             if client:
                 def stop_shim():
@@ -212,6 +239,41 @@ if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.se
                     report['status']='failed'
                     code=1
             report['afterCleanup'] = {'host':diagnostics.process_summary(host)}
+            if monitor:
+                try:
+                    monitor.close()
+                except Exception as error:
+                    report.setdefault('diagnosticErrors', []).append({'step':'monitor-close', **diagnostics.error_summary(error)})
+                    report['diagnosticsIncomplete'] = True
+                    report['status'] = 'failed'
+                    code = 1
+                try:
+                    report['shimLifecycle'] = monitor.snapshot()
+                except Exception as error:
+                    report['shimLifecycle'] = {'status':'unavailable', 'error':diagnostics.error_summary(error)}
+                    report['diagnosticsIncomplete'] = True
+                    report['status'] = 'failed'
+                    code = 1
+                if monitor.status in ('unavailable', 'not-observed', 'unsupported-platform'):
+                    report['diagnosticsIncomplete'] = True
+                    report['status'] = 'failed'
+                    code = 1
+                try:
+                    identity = monitor.identity
+                    start = identity[1]+identity[2]/1000000 if identity else None
+                    report['shimCrash'] = lifecycle.crash_summary(
+                        Path.home()/'Library/Logs/DiagnosticReports', monitor.pid, shim_executable,
+                        monitor.started_wall, start)
+                except Exception as error:
+                    report['shimCrash'] = {'error':diagnostics.error_summary(error)}
+                try:
+                    (output/'shim-lifecycle.json').write_text(json.dumps(
+                        {'kernel':report['shimLifecycle'],'crash':report['shimCrash']},indent=2)+'\n')
+                except Exception as error:
+                    report.setdefault('diagnosticErrors', []).append({'step':'lifecycle-write', **diagnostics.error_summary(error)})
+                    report['diagnosticsIncomplete'] = True
+                    report['status'] = 'failed'
+                    code = 1
             try:
                 report['streams'] = diagnostics.save_streams(private_logs, output)
                 if any(not item['present'] or 'error' in item for item in report['streams'].values()):

@@ -76,7 +76,7 @@ index 0000000..78cf1ac
 +      runner: macos-15-intel
 +      debug: true
 diff --git a/.github/workflows/verify-runtime-artifact.yml b/.github/workflows/verify-runtime-artifact.yml
-index 8e7a1aa..b84e132 100644
+index 8e7a1aa..c5982d1 100644
 --- a/.github/workflows/verify-runtime-artifact.yml
 +++ b/.github/workflows/verify-runtime-artifact.yml
 @@ -36,7 +36,7 @@ name: Verify Final Runtime Artifact
@@ -97,7 +97,7 @@ index 8e7a1aa..b84e132 100644
          type: boolean
          required: false
          default: false
-@@ -264,13 +264,14 @@ jobs:
+@@ -264,13 +264,15 @@ jobs:
          uses: actions/checkout@v4
          with:
            repository: Floorp-Projects/Floorp
@@ -110,10 +110,11 @@ index 8e7a1aa..b84e132 100644
              tools/app-shim/test-runtime.py
              tools/app-shim/test-context-menu.py
 +            tools/app-shim/shim_diagnostics.py
++            tools/app-shim/shim_lifecycle.py
 
        - name: Download exact final primary artifact by ID
          uses: actions/download-artifact@v4
-@@ -492,12 +493,13 @@ jobs:
+@@ -492,12 +494,13 @@ jobs:
            OUTPUT_FILE: ${{ runner.temp }}/native-full-version.txt
            PARSER_PATH: ${{ github.workspace }}/.github/workflows/scripts/verify_full_version.py
            TARGET_ARCH: ${{ inputs.arch }}
@@ -128,7 +129,7 @@ index 8e7a1aa..b84e132 100644
            case "$TARGET_ARCH" in
              x86_64) expected_runner_arch=x86_64; expected_slice=x86_64 ;;
              aarch64) expected_runner_arch=arm64; expected_slice=arm64 ;;
-@@ -671,11 +673,16 @@ jobs:
+@@ -671,11 +674,18 @@ jobs:
          uses: actions/upload-artifact@v4
          with:
            name: native-pwa-${{ inputs.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -139,6 +140,8 @@ index 8e7a1aa..b84e132 100644
              ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/result.json
 +            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/first-failure.json
 +            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/before-cleanup.json
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/shim-lifecycle.json
++            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/binary-inspection.json
              ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.log
 +            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.stdout.log
 +            ${{ runner.temp }}/native-pwa-evidence/context-menu/run-*/browser.stderr.log

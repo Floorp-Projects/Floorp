@@ -1,0 +1,112 @@
+diff --git a/widget/cocoa/appshim/DisconnectCause.h b/widget/cocoa/appshim/DisconnectCause.h
+new file mode 100644
+index 0000000..be02ead
+--- /dev/null
++++ b/widget/cocoa/appshim/DisconnectCause.h
+@@ -0,0 +1,25 @@
++// SPDX-License-Identifier: MPL-2.0
++#ifndef floorp_DisconnectCause_h
++#define floorp_DisconnectCause_h
++
++#include <cstdint>
++#include <string>
++#include <string_view>
++
++namespace floorp::shim {
++struct DisconnectCause {
++  std::string reason;
++  int64_t wallTimeMs = 0;
++  bool connected = false;
++
++  void Record(std::string_view aReason, int64_t aTime, bool aConnected) {
++    if (reason.empty()) {
++      reason.assign(aReason);
++      wallTimeMs = aTime;
++      connected = aConnected;
++    }
++  }
++  void Reset() { *this = DisconnectCause{}; }
++};
++}  // namespace floorp::shim
++#endif
+diff --git a/widget/cocoa/appshim/MacWebAppService.mm b/widget/cocoa/appshim/MacWebAppService.mm
+index 7cf3591..987a59d 100644
+--- a/widget/cocoa/appshim/MacWebAppService.mm
++++ b/widget/cocoa/appshim/MacWebAppService.mm
+@@ -3,6 +3,7 @@
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ #include "MacWebAppService.h"
++#include "DisconnectCause.h"
+ #include "MacWebAppWidget.h"
+
+ #import <Cocoa/Cocoa.h>
+@@ -155,6 +156,7 @@ NSDictionary* ValidatedSigningInfo(NSString* appId, NSString* profileId,
+
+ struct MacWebAppService::Impl {
+   struct App {
++    floorp::shim::DisconnectCause disconnectCause;
+     struct WindowSurfaces {
+       bool closed = false;
+       bool retired = false;
+@@ -282,7 +284,14 @@ struct MacWebAppService::Impl {
+     });
+   }
+
++  void RememberCause(App& aApp, NSString* aReason) {
++    aApp.disconnectCause.Record(aReason.UTF8String,
++        static_cast<int64_t>(NSDate.date.timeIntervalSince1970 * 1000), aApp.connected);
++  }
++
+   void Disconnect(App& aApp, NSString* aReason) {
++    RememberCause(aApp, aReason);
++    const pid_t exitedPID = aApp.pid;
+     // Stop is nonblocking and suppresses queued failure callbacks. An in-flight
+     // kernel send can finish, but never becomes part of a later launch.
+     aApp.StopSending();
+@@ -313,7 +322,12 @@ struct MacWebAppService::Impl {
+       dispatch_source_cancel(aApp.processSource);
+       aApp.processSource = nil;
+     }
+-    Notify(aApp.id, @"disconnected", @{@"reason": aReason});
++    Notify(aApp.id, @"disconnected", @{
++      @"reason": aReason,
++      @"causeReason": [NSString stringWithUTF8String:aApp.disconnectCause.reason.c_str()],
++      @"causeTimeMs": @(aApp.disconnectCause.wallTimeMs),
++      @"connectedBeforeDisconnect": @(aApp.disconnectCause.connected), @"pid": @(exitedPID)
++    });
+   }
+
+   bool Send(App& aApp, MessageType aType, NSDictionary* aPayload,
+@@ -443,6 +457,7 @@ struct MacWebAppService::Impl {
+       // teardown the queue must stop immediately; terminate only the exact
+       // launch instances we own instead of dropping a newly queued Terminate.
+       if (app->launching && !app->running) {
++        RememberCause(*app, @"service-stopped");
+         app->StopSending();
+         app->cancelling = true;
+         app->deferredHello.reset();
+@@ -691,6 +706,7 @@ NS_IMETHODIMP MacWebAppService::LaunchApp(const nsACString& aAppId) {
+   if (app->launching) return NS_ERROR_IN_PROGRESS;
+   NSString* token = floorp::shim::NewNonce();
+   if (!token) return NS_ERROR_FAILURE;
++  app->disconnectCause.Reset();
+   app->launchToken = token;
+   app->launching = true;
+   app->cancelling = false;
+@@ -752,6 +768,7 @@ NS_IMETHODIMP MacWebAppService::LaunchApp(const nsACString& aAppId) {
+     Impl::App* pending = self->mImpl->Find(appId);
+     if (pending && pending->launching && !pending->cancelling &&
+         [pending->launchToken isEqual:token]) {
++      self->mImpl->RememberCause(*pending, @"hello-timeout");
+       pending->cancelling = true;
+       pending->deferredHello.reset();
+       if (pending->running) [pending->running forceTerminate];
+@@ -771,6 +788,7 @@ NS_IMETHODIMP MacWebAppService::CancelLaunch(const nsACString& aAppId) {
+     mImpl->Notify(app->id, @"disconnected", @{@"reason": @"not-running"});
+     return NS_OK;
+   }
++  mImpl->RememberCause(*app, @"launch-cancelled");
+   app->cancelling = true;
+   app->deferredHello.reset();
+   if (app->running && app->pid > 0) [app->running forceTerminate];

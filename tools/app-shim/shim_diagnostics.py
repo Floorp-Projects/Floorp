@@ -8,6 +8,7 @@ from pathlib import Path
 REASONS = {
     "launch-failed", "process-exited", "process-monitor-failed", "send-failed",
     "not-running", "connection-generation-exhausted", "window-close-timeout",
+    "hello-timeout", "launch-cancelled", "service-stopped", "window-retirement-limit",
 }
 ERROR_CODES = ("NS_ERROR_NOT_AVAILABLE", "NS_ERROR_FAILURE", "NS_ERROR_DOM_SECURITY_ERR",
                "NS_ERROR_NOT_INITIALIZED", "NS_ERROR_INVALID_ARG", "NS_ERROR_IN_PROGRESS")
@@ -39,13 +40,17 @@ def error_summary(error):
 def event_summary(events):
     result = []
     auth_count = 0
+    connection_observed = False
     for event in events:
         if not isinstance(event, dict) or event.get("type") not in ("connected", "disconnected"):
             continue
         row = {"type": event["type"]}
+        connection_observed |= event["type"] == "connected"
         stamp = event.get("diagnosticTime")
         if type(stamp) is int:
             row["timeMs"] = stamp
+        if type(event.get("sequence")) is int and event["sequence"] > 0:
+            row["sequence"] = event["sequence"]
         payload = event.get("payload")
         if isinstance(payload, dict):
             pid = payload.get("pid")
@@ -54,12 +59,22 @@ def event_summary(events):
             if event["type"] == "disconnected":
                 reason = payload.get("reason")
                 row["reason"] = reason if isinstance(reason, str) and reason in REASONS else "other"
+                cause = payload.get("causeReason")
+                if isinstance(cause, str) and cause in REASONS:
+                    row["causeReason"] = cause
+                if type(payload.get("causeTimeMs")) is int:
+                    row["causeTimeMs"] = payload["causeTimeMs"]
+                if type(payload.get("connectedBeforeDisconnect")) is bool:
+                    row["connectedBeforeDisconnect"] = payload["connectedBeforeDisconnect"]
         result.append(row)
         auth_count += 1
         if len(result) > 64:
             result.pop(0)
     return {"events": result, "observedEventCount": len(events), "authEventCount": auth_count,
-            "truncated": auth_count > 64}
+            "truncated": auth_count > 64,
+            "authenticationState": "connection-observed" if connection_observed
+                                   else "unknown-truncated" if auth_count > 64 else "connection-not-observed",
+            "nativeAuthenticationCompleted": None}
 
 
 def process_summary(host):

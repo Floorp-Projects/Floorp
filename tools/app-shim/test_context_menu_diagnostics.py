@@ -109,7 +109,8 @@ class DiagnosticTests(unittest.TestCase):
 
 class ProbeFailureTests(unittest.TestCase):
     def run_probe(self, *, shim_cleanup_fails=False, host_cleanup_fails=False, snapshot_fails=False,
-                  client_cleanup_fails=False, ownership_fails=False):
+                  client_cleanup_fails=False, ownership_fails=False, monitor_close_fails=False,
+                  monitor_snapshot_fails=False, lifecycle_write_fails=False):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
@@ -165,8 +166,21 @@ class ProbeFailureTests(unittest.TestCase):
             self.assertEqual(description, "Shim authentication")
             self.assertEqual(timeout, 20)
             raise RuntimeError("Timed out waiting for Shim authentication")
+        monitor = Mock(identity=None, pid=None, started_wall=0, status="simulated")
+        monitor.snapshot.return_value = {"status":"simulated", "events":[]}
+        if monitor_close_fails:
+            monitor.close.side_effect = RuntimeError("monitor PRIVATE " + SECRET)
+        if monitor_snapshot_fails:
+            monitor.snapshot.side_effect = RuntimeError("snapshot PRIVATE " + SECRET)
+        write_text_original = Path.write_text
+        def write_text(path, *args, **kwargs):
+            if lifecycle_write_fails and path.name == "shim-lifecycle.json":
+                raise OSError("write PRIVATE " + SECRET)
+            return write_text_original(path, *args, **kwargs)
         stdout = io.StringIO()
-        with patch.object(probe.h, "run"), patch.object(probe.h, "unused_port", return_value=12345), \
+        with patch.object(Path, "write_text", new=write_text), patch.object(probe.h, "run"), patch.object(probe.h, "unused_port", return_value=12345), \
+             patch.object(probe.lifecycle, "binary_summary", return_value={}), \
+             patch.object(probe.lifecycle, "ShimMonitor", return_value=monitor), \
              patch.object(probe.h, "HostProcess", side_effect=launch), \
              patch.object(probe.h, "Marionette", return_value=client), \
              patch.object(probe.h, "seal_bundle"), patch.object(probe.h, "wait_for", side_effect=wait_for), \
@@ -222,6 +236,13 @@ class ProbeFailureTests(unittest.TestCase):
         self.assertEqual(report["cleanupErrors"][0]["step"], "client")
         self.assertTrue(report["afterCleanup"]["host"]["browserExited"])
         self.assertTrue(report["streams"]["browser.stderr.log"]["present"])
+
+    def test_new_monitor_failures_do_not_prevent_primary_result_or_streams(self):
+        for options in [{"monitor_close_fails":True}, {"monitor_snapshot_fails":True}, {"lifecycle_write_fails":True}]:
+            report, first = self.run_probe(**options)
+            self.assertEqual(report["error"], first["error"])
+            self.assertTrue(report["diagnosticsIncomplete"])
+            self.assertTrue(report["streams"]["browser.stderr.log"]["present"])
 
     def test_wrong_process_ownership_never_receives_chrome_or_cleanup_commands(self):
         report, _ = self.run_probe(ownership_fails=True)

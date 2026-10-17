@@ -43,9 +43,10 @@ jobs:
       - name: Verify compiled Runtime source provenance contract
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
       - name: Test macOS Shim failure diagnostics without a browser
-        run: >-
-          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
           -s tools/app-shim -p test_context_menu_diagnostics.py -v
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/app-shim -p test_shim_lifecycle.py -v
       - name: Test final package QA source intake
         run: node --test tools/test-final-package-qa-source.mjs
       - name: Run host tool tests
