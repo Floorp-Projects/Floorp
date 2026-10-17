@@ -1,0 +1,31 @@
+{
+  "checkedAtUTC": "2026-10-17T22:57:06.337388+00:00",
+  "fixtureCommit": "c127e001c5337e47a842c7453177da286bc02c54",
+  "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+  "runtimeCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "sdk": {
+    "artifact": 12096898807,
+    "attempt": 1,
+    "draftReaderFormat": "sorted compact JSON [normalized POSIX path,file|dir|symlink|hardlink,header size,content or linkname SHA256]",
+    "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "entry": "macos_sdk.tar.gz",
+    "expiresObserved": "2026-10-18T09:48:20Z",
+    "name": "macos-sdk",
+    "run": 39022451582,
+    "tarBytes": 105567985,
+    "tarSHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+    "treeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+    "version": "26.5",
+    "zipBytes": 105082683,
+    "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "expired": false,
+    "expiresCurrent": "2026-10-18T09:48:20Z",
+    "officialMetadataMatches": true,
+    "officialDownloadEndpointReturned302": true,
+    "payloadDownloadedBeforeJob": false,
+    "signedURLPublished": false
+  },
+  "activeMatchingNativeJobs": [],
+  "newArtifacts": 0
+}
