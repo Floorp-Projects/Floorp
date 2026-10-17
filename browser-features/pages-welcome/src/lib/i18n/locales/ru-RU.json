@@ -1,162 +1,162 @@
 {
   "setupRich": {
     "selected": "Выбрано",
-    "languageActive": "Used for menus and settings",
-    "palettePreview": "Color preview",
-    "searchDestination": "Address bar search provider",
-    "enlarge": "Enlarge the {{feature}} screenshot",
-    "enlargeShort": "View larger",
-    "closePreview": "Close preview",
-    "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
+    "languageActive": "Используется в меню и настройках",
+    "palettePreview": "Предпросмотр цвета",
+    "searchDestination": "Поисковая система адресной строки",
+    "enlarge": "Увеличить снимок экрана: {{feature}}",
+    "enlargeShort": "Показать крупнее",
+    "closePreview": "Закрыть предпросмотр",
+    "actualScreenshot": "Настоящий снимок экрана Floorp. Внешний вид зависит от версии и настроек."
   },
   "setupV5": {
     "back": "Назад",
     "supportLabels": {
-      "disabled": "Do not open automatically",
-      "blocking": "Open with my blocker settings",
-      "support": "Allow ads to support Floorp"
+      "disabled": "Не открывать автоматически",
+      "blocking": "Открывать с моими настройками блокировки",
+      "support": "Разрешить рекламу в поддержку Floorp"
     },
-    "supportNotice": "This is a draft choice. It takes effect when you press “Start using Floorp” on the next page. Closing setup before then keeps your current settings.",
+    "supportNotice": "Это черновой выбор. Он вступит в силу, когда вы нажмёте «Начать работу с Floorp» на следующей странице. Если закрыть настройку раньше, сохранятся текущие параметры.",
     "steps": [
       "Добро пожаловать",
       "Язык",
-      "Особенности",
+      "Возможности",
       "Центр Floorp",
       "Настройки",
       "Поддержка",
-      "Finish"
+      "Готово"
     ],
     "pages": [
       {
-        "title": "Welcome\nto Floorp.",
-        "description": "Make your browser work the way you do.",
-        "hint": "This guide introduces the features and helps you choose your first settings."
+        "title": "Добро пожаловать\nв Floorp.",
+        "description": "Настройте браузер так, как вам удобно работать.",
+        "hint": "Это руководство познакомит с возможностями и поможет выбрать первые настройки."
       },
       {
-        "title": "Start in the language\nyou know best.",
-        "description": "Check Floorp’s display language and change it if needed.",
-        "hint": "Your chosen language takes effect immediately."
+        "title": "Начните на языке,\nкоторый знаете лучше всего.",
+        "description": "Проверьте язык интерфейса Floorp и при необходимости смените его.",
+        "hint": "Выбранный язык применяется сразу."
       },
       {
-        "title": "Explore what\nFloorp can do.",
-        "description": "Separate tasks, view pages side by side, and work faster. Explore the features that interest you.",
-        "hint": "You can adjust these features in Settings later."
+        "title": "Посмотрите, на что\nспособен Floorp.",
+        "description": "Разделяйте задачи, смотрите страницы рядом и работайте быстрее. Изучите функции, которые вам интересны.",
+        "hint": "Позже эти функции можно настроить в «Центре Floorp»."
       },
       {
-        "title": "Your settings,\nin Floorp Hub.",
-        "description": "Adjust Floorp-specific features in one place.",
-        "hint": "You can open it any time after setup."
+        "title": "Ваши настройки —\nв «Центре Floorp».",
+        "description": "Особые функции Floorp собраны в одном месте.",
+        "hint": "После настройки его можно открыть в любой момент."
       },
       {
-        "title": "Make appearance\nand search your own.",
-        "description": "Choose the theme and search engine you use every day.",
-        "hint": "You can change them later in Floorp Hub or Firefox Settings."
+        "title": "Сделайте внешний вид\nи поиск своими.",
+        "description": "Выберите тему и поисковую систему, которыми пользуетесь каждый день.",
+        "hint": "Позже их можно изменить в «Центре Floorp» или в настройках Firefox."
       },
       {
-        "title": "Updates and\nsupporting Floorp.",
-        "description": "Advertising revenue supports Floorp’s development and operation. Choose how release notes open.",
-        "hint": "You can change this later under Updates and experiments."
+        "title": "Обновления\nи поддержка Floorp.",
+        "description": "Реклама помогает развивать и поддерживать Floorp. Выберите, как открывать заметки о выпуске.",
+        "hint": "Позже это можно изменить в разделе «Обновления и эксперименты»."
       },
       {
-        "title": "You’re ready\nto browse.",
-        "description": "Review your choices and start using Floorp.",
-        "hint": "You can still change your settings later."
+        "title": "Всё готово\nк работе в интернете.",
+        "description": "Проверьте выбранные параметры и начните пользоваться Floorp.",
+        "hint": "Настройки можно изменить и позже."
       }
     ],
-    "startTitle": "Before you begin",
+    "startTitle": "Перед началом",
     "startItems": [
       {
-        "title": "Check your display language",
-        "description": "Start in the language you use every day."
+        "title": "Проверьте язык интерфейса",
+        "description": "Начните на языке, которым пользуетесь каждый день."
       },
       {
-        "title": "Choose settings that suit you",
-        "description": "Select your theme and search engine."
+        "title": "Выберите подходящие настройки",
+        "description": "Укажите тему и поисковую систему."
       },
       {
-        "title": "Get ready to browse",
-        "description": "Review your choices before starting."
+        "title": "Подготовьтесь к работе",
+        "description": "Просмотрите выбор, прежде чем начать."
       }
     ],
-    "changeLater": "You can change these settings later.",
-    "languageTitle": "Display language",
-    "languageLabel": "Floorp display language",
-    "languageHint": "Used for menus and settings.",
-    "languageNotice": "Some add-ons may not support changing languages.",
-    "languageCurrent": "Using {{language}}",
-    "featuresTitle": "Explore the features",
-    "hubTitle": "Find what you want to adjust",
+    "changeLater": "Эти настройки можно изменить позже.",
+    "languageTitle": "Язык интерфейса",
+    "languageLabel": "Язык интерфейса Floorp",
+    "languageHint": "Используется в меню и настройках.",
+    "languageNotice": "Некоторые дополнения могут не поддерживать смену языка.",
+    "languageCurrent": "Используется: {{language}}",
+    "featuresTitle": "Возможности",
+    "hubTitle": "Найдите то, что хотите настроить",
     "hubItems": [
       {
-        "title": "Tabs and appearance",
-        "description": "Tab layout and the browser’s appearance"
+        "title": "Вкладки и внешний вид",
+        "description": "Расположение вкладок и внешний вид браузера"
       },
       {
         "title": "Рабочие пространства",
-        "description": "Switch tasks and organize tabs"
+        "description": "Переключайте задачи и упорядочивайте вкладки"
       },
       {
-        "title": "Mouse gestures",
-        "description": "Shortcuts to frequently used actions"
+        "title": "Жесты мышью",
+        "description": "Быстрые действия привычными движениями"
       }
     ],
     "openHub": "Открыть «Центр Floorp»",
-    "openPreferences": "Open Firefox Settings",
-    "newTab": "Opens in a new tab.",
-    "hubAddress": "You can also enter about:hub in the address bar.",
-    "customizeTitle": "Your first settings",
-    "searchHint": "Used when searching from the address bar.",
-    "supportTitle": "Release notes after updates",
-    "scopeTitle": "Scope when allowing advertising",
-    "summaryTitle": "Review your settings",
+    "openPreferences": "Открыть настройки Firefox",
+    "newTab": "Откроется в новой вкладке.",
+    "hubAddress": "Можно также ввести about:hub в адресной строке.",
+    "customizeTitle": "Первые настройки",
+    "searchHint": "Используется при поиске из адресной строки.",
+    "supportTitle": "Заметки о выпуске после обновлений",
+    "scopeTitle": "Область действия при разрешении рекламы",
+    "summaryTitle": "Проверьте настройки",
     "change": "Изменить",
-    "defaultTitle": "Make Floorp your everyday browser",
-    "defaultHint": "Set links to open in Floorp.",
-    "getStarted": "Start using Floorp",
-    "finishNotice": "“Start using Floorp” confirms your release notes choice."
+    "defaultTitle": "Сделать Floorp основным браузером",
+    "defaultHint": "Открывать ссылки в Floorp.",
+    "getStarted": "Начать работу с Floorp",
+    "finishNotice": "Кнопка «Начать работу с Floorp» подтверждает выбор для заметок о выпуске."
   },
   "releaseNotes": {
     "prompt": {
-      "title": "A new choice.\nSupport what comes next.",
-      "description": "Advertising revenue supports Floorp development and operation. You can now choose how release notes open and how blockers work on the Floorp blog.",
-      "hint": "Your settings stay as they are until you save a selection. You can change it later in Updates & Experiments.",
-      "choiceTitle": "Choose how release notes open",
-      "choiceDescription": "Choose automatic display after updates and how your blockers work on the Floorp blog.",
-      "dismiss": "Not now"
+      "title": "Новый выбор.\nПоддержите то, что будет дальше.",
+      "description": "Реклама помогает развивать и поддерживать Floorp. Теперь можно выбрать, как открывать заметки о выпуске и как работают блокировщики на блоге Floorp.",
+      "hint": "Настройки не изменятся, пока вы не сохраните выбор. Позже его можно сменить в разделе «Обновления и эксперименты».",
+      "choiceTitle": "Как открывать заметки о выпуске",
+      "choiceDescription": "Выберите автоматический показ после обновлений и работу блокировщиков на блоге Floorp.",
+      "dismiss": "Не сейчас"
     },
-    "learnMore": "Read about our funding and this setting (Japanese)",
-    "title": "Release notes and supporting Floorp",
-    "description": "Advertising revenue supports Floorp development and operation. Choose how to open release notes after updates. You can change this later in Settings → Updates & Experiments.",
+    "learnMore": "О финансировании и этой настройке (на японском)",
+    "title": "Заметки о выпуске и поддержка Floorp",
+    "description": "Реклама помогает развивать и поддерживать Floorp. Выберите, как открывать заметки о выпуске после обновлений. Позже это можно изменить: Настройки → Обновления и эксперименты.",
     "disabled": {
-      "label": "Do not open automatically",
-      "description": "Do not open release notes after updates. Keep your blocker settings when visiting the blog."
+      "label": "Не открывать автоматически",
+      "description": "Не открывать заметки о выпуске после обновлений. При посещении блога сохранить настройки блокировщиков."
     },
     "blocking": {
-      "label": "Open with your blocker settings",
-      "description": "Keep your extensions working as configured. This does not install or enable an ad blocker."
+      "label": "Открывать с вашими настройками блокировки",
+      "description": "Оставить расширения работать как настроено. Блокировщик рекламы не устанавливается и не включается."
     },
     "support": {
-      "label": "Allow ads to support Floorp (recommended)",
-      "description": "Restrict uBlock Origin, AdGuard, Adblock Plus, AdBlock and Ghostery on the Floorp blog."
+      "label": "Разрешить рекламу в поддержку Floorp (рекомендуется)",
+      "description": "Ограничить uBlock Origin, AdGuard, Adblock Plus, AdBlock и Ghostery на блоге Floorp."
     },
-    "scope": "The restriction applies to all HTTPS pages on blog.floorp.app, including manually opened pages, and affects tracking protection and custom filters as well as ad blocking. Other extensions are not restricted by this setting. Ads may still be blocked by other protection tools. Reload open blog pages after changing the setting.",
-    "currentSetting": "Current setting: {{mode}}",
-    "applyOnConfirm": "Your selection takes effect only when you confirm. Closing this page keeps your current setting.",
-    "changeSelection": "Change selection",
-    "applyOnFinish": "This is a draft selection. It takes effect when you finish setup on the next screen. Closing setup before then keeps your current setting.",
-    "confirm": "Save selection",
-    "dismiss": "Keep current setting",
-    "error": "Could not load or save your selection. Please reopen this page and try again."
+    "scope": "Ограничение действует для всех HTTPS-страниц blog.floorp.app, в том числе открытых вручную, и затрагивает защиту от отслеживания и пользовательские фильтры, а также блокировку рекламы. Другие расширения этой настройкой не ограничиваются. Рекламу всё равно могут блокировать другие средства защиты. После смены настройки обновите открытые страницы блога.",
+    "currentSetting": "Текущая настройка: {{mode}}",
+    "applyOnConfirm": "Выбор вступит в силу только после подтверждения. Если закрыть страницу, сохранится текущая настройка.",
+    "changeSelection": "Изменить выбор",
+    "applyOnFinish": "Это черновой выбор. Он вступит в силу, когда вы завершите настройку на следующем экране. Если закрыть настройку раньше, сохранится текущий параметр.",
+    "confirm": "Сохранить выбор",
+    "dismiss": "Оставить текущую настройку",
+    "error": "Не удалось загрузить или сохранить выбор. Откройте эту страницу снова и повторите попытку."
   },
   "navigation": {
-    "support": "Support Floorp",
+    "support": "Поддержать Floorp",
     "welcome": "Добро пожаловать",
     "language": "Язык",
     "languageSupport": "Языковая поддержка",
-    "features": "Особенности",
-    "featureIntroduction": "Введение в особенности",
+    "features": "Возможности",
+    "featureIntroduction": "Знакомство с возможностями",
     "hub": "Центр Floorp",
-    "hubIntro": "О центре Floorp",
+    "hubIntro": "О «Центре Floorp»",
     "customize": "Настроить",
     "initialSettings": "Начальные настройки",
     "complete": "Готово",
@@ -164,30 +164,30 @@
     "next": "Далее"
   },
   "hubPage": {
-    "title": "О Floorp Hub",
-    "subtitle": "Центральное место для настроек Floorp.",
+    "title": "О «Центре Floorp»",
+    "subtitle": "Единое место для особых настроек Floorp.",
     "sectionTitle": "Центр Floorp",
-    "description": "Центр Floorp — это специальный центр настроек Floorp. Вы можете открыть его, перейдя по ссылке «about:hub». Доступ к нему также можно получить из левой боковой панели страницы настроек Firefox по ссылке «about:preferences».",
+    "description": "«Центр Floorp» — отдельный раздел настроек, характерных для Floorp. Его можно открыть по адресу about:hub. Также он доступен из левой боковой панели страницы настроек Firefox (about:preferences).",
     "openHub": "Открыть about:hub",
     "openPreferences": "Открыть настройки (about:preferences)",
-    "tip": "Совет: Вы также можете получить доступ к центру Floorp из боковой панели настроек Firefox.",
+    "tip": "Совет: «Центр Floorp» также можно открыть из боковой панели настроек Firefox.",
     "features": {
-      "dedicated": "Выделенный центр настройки Floorp",
-      "accessible": "Доступно в about:hub или настройках Firefox",
-      "centralized": "Все настройки Floorp в одном месте"
+      "dedicated": "Отдельный центр настроек Floorp",
+      "accessible": "Доступен через about:hub или настройки Firefox",
+      "centralized": "Все особые настройки Floorp в одном месте"
     }
   },
   "customize": {
-    "title": "Настроить Floorp",
-    "description": "Настройте параметры по своему усмотрению. Вы всегда можете изменить их позже из «Центр Floorp» или со страницы настроек.",
+    "title": "Настройте Floorp",
+    "description": "Выберите удобные параметры. Их всегда можно изменить позже в «Центре Floorp» или на странице настроек.",
     "appearance": {
-      "title": "Настройки внешнего вида",
-      "description": "Вы можете настроить внешний вид Floorp в соответствии с вашими предпочтениями. Выберите светлую или темную тему, или настройте автоматическое переключение в зависимости от настроек вашей системы."
+      "title": "Внешний вид",
+      "description": "Настройте внешний вид Floorp: светлую или тёмную тему либо автоматическое переключение по системным настройкам."
     },
     "themes": {
       "light": "Светлая",
       "dark": "Тёмная",
-      "system": "Использовать настройки системы"
+      "system": "Как в системе"
     },
     "themeInfo": {
       "light": "Светлая тема",
@@ -202,55 +202,55 @@
     },
     "floorpHub": {
       "title": "Центр Floorp",
-      "description": "Центр Floorp — это специальный центр настроек Floorp. Вы можете открыть его, перейдя по ссылке «about:hub». Доступ к нему также можно получить из левой боковой панели страницы настроек Firefox по ссылке «about:preferences».",
+      "description": "«Центр Floorp» — отдельный раздел настроек, характерных для Floorp. Его можно открыть по адресу about:hub. Также он доступен из левой боковой панели страницы настроек Firefox (about:preferences).",
       "openHub": "Открыть about:hub",
       "openPreferences": "Открыть настройки (about:preferences)"
     }
   },
   "finish": {
     "title": "Настройка завершена!",
-    "subtitle": "Поздравляем! Вы завершили настройку Floorp. Наслаждайтесь комфортным и безопасным использованием Интернета.",
+    "subtitle": "Поздравляем! Настройка Floorp закончена. Приятного и безопасного интернета.",
     "nextSteps": {
       "title": "Следующие шаги (необязательно)",
-      "setDefault": "Установить как браузер по умолчанию",
+      "setDefault": "Сделать браузером по умолчанию",
       "documentation": "Документация"
     },
-    "getStarted": "Начало работы с Floorp",
-    "hint": "Более подробные настройки можно выполнить с помощью пункта «Настройки» в меню, расположенном в правом верхнем углу."
+    "getStarted": "Начать работу с Floorp",
+    "hint": "Более подробные настройки доступны в пункте «Настройки» меню в правом верхнем углу."
   },
   "setupGuide": {
     "welcome": "Добро пожаловать в Floorp.",
-    "description": "Make your browser work the way you do.",
-    "introduction": "This guide introduces Floorp's features and helps you choose your first settings.",
-    "start": "Start setup",
-    "next": "Next, check your display language.",
-    "progress": "Setup {{current}} / {{total}}",
-    "title": "What this guide covers",
-    "subtitle": "Explore the features and choose settings that suit you.",
+    "description": "Настройте браузер так, как вам удобно работать.",
+    "introduction": "Это руководство знакомит с возможностями Floorp и помогает выбрать первые настройки.",
+    "start": "Начать настройку",
+    "next": "Далее проверьте язык интерфейса.",
+    "progress": "Настройка {{current}} / {{total}}",
+    "title": "О чём это руководство",
+    "subtitle": "Изучите возможности и выберите подходящие настройки.",
     "discover": {
-      "title": "Discover Floorp's features",
-      "description": "Explore ways to organize tabs and customize your browser."
+      "title": "Возможности Floorp",
+      "description": "Способы упорядочить вкладки и настроить браузер."
     },
     "personalize": {
-      "title": "Choose your settings",
-      "description": "Adjust the appearance and controls to your preferences."
+      "title": "Выберите настройки",
+      "description": "Подстройте внешний вид и управление под себя."
     },
     "finish": {
-      "title": "Get ready to browse",
-      "description": "Review your choices and start browsing."
+      "title": "Готово к работе",
+      "description": "Проверьте выбор и начните пользоваться браузером."
     }
   },
   "welcomePage": {
     "welcome": "Добро пожаловать в Floorp!",
-    "description": "Floorp — быстрый и удобный веб-браузер, который делает упор на конфиденциальность и безопасность. В этом руководстве вы познакомитесь с основными функциями и настройками Floorp.",
+    "description": "Floorp — быстрый и удобный браузер с упором на конфиденциальность и безопасность. В этом руководстве вы познакомитесь с основными возможностями и настройками Floorp.",
     "readyToStart": "Когда будете готовы, нажмите кнопку ниже, чтобы продолжить.",
-    "features": "Особенности Floorp",
+    "features": "Возможности Floorp",
     "privacy": "Конфиденциальность",
     "privacyDesc": "Защищает ваши данные",
     "speed": "Скорость",
     "speedDesc": "Оптимизированная производительность",
     "customization": "Персонализация",
-    "customizationDesc": "Располагайте по своему усмотрению",
+    "customizationDesc": "Настройте под себя",
     "start": "Начать"
   },
   "localizationPage": {
@@ -263,45 +263,45 @@
     "floorpLanguage": "Язык Floorp",
     "selectLanguage": "Выбрать язык",
     "useSystemLanguage": "Использовать язык системы",
-    "multilingual": "Многоязыковая поддержка",
+    "multilingual": "Многоязычная поддержка",
     "chooseLanguage": "Выбирайте из широкого спектра языков",
-    "languageChangeNotice": "При изменении языка новый язык будет применен без перезапуска Floorp. Некоторые расширения могут не поддерживать изменения языка."
+    "languageChangeNotice": "При смене языка новый язык применяется без перезапуска Floorp. Некоторые расширения могут не поддерживать смену языка."
   },
   "featuresPage": {
-    "title": "Основные особенности Floorp",
-    "subtitle": "Floorp поставляется со множеством полезных функций. Ознакомьтесь с обзором функций!",
+    "title": "Основные возможности Floorp",
+    "subtitle": "В Floorp много полезных функций. Краткий обзор:",
     "panelSidebar": {
       "title": "Боковая панель",
-      "description": "Доступ к удобным функциям можно получить из боковой панели справа во время просмотра веб-страниц. На боковой панели можно разместить веб-панели, функции заметок, расширения, закладки и т.д.",
+      "description": "Удобные функции доступны с правой боковой панели во время просмотра. На неё можно поместить веб-панели, заметки, расширения, закладки и другое.",
       "features": [
-        "Закрепляйте веб-сайты на боковой панели",
-        "Быстро делайте заметки с помощью Floorp Notes во время просмотра веб-страниц",
-        "Поддерживает контейнеры"
+        "Закрепляйте сайты на боковой панели",
+        "Быстро делайте заметки в Floorp Notes во время просмотра",
+        "Поддерживаются контейнеры"
       ]
     },
     "workspaces": {
       "title": "Рабочие пространства",
-      "description": "Организуйте несколько наборов вкладок, чтобы оптимизировать работу. Быстро переключайтесь между рабочими пространствами с помощью уникальных значков и имён. Доступ через кнопку рабочего пространства в левом верхнем углу.",
+      "description": "Организуйте несколько наборов вкладок. Быстро переключайтесь между пространствами с уникальными значками и именами. Кнопка — в левом верхнем углу.",
       "features": [
-        "Классифицируйте по назначению: работа, личное, и т.д.",
-        "Визуально идентифицируйте с помощью настраиваемых значков",
-        "Легко управляйте вкладками"
+        "Разделяйте по назначению: работа, личное и т. д.",
+        "Отличайте пространства настраиваемыми значками",
+        "Удобно управляйте вкладками"
       ]
     },
     "pwa": {
       "title": "Поддержка прогрессивных веб-приложений",
-      "description": "В Windows вы можете добавлять PWA-совместимые сайты в качестве десктопных приложений при их посещении. Также можно устанавливать и обычные сайты.",
+      "description": "В Windows сайты с поддержкой PWA можно добавлять как приложения для рабочего стола. Обычные сайты тоже можно устанавливать.",
       "features": [
-        "Работают независимо в виде настольных приложений",
-        "Можно прикрепить на панели задач",
+        "Работают отдельно, как приложения",
+        "Можно закрепить на панели задач",
         "Дополнения Firefox тоже работают"
       ]
     },
     "mouseGesture": {
       "title": "Жесты мышью",
-      "description": "Управляйте браузером более интуитивно с помощью встроенной функции жестов мыши. Выполняйте жесты, удерживая правую кнопку мыши и перемещая мышь.",
+      "description": "Управляйте браузером жестами: удерживайте правую кнопку мыши и двигайте указатель.",
       "features": [
-        "Работайте без сочетаний клавиш",
+        "Действия без сочетаний клавиш",
         "Полностью настраиваемые жесты",
         "Быстрая навигация по страницам и истории"
       ]
@@ -311,15 +311,15 @@
   },
   "finishPage": {
     "title": "Настройка завершена!",
-    "subtitle": "Поздравляем! Вы завершили настройку Floorp. Теперь вы можете наслаждаться комфортным и безопасным использованием Интернета.",
+    "subtitle": "Поздравляем! Настройка Floorp закончена. Можно пользоваться комфортным и безопасным интернетом.",
     "nextSteps": "Следующие шаги (необязательно)",
     "defaultBrowser": "Сделать браузером по умолчанию",
     "support": "Поддержка",
     "documentation": "Документация",
-    "getStarted": "Начало работы с Floorp",
-    "hint": "Более подробные настройки можно выполнить с помощью пункта «Настройки» в меню, расположенном в правом верхнем углу.",
+    "getStarted": "Начать работу с Floorp",
+    "hint": "Более подробные настройки доступны в пункте «Настройки» меню в правом верхнем углу.",
     "resourcesLabel": "Ресурсы",
-    "defaultBrowserSuccess": "Floorp был установлен в качестве браузера по умолчанию!"
+    "defaultBrowserSuccess": "Floorp установлен как браузер по умолчанию!"
   },
   "whatsNew": {
     "title": "Добро пожаловать в Floorp {{version}}!",
@@ -333,155 +333,155 @@
     },
     "footer": {
       "follow": "Подписаться",
-      "terms": "Terms of Service",
-      "privacy": "Privacy Policy",
+      "terms": "Условия использования",
+      "privacy": "Политика конфиденциальности",
       "about": "О Floorp",
-      "copyright": "© {{year}} Project. Все права защищены."
+      "copyright": "© {{year}} Floorp Projects. Все права защищены."
     }
   },
   "ui": {
-    "retry": "Try again",
-    "loadError": "Could not load these settings. Please try again.",
-    "skipToContent": "Skip to content",
+    "retry": "Повторить",
+    "loadError": "Не удалось загрузить эти настройки. Попробуйте ещё раз.",
+    "skipToContent": "Перейти к содержимому",
     "loading": "Загрузка…",
-    "setupProgress": "Setup progress",
-    "stepNavigation": "Setup navigation",
-    "settingsNavigation": "Settings navigation",
-    "openNavigation": "Open navigation",
-    "closeNavigation": "Close navigation",
-    "saveError": "Could not save. Please try again."
+    "setupProgress": "Ход настройки",
+    "stepNavigation": "Навигация по шагам настройки",
+    "settingsNavigation": "Навигация по настройкам",
+    "openNavigation": "Открыть навигацию",
+    "closeNavigation": "Закрыть навигацию",
+    "saveError": "Не удалось сохранить. Попробуйте ещё раз."
   },
   "featureDemo": {
-    "label": "Interactive demo",
-    "close": "Close panel",
-    "cancel": "Отменить",
-    "reset": "Reset demo",
-    "play": "Watch the gesture",
-    "replay": "Watch again",
+    "label": "Интерактивная демонстрация",
+    "close": "Закрыть панель",
+    "cancel": "Отмена",
+    "reset": "Сбросить демонстрацию",
+    "play": "Посмотреть жест",
+    "replay": "Посмотреть ещё раз",
     "workspaces": {
-      "title": "Switch workspaces",
-      "instruction": "Open the workspace button at the upper left, then choose a workspace.",
+      "title": "Переключение рабочих пространств",
+      "instruction": "Откройте кнопку рабочего пространства слева сверху и выберите пространство.",
       "names": [
-        "Work",
+        "Работа",
         "Личное",
-        "Learning"
+        "Учёба"
       ],
       "tabs": [
         [
-          "Project",
-          "Mail",
-          "Calendar"
+          "Проект",
+          "Почта",
+          "Календарь"
         ],
         [
-          "Travel",
-          "Recipes",
+          "Путешествия",
+          "Рецепты",
           "Музыка"
         ],
         [
           "Заметки",
-          "Dictionary",
+          "Словарь",
           "Ресурсы"
         ]
       ],
-      "result": "Showing tabs for {{name}}.",
-      "benefit": "Switch between your work and personal tabs as a group.",
-      "guideOpen": "Open the Work button.",
-      "guideSelect": "Choose Personal.",
-      "guideDone": "The tabs above have switched together.",
-      "openHint": "1 Open here",
-      "selectHint": "2 Choose Personal",
+      "result": "Показаны вкладки пространства «{{name}}».",
+      "benefit": "Переключайте рабочие и личные вкладки целыми группами.",
+      "guideOpen": "Откройте кнопку «Работа».",
+      "guideSelect": "Выберите «Личное».",
+      "guideDone": "Вкладки сверху переключились вместе.",
+      "openHint": "1 Откройте здесь",
+      "selectHint": "2 Выберите «Личное»",
       "pages": [
         {
-          "category": "Team work",
-          "title": "This week’s project",
-          "description": "Keep tasks and progress together.",
+          "category": "Командная работа",
+          "title": "Проект этой недели",
+          "description": "Задачи и прогресс в одном месте.",
           "items": [
-            "Collect ideas for the project",
-            "Review the design",
-            "Prepare for the next meeting"
+            "Собрать идеи для проекта",
+            "Просмотреть макет",
+            "Подготовиться к следующей встрече"
           ]
         },
         {
-          "category": "Weekend plans",
-          "title": "Where to next?",
-          "description": "Collect favorite places and plan your next trip.",
+          "category": "Планы на выходные",
+          "title": "Куда дальше?",
+          "description": "Соберите любимые места и спланируйте поездку.",
           "items": [
-            "Find a café by the sea",
-            "Explore a new town",
-            "Make a packing list"
+            "Найти кафе у моря",
+            "Исследовать новый город",
+            "Составить список вещей"
           ]
         },
         {
-          "category": "Study notes",
-          "title": "Today’s learning notes",
-          "description": "Put what you learned into your own words.",
+          "category": "Учебные заметки",
+          "title": "Заметки за сегодня",
+          "description": "Перескажите изученное своими словами.",
           "items": [
-            "Summarize the key points",
-            "Write down new words",
-            "List questions to explore next"
+            "Кратко записать главное",
+            "Выписать новые слова",
+            "Составить вопросы на потом"
           ]
         }
       ]
     },
     "panelSidebar": {
-      "title": "Open a site alongside your page",
-      "instruction": "Use the music icon on the right to open or close the saved site.",
-      "article": "Keep exploring",
+      "title": "Откройте сайт рядом со страницей",
+      "instruction": "Значок музыки справа открывает и закрывает сохранённый сайт.",
+      "article": "Продолжайте изучать",
       "music": "Музыка",
-      "favorites": "Favorites",
+      "favorites": "Избранное",
       "tracks": [
         "Moonlit",
         "Blue hour",
         "Gentle breeze"
       ],
-      "play": "Try playback (no audio)",
-      "stop": "Stop playback",
-      "toggle": "Toggle music panel",
-      "open": "Your page and saved site appear side by side.",
-      "closed": "Open the panel again using the music icon on the right.",
-      "benefit": "Open another site alongside the page you are viewing."
+      "play": "Попробовать воспроизведение (без звука)",
+      "stop": "Остановить воспроизведение",
+      "toggle": "Показать или скрыть музыкальную панель",
+      "open": "Страница и сохранённый сайт отображаются рядом.",
+      "closed": "Снова откройте панель значком музыки справа.",
+      "benefit": "Открывайте другой сайт рядом с текущей страницей."
     },
     "pwa": {
-      "title": "Turn a favorite site into an app",
-      "instruction": "Try installing from the icon on the right of the address bar.",
-      "icon": "Open web app installation menu",
-      "open": "Open app",
+      "title": "Превратите любимый сайт в приложение",
+      "instruction": "Попробуйте установку со значка справа в адресной строке.",
+      "icon": "Открыть меню установки веб-приложения",
+      "open": "Открыть приложение",
       "install": "Установить приложение",
-      "calendar": "Calendar",
-      "result": "Example of a standalone app window",
-      "benefit": "Open a site as an app in a separate window.",
-      "tab": "Web apps"
+      "calendar": "Календарь",
+      "result": "Пример отдельного окна приложения",
+      "benefit": "Открывайте сайт как приложение в отдельном окне.",
+      "tab": "Веб-приложения"
     },
     "mouseGesture": {
-      "title": "Navigate with a mouse gesture",
+      "title": "Навигация жестом мыши",
       "steps": [
-        "Hold the right button",
-        "Move left",
-        "Release the button"
+        "Удерживайте правую кнопку",
+        "Проведите влево",
+        "Отпустите кнопку"
       ],
-      "previous": "Previous page",
-      "current": "Current page",
-      "result": "← Returned to the previous page (demo)",
-      "hint": "An example of the default Back gesture.",
-      "enable": "Enable mouse gestures in Settings to use this feature.",
-      "benefit": "Hold the right mouse button and move the mouse to perform actions such as Back."
+      "previous": "Предыдущая страница",
+      "current": "Текущая страница",
+      "result": "← Возврат на предыдущую страницу (демонстрация)",
+      "hint": "Пример жеста «Назад» по умолчанию.",
+      "enable": "Чтобы пользоваться этой функцией, включите жесты мышью в настройках.",
+      "benefit": "Удерживайте правую кнопку мыши и двигайте указатель, чтобы выполнять действия вроде «Назад»."
     }
   },
   "welcomeMotion": {
     "steps": [
-      "Check language",
-      "Choose appearance",
-      "Get started"
+      "Проверить язык",
+      "Выбрать внешний вид",
+      "Начать работу"
     ],
     "descriptions": [
-      "Check your preferred display language.",
-      "Choose a theme and search engine.",
-      "Review your choices and start using Floorp."
+      "Проверьте предпочитаемый язык интерфейса.",
+      "Выберите тему и поисковую систему.",
+      "Просмотрите выбор и начните пользоваться Floorp."
     ],
-    "replay": "Watch again"
+    "replay": "Посмотреть ещё раз"
   },
   "demoPlayback": {
-    "pause": "Pause",
-    "play": "Play / resume"
+    "pause": "Пауза",
+    "play": "Воспроизвести / продолжить"
   }
 }

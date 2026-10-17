@@ -598,6 +598,8 @@
     "bookmarkSwitcherWhereNewTab": "Новая вкладка",
     "bookmarkSwitcherWhereNewTabDesc": "Открыть в новой активной вкладке",
     "bookmarkSwitcherWherePlaceholder": "Выберите, где открыть…",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
     "searchShortcutDescription": "Искать «{{query}}»",
     "shortcuts": {
       "reservedTabSearch": "Поиск по открытым вкладкам",

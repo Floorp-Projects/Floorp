@@ -6,24 +6,25 @@
         "welcome": "Добро пожаловать в «Заметки {{productName}}»!",
         "welcomeContent": "Добро пожаловать в «Заметки {{productName}}»! Вот как этим пользоваться.\n\n«Заметки {{productName}}» — это функция ведения заметок, которую можно синхронизировать между устройствами. Чтобы включить синхронизацию, вам нужно войти на {{productName}} под аккаунтом Mozilla.\n«Заметки {{productName}}» хранятся в {{productName}} и синхронизируются между устройствами с помощью Firefox. Синхронизация Firefox шифрует содержимое синхронизации с помощью пароля аккаунта Mozilla, поэтому никто не сможет узнать его содержимое.",
         "new": "Новая заметка",
-        "reorder": "Пересортировать",
+        "reorder": "Изменить порядок",
+        "export": "Экспортировать как Markdown",
         "done": "Готово",
-        "emptyTitle": "Безымянный",
-        "emptyContent": "Нет содержания",
+        "emptyTitle": "Без названия",
+        "emptyContent": "Нет содержимого",
         "noNotesSelected": "Выберите заметку или создайте новую",
         "createNew": "Создать новую заметку",
         "titlePlaceholder": "Заголовок",
-        "loading": "Загрузка заметок...",
+        "loading": "Загрузка заметок…",
         "delete": "Удалить",
-        "empty": "No notes yet. Click \"New Note\" to create one.",
-        "deleteConfirmTitle": "Delete Note",
-        "deleteConfirmMessage": "Are you sure you want to delete this note? This action cannot be undone.",
+        "empty": "Заметок пока нет. Нажмите «Новая заметка», чтобы создать первую.",
+        "deleteConfirmTitle": "Удалить заметку",
+        "deleteConfirmMessage": "Удалить эту заметку? Это действие нельзя отменить.",
         "deleteConfirm": "Удалить",
-        "deleteCancel": "Отменить",
-        "noteList": "Notes list",
-        "search": "Search notes",
-        "clearSearch": "Clear search",
-        "noSearchResults": "No notes match your search"
+        "deleteCancel": "Отмена",
+        "noteList": "Список заметок",
+        "search": "Поиск заметок",
+        "clearSearch": "Очистить поиск",
+        "noSearchResults": "Нет заметок, подходящих под запрос"
     },
     "editor": {
         "bold": "Жирный",
@@ -39,31 +40,32 @@
         "heading1": "Заголовок 1",
         "heading2": "Заголовок 2",
         "heading3": "Заголовок 3",
-        "undo": "Undo",
-        "redo": "Redo",
+        "undo": "Отменить",
+        "redo": "Повторить",
         "history": "История",
-        "toolbar": "Formatting toolbar",
-        "headings": "Headings",
-        "textFormatting": "Text formatting",
-        "lists": "Lists",
-        "alignment": "Alignment",
-        "contentArea": "Note content",
-        "placeholder": "Start writing...",
-        "image": "Insert image"
+        "toolbar": "Панель форматирования",
+        "headings": "Заголовки",
+        "textFormatting": "Форматирование текста",
+        "lists": "Списки",
+        "alignment": "Выравнивание",
+        "contentArea": "Содержимое заметки",
+        "placeholder": "Начните писать…",
+        "image": "Вставить изображение"
     },
     "common": {
         "close": "Закрыть",
-        "confirm": "Confirm",
-        "cancel": "Отменить"
+        "confirm": "Подтвердить",
+        "cancel": "Отмена"
     },
     "save": {
-        "saving": "Saving...",
-        "saved": "Saved",
-        "error": "Save failed"
+        "saving": "Сохранение…",
+        "saved": "Сохранено",
+        "error": "Не удалось сохранить"
     },
     "error": {
         "loadFailed": "Не удалось загрузить данные заметки",
         "saveFailed": "Не удалось сохранить данные заметки",
+        "exportFailed": "Не удалось экспортировать заметку",
         "indexOutOfRange": "Индекс {{index}} находится вне диапазона"
     }
 }
