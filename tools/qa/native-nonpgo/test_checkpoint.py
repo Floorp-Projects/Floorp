@@ -114,6 +114,17 @@ class CheckpointGuards(unittest.TestCase):
         self.assertIsNone(receipt['deltaRecordsTruncated'])
         self.assertNotIn('private diagnostic text', json.dumps(receipt))
 
+    def test_optional_process_hints_never_exclude_candidates(self):
+        for hint in ({'status':'unavailable'}, {'status':'identity-verified','role':'preferences-service',
+                                              'observedInStageGroup':'observed'}):
+            receipt = {}
+            with mock.patch.object(cp, 'owned_processes', return_value={(101,123,4,501,501)}), \
+                    mock.patch('census_diagnostics.describe', return_value=hint), \
+                    self.assertRaisesRegex(Failure, 'checkpoint-owned-survivors'):
+                cp.verify_owned_boundary(set(), receipt, set())
+            self.assertEqual(receipt['newCandidateIdentities'],1)
+            self.assertEqual(receipt['deltaRecords'][0]['processHint'],hint)
+
     def test_boundary_identical_or_removed_candidates_pass_and_tags_are_unlinkable(self):
         baseline = {(101, 123, 4, 501, 501), (102, 124, 5, 501, 501)}
         receipt = {}

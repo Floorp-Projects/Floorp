@@ -166,6 +166,33 @@ class Runner:
         self.monitor_diagnostics = []
         self.monitor_failure = None
         self.phase_deadline_minutes = None
+        self.observed_processes = None
+        self.observation_status = 'disabled'
+
+    def observe_processes(self, activity):
+        """Bounded, sampled identity hints; never used to authorize signals."""
+        if self.observed_processes is None:
+            return
+        try:
+            self._observe_processes(activity)
+        except Exception:
+            self.observation_status = 'unavailable'
+
+    def _observe_processes(self, activity):
+        rows = activity.get('_pids', ())
+        if (activity.get('counterSource') != 'libproc-taskallinfo' or
+                not activity.get('sampleComplete') or
+                not all(isinstance(row, tuple) and len(row) == 3 and
+                        all(type(value) is int for value in row) and row[0] > 0 and
+                        row[1] > 0 and 0 <= row[2] < 1000000 for row in rows)):
+            self.observation_status = 'unavailable'
+            return
+        if len(self.observed_processes | set(rows)) > 100000:
+            self.observation_status = 'truncated'
+            return
+        self.observed_processes.update(rows)
+        if self.observation_status == 'disabled':
+            self.observation_status = 'sampling'
 
     def elapsed(self):
         return max(0, time.monotonic() - self.monotonic_started)
@@ -431,6 +458,7 @@ class Runner:
                         break
                     phase = 'group-activity'
                     activity = self.group_activity(process.pid)
+                    self.observe_processes(activity)
                     last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
                     if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete'] or activity.get('esrchRechecks'):
                         diagnostic = self.record_monitor(stage, activity)

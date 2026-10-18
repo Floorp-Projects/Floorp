@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "scope": "one short Intel census experiment before checkpoint retry",
+  "baseFixture": "17cdfe3165be63d0a538dfe5ac422668cf9c8c58",
+  "tests": {
+    "total": 210,
+    "passed": 200,
+    "darwinSkipped": 10,
+    "seconds": 8.634,
+    "resourceWarningsAreErrors": true
+  },
+  "independentTests": {
+    "total": 210,
+    "passed": 200,
+    "darwinSkipped": 10,
+    "seconds": 8.73,
+    "resourceWarningsAreErrors": true
+  },
+  "review": {
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "decision": "SHORT_EXPERIMENT_GO_WITH_IMMUTABLE_BINDINGS",
+    "file": "RECOVERY23_PRELAUNCH_REVIEW.json"
+  },
+  "macGate": {
+    "total": 210,
+    "skipsAllowed": 0
+  },
+  "storage": {
+    "newArtifacts": 0,
+    "sdkAcquisition": false,
+    "floorpBuild": false
+  },
+  "permissionsChanged": false,
+  "eligibilityRelaxed": false,
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "dc9ac032dd1f4ca48916b29e6aaa4ec28e04284e835f9e300923c2f99b11a079"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "f6008363f8841387346eadd02db056c7f2ddf5a67741d04ca3c6af98bdca9cac"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "b57a3b652b5e1bf17adf0fee911a9f05835b8902a566dbfbf1cfdfbd43757605"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "545bbad4d626b9336216805b3432f9a58a91bd55a13dc58eb5a3f9c9dda700cd"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_diagnostics.py",
+      "sha256": "b0c4a4a237b9c803e29ea6b26794e77ef338b52b51f6d5af47cdeb02544b4d3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_diagnostics.py",
+      "sha256": "a5b03f7ff0e6aad6260ed4c8b6bbc03757e11601c1ca5498fadbfe168867a55e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_experiment.py",
+      "sha256": "9627cc84ba061c1b047af7825e36f52cf4ac5bd88e5a9ff3434c706846feb647"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_experiment.py",
+      "sha256": "7109e1882f4f731d2838fc686c8dfb5153bb86e175341f0193dfdfbbcbd465f3"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_CENSUS_WORKFLOW.yml.disabled",
+      "sha256": "176170a700ee476f6beb6f941f3ec0fb72ed1ae48c87245f86f0108d975272ce"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_CENSUS_EXPERIMENT.ja.md",
+      "sha256": "36ca43bade940c6ba4ce3107816e61d31e11745e775a5ec843b339245e969edc"
+    }
+  ]
+}

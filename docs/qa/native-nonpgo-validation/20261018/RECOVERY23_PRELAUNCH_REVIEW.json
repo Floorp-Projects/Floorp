@@ -1,0 +1,141 @@
+{
+  "activationConditions": [
+    "Bind the immutable fixture to these file bytes and verify provider readback.",
+    "Render only the fixture placeholder in the reviewed workflow and verify immutable caller bytes.",
+    "Verify the dedicated activation branch has no previous execution or conflicting active job."
+  ],
+  "bindingMethod": "SHA256 of reviewed files and disabled workflow template",
+  "controls": {
+    "backgroundIntervalSeconds": 10,
+    "backgroundSamples": 13,
+    "diagnosticSuccessIsCheckpointQualification": false,
+    "knownChildReapAndGroupGoneRequired": true,
+    "knownChildUsesExactPopenCleanup": true,
+    "maxHintRecords": 16,
+    "negativeStageObservationProvesUnrelatedAncestry": false,
+    "nonemptyBoundaryDeltaStillRejected": true,
+    "observerCap": 100000,
+    "observerOverflowAndExceptionsRemainIncomplete": true,
+    "parentCandidateRequiresBirthMatch": true,
+    "positiveStageObservationRequiresSampledBirth": true,
+    "primaryCensusUnchanged": true,
+    "primaryUnknownCountsBecomeZero": false,
+    "rawPIDUIDNameArgvEnvironmentPublished": false,
+    "roleAndParentHintsRequireTwoMatchingChildFiveTupleReads": true,
+    "roleBasedExclusions": false,
+    "signalOwnershipExpanded": false
+  },
+  "decision": {
+    "checkpointEligibilityRelaxed": false,
+    "longTrialInScope": false,
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "CONDITIONAL_GO_SHORT_JOB_ONLY"
+  },
+  "independentValidation": {
+    "bashScriptsChecked": 4,
+    "ciOrExternalWritesPerformed": false,
+    "fullSuite": {
+      "darwinSkipped": 10,
+      "exitCode": 0,
+      "logSHA256": "5ed8ef6e13823e3e830d779addce0c02d05c822270e901b4265f0ebd65d088c1",
+      "passed": 200,
+      "seconds": 8.73,
+      "total": 210
+    },
+    "inlinePythonASTChecked": 1,
+    "latestFocusedSuite": {
+      "darwinSkipped": 1,
+      "passed": 34,
+      "seconds": 0.744,
+      "total": 35
+    },
+    "macExecutionPerformed": false,
+    "platform": "Linux",
+    "resourceWarningsAreErrors": true,
+    "yamlParsed": true
+  },
+  "limits": [
+    "Read-only BSD hints can remain unavailable for mixed-credential processes; no fallback or privilege change is introduced.",
+    "Observed process names are fixed diagnostic categories, not executable identity or writer proof.",
+    "Stage observations are sampled; absence, truncation and unknown cannot prove unrelated ancestry.",
+    "A two-minute background observation cannot establish stability over the approximately 72-minute build interval.",
+    "Short-job success establishes evidence collection and controlled-child behavior; it does not qualify a checkpoint, resumed full host/XUL build or native authentication."
+  ],
+  "resolvedFindings": [
+    {
+      "issue": "Known-child stage observation was synthesized from its census identity",
+      "resolution": "A real group_activity sample supplies validated birth tuples; the known child must match the captured set.",
+      "severity": "P2"
+    },
+    {
+      "issue": "Known-child cleanup exceptions could prevent final evidence output",
+      "resolution": "Cleanup records fixed operation/error classes, reap and group status; final evidence output remains in finally.",
+      "severity": "P2"
+    }
+  ],
+  "route": {
+    "artifactUpload": false,
+    "attempt": 1,
+    "beforeZeroRequired": true,
+    "dedicatedBranch": "codex/mac-native-census-recovery23-20261018",
+    "expectedMacTests": 210,
+    "floorpBuild": false,
+    "initialCreatedPushRequired": true,
+    "jobCount": 1,
+    "jobTimeoutMinutes": 20,
+    "macSkipsAllowed": 0,
+    "permissions": {
+      "actions": "read",
+      "contents": "read"
+    },
+    "runner": "macos-15-intel",
+    "sdkAcquisition": false,
+    "trigger": "push"
+  },
+  "schema": 1,
+  "scope": "One short SDK-free Intel census observation job",
+  "sourceBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/census_diagnostics.py",
+      "sha256": "b0c4a4a237b9c803e29ea6b26794e77ef338b52b51f6d5af47cdeb02544b4d3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_experiment.py",
+      "sha256": "9627cc84ba061c1b047af7825e36f52cf4ac5bd88e5a9ff3434c706846feb647"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "b57a3b652b5e1bf17adf0fee911a9f05835b8902a566dbfbf1cfdfbd43757605"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "dc9ac032dd1f4ca48916b29e6aaa4ec28e04284e835f9e300923c2f99b11a079"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "f6008363f8841387346eadd02db056c7f2ddf5a67741d04ca3c6af98bdca9cac"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_diagnostics.py",
+      "sha256": "a5b03f7ff0e6aad6260ed4c8b6bbc03757e11601c1ca5498fadbfe168867a55e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_experiment.py",
+      "sha256": "7109e1882f4f731d2838fc686c8dfb5153bb86e175341f0193dfdfbbcbd465f3"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "545bbad4d626b9336216805b3432f9a58a91bd55a13dc58eb5a3f9c9dda700cd"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_CENSUS_WORKFLOW.yml.disabled",
+      "sha256": "176170a700ee476f6beb6f941f3ec0fb72ed1ae48c87245f86f0108d975272ce"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_CENSUS_EXPERIMENT.ja.md",
+      "sha256": "36ca43bade940c6ba4ce3107816e61d31e11745e775a5ec843b339245e969edc"
+    }
+  ]
+}

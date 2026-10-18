@@ -332,6 +332,7 @@ def main():
         owned_baseline = None
         if checkpoint_role == 'producer':
             from checkpoint import owned_processes
+            runner.observed_processes = set()
             report['checkpointCensusBaseline'] = {}
             owned_baseline = owned_processes(report['checkpointCensusBaseline'])
         stage = 'harness'
@@ -412,7 +413,10 @@ def main():
             require(not any((task / 'obj/dist/bin').glob('XUL*')), 'checkpoint-xul-already-built')
             stage = 'checkpoint-census'
             census_completion = report['checkpointCensusCompletion'] = {}
-            verify_owned_boundary(owned_baseline, census_completion)
+            report['checkpointStageObservations'] = {
+                'status': runner.observation_status, 'identities': len(runner.observed_processes),
+                'scope': 'sampled measured stage-group identities; absence is not proof of unrelated ancestry'}
+            verify_owned_boundary(owned_baseline, census_completion, runner.observed_processes)
             require(runner.failure is None and runner.monitor_failure is None and
                     all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
                         row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None

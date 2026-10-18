@@ -215,7 +215,7 @@ def owned_processes(details=None):
     return value['identities']
 
 
-def verify_owned_boundary(baseline, receipt):
+def verify_owned_boundary(baseline, receipt, observed_births=None):
     """Retain safe census evidence before rejecting any new candidate identity."""
     receipt.update(status='collecting', signalOwnershipGranted=False,
                    rawProcessMetadataPublished=False, newCandidateIdentities=None,
@@ -245,9 +245,13 @@ def verify_owned_boundary(baseline, receipt):
         return receipt
     try:
         key = os.urandom(16)
+        if observed_births is not None:
+            from census_diagnostics import describe
         records = [{'kind': kind,
                     'identityTag': hashlib.blake2s(json.dumps(row).encode(), key=key,
-                                                   digest_size=8).hexdigest()}
+                                                   digest_size=8).hexdigest(),
+                    **({'processHint': describe(
+                        row, completion, baseline, observed_births)} if observed_births is not None else {})}
                    for kind, row in classified[:16]]
         receipt.update(deltaRecords=records, deltaRecordsTruncated=len(added)>16,
                        deltaDiagnosticStatus='complete')
