@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "atUTC": "2026-10-18 01:34:48 UTC",
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+  "priorFailedGate": 39086387102,
+  "priorTerminalReceiptCommit": "e97ec609ad2a753c4af241696f65e6f539429d7b",
+  "patchReviewCommit": "152ccfcfa9abb7859a026fd88c983ca215cce8ec",
+  "correction": {
+    "newExactChildReapRequired": true,
+    "initialPollNewReapPermitsFreshProbe": true,
+    "secondPollNewReapPermitsFreshProbe": true,
+    "boundedWaitTimeoutSeconds": 0.05,
+    "boundedWaitOnlyIfUnreapedAfterBothPolls": true,
+    "freshGroupProbeMaximum": 1,
+    "alreadyReapedAtEntryDoesNotPermitRetry": true,
+    "waitTimeoutPreservesOriginalPermissionError": true,
+    "freshAliveAndDeniedResultsPreserved": true,
+    "extraSignals": false,
+    "deniedProbeLeaderStateDiagnostics": true
+  },
+  "hypotheses": {
+    "historicalFailure": "Group-denial traceback does not identify which reap guard operand failed; actual leader state at that probe was not captured.",
+    "controlledGate": "Verify recovery after newly reaping the exact owned leader, with a fresh authoritative group query. Repeat rapid monitor-stop cleanup 20 times.",
+    "originalNativeExitCause": "unresolved"
+  },
+  "portableTests": {
+    "total": 133,
+    "passed": 124,
+    "skipped": 9,
+    "seconds": 6.658,
+    "logSHA256": "725a5c820518cfe8b512e31ef4b70ea1d502776efefdfbfc5195e06e68d0fee3"
+  },
+  "shortGate": {
+    "n": 15,
+    "parent": "434edc9be2171c23e35a946759116ff69f1bf96a",
+    "tree": "f228892afcd32c416b6408c8602de16a3d3e869c",
+    "commit": "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+    "path": ".github/workflows/mac-native-generation-recheck.yml",
+    "branch": "codex/mac-native-cleanup-recovery15-20261018",
+    "workflowSHA256": "7fabed22d9bba2fbe2cf69861ca7e9f42dee09d5eaf7e50994df5c17164ab2aa",
+    "testCount": 133,
+    "requiredSkips": 0,
+    "sdkRequired": false,
+    "buildRequired": false
+  },
+  "conditionalFull": {
+    "n": 16,
+    "parent": "dc052aff9d13a09312d8c948d80fa4fd89ca98e3",
+    "tree": "032ae2fbd2bdef592d2ea797db210abd03420dd3",
+    "commit": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "path": ".github/workflows/mac-native-nonpgo.yml",
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "workflowSHA256": "3086a7db2e48714115e4cd0ed0babcee3c86654152014f072cf420bd0a392f50",
+    "allowedExecutions": 1,
+    "criteria": [
+      "All 133 real Mac gate tests pass with no skips",
+      "Independent terminal review is clear",
+      "Official SDK metadata and acquisition guard remain valid"
+    ]
+  },
+  "unchanged": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "sdkArtifact": 12096898807,
+    "sdkContent": true,
+    "resourceLimits": true,
+    "permissionBoundary": true,
+    "processSelection": true,
+    "platformJobMinutes": 360
+  },
+  "newArtifacts": 0,
+  "productSigning": false,
+  "productPublishing": false,
+  "merge": false,
+  "workflowProviderExactReadback": true
+}
