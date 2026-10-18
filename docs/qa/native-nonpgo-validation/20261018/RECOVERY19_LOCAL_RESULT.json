@@ -1,0 +1,38 @@
+{
+  "bindings": [
+    {
+      "bytes": 26956,
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "34e0e51ef24f0ceb656cec15537f9e8431f50b65f744c7e18a5650f186eefbf6"
+    },
+    {
+      "bytes": 20167,
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "465503b217dc1ef6990b8349e5280b84efa3970505b7f0bfd77dba122cc4cb5b"
+    }
+  ],
+  "credentialDropOutsideCandidateScopeGuaranteed": false,
+  "independentTests": {
+    "darwinSkipped": 10,
+    "passed": 178,
+    "resourceWarningsAreErrors": true,
+    "seconds": 8.532,
+    "total": 188
+  },
+  "requiredMacTests": 188,
+  "review": {
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "TECHNICAL_GO_WITH_IMMUTABLE_BIND_GATES"
+  },
+  "schema": 1,
+  "signalOwnershipExpanded": false,
+  "skipsAllowed": 0,
+  "templateSHA256": "f73a0a424a28ec7ecbd044d8d213ee39e55efd132af50a49b75ed238e5ff24ce",
+  "tests": {
+    "darwinSkipped": 10,
+    "passed": 178,
+    "seconds": 8.498,
+    "total": 188
+  }
+}

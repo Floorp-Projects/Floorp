@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "run": 39126068495,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39126068495",
+  "caller": "545709094d22f05cb37cab99800e9404c970418f",
+  "fixture": "6bc5adaeea4bc53fc4702e4d19053fd87b6ca2da",
+  "producerJob": 117671348743,
+  "status": "failure-before-acquisition",
+  "consumer": "skipped",
+  "sdkAcquisition": "skipped",
+  "build": "not-started",
+  "upload": "skipped",
+  "storedArtifacts": 0,
+  "preflight": {
+    "status": "failed",
+    "self": {
+      "status": "measured",
+      "rssMiB": 18.33203125,
+      "cpuSeconds": 0.215726538,
+      "state": "R"
+    },
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 186,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "status": "failed",
+      "seconds": 54.689,
+      "bytes": 41836,
+      "sha256": "e9387b0b91265ed26392a77f37fc4a043340e982fb7f8493ab9208fb4e6e58cb",
+      "cases": [
+        {
+          "outcome": "ERROR",
+          "test": "test_checkpoint.CheckpointGuards.test_real_mac_new_owned_process_is_observed",
+          "phase": "test_real_mac_new_owned_process_is_observed",
+          "frames": [
+            {
+              "file": "test_checkpoint.py",
+              "line": 306
+            },
+            {
+              "file": "checkpoint.py",
+              "line": 232
+            },
+            {
+              "file": "support.py",
+              "line": 27
+            }
+          ],
+          "exceptionType": "support.Failure",
+          "failureCode": "checkpoint-process-owner-changed"
+        }
+      ]
+    },
+    "stages": [
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "failureEvidence": {
+          "beforeCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 41836,
+            "tailBytesRead": 41836,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 227,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          },
+          "leaderExitAlreadyObserved": 1,
+          "afterCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 41836,
+            "tailBytesRead": 41836,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 227,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          }
+        },
+        "reason": "nonzero-exit",
+        "failurePhase": "wait",
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "logBytes": 41836,
+        "peakRSSMiB": 97,
+        "minimumFreeGiB": 107.19,
+        "lastActivity": {
+          "rssMiB": 71.21875,
+          "cpuSeconds": 7.359,
+          "rssLowerBoundMiB": 71.21875,
+          "cpuLowerBoundSeconds": 7.359,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 71.21875,
+              "cpuSeconds": 7.358691993,
+              "state": "R",
+              "pidTag": "4b3ccb7972377ab0",
+              "identityTag": "e9e89d76c8561cd7"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "monitorFailure": null,
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 71.62
+    }
+  },
+  "actualMixedCredentialValues": "NOT_RECORDED",
+  "confirmedStaticDefect": "OR selection followed by AND worker-credential requirement rejects stable mixed-credential candidates",
+  "correction": "Require exact ps/BSD uid+ruid match; retain pid/birth/uid/ruid in read-only baseline; reject new candidate identities and changed credentials within OR candidate scope",
+  "signalOwnershipExpanded": false
+}

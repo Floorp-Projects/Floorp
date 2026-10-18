@@ -207,6 +207,7 @@ def context(plan_path, source, task, sdk):
 
 
 def owned_processes():
+    """Read-only UID-associated census; this does not grant signal ownership."""
     from darwin_activity import probe
     result = subprocess.run(['/bin/ps', '-axo', 'pid=,uid=,ruid='], capture_output=True,
                             text=True, check=True, timeout=3)
@@ -229,8 +230,10 @@ def owned_processes():
         status, bsd, reason = probe().bsd(pid)
         require(status in ('measured', 'gone'), 'checkpoint-process-identity-unavailable')
         if status == 'measured':
-            require(bsd.uid == os.geteuid() and bsd.ruid == os.getuid(), 'checkpoint-process-owner-changed')
-            births.add((bsd.pid, bsd.start_sec, bsd.start_usec))
+            require(bsd.uid == uid and bsd.ruid == ruid, 'checkpoint-process-owner-changed')
+            # Retain mixed credentials as well. Existing OS helpers belong in
+            # the baseline; a new identity or changed credential rejects pack.
+            births.add((bsd.pid, bsd.start_sec, bsd.start_usec, bsd.uid, bsd.ruid))
     return births
 
 

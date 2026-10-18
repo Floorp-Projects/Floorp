@@ -322,7 +322,7 @@ class CheckpointGuards(unittest.TestCase):
                 mock.patch.object(cp.os, 'geteuid', return_value=501), \
                 mock.patch.object(cp.os, 'getuid', return_value=501), \
                 mock.patch('darwin_activity.probe', return_value=probe):
-            self.assertEqual(cp.owned_processes(), {(41, 123, 4)})
+            self.assertEqual(cp.owned_processes(), {(41, 123, 4, 501, 501)})
         probe.bsd.assert_called_once_with(41)
 
     def test_malformed_or_invalid_uid_inventory_remains_unavailable(self):
@@ -334,15 +334,39 @@ class CheckpointGuards(unittest.TestCase):
                     cp.owned_processes()
                 probe.assert_not_called()
 
-    def test_real_uid_worker_still_requires_matching_bsd_effective_owner(self):
+    def test_mixed_owner_identity_is_bound_to_inventory_and_retained_in_census(self):
         probe = mock.Mock()
-        probe.bsd.return_value = ('measured', SimpleNamespace(uid=0, ruid=501), None)
+        probe.bsd.return_value = ('measured', SimpleNamespace(pid=41, start_sec=123, start_usec=4,
+                                                           uid=0, ruid=501), None)
+        with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='41 0 501\n')), \
+                mock.patch.object(cp.os, 'geteuid', return_value=501), \
+                mock.patch.object(cp.os, 'getuid', return_value=501), \
+                mock.patch('darwin_activity.probe', return_value=probe):
+            self.assertEqual(cp.owned_processes(), {(41,123,4,0,501)})
+        probe.bsd.assert_called_once_with(41)
+
+    def test_credentials_changed_since_inventory_remain_unavailable(self):
+        probe = mock.Mock()
+        probe.bsd.return_value = ('measured', SimpleNamespace(uid=501, ruid=501), None)
         with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='41 0 501\n')), \
                 mock.patch.object(cp.os, 'geteuid', return_value=501), \
                 mock.patch.object(cp.os, 'getuid', return_value=501), \
                 mock.patch('darwin_activity.probe', return_value=probe):
             with self.assertRaisesRegex(Failure, 'checkpoint-process-owner-changed'):
                 cp.owned_processes()
+
+    def test_same_birth_with_changed_credentials_is_not_in_baseline(self):
+        probe = mock.Mock()
+        def census(uid):
+            probe.bsd.return_value = ('measured', SimpleNamespace(pid=41, start_sec=123, start_usec=4,
+                                                               uid=uid, ruid=501), None)
+            with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout=f'41 {uid} 501\n')), \
+                    mock.patch.object(cp.os, 'geteuid', return_value=501), \
+                    mock.patch.object(cp.os, 'getuid', return_value=501), \
+                    mock.patch('darwin_activity.probe', return_value=probe):
+                return cp.owned_processes()
+        before = census(501)
+        self.assertEqual(census(0)-before, {(41,123,4,0,501)})
 
 
 if __name__ == '__main__':
