@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "executionEvidenceCommit": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+  "executionRun": 39082468600,
+  "patch": {
+    "commit": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+    "localEquivalentCommit": "dadccda72261131bf07fbd2c44f5328589e36bab",
+    "tree": "20cf2f84cfce233501f6415a12480ae8ede07abf",
+    "parent": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "d9c2e621d7c9fbc573a053c7f06798fc1d52cd893e39022b41f8550c1842bdce"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_inventory_timeout.py",
+        "sha256": "c4f034c3dc55799e24fb59d657f45f7d1424705adf61f4814d33e887508ce8ee"
+      }
+    ],
+    "providerTreeAndFileContentsVerified": true
+  },
+  "change": {
+    "boundary": "Only the process inventory subprocess TimeoutExpired is converted to an incomplete sample.",
+    "classification": "inventory-timeout",
+    "publishedQueryFields": [
+      "operation",
+      "errorType",
+      "timeoutSeconds",
+      "elapsedSeconds"
+    ],
+    "unknownFields": [
+      "rssMiB",
+      "cpuSeconds",
+      "rssLowerBoundMiB",
+      "cpuLowerBoundSeconds",
+      "processes"
+    ],
+    "unknownValue": null,
+    "partialOutputUsed": false,
+    "maxExistingAttempts": 3,
+    "perQueryTimeoutSeconds": 3,
+    "retryPauseSeconds": 0.25,
+    "newRetryLoop": false,
+    "recoveredSample": "Only a complete new inventory plus successful existing counter validation supplies resource values; prior timeout detail remains in partialSamples.",
+    "persistentFailure": "monitor-unavailable remains a failure; safe owned-group cleanup and exact leader reaping remain required.",
+    "probeAndParserExceptions": "Unchanged propagation; not caught by the query timeout handler."
+  },
+  "tests": {
+    "platform": "linux",
+    "command": "python3 -m unittest test_owned_cleanup test_native_processes test_ps_lifetime test_guards test_failure_recovery test_mac_recheck test_inventory_timeout -v",
+    "total": 126,
+    "passed": 119,
+    "skipped": 7,
+    "seconds": 6.7,
+    "newTargetedTests": 8,
+    "privateLogSHA256": "6e70ed7fb22ce92765bb523e79863644297baf78e3528d0fb6188317f2cb2d1b",
+    "skippedScope": "Actual macOS process ABI tests; this patch has not yet run on macOS.",
+    "cases": [
+      "Timeout then full sample on Darwin and Linux paths",
+      "Three timeouts retain null resources and exact retry count",
+      "Permission and nonzero query failures propagate",
+      "Partial libproc sample then timeout then complete retains both failures",
+      "Counter-probe timeout and KeyboardInterrupt are not swallowed",
+      "Real timed-out query child is killed and reaped before next attempt",
+      "Persistent query failures retain first failure, durable excerpts and safe stage cleanup",
+      "Recovered inventory failure permits a real stage to complete"
+    ]
+  },
+  "invariants": {
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "resourceLimitsChanged": false,
+    "ownershipChecksChanged": false,
+    "cleanupChanged": false,
+    "darwinCounterABIChanged": false,
+    "sdkAcquisitionRulesChanged": false,
+    "productChanged": false,
+    "newArtifacts": 0,
+    "permissionsExpanded": false,
+    "authenticationSettingsChanged": false,
+    "productSigning": false,
+    "merge": false,
+    "newCIExecution": false,
+    "productPublishing": false
+  },
+  "nextGate": {
+    "kind": "short SDK-free macos-15-intel test job",
+    "requiredBeforeFullRetry": true,
+    "hypothesis": "A single bounded process-inventory timeout can recover through the existing resample budget without stopping the owned stage; repeated inventory timeouts remain monitor-inconclusive.",
+    "mustVerify": [
+      "Actual macOS query-child timeout kill/reap",
+      "Recovery with real Darwin inventory and counters",
+      "Persistent timeout first failure and safe owned-stage cleanup",
+      "Existing zombie, birth-generation, census and failure-excerpt tests"
+    ],
+    "fullBuildRetryLaunched": false
+  },
+  "remainingUnknowns": [
+    "Cause of the original native host exit",
+    "Why this runner's ps inventory exceeded three seconds",
+    "Full host/XUL and native authentication outcome for the corrected fixture",
+    "Any compiler diagnostics outside the inspected bounded pre-cleanup tail"
+  ],
+  "review": {
+    "decision": {
+      "executionReady": false,
+      "nextValidation": "Short SDK-free macos-15-intel gate only; no additional full-build retry is included in this review.",
+      "openBlocking": 0,
+      "openP1": 0,
+      "openP2": 0,
+      "staticReady": true,
+      "status": "STATIC_READY_PORTABLE_TESTS_PASSED_MAC_GATE_REQUIRED"
+    },
+    "commit": "55ad73ac792e150b2647556f8150132623fab8c4",
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY12_PATCH_REVIEW.json",
+    "sha256": "4ee81948ca68efc7c9081a9e57aa52b50f9f4d89f18a9917c84efc323306e480",
+    "reviewerTargetedTests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_inventory_timeout -v",
+      "environment": "Linux, Python 3.12",
+      "passed": 8,
+      "result": "OK",
+      "seconds": 1.872,
+      "skipped": 0,
+      "total": 8
+    },
+    "reviewerAdditionalPortableCheck": {
+      "assertions": {
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "partialUnknownKind": "inventory-timeout",
+        "recoveredSampleAttempts": 2,
+        "stageSucceeded": true,
+        "watchInstances": 2
+      },
+      "method": "Read-only real-stage execution with an injected first query timeout and a wrapped ProgressWatch factory; repository source unchanged. This is an ad-hoc reviewer check, not a committed reset-specific test."
+    }
+  }
+}
