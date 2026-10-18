@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Không gian làm việc mới ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "Đẩy không gian làm việc lên",
       "move-down": "Đẩy không gian làm việc xuống",
       "delete": "Xóa không gian",
       "manage": "Quản lý không gian",
-      "archive": "Archive Workspace"
+      "archive": "Archive Workspace",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "Tạo không gian làm việc mới...",
