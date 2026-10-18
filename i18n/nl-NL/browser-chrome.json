@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "QR-code genereren voor deze pagina",
   "qrcode-generate-page-action-title": "QR-code Generator",
+  "firefoxSidebar": {
+    "edgeToggle": "De Firefox-zijbalk openen of vastzetten",
+    "resize": "De Firefox-zijbalk groter of kleiner maken"
+  },
   "panelSidebar": {
+    "resize": "Breedte van de zijbalk aanpassen",
     "modal": {
       "type": "Paneel Type",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Media",
       "open-tabs": "Tabbladen openen",
       "switcher": "Schakelaar",
-      "history-suggestions": "Geschiedenis",
-      "bookmark-suggestions": "Bladwijzers"
+      "history-suggestions": "Geschiedenis (Dynamisch zoeken)",
+      "bookmark-suggestions": "Bladwijzers (Dynamisch zoeken)"
     },
     "noResults": "Geen opdrachten gevonden",
     "noResultsHint": "Probeer een andere zoekopdracht",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Waar openen",
     "bookmarkSwitcherWhereNewTab": "Nieuw tabblad",
     "bookmarkSwitcherWhereNewTabDesc": "Openen in een nieuw tabblad op de voorgrond",
-    "bookmarkSwitcherWherePlaceholder": "Kies waar je het wilt openen..."
+    "bookmarkSwitcherWherePlaceholder": "Kies waar je het wilt openen...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Zoeken \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Zoeken Open Tabs",
+      "reservedBookmarkSearch": "Zoeken in bladwijzers",
+      "reservedHistorySearch": "Zoekgeschiedenis"
+    }
   },
   "commandPaletteReadings": {}
 }

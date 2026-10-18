@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Генерувати QR-код для цієї сторінки",
   "qrcode-generate-page-action-title": "Генератор QR-кодів",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "Тип панелі",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Media",
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
-      "history-suggestions": "Історія",
-      "bookmark-suggestions": "Закладки"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Where to open",
     "bookmarkSwitcherWhereNewTab": "Нова вкладка",
     "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
-    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
+    "bookmarkSwitcherWherePlaceholder": "Select where to open...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Історія пошуку"
+    }
   },
   "commandPaletteReadings": {}
 }
