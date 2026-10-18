@@ -1,0 +1,23 @@
+{
+  "atUTC": "2026-10-18T00:20:49Z",
+  "artifact": {
+    "id": 12096898807,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "expired": false,
+    "expiresAt": "2026-10-18T09:48:20Z",
+    "sourceRun": 39022451582
+  },
+  "source": {
+    "run": 39022451582,
+    "attempt": 1,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "status": "completed"
+  },
+  "contentPinsUnchanged": true,
+  "regularAcquisitionGuardsRetained": true,
+  "payloadDownloadedBeforeJob": false,
+  "noActiveMatchingNativeJobs": true,
+  "priorFullBranchRuns": 0
+}
