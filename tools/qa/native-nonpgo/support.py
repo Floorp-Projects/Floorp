@@ -15,6 +15,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from failure_excerpt import excerpt
 
 
 class Failure(RuntimeError):
@@ -282,6 +283,7 @@ class Runner:
             if value['sampleComplete']:
                 break
             partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
+                            **{key: value[key] for key in ('esrchRechecks', 'esrchExamples') if key in value},
                             **({'inventorySummary': value['inventorySummary']}
                                if 'inventorySummary' in value else {}),
                             'knownRSSLowerBoundMiB': value['rssLowerBoundMiB'],
@@ -319,6 +321,12 @@ class Runner:
         cleanup_diagnostics = []
         leader_reap = {'status': 'not-launched'}
         group_cleanup = 'not-launched'
+        failure_evidence = None
+        def capture_failure_evidence():
+            nonlocal failure_evidence
+            if failure_evidence is None:
+                failure_evidence = {'beforeCleanup': excerpt(path),
+                                    'leaderExitAlreadyObserved': process.returncode if process is not None else None}
         try:
             with path.open('xb') as output:
                 process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
@@ -350,12 +358,13 @@ class Runner:
                         reason = 'native-private-size-limit'
                     if reason:
                         self.fail(stage, reason)
+                        capture_failure_evidence()
                         self.stop(process, cleanup_diagnostics)
                         break
                     phase = 'group-activity'
                     activity = self.group_activity(process.pid)
                     last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
-                    if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete']:
+                    if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete'] or activity.get('esrchRechecks'):
                         diagnostic = self.record_monitor(stage, activity)
                     if not activity['sampleComplete']:
                         if process.poll() is not None:
@@ -370,7 +379,7 @@ class Runner:
                     if self.native_registry is not None:
                         self.native_registry.census()
                         rss += self.native_registry.outside_group_rss(activity['_pids'])
-                    if activity.get('partialSamples'):
+                    if activity.get('partialSamples') or activity.get('esrchRechecks'):
                         # An unobserved interval cannot count as evidence of
                         # unchanged CPU, memory, membership or runnable state.
                         progress = ProgressWatch(self.limits['stallQuietMinutes'])
@@ -383,6 +392,7 @@ class Runner:
                         reason = 'stalled-no-progress'
                     if reason:
                         self.fail(stage, reason)
+                        capture_failure_evidence()
                         self.stop(process, cleanup_diagnostics)
                         break
                     if elapsed >= next_status:
@@ -399,12 +409,14 @@ class Runner:
             if self.owned_group_alive(process, cleanup_diagnostics):
                 reason = reason or 'owned-descendants-outlived-leader'
                 self.fail(stage, reason)
+                capture_failure_evidence()
                 self.stop(process, cleanup_diagnostics)
             if code or reason:
                 self.fail(stage, reason or 'nonzero-exit')
                 raise Failure(reason or 'nonzero-exit')
             return path
         except BaseException as error:
+            capture_failure_evidence()
             reason = reason or (str(error) if isinstance(error, Failure) else type(error).__name__)
             failure_phase = phase
             if phase == 'group-activity' and self.monitor_failure is None:
@@ -426,6 +438,7 @@ class Runner:
                                 self.fail(stage, 'owned-native-cleanup-incomplete')
                                 raise Failure('owned-native-cleanup-incomplete')
             except BaseException as error:
+                capture_failure_evidence()
                 cleanup_failure = str(error) if isinstance(error, Failure) else type(error).__name__
                 reason = reason or cleanup_failure
                 failure_phase = failure_phase or 'cleanup'
@@ -448,7 +461,10 @@ class Runner:
                     log_bytes = path.stat().st_size
                 except OSError:
                     log_bytes = None
+                if failure_evidence is not None:
+                    failure_evidence['afterCleanup'] = excerpt(path)
                 self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
+                                     'failureEvidence': failure_evidence,
                                      'reason': reason, 'failurePhase': failure_phase,
                                      'cleanupFailure': cleanup_failure,
                                      'cleanupDiagnostics': cleanup_diagnostics,

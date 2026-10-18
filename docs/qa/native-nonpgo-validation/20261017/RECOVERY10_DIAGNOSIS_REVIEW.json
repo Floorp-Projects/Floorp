@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "decision": "NARROW_IDENTITY_BOUND_ESRCH_RECHECK_AND_BOUNDED_FAILURE_DIAGNOSTICS_ARE_SUPPORTED_CANDIDATES",
+  "patchReviewed": false,
+  "executionReady": false,
+  "binding": {
+    "analysisBaseCommit": "dec153d3e03d4ccf1ae2cb6c14642bf602439a20",
+    "executedFixture": "c127e001c5337e47a842c7453177da286bc02c54",
+    "callerCommit": "dbca173839e63b82fcca2f1a109dfd1ec671f0a3",
+    "runId": 39077252234,
+    "jobId": 117526865829,
+    "attempt": 1,
+    "darwinActivitySHA256": "208440527a8a0e848ba82afc960bf845cf5b62c923e7dfaaa64d3a5b759f032e",
+    "collectedDecodedLogBytes": 161324,
+    "collectedDecodedLogSHA256": "31e9cc2d05f403446046fd22a03648e4b9979f800b35cacfc6fe4c93262fbb2c",
+    "rawLogPublished": false
+  },
+  "terminalFacts": {
+    "providerStatus": "completed",
+    "providerConclusion": "failure",
+    "runner": "macos-15-intel",
+    "newArtifacts": 0,
+    "pipelineElapsedMinutes": 49.51,
+    "firstFailure": {
+      "stage": "full-build",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 2969.82
+    },
+    "fullBuild": {
+      "exitCode": 1,
+      "reason": "monitor-unavailable",
+      "failurePhase": "group-activity",
+      "cleanupFailure": null,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 1
+      },
+      "logBytes": 10926490,
+      "peakRSSMiB": 7275,
+      "minimumFreeGiB": 91.86
+    },
+    "sampleAttempts": 3,
+    "distinctPidTags": 3,
+    "distinctFallbackBirthTags": 3,
+    "taskQueries": [
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      }
+    ],
+    "BSDQueries": [
+      {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      }
+    ],
+    "fallbackStateInterpretation": "Full valid BSD identity with a live state, not measured task resources. The original failed task queries carry no birth identity.",
+    "inventoryOwnerRelations": [
+      "same",
+      "same",
+      "same"
+    ],
+    "differentOwners": 0,
+    "resourceTotals": {
+      "rssMiB": null,
+      "cpuSeconds": null
+    },
+    "stagePackageReached": false,
+    "nativeSuiteReached": false,
+    "nativeCleanup": null,
+    "productQualification": false
+  },
+  "diagnosis": {
+    "classification": "Monitoring inconclusive during a changing same-owner build process graph; not the earlier same-child privileged-ps EPERM case.",
+    "established": "Three distinct PID/birth snapshots each failed the task query with ESRCH while a later BSD query succeeded. Resource totals were correctly withheld and cleanup verified.",
+    "notEstablished": [
+      "Exact lifecycle transition behind any initial ESRCH",
+      "That any initial failed query and its later BSD result referred to the same generation",
+      "A compiler error as the primary build failure",
+      "A signal as the primary compiler failure",
+      "Successful full-host/XUL completion or native authentication"
+    ],
+    "kernelEvidence": "The task-all flavor performs a live proc lookup and does not request zombies; the BSD flavor with nonzero arg can also find zombies. These are separate observations. proc_find has exec/shadow-process handling. This supports a race hypothesis but does not identify the observed transition. BSD state or flags alone cannot establish missing task resource totals."
+  },
+  "minimumRecheckDesign": {
+    "trigger": "Only initial task size=0 and errno=ESRCH followed by a complete valid live BSD identity satisfying the external expected generation, same UID, and target group requirements.",
+    "anchor": "Bind the additional query to the first valid BSD (PID,startSec,startUsec). Keep this internal anchor separate from an external OwnedNative expected identity.",
+    "budget": "At most one immediate additional task read, plus the normal authoritative BSD fallback if needed; no recursion, sleep or widening of the outer three attempts and 0.25-second spacing.",
+    "measurement": "Accept only a complete task-all result with the same anchor and every existing state/owner/group/counter validation. Append that measured birth to the existing deduplication set.",
+    "gone": "Accept only an authoritative full valid zombie result, independently confirmed ESRCH, or replacement of an externally expected owned generation. Flags such as INEXIT are not absence.",
+    "replacementHazard": "When the external expected identity is absent, an internal-anchor mismatch with a new live same-PID/same-PGID generation must remain unknown. Calling that slot gone could discard a current group member and fabricate a complete resource total.",
+    "persistentOrInvalid": "Live persistent ESRCH, permissions, short/invalid identity, invalid task counters, owner changes or unresolved membership remain unavailable/null. Permission errors do not trigger additional attempts.",
+    "evidence": "Retain bounded original/fallback/recheck outcomes and anonymous generation tags. Preserve recovery diagnostics without unbounded arrays or replacing first failure.",
+    "qualification": "This is a safe candidate for a transient window; it is not proven to resolve the observed run or every process-churn race."
+  },
+  "failureMessageEvidence": {
+    "observedMarkers": {
+      "compiler-error": 1
+    },
+    "rustErrorCodes": [],
+    "fullBuildPrivateLogBytes": 10926490,
+    "availability": "The private full-build log is not present in collected job output or retained artifacts. The original error text cannot be reconstructed from the marker count.",
+    "currentImplementation": "The error-colon count is generated from a bounded private tail after Runner cleanup. It may include output caused by monitor-triggered termination; exitCode=1 does not disambiguate the chronology.",
+    "minimumCollection": "Capture a bounded classified tail before cleanup signals and distinguish it from any after-cleanup capture. Keep a hard byte, line and record cap, and catch collector failures without changing primary firstFailure.",
+    "publicAllowlist": [
+      "Known tool enum",
+      "Known diagnostic category",
+      "Validated repository-relative source file and bounded line/column",
+      "Rust Edddd codes",
+      "Known signal or OS-status enums",
+      "Counts and truncation/availability flags"
+    ],
+    "excluded": [
+      "Arbitrary free-text messages or quoted strings",
+      "Adjacent source/context lines",
+      "Full argv, environment, absolute filesystem paths or URLs",
+      "Secret/token patterns and private non-diagnostic text"
+    ],
+    "unknown": "Use unclassified or unavailable without raw fallback text. Canonical allowlisted categories must not be described as verbatim original excerpts."
+  },
+  "requiredTargetedTests": [
+    "Initial ESRCH plus valid live anchor followed by full same-birth counters recovers once.",
+    "Same-birth zombie and independent ESRCH reconcile to gone; no flags-only reconciliation.",
+    "Initial or recheck permission, persistent live ESRCH, malformed/short BSD, and invalid task counters remain unknown.",
+    "Same PID/different live birth in the same target PGID stays unknown in group sampling, including null totals and no confirmed-gone increment.",
+    "An externally expected replaced owned generation preserves the existing gone behavior without changing group membership selection.",
+    "Retry count is bounded with no recursive rechecks; outer attempts and spacing remain unchanged.",
+    "Failure diagnostics separate before/after cleanup, apply all byte/record caps, suppress arbitrary secret-like text and retain primary failure when collection fails.",
+    "An SDK-free actual-Mac own-child/churn gate would be needed before claiming execution qualification; no additional full build is needed for implementation review."
+  ],
+  "invariants": [
+    "No resource-role exclusions or privilege changes",
+    "No unknown-to-zero substitution",
+    "No global retry/limit changes",
+    "Exact ownership and cleanup retained",
+    "Original failure and unavailable native authentication retained"
+  ],
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39077252234",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_proc.c"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "SDKDownloads": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0,
+    "method": "Read-only decoded evidence and committed source review, terminal provider API check, and official Apple source comparison."
+  }
+}

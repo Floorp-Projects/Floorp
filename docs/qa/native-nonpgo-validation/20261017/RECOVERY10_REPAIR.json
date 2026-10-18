@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "recordedAtUTC": "2026-10-18T00:02:04.704493+00:00",
+  "sourceBase": "c127e001c5337e47a842c7453177da286bc02c54",
+  "terminalEvidenceCommit": "96bf0e1d436acbe356dcf2e76d802a84a902abdf",
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "bytes": 13139,
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 24610,
+      "sha256": "02128febb25e9e4c61ef976673710ecaa74a856caee4d3f5ad272e147485ffde"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 29005,
+      "sha256": "a6dc0bf40692b75f59b3813c5dae21169530625cc7cecc435c7b4aed8b56cb49"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+      "bytes": 3347,
+      "sha256": "428e42b3b9fd7dd15d92bb36e302574e8ea83ca350a436379120c61509156bf8"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
+      "bytes": 11121,
+      "sha256": "a277cf4f8426ec0b19d38930215eb83bc8ce297fd8f2fd4f46457dbd203042af"
+    }
+  ],
+  "changes": {
+    "esrch": "Only zero-byte ESRCH with complete valid live same-owner/group BSD anchors one immediate additional task read; no added sleep or recursion. Recovered full counters require the same birth; a new live generation stays unknown for group inventory. Explicit owned-generation replacement semantics remain distinct.",
+    "failureEvidence": "Separate bounded before/after cleanup diagnostic-shape records, maximum 128 KiB read and 16 retained records, fixed message classes and Rust diagnostic codes only; no arbitrary text, paths, argv, environment or quoted values.",
+    "markerMeaning": "Rename the generic compiler-error regex count to error-marker; explicitly label it as post-cleanup text matches, not a compiler verdict."
+  },
+  "retained": {
+    "planBytesUnchanged": true,
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "sdkArtifact": 12096898807,
+    "globalAttempts": 3,
+    "retrySleepSeconds": 0.25,
+    "unknownRSSAndCPU": null,
+    "noResourceRoleOrUIDExclusions": true,
+    "resourceLimitsUnchanged": true,
+    "permissionChanges": false,
+    "newArtifacts": 0
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_owned_cleanup test_native_processes test_ps_lifetime test_guards test_failure_recovery -q",
+    "total": 111,
+    "passed": 108,
+    "skipped": 3,
+    "skipReason": "Existing actual macOS libproc gates; current development host is Linux.",
+    "elapsedSeconds": 3.748,
+    "newTargetedTests": 14,
+    "realLinuxMonitorStopAndReap": true,
+    "secretRedactionAndBounds": true
+  },
+  "limits": {
+    "actualMacCandidateExecution": false,
+    "newCIExecutions": 0,
+    "newFullBuilds": 0,
+    "currentHistoricalCompilerErrorCause": "UNKNOWN_RAW_PRIVATE_STAGE_LOG_NOT_RETAINED",
+    "candidateGuaranteedToResolveHistoricalESRCH": false,
+    "remainingGate": "Representative actual Mac recheck/churn validation with fixed negative controls before another full build."
+  },
+  "kernelSource": {
+    "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+    "observation": "The task-all-info and BSD-info flavors perform distinct lookups; only BSD-info with nonzero arg enables zombie lookup. This permits lookup observations to differ and does not make ESRCH or a live-looking BSD record sufficient to prove disappearance. The exact historical generation at the failed task query was not observed."
+  }
+}

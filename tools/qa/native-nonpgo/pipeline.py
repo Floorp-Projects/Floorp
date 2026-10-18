@@ -402,12 +402,13 @@ def main():
                     stream.seek(max(0, path.stat().st_size - 131072))
                     text = stream.read(131072).decode('utf-8', errors='replace')
                 markers = {name: len(re.findall(pattern, text, re.I)) for name, pattern in (
-                    ('compiler-error', r'error:'), ('rust-error', r'error\[E[0-9]{4}\]'),
+                    ('error-marker', r'error:'), ('rust-error', r'error\[E[0-9]{4}\]'),
                     ('missing-header', r'fatal error:.*file not found'),
                     ('undefined-symbol', r'Undefined symbols|undefined reference'),
                     ('linker-error', r'ld:.*error'), ('disk-full', r'No space left on device'),
                     ('memory-exhaustion', r'out of memory|cannot allocate memory'))}
                 report['buildDiagnosticMarkers'] = {key: value for key, value in markers.items() if value}
+                report['buildDiagnosticMarkerScope'] = 'Post-cleanup tail text matches; not a compiler-failure verdict.'
                 report['rustErrorCodes'] = sorted(set(re.findall(r'error\[(E[0-9]{4})\]', text)))[:16]
             except OSError:
                 report['buildDiagnosticUnavailable'] = True

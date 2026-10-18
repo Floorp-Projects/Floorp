@@ -88,6 +88,28 @@ class DarwinActivity:
         return 'unavailable', None, 'short-bsd-info'
 
     def read(self, pid, pgid=None, expected=None):
+        first = self._read_once(pid, pgid, expected)
+        if (first['status'] != 'unavailable' or
+                first['taskQuery']['bytes'] != 0 or
+                first['taskQuery']['errno'] != errno.ESRCH or '_birth' not in first or
+                first['reason'] != 'short-task-info' or first.get('fallbackReason') != 'measured'):
+            return first
+        current = self._read_once(pid, pgid, expected)
+        same_birth = current.get('_birth') == first['_birth'] if '_birth' in current else None
+        evidence = {'firstTaskQuery': first['taskQuery'], 'firstBSDQuery': first['bsdQuery'],
+                    'firstIdentityTag': first['identityTag'], 'sameGeneration': same_birth,
+                    'taskQuery': current['taskQuery'], 'outcome': current['status']}
+        for key in ('bsdQuery', 'reason', 'identityTag'):
+            if key in current:
+                evidence[key] = current[key]
+        if (current['status'] in ('measured', 'gone') and same_birth is False and
+                not (expected is not None and current.get('reason') == 'generation-replaced')):
+            # An internal retry anchor must not exclude a new live group member.
+            current = {**first, 'reason': 'generation-changed-during-recheck'}
+            evidence.update(outcome='unavailable', reason=current['reason'])
+        return {**current, 'esrchRecheck': evidence}
+
+    def _read_once(self, pid, pgid=None, expected=None):
         result = {'status': 'unavailable', 'pidTag': self.tag(pid)}
         value = TaskAllInfo()
         size, code = self.query(pid, 2, value)
@@ -101,6 +123,7 @@ class DarwinActivity:
             result.update(bsdQuery=details, fallbackReason=reason or state)
             if bsd is not None:
                 result['identityTag'] = self.tag((bsd.pid, bsd.start_sec, bsd.start_usec))
+                result['_birth'] = (bsd.pid, bsd.start_sec, bsd.start_usec)
             if bsd is not None and expected is not None and (
                     bsd.pid, bsd.start_sec, bsd.start_usec) != (
                     expected['pid'], expected['startSec'], expected['startUsec']):
@@ -119,6 +142,7 @@ class DarwinActivity:
         result['identityTag'] = self.tag(birth)
         if bsd.status not in (1, 2, 3, 4, 5):
             return {**result, 'reason': 'invalid-bsd-state'}
+        result['_birth'] = birth
         if expected is not None and birth != (expected['pid'], expected['startSec'], expected['startUsec']):
             return {**result, 'status': 'gone', 'reason': 'generation-replaced'}
         if bsd.status == 5:
@@ -140,6 +164,7 @@ class DarwinActivity:
         inventory_summary = {'identityBound': False, 'sameOwner': 0, 'differentOwner': 0,
                              'metadataUnavailable': 0, 'roles': {}}
         rss, cpu, states, births, gone = 0.0, 0.0, set(), [], 0
+        rechecks, recheck_examples = 0, []
         for line in inventory.splitlines():
             fields = line.split(None, 5)
             if not fields or fields[0] != str(pgid):
@@ -170,6 +195,10 @@ class DarwinActivity:
             else:
                 inventory_summary['metadataUnavailable'] += 1
             value = self.read(pid, pgid)
+            if 'esrchRecheck' in value:
+                rechecks += 1
+                if len(recheck_examples) < 3:
+                    recheck_examples.append({'pidTag': value['pidTag'], **value['esrchRecheck']})
             if value['status'] == 'unavailable':
                 reason = value['reason']
                 unknown[reason] = unknown.get(reason, 0) + 1
@@ -200,6 +229,7 @@ class DarwinActivity:
                 '_pids': tuple(sorted(births)), 'sampleComplete': complete, 'unknownKinds': unknown,
                 'formatExamples': examples, 'confirmedGone': gone, 'counterSource': 'libproc-taskallinfo',
                 'inventorySummary': inventory_summary,
+                'esrchRechecks': rechecks, 'esrchExamples': recheck_examples,
                 'statesSource': 'libproc-runnable-summary',
                 'timebaseNumer': self.numer, 'timebaseDenom': self.denom}
 
