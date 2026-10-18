@@ -165,6 +165,7 @@ class Runner:
         self.native_cleanup = None
         self.monitor_diagnostics = []
         self.monitor_failure = None
+        self.phase_deadline_minutes = None
 
     def elapsed(self):
         return max(0, time.monotonic() - self.monotonic_started)
@@ -350,9 +351,15 @@ class Runner:
         del self.monitor_diagnostics[:-16]
         return value
 
-    def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None):
+    def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None, *, phase_deadline_minutes=None):
         require(stage.replace('-', '').isalnum(), 'stage-name')
         require(deadline_minutes == self.limits['jobMinutes'], 'platform-budget-binding')
+        if phase_deadline_minutes is None:
+            phase_deadline_minutes = self.phase_deadline_minutes
+        require(phase_deadline_minutes is None or
+                0 < phase_deadline_minutes < deadline_minutes, 'phase-budget-binding')
+        require(phase_deadline_minutes is None or self.elapsed() < phase_deadline_minutes * 60,
+                'phase-deadline-before-launch')
         path = self.task / (stage + '.private.log')
         limit = log_limit or self.limits['maxStageLogBytes']
         reason = None
@@ -415,6 +422,8 @@ class Runner:
                         reason = 'private-log-limit'
                     elif private_bytes > self.limits['maxNativePrivateBytes']:
                         reason = 'native-private-size-limit'
+                    elif phase_deadline_minutes is not None and elapsed >= phase_deadline_minutes * 60:
+                        reason = 'phase-deadline'
                     if reason:
                         self.fail(stage, reason)
                         capture_failure_evidence()
@@ -466,6 +475,8 @@ class Runner:
                     time.sleep(1)
             phase = 'wait'
             code = process.wait(timeout=5)
+            if phase_deadline_minutes is not None and self.elapsed() >= phase_deadline_minutes * 60:
+                reason = reason or 'phase-deadline'
             if self.owned_group_alive(process, cleanup_diagnostics):
                 reason = reason or 'owned-descendants-outlived-leader'
                 self.fail(stage, reason)

@@ -1,0 +1,77 @@
+{
+  "artifactUploads": 0,
+  "bindings": [
+    {
+      "bytes": 23929,
+      "path": "tools/qa/native-nonpgo/test_checkpoint_prototype.py",
+      "sha256": "c08be1e8d106ac75c1b441e79a4a994a0b844e209a769a401d60d1e6ec042c0d"
+    },
+    {
+      "bytes": 11988,
+      "path": "docs/qa/native-nonpgo-validation/20261018/CHECKPOINT_LOCAL_DESIGN.ja.md",
+      "sha256": "ce0e66cc2e2e7f30af39b503e67926a86e8a345cf18035b89f4404d2852ad6c9"
+    }
+  ],
+  "ciExecutions": 0,
+  "cloudMutations": 0,
+  "largeDownloads": 0,
+  "localMechanisms": {
+    "actualMakeSIGINT": true,
+    "archiveRestoreAndNormalMakeSucceeded": true,
+    "completedCObjectHashAndMtimePreserved": true,
+    "groupCleanup": "verified-gone",
+    "leaderExit": -2,
+    "leaderReaped": true,
+    "newQATimerAndEmptyOwnershipState": true,
+    "partialTargetDeleted": true
+  },
+  "privateTestLog": {
+    "bytes": 4052,
+    "rawContentPublished": false,
+    "sha256": "8e9d84f55c0b1b5599fa3ec86fa80e06c4947d0c1d863dd27ab875d4f781c243"
+  },
+  "producerDeadlinesMinutes": {
+    "archiveHashEnd": 305,
+    "buildStop": 240,
+    "cleanupEnd": 245,
+    "platformLimit": 360,
+    "receiptEnd": 345,
+    "scanManifestEnd": 260,
+    "uploadEnd": 335
+  },
+  "productQualification": false,
+  "productionChanged": false,
+  "proposedLimits": {
+    "actualSizeKnown": false,
+    "artifacts": 1,
+    "entries": 200000,
+    "executions": 1,
+    "logicalGiB": 30,
+    "phaseDurationFitKnown": false,
+    "retentionDays": 1,
+    "serialStandardIntelJobs": 2,
+    "storedGiB": 10
+  },
+  "review": {
+    "blockingUnknowns": [
+      "Gecko/Cargo partial outputs and build-script OUT_DIR",
+      "actual Mac interruption/resume",
+      "natural export/Rust boundary prerequisite and duration qualification",
+      "exact paths and metadata across separate VMs",
+      "size, archive/upload throughput and two-job completion"
+    ],
+    "localPrototype": "CLEAR",
+    "realCheckpoint": "NO_GO"
+  },
+  "schemaVersion": 1,
+  "scope": "local design experiment only",
+  "tests": {
+    "independentPassed": 20,
+    "independentSeconds": 0.448,
+    "passed": 20,
+    "seconds": 0.45,
+    "skipped": 0,
+    "total": 20
+  },
+  "workflowChanged": false
+}

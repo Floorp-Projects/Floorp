@@ -1,0 +1,51 @@
+{
+  "independentFocusedAfterFinalMtimeFix": {
+    "darwinSkipped": 1,
+    "passed": 44,
+    "seconds": 1.051,
+    "total": 45
+  },
+  "independentRegressionBeforeFinalMtimeFix": {
+    "darwinSkipped": 10,
+    "passed": 167,
+    "seconds": 7.675,
+    "total": 177
+  },
+  "interruptedStateEligible": false,
+  "latestFullRegression": {
+    "darwinSkipped": 10,
+    "passed": 168,
+    "seconds": 7.714,
+    "total": 178
+  },
+  "openP1": 0,
+  "openP2": 0,
+  "productQualification": false,
+  "remainingBindGates": [
+    "replace fixture placeholder exactly once with immutable reviewed fixture SHA",
+    "provider file readback and exact workflow render comparison",
+    "fresh official SDK remains unexpired at acquisition",
+    "actual Mac178/178 with no skips before SDK acquisition/build"
+  ],
+  "resolvedFinding": "source/tools/SDK mtimeNS restoration now requires immediate nofollow lstat equality; omitted-utime fault injection must fail",
+  "schema": 1,
+  "scope": "fixed natural-success checkpoint across two standard Intel jobs",
+  "unproved": [
+    "real Mac natural boundary duration",
+    "real stored/logical size and archive throughput",
+    "cross-VM restore and complete full host/XUL/native within two jobs"
+  ],
+  "verdict": "TECHNICAL_GO_WITH_IMMUTABLE_BIND_GATES",
+  "workflowReview": {
+    "bashScripts": 15,
+    "inlinePythonAST": 5,
+    "jobs": 2,
+    "macTestsRequired": 178,
+    "rawSingleFile": true,
+    "readPermissionsOnly": true,
+    "retentionDays": 1,
+    "serial": true,
+    "templateSHA256": "c049957d2c2a5ba84620db003463ee491ca0af7bc21ffaade3cef6d260c0a87a",
+    "uploads": 1
+  }
+}

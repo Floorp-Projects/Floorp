@@ -22,6 +22,10 @@ from owned_native import OwnedNative
 HERE = Path(__file__).resolve().parent
 
 
+class CheckpointComplete(Exception):
+    pass
+
+
 def capture(args, cwd=None):
     value = subprocess.check_output(args, cwd=cwd, timeout=30, stderr=subprocess.DEVNULL)
     require(len(value) < 2 * 1024**2, 'capture-limit')
@@ -299,6 +303,7 @@ def main():
     parser.add_argument('--fixture', type=Path, required=True)
     parser.add_argument('--harness', type=Path, required=True)
     parser.add_argument('--task', type=Path, required=True)
+    parser.add_argument('--checkpoint-role', choices=('producer', 'consumer'))
     args = parser.parse_args()
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
@@ -310,11 +315,24 @@ def main():
     report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
     stage = 'preflight'
+    checkpoint_role = args.checkpoint_role
+    if checkpoint_role:
+        report.update(qualification=plan['checkpoint']['qualification'], freshObjdir=False,
+                      sameJob=False, checkpointRole=checkpoint_role,
+                      criteria={**plan['criteria'], 'freshObjdir': False, 'sameJob': False},
+                      checkpointStorage={'authorizedArtifacts': 1, 'retentionDays': 1,
+                                         'maxStoredBytes': plan['checkpoint']['maxStoredBytes']})
+        runner.phase_deadline_minutes = plan['checkpoint'][
+            'producerBuildDeadlineMinutes' if checkpoint_role == 'producer' else 'consumerRestoreDeadlineMinutes']
     try:
         (task / 'tmp').mkdir(mode=0o700)
         basic_env = clean_environment(task)
         basic_env['PATH'] += ':/usr/local/bin'
         report['preflight'] = preflight(plan, args.source, args.fixture, args.harness, task)
+        owned_baseline = None
+        if checkpoint_role == 'producer':
+            from checkpoint import owned_processes
+            owned_baseline = owned_processes()
         stage = 'harness'
         report['harness'] = prepare_harness(plan, args.harness, args.fixture, runner, basic_env)
         stage = 'sdk'
@@ -329,6 +347,15 @@ def main():
         env = clean_environment(task, tools)
         env['PATH'] += ':/usr/local/bin'
         env['MOZ_BUILD_DATE'] = time.strftime('%Y%m%d%H%M%S', time.gmtime(started))
+        if checkpoint_role == 'consumer':
+            date = os.environ.get('CHECKPOINT_BUILD_DATE', '')
+            require(re.fullmatch('[0-9]{14}', date), 'checkpoint-build-date')
+            env['MOZ_BUILD_DATE'] = date
+        os.environ['MOZ_BUILD_DATE'] = env['MOZ_BUILD_DATE']
+        checkpoint_env = {**env, **{key: os.environ[key] for key in
+                          ('FLOORP_FIXTURE_SHA', 'HARNESS_SHA', 'RUNTIME_SHA', 'GITHUB_REPOSITORY',
+                           'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT', 'GITHUB_SHA', 'ImageVersion')
+                          if key in os.environ}}
         for name, command, expected in (
             ('clang', [str(tools / 'clang/bin/clang'), '--version'], 'clang version 22.1.8'),
             ('rust', [str(tools / 'rust/bin/rustc'), '--version'], 'rustc 1.95.0 (59807616e 2026-04-14)'),
@@ -339,20 +366,86 @@ def main():
         stage = 'prepare-source'
         prepare_source(plan, args.source, args.fixture, task, tools, sdk, runner, env)
         require(not (task / 'obj').exists(), 'objdir-not-fresh')
-        stage = 'configure'
-        runner.run('configure', [sys.executable, 'mach', 'configure'], args.source, env, plan['limits']['jobMinutes'])
-        runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
-                   args.source, env, plan['limits']['jobMinutes'])
+        if checkpoint_role == 'consumer':
+            stage = 'checkpoint-restore'
+            runner.run(stage, [sys.executable, str(HERE / 'checkpoint.py'), 'restore',
+                       '--source', str(args.source), '--task', str(task)], task, checkpoint_env,
+                       plan['limits']['jobMinutes'], phase_deadline_minutes=plan['checkpoint']['consumerRestoreDeadlineMinutes'])
+            report['checkpointRestore'] = json.loads((task / 'checkpoint-restore.json').read_text())
+            runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
+                       args.source, env, plan['limits']['jobMinutes'])
+            from checkpoint import verify_restored_config
+            verify_restored_config(task)
+            report['resumedEffectiveConfigVerified'] = True
+        else:
+            stage = 'configure'
+            runner.run('configure', [sys.executable, 'mach', 'configure'], args.source, env, plan['limits']['jobMinutes'])
+            runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
+                       args.source, env, plan['limits']['jobMinutes'])
         verify_config(plan, task, tools, sdk)
+        if checkpoint_role == 'producer':
+            from checkpoint import full_log_receipt, owned_processes, verify_graph
+            stage = 'checkpoint-exports'
+            runner.run(stage, [sys.executable, 'mach', 'build', '-j', '3', 'pre-export', 'export'],
+                       args.source, env, plan['limits']['jobMinutes'],
+                       phase_deadline_minutes=plan['checkpoint']['producerBuildDeadlineMinutes'])
+            data = json.loads((task / 'effective-config.private.log').read_text())
+            boundary = verify_graph(task, args.source, data)
+            archive = Path(boundary['archive'])
+            require(not archive.exists() and not archive.is_symlink(), 'checkpoint-rust-not-fresh')
+            stage = 'checkpoint-rust'
+            runner.run(stage, [sys.executable, 'mach', 'build', '-j', '3', '-C', '.', boundary['node']],
+                       args.source, env, plan['limits']['jobMinutes'],
+                       phase_deadline_minutes=plan['checkpoint']['producerBuildDeadlineMinutes'])
+            depinfo = Path(boundary['depInfo'])
+            require(archive.is_file() and not archive.is_symlink() and archive.stat().st_size > 8 and
+                    depinfo.is_file() and not depinfo.is_symlink() and depinfo.stat().st_size > 0,
+                    'checkpoint-rust-output')
+            with archive.open('rb') as stream:
+                require(stream.read(8) == b'!<arch>\n', 'checkpoint-rust-archive-format')
+            runner.run('checkpoint-rust-archive', ['/usr/bin/ar', '-t', str(archive)], task, env,
+                       plan['limits']['jobMinutes'],
+                       phase_deadline_minutes=plan['checkpoint']['producerBuildDeadlineMinutes'])
+            host = task / 'obj/widget/cocoa/MacWebAppService.o'
+            require(not host.exists() and not host.is_symlink(), 'checkpoint-host-already-built')
+            require(not any((task / 'obj/dist/bin').glob('XUL*')), 'checkpoint-xul-already-built')
+            require(not (owned_processes() - owned_baseline), 'checkpoint-owned-survivors')
+            require(runner.failure is None and runner.monitor_failure is None and
+                    all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
+                        row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None
+                        for row in runner.records), 'checkpoint-stage-completion')
+            boundary.update(status='passed', interrupted=False, newOwnedSurvivors=0,
+                            archiveSHA256=digest(archive), depInfoSHA256=digest(depinfo),
+                            censusScope='BSD identities with worker effective or real UID; baseline before all build preparation',
+                            logs={name: full_log_receipt(task / (name + '.private.log'))
+                                  for name in ('checkpoint-exports', 'checkpoint-rust')},
+                            stages=[row for row in runner.records if row['stage'].startswith('checkpoint-')])
+            require(all(row['complete'] for row in boundary['logs'].values()), 'checkpoint-log-unavailable')
+            write_json(task / 'checkpoint-boundary.json', boundary)
+            stage = 'checkpoint-pack'
+            runner.run(stage, [sys.executable, str(HERE / 'checkpoint.py'), 'pack', '--source',
+                       str(args.source), '--task', str(task)], task, checkpoint_env, plan['limits']['jobMinutes'],
+                       phase_deadline_minutes=plan['checkpoint']['producerPackDeadlineMinutes'])
+            ready = json.loads((task / 'checkpoint-ready.json').read_text())
+            report.update(status='checkpoint-ready', checkpoint=ready, nativeAuthentication='NOT_TESTED')
+            with Path(os.environ['GITHUB_OUTPUT']).open('a') as output:
+                for key in ('bytes', 'sha256', 'manifestSHA256', 'buildDate'):
+                    output.write(key + '=' + str(ready[key]) + '\n')
+            raise CheckpointComplete
+        runner.phase_deadline_minutes = None
         stage = 'full-build'
         runner.run('full-build', [sys.executable, 'mach', 'build', '-j', '3'], args.source, env,
-                   plan['limits']['buildDeadlineMinutes'])
+                   plan['limits']['buildDeadlineMinutes'],
+                   phase_deadline_minutes=plan['checkpoint']['consumerBuildDeadlineMinutes'] if checkpoint_role else None)
+        if checkpoint_role:
+            runner.phase_deadline_minutes = plan['checkpoint']['consumerNativeDeadlineMinutes']
         object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
         report['hostObject'] = macho(object_path, 1)
         require(object_path.stat().st_mtime >= started, 'object-not-fresh')
         stage = 'stage-package'
         runner.run('stage-package', [sys.executable, 'mach', 'build', '--allow-subdirectory-build',
-                   'browser/installer/stage-package'], args.source, env, plan['limits']['buildDeadlineMinutes'])
+                   'browser/installer/stage-package'], args.source, env, plan['limits']['buildDeadlineMinutes'],
+                   phase_deadline_minutes=plan['checkpoint']['consumerPackageDeadlineMinutes'] if checkpoint_role else None)
         apps = list((task / 'obj/dist/floorp').glob('*.app'))
         require(len(apps) == 1, 'staged-app-layout')
         app = apps[0]
@@ -377,13 +470,18 @@ def main():
         runner.run('native-suite', [sys.executable, str(HERE / 'native_suite.py'), '--browser', str(disposable),
                    '--harness', str(args.harness), '--task', str(task), '--build-id', env['MOZ_BUILD_DATE']],
                    task, clean_environment(task),
-                   plan['limits']['nativeDeadlineMinutes'], plan['limits']['maxNativePrivateBytes'])
+                   plan['limits']['nativeDeadlineMinutes'], plan['limits']['maxNativePrivateBytes'],
+                   phase_deadline_minutes=plan['checkpoint']['consumerNativeDeadlineMinutes'] if checkpoint_role else None)
         report['native'] = json.loads((task / 'native-summary.json').read_text())
         require(report['native']['status'] == 'passed', 'native-summary')
         require(digest(disposable / 'Contents/MacOS/XUL') == report['signedCopyXUL']['sha256'], 'post-test-copy-binding')
+        if checkpoint_role:
+            runner.phase_deadline_minutes = plan['checkpoint']['finalDeadlineMinutes']
         runner.run('verify-copy-after', ['/usr/bin/codesign', '--verify', '--deep', '--strict', str(disposable)],
                    task, basic_env, plan['limits']['cleanupDeadlineMinutes'])
         report['status'] = 'passed'
+    except CheckpointComplete:
+        pass
     except BaseException as error:
         code = str(error) if isinstance(error, Failure) else type(error).__name__
         runner.fail(stage, code)
@@ -437,7 +535,22 @@ def main():
         report['monitorFailure'] = runner.monitor_failure
         report['firstFailure'] = runner.failure
         report['stages'] = runner.records
+        if checkpoint_role:
+            from checkpoint import full_log_receipt
+            report['checkpointStageLogs'] = {
+                row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
+                for row in runner.records if row['stage'] in
+                ('checkpoint-exports', 'checkpoint-rust', 'checkpoint-pack', 'checkpoint-restore',
+                 'full-build', 'stage-package', 'native-suite')}
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)
+        if report['status'] == 'checkpoint-ready':
+            complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
+                                                     'source', 'effectiveConfig', 'checkpoint')) and
+                        report.get('monitorPreflight', {}).get('status') == 'passed' and
+                        len(report.get('toolchains', [])) == 11 and runner.failure is None)
+            if not complete:
+                runner.fail('final-proof', 'checkpoint-proof-incomplete')
+                report['status'], report['firstFailure'] = 'failed', runner.failure
         if report['status'] == 'passed':
             complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
                         report.get('monitorPreflight', {}).get('status') == 'passed' and
@@ -456,7 +569,7 @@ def main():
             report['validationOutcome'] = validation_outcome(report)
         finally:
             print(json.dumps(report), flush=True)
-    return 0 if report['status'] == 'passed' else 1
+    return 0 if report['status'] in ('passed', 'checkpoint-ready') and runner.failure is None else 1
 
 
 if __name__ == '__main__':

@@ -1,0 +1,88 @@
+{
+  "actualCheckpointProduced": false,
+  "actualRestoreVerified": false,
+  "bindings": [
+    {
+      "bytes": 37255,
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "d979933d389978133ac42233a5d10e0c35a3c672be1aab4886de66593d67e394"
+    },
+    {
+      "bytes": 25727,
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "79d8690f2a94d0317a8208b97a6b03f0a6671dc13809a8f1cb132b05e21a5776"
+    },
+    {
+      "bytes": 28948,
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "bceccd7c154eade3f0c3fbbd579aa58cc3692abc9156526fed7cc3f54d32bbeb"
+    },
+    {
+      "bytes": 26188,
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "e425d5cfc3f9d05a59d14109f1f5a92f6f80bf129df49fc9d66f5bb29e5274ad"
+    },
+    {
+      "bytes": 7491,
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "sha256": "a35803793f7cbcfa1f0601fcffc14f1e2f277d709d074fb1797631914bd71395"
+    },
+    {
+      "bytes": 16602,
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "d211d6a702e18b6ac892972abe2f663b10c3e103f73a2ce547f4e4f5824b6d23"
+    },
+    {
+      "bytes": 5206,
+      "path": "tools/qa/native-nonpgo/test_checkpoint_transfer.py",
+      "sha256": "d55609afb6cf15d58d744df5398bab652252ce332af509f03b89a5a0eb69b533"
+    },
+    {
+      "bytes": 23929,
+      "path": "tools/qa/native-nonpgo/test_checkpoint_prototype.py",
+      "sha256": "c08be1e8d106ac75c1b441e79a4a994a0b844e209a769a401d60d1e6ec042c0d"
+    }
+  ],
+  "macTestsRequired": {
+    "passed": 178,
+    "skipped": 0,
+    "total": 178
+  },
+  "platform": "Linux",
+  "privateTestLog": {
+    "bytes": 36637,
+    "rawContentPublished": false,
+    "sha256": "21e7e3716fd59672d07fc620a657ebfaa87033266daebd1a80bd257a9bb9a840"
+  },
+  "productQualification": false,
+  "realMacBoundaryDurationKnown": false,
+  "realStoredSizeKnown": false,
+  "schema": 1,
+  "scope": "fixed natural-success checkpoint contract; no interrupted-state eligibility",
+  "sdk": {
+    "acquiredAt": "2026-10-18T11:12:15.544644+00:00",
+    "artifact": 12113511845,
+    "canonicalTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "expires": "2026-10-18T20:19:27Z",
+    "run": 39066132056,
+    "sameCanonicalContentAsPreviousPin": true,
+    "tarSHA256": "c63312b0c34b464e4d5127101377c6ce29a3703351b7da1d1846a6059a99fee1",
+    "version": "26.5",
+    "zipSHA256": "99234850e98cd87ccbf77cc702cf0e76bd80ee2ad431eda6ba8dfc8427159c20"
+  },
+  "tests": {
+    "passed": 168,
+    "seconds": 7.714,
+    "skippedDarwinOnly": 10,
+    "total": 178
+  },
+  "workflowStaticValidation": {
+    "artifactsAtMost": 1,
+    "bashSyntax": true,
+    "inlinePythonAST": true,
+    "retentionDays": 1,
+    "serialJobs": 2,
+    "storedBytesAtMost": 10737418240,
+    "yaml": true
+  }
+}
