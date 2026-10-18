@@ -40,7 +40,7 @@ interface GBrowser {
       relatedToCurrent?: boolean;
     },
   ): XULElement;
-  removeTab(tab: XULElement): void;
+  removeTab(tab: XULElement, options?: { animate?: boolean }): void;
   showTab(tab: XULElement): void;
   hideTab(tab: XULElement): void;
   getBrowserForTab(tab: XULElement): {
@@ -52,6 +52,8 @@ interface GBrowser {
     ) => void;
   };
   pinTab(tab: XULElement): void;
+  unpinTab(tab: XULElement): void;
+  moveTabTo(tab: XULElement, options: { tabIndex: number }): void;
   tabGroups: Array<{ tabs: XULElement[]; style: { display: string } }>;
   tabContainer: EventTarget;
   selectedBrowser: {
