@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "atUTC": "2026-10-18T00:12:23.394136+00:00",
+  "baseReviewedPatch": "4ee7ba2b6552cd25b825a2e28178907b453afc40",
+  "generationCounterCodeUnchanged": true,
+  "planAndPinsUnchanged": true,
+  "changes": [
+    "Emit before-cleanup and after-cleanup bounded sanitized excerpts immediately to stdout with flush, independently of the final summary.",
+    "Retain compiler wording through fixed-vocabulary normalized snippets (240 characters maximum), with ANSI stripped and arbitrary quoted values, paths, URLs, assignments and unknown tokens redacted.",
+    "Add actual-Mac live and zombie generation rechecks with controlled first ESRCH, natural 720-child churn with the unchanged resource monitor, and an actual clang source-error durable-log control."
+  ],
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+      "bytes": 5357,
+      "sha256": "94228ce441b62cf2cb3fd30aa3f728ea8dc9919ab9d9ff639e09cb3ff7e782e2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 25486,
+      "sha256": "ae5013457b9471d566fff4f6c572447604e0d4cd743176f5d82c07671901ca01"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
+      "bytes": 14918,
+      "sha256": "07a86f9c16c0311ef188cebb7d01ec78cd856a3a331ca0bc64cb8d17f40b8edf"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mac_recheck.py",
+      "bytes": 8051,
+      "sha256": "285cbad23a49f947bbb54068c831e6242734934ae558721785f1def0bd8ec3cc"
+    }
+  ],
+  "portableTests": {
+    "total": 118,
+    "passed": 111,
+    "skipped": 7,
+    "elapsedSeconds": 4.831,
+    "includesDurableJSONPhaseOrderAndRedaction": true
+  },
+  "macScope": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "sdkRequired": false,
+    "runtimeBuildRequired": false,
+    "newArtifacts": 0,
+    "permissionsExpanded": false
+  },
+  "criteriaBeforeFullValidation": [
+    "All real-Mac and negative-control tests pass.",
+    "Durable job log contains both before and after actual-clang diagnostic excerpts without the private sentinel.",
+    "Independent review has no meaningful unresolved findings.",
+    "Current official SDK metadata and acquisition expiry remain valid."
+  ]
+}

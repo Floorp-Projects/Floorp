@@ -26,6 +26,35 @@ PATTERNS = (
     ('resource-error', 'memory-exhaustion', r'\b(?:out of memory|cannot allocate memory)\b'),
 )
 
+VOCABULARY = frozenset(('error fatal use of undeclared identifier unknown type name no matching '
+    'member function file not found undefined symbols space left on device out memory cannot allocate '
+    'clang frontend command failed unable to execute segmentation fault signal interrupt interrupted '
+    'terminated killed aborted by user keyboardinterrupt expected unqualified declaration definition '
+    'incompatible incomplete invalid conversion from to for in is was were a an the and with '
+    'argument arguments parameter parameters too many few must be at least return value '
+    'lvalue rvalue const static struct class template instantiation ambiguous reference candidate '
+    'match does requires but provided non assertion attribute unsupported target linker exit code '
+    'thread panic unreachable redefinition conflicting types format string operand operator using '
+    'call expression constant after before scope required declared initialize initialization '
+    'out line any this that mismatched rustc llvm as or directory such').split())
+
+
+def normalized_diagnostic(line):
+    line = re.sub(r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"|`[^`]*`", ' REDACTED ', line)
+    line = re.sub(r'https?://\S+|(?:/|[A-Za-z]:[\\/])\S*|\b\S+=\S+', ' REDACTED ', line)
+    start = re.search(r'\b(?:fatal )?error(?:\[E[0-9]{4}\])?:', line, re.I)
+    if start:
+        line = line[start.start():]
+    tokens = []
+    for match in re.finditer(r'[A-Za-z_][A-Za-z_0-9]*|[0-9]+', line):
+        word = match[0]
+        token = word.lower() if word.lower() in VOCABULARY else word if re.fullmatch(r'E[0-9]{4}', word) else '<redacted>'
+        if not tokens or token != '<redacted>' or tokens[-1] != token:
+            tokens.append(token)
+        if len(tokens) >= 48 or len(' '.join(tokens)) >= 240:
+            break
+    return ' '.join(tokens)[:240]
+
 
 def classify(line):
     matches = [{'kind': kind, 'messageClass': label} for kind, label, pattern in PATTERNS
@@ -54,8 +83,10 @@ def excerpt(path):
             data = data.partition(b'\n')[2]
         records = []
         for number, line in enumerate(data.decode('utf-8', errors='replace').splitlines(), 1):
+            line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', line)
             for value in classify(line):
-                records.append({'tailLine': number, **value})
+                records.append({'tailLine': number, **value,
+                                'normalizedDiagnostic': normalized_diagnostic(line)})
         selected = records if len(records) <= 16 else records[:8] + records[-8:]
         return {**result, 'available': True, 'fileBytes': info.st_size,
                 'tailBytesRead': len(data), 'tailTruncated': bool(start),

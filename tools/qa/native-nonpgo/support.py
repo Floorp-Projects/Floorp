@@ -328,6 +328,12 @@ class Runner:
             except Exception:
                 return {'available': False, 'errorType': 'diagnostic-collector-error',
                         'rawContentPublished': False}
+        def emit_excerpt(phase_name, evidence):
+            try:
+                print(json.dumps({'failureExcerpt': {'stage': stage, 'phase': phase_name,
+                                                     'evidence': evidence}}), flush=True)
+            except Exception:
+                pass
         def capture_failure_evidence(before_cleanup=True):
             nonlocal failure_evidence
             if failure_evidence is None:
@@ -335,6 +341,7 @@ class Runner:
                     'available': False, 'reason': 'not-captured-before-cleanup'}
                 failure_evidence = {'beforeCleanup': before,
                                     'leaderExitAlreadyObserved': process.returncode if process is not None else None}
+                emit_excerpt('before-cleanup', before)
         try:
             with path.open('xb') as output:
                 process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
@@ -471,6 +478,7 @@ class Runner:
                     log_bytes = None
                 if failure_evidence is not None:
                     failure_evidence['afterCleanup'] = collect_excerpt()
+                    emit_excerpt('after-cleanup', failure_evidence['afterCleanup'])
                 self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
                                      'failureEvidence': failure_evidence,
                                      'reason': reason, 'failurePhase': failure_phase,

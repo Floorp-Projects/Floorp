@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MPL-2.0
 import ctypes
+import contextlib
 import errno
+import io
 import json
 import os
 from pathlib import Path
@@ -180,7 +182,8 @@ class FailureExcerptTests(unittest.TestCase):
                     'rssLowerBoundMiB': 0, 'cpuLowerBoundSeconds': 0,
                     'unknownKinds': {'short-task-info': 1}, 'formatExamples': []}
         script = "import time; print(\"x.cc:1:2: error: use of undeclared identifier 'SECRET'\",flush=True); time.sleep(30)"
-        with mock.patch.object(runner, 'group_activity', side_effect=unavailable):
+        durable = io.StringIO()
+        with mock.patch.object(runner, 'group_activity', side_effect=unavailable), contextlib.redirect_stdout(durable):
             with self.assertRaisesRegex(Failure, 'monitor-unavailable'):
                 runner.run('compile', [sys.executable, '-c', script], self.root, os.environ.copy(), 360)
         record = runner.records[-1]
@@ -192,6 +195,23 @@ class FailureExcerptTests(unittest.TestCase):
         self.assertEqual([x['kind'] for x in before['records']], ['source-error'])
         self.assertIn('keyboard-interrupt', json.dumps(after))
         self.assertNotIn('SECRET', json.dumps(record))
+        emitted = [json.loads(line)['failureExcerpt'] for line in durable.getvalue().splitlines()]
+        self.assertEqual([x['phase'] for x in emitted], ['before-cleanup', 'after-cleanup'])
+        self.assertEqual(emitted[0]['evidence'], before)
+        self.assertEqual(emitted[1]['evidence'], after)
+        self.assertNotIn('SECRET', durable.getvalue())
+
+    def test_unknown_diagnostic_preserves_safe_words_and_strips_color_and_values(self):
+        path = self.root / 'unknown.private.log'
+        path.write_text("\x1b[31m/private/PASSWORD/x.cc:1:2: error: out-of-line definition of 'SECRET' "
+                        "does not match any declaration in `PRIVATE` API_TOKEN=value\x1b[0m\n")
+        result = excerpt(path)
+        value = result['records'][0]['normalizedDiagnostic']
+        self.assertIn('out of line definition', value)
+        self.assertIn('does not match any declaration in', value)
+        for private in ('PASSWORD', 'SECRET', 'PRIVATE', 'API_TOKEN', 'value', '/private'):
+            self.assertNotIn(private, json.dumps(result))
+        self.assertLessEqual(len(value), 240)
 
     def test_unreadable_diagnostics_do_not_change_primary_failure(self):
         with mock.patch('failure_excerpt.os.open', side_effect=PermissionError):
