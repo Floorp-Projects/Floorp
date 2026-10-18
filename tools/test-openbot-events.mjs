@@ -342,6 +342,7 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
   const calls = [];
   /** @type {number[]} */
   const waits = [];
+  /** @type {string[]} */
   const warnings = [];
   let clock = 1000;
   /** @type {(delay:number) => Promise<void>} */
@@ -363,7 +364,7 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
     now: () => clock++,
     wait,
     fetchImpl,
-    onRetry: message => warnings.push(message),
+    onRetry: (/** @type {string} */ message) => warnings.push(message),
   });
   assert.equal(status, 202);
   assert.equal(calls.length, 3);
@@ -393,6 +394,7 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
 });
 test("transport failures log only safe cause codes, never the private webhook URL", async () => {
   const event = formatEvent(issueEvent("opened"), "issues");
+  /** @type {string[]} */
   const warnings = [];
   let calls = 0;
   const transportError = new Error("fetch failed: https://private.example/hook?token=secret-value");
@@ -403,13 +405,14 @@ test("transport failures log only safe cause codes, never the private webhook UR
       secret: "synthetic",
       attempts: 2,
       wait: () => Promise.resolve(),
-      onRetry: message => warnings.push(message),
+      onRetry: (/** @type {string} */ message) => warnings.push(message),
       fetchImpl: () => {
         calls++;
         return Promise.reject(transportError);
       },
     }),
     error => {
+      assert.ok(error instanceof Error);
       assert.match(error.message, /last: transport ENOTFOUND/);
       assert.doesNotMatch(error.message, /secret-value|private\.example/);
       return true;
@@ -424,13 +427,14 @@ test("transport failures log only safe cause codes, never the private webhook UR
 
 test("unrecognized transport causes are redacted", async () => {
   const event = formatEvent(issueEvent("opened"), "issues");
+  /** @type {string[]} */
   const warnings = [];
   await assert.rejects(
     sendEvent(event, {
       url: "https://example.invalid/hook",
       secret: "synthetic",
       attempts: 1,
-      onRetry: message => warnings.push(message),
+      onRetry: (/** @type {string} */ message) => warnings.push(message),
       fetchImpl: () => {
         const error = new Error("private-secret");
         error.cause = { code: "private-secret" };
