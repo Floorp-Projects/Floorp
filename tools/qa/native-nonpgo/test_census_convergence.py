@@ -57,6 +57,15 @@ def controlled_child(child):
             else:raise AssertionError('controlled-child-cleanup-failed')
 
 
+@contextmanager
+def held_diagnostic_boundary(primary):
+    try:
+        yield
+    except BaseException:
+        if primary is None:raise AssertionError('held-child-diagnostic-failed') from None
+        primary.add_note('held-child-diagnostic-failed')
+
+
 class ConvergenceGuards(unittest.TestCase):
     def runner(self,task):
         return Runner(task,0,{'jobMinutes':360,'stallQuietMinutes':20,
@@ -285,41 +294,90 @@ class ConvergenceGuards(unittest.TestCase):
             print(json.dumps({'censusMetadataResourceGate':value}),flush=True)
 
     @unittest.skipUnless(sys.platform=='darwin','actual Darwin convergence gate')
-    def test_actual_held_child_blocks_until_exit_reap_and_strict_zero(self):
+    def test_actual_held_child_rejects_until_exit_and_preserves_unrelated_candidates(self):
+        from darwin_activity import probe
+        from unittest_receipt import held_child_control_passed,held_resource_public
         with tempfile.TemporaryDirectory() as temporary:
-            task=Path(temporary);runner=self.runner(task);receipt={}
-            baseline=owned_processes()
-            read_fd,write_fd=os.pipe();child=None
+            task=Path(temporary);runner=self.runner(task);receipt={};reader=probe()
+            child=None;read_fd=write_fd=None;released=False;exit_before_boundary=False
+            bound=False;presence=[];outcome='failed';phase_failure=None;baseline=None
             try:
+                baseline=owned_processes()
+                read_fd,write_fd=os.pipe()
                 child=subprocess.Popen([sys.executable,'-c',
                     'import os,select,sys; fd=int(sys.argv[1]); select.select([fd],[],[],30); os.read(fd,1)',str(read_fd)],
                     pass_fds=(read_fd,),start_new_session=True,env=clean_environment(task),
                     stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 os.close(read_fd);read_fd=None
-                released=False
+                state,anchor,_=reader.bsd(child.pid)
+                self.assertEqual(state,'measured');self.assertIsNotNone(anchor)
+                held=cc.identity(anchor);bound=True
                 def release(seconds):
-                    nonlocal released,write_fd
+                    nonlocal released,write_fd,exit_before_boundary
                     if not released:
-                        os.close(write_fd);write_fd=None;child.wait(timeout=5);released=True
+                        self.assertIsNone(child.poll())
+                        os.close(write_fd);write_fd=None
+                        self.assertEqual(child.wait(timeout=5),0)
+                        self.assertFalse(Runner.group_alive(child.pid))
+                        released=True;exit_before_boundary=True
                     else:
-                        # Keep the real strict census; unrelated new candidates cannot be waived.
-                        import time;time.sleep(seconds)
+                        time.sleep(seconds)
                 def measure(actual,value,observed):
+                    self.assertIs(actual,baseline)
                     rows=measure_owned_boundary(actual,value,observed)
-                    if not released:self.assertIn(child.pid,{row[0] for row in rows})
+                    present=held in rows;presence.append(present)
+                    if not released:self.assertTrue(present)
+                    else:self.assertFalse(present)
                     return rows
-                cc.wait_for_boundary(baseline,receipt,runner,deadline_minutes=1,measure=measure,sleep=release)
-                self.assertGreater(receipt['samples'][0]['boundary']['newCandidateIdentities'],0)
-                self.assertEqual(receipt['finalBoundary']['newCandidateIdentities'],0)
-                self.assertIsNotNone(child.returncode)
-                self.assertFalse(Runner.group_alive(child.pid))
+                try:
+                    cc.wait_for_boundary(baseline,receipt,runner,deadline_minutes=1,
+                                         reader=reader,measure=measure,sleep=release)
+                    outcome='natural-zero'
+                except Failure as error:
+                    if str(error)!='census-wait-phase-deadline':raise
+                    phase_failure='census-wait-phase-deadline';outcome='safely-rejected-deadline'
             finally:
-                if read_fd is not None:os.close(read_fd)
-                if write_fd is not None:os.close(write_fd)
-                if child is not None:
-                    try:child.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        child.kill();child.wait(timeout=5)
+                primary=sys.exception();closed=True
+                for descriptor in (read_fd,write_fd):
+                    if descriptor is not None:
+                        try:os.close(descriptor)
+                        except OSError:closed=False
+                cleanup=cleanup_child(child) if child is not None else {}
+                with held_diagnostic_boundary(primary):
+                    samples=receipt.get('samples',[]);counts=[]
+                    for index,sample in enumerate(samples):
+                        resource=sample['resource'];boundary=sample['boundary']
+                        counts.append([sample['elapsedSeconds'],boundary.get('newCandidateIdentities'),
+                            boundary.get('removedCandidateIdentities'),resource.get('sampleComplete') is True,
+                            resource.get('rssMiB') is not None and resource.get('cpuSeconds') is not None,
+                            presence[index] if index<len(presence) else None])
+                    final=receipt.get('finalBoundary')
+                    try:
+                        last_resource=held_resource_public(samples[-1]['resource'] if samples else {})
+                    except Exception:
+                        last_resource={'status':'unavailable','sampleComplete':False,'rssMiB':None,
+                                       'cpuSeconds':None,'projectionUnavailable':True}
+                    value={'schema':1,'status':'failed','outcome':outcome,
+                        'receiptStatus':receipt.get('status','unavailable'),'phaseFailure':phase_failure,
+                        'childBindingVerified':bound,'childReleased':released,
+                        'childExitVerifiedBeforeBoundary':exit_before_boundary,
+                        'childReaped':cleanup.get('leaderReaped',False),
+                        'childExitCode':cleanup.get('exitCode'),
+                        'childGroupGone':cleanup.get('groupCleanup')=='verified-gone',
+                        'childCleanupComplete':closed and cleanup.get('leaderReaped') is True and
+                            cleanup.get('groupCleanup')=='verified-gone' and cleanup.get('cleanupFailure') is None,
+                        'monitorFailureAbsent':runner.monitor_failure is None,
+                        'baselineReset':receipt.get('baselineReset'),
+                        'candidatesExcluded':receipt.get('candidatesExcluded'),'signalsSent':receipt.get('signalsSent'),
+                        'finalBoundaryZero':isinstance(final,dict) and final.get('status')=='passed' and
+                            final.get('newCandidateIdentities')==0,
+                        'checkpointEligibilityEstablished':False,'sampleCounts':counts,'lastResource':last_resource}
+                    value['baselineCandidateIdentities']=len(baseline) if baseline is not None else None
+                    passed=primary is None and held_child_control_passed(value)
+                    value['status']='passed' if passed else 'failed'
+                    print(json.dumps({'heldChildBoundaryControl':value}),flush=True)
+                    if primary is None:self.assertTrue(passed,'held-child-boundary-control-failed')
+                    elif not value['childCleanupComplete']:primary.add_note('held-child-cleanup-failed')
 
 
 class CandidateRecheckGuards(unittest.TestCase):
@@ -445,6 +503,22 @@ class CandidateRecheckGuards(unittest.TestCase):
              self.assertRaisesRegex(Failure,'census-wait-metadata-task-permission'):
             cc.metadata_resource_gate({ROW},reader,{})
         self.assertEqual(reader.read.call_count,3)
+
+    def test_held_diagnostic_projection_and_emit_failures_preserve_primary(self):
+        for operation in ('projection','emit'):
+            primary=RuntimeError('original-control-failure')
+            with self.assertRaises(RuntimeError) as caught:
+                try:
+                    raise primary
+                finally:
+                    with held_diagnostic_boundary(sys.exception()):
+                        if operation=='projection':raise ValueError('PRIVATE-PROJECTION')
+                        with mock.patch('builtins.print',side_effect=OSError('PRIVATE-EMIT')):
+                            print('fixed')
+            self.assertIs(caught.exception,primary)
+            self.assertEqual(primary.__notes__,['held-child-diagnostic-failed'])
+        with self.assertRaisesRegex(AssertionError,'^held-child-diagnostic-failed$'):
+            with held_diagnostic_boundary(None):raise ValueError('PRIVATE-PROJECTION')
 
     def phase_pause_case(self,initial,after_sleep=None,interrupt=False):
         clock=[initial];reader=mock.Mock();reader.bsd.side_effect=self.stable_bsd

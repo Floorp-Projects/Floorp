@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "scope": "Recovery36 short actual Intel Mac terminal evidence and held-child control limits",
+  "decision": {
+    "terminal": "FAILURE_CONFIRMED",
+    "longRecovery37": "NO_GO",
+    "checkpointEligibility": "NOT_ESTABLISHED",
+    "nextShort": "Diagnostic-only test contract and structured evidence require separate review; a short pass alone does not establish long-run feasibility or candidate origin"
+  },
+  "bindings": {
+    "run": 39175758931,
+    "job": 117817956487,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39175758931",
+    "fixture": "9c1db4a082167fc055a498dcec96f5d8072fd540",
+    "fixtureTree": "38772fc08065a60a6510810814db36e51fbc1f31",
+    "caller": "e3992d5e9842277ee8a8d65e67330ba827fd1865",
+    "callerTree": "a1a8d63a6b0a691e304b09f6b71161318ec79f32",
+    "receipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_TERMINAL_RESULT.json",
+      "bytes": 15700,
+      "sha256": "158620d854656a08a65ad18d9fe0cf2caeba1f6b011f2382adcba09acabc86c4"
+    },
+    "decodedProviderLog": {
+      "bytes": 31836,
+      "sha256": "8da87389e8e2f21f8a6d44737a0283f3b22fbe4665fc081dd9f1c18cc5233a99",
+      "rawContentPublished": false
+    },
+    "testSource": {
+      "path": "tools/qa/native-nonpgo/test_census_convergence.py",
+      "sha256": "d42830fff51d005852b7c283ba416f842e4f12e56ef333a59ad84456600857ea"
+    },
+    "resourceSource": {
+      "path": "tools/qa/native-nonpgo/census_convergence.py",
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594"
+    }
+  },
+  "independentVerification": {
+    "actions": [
+      "Read provider run and jobs metadata, decoded job log and artifact collection",
+      "Parsed the complete censusExperiment JSON and compared it exactly with the receipt experiment",
+      "Checked the failing test and unchanged strict production boundary source"
+    ],
+    "metadata": {
+      "event": "push",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "runner": "macos-15-intel",
+      "jobs": 1,
+      "startedAt": "2026-10-18T23:15:42Z",
+      "completedAt": "2026-10-18T23:19:37Z"
+    },
+    "receiptExperimentExact": true,
+    "artifactCount": 0,
+    "testsRerunByReviewer": false,
+    "privateSentinelTokensAbsent": true,
+    "privatePidArrayAbsent": true
+  },
+  "observations": {
+    "sdk": {
+      "acquisition": "passed",
+      "materialization": "passed",
+      "artifact": 12133086104,
+      "canonicalTreeVerified": true,
+      "version": "26.5"
+    },
+    "tests": {
+      "total": 312,
+      "passed": 311,
+      "errors": 1,
+      "failures": 0,
+      "skipped": 0,
+      "seconds": 122.307,
+      "error": {
+        "test": "test_census_convergence.ConvergenceGuards.test_actual_held_child_blocks_until_exit_reap_and_strict_zero",
+        "exceptionType": "support.Failure",
+        "failureCode": "census-wait-phase-deadline",
+        "frames": [
+          {
+            "file": "test_census_convergence.py",
+            "line": 311
+          },
+          {
+            "file": "census_convergence.py",
+            "line": 242
+          },
+          {
+            "file": "support.py",
+            "line": 27
+          }
+        ]
+      },
+      "delayedRecheckControls": "Both actual-Mac controlled live and unreaped-child cases passed; inferred from the source-bound complete suite with zero skips and its sole different error, without separate public per-control receipts",
+      "privateTestLog": {
+        "bytes": 66891,
+        "sha256": "bf4cc0d35de83fe321f6a721667a76643073c0683451c663a931a10c2ef13eed",
+        "rawContentPublished": false
+      }
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 222.63
+    },
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "nativeSelection": "The suite case passed the strict schema2 child argv and cross-selection assertions; five fresh repetitions were not reached",
+    "cleanup": {
+      "startedStages": 5,
+      "allGroups": "verified-gone",
+      "allLeadersReaped": true,
+      "cleanupFailureCount": 0,
+      "leaderExitCodes": [
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "unreached": [
+      "Five fresh candidate repetitions",
+      "Synchronized inventory stress",
+      "Known-child and background experiment",
+      "Checkpoint build/storage/resume",
+      "Browser/native authentication"
+    ],
+    "productQualification": false
+  },
+  "findings": [
+    {
+      "id": "R36-TEST-CONTROL",
+      "severity": "P2",
+      "area": "Test contract",
+      "status": "OPEN",
+      "detail": "The real held-child test requires every candidate absent from its fixed global baseline to disappear within one minute after the controlled child is released. This combines controlled child lifecycle safety with an additional environment-dependent global convergence condition. The production strict-zero requirement remains necessary.",
+      "evidence": [
+        "tools/qa/native-nonpgo/test_census_convergence.py:288",
+        "tools/qa/native-nonpgo/test_census_convergence.py:311",
+        "tools/qa/native-nonpgo/census_convergence.py:242"
+      ],
+      "recommendation": "For a diagnostic-only control, distinguish actual natural-zero completion from fully measured safe nonzero deadline rejection. Preserve all production eligibility checks, candidates, resource limits and failures. Neither outcome by itself proves long-run eligibility."
+    },
+    {
+      "id": "R36-TEST-EVIDENCE",
+      "severity": "P2",
+      "area": "Evidence retention",
+      "status": "OPEN",
+      "detail": "The failed test's actual census samples, candidate identities and child lifecycle details were not projected to the public structured receipt. Its particular remaining delta and reason for reaching the deadline are unknown.",
+      "recommendation": "Always project an allowlisted held-child control receipt through the existing structured unittest receipt route, including first and recent boundaries, all sample counts, explicit unknowns and exact-child cleanup. Reject missing, duplicate, malformed or incomplete evidence."
+    }
+  ],
+  "openFindings": {
+    "P1": 0,
+    "P2": 2,
+    "blockingForLong": true
+  },
+  "nextDiagnosticConditions": [
+    "Keep the original baseline fixed, final strict delta=0 unchanged, exclusions false, signals false and unknown resources null/failing.",
+    "Catch only the fixed census-wait-phase-deadline for a safe rejection control, and require at least one complete nonzero sample containing the exact known child's five-field identity before release.",
+    "Require the controlled child to exit naturally after the pipe release, be exactly reaped with exit0, and have its group verified gone before classifying a safe deadline rejection.",
+    "For the safe rejection branch require every recorded sample to remain nonzero with complete nonnull resource evidence, no final zero boundary, a failed wait receipt and no fatal monitor failure.",
+    "Fail the diagnostic for any other exception, missing sample, resource unknown, unreleased child or incomplete cleanup.",
+    "Publish separate outcome enums for natural-zero, safely-rejected-deadline and failed. Explicitly state that the test result does not establish checkpoint eligibility and does not retrospectively pass Recovery36.",
+    "Use build-free background and original-parent observations only as diagnostic evidence. PID1 original-parent consistency does not prove absence of build-triggered work or filesystem writers.",
+    "Keep long execution on hold until candidate origin and strict-zero feasibility have supporting evidence; do not repeat a long run solely because the short control passes."
+  ],
+  "limitations": [
+    "Monitor failure null means no fatal monitor stop was recorded; it is not proof that every resource query was free of transient recovered races.",
+    "The failing test reached the top-of-loop census deadline. Its private internal census receipt was not retained, so background candidates and exact sample history cannot be reconstructed.",
+    "Neither Recovery36 nor a revised diagnostic establishes that the prior Recovery33/35 remaining candidates originated outside the build.",
+    "SDK success and two controlled delayed rechecks do not establish stable long-running census resource reads, natural convergence, checkpoint eligibility, resumed full host/XUL, or native authentication."
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema": 1,
+  "scope": "Recovery38 diagnostic-only held-child test contract, safe unittest projection and background original-parent observations",
+  "baseFixture": "9c1db4a082167fc055a498dcec96f5d8072fd540",
+  "decision": {
+    "shortRecovery38": "CONDITIONAL_GO",
+    "longRecovery37": "NO_GO",
+    "anyLongFollowUp": "NO_GO_PENDING_CANDIDATE_ORIGIN_AND_STRICT_ZERO_FEASIBILITY_EVIDENCE",
+    "checkpointEligibility": "NOT_ESTABLISHED"
+  },
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "files": {
+    "tools/qa/native-nonpgo/test_census_convergence.py": {
+      "bytes": 45261,
+      "sha256": "9369f2773975e4c14fecf0673dbd848b6c766f67026a051c11f6eb43da938e16"
+    },
+    "tools/qa/native-nonpgo/unittest_receipt.py": {
+      "bytes": 17107,
+      "sha256": "679f31ef9b737e00a5885a336288e021cb092767fbd905a58bdce6185118c097"
+    },
+    "tools/qa/native-nonpgo/test_unittest_receipt.py": {
+      "bytes": 12915,
+      "sha256": "129ee669351999ac661b35c8cd1608e9e183cc5d64f5d22ae02e5f9c1704c6ec"
+    },
+    "tools/qa/native-nonpgo/census_experiment.py": {
+      "bytes": 13746,
+      "sha256": "8c141d2361cfa03db8f48515e8f3975f5fd75220985af1736b956d3f3b809883"
+    },
+    "tools/qa/native-nonpgo/test_census_experiment.py": {
+      "bytes": 9358,
+      "sha256": "f9a86d640395757bdd08118b2faaf5c53606cb50e53b88644b135cc933775e47"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_CENSUS_VERIFICATION.md": {
+      "bytes": 6688,
+      "sha256": "f91bc60ecda04cecc6331442cb50e94a700b9daa2b7f92e020a9b9b2e065934d"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_CENSUS_WORKFLOW.yml.disabled": {
+      "bytes": 3421,
+      "sha256": "b5e42ca47fb307247fea2c982ff5cf1054e624309c3ff6723db35faf3f52a1bc"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_LOCAL_RESULT.json": {
+      "bytes": 1146,
+      "sha256": "aefdae1891e4526dcd147e91f1591fca88155eb3577e5ea708bb6180b6a42337"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_TERMINAL_RESULT.json": {
+      "bytes": 15700,
+      "sha256": "158620d854656a08a65ad18d9fe0cf2caeba1f6b011f2382adcba09acabc86c4"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_TERMINAL_REVIEW.json": {
+      "bytes": 8481,
+      "sha256": "6bd3a809d7474487fbbc4c5191c00333866fc8d4a251a3c51914e6e32e72f6c9"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_INITIAL_REVIEW.json": {
+      "bytes": 3947,
+      "sha256": "035b6cec8d577f5774901fd35b2fe80dcba521ce150aad3bd9f08af44e5af53a"
+    }
+  },
+  "independentValidation": {
+    "immutableBaseRead": "Fetched the five changed source files at the base fixture and compared the changed definitions",
+    "executed": {
+      "environment": "Linux x86_64",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "total": 321,
+      "passed": 305,
+      "skipped": 16,
+      "skipReason": "Darwin-specific cases",
+      "seconds": 17.063,
+      "exitCode": 0,
+      "logBytes": 9156,
+      "logSHA256": "772ac8d00dc93d7f63ebf4657043c1e8bf5ab4bcdf22b6031e32a77cdc98f916"
+    },
+    "syntax": {
+      "yamlDocuments": 1,
+      "bashBlocks": 5,
+      "inlinePythonASTBlocks": 1,
+      "status": "passed"
+    },
+    "sourceBindingsMatchFinalManifest": true,
+    "macExecutionOfThisRevision": "NOT_EXECUTED in this review",
+    "reviewerActions": "Read-only source/provider inspection and local regression execution; wrote review artifacts only"
+  },
+  "changesReviewed": [
+    "The actual held-child test binds the exact five-field identity, preserves the same baseline object, verifies presence before release and absence afterward, checks the exact child is still live before pipe release, then requires natural exit0, exact reap and verified group disappearance.",
+    "Only census-wait-phase-deadline may become a safely-rejected-deadline test-control outcome. Natural-zero still requires the real strict final boundary. Both outcomes explicitly deny checkpoint qualification.",
+    "A passing control requires at least two complete nonnull resource samples, monotonic sample elapsed values, no baseline reset/exclusion/signals, a valid baseline count, released/reaped child, clean group and no fatal monitor failure. Safe deadline rejection requires every delta nonzero; natural-zero requires positive earlier deltas and zero only at the final sample.",
+    "The finally diagnostic retains bounded sample counts and child presence, lifecycle flags and a fixed last-resource projection. Raw identities, paths, arguments, environment, arbitrary text and private extension fields are excluded.",
+    "The exact verbose test marker is bound to an allowlisted public schema. Missing, duplicate, malformed or contradictory diagnostics cannot complete a successful receipt. Failed control details remain visible under a failed suite.",
+    "Background origins are optional and diagnostic-only. Each snapshot preserves the original primary boundary status/counts and baseline, examines at most16 new candidates, uses run-local keyed opaque tags of full five-field identities and binds process hints and origin observations independently. No candidate is excluded or granted signal ownership."
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "Projection or output failure in a finally block could replace an original primary exception",
+      "resolution": "A diagnostic exception boundary preserves the original exception with a fixed note; absent a primary it produces a fixed failure. Portable tests exercise both projection and emit failures."
+    },
+    {
+      "severity": "P2",
+      "issue": "Unavailable or null last-resource values could be accepted as a successful control",
+      "resolution": "Success now requires measured state, complete sample, available projection and numeric finite nonnegative nonnull RSS/CPU. Negative tests cover unavailable/null, unknown, malformed traces/pauses and contradictory success evidence."
+    },
+    {
+      "severity": "P2",
+      "issue": "The inherited test required environment-wide natural zero as part of the controlled-child safety gate and did not project internal observations",
+      "resolution": "The new test explicitly separates genuine natural zero from fully measured safe deadline rejection and exports structured evidence. Recovery36 remains failed; its missing internal candidate data is not reconstructed or retrospectively reclassified."
+    }
+  ],
+  "productionInvariantBindings": {
+    "tools/qa/native-nonpgo/census_convergence.py": {
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594",
+      "unchanged": true
+    },
+    "tools/qa/native-nonpgo/darwin_activity.py": {
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb",
+      "unchanged": true
+    },
+    "tools/qa/native-nonpgo/support.py": {
+      "sha256": "6dc4a5241578b54c5ff954a88cd78191250c629cec5fbb4d43b157d71fa343bc",
+      "unchanged": true
+    },
+    "tools/qa/native-nonpgo/darwin_inventory.py": {
+      "sha256": "e288841181a9240a9a45cb7fe65885e6eb04a696ea770162d4b94271a68c429f",
+      "unchanged": true
+    },
+    "tools/qa/native-nonpgo/plan.json": {
+      "sha256": "0e6bd64cffb9265b8b887a6b7ff31a8a9ffbe3a64388d6e0057202a3021a14a1",
+      "unchanged": true
+    }
+  },
+  "workflow": {
+    "status": "disabled template, fixture placeholder requires immutable rendering",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobTimeoutMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "trigger": "single unused branch initial created push; before zero and attempt1 required",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "persistCredentials": false,
+    "sdk": "Official unexpired acquisition and fixed materialization controls unchanged",
+    "expectedActualMacTests": 321,
+    "expectedSkips": 0,
+    "freshSelectionRepetitions": 5,
+    "inventoryStress": "same strict zero-timeout synchronized load",
+    "backgroundSnapshots": 13,
+    "originalParentControl": true,
+    "newArtifacts": 0,
+    "floorpBuild": false,
+    "upload": false,
+    "longCallerActivation": false
+  },
+  "shortActivationConditions": [
+    "Publish and read back an immutable fixture matching every reviewed file; render only that fixture into the disabled workflow and verify the exact provider caller bytes and single workflow difference.",
+    "Verify the new activation branch is unused, attempt1 initial created-push guards hold, and there is no overlapping owned active or queued run.",
+    "Recheck the fixed SDK official metadata and normal acquisition validity; preserve expiry, HTTP,600-second download and ZIP/TAR/tree/version checks without an expired-artifact workaround.",
+    "Require all321 real Mac cases with zero skips, a valid held-child public diagnostic, SDK verification, all five fresh selection repetitions, strict stress, original-parent control, complete known-child cleanup and all13 background observations.",
+    "Review terminal provider evidence and privacy-safe projections; any missing/unknown resource, failed gate or incomplete cleanup keeps the short run failed."
+  ],
+  "limitations": [
+    "A passing diagnostic control is not checkpoint eligibility. Production still requires all candidates absent from the fixed original baseline to disappear and the strict final delta to be zero.",
+    "The held-child control projects counts and last-resource/lifecycle evidence only. It does not retain the full first/recent candidate-boundary records or establish residual candidate origin; the separate background/origins receipt is the source for those diagnostic observations.",
+    "Process hints and origin captures are sequential individually bound observations, not an atomic snapshot of one exec state.",
+    "PID1 original-parent consistency does not prove non-writer status or independence from build-triggered XPC work. Negative stage-group observation is not ancestry exclusion.",
+    "This run performs no Floorp build, but SDK materialization, tests and stress can trigger services. Different studies retain their own fixed baselines; short natural-zero observations do not establish feasibility after a long build.",
+    "Specific vanished candidates from Recovery33/35 and the internal delta from failed Recovery36 cannot be reconstructed by a future short run.",
+    "No automatic long follow-up is cleared. Candidate origin and whether strict zero is achievable on this GitHub-hosted setting require evidence first. If unresolved, retain long NO_GO and report those limits.",
+    "Original native authentication failure, resumed full host/XUL/package validation and actual browser/native authentication remain unqualified."
+  ]
+}

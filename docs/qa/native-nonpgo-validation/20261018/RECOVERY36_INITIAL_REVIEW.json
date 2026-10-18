@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "review": "Recovery36 independent initial immutable route",
+  "decision": "INITIAL_BINDINGS_VERIFIED_EXECUTION_IN_PROGRESS",
+  "checkedAt": "2026-10-18T23:16:15Z",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39175758931,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39175758931",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-inventory-recovery36-20261018",
+    "head": "e3992d5e9842277ee8a8d65e67330ba827fd1865",
+    "createdAt": "2026-10-18T23:15:39Z",
+    "producerJob": 117817956487,
+    "startedAt": "2026-10-18T23:15:42Z",
+    "runner": "macos-15-intel",
+    "status": "in_progress"
+  },
+  "fixture": {
+    "sha": "9c1db4a082167fc055a498dcec96f5d8072fd540",
+    "comparisonBaseline": "4848f4cc7090d5910d776c6ab9fec93753ee7631",
+    "independentProviderDiff": "Exactly the two reviewed source modifications and seven evidence/review documentation additions.",
+    "providerSourceBindings": {
+      "tools/qa/native-nonpgo/census_convergence.py": {
+        "bytes": 18238,
+        "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594"
+      },
+      "tools/qa/native-nonpgo/test_census_convergence.py": {
+        "bytes": 40322,
+        "sha256": "d42830fff51d005852b7c283ba416f842e4f12e56ef333a59ad84456600857ea"
+      }
+    },
+    "tree": "38772fc08065a60a6510810814db36e51fbc1f31",
+    "parent": "4848f4cc7090d5910d776c6ab9fec93753ee7631"
+  },
+  "caller": {
+    "sha": "e3992d5e9842277ee8a8d65e67330ba827fd1865",
+    "tree": "a1a8d63a6b0a691e304b09f6b71161318ec79f32",
+    "parent": "a655f430c5db25c0aee2c802e41d00097da5493a",
+    "changedFiles": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "bytes": 3417,
+    "sha256": "48df69252ad17f536405c75318cbfb1df6a46a1c2c4c6ae2bdc64f3a61de82b4",
+    "exactTemplateRender": "Reviewed Recovery36 template with fixture SHA replacement only."
+  },
+  "APIObservation": {
+    "jobCount": 1,
+    "guard": "success",
+    "fixtureCheckout": "success",
+    "clock": "success",
+    "officialSDKAcquisition": "in_progress at initial observation",
+    "diagnosticBody": "pending at initial observation",
+    "otherActiveOwnedNativeRuns": 0,
+    "queuedOwnedNativeRuns": 0
+  },
+  "sdkFreshMetadata": {
+    "artifact": 12133086104,
+    "sizeBytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sourceRun": 39117481043,
+    "sourceAttempt": 1,
+    "sourceConclusion": "completed-success",
+    "sourceRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "verification": "Official complete source artifact collection and source-run API independently read; no payload retrieved."
+  },
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobMinutes": 20,
+    "internalExperimentMinutes": 15,
+    "expectedActualMacTests": 312,
+    "requiredSkips": 0,
+    "candidateRepeats": 5,
+    "sdkVerification": true,
+    "fullSynchronizedStress": true,
+    "knownChildAndBackground": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "pending": "Actual312/zero-skip tests including both delayed lifecycle controls, SDK, five candidate repeats, strict-zero-timeout synchronized stress, known-child/background observations and terminal failure/cleanup evidence.",
+  "limits": [
+    "Initial checks do not establish any execution gate success, long stability, strict checkpoint eligibility or native authentication.",
+    "No long workflow activated by this review; Recovery37 remains conditional on successful independent short terminal review and fresh immutable route checks.",
+    "Reviewer performed read-only API/source/evidence inspection; no CI activation, SDK payload retrieval, artifact operation or public write."
+  ]
+}

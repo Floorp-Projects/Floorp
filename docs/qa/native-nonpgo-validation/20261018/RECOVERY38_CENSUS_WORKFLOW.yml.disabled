@@ -1,0 +1,78 @@
+name: One short Intel candidate origin and strict boundary diagnostic
+'on':
+  push:
+    branches: [codex/mac-native-inventory-recovery38-20261018]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: isolated-intel-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  FLOORP_FIXTURE_SHA: FIXTURE_PENDING_REVIEW
+  HARNESS_SHA: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
+  RUNTIME_SHA: 7dd619742b25567e479eeda97ae071d10542ad0b
+jobs:
+  producer:
+    name: checkpoint-producer
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - name: Bound the initial authorized execution
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-inventory-recovery38-20261018
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test '${{ github.event.created }}' = true
+          test '${{ github.event.before }}' = 0000000000000000000000000000000000000000
+          TASK_PYTHON="$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3"
+          test -x "$TASK_PYTHON"
+          echo "TASK_PYTHON=$TASK_PYTHON" >> "$GITHUB_ENV"
+          echo "TASK_ROOT=$RUNNER_TEMP/floorp-native-checkpoint" >> "$GITHUB_ENV"
+      - name: Checkout immutable reviewed fixture
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.FLOORP_FIXTURE_SHA }}
+          path: fixture
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Establish this job's fresh clock and task root
+        timeout-minutes: 3
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py init --role producer --task "$TASK_ROOT"
+      - name: Acquire the unexpired content-matched SDK through the official API
+        timeout-minutes: 12
+        env:
+          SDK_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/fetch_sdk.py --plan fixture/tools/qa/native-nonpgo/plan.json --output "$TASK_ROOT/sdk-download"
+      - name: Validate native inventory under short CPU RSS and process churn
+        timeout-minutes: 16
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/census_experiment.py --task "$TASK_ROOT" --expected-tests 321 --inventory-stress --native-selection-repeats 5 --verify-sdk --original-parent
+      - name: Verify experiment receipt
+        if: always()
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib
+          path=pathlib.Path(os.environ['TASK_ROOT'])/'census-experiment.json'
+          if not path.is_file():
+              print('{"status":"failed","code":"census-experiment-receipt-missing"}',flush=True)
+              raise SystemExit(1)
+          value=json.loads(path.read_text())
+          passed=value['status']=='passed' and value['firstFailure'] is None and value['monitorFailure'] is None
+          print(json.dumps({'censusExperimentStatus':'passed' if passed else 'failed','newArtifacts':0}),flush=True)
+          raise SystemExit(0 if passed else 1)
+          PYCODE

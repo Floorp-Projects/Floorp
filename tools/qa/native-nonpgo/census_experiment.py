@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 
-from checkpoint import owned_processes, verify_owned_boundary
+from checkpoint import owned_processes, verify_owned_boundary,measure_owned_boundary
 from census_diagnostics import describe
 from darwin_activity import probe
 from process_census import BINDING_KEYS, prepare_abi
@@ -81,9 +81,23 @@ def take_owned(value):
         raise
 
 
-def observe(baseline, observed, value=None):
+def observe(baseline, observed, value=None,*,origins=False):
     if value is None:
         value = {}
+    if origins:
+        from darwin_origin import describe_origin
+        rows=measure_owned_boundary(baseline,value,observed)
+        reader=probe()
+        diagnostics={'candidateIdentities':len(rows),'sampledCandidates':min(len(rows),16),
+            'truncated':len(rows)>16,'rawProcessMetadataPublished':False,'baselineReset':False,
+            'exclusionAuthorized':False,'signalOwnershipGranted':False,
+            'checkpointEligibilityNotEvaluated':True,'records':[]}
+        value['originalParentObservations']=diagnostics
+        for row in sorted(rows)[:16]:
+            diagnostics['records'].append({'candidateIdentityTag':reader.tag(row),
+                'processHint':describe(row,baseline|rows,baseline,observed),
+                'origin':describe_origin(row,observed,reader)})
+        return value
     try:
         verify_owned_boundary(baseline, value, observed)
     except Failure as error:
@@ -233,7 +247,7 @@ def main():
                     'census-experiment-self-monitor')
             value={'index':index,'elapsedSeconds':round(time.monotonic()-began,3)}
             result['background'].append(value)
-            observe(baseline,runner.observed_processes,value)
+            observe(baseline,runner.observed_processes,value,origins=args.original_parent)
             print(json.dumps({'censusBackground':value}),flush=True)
             if index<12:
                 time.sleep(10)

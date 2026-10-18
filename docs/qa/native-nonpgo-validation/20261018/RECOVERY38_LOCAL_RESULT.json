@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "scope": "Recovery38 diagnostic-only held-child boundary and background candidate origins",
+  "linux": {
+    "total": 321,
+    "passed": 305,
+    "skipped": 16,
+    "seconds": 16.92,
+    "exitCode": 0,
+    "logSHA256": "91665468945c2a8960d2d613bcc6e55566d1363835e5b19a19a5d8c5fcf0dcaf"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 321,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "originalParentControl": true,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "productionCensusSHA256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594",
+  "productionCensusChanged": false,
+  "heldControlOutcomes": [
+    "natural-zero",
+    "safely-rejected-deadline",
+    "failed"
+  ],
+  "checkpointEligibilityEstablished": false,
+  "longActivation": "BLOCKED until evidence establishes residual candidate provenance and global zero feasibility; short success alone is insufficient",
+  "originalRecovery36FailureCause": "UNRESOLVED; internal sample details were not retained"
+}

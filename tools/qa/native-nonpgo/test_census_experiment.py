@@ -16,6 +16,51 @@ from support import Failure
 
 
 class ExperimentCleanup(unittest.TestCase):
+    def test_background_origins_keep_same_baseline_all_counts_and_stable_opaque_tags(self):
+        baseline={(8675309,123,4,501,501)};observed=set()
+        rows={(pid,124,4,501,501) for pid in range(8675310,8675330)}
+        before=set(baseline);reader=mock.Mock()
+        reader.tag.side_effect=lambda row:format(row[0]-8675309,'016x')
+        def measure(actual,value,seen):
+            self.assertIs(actual,baseline);self.assertIs(seen,observed)
+            value.update(status='rejected',newCandidateIdentities=len(rows));return rows
+        with mock.patch.object(ce,'measure_owned_boundary',side_effect=measure), \
+             mock.patch.object(ce,'probe',return_value=reader), \
+             mock.patch.object(ce,'describe',return_value={'status':'identity-verified','role':'metadata-worker',
+                                                         'writerRoleEstablished':False}) as hint, \
+             mock.patch('darwin_origin.describe_origin',return_value={'status':'identity-verified',
+                 'classification':'pid1-original-parent-consistent','writerRoleEstablished':False,
+                 'exclusionAuthorized':False,'signalOwnershipGranted':False}):
+            first=ce.observe(baseline,observed,origins=True)
+            second=ce.observe(baseline,observed,origins=True)
+        self.assertEqual(baseline,before)
+        self.assertEqual(first['newCandidateIdentities'],20);self.assertEqual(first['status'],'rejected')
+        origin=first['originalParentObservations']
+        self.assertEqual(origin['candidateIdentities'],20);self.assertEqual(origin['sampledCandidates'],16)
+        self.assertTrue(origin['truncated']);self.assertFalse(origin['exclusionAuthorized'])
+        self.assertIs(origin['checkpointEligibilityNotEvaluated'],True)
+        self.assertEqual(origin,second['originalParentObservations'])
+        self.assertEqual(hint.call_args.args[1],baseline|rows)
+        self.assertNotIn('86753',json.dumps(first))
+
+    def test_background_origin_unknown_and_primary_failure_never_qualify_or_refresh(self):
+        baseline={(41,123,4,501,501)};rows={(42,124,4,501,501)};reader=mock.Mock()
+        reader.tag.return_value='a'*16
+        def measure(actual,value,seen):
+            value.update(status='rejected',newCandidateIdentities=1);return rows
+        with mock.patch.object(ce,'measure_owned_boundary',side_effect=measure), \
+             mock.patch.object(ce,'probe',return_value=reader),mock.patch.object(ce,'describe',return_value={}), \
+             mock.patch('darwin_origin.describe_origin',return_value={'status':'diagnostic-unavailable',
+                'anchorQuery':{'bytes':0,'expectedBytes':56,'errno':1},'exclusionAuthorized':False}):
+            value=ce.observe(baseline,set(),origins=True)
+        self.assertEqual(value['status'],'rejected')
+        self.assertEqual(value['originalParentObservations']['records'][0]['origin']['status'],'diagnostic-unavailable')
+        value={}
+        with mock.patch.object(ce,'measure_owned_boundary',side_effect=Failure('census-sysctl-permission')), \
+             mock.patch.object(ce,'probe') as probe,self.assertRaisesRegex(Failure,'census-sysctl-permission'):
+            ce.observe(baseline,set(),value,origins=True)
+        probe.assert_not_called();self.assertNotIn('originalParentObservations',value)
+
     def test_early_failure_preserves_unverified_requested_sdk_as_unknown(self):
         for requested in (False,True):
             with tempfile.TemporaryDirectory() as temporary,contextlib.redirect_stdout(io.StringIO()):
