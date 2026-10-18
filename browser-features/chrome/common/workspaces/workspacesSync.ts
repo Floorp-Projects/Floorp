@@ -6,13 +6,13 @@ import type {
   WorkspaceSyncDocument,
   WorkspaceSyncProvider,
   WorkspaceSyncSnapshot,
-} from "../../../modules/common/workspace-sync-types.ts";
+} from "#modules/common/workspace-sync-types.ts";
 import {
   isSyncableWorkspaceURL,
   isWorkspaceSyncId,
   liveWorkspaceSyncTabs,
   WORKSPACE_SYNC_CHANGED,
-} from "../../../modules/common/workspace-sync.ts";
+} from "#modules/common/workspace-sync.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.ts";
 import type {

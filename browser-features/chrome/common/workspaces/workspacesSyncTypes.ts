@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { WorkspaceSyncProvider } from "../../../modules/common/workspace-sync-types.ts";
+import type { WorkspaceSyncProvider } from "#modules/common/workspace-sync-types.ts";
 
 export interface SyncSessionStore {
   promiseAllWindowsRestored: Promise<void>;
