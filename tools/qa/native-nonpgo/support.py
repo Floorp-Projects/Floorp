@@ -209,14 +209,42 @@ class Runner:
             raise
 
     def owned_group_alive(self, process, diagnostics=None):
+        was_unreaped = process.returncode is None
         process.poll()
         try:
             return self.group_alive(process.pid, diagnostics)
-        except PermissionError:
+        except PermissionError as denied:
             # A newly exited, unreaped leader can leave a zombie-only Darwin
-            # group. Only an exact-child reap permits a fresh group probe.
-            if process.returncode is not None or process.poll() is None:
+            # group. Only a new exact-child reap in this call permits a
+            # fresh group probe, including a reap by the initial poll.
+            observation = {'operation': 'denied-group-leader-reap',
+                           'leaderWasUnreaped': was_unreaped,
+                           'leaderExitAtProbe': process.returncode,
+                           'reapResult': 'already-reaped' if not was_unreaped else 'pending',
+                           'boundedWaitSeconds': None, 'freshProbeAttempted': False}
+            if diagnostics is not None:
+                diagnostics.append(observation)
+                del diagnostics[:-16]
+            if not was_unreaped:
                 raise
+            source = 'initial-poll'
+            if process.returncode is None and process.poll() is None:
+                # An exiting child may not yet be waitable at either poll.
+                # Wait only for this exact child; timeout preserves denial.
+                observation['boundedWaitSeconds'] = 0.05
+                try:
+                    process.wait(timeout=0.05)
+                except subprocess.TimeoutExpired:
+                    observation['reapResult'] = 'wait-timeout'
+                    raise denied from None
+                source = 'bounded-wait'
+            elif observation['leaderExitAtProbe'] is None:
+                source = 'second-poll'
+            if process.returncode is None:
+                observation['reapResult'] = 'unconfirmed'
+                raise denied
+            observation.update(reapResult='newly-reaped', reapSource=source,
+                               leaderExitAfterReap=process.returncode, freshProbeAttempted=True)
             return self.group_alive(process.pid, diagnostics)
 
     @staticmethod

@@ -550,9 +550,9 @@ class Guards(unittest.TestCase):
                 self.assertEqual(record['reason'], 'monitor-unavailable')
                 self.assertEqual(record['cleanupFailure'], 'PermissionError')
                 self.assertEqual(record['groupCleanup'], 'unverified')
-                self.assertEqual(record['cleanupDiagnostics'][-1], {
+                self.assertIn({
                     'operation': operation, 'signal': int(denied_signal),
-                    'errorType': 'PermissionError', 'errno': errno.EPERM})
+                    'errorType': 'PermissionError', 'errno': errno.EPERM}, record['cleanupDiagnostics'])
                 self.assertEqual(record['leaderReap'], {'status': 'reaped', 'exitCode': 7})
                 self.assertEqual(record['exitCode'], 7)
                 self.assertIsNone(record['peakRSSMiB'])
@@ -577,7 +577,7 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.records[0]['cleanupFailure'], 'PermissionError')
         self.assertEqual(runner.records[0]['groupCleanup'], 'unverified')
         self.assertIsNone(runner.records[0]['exitCode'])
-        child.wait.assert_called_once_with(timeout=5)
+        self.assertEqual(child.wait.call_args_list, [mock.call(timeout=0.05), mock.call(timeout=5)])
         self.assertEqual(runner.failure['code'], 'monitor-unavailable')
 
     def test_stall_requires_multiple_stable_signals(self):
