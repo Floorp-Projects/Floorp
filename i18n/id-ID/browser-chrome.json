@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Buat kode QR untuk halaman ini",
   "qrcode-generate-page-action-title": "Pembuat Kode QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Buka atau sematkan bilah samping Firefox",
+    "resize": "Ubah ukuran bilah samping Firefox"
+  },
   "panelSidebar": {
+    "resize": "Ubah ukuran bilah samping",
     "modal": {
       "type": "Jenis Panel",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Media",
       "open-tabs": "Tab Terbuka",
       "switcher": "Switcher",
-      "history-suggestions": "Riwayat",
-      "bookmark-suggestions": "Markah"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Where to open",
     "bookmarkSwitcherWhereNewTab": "Tab Baru",
     "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
-    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
+    "bookmarkSwitcherWherePlaceholder": "Select where to open...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Cari Tab Terbuka",
+      "reservedBookmarkSearch": "Cari Markah",
+      "reservedHistorySearch": "Cari Riwayat"
+    }
   },
   "commandPaletteReadings": {}
 }

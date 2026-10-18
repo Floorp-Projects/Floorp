@@ -64,21 +64,12 @@
     "service": {
       "new-workspace": "新しいワークスペース ({{count}})"
     },
-    "sync": {
-      "help": "Mozilla アカウントでこのワークスペースとウェブのタブを同期します。",
-      "error-title": "ワークスペースの同期",
-      "incoming-failed": "同期データの一部を読み込めませんでした。同期に成功するまで、既存のタブは保持されます。",
-      "invalid-workspace": "このワークスペースを同期できませんでした。名前とアイコンをそれぞれ 256 文字以内にして、もう一度お試しください。ほかのワークスペースの同期は続行されます。",
-      "deleted-workspace": "このワークスペースは同期から削除されています。アーカイブから復元するか、新しいワークスペースを作成すると再び同期できます。"
-    },
     "context-menu": {
       "move-up": "このワークスペースを上に移動",
       "move-down": "このワークスペースを下に移動",
       "delete": "ワークスペースを削除",
       "manage": "ワークスペースを管理",
-      "archive": "ワークスペースをアーカイブ",
-      "sync": "このワークスペースとタブを同期",
-      "sync-paused": "ワークスペースの同期を確認"
+      "archive": "ワークスペースをアーカイブ"
     },
     "popup": {
       "create-new": "新しいワークスペースを作成...",
@@ -295,11 +286,11 @@
   "qrcode-generate-page-action": "このページの QR コードを生成",
   "qrcode-generate-page-action-title": "QR コードジェネレーター",
   "firefoxSidebar": {
-    "edgeToggle": "Firefox サイドバーを開く・固定表示する",
-    "resize": "Firefox サイドバーの幅を変更する"
+    "edgeToggle": "Firefox のサイドバーを開く/固定",
+    "resize": "Firefox のサイドバーのサイズを変更"
   },
   "panelSidebar": {
-    "resize": "パネルサイドバーの幅を変更する",
+    "resize": "パネルサイドバーのサイズを変更",
     "modal": {
       "type": "パネルの種類",
       "typeOptions": {
@@ -524,8 +515,8 @@
       "media": "メディア",
       "open-tabs": "タブを開く",
       "switcher": "スイッチャー",
-      "history-suggestions": "履歴（動的検索）",
-      "bookmark-suggestions": "ブックマーク（動的検索）"
+      "history-suggestions": "履歴 (動的検索)",
+      "bookmark-suggestions": "ブックマーク (動的検索)"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語句をお試しください",
@@ -613,7 +604,7 @@
     "bookmarkSwitcherWherePlaceholder": "開く場所を選択...",
     "shortcutLabel": "@{{prefix}}",
     "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
-    "searchShortcutDescription": "「{{query}}」を検索",
+    "searchShortcutDescription": "[{{query}}] を検索",
     "shortcuts": {
       "reservedTabSearch": "開いているタブを検索",
       "reservedBookmarkSearch": "ブックマークを検索",

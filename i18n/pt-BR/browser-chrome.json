@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Gerar código QR para esta página",
   "qrcode-generate-page-action-title": "Gerador de código QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Abrir ou fixar a barra lateral do Firefox",
+    "resize": "Redimensionar a barra lateral do Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionar a barra lateral do painel",
     "modal": {
       "type": "Tipo de painel",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Mídia",
       "open-tabs": "Abrir abas",
       "switcher": "Console web",
-      "history-suggestions": "Histórico",
-      "bookmark-suggestions": "Marcadores"
+      "history-suggestions": "Histórico (Pesquisa dinâmica)",
+      "bookmark-suggestions": "Favoritos (Pesquisa dinâmica)"
     },
     "noResults": "Nenhum comando encontrado",
     "noResultsHint": "Experimente um termo de pesquisa diferente.",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Onde abrir",
     "bookmarkSwitcherWhereNewTab": "Nova aba",
     "bookmarkSwitcherWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
-    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir..."
+    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Pesquisar por \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Pesquisar abas abertas",
+      "reservedBookmarkSearch": "Pesquisar favoritos",
+      "reservedHistorySearch": "Pesquisar no histórico"
+    }
   },
   "commandPaletteReadings": {}
 }
