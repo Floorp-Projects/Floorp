@@ -117,7 +117,7 @@ class ESRCHRecheckTests(unittest.TestCase):
                 mock.patch('darwin_activity.probe', return_value=sensor), \
                 mock.patch('support.subprocess.run', side_effect=rows) as inventory, \
                 mock.patch('support.time.sleep') as pause:
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertFalse(value['sampleComplete'])
         self.assertIsNone(value['rssMiB'])
         self.assertIsNone(value['cpuSeconds'])

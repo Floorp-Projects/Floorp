@@ -96,6 +96,7 @@ def main():
     parser.add_argument('--task',type=Path,required=True)
     parser.add_argument('--expected-tests',type=int,required=True)
     parser.add_argument('--original-parent',action='store_true')
+    parser.add_argument('--inventory-stress',action='store_true')
     args=parser.parse_args()
     task=args.task
     plan=json.loads((HERE/'plan.json').read_text())
@@ -112,13 +113,13 @@ def main():
         require(sys.platform=='darwin' and platform.machine()=='x86_64' and
                 platform.python_version()==plan['runner']['python'] and
                 os.environ.get('ImageVersion')==plan['runner']['imageVersion'],'census-experiment-platform')
-        version=runner.run('system-version',['/usr/bin/sw_vers','-productVersion'],task,env,360,phase_deadline_minutes=15)
-        require(version.read_text().strip()==plan['runner']['osVersion'],'census-experiment-os')
         stage='abi'
         abi=prepare_abi(task,runner,env)
         os.environ['FLOORP_CENSUS_ABI']=str(abi)
         env.update({key:os.environ[key] for key in (*BINDING_KEYS,'TASK_ROOT')})
         env['FLOORP_CENSUS_ABI']=str(abi)
+        version=runner.run('system-version',['/usr/bin/sw_vers','-productVersion'],task,env,360,phase_deadline_minutes=15)
+        require(version.read_text().strip()==plan['runner']['osVersion'],'census-experiment-os')
         stage='tests'
         try:
             runner.run('checkpoint-tests',[sys.executable,'-m','unittest','discover','-v'],HERE,env,360,phase_deadline_minutes=15)
@@ -126,6 +127,11 @@ def main():
             result['tests']=unittest_receipt(task/'checkpoint-tests.private.log')
         require(result['tests']['complete'] and result['tests']['status']=='passed' and
                 result['tests']['total']==args.expected_tests and result['tests']['skipped']==0,'checkpoint-mac-tests')
+        if args.inventory_stress:
+            stage='inventory-stress'
+            from inventory_stress import run_experiment
+            result['inventoryStress']={}
+            run_experiment(task,runner,env,result['inventoryStress'])
         stage='baseline'
         baseline_details=result['baseline']={}
         baseline=take_owned(baseline_details)

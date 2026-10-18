@@ -1020,7 +1020,7 @@ class DarwinCounterGuards(unittest.TestCase):
                 mock.patch('darwin_activity.probe', return_value=sensor), \
                 mock.patch('support.subprocess.run', return_value=mock.Mock(stdout=rows)) as ps, \
                 mock.patch('support.time.sleep'):
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertEqual(ps.call_count, 3)
         self.assertFalse(value['sampleComplete'])
         self.assertIsNone(value['rssMiB'])
@@ -1247,7 +1247,7 @@ class DarwinCounterGuards(unittest.TestCase):
                 mock.patch('darwin_activity.probe', return_value=sensor), \
                 mock.patch('support.subprocess.run', return_value=mock.Mock(
                     stdout=f'900 42 10 {os.geteuid()} {os.getuid()} /python\n')) as ps:
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertEqual(ps.call_args.args[0][-1], 'pgid=,pid=,ppid=,uid=,ruid=,comm=')
         self.assertTrue(value['sampleComplete'])
         self.assertEqual(value['rssMiB'], 8)

@@ -42,16 +42,22 @@ def validate_layout(value):
 
 def binding(task):
     return {**{key:os.environ[key] for key in BINDING_KEYS},
-            'jobOriginSHA256':digest(task/'job-origin.json'), 'sourceSHA256':digest(HERE/'census_abi.c')}
+            'jobOriginSHA256':digest(task/'job-origin.json'), 'sourceSHA256':digest(HERE/'census_abi.c'),
+            'inventorySourceSHA256':digest(HERE/'darwin_inventory.py')}
 
 
 def prepare_abi(task, runner, env):
     require(sys.platform == 'darwin' and sys.byteorder == 'little' and ctypes.sizeof(ctypes.c_void_p)==8,
             'census-platform')
     binary = task/'census-abi'
-    runner.run('census-abi-compile', ['/usr/bin/cc','-std=c11','-O2','-Wall','-Wextra','-Werror',
-               str(HERE/'census_abi.c'),'-o',str(binary)], task, env, 360, phase_deadline_minutes=15)
-    log = runner.run('census-abi', [str(binary)], task, env, 360, phase_deadline_minutes=15)
+    require(runner.inventory_bootstrap is False,'census-abi-bootstrap-state')
+    runner.inventory_bootstrap=True
+    try:
+        runner.run('census-abi-compile', ['/usr/bin/cc','-std=c11','-O2','-Wall','-Wextra','-Werror',
+                   str(HERE/'census_abi.c'),'-o',str(binary)], task, env, 360, phase_deadline_minutes=15)
+        log = runner.run('census-abi', [str(binary)], task, env, 360, phase_deadline_minutes=15)
+    finally:
+        runner.inventory_bootstrap=False
     require(log.stat().st_size <= 8192, 'census-abi-output-size')
     layout = validate_layout(json.loads(log.read_text()))
     rows = [row for row in runner.records if row['stage'] in ('census-abi-compile','census-abi')]

@@ -168,6 +168,7 @@ class Runner:
         self.phase_deadline_minutes = None
         self.observed_processes = None
         self.observation_status = 'disabled'
+        self.inventory_bootstrap = False
 
     def observe_processes(self, activity):
         """Bounded, sampled identity hints; never used to authorize signals."""
@@ -324,15 +325,41 @@ class Runner:
                 'sampleComplete': not unknown, 'unknownKinds': unknown, 'formatExamples': examples}
 
     @staticmethod
-    def group_activity(pgid):
+    def group_activity(pgid, *, bootstrap=False):
         partial = []
         for attempt in range(3):
             columns = ('pgid=,pid=,ppid=,uid=,ruid=,comm=' if sys.platform == 'darwin'
                        else 'pgid=,pid=,rss=,time=,stat=')
             query_started = time.monotonic()
+            native = sys.platform == 'darwin' and not bootstrap
             try:
-                result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
-                                        check=True, timeout=3, text=True)
+                if native:
+                    from darwin_inventory import decode_reply
+                    from process_census import BINDING_KEYS
+                    require(type(pgid) is int and 0 < pgid < 2**31,'inventory-group-id')
+                    env={key:os.environ[key] for key in
+                         (*BINDING_KEYS,'TASK_ROOT','FLOORP_CENSUS_ABI','HOME','TMPDIR','LANG','LC_ALL')
+                         if key in os.environ}
+                    env['PYTHONDONTWRITEBYTECODE']='1'
+                    if not all(key in env for key in (*BINDING_KEYS,'TASK_ROOT','FLOORP_CENSUS_ABI')):
+                        raise Failure('inventory-abi-missing')
+                    result=subprocess.run([sys.executable,str(Path(__file__).with_name('darwin_inventory.py')),
+                                           '--pgid',str(pgid)],capture_output=True,check=True,timeout=3,
+                                          text=True,env=env)
+                    reply=decode_reply(result.stdout,pgid)
+                    if reply['status']!='measured':
+                        value={'rssMiB':None,'cpuSeconds':None,'rssLowerBoundMiB':None,
+                               'cpuLowerBoundSeconds':None,'processes':None,'states':['?'],'_pids':(),
+                               'sampleComplete':False,'unknownKinds':{'inventory-unavailable':1},
+                               'formatExamples':[],'queryFailure':{'operation':'kern-proc-pgrp-inventory',
+                                   'failureCode':reply['failureCode'],'phase':reply['phase'],
+                                   'errorType':reply['errorType'],'queries':reply['queries']}}
+                        if 'errno' in reply:value['queryFailure']['errno']=reply['errno']
+                    else:
+                        inventory=''.join(str(pgid)+' '+str(pid)+'\n' for pid in reply['pids'])
+                else:
+                    result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
+                                            check=True, timeout=3, text=True)
             except subprocess.TimeoutExpired:
                 # run() kills and reaps its exact query child before raising.
                 # Partial output is not a complete process inventory. Retain
@@ -342,15 +369,37 @@ class Runner:
                          'processes': None, 'states': ['?'], '_pids': (),
                          'sampleComplete': False, 'unknownKinds': {'inventory-timeout': 1},
                          'formatExamples': [],
-                         'queryFailure': {'operation': 'process-group-inventory',
+                        'queryFailure': {'operation': 'kern-proc-pgrp-inventory' if native else 'process-group-inventory',
                              'errorType': 'TimeoutExpired', 'timeoutSeconds': 3,
                              'elapsedSeconds': round(time.monotonic() - query_started, 3)}}
+            except Exception as error:
+                if not native:
+                    raise
+                code=str(error) if isinstance(error,Failure) else 'inventory-helper-exception'
+                allowed={'inventory-abi-missing','inventory-group-id','inventory-protocol-size',
+                         'inventory-protocol','inventory-protocol-keys','inventory-protocol-queries',
+                         'inventory-protocol-query','inventory-protocol-unknown','inventory-protocol-failure',
+                         'inventory-protocol-pids','inventory-protocol-measurement'}
+                value={'rssMiB':None,'cpuSeconds':None,'rssLowerBoundMiB':None,'cpuLowerBoundSeconds':None,
+                       'processes':None,'states':['?'],'_pids':(),'sampleComplete':False,
+                       'unknownKinds':{'inventory-unavailable':1},'formatExamples':[],
+                       'queryFailure':{'operation':'kern-proc-pgrp-inventory',
+                           'failureCode':code if code in allowed else 'inventory-helper-exception'}}
+                if isinstance(error,OSError) and type(error.errno) is int:
+                    value['queryFailure']['errno']=error.errno
+                if isinstance(error,subprocess.CalledProcessError):
+                    value['queryFailure']['exitCode']=error.returncode
             else:
-                if sys.platform == 'darwin':
+                if native and reply['status']=='measured':
+                    from darwin_activity import probe
+                    value=probe().group(inventory,pgid)
+                    value['inventoryMeasurement']=reply['measurement']
+                elif not native and sys.platform == 'darwin':
                     from darwin_activity import probe
                     value = probe().group(result.stdout, pgid)
-                else:
+                elif not native:
                     value = Runner.parse_group_activity(result.stdout, pgid)
+            value['inventoryBackend']='kern-proc-pgrp-helper' if native else 'bootstrap-ps' if bootstrap else 'linux-ps'
             if value['sampleComplete']:
                 break
             partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
@@ -380,6 +429,8 @@ class Runner:
 
     def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None, *, phase_deadline_minutes=None):
         require(stage.replace('-', '').isalnum(), 'stage-name')
+        require(not self.inventory_bootstrap or stage in ('census-abi-compile','census-abi'),
+                'census-abi-bootstrap-stage')
         require(deadline_minutes == self.limits['jobMinutes'], 'platform-budget-binding')
         if phase_deadline_minutes is None:
             phase_deadline_minutes = self.phase_deadline_minutes
@@ -457,7 +508,8 @@ class Runner:
                         self.stop(process, cleanup_diagnostics)
                         break
                     phase = 'group-activity'
-                    activity = self.group_activity(process.pid)
+                    activity = (self.group_activity(process.pid,bootstrap=True) if self.inventory_bootstrap
+                                else self.group_activity(process.pid))
                     self.observe_processes(activity)
                     last_activity = {key: value for key, value in activity.items() if not key.startswith('_')}
                     if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete'] or activity.get('esrchRechecks'):

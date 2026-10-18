@@ -20,6 +20,8 @@ int main(void) {
     _Static_assert(sizeof(void *) == 8, "LP64 required");
     _Static_assert(sizeof(pid_t) == 4, "32-bit PID required");
     _Static_assert(sizeof(uid_t) == 4, "32-bit UID required");
+    _Static_assert(KERN_PROC_PID == 1, "self selector required");
+    _Static_assert(KERN_PROC_PGRP == 2, "group selector required");
     printf("{\"schema\":1,\"pointerBytes\":%zu,\"recordBytes\":%zu,"
            "\"byteOrder\":\"%s\",\"mib\":[%d,%d,%d,0],\"fields\":{",
            sizeof(void *), sizeof(struct kinfo_proc),

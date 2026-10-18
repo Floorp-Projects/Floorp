@@ -1,0 +1,435 @@
+{
+  "schema": 1,
+  "run": {
+    "id": "39148209748",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39148209748",
+    "producerJob": "117736307902",
+    "consumerJob": "117748452067",
+    "fixture": "2987b8f3da209af6342799649c4c8246a92d7127",
+    "caller": "61daf98f0b5fcdce792dc3af70a3cbae0e5541d1",
+    "attempt": 1
+  },
+  "status": "failed",
+  "firstFailure": {
+    "stage": "checkpoint-rust",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 3201.8
+  },
+  "monitorFailure": {
+    "stage": "checkpoint-rust",
+    "elapsedSeconds": 3201.47,
+    "rssMiB": null,
+    "cpuSeconds": null,
+    "rssLowerBoundMiB": null,
+    "cpuLowerBoundSeconds": null,
+    "processes": null,
+    "states": [
+      "?"
+    ],
+    "sampleComplete": false,
+    "unknownKinds": {
+      "inventory-timeout": 1
+    },
+    "formatExamples": [],
+    "queryFailure": {
+      "operation": "process-group-inventory",
+      "errorType": "TimeoutExpired",
+      "timeoutSeconds": 3,
+      "elapsedSeconds": 3.247
+    },
+    "sampleAttempts": 3,
+    "partialSamples": [
+      {
+        "unknownKinds": {
+          "inventory-timeout": 1
+        },
+        "formatExamples": [],
+        "queryFailure": {
+          "operation": "process-group-inventory",
+          "errorType": "TimeoutExpired",
+          "timeoutSeconds": 3,
+          "elapsedSeconds": 3.32
+        },
+        "knownRSSLowerBoundMiB": null,
+        "knownCPULowerBoundSeconds": null
+      },
+      {
+        "unknownKinds": {
+          "inventory-timeout": 1
+        },
+        "formatExamples": [],
+        "queryFailure": {
+          "operation": "process-group-inventory",
+          "errorType": "TimeoutExpired",
+          "timeoutSeconds": 3,
+          "elapsedSeconds": 3.163
+        },
+        "knownRSSLowerBoundMiB": null,
+        "knownCPULowerBoundSeconds": null
+      },
+      {
+        "unknownKinds": {
+          "inventory-timeout": 1
+        },
+        "formatExamples": [],
+        "queryFailure": {
+          "operation": "process-group-inventory",
+          "errorType": "TimeoutExpired",
+          "timeoutSeconds": 3,
+          "elapsedSeconds": 3.247
+        },
+        "knownRSSLowerBoundMiB": null,
+        "knownCPULowerBoundSeconds": null
+      }
+    ]
+  },
+  "elapsedMinutes": 53.71,
+  "macTests": {
+    "bytes": 50899,
+    "cases": [],
+    "complete": true,
+    "errors": 0,
+    "exceptionTextPublished": false,
+    "failures": 0,
+    "rawContentPublished": false,
+    "seconds": 39.427,
+    "sha256": "4cb1ff3797d79b6672b70d993289b0a55aaa614481ffbc3ad2d654e73f7221ef",
+    "skipped": 0,
+    "status": "passed",
+    "total": 244
+  },
+  "baseline": {
+    "api": "sysctl-kern-proc-all",
+    "snapshotBytes": 320112,
+    "snapshotEntries": 494,
+    "candidateIdentities": 267,
+    "candidateZombies": 0,
+    "mixedCandidateIdentities": 2,
+    "selfBindingVerified": true,
+    "rawProcessMetadataPublished": false,
+    "attempts": 1,
+    "retryErrnos": [],
+    "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+  },
+  "stages": [
+    {
+      "stage": "checkpoint-exports",
+      "exitCode": 0,
+      "failureEvidence": null,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 2778702,
+      "peakRSSMiB": 1401,
+      "minimumFreeGiB": 98.14,
+      "lastActivity": {
+        "rssMiB": 124.3515625,
+        "cpuSeconds": 7.425,
+        "rssLowerBoundMiB": 124.3515625,
+        "cpuLowerBoundSeconds": 7.425,
+        "processes": 8,
+        "states": [
+          "R",
+          "S"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "measured",
+            "source": "libproc-taskallinfo",
+            "rssMiB": 43.95703125,
+            "cpuSeconds": 3.511432793,
+            "state": "S",
+            "pidTag": "0b7e624096b29318",
+            "identityTag": "e309aae9fa942944"
+          }
+        ],
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "inventorySummary": {
+          "identityBound": false,
+          "sameOwner": 8,
+          "differentOwner": 0,
+          "metadataUnavailable": 0,
+          "roles": {
+            "other": 8
+          }
+        },
+        "esrchRechecks": 0,
+        "esrchExamples": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseNumer": 1,
+        "timebaseDenom": 1,
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "quietSeconds": 0
+    },
+    {
+      "stage": "checkpoint-rust",
+      "exitCode": 254,
+      "failureEvidence": {
+        "beforeCleanup": {
+          "rawContentPublished": false,
+          "freeTextPublished": false,
+          "readLimitBytes": 131072,
+          "recordLimit": 16,
+          "available": true,
+          "fileBytes": 4581801,
+          "tailBytesRead": 129665,
+          "tailTruncated": true,
+          "matchingRecords": 0,
+          "recordsTruncated": false,
+          "records": []
+        },
+        "leaderExitAlreadyObserved": null,
+        "afterCleanup": {
+          "rawContentPublished": false,
+          "freeTextPublished": false,
+          "readLimitBytes": 131072,
+          "recordLimit": 16,
+          "available": true,
+          "fileBytes": 4584126,
+          "tailBytesRead": 131064,
+          "tailTruncated": true,
+          "matchingRecords": 3,
+          "recordsTruncated": false,
+          "records": [
+            {
+              "tailLine": 639,
+              "kind": "termination",
+              "messageClass": "keyboard-interrupt",
+              "normalizedDiagnostic": "keyboardinterrupt"
+            },
+            {
+              "tailLine": 642,
+              "kind": "termination",
+              "messageClass": "interrupted",
+              "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+            },
+            {
+              "tailLine": 643,
+              "kind": "termination",
+              "messageClass": "interrupted",
+              "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+            }
+          ]
+        }
+      },
+      "reason": "monitor-unavailable",
+      "failurePhase": "group-activity",
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 254
+      },
+      "logBytes": 4584126,
+      "peakRSSMiB": 7615,
+      "minimumFreeGiB": 94.84,
+      "lastActivity": {
+        "rssMiB": null,
+        "cpuSeconds": null,
+        "rssLowerBoundMiB": null,
+        "cpuLowerBoundSeconds": null,
+        "processes": null,
+        "states": [
+          "?"
+        ],
+        "sampleComplete": false,
+        "unknownKinds": {
+          "inventory-timeout": 1
+        },
+        "formatExamples": [],
+        "queryFailure": {
+          "operation": "process-group-inventory",
+          "errorType": "TimeoutExpired",
+          "timeoutSeconds": 3,
+          "elapsedSeconds": 3.247
+        },
+        "sampleAttempts": 3,
+        "partialSamples": [
+          {
+            "unknownKinds": {
+              "inventory-timeout": 1
+            },
+            "formatExamples": [],
+            "queryFailure": {
+              "operation": "process-group-inventory",
+              "errorType": "TimeoutExpired",
+              "timeoutSeconds": 3,
+              "elapsedSeconds": 3.32
+            },
+            "knownRSSLowerBoundMiB": null,
+            "knownCPULowerBoundSeconds": null
+          },
+          {
+            "unknownKinds": {
+              "inventory-timeout": 1
+            },
+            "formatExamples": [],
+            "queryFailure": {
+              "operation": "process-group-inventory",
+              "errorType": "TimeoutExpired",
+              "timeoutSeconds": 3,
+              "elapsedSeconds": 3.163
+            },
+            "knownRSSLowerBoundMiB": null,
+            "knownCPULowerBoundSeconds": null
+          },
+          {
+            "unknownKinds": {
+              "inventory-timeout": 1
+            },
+            "formatExamples": [],
+            "queryFailure": {
+              "operation": "process-group-inventory",
+              "errorType": "TimeoutExpired",
+              "timeoutSeconds": 3,
+              "elapsedSeconds": 3.247
+            },
+            "knownRSSLowerBoundMiB": null,
+            "knownCPULowerBoundSeconds": null
+          }
+        ]
+      },
+      "quietSeconds": 0
+    }
+  ],
+  "checkpointStageLogs": {
+    "checkpoint-exports": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 2778702,
+      "sha256": "9da710b5cd7f024508cd5a81dcd2dd9af03d93b3e831f5105d792006355f0de3",
+      "lines": 1749,
+      "diagnosticCounts": {},
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": [],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    },
+    "checkpoint-rust": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 4584126,
+      "sha256": "5e20d94e2de746fc4cf29c6d2b827ed4658e24eabdabec75a891bf59afe052f4",
+      "lines": 30334,
+      "diagnosticCounts": {
+        "unclassified-error-marker": 49,
+        "termination": 3
+      },
+      "matchingRecords": 52,
+      "recordsTruncated": true,
+      "records": [
+        {
+          "line": 1871,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2831,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2839,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 3578,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3587,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3641,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3647,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3652,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 19058,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error"
+        },
+        {
+          "line": 19067,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error"
+        },
+        {
+          "line": 25297,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 25307,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 26020,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 30327,
+          "kind": "termination",
+          "messageClass": "keyboard-interrupt",
+          "normalizedDiagnostic": "keyboardinterrupt"
+        },
+        {
+          "line": 30330,
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+        },
+        {
+          "line": 30331,
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+        }
+      ],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    }
+  },
+  "censusWaitReached": false,
+  "artifacts": [],
+  "consumer": "skipped",
+  "validationOutcome": {
+    "execution": "monitor-inconclusive",
+    "nativeAuthentication": "not-verified",
+    "monitorFailureEstablishesProductFailure": false
+  },
+  "limitations": [
+    "No product failure is established by monitor inventory timeout.",
+    "No Rust natural-success boundary, checkpoint archive or resumed consumer was reached.",
+    "Original native host exit cause remains unknown."
+  ]
+}

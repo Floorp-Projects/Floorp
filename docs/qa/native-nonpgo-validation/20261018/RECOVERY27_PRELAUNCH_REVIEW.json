@@ -1,0 +1,215 @@
+{
+  "schema": 1,
+  "review": "Recovery27 native group inventory and short stress diagnostic",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "tools/qa/native-nonpgo/darwin_inventory.py": {
+      "bytes": 9027,
+      "sha256": "6515c8c5bc7cd9f2bfd02ed9efc5c2f236a0679101e1d4d9a83a704b790e0750"
+    },
+    "tools/qa/native-nonpgo/inventory_stress.py": {
+      "bytes": 8261,
+      "sha256": "a1718cce6d3e348f2eb28667fcdde7fa73fc3029196a41f0c0c7d2861d6be926"
+    },
+    "tools/qa/native-nonpgo/test_darwin_inventory.py": {
+      "bytes": 15007,
+      "sha256": "c1e3111673249346f3deaabe3205aab7b5b0ddaf8c97ffe7782cecfce22baa21"
+    },
+    "tools/qa/native-nonpgo/test_inventory_stress.py": {
+      "bytes": 4344,
+      "sha256": "4d724cc657e1e0044103444131f0d001cb0540dbf34f4c84612524caaef207de"
+    },
+    "tools/qa/native-nonpgo/support.py": {
+      "bytes": 34219,
+      "sha256": "a341b26e325efd4b390deb82c44034d1d75822706b1be71940147c7b83772bf4"
+    },
+    "tools/qa/native-nonpgo/process_census.py": {
+      "bytes": 9313,
+      "sha256": "10993e23dafa4be660b09772d7d764e7c93139d6afe16ac3a6f8c14457512179"
+    },
+    "tools/qa/native-nonpgo/census_abi.c": {
+      "bytes": 1711,
+      "sha256": "d62de0173995f0e963a42bdbdee80b0892558424f3439e4f723abe872f8f6912"
+    },
+    "tools/qa/native-nonpgo/census_experiment.py": {
+      "bytes": 10168,
+      "sha256": "43ab3ba409c4017d12ac17554dd56f0b8c296276d371d64ee09daff75c4dd722"
+    },
+    "tools/qa/native-nonpgo/test_guards.py": {
+      "bytes": 82628,
+      "sha256": "cd6d66fb7910f2ff157810f4e636f22f50eed7bbf8daca744555fcb24f62f3b5"
+    },
+    "tools/qa/native-nonpgo/test_failure_recovery.py": {
+      "bytes": 14934,
+      "sha256": "24530c3b0b5bc0869a5e7ccae018fd5b0a0765f65a4b666b579ef0b3ccd8b854"
+    },
+    "tools/qa/native-nonpgo/test_inventory_timeout.py": {
+      "bytes": 11050,
+      "sha256": "281f081b38fa8c934125fbc4a8b1673b37d8edf137538c3c23b1fd9c6e07790f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY27_INVENTORY_WORKFLOW.yml.disabled": {
+      "bytes": 2986,
+      "sha256": "f5edfeceb253b51519403e2fec11d724a633186df3d1968b09e9522b8a28e18f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY27_INVENTORY_DIAGNOSTIC.md": {
+      "bytes": 3019,
+      "sha256": "23e34843ca9a6eb775c74b1b11ca50ab37a900736dbd599125192d32c37bf75c"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY27_LOCAL_RESULT.json": {
+      "bytes": 885,
+      "sha256": "32281cac1255fe9b027eb10a534e169bc8dd628fa06cc1f85aaf9cf88bc27ff9"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_TERMINAL_RESULT.json": {
+      "bytes": 12632,
+      "sha256": "7984f3beae62eff0e279ea6759c83670ae9b8f756e64ec6911ba400d3c6a949e"
+    }
+  },
+  "immutableBinding": {
+    "fixtureCommit": null,
+    "callerCommit": null,
+    "state": "Source bytes and disabled workflow reviewed; final immutable fixture/caller commits require activation-time binding.",
+    "conditions": [
+      "Render only FIXTURE_PENDING_REVIEW to the immutable fixture containing the reviewed source bytes.",
+      "Read back all 15 bound files and the rendered single workflow from the provider and compare exact bytes.",
+      "Confirm the activation branch is unused, its run count is zero, and no overlapping owned native validation job is active or queued.",
+      "Preserve the repository/ref/push/attempt-one/created/before-zero guards and one-job route."
+    ]
+  },
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "branch": "codex/mac-native-inventory-recovery27-20261018",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "longTrialInScope": false,
+    "nativeAuthenticationTested": false
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 267,
+    "passed": 253,
+    "skipped": 14,
+    "seconds": 9.015,
+    "exitCode": 0,
+    "logSHA256": "99e1ad82a7587c75970403a568d279e77507b411229077bdb2b8357185ac1af2",
+    "sourceUnchangedDuringTests": true,
+    "syntax": {
+      "workflowYAML": "passed",
+      "bashScripts": 4,
+      "inlinePythonAST": 1
+    },
+    "actualMacExecution": "NOT_EXECUTED for these revised bytes in this review; 14 Darwin tests skipped on Linux."
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "area": "Actual Mac unreaped-child gate",
+      "issue": "Direct waitid assumptions and zombie-only process-group signal-zero expectations did not match the existing Darwin compatibility contract.",
+      "resolution": "The test now uses the existing WNOWAIT child_status helper, stdin-gated live child, exact child identity, bounded exit-pending observation, individual signal-zero success, process-group EPERM, retained zombie inventory and exact wait/reap before group-gone verification.",
+      "remainingGate": "Execute this actual Mac test with zero skips."
+    },
+    {
+      "severity": "P2",
+      "area": "Stress workload failure cleanup",
+      "issue": "An early exact-child cleanup error could stop later child cleanup or replace the primary failure.",
+      "resolution": "Cleanup continues across every exact child, closes streams, retains fixed operation/error kinds, preserves the original pending exception, writes the safe receipt even on failure, and restores the original sampler in a nested finally.",
+      "regression": "Two-child negative test verifies later wait after an earlier terminate PermissionError and preservation of the exact original OSError object."
+    }
+  ],
+  "apiAssessment": {
+    "normalDarwinPrimary": "A bounded Python child uses read-only sysctl KERN_PROC_PID for self-binding and KERN_PROC_PGRP for group records. There is no permission-triggered fallback.",
+    "completeness": "Size/data calls validate the 8 MiB cap and record-size multiples. ENOMEM data is discarded before fresh bounded size/data retries. Duplicate/invalid PID, birth, credentials or state rejects the inventory. Valid zombies and other-owner records are retained.",
+    "selfBinding": "The header-derived layout and source/binary/job binding are validated, then the exact helper PID/birth/EUID/RUID are compared across sysctl and libproc.",
+    "arguments": "Selectors and subjects require exact int types; bool, invalid selector and invalid subject inputs are rejected before any API call.",
+    "resourceChecks": "Existing task/BSD counters, PID generation, owner and current group membership checks remain authoritative. Inventory selection does not grant signal ownership.",
+    "unknown": "Denied, malformed, empty, missing-ABI and helper failures remain unavailable with null resource totals; they cannot certify zero usage or group exit.",
+    "deadline": "subprocess.run retains timeout=3 with exact helper kill/reap, the existing three-attempt sampler and two 0.25-second retry gaps. Process creation and cleanup overhead are outside the communicate timeout; this is not a strict 9.5-second wall-clock bound.",
+    "bootstrap": "Explicit ps bootstrap is limited to census-abi-compile and census-abi. The flag resets in finally; normal stages with a missing/invalid ABI fail without ps fallback.",
+    "privateProtocol": "Raw PIDs/group identifiers stay in the bounded private helper protocol. Public diagnostics retain fixed allowlisted phases/error types/queries/errno/lengths only. The helper receives allowlisted environment keys, not tokens or arbitrary job environment."
+  },
+  "actualMacRequiredGate": {
+    "tests": 267,
+    "passedRequired": 267,
+    "skippedRequired": 0,
+    "stress": {
+      "seconds": 60,
+      "workers": 3,
+      "touchedMiBPerWorker": 1536,
+      "churnBatch": 4,
+      "required": "At least 20 samples; all returned samples complete; native helper backend only; zero inventory timeout attempts; measured peak RSS at least 2048 MiB; measured CPU at least 20 seconds; natural worker completion and exact worker/churn reaps; monitored group verified gone, leader exit zero and no cleanup failure."
+    },
+    "receipt": "FirstFailure and monitorFailure must be null; safe result must be passed. Missing or failed receipts fail the job."
+  },
+  "run26Evidence": {
+    "run": 39148209748,
+    "producerJob": 117736307902,
+    "consumerJob": 117748452067,
+    "apiStatus": "completed failure",
+    "consumer": "skipped",
+    "artifacts": 0,
+    "receiptSHA256": "7984f3beae62eff0e279ea6759c83670ae9b8f756e64ec6911ba400d3c6a949e",
+    "independentChecks": "Read-only run/job/artifact API metadata and the decoded producer report were compared with the retained receipt. The first failure, monitor failure and both retained stages matched.",
+    "tests": {
+      "total": 244,
+      "passed": 244,
+      "skipped": 0,
+      "seconds": 39.427
+    },
+    "firstFailure": {
+      "stage": "checkpoint-rust",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 3201.8
+    },
+    "inventoryTimeoutSeconds": [
+      3.32,
+      3.163,
+      3.247
+    ],
+    "cleanup": {
+      "group": "verified-gone",
+      "leaderReaped": true,
+      "leaderExitCode": 254,
+      "cleanupFailure": null
+    },
+    "rustNaturalSuccess": false,
+    "convergenceReached": false,
+    "checkpointStored": false,
+    "interpretation": "The observed stop was an inventory-monitor failure. It does not establish a compiler/product failure or the original native-host exit cause."
+  },
+  "limitations": [
+    "Kernel process enumeration is a changing snapshot, not proof of continuous or atomic process coverage; existing per-process identity and membership checks remain necessary.",
+    "The short approximately 4.5 GiB touched-memory load does not prove stability throughout a multi-hour Rust build or reproduce the original 7615 MiB observed peak.",
+    "The two early ABI preparation stages still use bootstrap ps inventory.",
+    "Successful short diagnostics do not establish checkpoint eligibility, full-build completion, native authentication or the historical native exit cause.",
+    "A long trial requires a separate decision after immutable short-job terminal evidence review."
+  ],
+  "primarySources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sysctl.c",
+      "supports": "KERN_PROC group filtering includes live/zombie iteration, accounts for required records and reports ENOMEM when the copy capacity is insufficient."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/sysctl.h",
+      "supports": "KERN_PROC_PID and KERN_PROC_PGRP selector constants."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c",
+      "supports": "The alternative proc_listpids implementation has an independent internal nprocs-plus-slop allocation cap and was not selected as a complete enumeration contract."
+    }
+  ]
+}

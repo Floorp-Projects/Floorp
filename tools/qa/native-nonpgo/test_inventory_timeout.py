@@ -34,7 +34,7 @@ class InventoryTimeoutTests(unittest.TestCase):
                     mock.patch.object(Runner, 'parse_group_activity', return_value=self.complete()) as parser, \
                     mock.patch('support.time.sleep') as pause:
                 sensor.return_value.group.return_value = self.complete()
-                value = Runner.group_activity(900)
+                value = Runner.group_activity(900, bootstrap=True)
                 self.assertTrue(value['sampleComplete'])
                 self.assertEqual(value['sampleAttempts'], 2)
                 self.assertEqual(value['rssMiB'], 4)
@@ -61,7 +61,7 @@ class InventoryTimeoutTests(unittest.TestCase):
         with mock.patch('support.subprocess.run', side_effect=self.timeout()) as query, \
                 mock.patch('support.time.sleep') as pause, \
                 mock.patch('darwin_activity.probe') as sensor:
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertFalse(value['sampleComplete'])
         self.assertEqual(value['sampleAttempts'], 3)
         self.assertEqual(len(value['partialSamples']), 3)
@@ -79,7 +79,7 @@ class InventoryTimeoutTests(unittest.TestCase):
                     mock.patch('support.subprocess.run', side_effect=error) as query, \
                     mock.patch('support.time.sleep') as pause:
                 with self.assertRaises(type(error)):
-                    Runner.group_activity(900)
+                    Runner.group_activity(900, bootstrap=True)
                 self.assertEqual(query.call_count, 1)
                 pause.assert_not_called()
 
@@ -91,7 +91,7 @@ class InventoryTimeoutTests(unittest.TestCase):
                 mock.patch('darwin_activity.probe') as sensor, \
                 mock.patch('support.time.sleep') as pause:
             sensor.return_value.group.side_effect = [partial, self.complete()]
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertTrue(value['sampleComplete'])
         self.assertEqual(value['sampleAttempts'], 3)
         self.assertEqual([x['unknownKinds'] for x in value['partialSamples']],
@@ -109,7 +109,7 @@ class InventoryTimeoutTests(unittest.TestCase):
                     mock.patch('support.time.sleep') as pause:
                 sensor.return_value.group.side_effect = error
                 with self.assertRaises(type(error)):
-                    Runner.group_activity(900)
+                    Runner.group_activity(900, bootstrap=True)
                 self.assertEqual(query.call_count, 1)
                 pause.assert_not_called()
 
@@ -134,7 +134,7 @@ class InventoryTimeoutTests(unittest.TestCase):
                 mock.patch('support.subprocess.Popen', side_effect=launch), \
                 mock.patch('support.subprocess.run', side_effect=query), \
                 mock.patch('support.time.sleep'):
-            value = Runner.group_activity(900)
+            value = Runner.group_activity(900, bootstrap=True)
         self.assertTrue(value['sampleComplete'])
         self.assertEqual(value['sampleAttempts'], 2)
         self.assertEqual(len(children), 1)
@@ -159,7 +159,8 @@ class InventoryTimeoutTests(unittest.TestCase):
             self.assertIsNone(record['peakRSSMiB'])
             failure = runner.monitor_failure
             self.assertEqual(failure['unknownKinds'], {'inventory-timeout': 1})
-            self.assertEqual(failure['queryFailure']['operation'], 'process-group-inventory')
+            self.assertEqual(failure['queryFailure']['operation'],
+                             'kern-proc-pgrp-inventory' if sys.platform=='darwin' else 'process-group-inventory')
             self.assertEqual(failure['sampleAttempts'], 3)
             self.assertIsNone(failure['processes'])
             self.assertEqual(len(failure['partialSamples']), 3)
