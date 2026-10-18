@@ -273,17 +273,33 @@ class Runner:
         for attempt in range(3):
             columns = ('pgid=,pid=,ppid=,uid=,ruid=,comm=' if sys.platform == 'darwin'
                        else 'pgid=,pid=,rss=,time=,stat=')
-            result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
-                                    check=True, timeout=3, text=True)
-            if sys.platform == 'darwin':
-                from darwin_activity import probe
-                value = probe().group(result.stdout, pgid)
+            query_started = time.monotonic()
+            try:
+                result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
+                                        check=True, timeout=3, text=True)
+            except subprocess.TimeoutExpired:
+                # run() kills and reaps its exact query child before raising.
+                # Partial output is not a complete process inventory. Retain
+                # the failure inside the existing bounded sample retry budget.
+                value = {'rssMiB': None, 'cpuSeconds': None,
+                         'rssLowerBoundMiB': None, 'cpuLowerBoundSeconds': None,
+                         'processes': None, 'states': ['?'], '_pids': (),
+                         'sampleComplete': False, 'unknownKinds': {'inventory-timeout': 1},
+                         'formatExamples': [],
+                         'queryFailure': {'operation': 'process-group-inventory',
+                             'errorType': 'TimeoutExpired', 'timeoutSeconds': 3,
+                             'elapsedSeconds': round(time.monotonic() - query_started, 3)}}
             else:
-                value = Runner.parse_group_activity(result.stdout, pgid)
+                if sys.platform == 'darwin':
+                    from darwin_activity import probe
+                    value = probe().group(result.stdout, pgid)
+                else:
+                    value = Runner.parse_group_activity(result.stdout, pgid)
             if value['sampleComplete']:
                 break
             partial.append({'unknownKinds': value['unknownKinds'], 'formatExamples': value['formatExamples'],
-                            **{key: value[key] for key in ('esrchRechecks', 'esrchExamples') if key in value},
+                            **{key: value[key] for key in ('esrchRechecks', 'esrchExamples', 'queryFailure')
+                               if key in value},
                             **({'inventorySummary': value['inventorySummary']}
                                if 'inventorySummary' in value else {}),
                             'knownRSSLowerBoundMiB': value['rssLowerBoundMiB'],
@@ -386,7 +402,8 @@ class Runner:
                             break
                         if self.monitor_failure is None:
                             self.monitor_failure = diagnostic
-                        if activity.get('rssLowerBoundMiB', 0) > self.limits.get('maxOwnedRSSMiB', 10240):
+                        lower_bound = activity.get('rssLowerBoundMiB')
+                        if lower_bound is not None and lower_bound > self.limits.get('maxOwnedRSSMiB', 10240):
                             raise Failure('owned-process-memory-limit')
                         raise Failure('monitor-unavailable')
                     rss = activity['rssMiB']
