@@ -1,0 +1,148 @@
+{
+  "decision": {
+    "checkpointEligibilityEstablished": false,
+    "longDiagnosticTrial": "CONDITIONAL_TECHNICAL_GO_ONE_TRIAL",
+    "nativeAuthentication": "NOT_TESTED",
+    "naturalDrainIntroduced": false,
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "qualificationRelaxed": false,
+    "shortExperiment": "VERIFIED_SUCCESS"
+  },
+  "independentVerification": {
+    "allAttemptJobCollectionGET": true,
+    "artifactCollectionGET": true,
+    "completeExperimentSummaries": 1,
+    "decodedJobLogGET": true,
+    "decodedSafeResultEqualsReceipt": true,
+    "newExecutionPerformed": false,
+    "rawLogPublished": false,
+    "runMetadataGET": true
+  },
+  "limits": [
+    "Two-minute background observations do not prove stability over the approximately 72-minute build interval or establish the origin of run21 candidates.",
+    "A sampled birth match is affirmative past stage-group observation; absence, truncation or unknown does not prove unrelated ancestry.",
+    "Fixed role names and parent hints do not establish executable identity or writer absence and cannot exclude candidates.",
+    "Additional hints cover at most the first 16 delta records; unretained identities remain unexplained.",
+    "A nonempty final primary baseline delta remains checkpoint-owned-survivors; the diagnostic trial can fail while retaining evidence.",
+    "No checkpoint, resumed full host/XUL build, browser run or native authentication success is established by this short experiment."
+  ],
+  "longTemplate": {
+    "actionsPermission": "read",
+    "bashScriptsChecked": 15,
+    "bytes": 18260,
+    "contentsPermission": "read",
+    "diffFromRecovery21": "Dedicated branch substitutions and expected test count 195 to 210 only",
+    "inlinePythonASTChecked": 5,
+    "jobCount": 2,
+    "jobTimeoutMinutes": 360,
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY24_WORKFLOW.yml.disabled",
+    "rawCheckpointCountAtMost": 1,
+    "retentionDays": 1,
+    "runner": "macos-15-intel",
+    "serialDependency": "consumer needs producer",
+    "sha256": "441b452a23bb6fee069f6854cc8560d00524bffa34658d58a34f7d556a669f21",
+    "storedBytesAtMost": 10737418240
+  },
+  "observations": {
+    "background": {
+      "allNewCandidateCountsZero": true,
+      "allSelfBindingVerified": true,
+      "completeSamples": 13,
+      "firstElapsedSeconds": 0,
+      "lastElapsedSeconds": 121.298,
+      "removedCandidateCountsRange": [
+        0,
+        16
+      ]
+    },
+    "firstFailure": null,
+    "floorpBuildPerformed": false,
+    "knownChild": {
+      "boundaryStatus": "rejected",
+      "cleanupFailure": null,
+      "exitCode": -15,
+      "groupCleanup": "verified-gone",
+      "leaderReaped": true,
+      "newCandidateIdentities": 1,
+      "parentRelation": "caller",
+      "primaryFiveTupleAndTwoBSDReadsVerified": true,
+      "realSamplerComplete": true,
+      "role": "python",
+      "samplerRSSMiB": 9.2109375,
+      "samplerSource": "libproc-taskallinfo",
+      "stageBirthObservation": "observed"
+    },
+    "macTests": {
+      "passed": 210,
+      "privateLogSHA256": "c5fb965ac87048ccdca71e318735997ccb8aa674a46b4bfb8b0e74b434319235",
+      "seconds": 46.849,
+      "skipped": 0,
+      "total": 210
+    },
+    "monitorFailure": null,
+    "sdkAcquired": false
+  },
+  "receipt": {
+    "bytes": 23118,
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_TERMINAL_RESULT.json",
+    "sha256": "235dab1e8a0ca62cb7489160878fbd5f034de2701314b44980789685b94d3779"
+  },
+  "remainingActivationConditions": [
+    "Use the identical reviewed fixture code and verify immutable provider file bytes.",
+    "Render and verify the exact immutable long caller; permit only the dedicated initial created push with attempt 1 and before-zero guard.",
+    "Confirm no conflicting owned job is active and no prior execution exists for the activation branch.",
+    "Recheck official SDK metadata and preserve ordinary acquisition, expiry, HTTP, deadline, ZIP/TAR/tree/version validation.",
+    "Preserve the two serial standard jobs, all phase/resource/cleanup limits and one raw checkpoint at most 10 GiB retained one day."
+  ],
+  "schema": 1,
+  "shortRun": {
+    "artifacts": 0,
+    "attempt": 1,
+    "caller": "be1e25f92c106facd1768c1b3966f8f4f1951e04",
+    "conclusion": "success",
+    "event": "push",
+    "fixture": "8023e5a9323464e0343d59dbaae7817b1d796100",
+    "id": 39135355949,
+    "job": 117698651341,
+    "jobCount": 1,
+    "runner": "macos-15-intel",
+    "status": "completed",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39135355949"
+  },
+  "sourceBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/census_diagnostics.py",
+      "sha256": "b0c4a4a237b9c803e29ea6b26794e77ef338b52b51f6d5af47cdeb02544b4d3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_experiment.py",
+      "sha256": "9627cc84ba061c1b047af7825e36f52cf4ac5bd88e5a9ff3434c706846feb647"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "b57a3b652b5e1bf17adf0fee911a9f05835b8902a566dbfbf1cfdfbd43757605"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "dc9ac032dd1f4ca48916b29e6aaa4ec28e04284e835f9e300923c2f99b11a079"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "f6008363f8841387346eadd02db056c7f2ddf5a67741d04ca3c6af98bdca9cac"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_diagnostics.py",
+      "sha256": "a5b03f7ff0e6aad6260ed4c8b6bbc03757e11601c1ca5498fadbfe168867a55e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_experiment.py",
+      "sha256": "7109e1882f4f731d2838fc686c8dfb5153bb86e175341f0193dfdfbbcbd465f3"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "545bbad4d626b9336216805b3432f9a58a91bd55a13dc58eb5a3f9c9dda700cd"
+    }
+  ]
+}

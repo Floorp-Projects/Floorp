@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "scope": "one diagnostic checkpoint trial with unchanged eligibility",
+  "baseFixture": "8023e5a9323464e0343d59dbaae7817b1d796100",
+  "codeMatchesShortExperimentFixture": true,
+  "codeBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "dc9ac032dd1f4ca48916b29e6aaa4ec28e04284e835f9e300923c2f99b11a079"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "f6008363f8841387346eadd02db056c7f2ddf5a67741d04ca3c6af98bdca9cac"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "b57a3b652b5e1bf17adf0fee911a9f05835b8902a566dbfbf1cfdfbd43757605"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "545bbad4d626b9336216805b3432f9a58a91bd55a13dc58eb5a3f9c9dda700cd"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_diagnostics.py",
+      "sha256": "b0c4a4a237b9c803e29ea6b26794e77ef338b52b51f6d5af47cdeb02544b4d3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_diagnostics.py",
+      "sha256": "a5b03f7ff0e6aad6260ed4c8b6bbc03757e11601c1ca5498fadbfe168867a55e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_experiment.py",
+      "sha256": "9627cc84ba061c1b047af7825e36f52cf4ac5bd88e5a9ff3434c706846feb647"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_census_experiment.py",
+      "sha256": "7109e1882f4f731d2838fc686c8dfb5153bb86e175341f0193dfdfbbcbd465f3"
+    }
+  ],
+  "shortExperiment": {
+    "run": "39135355949",
+    "status": "passed",
+    "actualMacTests": 210,
+    "skipped": 0,
+    "knownChildIdentitySamplerRejectionAndCleanupVerified": true,
+    "backgroundSnapshots": 13,
+    "backgroundNewCandidateCounts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "durationSeconds": 121.298,
+    "artifacts": 0
+  },
+  "limits": {
+    "standardRunner": "macos-15-intel",
+    "serialJobs": 2,
+    "platformMinutesEach": 360,
+    "checkpointArtifactsAtMost": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionDays": 1
+  },
+  "eligibilityRelaxed": false,
+  "drainIntroduced": false,
+  "permissionsChanged": false,
+  "signalOwnershipExpanded": false,
+  "sdk": {
+    "artifact": 12113511845,
+    "run": 39066132056,
+    "expiresAt": "2026-10-18T20:19:27Z",
+    "bytes": 105082683,
+    "zipSHA256": "99234850e98cd87ccbf77cc702cf0e76bd80ee2ad431eda6ba8dfc8427159c20",
+    "officialMetadataUnexpired": true
+  },
+  "bindings": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY23_TERMINAL_RESULT.json",
+      "sha256": "235dab1e8a0ca62cb7489160878fbd5f034de2701314b44980789685b94d3779"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY24_WORKFLOW.yml.disabled",
+      "sha256": "441b452a23bb6fee069f6854cc8560d00524bffa34658d58a34f7d556a669f21"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY24_DIAGNOSTIC_CHECKPOINT.ja.md",
+      "sha256": "ed4b2cb777bb68554a5d09b51b8b45537ddbd0a0068eeb70f8e5f8ec07721e77"
+    }
+  ],
+  "review": "RECOVERY24_PRELAUNCH_REVIEW.json"
+}
