@@ -1,0 +1,207 @@
+{
+  "schema": 1,
+  "review": "Recovery27 short native inventory diagnostic terminal review",
+  "decision": "NO_GO_LONG; SHORT_LOAD_GATE_INCOMPLETE",
+  "run": {
+    "id": 39154799561,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39154799561",
+    "job": 117755695049,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "fixture": "92a42cd29ad4aff3ec1e0dbe393abe61223f2244",
+    "caller": "ec8cde8d23340af4553c4cbd1d73efa709bacbf7",
+    "branch": "codex/mac-native-inventory-recovery27-20261018",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "startedAt": "2026-10-18T18:34:56Z",
+    "completedAt": "2026-10-18T18:36:10Z"
+  },
+  "contentBindings": {
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY27_TERMINAL_RESULT.json": {
+      "bytes": 10346,
+      "sha256": "2b2fa4f1b81ea7fa388dd42ad27e7c23882ea010afbb720c2ca99c4c7afb7ae9"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY27_NEXT_DIAGNOSTIC.md": {
+      "bytes": 3702,
+      "sha256": "17fdda8ede9fc7eadc4ab53d605b50ca04091d0b188854cc4844a4cbbee6b4f2"
+    },
+    "tools/qa/native-nonpgo/native_processes.py": {
+      "bytes": 6111,
+      "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b"
+    },
+    "tools/qa/native-nonpgo/test_native_processes.py": {
+      "bytes": 7399,
+      "sha256": "f4562ffd7ca3f8b3097cb04592f0c8588559409a8df7cd0e36c0218a31de6a3c"
+    }
+  },
+  "independentEvidence": {
+    "checks": [
+      "Read-only run, job, decoded job-log and artifact APIs",
+      "Run caller, fixture checkout and single Mac job bindings",
+      "Exact decoded job log comparison with saved evidence",
+      "Exact structured experiment comparison with terminal receipt",
+      "Immutable fixture source readback for the failing test and NativeProcesses helper"
+    ],
+    "jobLogBytes": 25955,
+    "jobLogSHA256": "3e6f4db1c053ba7def4fc8121dc34c74626aa75435ce6b59d2d57b67f3873160",
+    "savedLogExactProviderMatch": true,
+    "receiptExperimentExactLogMatch": true,
+    "sourceFilesExactProviderMatch": true,
+    "artifactCount": 0
+  },
+  "observed": {
+    "tests": {
+      "total": 267,
+      "passed": 266,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 46.783,
+      "privateTestLogBytes": 56660,
+      "privateTestLogSHA256": "462656ec9531b6117aee7b765e7507efeb8b9653b95468b2a06bf071b248fec9"
+    },
+    "soleFailure": {
+      "test": "test_native_processes.NativeInventoryGuards.test_real_mac_child_identity_and_argc_without_environment_or_ps",
+      "file": "tools/qa/native-nonpgo/test_native_processes.py",
+      "line": 138,
+      "exceptionType": "AssertionError",
+      "predicate": "The earlier single-PID row must be a member of a later rows(executable=path) result."
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 68.95
+    },
+    "monitorFailure": null,
+    "stageResults": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "cleanupFailure": null
+      }
+    ],
+    "normalStageInventoryBackend": "kern-proc-pgrp-helper",
+    "bootstrapStages": [
+      "census-abi-compile",
+      "census-abi"
+    ],
+    "inventoryStressReached": false,
+    "backgroundObservationReached": false,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "checkpointStored": false,
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "interpretation": {
+    "primaryStop": "An existing native candidate-inclusion unit assertion failed; this was not a fatal inventory-monitor stop.",
+    "rootCause": "UNKNOWN",
+    "newInventoryTests": "All tests other than the named existing NativeProcesses assertion passed, including the new Darwin inventory and stress-unit tests.",
+    "monitorLimit": "monitorFailure=null does not prove there were zero recovered timeout/race samples.",
+    "gateLimit": "The 60-second load experiment was not reached, so the short diagnostic gate is incomplete. No long trial is justified by this result.",
+    "productLimit": "This observation does not establish a Floorp compiler/product failure or the historical native-host exit cause."
+  },
+  "staticAnalysis": {
+    "twoPaths": "The new resource inventory uses the bounded sysctl KERN_PROC_PGRP helper. The failing existing native discovery helper separately uses proc_listpids(PROC_UID_ONLY) and exact executable-path filtering.",
+    "possiblePredicateBranches": [
+      "The target PID is absent from the later actual candidate enumeration.",
+      "The target is enumerated but a BSD read confirms gone/zombie, including a successful gone recheck after a RuntimeError, so rows skips it.",
+      "The target is enumerated but its current executable-path string differs from the independently obtained filter string.",
+      "The target returns a row whose birth or argv differs from the earlier row even though each independent read is internally consistent."
+    ],
+    "evidenceLimit": "The safe failure identity and static frame do not retain assertion operands or the intermediate selection predicates. None of these branches can be selected from the current evidence.",
+    "capacityCaveat": "The pinned XNU implementation allocates min(nprocs+20, caller capacity) before locking enumeration and can stop at that internal cap. Returning fewer bytes than the caller buffer therefore is not a general completeness proof. This known caveat is a hypothesis, not evidence that this run truncated.",
+    "lifecycleCaveat": "The child is intended to wait on stdin, but the test has no explicit interpreter-ready acknowledgement or WNOWAIT observations bracketing the failed selection. Its stable waiting lifetime across the comparison was not recorded."
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "kind": "diagnostic-coverage",
+      "status": "unresolved evidence gap",
+      "description": "The inclusion failure is safely identified but its failed predicate cannot be classified; raw assertion text should remain private.",
+      "recommendation": "Capture privacy-safe predicates from the actual selection call and project fixed outcomes through the public structured receipt."
+    }
+  ],
+  "nextMinimalDiagnostic": {
+    "state": "PROPOSED_ONLY; not implemented or executed",
+    "observations": [
+      "Add an explicit ready acknowledgement from the exact Popen child before comparison.",
+      "Bracket the actual selection with exact-child WNOWAIT status and distinguish live, exit-pending and unavailable without reaping early.",
+      "Wrap the actual pids/target BSD/path/argv selection calls to retain only candidate/filtered presence, equality booleans, fixed outcome kinds, counts and API bytes/errno.",
+      "Split candidate presence, filtered presence, birth equality and argv equality into independent static assertion lines so the existing frame projection can identify the failed predicate; preserve the strict final comparison.",
+      "Test safe projection and negative enumeration omission, row mismatch, unavailable/lifecycle and exact-child cleanup paths."
+    ],
+    "privacy": "Do not publish raw PID/UID/path/argv/environment, arbitrary exception text or full unittest logs. Printing safe diagnostics only inside unittest is insufficient because that output remains in the private test log.",
+    "unchanged": "Keep API permissions, selection, retry budgets, unknown handling and cleanup ownership unchanged; absence or unavailable reads must not become success."
+  },
+  "reviewerPortableChecks": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_native_processes -q",
+    "environment": "Linux",
+    "total": 7,
+    "passed": 6,
+    "skipped": 1,
+    "seconds": 0.002,
+    "exitCode": 0,
+    "branchModels": "Four local mock models reproduced the same inclusion-predicate failure without an escaping API exception: enumeration omission, path mismatch, authoritative gone and stable row change. These are branch models, not a reproduction of the Mac event.",
+    "environmentUsable": "Shell, repository reads and portable tests succeeded during review."
+  },
+  "sdkPlanning": {
+    "metadataCheckedAt": "2026-10-18T18:40:14Z",
+    "artifact": 12113511845,
+    "sourceRun": 39066132056,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "expired": false,
+    "expiresAt": "2026-10-18T20:19:27Z",
+    "sizeBytes": 105082683,
+    "digest": "sha256:99234850e98cd87ccbf77cc702cf0e76bd80ee2ad431eda6ba8dfc8427159c20",
+    "payloadDownloaded": false,
+    "concern": "A later consumer performs fresh acquisition and may begin after expiry. A legitimate unexpired acquisition path or separately reviewed reuse of content acquired while valid is required before a long trial; no expiry bypass or six-hours-remaining guard is justified."
+  },
+  "notInScope": [
+    "New short or long run activation",
+    "SDK or large artifact payload acquisition",
+    "Source edits",
+    "New artifact storage",
+    "Signing, publication, merge or permission changes"
+  ],
+  "primarySource": {
+    "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L359",
+    "supports": "proc_listpids internal capacity calculation before proc_list_lock, UID filtering, live/zombie enumeration and returned byte count. This source does not identify which branch occurred on the hosted runner."
+  }
+}
