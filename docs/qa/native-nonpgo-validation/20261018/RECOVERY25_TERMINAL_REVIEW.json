@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "decision": "CLEAR_DIAGNOSTIC_RESULT",
+  "run": {
+    "id": 39145332878,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39145332878",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "attempt": 1,
+    "callerCommit": "f1536a01b9394cd3e027b49177b0fe37bcfb79eb",
+    "fixtureCommit": "53c7e003c369b4c11c7bca9106d3705d62f1b761",
+    "jobs": [
+      {
+        "id": 117727889715,
+        "status": "completed",
+        "conclusion": "success",
+        "labels": [
+          "macos-15-intel"
+        ]
+      }
+    ],
+    "artifacts": 0
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_TERMINAL_RESULT.json",
+    "bytes": 33219,
+    "sha256": "b4542d4d22fa1b87776788383ce3de4fe1a1b3d5d2c3f2d289938a68351c8e9d"
+  },
+  "verification": {
+    "directRunJobsArtifactsAPI": true,
+    "decodedJobLogReviewed": true,
+    "entireExperimentMatchesReceipt": true,
+    "nonpublicSentinelPresent": false,
+    "newCIStartedByReviewer": false
+  },
+  "tests": {
+    "total": 226,
+    "passed": 226,
+    "skipped": 0,
+    "seconds": 50.119
+  },
+  "originalParentControl": {
+    "status": "passed",
+    "afterOrphan": {
+      "sameIdentity": true,
+      "originalParentRetained": true,
+      "currentParentIsPID1": true,
+      "parentUniqueMatchesPID1": false,
+      "originalParentVersionMatchesPID1": false
+    },
+    "afterExec": {
+      "sameIdentity": true,
+      "execVersionChanged": true,
+      "originalParentRetained": true,
+      "parentUniqueMatchesPID1": true,
+      "originalParentVersionMatchesPID1": false,
+      "classification": "original-parent-not-established"
+    },
+    "cleanup": {
+      "pipeClosed": true,
+      "leaderReaped": true,
+      "groupCleanup": "verified-gone",
+      "cleanupFailure": null
+    }
+  },
+  "metadataObservation": {
+    "candidateIdentities": 278,
+    "verifiedMetadataCandidates": 16,
+    "roleUnavailableCandidates": 1,
+    "originRecords": 16,
+    "allObservedOriginClassifications": "pid1-original-parent-consistent",
+    "excluded": false
+  },
+  "knownChild": {
+    "actualSamplerComplete": true,
+    "stageBirthObserved": true,
+    "boundaryRejectedNewIdentity": true,
+    "cleanup": {
+      "leaderReaped": true,
+      "exitCode": -15,
+      "groupCleanup": "verified-gone",
+      "cleanupFailure": null
+    }
+  },
+  "background": {
+    "completeSnapshots": 13,
+    "allNewCandidateIdentities": 0,
+    "removedCandidateIdentitiesRange": [
+      0,
+      16
+    ]
+  },
+  "failures": {
+    "firstFailure": null,
+    "monitorFailure": null
+  },
+  "scope": {
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "newArtifacts": 0,
+    "nativeAuthentication": "NOT_TESTED",
+    "checkpointEligibilityChanged": false,
+    "signalOwnershipExpanded": false
+  },
+  "limitations": [
+    "Different runner from run24; its thirteen candidates are not retroactively attributed",
+    "Original-parent consistency does not prove non-job causation or non-writer status",
+    "Two-minute background observations do not establish long-build stability",
+    "No service-name, parent or negative sampler observation authorizes exclusion"
+  ],
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  }
+}

@@ -386,7 +386,7 @@ def main():
                        args.source, env, plan['limits']['jobMinutes'])
         verify_config(plan, task, tools, sdk)
         if checkpoint_role == 'producer':
-            from checkpoint import full_log_receipt, verify_owned_boundary, verify_graph
+            from checkpoint import full_log_receipt, verify_graph
             stage = 'checkpoint-exports'
             runner.run(stage, [sys.executable, 'mach', 'build', '-j', '3', 'pre-export', 'export'],
                        args.source, env, plan['limits']['jobMinutes'],
@@ -416,7 +416,14 @@ def main():
             report['checkpointStageObservations'] = {
                 'status': runner.observation_status, 'identities': len(runner.observed_processes),
                 'scope': 'sampled measured stage-group identities; absence is not proof of unrelated ancestry'}
-            verify_owned_boundary(owned_baseline, census_completion, runner.observed_processes)
+            from census_convergence import wait_for_boundary
+            census_wait = report['checkpointCensusWait'] = {}
+            census_completion.update(status='unavailable',newCandidateIdentities=None)
+            try:
+                census_completion = wait_for_boundary(owned_baseline,census_wait,runner)
+            finally:
+                if census_wait.get('samples'):
+                    report['checkpointCensusCompletion'] = census_wait['samples'][-1]['boundary']
             require(runner.failure is None and runner.monitor_failure is None and
                     all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
                         row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None

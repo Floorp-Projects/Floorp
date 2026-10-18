@@ -217,6 +217,13 @@ def owned_processes(details=None):
 
 def verify_owned_boundary(baseline, receipt, observed_births=None):
     """Retain safe census evidence before rejecting any new candidate identity."""
+    added = measure_owned_boundary(baseline, receipt, observed_births)
+    require(not added, 'checkpoint-owned-survivors')
+    return receipt
+
+
+def measure_owned_boundary(baseline, receipt, observed_births=None):
+    """Measure the unchanged strict boundary; return private candidate identities."""
     receipt.update(status='collecting', signalOwnershipGranted=False,
                    rawProcessMetadataPublished=False, newCandidateIdentities=None,
                    removedCandidateIdentities=None, deltaKinds=None, deltaRecords=None,
@@ -242,7 +249,7 @@ def verify_owned_boundary(baseline, receipt, observed_births=None):
                    deltaScope='worker effective or real UID candidates; ancestry and writer role unproven')
     if not added:
         receipt.update(deltaRecords=[], deltaRecordsTruncated=False, deltaDiagnosticStatus='complete')
-        return receipt
+        return added
     try:
         key = os.urandom(16)
         if observed_births is not None:
@@ -257,8 +264,7 @@ def verify_owned_boundary(baseline, receipt, observed_births=None):
                        deltaDiagnosticStatus='complete')
     except Exception:
         receipt['deltaDiagnosticStatus'] = 'unavailable'
-    require(not added, 'checkpoint-owned-survivors')
-    return receipt
+    return added
 
 
 def full_log_receipt(path):

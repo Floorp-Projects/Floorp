@@ -1,0 +1,211 @@
+{
+  "schema": 1,
+  "decision": "GO_ONE_RECOVERY26_WORKFLOW_AFTER_BINDING_WITH_PRE_SDK_MAC_GATE",
+  "scope": "One bounded resumed validation with two serial standard Intel jobs",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "binding": {
+    "kind": "exact content SHA256",
+    "fixtureCommit": null,
+    "callerCommit": null,
+    "files": {
+      "tools/qa/native-nonpgo/census_convergence.py": {
+        "bytes": 10246,
+        "sha256": "a1ddd9e156048ecb8950b7b460083806a9fbff5b9735534b4252e3b564377a54"
+      },
+      "tools/qa/native-nonpgo/test_census_convergence.py": {
+        "bytes": 17734,
+        "sha256": "bb1364bcca23d45595765a6f5d6969cb3cba00aaf0d0aee1c2d0f26a2d822580"
+      },
+      "tools/qa/native-nonpgo/checkpoint.py": {
+        "bytes": 28077,
+        "sha256": "6a7af45bb7eac28ee837f2eaa9bd6d183fd52731fb60dc5b845dea3be3802ec0"
+      },
+      "tools/qa/native-nonpgo/pipeline.py": {
+        "bytes": 38277,
+        "sha256": "c7156d928801465a00c622af4a69e37859582ada01c4cfbf30b224444ed85c1a"
+      },
+      "tools/qa/native-nonpgo/darwin_activity.py": {
+        "bytes": 13139,
+        "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+      },
+      "tools/qa/native-nonpgo/support.py": {
+        "bytes": 30198,
+        "sha256": "b57a3b652b5e1bf17adf0fee911a9f05835b8902a566dbfbf1cfdfbd43757605"
+      },
+      "tools/qa/native-nonpgo/process_census.py": {
+        "bytes": 9052,
+        "sha256": "31b1457bf14b29850f888e470f1c5287bc9236b68229f4d4f7ea0128b0def3af"
+      },
+      "tools/qa/native-nonpgo/census_diagnostics.py": {
+        "bytes": 3477,
+        "sha256": "b0c4a4a237b9c803e29ea6b26794e77ef338b52b51f6d5af47cdeb02544b4d3a"
+      },
+      "tools/qa/native-nonpgo/plan.json": {
+        "bytes": 25898,
+        "sha256": "22532973923b62e3037a121e9b6a4b2b0ebcf980bffe4c7730b2fef684341daa"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_WORKFLOW.yml.disabled": {
+        "bytes": 18260,
+        "sha256": "65a608cd8773aee5a2196f701fe5790a6124888ab50b4834c619886ffb9833dd"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_CONVERGENCE_WAIT.ja.md": {
+        "bytes": 3952,
+        "sha256": "ff2030e37d7c1df720cbeaf268243958598e27316655c9b8ce1145a2000910ee"
+      }
+    }
+  },
+  "shortDiagnosticEvidence": {
+    "run": 39145332878,
+    "job": 117727889715,
+    "conclusion": "success",
+    "callerCommit": "f1536a01b9394cd3e027b49177b0fe37bcfb79eb",
+    "fixtureCommit": "53c7e003c369b4c11c7bca9106d3705d62f1b761",
+    "actualMacTests": 226,
+    "passed": 226,
+    "skipped": 0,
+    "directAPIAndDecodedLogCompared": true,
+    "completeExperimentMatchesReceipt": true,
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_TERMINAL_RESULT.json",
+    "receiptSHA256": "b4542d4d22fa1b87776788383ce3de4fe1a1b3d5d2c3f2d289938a68351c8e9d",
+    "terminalReviewSHA256": "9b7f2019ddcb5d646837aa1f9c47deb65b6e94f172b52db743b42e06b3b564ff",
+    "originalParentNegativeControl": "Orphan exec changes parent uniqueid to PID1 while retaining supervisor original-parent version; not classified as PID1-original-parent-consistent",
+    "metadataObservation": "16 verified metadata candidates were PID1-original-parent-consistent; one role unavailable candidate retained separately",
+    "cleanup": "Exact supervisor reaped, group verified-gone, no cleanup failure",
+    "newArtifacts": 0,
+    "firstFailure": null,
+    "monitorFailure": null,
+    "qualificationLimit": "Does not attribute run24 candidates or prove non-writer/non-job status"
+  },
+  "validation": {
+    "reviewerExecuted": true,
+    "platform": "Linux x86_64",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 244,
+    "passed": 232,
+    "skipped": 12,
+    "seconds": 8.857,
+    "exitCode": 0,
+    "sourceUnchangedDuringTests": true,
+    "macConvergenceExecution": "NOT_EXECUTED in these review results",
+    "workflowSyntax": {
+      "yaml": "passed",
+      "bashScripts": 15,
+      "inlinePythonAST": 5
+    },
+    "workflowComparison": "Exact branch substitutions in three places and test-count substitutions in two places relative to Recovery24 template",
+    "metadataFailureRouting": "task-permission / identity-permission / query-unavailable confirmed",
+    "metadataStructuredReceiptProjection": "task-permission survives known source test identity and known Failure code projection"
+  },
+  "convergenceContract": {
+    "baseline": "Original immutable baseline retained; never reset",
+    "finalPredicate": "Only a newly measured primary census with actual completion-minus-baseline empty can pass",
+    "waitPolicyChange": "Immediate one-shot rejection becomes a bounded read-only convergence wait; final qualification predicate is unchanged",
+    "nameOrOriginExclusions": false,
+    "signalsSent": false,
+    "signalOwnershipExpanded": false,
+    "unknown": "Primary unavailable immediately fails; resource unknown retains null totals, fixed failure code and API query diagnostics, sets monitor-unavailable and fails",
+    "resourceScope": "Self plus all new worker-EUID/RUID candidates, including unrelated background candidates",
+    "resourceBinding": "Complete BSD PID/birth/EUID/RUID before and after task counters; expected birth preserved",
+    "gone": "Only same-birth authoritative zombie or independent ESRCH accepted; generation replacement remains unknown",
+    "rssLimitMiB": 10240,
+    "minFreeGiB": 8,
+    "maxStageLogBytes": 268435456,
+    "maxNativePrivateBytes": 134217728,
+    "cadence": "One second sleep between completed observations; query duration is additional",
+    "deadlines": "Original monotonic job origin; census phase260, pack305, upload335, final345, platform360 minutes unchanged",
+    "stall": "Existing 20-minute multisignal rule applied to new-candidate counters/roster, fixed stage log sizes and disk; monitor self CPU/RSS excluded from progress",
+    "evidence": "All sample counts/resources retained; first and latest16 detailed boundaries retained; last boundary survives failure",
+    "maxSamples": 15601,
+    "stageBoundary": "All build stages still require natural exit0, verified group-gone, exact leader reap and no cleanup failure before packing"
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "Exit between initial BSD and task query was treated as unavailable even with authoritative gone evidence",
+      "status": "fixed; same-birth zombie/independent ESRCH accepted, replaced-generation negative cases retained"
+    },
+    {
+      "severity": "P2",
+      "issue": "Deadline crossing immediately before sleep could produce negative sleep and ValueError",
+      "status": "fixed; one remaining-time calculation and fixed deadline failure test"
+    },
+    {
+      "severity": "P2",
+      "issue": "Resource failure lost classified operation and API failure evidence",
+      "status": "fixed; allowlisted operation/reason/failure code and integer query fields retained, exception text withheld"
+    },
+    {
+      "severity": "P2",
+      "issue": "Prior candidate task query could leak into the next failed candidate diagnostic",
+      "status": "fixed; candidate-local query reset and two-candidate exception regression"
+    },
+    {
+      "severity": "P2",
+      "issue": "Representative metadata gate supplemental output was captured only in the private unittest log",
+      "status": "fixed for permission/unknown classification via allowlisted literal Failure codes and verified public structured receipt projection"
+    }
+  ],
+  "workflow": {
+    "jobs": 2,
+    "serialDependency": "consumer needs successful producer",
+    "runner": "macos-15-intel",
+    "jobTimeoutMinutes": 360,
+    "initialCreatedPushAttempt1Guard": true,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "producerGateBeforeSDK": {
+      "actualMacTests": 244,
+      "requiredPassed": 244,
+      "requiredSkipped": 0,
+      "metadataResourceGate": "At least one identity-verified metadata-worker must actually yield bound task counters; zero candidate or all gone/self-only measurements fail",
+      "selectionScope": "Metadata role selects this representative diagnostic only; convergence continues to include all new UID/RUID candidates",
+      "safeFailureCodes": [
+        "census-wait-metadata-no-candidate",
+        "census-wait-metadata-no-measurement",
+        "census-wait-metadata-task-permission",
+        "census-wait-metadata-identity-permission",
+        "census-wait-metadata-query-unavailable"
+      ],
+      "failureEvidence": "Fixed production Failure literals are projected into public tests.cases.failureCode by the existing source-allowlisted unittest receipt; supplemental JSON print remains private test log content"
+    },
+    "artifact": {
+      "maximumCount": 1,
+      "rawSingleFile": true,
+      "maxStoredBytes": 10737418240,
+      "retentionDays": 1,
+      "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
+    },
+    "qualification": "verified resumed build across two standard Intel jobs; freshObjdir=false, sameJob=false",
+    "fixturePlaceholderPresent": true,
+    "productSigningPublicationMergeOrPermissionChanges": false
+  },
+  "activationConditions": [
+    "Freeze immutable fixture with these reviewed bytes; render only fixture placeholder and read back exact fixture/caller content",
+    "Verify unused activation branch and no overlapping owned active/queued run; preserve one workflow with two serial jobs",
+    "Recheck official SDK metadata/content pins and unexpired acquisition; normal API and acquisition guards remain mandatory",
+    "Require all244 actual Mac tests with zero skips before SDK/build; any failure stops acquisition/build/upload",
+    "If convergence does not reach strict zero within existing resource/stall/phase limits, preserve failure and do not upload checkpoint or start consumer"
+  ],
+  "limitations": [
+    "Sequential per-process measurements are sampled aggregates, not an atomic or continuous memory upper bound",
+    "Final zero is a process snapshot and does not prove all possible external writers absent afterward",
+    "The existing EUID/RUID candidate scope is unchanged; processes outside both credential predicates are outside that census contract",
+    "Short25 success does not establish long-run stability or native authentication",
+    "Actual full host/XUL/native result remains pending; interrupted build states are still ineligible",
+    "Actual Mac244 gates remain pending; representative metadata success would not prove every later candidate query will remain available. Any later denial is still fail-closed.",
+    "The pre-SDK metadata gate publishes fixed failure category through the structured unittest receipt; its detailed API bytes/errno JSON remains in the private test log."
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "newCI": 0,
+    "sdkAcquisition": 0,
+    "artifactUploads": 0,
+    "externalWrites": 0
+  }
+}

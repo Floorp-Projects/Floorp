@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "platform": "linux",
+  "testReceipt": {
+    "complete": true,
+    "rawContentPublished": false,
+    "exceptionTextPublished": false,
+    "total": 244,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 12,
+    "status": "passed",
+    "seconds": 8.873,
+    "bytes": 47516,
+    "sha256": "afb29389d20a4e8c16ca8f7e868785a73a7e90342222e6587e037ef21750da98",
+    "cases": []
+  },
+  "sourceHashes": {
+    "tools/qa/native-nonpgo/census_convergence.py": "a1ddd9e156048ecb8950b7b460083806a9fbff5b9735534b4252e3b564377a54",
+    "tools/qa/native-nonpgo/test_census_convergence.py": "bb1364bcca23d45595765a6f5d6969cb3cba00aaf0d0aee1c2d0f26a2d822580",
+    "tools/qa/native-nonpgo/checkpoint.py": "6a7af45bb7eac28ee837f2eaa9bd6d183fd52731fb60dc5b845dea3be3802ec0",
+    "tools/qa/native-nonpgo/pipeline.py": "c7156d928801465a00c622af4a69e37859582ada01c4cfbf30b224444ed85c1a",
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_WORKFLOW.yml.disabled": "65a608cd8773aee5a2196f701fe5790a6124888ab50b4834c619886ffb9833dd",
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_CONVERGENCE_WAIT.ja.md": "ff2030e37d7c1df720cbeaf268243958598e27316655c9b8ce1145a2000910ee"
+  },
+  "finalQualificationChanged": false,
+  "observationWaitPolicyChanged": true,
+  "baselineReset": false,
+  "candidatesExcluded": false,
+  "signalsSent": false,
+  "macGateRequiredBeforeSDK": {
+    "total": 244,
+    "skip": 0,
+    "metadataTaskMeasuredCandidatesMinimum": 1
+  },
+  "maxNewArtifacts": 1,
+  "retentionDays": 1,
+  "maxStoredBytes": 10737418240
+}
