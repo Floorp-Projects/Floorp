@@ -1,0 +1,225 @@
+{
+  "bindings": {
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "caller": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "callerTree": "032ae2fbd2bdef592d2ea797db210abd03420dd3",
+    "configuredFixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+    "configuredHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "configuredInputsMatchReviewedRoute": true,
+    "configuredRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "python": "3.12.10/x64 from existing runner tool cache",
+    "runnerCheckoutByteEvidence": "Full decoded job log is not yet available; fixed checkout inputs and completed/pending step status are distinguished.",
+    "workflow": {
+      "bytes": 6749,
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "sha256": "3086a7db2e48714115e4cd0ed0babcee3c86654152014f072cf420bd0a392f50"
+    }
+  },
+  "decision": {
+    "fullBuildResult": "NOT_ESTABLISHED",
+    "nativeAuthentication": "NOT_TESTED",
+    "newExecutionRequested": false,
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "status": "RUNNING_INITIAL_BINDINGS_CONFIRMED_SDK_PENDING"
+  },
+  "executionControls": {
+    "additionalBuildsOrRetriesRequestedByReviewer": 0,
+    "artifactUploadSteps": 0,
+    "attempt": 1,
+    "branchRunCount": 1,
+    "event": "push",
+    "guardMeaning": [
+      "Exact repository/ref match",
+      "push event",
+      "attempt1",
+      "created=true",
+      "before=40 zeroes"
+    ],
+    "initialGuardStep": "success",
+    "jobCount": 1,
+    "jobId": 117556135754,
+    "jobName": "validate",
+    "newArtifactsAtSnapshot": 0,
+    "permissions": {
+      "actions": "read",
+      "contents": "read"
+    },
+    "platformTimeoutMinutes": 360,
+    "runnerLabels": [
+      "macos-15-intel"
+    ]
+  },
+  "initialSteps": {
+    "fixtureCheckout": "success",
+    "harnessCheckout": "pending",
+    "ownedProcessPreflight": "success",
+    "pipeline": "pending",
+    "runtimeCheckout": "in_progress",
+    "sdkAcquisition": "pending"
+  },
+  "jobObservedAtUTC": "2026-10-18T01:41:51Z",
+  "jobs": [
+    {
+      "conclusion": null,
+      "id": 117556135754,
+      "labels": [
+        "macos-15-intel"
+      ],
+      "name": "validate",
+      "startedAt": "2026-10-18T01:38:06Z",
+      "status": "in_progress",
+      "steps": [
+        {
+          "completedAt": "2026-10-18T01:38:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "startedAt": "2026-10-18T01:38:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:11Z",
+          "conclusion": "success",
+          "name": "Bound the initial authorized run",
+          "startedAt": "2026-10-18T01:38:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:20Z",
+          "conclusion": "success",
+          "name": "Checkout immutable preparation fixture",
+          "startedAt": "2026-10-18T01:38:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:24Z",
+          "conclusion": "success",
+          "name": "Verify owned process sampling before source checkout",
+          "startedAt": "2026-10-18T01:38:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Checkout immutable Runtime source",
+          "startedAt": "2026-10-18T01:38:24Z",
+          "status": "in_progress"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Checkout immutable native harness",
+          "startedAt": null,
+          "status": "pending"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Acquire only the existing fixed SDK",
+          "startedAt": null,
+          "status": "pending"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Compile full host and XUL then authenticate native Shim",
+          "startedAt": null,
+          "status": "pending"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Confirm bounded result exists",
+          "startedAt": null,
+          "status": "pending"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Post Checkout immutable Runtime source",
+          "startedAt": null,
+          "status": "pending"
+        },
+        {
+          "completedAt": null,
+          "conclusion": null,
+          "name": "Post Checkout immutable preparation fixture",
+          "startedAt": null,
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "This is an initial mutable-state snapshot, not a terminal execution review or product qualification.",
+    "Decoded logs returned not-yet-available BlobNotFound during the running job; that is not evidence that an execution step failed.",
+    "No source edit, new CI, cancellation, SDK acquisition, signature, publication, merge or privilege change was performed by this review.",
+    "Historical native exit, group-denial and inventory-delay causes remain unknown."
+  ],
+  "prerequisite": {
+    "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+    "result": "CLEAR_GO_FOR_ONE_PINNED_FULL_HOST_XUL_NATIVE_RUN",
+    "shortCaller": "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+    "shortRun": 39087022762,
+    "terminalReviewSHA256": "8a1a32c5d6df6962a9f82c664d27194ded97300ff74ebc39073be99a0a0f51d0",
+    "testsPassed": 133,
+    "testsSkipped": 0
+  },
+  "remainingEvidence": [
+    "Actual Runtime and harness checkout completion and immutable checkout outputs.",
+    "Successful guarded SDK acquisition, then SDK tree/version materialization proof.",
+    "Fresh full host/XUL compilation, package/ad-hoc test copy verification and actual native authentication results.",
+    "Terminal first failure, stage and resource/cleanup evidence, diagnostic limits and final artifact count."
+  ],
+  "reviewType": "independent initial full-validation execution snapshot",
+  "run": {
+    "attempt": 1,
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "conclusion": null,
+    "createdAt": "2026-10-18T01:37:59Z",
+    "event": "push",
+    "head": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "id": 39087195468,
+    "status": "in_progress",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087195468"
+  },
+  "schemaVersion": 1,
+  "sdk": {
+    "acquisition": "NOT_STARTED_AT_JOB_SNAPSHOT",
+    "fixedContent": {
+      "artifact": 12096898807,
+      "canonicalTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "materializerTreeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+      "sourceRun": 39022451582,
+      "tarBytes": 105567985,
+      "tarSHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+      "version": "26.5",
+      "zipBytes": 105082683,
+      "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4"
+    },
+    "metadata": {
+      "bytes": 105082683,
+      "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+      "expired": false,
+      "expiresAt": "2026-10-18T09:48:20Z",
+      "id": 12096898807,
+      "name": "macos-sdk",
+      "sourceRun": 39022451582,
+      "sourceRunAttempt": 1,
+      "sourceRunConclusion": "success",
+      "sourceRunHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "sourceRunStatus": "completed"
+    },
+    "payloadAcquiredByReviewer": false,
+    "proofBoundaries": [
+      "Current official metadata matches the fixed artifact identity, size, digest, completed-success source run, source head and attempt, with expired=false.",
+      "The acquisition step has not yet succeeded in this snapshot. No local SDK receipt, ZIP/TAR verification or usable SDK is claimed for this run yet.",
+      "A successful unchanged fetch step establishes its official metadata, HTTP redirect/error, unexpired-at-fetch, 600-second acquisition, ZIP/TAR/layout checks. Tree/version validation is a later materialization/pipeline proof and must be separately observed.",
+      "A normally fetched verified local SDK is not invalidated solely because service retention expires later; no expired download bypass is included."
+    ]
+  },
+  "sdkMetadataObservedAtUTC": "2026-10-18T01:42:14Z"
+}
