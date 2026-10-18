@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "review": "Recovery28 controlled native candidate-selection diagnosis",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "tools/qa/native-nonpgo/native_selection_diagnostic.py": {
+      "bytes": 6406,
+      "sha256": "7df78aad4c2a624927c0db788c2a33dad6ec146b8aee44c20b7107f9d212cf0e"
+    },
+    "tools/qa/native-nonpgo/test_native_selection_diagnostic.py": {
+      "bytes": 7448,
+      "sha256": "5ec5b16cda826fab253339d8c43d6f75b18511c9bf3d612e0120b5b87915ceb0"
+    },
+    "tools/qa/native-nonpgo/test_native_processes.py": {
+      "bytes": 8896,
+      "sha256": "d41f86661dba3d32553a3d0ebbfbe3fc8b15a42e38ccbe7ea171e8d894c15ef5"
+    },
+    "tools/qa/native-nonpgo/unittest_receipt.py": {
+      "bytes": 7705,
+      "sha256": "5c22e9722d7f9a0a4c7f97a4e4d34fad900e61b5fc7aac049ee010c652ba5308"
+    },
+    "tools/qa/native-nonpgo/census_experiment.py": {
+      "bytes": 11301,
+      "sha256": "dabf1c800cc8027ea4369aa6b50a3e2ef36ade27d68c7671e0b2a9a50522f68f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_SELECTION_WORKFLOW.yml.disabled": {
+      "bytes": 3015,
+      "sha256": "fbf6b10b1da00478b273cce51d4efa5912ab2f637a0dfbcc0aaf1ad67416be7a"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_SELECTION_DIAGNOSTIC.md": {
+      "bytes": 3602,
+      "sha256": "7de59582307f9b0b760f4fa4c494427971a115a9b2718e3a66af668899698d2c"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_LOCAL_RESULT.json": {
+      "bytes": 880,
+      "sha256": "bebf01a6bc765faf250b167587315b5d364f1efb38dd001437f6a2cb982232e7"
+    }
+  },
+  "activationConditions": [
+    "Bind the eight reviewed files to an immutable fixture and render only its SHA into the reviewed single workflow; read back exact provider bytes before activation.",
+    "Confirm the fresh recovery28 branch has no prior run and no overlapping owned validation is active or queued.",
+    "Preserve repository/ref/push/created/before-zero/attempt-one guards and read-only permissions."
+  ],
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery28-20261018",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "longTrialInScope": false
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 275,
+    "passed": 261,
+    "skipped": 14,
+    "seconds": 9.582,
+    "exitCode": 0,
+    "sourceUnchangedDuringTests": true,
+    "logSHA256": "dc7e3c7492a11d19439c59b7ef73628e43d6722b7341b894b4a9ee8f704fa6f2",
+    "syntax": {
+      "workflowYAML": "passed",
+      "bashScripts": 4,
+      "inlinePythonAST": 1
+    },
+    "additionalNegative": "Invoked the actual controlled-test body with injected readiness AssertionError and group-still-present cleanup failure: the exact original exception propagated, the fixed cleanup diagnostic survived, and private exception text was absent.",
+    "actualMac": "NOT_EXECUTED for these revised bytes; the real Mac requirements remain pending."
+  },
+  "resolvedFinding": {
+    "severity": "P2",
+    "area": "Cleanup failure projection",
+    "issue": "group-still-present was a valid cleanup result missing from the diagnostic enum, which could discard the safe diagnostic on an existing primary failure.",
+    "resolution": "The enum now includes it and a finish-to-public-to-unittest-receipt negative test preserves failed status and the cleanup classification."
+  },
+  "assessment": {
+    "selection": "Wrappers observe the actual one rows() call. They return original API values, preserve escaping API exception identity, restore original methods, and add no candidate selection, enumeration retry or fallback.",
+    "lifetime": "An explicit child readiness acknowledgement and exact-child WNOWAIT observations bracket selection. Unavailable stays unavailable; exit-pending is distinct from live. The dedicated child session and readiness are new controlled preconditions, not a proven historical fix.",
+    "predicates": "Candidate absence, BSD gone reads, executable-path mismatch, filtered presence and birth/argv row mismatch are separated by fixed fields and independent static assertion lines. The original strict inclusion assertion remains.",
+    "unknown": "Unobserved candidate/filtered counts remain null; known read counters start at zero. selectionFailureTargetsChild distinguishes an unrelated candidate error from an error on the controlled child.",
+    "privacy": "The exact-key schema permits only bounded counts, bool/null values, fixed phases/error enums and errno. Raw PID/UID/path/argv/environment and arbitrary exception text cannot enter this projection.",
+    "durability": "The unittest parser projects the schema into the structured result; duplicate or malformed markers fail closed. Repetition receipts are appended even when the monitored test command fails.",
+    "cleanup": "Streams are closed independently and exact-child cleanup is attempted after stream-close error. A cleanup or diagnostic-print failure cannot replace a pending primary failure in the reviewed normal failure path.",
+    "unchangedProductionDiscoverySHA256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b",
+    "boundaries": "Native discovery, resource API/limits, strict checkpoint eligibility, permissions, SDK lifetime and artifact retention are unchanged."
+  },
+  "actualMacRequired": {
+    "tests": 275,
+    "passedRequired": 275,
+    "skippedRequired": 0,
+    "freshProcessRepeats": 5,
+    "eachRepeat": "One passed test, zero skips and exactly one schema-valid diagnostic with status passed.",
+    "then": "The unchanged 60-second CPU/touched-memory/process-churn stress gate and known-child/background observations must succeed.",
+    "terminal": "Safe receipt status passed, firstFailure null, monitorFailure null, exact child reaps and verified-gone group cleanup are required. Terminal evidence review remains necessary before any long-trial decision."
+  },
+  "historicalEvidence": {
+    "run26": {
+      "id": 39148209748,
+      "establishedStop": "External process-group ps inventory timed out three times during checkpoint-rust; unknown resource totals and safe cleanup were retained.",
+      "mechanismResponse": "The already reviewed bounded KERN_PROC_PGRP helper removes that normal-stage external ps dependency; two early ABI stages still use explicit bootstrap ps."
+    },
+    "run27": {
+      "id": 39154799561,
+      "tests": "266 passed, one existing candidate-inclusion assertion failed, no errors or skips.",
+      "cause": "UNKNOWN",
+      "stressReached": false,
+      "limit": "The failing NativeProcesses candidate path is separate from resource inventory. These controlled preconditions and any future pass cannot retrospectively identify the failed historical predicate or prove no timing interaction."
+    }
+  },
+  "limitations": [
+    "Instrumentation adds observation overhead and readiness/session preconditions; it preserves selection/API results but is not an identical timing replay.",
+    "Fixed Python exception kinds and errno are diagnostic classifications, not proof of the underlying kernel failure cause.",
+    "Short repeated success does not prove multi-hour build stability, checkpoint qualification or native authentication.",
+    "Long trials remain gated on stable short terminal evidence and a legitimate reviewed SDK acquisition path; this review covers only the short diagnosis."
+  ]
+}

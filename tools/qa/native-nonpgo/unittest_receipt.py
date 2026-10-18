@@ -3,6 +3,7 @@
 import ast
 import builtins
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -72,7 +73,7 @@ def receipt(path):
                                 'ctypes.ArgumentError', 'unittest.case.SkipTest'))
         codes = known_failure_codes()
         checksum = hashlib.sha256()
-        failures, counts, outcomes, current = [], [], [], None
+        failures, counts, outcomes, current, diagnostics = [], [], [], None, []
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         with os.fdopen(descriptor, 'rb') as stream:
             info = os.fstat(stream.fileno())
@@ -83,6 +84,13 @@ def receipt(path):
                 total += len(raw)
                 checksum.update(raw)
                 line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', raw.decode('utf-8')).rstrip('\n\r')
+                marker=line.find('{"nativeSelectionDiagnostic":')
+                if marker>=0:
+                    from native_selection_diagnostic import public
+                    require(not diagnostics,'unittest-native-selection-duplicate')
+                    value=json.loads(line[marker:])
+                    require(set(value)=={'nativeSelectionDiagnostic'},'unittest-native-selection-marker')
+                    diagnostics.append(public(value['nativeSelectionDiagnostic']))
                 header = re.fullmatch(r'(ERROR|FAIL): ([A-Za-z_][A-Za-z_0-9]*) \(([A-Za-z_][A-Za-z_0-9.]*)\)(?: \(.*\))?', line)
                 if header:
                     identity = header[3]
@@ -127,6 +135,7 @@ def receipt(path):
         require(sum(row['outcome']=='ERROR' for row in failures)==outcome['errors'] and
                 sum(row['outcome']=='FAIL' for row in failures)==outcome['failures'], 'unittest-log-case-count')
         return {**result, **outcome, 'complete': True, 'total':counts[0][0], 'seconds':counts[0][1],
-                'bytes':total, 'sha256':checksum.hexdigest(), 'cases':failures}
+                'bytes':total, 'sha256':checksum.hexdigest(), 'cases':failures,
+                'nativeSelectionDiagnostics':diagnostics}
     except Exception as error:
         return {**result, 'errorType':type(error).__name__}

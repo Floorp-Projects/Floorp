@@ -97,7 +97,9 @@ def main():
     parser.add_argument('--expected-tests',type=int,required=True)
     parser.add_argument('--original-parent',action='store_true')
     parser.add_argument('--inventory-stress',action='store_true')
+    parser.add_argument('--native-selection-repeats',type=int,default=0)
     args=parser.parse_args()
+    require(0<=args.native_selection_repeats<=10,'native-selection-repeat-bound')
     task=args.task
     plan=json.loads((HERE/'plan.json').read_text())
     runner=Runner(task,float((task/'started').read_text()),plan['limits'])
@@ -127,6 +129,20 @@ def main():
             result['tests']=unittest_receipt(task/'checkpoint-tests.private.log')
         require(result['tests']['complete'] and result['tests']['status']=='passed' and
                 result['tests']['total']==args.expected_tests and result['tests']['skipped']==0,'checkpoint-mac-tests')
+        if args.native_selection_repeats:
+            result['nativeSelectionRepeats']=[]
+            for index in range(args.native_selection_repeats):
+                stage='native-selection-repeat-'+str(index+1)
+                try:
+                    runner.run(stage,[sys.executable,'-m','unittest','-v',
+                        'test_native_processes.NativeInventoryGuards.test_real_mac_child_identity_and_argc_without_environment_or_ps'],
+                        HERE,env,360,phase_deadline_minutes=15)
+                finally:
+                    test=unittest_receipt(task/(stage+'.private.log'))
+                    result['nativeSelectionRepeats'].append(test)
+                require(test['complete'] and test['status']=='passed' and test['total']==1 and test['skipped']==0 and
+                        len(test['nativeSelectionDiagnostics'])==1 and
+                        test['nativeSelectionDiagnostics'][0]['status']=='passed','native-selection-repeat-failed')
         if args.inventory_stress:
             stage='inventory-stress'
             from inventory_stress import run_experiment

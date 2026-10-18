@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scope": "Recovery28 short native candidate diagnosis",
+  "linux": {
+    "total": 275,
+    "passed": 261,
+    "skipped": 14,
+    "seconds": 9.413,
+    "exitCode": 0,
+    "privateLogSHA256": "3a6bc17f6a963f2e17279cfb82a04cffdb6c66f2f488dd72961d3ebede2e214d"
+  },
+  "syntax": [
+    "workflow YAML",
+    "Bash scripts",
+    "inline Python AST"
+  ],
+  "mac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 275,
+    "requiredSkipped": 0,
+    "candidateFreshProcessRepeats": 5,
+    "stressSeconds": 60,
+    "jobMinutes": 20,
+    "internalDeadlineMinutes": 15,
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "run26Cause": "external ps inventory timeout; recorded",
+  "run27Cause": "unknown candidate inclusion predicate; diagnostic incomplete",
+  "longTrialActivated": false
+}

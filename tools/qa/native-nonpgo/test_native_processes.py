@@ -3,6 +3,7 @@ import ctypes
 import errno
 import json
 import os
+import select
 from pathlib import Path
 import struct
 import subprocess
@@ -121,10 +122,18 @@ class NativeInventoryGuards(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == 'darwin', 'real normal-permission Darwin process APIs')
     def test_real_mac_child_identity_and_argc_without_environment_or_ps(self):
-        command = [sys.executable, '-c', 'import sys; sys.stdin.buffer.read(1)']
+        import native_selection_diagnostic as diagnostic
+        details=diagnostic.fresh()
+        command = [sys.executable, '-c', "import sys;print('ready',flush=True);sys.stdin.buffer.read(1)"]
         child = subprocess.Popen(command, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE,start_new_session=True,
                                  env={**os.environ, 'FLOORP_TEST_PRIVATE_ENV': 'never-in-process-rows'})
         try:
+            details['phase']='readiness'
+            self.assertTrue(select.select([child.stdout],[],[],5)[0])
+            self.assertEqual(child.stdout.readline(),b'ready\n')
+            details['readyAcknowledged']=True
+            details['phase']='initial-row'
             inventory = NativeProcesses()
             self.assertIn(child.pid, inventory.pids())
             with mock.patch('subprocess.Popen', side_effect=AssertionError('unexpected ps helper')):
@@ -135,22 +144,40 @@ class NativeInventoryGuards(unittest.TestCase):
             self.assertNotIn('never-in-process-rows', rows[0][2])
             self.assertRegex(rows[0][1], r'^[1-9][0-9]*\.[0-9]{6}$')
             path = inventory.path(child.pid)
-            self.assertIn(rows[0], inventory.rows(executable=path))
+            details['phase']='selection'
+            selected=diagnostic.select(inventory,rows[0],path,details)
+            details['phase']='predicates'
+            self.assertEqual(details['beforeState'],'live')
+            self.assertEqual(details['afterState'],'live')
+            self.assertTrue(details['candidateListed'])
+            self.assertEqual(details['targetGoneReads'],0)
+            self.assertTrue(details['targetPathMatched'])
+            self.assertTrue(details['targetFiltered'])
+            self.assertTrue(details['filteredBirthMatched'])
+            self.assertTrue(details['filteredArgvMatched'])
+            self.assertIn(rows[0],selected)
+            details['phase']='release'
             child.stdin.write(b'x')
             child.stdin.close()
+            details['phase']='zombie'
             deadline = time.monotonic() + 5
             while not child_status(child.pid)['exitPending']:
                 self.assertLess(time.monotonic(), deadline)
                 time.sleep(.01)
             self.assertEqual(inventory.rows(child.pid), [])
+            details.update(status='passed',phase='finished')
             print(json.dumps({'ordinaryNativeInventory': {'sameOwnedPID': True,
                   'fullBirthAvailable': True, 'exactArgvMatched': True,
                   'environmentExcluded': True, 'candidateMatched': True,
                   'validatedZombieNotLive': True, 'helperProcessesStarted': 0,
                   'privilegeChanges': False}}), flush=True)
         finally:
-            child.stdin.close()
-            child.wait(timeout=5)
+            primary_pending=sys.exc_info()[0] is not None
+            complete=diagnostic.finish(child,details)
+            try:print(json.dumps({'nativeSelectionDiagnostic':diagnostic.public(details)}),flush=True)
+            except Exception:
+                if not primary_pending:raise
+            if not primary_pending:self.assertTrue(complete)
 
 
 if __name__ == '__main__':
