@@ -13,7 +13,7 @@ import {
   KEYBOARD_SHORTCUT_SCHEMA_VERSION,
   ZEN_MODE_ACTION,
 } from "../defaults.ts";
-import { migrateConfigToV2 } from "../migration.ts";
+import { migrateConfigToV3 } from "../migration.ts";
 
 function testPlatformDefaults(): void {
   const mac = createZenModeShortcut("macosx");
@@ -29,12 +29,12 @@ function testPlatformDefaults(): void {
   assertEquals(windows.modifiers.meta, false, "non-mac default excludes Meta");
 }
 
-function testFreshDefaultsAreV2(): void {
+function testFreshDefaultsAreV3(): void {
   const defaults = createDefaultConfig("win");
   assertEquals(
     defaults.schemaVersion,
     KEYBOARD_SHORTCUT_SCHEMA_VERSION,
-    "fresh defaults use schema v2",
+    "fresh defaults use schema v3",
   );
   assertEquals(
     Object.keys(defaults.shortcuts).length,
@@ -53,7 +53,7 @@ function testLegacyAddsOnlyZen(): void {
     modifiers: { alt: false, ctrl: true, meta: false, shift: true },
     action: "floorp-toggle-command-palette",
   };
-  const migrated = migrateConfigToV2(
+  const migrated = migrateConfigToV3(
     {
       enabled: false,
       shortcuts: { "floorp-toggle-command-palette": rebound },
@@ -61,11 +61,11 @@ function testLegacyAddsOnlyZen(): void {
     createDefaultConfig("win"),
   );
 
-  assertEquals(migrated.schemaVersion, 2, "legacy config migrates to v2");
+  assertEquals(migrated.schemaVersion, 3, "legacy config migrates to v3");
   assertEquals(migrated.enabled, false, "legacy enabled state is preserved");
   assertEquals(
     JSON.stringify(migrated.shortcuts["floorp-toggle-command-palette"]),
-    JSON.stringify(rebound),
+    JSON.stringify([rebound]),
     "legacy rebound shortcut is preserved exactly",
   );
   assertEquals(
@@ -81,14 +81,14 @@ function testExistingZenBindingIsPreserved(): void {
     modifiers: { alt: false, ctrl: true, meta: false, shift: true },
     action: ZEN_MODE_ACTION,
   };
-  const migrated = migrateConfigToV2(
+  const migrated = migrateConfigToV3(
     { shortcuts: { "custom-zen-binding": reboundZen } },
     createDefaultConfig("win"),
   );
 
   assertEquals(
     JSON.stringify(migrated.shortcuts["custom-zen-binding"]),
-    JSON.stringify(reboundZen),
+    JSON.stringify([reboundZen]),
     "an existing Zen binding under a custom id is not overwritten",
   );
   assertEquals(
@@ -98,14 +98,14 @@ function testExistingZenBindingIsPreserved(): void {
   );
 }
 
-function testV2DeletionPersists(): void {
+function testV3DeletionPersists(): void {
   const deleted = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     enabled: true,
     shortcuts: {},
   } as const;
-  const firstLoad = migrateConfigToV2(deleted, createDefaultConfig("win"));
-  const restartLoad = migrateConfigToV2(
+  const firstLoad = migrateConfigToV3(deleted, createDefaultConfig("win"));
+  const restartLoad = migrateConfigToV3(
     JSON.parse(JSON.stringify(firstLoad)),
     createDefaultConfig("win"),
   );
@@ -113,24 +113,24 @@ function testV2DeletionPersists(): void {
   assertEquals(
     Object.hasOwn(firstLoad.shortcuts, ZEN_MODE_ACTION),
     false,
-    "v2 deletion is preserved on load",
+    "v3 deletion is preserved on load",
   );
   assertEquals(
     Object.hasOwn(restartLoad.shortcuts, ZEN_MODE_ACTION),
     false,
-    "v2 deletion is preserved after restart serialization",
+    "v3 deletion is preserved after restart serialization",
   );
 }
 
 const tests: TestCase[] = [
   { name: "platform defaults", fn: testPlatformDefaults },
-  { name: "fresh defaults are v2", fn: testFreshDefaultsAreV2 },
+  { name: "fresh defaults are v3", fn: testFreshDefaultsAreV3 },
   { name: "legacy migration adds only Zen", fn: testLegacyAddsOnlyZen },
   {
     name: "legacy migration preserves existing Zen binding",
     fn: testExistingZenBindingIsPreserved,
   },
-  { name: "v2 deletion persists", fn: testV2DeletionPersists },
+  { name: "v3 deletion persists", fn: testV3DeletionPersists },
 ];
 
 export async function runAllTests(): Promise<void> {

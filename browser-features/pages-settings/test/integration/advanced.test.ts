@@ -356,7 +356,7 @@ export async function runAdvancedTests() {
       ) {
         const select =
           document.querySelectorAll<HTMLSelectElement>("main select")[index];
-        const next = [...select.options].find((option) =>
+        const next = Array.from(select.options).find((option) =>
           !option.disabled && option.value !== select.value
         )!;
         select.dataset.testSelect = String(index);
@@ -387,7 +387,7 @@ export async function runAdvancedTests() {
         "Gesture editor missing",
       );
       const select = element<HTMLSelectElement>("[role=dialog] select");
-      const action = [...select.options].find((option) =>
+      const action = Array.from(select.options).find((option) =>
         option.value && !option.disabled
       )!.value;
       await input("[role=dialog] select", action);
@@ -397,7 +397,8 @@ export async function runAdvancedTests() {
       try {
         await button("Save");
         await until(
-          () => document.querySelector("[role=dialog] [role=alert]"),
+          () =>
+            document.querySelector("[role=dialog] [role=alert]"),
           "Gesture save failure missing",
         );
         assert(
@@ -463,7 +464,7 @@ export async function runAdvancedTests() {
       "Keyboard shortcut editor records modifiers, retries failed save, reloads and deletes",
     fn: async () => {
       await route("features/shortcuts", "#enable-shortcuts");
-      await click("tbody tr:first-child button");
+      await click("tbody tr td button");
       await until(
         () => document.querySelector("[role=dialog] input[type=text]"),
         "Shortcut editor missing",
@@ -501,22 +502,22 @@ export async function runAdvancedTests() {
       );
       const shortcuts = json(SHORTCUT).shortcuts as Record<
         string,
-        { key: string; modifiers: Record<string, boolean> }
+        Array<{ key: string; modifiers: Record<string, boolean> }>
       >;
       const found = Object.entries(shortcuts).find(([, shortcut]) =>
-        shortcut.key === "F9"
+        shortcut[0]?.key === "F9"
       );
       assert(found, "Recorded key missing");
       assert(
-        Object.values(found[1].modifiers).every(Boolean),
+        Object.values(found[1][0].modifiers).every(Boolean),
         "Modifiers did not save",
       );
       await route("features/shortcuts", "#enable-shortcuts");
       assert(
-        element("tbody tr:first-child").textContent!.includes("F9"),
+        element("tbody tr td:nth-child(3)").textContent!.includes("F9"),
         "Shortcut reload",
       );
-      await click("tbody tr:first-child button:nth-child(2)");
+      await click("tbody tr td button:nth-child(2)");
       await until(
         () => !(json(SHORTCUT).shortcuts as Record<string, unknown>)[found[0]],
         "Shortcut not deleted",

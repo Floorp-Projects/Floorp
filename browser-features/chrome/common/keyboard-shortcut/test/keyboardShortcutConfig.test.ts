@@ -8,15 +8,15 @@ import {
 } from "../../../test/utils/test_harness.ts";
 import type { ShortcutConfig } from "../type.ts";
 import {
-  shortcutToString,
-  stringToShortcut,
   defaultConfig,
-  strDefaultConfig,
-  KEYBOARD_SHORTCUT_ENABLED_PREF,
   KEYBOARD_SHORTCUT_CONFIG_PREF,
-  setEnabled,
-  setConfig,
+  KEYBOARD_SHORTCUT_ENABLED_PREF,
   parseConfig,
+  setConfig,
+  setEnabled,
+  shortcutToString,
+  strDefaultConfig,
+  stringToShortcut,
 } from "../config.ts";
 
 // ---------------------------------------------------------------------------
@@ -344,8 +344,9 @@ function testDefaultConfigStructure(): void {
     2,
     "default config should have command-palette and Zen shortcuts",
   );
-  assertEquals(defaultConfig.schemaVersion, 2, "default config should be v2");
-  const shortcut = defaultConfig.shortcuts["floorp-toggle-command-palette"];
+  assertEquals(defaultConfig.schemaVersion, 3, "default config should be v3");
+  const shortcut = defaultConfig
+    .shortcuts["floorp-toggle-command-palette"]?.[0];
   assertEquals(
     shortcut.action,
     "floorp-toggle-command-palette",
@@ -366,10 +367,10 @@ function testStrDefaultConfigIsParseable(): void {
     2,
     "parsed default config should have command-palette and Zen shortcuts",
   );
-  assertEquals(parsed.schemaVersion, 2, "parsed default config should be v2");
+  assertEquals(parsed.schemaVersion, 3, "parsed default config should be v3");
   const parsedShortcut = parsed.shortcuts[
     "floorp-toggle-command-palette"
-  ] as ShortcutConfig;
+  ]?.[0] as ShortcutConfig;
   assertEquals(
     parsedShortcut.action,
     "floorp-toggle-command-palette",
@@ -440,7 +441,7 @@ function testNormalizeConfigWithPartialConfig(): void {
 
 function testParseConfigHandlesInvalidJson(): void {
   const parsed = parseConfig("invalid-json{{{");
-  assertEquals(parsed.schemaVersion, 2, "invalid JSON should recover to v2");
+  assertEquals(parsed.schemaVersion, 3, "invalid JSON should recover to v3");
   assertEquals(
     Object.keys(parsed.shortcuts).length,
     2,
@@ -450,7 +451,11 @@ function testParseConfigHandlesInvalidJson(): void {
 
 function testParseConfigHandlesMalformedObject(): void {
   const parsed = parseConfig(JSON.stringify({ invalidField: "test" }));
-  assertEquals(parsed.schemaVersion, 2, "malformed object should migrate to v2");
+  assertEquals(
+    parsed.schemaVersion,
+    3,
+    "malformed object should normalize to v3",
+  );
   assertEquals(
     Object.keys(parsed.shortcuts).length,
     2,
@@ -528,11 +533,11 @@ function testSetConfigUpdatesPref(): void {
     const testConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     setConfig(testConfig);
@@ -541,7 +546,7 @@ function testSetConfigUpdatesPref(): void {
     );
     const parsed = JSON.parse(prefValue);
     assertEquals(
-      parsed.shortcuts["test-action"].key,
+      parsed.shortcuts["test-action"]?.[0].key,
       "T",
       "setConfig should update pref",
     );

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { migrateLegacyConfig, clearLegacyConfig } from "../migration.ts";
+import { clearLegacyConfig, migrateLegacyConfig } from "../migration.ts";
+import type { ShortcutConfig } from "../type.ts";
 import {
-  type TestCase,
   assert,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
 
 const LEGACY_PREF = "floorp.browser.nora.csk.data";
@@ -22,6 +23,13 @@ function withStringPref(value: string, fn: () => void): void {
 // ---------------------------------------------------------------------------
 // Tests — migrateLegacyConfig
 // ---------------------------------------------------------------------------
+
+function firstBinding(
+  shortcuts: Record<string, ShortcutConfig[]>,
+  actionId: string,
+): ShortcutConfig | undefined {
+  return shortcuts[actionId]?.[0];
+}
 
 function testNoPrefReturnsNull(): void {
   // Ensure pref does not exist
@@ -58,7 +66,7 @@ function testSingleShortcutMigration(): void {
   withStringPref(JSON.stringify(legacy), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not be null");
-    const shortcut = result.shortcuts["open-new-tab"];
+    const shortcut = firstBinding(result.shortcuts, "open-new-tab");
     assert(shortcut !== undefined, "should have open-new-tab shortcut");
     assertEquals(shortcut.key, "t", "key should be t");
     assertEquals(shortcut.action, "open-new-tab", "action should match");
@@ -185,7 +193,7 @@ function testAllModifiersEnabled(): void {
   withStringPref(JSON.stringify(legacy), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not be null");
-    const shortcut = result.shortcuts["superAction"];
+    const shortcut = firstBinding(result.shortcuts, "superAction");
     assert(shortcut !== undefined, "superAction should exist");
     assertEquals(shortcut.modifiers.alt, true, "alt should be true");
     assertEquals(shortcut.modifiers.ctrl, true, "ctrl should be true");
@@ -205,7 +213,7 @@ function testDigitKeyMigration(): void {
   withStringPref(JSON.stringify(legacy), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not be null");
-    const shortcut = result.shortcuts["tabSwitch1"];
+    const shortcut = firstBinding(result.shortcuts, "tabSwitch1");
     assert(shortcut !== undefined, "tabSwitch1 should exist");
     assertEquals(shortcut.key, "1", "digit key should be preserved");
   });
@@ -221,7 +229,7 @@ function testEmptyKeyMigration(): void {
   withStringPref(JSON.stringify(legacy), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not be null");
-    const shortcut = result.shortcuts["emptyKey"];
+    const shortcut = firstBinding(result.shortcuts, "emptyKey");
     assert(shortcut !== undefined, "emptyKey should exist");
     assertEquals(shortcut.key, "", "empty key should be preserved");
   });
@@ -273,7 +281,7 @@ function testActionFieldIsSetCorrectly(): void {
   withStringPref(JSON.stringify(legacy), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not be null");
-    const shortcut = result.shortcuts["my-custom-action"];
+    const shortcut = firstBinding(result.shortcuts, "my-custom-action");
     assert(shortcut !== undefined, "my-custom-action should exist");
     assertEquals(
       shortcut.action,
@@ -446,7 +454,7 @@ function testMigrateWithArrayKey(): void {
     // so an array key remains an array (typeof is "object").
     if (result.shortcuts["action-with-array-key"]) {
       assertEquals(
-        typeof result.shortcuts["action-with-array-key"].key,
+        typeof firstBinding(result.shortcuts, "action-with-array-key")?.key,
         "object",
         "array key is preserved as-is (not converted to string)",
       );
@@ -477,9 +485,13 @@ function testMigrateWithNumericStringKey(): void {
   withStringPref(JSON.stringify(numericKey), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on numeric string key");
-    const shortcut = result.shortcuts["action-123"];
+    const shortcut = firstBinding(result.shortcuts, "action-123");
     if (shortcut) {
-      assertEquals(shortcut.key, "123", "numeric string key should be preserved");
+      assertEquals(
+        shortcut.key,
+        "123",
+        "numeric string key should be preserved",
+      );
     }
   });
 }
@@ -494,9 +506,13 @@ function testMigrateWithWhitespaceKey(): void {
   withStringPref(JSON.stringify(whitespaceKey), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on whitespace key");
-    const shortcut = result.shortcuts["action-with-whitespace"];
+    const shortcut = firstBinding(result.shortcuts, "action-with-whitespace");
     if (shortcut) {
-      assertEquals(shortcut.key, "  space  ", "whitespace in key should be preserved");
+      assertEquals(
+        shortcut.key,
+        "  space  ",
+        "whitespace in key should be preserved",
+      );
     }
   });
 }
@@ -511,7 +527,10 @@ function testMigrateWithSpecialActionName(): void {
   withStringPref(JSON.stringify(specialAction), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on special action name");
-    const shortcut = result.shortcuts["action-with-special-chars-!@#$%^&*()"];
+    const shortcut = firstBinding(
+      result.shortcuts,
+      "action-with-special-chars-!@#$%^&*()",
+    );
     if (shortcut) {
       assertEquals(
         shortcut.action,
@@ -532,9 +551,13 @@ function testMigrateWithNumericActionName(): void {
   withStringPref(JSON.stringify(numericAction), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on numeric action name");
-    const shortcut = result.shortcuts["123"];
+    const shortcut = firstBinding(result.shortcuts, "123");
     if (shortcut) {
-      assertEquals(shortcut.action, "123", "numeric action name should be preserved");
+      assertEquals(
+        shortcut.action,
+        "123",
+        "numeric action name should be preserved",
+      );
     }
   });
 }
@@ -588,32 +611,32 @@ function testMigratePreservesModifierState(): void {
 
     // Verify a few key combinations
     assertEquals(
-      result.shortcuts["alt-only"].modifiers.alt,
+      firstBinding(result.shortcuts, "alt-only")?.modifiers.alt,
       true,
       "alt-only should preserve alt",
     );
     assertEquals(
-      result.shortcuts["ctrl-only"].modifiers.ctrl,
+      firstBinding(result.shortcuts, "ctrl-only")?.modifiers.ctrl,
       true,
       "ctrl-only should preserve ctrl",
     );
     assertEquals(
-      result.shortcuts["alt-ctrl"].modifiers.alt,
+      firstBinding(result.shortcuts, "alt-ctrl")?.modifiers.alt,
       true,
       "alt-ctrl should preserve alt",
     );
     assertEquals(
-      result.shortcuts["alt-ctrl"].modifiers.ctrl,
+      firstBinding(result.shortcuts, "alt-ctrl")?.modifiers.ctrl,
       true,
       "alt-ctrl should preserve ctrl",
     );
     assertEquals(
-      result.shortcuts["meta-shift"].modifiers.meta,
+      firstBinding(result.shortcuts, "meta-shift")?.modifiers.meta,
       true,
       "meta-shift should preserve meta",
     );
     assertEquals(
-      result.shortcuts["meta-shift"].modifiers.shift,
+      firstBinding(result.shortcuts, "meta-shift")?.modifiers.shift,
       true,
       "meta-shift should preserve shift",
     );
@@ -630,7 +653,7 @@ function testMigrateWithVeryLongKey(): void {
   withStringPref(JSON.stringify(longKey), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on very long key");
-    const shortcut = result.shortcuts["long-key-action"];
+    const shortcut = firstBinding(result.shortcuts, "long-key-action");
     if (shortcut) {
       assertEquals(
         shortcut.key.length,
@@ -652,7 +675,7 @@ function testMigrateWithVeryLongActionName(): void {
   withStringPref(JSON.stringify(longAction), () => {
     const result = migrateLegacyConfig();
     assert(result !== null, "should not crash on very long action name");
-    const shortcut = result.shortcuts[longActionName];
+    const shortcut = firstBinding(result.shortcuts, longActionName);
     if (shortcut) {
       assertEquals(
         shortcut.action,

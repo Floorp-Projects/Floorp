@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "unknown"
+floorp_commit: "38263181332fab65d04c601d876ccb403817d0d6"
 generated: true
 ---
 # Architecture Overview
@@ -26,11 +26,11 @@ The startup bridge is owned by `bridge/startup/src/chrome_root.ts:51-52`. It sel
 - Test: `http://localhost:5181/loader/test/index.ts`
 - Production: `chrome://noraneko/content/core.js`
 
-The loader development server is configured by `bridge/loader-features/vite.config.ts:41` on port 5181.
+The loader development server is configured by `bridge/loader-features/vite.config.ts:37` on port 5181.
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:561`. The current inventory lists 24 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:587`. The current inventory lists 25 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -40,6 +40,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 - `NRExperimemmt`
 - `NRI18n`
 - `NRKeyboardShortcutFocus`
+- `NRKeySync`
 - `NRMouseGestureScroll`
 - `NROSAutomotor`
 - `NRPanelSidebar`

@@ -113,6 +113,32 @@ const JS_WINDOW_ACTORS: {
     ],
     ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },
+  NRKeySync: {
+    parent: {
+      esModuleURI: localPathToResourceURI("../actors/NRKeySyncParent.sys.mts"),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRKeySyncChild.sys.mts"),
+      // Same event set as NRSettings: actorCreated requires at least one
+      // event, and HTTP-loaded dev pages need the later ones to see their
+      // final document URL.
+      events: {
+        DOMDocElementInserted: {},
+        DOMContentLoaded: {},
+        load: {},
+        pageshow: {},
+      },
+    },
+    matches: [
+      ...DEVELOPMENT_LOOPBACK_MATCHES,
+      // Development loopback pages plus the packaged settings chrome route
+      // and its about:hub alias; ordinary HTTP pages must not instantiate
+      // this privileged bridge.
+      "chrome://noraneko-settings/*",
+      "about:hub*",
+    ],
+    ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
+  },
   NRExperimemmt: {
     parent: {
       esModuleURI: localPathToResourceURI(

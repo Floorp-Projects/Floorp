@@ -7,8 +7,7 @@ let _isMac: boolean | undefined;
 
 function isMac(): boolean {
   if (_isMac === undefined) {
-    _isMac =
-      typeof navigator !== "undefined" &&
+    _isMac = typeof navigator !== "undefined" &&
       navigator?.platform?.toUpperCase().includes("MAC") === true;
   }
   return _isMac;

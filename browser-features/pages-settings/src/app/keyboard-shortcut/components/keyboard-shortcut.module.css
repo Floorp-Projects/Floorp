@@ -1,0 +1,125 @@
+.categoryNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 20px;
+}
+
+.categoryJumpButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--floorp-line);
+  border-radius: 10px;
+  background: var(--floorp-surface);
+  color: var(--floorp-ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.categoryJumpButton:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--floorp-action) 35%,
+    var(--floorp-line)
+  );
+  background: color-mix(
+    in srgb,
+    var(--floorp-action) 8%,
+    var(--floorp-surface)
+  );
+  color: var(--floorp-action);
+}
+
+.categoryJumpButton:active {
+  transform: translateY(1px);
+}
+
+.categoryJumpButton:focus-visible {
+  outline: 3px solid var(--floorp-focus);
+  outline-offset: 2px;
+}
+
+.categoryMarker {
+  inline-size: 7px;
+  block-size: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--floorp-action);
+}
+
+.categoryName {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.categoryCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 22px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  background: var(--floorp-subtle);
+  color: var(--floorp-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.categoryArrow {
+  inline-size: 15px;
+  block-size: 15px;
+  flex-shrink: 0;
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
+
+.categoryHeader {
+  background: color-mix(in srgb, var(--floorp-subtle) 70%, transparent);
+  border-block: 1px solid var(--floorp-line);
+}
+
+.categoryHeaderInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-block: 2px;
+}
+
+.readOnlyStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid var(--floorp-line);
+  border-radius: 7px;
+  background: var(--floorp-subtle);
+  color: var(--floorp-muted);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.readOnlyStatus svg {
+  inline-size: 13px;
+  block-size: 13px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .categoryJumpButton {
+    inline-size: 100%;
+    justify-content: flex-start;
+  }
+}

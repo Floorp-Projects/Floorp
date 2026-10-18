@@ -18,15 +18,17 @@ export const zShortcutConfig = t.type({
   action: t.string,
 });
 
+export const zShortcutList = t.array(zShortcutConfig);
+
 const zKeyboardShortcutConfigRequired = t.type({
-  shortcuts: t.record(t.string, zShortcutConfig),
+  shortcuts: t.record(t.string, zShortcutList),
 });
 
 const zKeyboardShortcutConfigOptional = t.partial({
   enabled: t.boolean,
   // Optional at the API boundary so callers can still supply a legacy config.
-  // All persisted configurations are normalized to version 2 before storage.
-  schemaVersion: t.literal(2),
+  // All persisted configurations are normalized to version 3 before storage.
+  schemaVersion: t.literal(3),
 });
 
 export const zKeyboardShortcutConfig = t.intersection([

@@ -7,11 +7,15 @@ import { Modal } from "../../../../../../libs/ui/modal.tsx";
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { comboToCanonicalCode } from "../../../../../modules/common/NRKeySyncCombo.ts";
+import type { FirefoxKeyEntry } from "../../../../../modules/common/NRKeySyncTypes.ts";
 import {
   getRecordedShortcutCode,
   type ShortcutConfig,
 } from "../../../types/pref.ts";
 import { Input } from "@/components/common/input.tsx";
+import { keySync } from "../../../lib/rpc/keysync.ts";
+import { useFirefoxKeys } from "../firefoxKeysManager.ts";
 import { formatModifierLabel, formatModifierSymbol } from "../platform.ts";
 import type { ShortcutEditorProps } from "../types.ts";
 
@@ -22,6 +26,7 @@ export const ShortcutEditor = ({
   initialShortcut,
   existingShortcuts,
   actionId,
+  firefoxKeys: firefoxKeysOverride,
 }: ShortcutEditorProps) => {
   const { t } = useTranslation();
   const [shortcut, setShortcut] = useState<ShortcutConfig>(
@@ -38,8 +43,13 @@ export const ShortcutEditor = ({
   );
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [firefoxConflict, setFirefoxConflict] = useState<
+    FirefoxKeyEntry | null
+  >(null);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const hookResult = useFirefoxKeys();
+  const firefoxKeys = firefoxKeysOverride ?? hookResult.keys;
 
   const handleSave = async () => {
     if (saving || !shortcut.key || error) return;
@@ -104,9 +114,11 @@ export const ShortcutEditor = ({
       key: normalizeKeyCode(key),
     };
 
-    const otherShortcuts = existingShortcuts.filter(
-      (s) => s.action !== initialShortcut?.action,
-    );
+    // Compare by identity so editing one binding in an action still detects
+    // duplicates against that action's other bindings.
+    const otherShortcuts = initialShortcut
+      ? existingShortcuts.filter((existing) => existing !== initialShortcut)
+      : existingShortcuts;
 
     const isDuplicate = otherShortcuts.some((existing) => {
       const normalizedExistingKey = normalizeKeyCode(existing.key);
@@ -131,6 +143,36 @@ export const ShortcutEditor = ({
       checkDuplicate(shortcut.key);
     }
   }, [shortcut.modifiers]);
+
+  useEffect(() => {
+    if (shortcut.key) {
+      checkFirefoxConflict(
+        shortcut.modifiers,
+        normalizeKeyCode(shortcut.key),
+      );
+    }
+  }, [shortcut.key, shortcut.modifiers, firefoxKeys]);
+
+  /**
+   * Warns (without blocking) when the recorded combo matches a Firefox
+   * live key. Floorp's controller takes priority at runtime, so this is
+   * informational only — unlike the Floorp-internal duplicate check.
+   */
+  const checkFirefoxConflict = (
+    modifiers: ShortcutConfig["modifiers"],
+    normalizedKey: string,
+  ): void => {
+    if (!normalizedKey) {
+      setFirefoxConflict(null);
+      return;
+    }
+    const canonical = comboToCanonicalCode(modifiers, normalizedKey);
+    const match = firefoxKeys.find(
+      (entry) =>
+        entry.canonicalCode !== null && entry.canonicalCode === canonical,
+    );
+    setFirefoxConflict(match ?? null);
+  };
 
   if (!isOpen) return null;
 
@@ -172,12 +214,33 @@ export const ShortcutEditor = ({
           </div>
         )}
 
+        {firefoxConflict && (
+          <div className="floorp-notice floorp-notice-warning">
+            <span className="text-sm">
+              {t("keyboardShortcut.firefoxKeyConflict", {
+                label: firefoxConflict.label,
+                shortcut: firefoxConflict.shortcutText,
+              })}{" "}
+              <button
+                type="button"
+                className="text-[var(--link-text-color)] hover:underline"
+                onClick={() => {
+                  void keySync.openAboutKeyboard();
+                }}
+              >
+                {t("keyboardShortcut.openAboutKeyboard")}
+              </button>
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <label className="floorp-field-label">
             <input
               type="checkbox"
               className="floorp-checkbox"
-              aria-label={formatModifierLabel("alt")} checked={shortcut.modifiers.alt}
+              aria-label={formatModifierLabel("alt")}
+              checked={shortcut.modifiers.alt}
               onChange={(e) =>
                 setShortcut((prev) => ({
                   ...prev,
@@ -190,7 +253,8 @@ export const ShortcutEditor = ({
             <input
               type="checkbox"
               className="floorp-checkbox"
-              aria-label={formatModifierLabel("ctrl")} checked={shortcut.modifiers.ctrl}
+              aria-label={formatModifierLabel("ctrl")}
+              checked={shortcut.modifiers.ctrl}
               onChange={(e) =>
                 setShortcut((prev) => ({
                   ...prev,
@@ -203,7 +267,8 @@ export const ShortcutEditor = ({
             <input
               type="checkbox"
               className="floorp-checkbox"
-              aria-label={formatModifierLabel("meta")} checked={shortcut.modifiers.meta}
+              aria-label={formatModifierLabel("meta")}
+              checked={shortcut.modifiers.meta}
               onChange={(e) =>
                 setShortcut((prev) => ({
                   ...prev,
@@ -216,7 +281,8 @@ export const ShortcutEditor = ({
             <input
               type="checkbox"
               className="floorp-checkbox"
-              aria-label={formatModifierLabel("shift")} checked={shortcut.modifiers.shift}
+              aria-label={formatModifierLabel("shift")}
+              checked={shortcut.modifiers.shift}
               onChange={(e) =>
                 setShortcut((prev) => ({
                   ...prev,
@@ -229,10 +295,13 @@ export const ShortcutEditor = ({
 
         <div className="floorp-field">
           <label className="floorp-field-label">
-            <span className="floorp-field-text">{t("keyboardShortcut.key")}</span>
+            <span className="floorp-field-text">
+              {t("keyboardShortcut.key")}
+            </span>
           </label>
           <div className="relative">
-            <Input aria-label={t("keyboardShortcut.key")}
+            <Input
+              aria-label={t("keyboardShortcut.key")}
               type="text"
               className="w-full"
               aria-invalid={Boolean(error)}

@@ -23,6 +23,13 @@ export {
   stringToShortcut,
 } from "./config.ts";
 
+/** Structural type of the key sync module loaded via resource URI. */
+interface KeySyncServiceModule {
+  keySyncService: {
+    init(): void;
+  };
+}
+
 @noraComponent(import.meta.hot)
 export default class KeyboardShortcut extends NoraComponentBase {
   static ctx: typeof keyboardShortcutService | null = null;
@@ -30,5 +37,13 @@ export default class KeyboardShortcut extends NoraComponentBase {
     const ctx = keyboardShortcutService;
     KeyboardShortcut.ctx = ctx;
     ctx.attachToWindow(window);
+    try {
+      const keySyncModule = ChromeUtils.importESModule(
+        "resource://noraneko/modules/NRKeySyncService.sys.mjs",
+      ) as KeySyncServiceModule;
+      keySyncModule.keySyncService.init();
+    } catch (e) {
+      console.error("[keyboard-shortcut] KeySyncService init failed:", e);
+    }
   }
 }

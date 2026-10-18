@@ -18,7 +18,7 @@ import {
 } from "./type.ts";
 import {
   clearLegacyConfig,
-  migrateConfigToV2,
+  migrateConfigToV3,
   migrateLegacyConfig,
 } from "./migration.ts";
 import { createDefaultConfig } from "./defaults.ts";
@@ -45,7 +45,7 @@ export const strDefaultConfig = JSON.stringify(defaultConfig);
 const normalizeConfig = (
   config: Record<string, unknown>,
 ): KeyboardShortcutConfig => {
-  return migrateConfigToV2(config, defaultConfig);
+  return migrateConfigToV3(config, defaultConfig);
 };
 
 export const parseConfig = (jsonStr: string): KeyboardShortcutConfig => {
@@ -76,18 +76,21 @@ function createEnabled(): [Accessor<boolean>, Setter<boolean>] {
       defaultConfig.enabled,
     ),
   );
+  let lastWrittenEnabled = enabled();
 
   createEffect(() => {
-    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, enabled());
+    const nextEnabled = enabled();
+    lastWrittenEnabled = nextEnabled;
+    Services.prefs.setBoolPref(KEYBOARD_SHORTCUT_ENABLED_PREF, nextEnabled);
   });
 
   const enabledObserver = () => {
-    setEnabled(
-      Services.prefs.getBoolPref(
-        KEYBOARD_SHORTCUT_ENABLED_PREF,
-        defaultConfig.enabled,
-      ),
+    const nextEnabled = Services.prefs.getBoolPref(
+      KEYBOARD_SHORTCUT_ENABLED_PREF,
+      defaultConfig.enabled,
     );
+    if (nextEnabled === lastWrittenEnabled) return;
+    setEnabled(nextEnabled);
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_ENABLED_PREF, enabledObserver);
@@ -122,23 +125,24 @@ function createConfig(): [
       ),
     ),
   );
+  let lastWrittenConfig = JSON.stringify(config());
 
   createEffect(() => {
+    const nextConfig = JSON.stringify(config());
+    lastWrittenConfig = nextConfig;
     Services.prefs.setStringPref(
       KEYBOARD_SHORTCUT_CONFIG_PREF,
-      JSON.stringify(config()),
+      nextConfig,
     );
   });
 
   const configObserver = () => {
-    setConfig(
-      parseConfig(
-        Services.prefs.getStringPref(
-          KEYBOARD_SHORTCUT_CONFIG_PREF,
-          strDefaultConfig,
-        ),
-      ),
+    const nextConfig = Services.prefs.getStringPref(
+      KEYBOARD_SHORTCUT_CONFIG_PREF,
+      strDefaultConfig,
     );
+    if (nextConfig === lastWrittenConfig) return;
+    setConfig(parseConfig(nextConfig));
   };
 
   Services.prefs.addObserver(KEYBOARD_SHORTCUT_CONFIG_PREF, configObserver);
@@ -165,7 +169,7 @@ export const isEnabled = () => _enabled();
 export const setEnabled = (value: boolean) => _setEnabled(value);
 export const getConfig = () => _config();
 export const setConfig = (value: KeyboardShortcutConfig) =>
-  _setConfig(migrateConfigToV2(value, defaultConfig));
+  _setConfig(migrateConfigToV3(value, defaultConfig));
 
 /**
  * Experiment "ks_safe_error_handling" — wraps getAction + fn invocation

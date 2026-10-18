@@ -122,49 +122,64 @@ function createFakeWindow(): Window {
 const CTRL_T_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-ctrl-t": {
+    "test-ctrl-t": [{
       key: "T",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-ctrl-t",
-    },
+    }],
   },
 };
 
 const ALT_SHIFT_F_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-alt-shift-f": {
+    "test-alt-shift-f": [{
       key: "F",
       modifiers: { alt: true, ctrl: false, meta: false, shift: true },
       action: "test-alt-shift-f",
-    },
+    }],
   },
 };
 
 const DIGIT_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-digit-1": {
+    "test-digit-1": [{
       key: "1",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-digit-1",
-    },
+    }],
   },
 };
 
 const MULTI_CONFIG: KeyboardShortcutConfig = {
   enabled: true,
   shortcuts: {
-    "test-ctrl-t": {
+    "test-ctrl-t": [{
       key: "T",
       modifiers: { alt: false, ctrl: true, meta: false, shift: false },
       action: "test-ctrl-t",
-    },
-    "test-alt-shift-f": {
+    }],
+    "test-alt-shift-f": [{
       key: "F",
       modifiers: { alt: true, ctrl: false, meta: false, shift: true },
       action: "test-alt-shift-f",
-    },
+    }],
+  },
+};
+
+const MULTIPLE_BINDING_CONFIG: KeyboardShortcutConfig = {
+  enabled: true,
+  shortcuts: {
+    "test-multiple-bindings": [{
+      key: "KeyB",
+      modifiers: { alt: false, ctrl: true, meta: false, shift: false },
+      action: "test-multiple-bindings",
+    }, {
+      key: "ArrowLeft",
+      modifiers: { alt: true, ctrl: false, meta: false, shift: false },
+      action: "test-multiple-bindings",
+    }],
   },
 };
 
@@ -557,6 +572,28 @@ function testMultipleShortcutsNeitherMatches(): void {
   });
 }
 
+function testMultipleBindingsForSameActionMatch(): void {
+  withPrefs(() => {
+    applyTestConfig(MULTIPLE_BINDING_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(fakeWin);
+
+    const ctrlB = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyB",
+      ctrlKey: true,
+    });
+    assertEquals(ctrlB.defaultPrevented, true, "first binding should match");
+
+    const altLeft = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "ArrowLeft",
+      altKey: true,
+    });
+    assertEquals(altLeft.defaultPrevented, true, "second binding should match");
+
+    controller.destroy();
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests — Disabled state
 // ---------------------------------------------------------------------------
@@ -770,11 +807,11 @@ function testUppercaseKeyNormalization(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -858,11 +895,11 @@ function testKeySequenceDoesNotMatchPartialCombos(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "T",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -901,11 +938,11 @@ function testNumpadKeyMatching(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-numpad": {
+        "test-numpad": [{
           key: "1",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-numpad",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -934,11 +971,11 @@ function testFunctionKeyMatching(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-f5": {
+        "test-f5": [{
           key: "F5",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-f5",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -972,11 +1009,11 @@ function testLowercaseKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "t", // lowercase
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1008,11 +1045,11 @@ function testActionNotFoundNoError(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "non-existent-action": {
+        "non-existent-action": [{
           key: "X",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "this-action-does-not-exist",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1041,11 +1078,11 @@ function testSafeErrorHandlingExperimentEnabled(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "throwing-action": {
+        "throwing-action": [{
           key: "Z",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "__nonexistent_throwing__",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1075,11 +1112,11 @@ function testSafeErrorHandlingExperimentDisabled(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "safe-action": {
+        "safe-action": [{
           key: "Y",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "non-existent-safe-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1096,6 +1133,177 @@ function testSafeErrorHandlingExperimentDisabled(): void {
       event.defaultPrevented,
       true,
       "event should be prevented in control branch too",
+    );
+
+    controller.destroy();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tests — Action execution with mock resolver (DI)
+// ---------------------------------------------------------------------------
+
+function testMockActionCalledOnMatch(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    let receivedWindow: Window | undefined;
+    const mockFn = (win: Window): void => {
+      callCount++;
+      receivedWindow = win;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      1,
+      "mock action should be invoked exactly once on match",
+    );
+    assertEquals(
+      receivedWindow,
+      fakeWin,
+      "mock action should receive the controller's target window",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockActionNotCalledOnMismatch(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const mockFn = (): void => {
+      callCount++;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+
+    // Wrong key — should not match Ctrl+T.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyR",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      0,
+      "mock action should NOT be invoked when shortcut does not match",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockActionNotCalledAfterDestroy(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const mockFn = (): void => {
+      callCount++;
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => mockFn,
+    );
+    controller.destroy();
+
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      0,
+      "destroyed controller should not invoke the mock action",
+    );
+  });
+}
+
+function testMockActionThrowDoesNotCrashController(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    let callCount = 0;
+    const throwingMock = (): void => {
+      callCount++;
+      throw new Error("mock action failure");
+    };
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => throwingMock,
+    );
+
+    // The controller's try-catch should swallow the throw.
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      1,
+      "throwing mock should still be invoked once",
+    );
+
+    // A second key press should still match (controller is alive).
+    dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      callCount,
+      2,
+      "controller should remain functional after action threw",
+    );
+
+    controller.destroy();
+  });
+}
+
+function testMockResolverReturningUndefined(): void {
+  withPrefs(() => {
+    applyTestConfig(CTRL_T_CONFIG);
+    const fakeWin = createFakeWindow();
+    const controller = new KeyboardShortcutController(
+      fakeWin,
+      null,
+      "linux",
+      () => undefined,
+    );
+
+    const event = dispatchKeyEvent(fakeWin, "keydown", {
+      code: "KeyT",
+      ctrlKey: true,
+    });
+
+    assertEquals(
+      event.defaultPrevented,
+      true,
+      "shortcut should match even when resolver returns undefined",
     );
 
     controller.destroy();
@@ -1167,11 +1375,11 @@ function testEmptyKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "", // empty key
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1195,11 +1403,11 @@ function testVeryLongKeyInConfig(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-action": {
+        "test-action": [{
           key: "verylongkeynamethatwontmatch",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-action",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1337,11 +1545,11 @@ function testWindowBlurClearsLostKeyUpState(): void {
     const CTRL_D_CONFIG: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-d": {
+        "test-ctrl-d": [{
           key: "D",
           modifiers: { alt: false, ctrl: true, meta: false, shift: false },
           action: "test-ctrl-d",
-        },
+        }],
       },
     };
     applyTestConfig(CTRL_D_CONFIG);
@@ -1377,11 +1585,11 @@ function testCapturePhaseBlocksBubbleListener(): void {
     const CTRL_SHIFT_P_CONFIG: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-shift-p": {
+        "test-ctrl-shift-p": [{
           key: "P",
           modifiers: { alt: false, ctrl: true, meta: false, shift: true },
           action: "test-ctrl-shift-p",
-        },
+        }],
       },
     };
     applyTestConfig(CTRL_SHIFT_P_CONFIG);
@@ -1423,11 +1631,11 @@ function testPhysicalCodeMatchesNonLatinKey(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-physical-code": {
+        "test-physical-code": [{
           key: "KeyZ",
           modifiers: { alt: true, ctrl: true, meta: false, shift: false },
           action: "test-physical-code",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1470,11 +1678,11 @@ function testAltGraphIsNotCtrlAlt(): void {
     const config: KeyboardShortcutConfig = {
       enabled: true,
       shortcuts: {
-        "test-ctrl-alt-z": {
+        "test-ctrl-alt-z": [{
           key: "KeyZ",
           modifiers: { alt: true, ctrl: true, meta: false, shift: false },
           action: "test-ctrl-alt-z",
-        },
+        }],
       },
     };
     applyTestConfig(config);
@@ -1571,6 +1779,10 @@ export async function runAllTests(): Promise<void> {
       name: "multi config: Ctrl+Z does NOT match",
       fn: testMultipleShortcutsNeitherMatches,
     },
+    {
+      name: "multiple bindings for same action match",
+      fn: testMultipleBindingsForSameActionMatch,
+    },
     // Disabled state
     {
       name: "disabled does not match",
@@ -1649,6 +1861,27 @@ export async function runAllTests(): Promise<void> {
     {
       name: "safe error handling experiment disabled",
       fn: testSafeErrorHandlingExperimentDisabled,
+    },
+    // Action execution with mock resolver (DI)
+    {
+      name: "mock action called on match",
+      fn: testMockActionCalledOnMatch,
+    },
+    {
+      name: "mock action not called on mismatch",
+      fn: testMockActionNotCalledOnMismatch,
+    },
+    {
+      name: "mock action not called after destroy",
+      fn: testMockActionNotCalledAfterDestroy,
+    },
+    {
+      name: "mock action throw does not crash controller",
+      fn: testMockActionThrowDoesNotCrashController,
+    },
+    {
+      name: "mock resolver returning undefined",
+      fn: testMockResolverReturningUndefined,
     },
     // Key state tracking
     {

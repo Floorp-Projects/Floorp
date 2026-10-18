@@ -9,7 +9,7 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
 
-export const KEYBOARD_SHORTCUT_SCHEMA_VERSION = 2 as const;
+export const KEYBOARD_SHORTCUT_SCHEMA_VERSION = 3 as const;
 export const COMMAND_PALETTE_ACTION = "floorp-toggle-command-palette";
 export const ZEN_MODE_ACTION = "floorp-toggle-zen-mode";
 
@@ -30,14 +30,14 @@ export function createZenModeShortcut(platform: string): ShortcutConfig {
 
 export function createDefaultShortcuts(
   platform: string = AppConstants.platform,
-): Record<string, ShortcutConfig> {
+): Record<string, ShortcutConfig[]> {
   return {
-    [COMMAND_PALETTE_ACTION]: {
+    [COMMAND_PALETTE_ACTION]: [{
       key: "F2",
       modifiers: { alt: false, ctrl: false, meta: false, shift: false },
       action: COMMAND_PALETTE_ACTION,
-    },
-    [ZEN_MODE_ACTION]: createZenModeShortcut(platform),
+    }],
+    [ZEN_MODE_ACTION]: [createZenModeShortcut(platform)],
   };
 }
 
