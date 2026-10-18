@@ -57,6 +57,7 @@ export function ContextMenuAvailabilityProvider(
           policy !== "never" &&
           experiments.some((experiment) =>
             experiment.id === CONTEXT_MENU_EXPERIMENT_ID &&
+            experiment.isReady === true &&
             experiment.isActive === true &&
             experiment.currentVariantId === "enabled" &&
             (experiment.enrollmentStatus === "enrolled" ||

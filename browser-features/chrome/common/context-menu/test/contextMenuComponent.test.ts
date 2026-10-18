@@ -223,8 +223,8 @@ async function testInitAttachesPopupShowingListener(): Promise<void> {
 
     assertEquals(
       popupListenerAddCount,
-      1,
-      "constructor init and an explicit init should share one document capture listener",
+      0,
+      "constructor init and an explicit init must not attach outside Flasco",
     );
   } finally {
     if (capturedUnloadListener) invokeCapturedUnloadListener();
@@ -995,6 +995,7 @@ async function testCleanupRemovesEventListener(): Promise<void> {
 
 async function testWindowUnloadDestroysController(): Promise<void> {
   cleanupDOM();
+  createMockContentAreaContextMenu();
   const mod = await import("../index.ts");
   resetListenerTracking();
   wrapDocumentForTracking();
@@ -1004,14 +1005,14 @@ async function testWindowUnloadDestroysController(): Promise<void> {
     const instance = new mod.default();
     assertEquals(
       popupListenerAddCount,
-      1,
-      "component should attach one controller",
+      0,
+      "component must not attach outside Flasco",
     );
     invokeCapturedUnloadListener();
     assertEquals(
       popupListenerRemoveCount,
-      1,
-      "window unload should destroy the controller",
+      0,
+      "window unload has no customizer popup listener to remove outside Flasco",
     );
     assertEquals(
       unloadListenerRemoveCount,
@@ -1022,10 +1023,59 @@ async function testWindowUnloadDestroysController(): Promise<void> {
     instance.init();
     assertEquals(
       popupListenerAddCount,
-      2,
-      "an explicitly reinitialized instance should own one fresh controller",
+      0,
+      "an explicitly reinitialized instance still respects Flasco",
     );
     invokeCapturedUnloadListener();
+  } finally {
+    cleanupDOM();
+  }
+}
+
+async function testLegacyNormalizationOutsideFlasco(): Promise<void> {
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+  const screenshot = document.createElement("menuitem");
+  screenshot.id = "context-take-screenshot";
+  const adjacent = document.createElement("menuitem");
+  adjacent.hidden = true;
+  const separator = document.createElement("menuseparator");
+  const hiddenItem = document.createElement("menuitem");
+  hiddenItem.hidden = true;
+  menu.append(screenshot, adjacent, separator, hiddenItem);
+  const mod = await import("../index.ts");
+  resetListenerTracking();
+  wrapDocumentForTracking();
+  wrapWindowForUnloadTracking();
+  try {
+    const instance = new mod.default();
+    instance.init();
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      popupListenerAddCount,
+      0,
+      "excluded customizer stays detached",
+    );
+    assertEquals(adjacent.hidden, false, "legacy screenshot repair still runs");
+    assertEquals(
+      separator.hidden,
+      true,
+      "native hidden-row separator is normalized",
+    );
+    invokeCapturedUnloadListener();
+    adjacent.hidden = true;
+    separator.hidden = false;
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      adjacent.hidden,
+      true,
+      "component cleanup removes the native helper",
+    );
+    assertEquals(
+      separator.hidden,
+      false,
+      "cleanup does not register duplicate helpers",
+    );
   } finally {
     cleanupDOM();
   }
@@ -1183,7 +1233,7 @@ export async function runAllTests(): Promise<void> {
 
     // ContextMenu component — Init behavior
     {
-      name: "ContextMenu init attaches popupshowing listener",
+      name: "ContextMenu init registers no popup listeners outside Flasco",
       fn: testInitAttachesPopupShowingListener,
     },
     {
@@ -1193,6 +1243,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "ContextMenu unload destroys and releases controller",
       fn: testWindowUnloadDestroysController,
+    },
+    {
+      name: "Legacy native menu normalization remains outside Flasco",
+      fn: testLegacyNormalizationOutsideFlasco,
     },
 
     // ContextMenuUtils — contentAreaContextMenu
@@ -1326,5 +1380,14 @@ export async function runAllTests(): Promise<void> {
   ];
 
   const { runTests } = await import("../../../test/utils/test_harness.ts");
-  await runTests("contextMenuComponent.test.ts", tests);
+  const policyPref = "floorp.experiments.participationPolicy";
+  const hadPolicy = Services.prefs.prefHasUserValue(policyPref);
+  const policy = Services.prefs.getStringPref(policyPref, "default");
+  Services.prefs.setStringPref(policyPref, "never");
+  try {
+    await runTests("contextMenuComponent.test.ts", tests);
+  } finally {
+    if (hadPolicy) Services.prefs.setStringPref(policyPref, policy);
+    else Services.prefs.clearUserPref(policyPref);
+  }
 }

@@ -36,7 +36,7 @@ index e24d82fcaef..224600b2187 100644
  }
  
 diff --git a/widget/cocoa/appshim/MacWebAppInput.h b/widget/cocoa/appshim/MacWebAppInput.h
-index 3338f985a6c..269fedaed7d 100644
+index 3338f985a6c..dadf040dab0 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.h
 +++ b/widget/cocoa/appshim/MacWebAppInput.h
 @@ -14,15 +14,15 @@
@@ -66,8 +66,16 @@ index 3338f985a6c..269fedaed7d 100644
    std::function<void(NSDictionary*)> mSendEditorState;
    NSEvent* mLastKeyEvent =
        nullptr;  // Retained; this file uses Gecko's MRC input helpers.
+@@ -64,6 +64,7 @@ class MacWebAppInput final : public TextEventDispatcherListener {
+   int16_t mButtons = 0;
+   bool mUpdatingEditorState = false;
+   bool mKeyDownConsumed = false;
++  bool mSuppressNativeKeyBindings = false;
+   bool mComposing = false;
+   bool mIMEFocused = false;
+ };
 diff --git a/widget/cocoa/appshim/MacWebAppInput.mm b/widget/cocoa/appshim/MacWebAppInput.mm
-index 47b32e89973..772f856d3d2 100644
+index 47b32e89973..1dec072b8ed 100644
 --- a/widget/cocoa/appshim/MacWebAppInput.mm
 +++ b/widget/cocoa/appshim/MacWebAppInput.mm
 @@ -4,6 +4,7 @@
@@ -86,7 +94,7 @@ index 47b32e89973..772f856d3d2 100644
  #include "mozilla/AutoRestore.h"
  #include "mozilla/widget/IMEData.h"
  #include "mozilla/MiscEvents.h"
-@@ -113,7 +115,7 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+@@ -113,7 +115,7 @@ NS_IMPL_ISUPPORTS(MacWebAppInput, TextEventDispatcherListener,
                    nsISupportsWeakReference)
  
  MacWebAppInput::MacWebAppInput(
@@ -95,7 +103,19 @@ index 47b32e89973..772f856d3d2 100644
      : mWidget(aWidget), mSendEditorState(std::move(aSendEditorState)) {}
  
  MacWebAppInput::~MacWebAppInput() { OnDestroy(); }
-@@ -186,15 +188,32 @@ bool Boolean(NSDictionary* aPayload, NSString* aKey, bool* aValue) {
+@@ -148,6 +150,11 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
+   MOZ_ASSERT(NS_IsMainThread());
+   if (!IsAlive()) return;
+   RefPtr<MacWebAppInput> self(this);
++  // Reentrant shim input uses its own command policy.
++  AutoRestore<Maybe<Command>> command(mCommand);
++  AutoRestore<bool> suppressNativeKeyBindings(mSuppressNativeKeyBindings);
++  mCommand.reset();
++  mSuppressNativeKeyBindings = false;
+   NSString* kind = ReadString(aPayload, @"kind", 32);
+   if (!kind) return;
+   if ([kind isEqualToString:@"focus"]) {
+@@ -186,15 +193,32 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
    if ([kind isEqualToString:@"scroll"]) {
      double dx, dy;
      bool precise;
@@ -111,7 +131,7 @@ index 47b32e89973..772f856d3d2 100644
 +        !ReadUInt(aPayload, @"momentumPhase", &momentum, true) ||
 +        !ReadNumber(aPayload, @"timestamp", &timestamp, 0, 1e12) ||
 +        (aPayload[@"swipeEnabled"] && !Boolean(aPayload, @"swipeEnabled", &swipeEnabled)))
-       return;
++      return;
 +    if (!aPayload[@"swipeEnabled"])
 +      swipeEnabled = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
 +    if (precise && (phase != NSEventPhaseNone || momentum != NSEventPhaseNone)) {
@@ -121,7 +141,7 @@ index 47b32e89973..772f856d3d2 100644
 +          ScreenPoint(-dx * scale, -dy * scale), gfx::IntPoint(),
 +          GeckoModifiers(modifiers));
 +      mWidget->DispatchPanGestureInput(pan);
-+      return;
+       return;
 +    }
      WidgetWheelEvent event(true, eWheel, mWidget);
      event.mRefPoint = point;
@@ -130,6 +150,44 @@ index 47b32e89973..772f856d3d2 100644
      event.mDeltaMode = precise ? 0 : 1;
      event.mDeltaX = -dx * (precise ? scale : 1);
      event.mDeltaY = -dy * (precise ? scale : 1);
+@@ -237,7 +261,7 @@ void MacWebAppInput::Handle(NSDictionary* aPayload) {
+   event.mClickCount = clicks;
+   mWidget->DispatchInputEvent(&event);
+   if (message == eMouseUp && domButton == 2 && IsAlive()) {
+-    WidgetMouseEvent menu(true, eContextMenu, mWidget, WidgetMouseEvent::eReal);
++    WidgetPointerEvent menu(true, eContextMenu, mWidget);
+     menu.mRefPoint = point;
+     menu.mModifiers = event.mModifiers;
+     menu.mButton = domButton;
+@@ -373,7 +397,6 @@ void MacWebAppInput::HandleText(NSDictionary* aPayload) {
+     WidgetKeyboardEvent event(true, eKeyDown, mWidget);
+     TISInputSourceWrapper::CurrentInputSource().InitKeyEvent(mLastKeyEvent,
+                                                              event, false);
+-    event.InitAllEditCommands(dispatcher->MaybeWritingModeRefAtSelection());
+     dispatcher->MaybeDispatchKeypressEvents(event, status);
+     return;
+   }
+@@ -392,7 +415,8 @@ void MacWebAppInput::HandleText(NSDictionary* aPayload) {
+       WidgetKeyboardEvent event(true, eKeyDown, mWidget);
+       TISInputSourceWrapper::CurrentInputSource().InitKeyEvent(
+           mLastKeyEvent, event, false, &value);
+-      event.PreventNativeKeyBindings();
++      AutoRestore<bool> suppressNativeKeyBindings(mSuppressNativeKeyBindings);
++      mSuppressNativeKeyBindings = true;
+       dispatcher->MaybeDispatchKeypressEvents(event, status);
+     } else {
+       WidgetContentCommandEvent event(true, eContentCommandInsertText, mWidget);
+@@ -435,6 +459,10 @@ bool MacWebAppInput::GetEditCommands(NativeKeyBindingsType aType,
+                                      const WidgetKeyboardEvent& aEvent,
+                                      nsTArray<CommandInt>& aCommands) {
+   if (!IsAlive()) return false;
++  if (mSuppressNativeKeyBindings) {
++    aCommands.Clear();
++    return true;
++  }
+   if (mCommand)
+     aCommands.AppendElement(static_cast<CommandInt>(*mCommand));
+   else
 diff --git a/widget/cocoa/appshim/MacWebAppWidget.h b/widget/cocoa/appshim/MacWebAppWidget.h
 index bc6fcb0b13a..8b2b8ee757f 100644
 --- a/widget/cocoa/appshim/MacWebAppWidget.h
@@ -195,7 +253,7 @@ index 4916c301f8b..d5d465bdf91 100644
    if (RefPtr<NativeLayerRootRemoteMacParent> actor = std::move(mRemoteRoot)) {
      CompositorThread()->Dispatch(NewRunnableMethod("MacWebAppWidget::CloseRemoteRoot",
 diff --git a/widget/cocoa/appshim/shim/ShimView.mm b/widget/cocoa/appshim/shim/ShimView.mm
-index 256869bf43d..d0f0fac4c00 100644
+index 256869b..7443931 100644
 --- a/widget/cocoa/appshim/shim/ShimView.mm
 +++ b/widget/cocoa/appshim/shim/ShimView.mm
 @@ -6,6 +6,7 @@
@@ -228,7 +286,40 @@ index 256869bf43d..d0f0fac4c00 100644
      }
    }
    for (int column = 0; column < 4; ++column) {
-@@ -633,6 +636,7 @@ - (void)scrollWheel:(NSEvent*)event {
+@@ -277,6 +280,7 @@ @implementation FPAShimView {
+   uint32_t _textOffset;
+   NSString* _editorText;
+   NSRange _selectedRange;
++  NSRange _imeSelectedRange;
+   NSRange _markedRange;
+   NSRect _caret;
+   BOOL _editable;
+@@ -295,6 +299,7 @@ - (instancetype)initWithFrame:(NSRect)frame windowID:(uint32_t)windowID
+     _sink = [sink copy];
+     _editorText = @"";
+     _selectedRange = NSMakeRange(0, 0);
++    _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+     _markedRange = NSMakeRange(NSNotFound, 0);
+     self.wantsLayer = YES;
+     self.layer.backgroundColor = NSColor.windowBackgroundColor.CGColor;
+@@ -557,6 +562,7 @@ - (BOOL)setEditorState:(NSDictionary*)payload {
+   _caret = NSMakeRect(x, y, width, height);
+   _editable = [payload[@"editable"] boolValue];
+   _password = password;
++  if (!_editable || discard) _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+   if (discard) {
+     _markedRange = NSMakeRange(NSNotFound, 0);
+     [self.inputContext discardMarkedText];
+@@ -588,6 +594,8 @@ - (void)disconnect {
+   _cursor = NSCursor.arrowCursor;
+   [self applyCursor];
+   _sink = nil;
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
++  _markedRange = NSMakeRange(NSNotFound, 0);
+   [self updateSecureInput];
+   [self.inputContext discardMarkedText];
+   self.layer.sublayers = @[];
+@@ -633,6 +641,7 @@ - (void)scrollWheel:(NSEvent*)event {
        @"deltaX": @(event.scrollingDeltaX), @"deltaY": @(event.scrollingDeltaY),
        @"precise": @(event.hasPreciseScrollingDeltas), @"phase": @(event.phase),
        @"momentumPhase": @(event.momentumPhase), @"modifiers": @(event.modifierFlags),
@@ -236,7 +327,13 @@ index 256869bf43d..d0f0fac4c00 100644
        @"timestamp": @(event.timestamp)}];
  }
  - (void)keyEvent:(NSEvent*)event kind:(NSString*)kind {
-@@ -671,10 +675,14 @@ - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange
+@@ -666,23 +675,35 @@ - (void)insertText:(id)value replacementRange:(NSRange)replacement {
+   [self emit:MessageType::Input payload:@{@"kind": @"insertText", @"text": text,
+       @"replacement": RangePayload(replacement), @"editorRevision": @(_editorRevision)}];
+   _markedRange = NSMakeRange(NSNotFound, 0);
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+ }
+ - (void)setMarkedText:(id)value selectedRange:(NSRange)selected replacementRange:(NSRange)replacement {
    NSString* text = PlainText(value);
    if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
        selected.length > text.length - selected.location) return;
@@ -248,10 +345,35 @@ index 256869bf43d..d0f0fac4c00 100644
        @"editorRevision": @(_editorRevision)}];
 -  _markedRange = NSMakeRange(_selectedRange.location, text.length);
 +  _markedRange = NSMakeRange(markedStart, text.length);
-+  _selectedRange = NSMakeRange(markedStart + selected.location, selected.length);
++  // Gecko reports a collapsed composition caret, even when AppKit selects a
++  // conversion clause. Keep the IME's range until it commits or cancels so the
++  // next Space continues conversion rather than replacing it with whitespace.
++  _imeSelectedRange = text.length
++      ? NSMakeRange(markedStart + selected.location, selected.length) : NSMakeRange(NSNotFound, 0);
  }
  - (void)unmarkText {
    if ([self hasMarkedText]) [self emit:MessageType::Input payload:@{@"kind": @"unmarkText", @"editorRevision": @(_editorRevision)}];
+   _markedRange = NSMakeRange(NSNotFound, 0);
++  _imeSelectedRange = NSMakeRange(NSNotFound, 0);
+ }
+ - (BOOL)hasMarkedText { return _markedRange.location != NSNotFound && _markedRange.length > 0; }
+ - (NSRange)markedRange { return _markedRange; }
+-- (NSRange)selectedRange { return _selectedRange; }
++- (NSRange)selectedRange {
++  return _imeSelectedRange.location != NSNotFound ? _imeSelectedRange : _selectedRange;
++}
+ - (NSArray<NSAttributedStringKey>*)validAttributesForMarkedText { return @[]; }
+ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actualRange:(NSRangePointer)actual {
+   if (range.location == NSNotFound || range.location < _textOffset ||
+@@ -696,7 +717,7 @@ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actual
+   return [[NSAttributedString alloc] initWithString:[_editorText substringWithRange:local]];
+ }
+ - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actual {
+-  if (actual) *actual = _selectedRange;
++  if (actual) *actual = [self selectedRange];
+   return [self.window convertRectToScreen:[self convertRect:_caret toView:nil]];
+ }
+ - (NSUInteger)characterIndexForPoint:(NSPoint)point { return NSNotFound; }
 diff --git a/widget/cocoa/nsCocoaUtils.h b/widget/cocoa/nsCocoaUtils.h
 index 3a4f96a4ed8..302537e0885 100644
 --- a/widget/cocoa/nsCocoaUtils.h
@@ -438,16 +560,12 @@ index 00000000000..3a1c513f17b
 +  EXPECT_EQ(pan.mPanDisplacement, ScreenPoint(-19, 6));
 +}
 diff --git a/widget/tests/gtest/moz.build b/widget/tests/gtest/moz.build
-index c870dbd1039..c7f681f3572 100644
+index c870dbd..c7f681f 100644
 --- a/widget/tests/gtest/moz.build
 +++ b/widget/tests/gtest/moz.build
-@@ -12,6 +12,9 @@ UNIFIED_SOURCES = [
- ]
- 
+@@ -14,2 +14,5 @@ UNIFIED_SOURCES = [
  if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 +    SOURCES += [
 +        "TestMacWebAppPanGesture.mm",
 +    ]
      UNIFIED_SOURCES += [
-         "TestNativeKeyBindings.cpp",
-     ]

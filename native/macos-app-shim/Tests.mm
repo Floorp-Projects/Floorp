@@ -472,6 +472,64 @@ void TestNativeView() {
   CFRelease(second);
 }
 
+void TestIMESelectionCache() {
+  FPAShimView* view = [[FPAShimView alloc] initWithFrame:NSMakeRect(0, 0, 360, 240) windowID:1
+      sink:^(MessageType, NSDictionary*) {}];
+  auto state = [](uint32_t revision, NSString* text, NSRange selection) {
+    return [@{@"revision": @(revision), @"text": text, @"textOffset": @40000,
+        @"selectionStart": @(selection.location), @"selectionLength": @(selection.length),
+        @"caretX": @20, @"caretY": @30, @"caretWidth": @1, @"caretHeight": @18,
+        @"editable": @YES} mutableCopy];
+  };
+  Expect([view setEditorState:state(1, @"日本語", NSMakeRange(40003, 0))], "initialize conversion fixture");
+  [view setMarkedText:@"かんじ" selectedRange:NSMakeRange(3, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view setMarkedText:@"漢字" selectedRange:NSMakeRange(0, 2) replacementRange:NSMakeRange(NSNotFound, 0)];
+  NSMutableDictionary* ack = state(2, @"日本語漢字", NSMakeRange(40003, 0));
+  ack[@"markedStart"] = @40003;
+  ack[@"markedLength"] = @2;
+  Expect([view setEditorState:ack], "accept Gecko's collapsed conversion caret");
+  Expect(NSEqualRanges(view.selectedRange, NSMakeRange(40003, 2)),
+      "Gecko acknowledgement must preserve the IME's selected conversion clause");
+  NSRange actual;
+  [view firstRectForCharacterRange:view.selectedRange actualRange:&actual];
+  Expect(NSEqualRanges(actual, view.selectedRange), "candidate geometry reports the same IME selection range");
+  [view setMarkedText:@"感じ" selectedRange:NSMakeRange(0, 2) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack[@"revision"] = @3;
+  ack[@"text"] = @"日本語感じ";
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40003, 2)),
+      "repeated candidate conversion survives subsequent caret updates");
+  [view insertText:@"感じ" replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40003, 0)),
+      "composition commit releases the IME selection override");
+  Expect([view setEditorState:state(4, @"日本語感じ", NSMakeRange(40005, 0))], "committed editor selection resumes");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view unmarkText];
+  ack = state(5, @"日本語感じ字", NSMakeRange(40006, 0));
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "unmarking releases the IME selection override");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack = state(6, @"日本語感じ字", NSMakeRange(40006, 0));
+  ack[@"discardMarkedText"] = @YES;
+  Expect([view setEditorState:ack] && !view.hasMarkedText &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)), "host cancellation releases the IME selection override");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:NSMakeRange(NSNotFound, 0)];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "empty marked text releases the conversion selection");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  ack = state(7, @"日本語感じ字", NSMakeRange(40006, 0));
+  ack[@"editable"] = @NO;
+  Expect([view setEditorState:ack] && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "leaving an editable element releases the IME selection override");
+  ack[@"revision"] = @8;
+  ack[@"editable"] = @YES;
+  Expect([view setEditorState:ack], "restore editable fixture");
+  [view setMarkedText:@"字" selectedRange:NSMakeRange(0, 1) replacementRange:NSMakeRange(NSNotFound, 0)];
+  [view disconnect];
+  Expect(!view.hasMarkedText && NSEqualRanges(view.selectedRange, NSMakeRange(40006, 0)),
+      "disconnect releases the IME selection override");
+}
+
 void TestReceivePortQueueLimit() {
   Port receiving = Port::Receive();
   Expect(bool(receiving), "receive port allocates");
@@ -690,6 +748,7 @@ int main(int argc, char* argv[]) {
     TestSignedPeer();
     TestColdBootstrap(argv[0]);
     TestNativeView();
+    TestIMESelectionCache();
     TestReceivePortQueueLimit();
     TestAsyncSender();
     TestRelatedWindows();

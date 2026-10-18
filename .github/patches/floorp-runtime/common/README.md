@@ -5,6 +5,11 @@ Floorp and before the artifact build. Keep Runtime changes here rather than
 editing a sibling Floorp-Runtime checkout. Validate patches against the source
 commit in `floorp-runtime.lock.json`, using an isolated checkout or source fixture.
 
+Packaging skips an exact reverse-applicable common patch that was already applied
+by the Runtime's upstream patch step. A missing patch is applied normally, while
+partially applied patches still fail validation. Native changes still require
+freshly compiled Runtime artifacts.
+
 `workspace-external-containers.patch` chooses the workspace container before
 creating a browser for external URL opens, including cold launch and new windows.
 It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
@@ -21,6 +26,14 @@ Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
 
+`contextual-search-initialization.patch` lazily loads the selector configuration
+for contextual engine lookups. Floorp's fixed default engine list can initialize
+SearchService without loading that configuration. If it is unavailable, the
+optional lookup returns no match so OpenSearch and other address-bar actions
+can continue. The matching `tools/patches` patch covers extracted local builds;
+the host parity test and browser `contextualSearch.test.ts` cover both paths.
+This changes JavaScript only and does not require native recompilation.
+
 `macos-artifact-app-shim.patch` carries the Runtime's native App Shim executable
 from the macOS Runtime DMG into the artifact build. The package manifest already
 requires that executable; omitting it prevents the final app from being built.
@@ -33,12 +46,22 @@ and selection ranges, and routes phased trackpad input through Gecko's APZ,
 overscroll, and history-swipe handling. PWA widgets bypass host-process AppKit
 popup menus, which require a local NSView, and use Gecko popups presented by the
 Shim instead. Ordinary browser menus keep their existing behavior and native
-menu preferences remain enabled. The canonical Shim files in
+menu preferences remain enabled. PWA context-menu input uses Gecko's pointer
+event class so that remote content processes accept the event without an IPC
+deserialization failure. The canonical Shim files in
 `native/macos-app-shim/` must stay in sync with this patch. Native View regressions
 are covered by `deno task app-shim:build --test`; Runtime phase conversion is
 covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
 `tools/app-shim/test-popups-and-overscroll.py` runner checks popup positioning,
 zoom, option commands, and APZ overscroll against a source-built Runtime.
+`tools/app-shim/test-context-menu.py` checks repeated trusted right-click menu
+delivery and content-process survival through the PWA input adapter.
+The Shim retains the IME's selected conversion clause while Gecko acknowledges
+a collapsed caret; repeated Space presses continue Japanese conversion. The
+selection override ends on commit, unmark, cancellation, empty marked text,
+leaving an editable element, or disconnection. Candidate geometry uses that same
+selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
+textarea and contenteditable fixtures, using an isolated browser profile.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts

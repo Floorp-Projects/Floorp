@@ -11,7 +11,7 @@ export interface ReclaimTestInstance {
   settings: IdleMemoryReclaimSettings;
   reclaiming: boolean;
   disposed: boolean;
-  pollTimerId: ReturnType<typeof setInterval> | null;
+  pollTimerId: ReturnType<Window["setInterval"]> | null;
   idleObserver: nsIObserver | null;
   prefObserver: nsIObserver | null;
   registeredIdleSec: number | null;
@@ -26,4 +26,12 @@ export interface ReclaimTestInstance {
 
 export interface SharedReclaimStats {
   value: IdleMemoryReclaimStats;
+}
+
+export interface ReclaimConstructorTestInstance extends ReclaimTestInstance {
+  init: () => void;
+  getPreferences: () => nsIPrefBranch;
+  getObserverService: () => nsIObserverService;
+  getIdleService: () => nsIUserIdleService | null;
+  getTimers: () => Pick<Window, "setInterval" | "clearInterval">;
 }

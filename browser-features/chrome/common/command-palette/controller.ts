@@ -80,7 +80,13 @@ export class CommandPaletteController {
   }
 
   public destroy(): void {
+    if (this.state.isVisible()) {
+      this.hidePalette();
+    }
     this.stepChoicesLoadGeneration++;
+    this.searchGeneration++;
+    this.currentSearchQuery = "";
+    this.debouncedUpdateSearch.clear();
     if (this.eventListenersAttached) {
       this.targetWindow.removeEventListener(
         "keydown",
@@ -90,6 +96,7 @@ export class CommandPaletteController {
       this.eventListenersAttached = false;
     }
     this.clearAnimOutTimer();
+    this.state.setIsAnimatingOut(false);
     if (this.historySearchTimer) {
       clearTimeout(this.historySearchTimer);
       this.historySearchTimer = null;
@@ -97,9 +104,6 @@ export class CommandPaletteController {
     if (this.bookmarkSearchTimer) {
       clearTimeout(this.bookmarkSearchTimer);
       this.bookmarkSearchTimer = null;
-    }
-    if (this.state.isVisible()) {
-      this.hidePalette();
     }
   }
 

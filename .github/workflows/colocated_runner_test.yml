@@ -40,6 +40,10 @@ jobs:
           deno run -A tools/runtime-lock/runtime_lock_cli.ts
           validate-release-metadata
       - run: deno task test:smoke
+      - name: Verify compiled Runtime source provenance contract
+        run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
+      - name: Test final package QA source intake
+        run: node --test tools/test-final-package-qa-source.mjs
       - name: Run host tool tests
         run: deno task test:host
       - name: Run locked Firefox test tooling tests
@@ -113,6 +117,10 @@ jobs:
         run: >-
           deno test --allow-read --allow-write --allow-run
           tools/native/tests/g5_macos_lifecycle_helper.test.ts
+
+      - name: Build and test universal macOS App Shim
+        if: matrix.platform == 'macos'
+        run: deno task app-shim:build --test --universal
 
       - name: Install locked Runtime for browser suite
         if: matrix.browser_suite == true
@@ -414,8 +422,8 @@ jobs:
         if: matrix.browser_suite == true
         run: deno test -A tools/src/colocated_test_runner.test.ts
 
-      - name: Upload logs on failure
-        if: failure() && matrix.browser_suite == true
+      - name: Upload browser integration evidence
+        if: always() && matrix.browser_suite == true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: test-logs-${{ matrix.runner }}
