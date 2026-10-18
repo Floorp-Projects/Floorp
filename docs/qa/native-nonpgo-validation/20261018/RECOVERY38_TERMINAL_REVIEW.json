@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "scope": "Recovery38 actual Intel Mac short terminal review and strict-boundary feasibility limits",
+  "decision": {
+    "shortDiagnostic": "PASS_CONFIRMED",
+    "longRecovery37": "NO_GO",
+    "anyLongFollowUp": "ON_HOLD_PENDING_CANDIDATE_ORIGIN_AND_POST_BUILD_FEASIBILITY_ASSESSMENT",
+    "checkpointEligibility": "NOT_ESTABLISHED",
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "bindings": {
+    "run": 39177248384,
+    "job": 117822346436,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39177248384",
+    "fixture": "cf8d724dc817796e1cc36e3c5d0729721fb9c924",
+    "fixtureTree": "105c765cc406bdb808fe02b91e20147a612e7e69",
+    "caller": "55d51f051dd3c370308acb7764d49a325840da86",
+    "callerTree": "797d814f963fb4f7021fa318ff2845218e9cc612",
+    "files": {
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_TERMINAL_RESULT.json": {
+        "bytes": 268623,
+        "sha256": "b4f6b71320431af9936bfcd07426df59c9fa488f14751aa974bf29844fe29865"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_CANDIDATE_ASSESSMENT.md": {
+        "bytes": 6405,
+        "sha256": "ded7dfd8afa122564d677d0ee39e0bd9a5db40a253b673e4cd3bcae2bbe6cda0"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_INITIAL_REVIEW.json": {
+        "bytes": 3258,
+        "sha256": "ace5cfc13bae87b99a90b3c15808ebb51623dc28deff5b698e4f1dd0f973e90e"
+      }
+    },
+    "decodedProviderLog": {
+      "bytes": 304748,
+      "sha256": "493551e64194fb5fa65c85f3ef191dd8cc5a607338b273d4225fd821c74902b9",
+      "rawContentPublished": false
+    }
+  },
+  "independentVerification": {
+    "providerRunAndJob": "completed success; push attempt1, single macos-15-intel job",
+    "startedAt": "2026-10-18T23:36:49Z",
+    "completedAt": "2026-10-18T23:43:12Z",
+    "completeExperimentObjectsInDecodedLog": 1,
+    "receiptExperimentExactlyMatchesProviderJSON": true,
+    "all14CandidateSpansIndependentlyRecomputedAndMatched": true,
+    "artifactCollectionCount": 0,
+    "sentinelTokensAndPrivatePidArraysAbsent": true,
+    "sourceEditedOrNewExecutionStartedByReviewer": false
+  },
+  "observations": {
+    "sdk": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "sourceRun": 39117481043,
+      "version": "26.5",
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765
+    },
+    "actualMacTests": {
+      "total": 321,
+      "passed": 321,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 72.2,
+      "privateTestLogBytes": 68661,
+      "privateTestLogSHA256": "8abd64469bb08a78e6ec36d73dbf01606457427c60b4eefa83feb5ffc4c1b15c",
+      "bothDelayedRecheckLifecycleControls": "passed, source-bound suite assertions"
+    },
+    "heldChildControl": {
+      "status": "passed",
+      "outcome": "natural-zero",
+      "originalBaselineCandidateIdentities": 274,
+      "sampleCounts": [
+        [
+          0.011,
+          1,
+          0,
+          true,
+          true,
+          true
+        ],
+        [
+          0.051,
+          0,
+          0,
+          true,
+          true,
+          false
+        ]
+      ],
+      "sampleCountColumns": [
+        "elapsedSeconds",
+        "newCandidateIdentities",
+        "removedCandidateIdentities",
+        "resourceComplete",
+        "resourceTotalsAvailable",
+        "heldChildPresent"
+      ],
+      "childBirthBinding": true,
+      "childReleased": true,
+      "naturalExitCode": 0,
+      "exactLeaderReaped": true,
+      "groupCleanup": "verified-gone",
+      "cleanupComplete": true,
+      "baselineReset": false,
+      "candidatesExcluded": false,
+      "signalsSent": false,
+      "checkpointEligibilityEstablished": false,
+      "lastResourceComplete": true
+    },
+    "freshSelectionRepetitions": {
+      "count": 5,
+      "allPassed": true,
+      "strictChildOriginalArgvTailPathAndCrossSelection": "passed; launcher argv0 text/canonical mismatch remains diagnostic-only"
+    },
+    "stress": {
+      "status": "passed",
+      "workers": 3,
+      "workerMiB": 1536,
+      "readyWorkers": 3,
+      "readySeconds": 19.187,
+      "barriersReleased": 3,
+      "loadSeconds": 60.005,
+      "samples": 56,
+      "completeSamples": 56,
+      "retriedSamples": 0,
+      "unknownSamples": 0,
+      "timeoutAttempts": 0,
+      "maxSampleSeconds": 2.3419,
+      "peakRSSMiB": 4704.16796875,
+      "peakCPUSeconds": 128.42,
+      "churnChildren": 988,
+      "churnReaped": 988,
+      "workersReaped": 3,
+      "allWorkerExitCodes": 0
+    },
+    "originalParentControl": {
+      "status": "passed",
+      "directAndGrandchildBinding": true,
+      "afterOrphanOriginalParentRetained": true,
+      "afterExecVersionChanged": true,
+      "afterExecParentUniqueMatchesPID1": true,
+      "afterExecOriginalParentVersionMatchesPID1": false,
+      "cleanup": "leader reaped, group verified gone, no failure"
+    },
+    "knownChild": {
+      "identityVerified": true,
+      "role": "python",
+      "parentRelation": "caller",
+      "samplerObservedBirth": true,
+      "completeSamplerRSSMiB": 9.23046875,
+      "strictBoundary": "rejected with new1",
+      "cleanupExitCode": -15,
+      "leaderReaped": true,
+      "groupCleanup": "verified-gone",
+      "cleanupFailure": null
+    },
+    "initialMetadataOrigins": {
+      "baselineCandidates": 279,
+      "roleVerifiedMetadataCandidates": 16,
+      "roleUnavailableCandidates": 1,
+      "recordedOrigins": 16,
+      "allRecordedOrigins": "identity-verified and PID1 original-parent-consistent",
+      "truncated": false
+    },
+    "background": {
+      "fixedBaselineCandidateIdentities": 279,
+      "snapshots": 13,
+      "elapsedSeconds": [
+        0,
+        10.038,
+        20.129,
+        30.319,
+        40.595,
+        50.779,
+        60.923,
+        71.101,
+        81.223,
+        91.367,
+        101.598,
+        111.661,
+        121.721
+      ],
+      "newCandidateCounts": [
+        0,
+        6,
+        11,
+        11,
+        11,
+        12,
+        12,
+        12,
+        12,
+        9,
+        0,
+        1,
+        0
+      ],
+      "removedCandidateCounts": [
+        0,
+        6,
+        11,
+        11,
+        11,
+        12,
+        13,
+        13,
+        13,
+        15,
+        16,
+        17,
+        17
+      ],
+      "zeroIndices": [
+        0,
+        10,
+        12
+      ],
+      "candidateRecords": 97,
+      "distinctFiveFieldTags": 14,
+      "distinctMetadataWorkerTags": 13,
+      "distinctOtherTags": 1,
+      "metadataWorkerObservations": 96,
+      "otherObservations": 1,
+      "all97ProcessHintsIdentityVerified": true,
+      "all97OriginsIdentityVerifiedPID1Consistent": true,
+      "truncated": false,
+      "longestSampledSpan": {
+        "candidates": 4,
+        "observationsEach": 9,
+        "firstSeconds": 10.038,
+        "lastSeconds": 91.367,
+        "spanSeconds": 81.329
+      }
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": {
+      "retained": 1,
+      "stage": "inventory-stress",
+      "event": "Inherited internal task read recovered ESRCH to an authoritative same-generation BSD zombie",
+      "firstTaskQuery": {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "secondTaskQuery": {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "fallbackBSDQuery": {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      "sameGeneration": true,
+      "reason": "bsd-zombie",
+      "sampleComplete": true,
+      "naturallyExercisedOuterDelayedConvergenceRetry": "NOT_ESTABLISHED by public terminal evidence"
+    },
+    "cleanup": {
+      "startedStages": 11,
+      "allStageExitCodes": 0,
+      "allExactLeaderExitCodes": 0,
+      "allGroups": "verified-gone",
+      "cleanupFailures": 0
+    },
+    "artifactCount": 0,
+    "floorpBuildPerformed": false,
+    "productQualification": false
+  },
+  "candidateFeasibilityAssessment": {
+    "established": [
+      "Strict delta0 is achievable at sampled instants on this hosted runner with the fixed original baseline: the held-child control reached zero after exact reap, and the background study returned to zero after a real candidate burst.",
+      "New and persistent candidates appeared without a Floorp build. Stable tags distinguish sampled persistence and turnover in this experiment process.",
+      "All recorded new-candidate origins were consistently bound to PID1 using the diagnostic contract, including its original-parent version check. The orphan/exec negative control preserved the distinction from mere current-parent matching."
+    ],
+    "notEstablished": [
+      "Build or non-build provenance of the specific Recovery33/35 candidates; their vanished identities cannot now be queried or linked to the new run.",
+      "Non-writer status, absence of job-triggered XPC activity or safe exclusion authority from PID1 original-parent consistency.",
+      "Practical strict-zero convergence after a long Rust build or persistence of zero throughout later archive operations.",
+      "Repair of the natural Recovery35 ESRCH event by the sample-bounded delayed retry. This run demonstrates controlled rechecks and a different inherited internal zombie recovery only."
+    ],
+    "requiredInterpretation": "Retain every candidate, all unknowns, the original baseline and strict final delta0. Do not grant signal authority or exclude by role, origin or negative stage-group observation. Return the evidence and unresolved limits before any long execution decision."
+  },
+  "findings": [],
+  "remainingBlockers": {
+    "completedShort": [],
+    "longQualification": [
+      "Specific previous long-run candidate provenance remains unknown.",
+      "Practical strict-zero convergence after the long Rust build remains unproven.",
+      "Natural Recovery35 task-unavailable cause and effectiveness of delayed recovery remain unproven."
+    ]
+  },
+  "limitations": [
+    "Background samples are periodic observations, not continuous-liveness or ancestry-completeness proofs. Distinct study baselines were fixed separately; no baseline was reset within a study.",
+    "Process hints and origin reads are sequential individually bound observations, not an atomic exec-state snapshot.",
+    "SDK extraction, tests and stress may trigger system services even though no Floorp build occurred.",
+    "A null fatal monitor failure and zero inventory retries/timeouts do not mean no internal task-query race occurred: the recovered authoritative zombie diagnostic was retained.",
+    "The initial baseline retained one unavailable role; recorded positive origins cannot convert that unobserved role into a provenance claim.",
+    "Recovery36 remains failed; this run does not reconstruct its missing census details. No checkpoint, consumer, resumed full host/XUL/package or actual browser/native authentication was performed.",
+    "Long execution remains on hold; the short success does not automatically activate Recovery37 or another long workflow. The original native-host exit cause remains unknown."
+  ]
+}

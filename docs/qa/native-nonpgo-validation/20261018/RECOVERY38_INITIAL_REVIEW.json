@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "scope": "Recovery38 short diagnostic initial provider binding review",
+  "decision": {
+    "initialBindings": "PASS",
+    "terminal": "PENDING",
+    "long": "NO_GO",
+    "checkpointEligibility": "NOT_ESTABLISHED"
+  },
+  "observedAtUTC": "2026-10-18T23:37:42Z",
+  "run": {
+    "id": 39177248384,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39177248384",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-inventory-recovery38-20261018",
+    "statusAtObservation": "in_progress",
+    "job": 117822346436,
+    "jobs": 1,
+    "runner": "macos-15-intel"
+  },
+  "fixture": {
+    "commit": "cf8d724dc817796e1cc36e3c5d0729721fb9c924",
+    "tree": "105c765cc406bdb808fe02b91e20147a612e7e69",
+    "parent": "9c1db4a082167fc055a498dcec96f5d8072fd540",
+    "providerChangedFiles": 12,
+    "all12ProviderBlobIDsMatchReviewedLocalBytes": true,
+    "allFiveChangedSourceContentsIndependentlyFetchedAndSHA256Matched": true,
+    "productionFilesNotChanged": true
+  },
+  "caller": {
+    "commit": "55d51f051dd3c370308acb7764d49a325840da86",
+    "tree": "797d814f963fb4f7021fa318ff2845218e9cc612",
+    "parent": "e3992d5e9842277ee8a8d65e67330ba827fd1865",
+    "changedFiles": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "renderedWorkflowBytes": 3439,
+    "renderedWorkflowSHA256": "e3c029ea04fa4452d20ffba29187f0575b418f33751cda49697b9ab02224a965",
+    "providerWorkflowMatchesReviewedTemplateWithOnlyFixturePlaceholderRendered": true
+  },
+  "prelaunchReview": {
+    "bytes": 10822,
+    "sha256": "0083872045eafb407e9ff15d7fe7439f42fb3853094f6ddce73b6f27230d525c"
+  },
+  "startup": {
+    "initialPushGuard": "success",
+    "immutableCheckout": "success",
+    "clockInitialization": "success",
+    "sdkAcquisition": "in_progress at initial jobs read",
+    "ownedActiveRunsInLatest100": [
+      39177248384
+    ],
+    "ownedQueuedRunsInLatest100": []
+  },
+  "sdkMetadata": {
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "headSHA": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sizeBytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "ordinaryAcquisitionAndContentVerificationStillRequired": true
+  },
+  "terminalGates": [
+    "321 actual Mac tests, zero skips and complete safe held-child control diagnostic",
+    "SDK verification, five fresh strict selection repetitions and unchanged strict stress",
+    "Original-parent control, exact known-child cleanup and13 background/origin observations",
+    "All started groups verified gone, all exact leaders reaped, no cleanup failure and no artifact"
+  ],
+  "limitations": [
+    "Initial metadata and immutable bindings do not establish terminal success.",
+    "A passing short diagnostic does not clear a long trial. Candidate origin and strict-zero feasibility need evidence; PID1 consistency alone is not non-writer or job-independence proof.",
+    "Recovery36 remains failed, and its missing internal census delta cannot be reconstructed.",
+    "Active-run observation covers the latest100 workflow runs; no run, upload, source edit or permission change was performed by this review."
+  ]
+}

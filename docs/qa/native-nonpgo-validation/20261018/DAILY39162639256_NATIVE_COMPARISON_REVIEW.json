@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "scope": "Read-only independent review of existing daily Intel native evidence, separate from Recovery38 and checkpoint qualification",
+  "decision": {
+    "comparison": "ACCEPTED_WITH_STATED_LIMITS",
+    "newBlockingFindings": 0,
+    "P1": 0,
+    "P2": 0,
+    "sameUnderlyingCause": "NOT_ESTABLISHED",
+    "nativeAuthentication": "NOT_QUALIFIED",
+    "checkpointQualification": "NOT_ESTABLISHED",
+    "longExecution": "ON_HOLD"
+  },
+  "comparisonBinding": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/DAILY39162639256_NATIVE_COMPARISON.json",
+    "bytes": 12937,
+    "sha256": "06264c12e5071cff6b9699a00f40ddd72ed48084278fcf5acfa8ae71c63f5784"
+  },
+  "providerBindings": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39162639256,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39162639256",
+    "attempt": 1,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runConclusion": "failure",
+    "jobs": {
+      "total": 38,
+      "success": 16,
+      "skipped": 21,
+      "failure": 1
+    },
+    "intelJob": 117820798341,
+    "runner": "macos-15-intel",
+    "jobStartedAt": "2026-10-18T23:29:21Z",
+    "jobCompletedAt": "2026-10-18T23:32:08Z",
+    "firstFailedStep": 11,
+    "decodedIntelLog": {
+      "bytes": 52011,
+      "sha256": "90eb46958f3ca845cde6a09249b13b802e7e489539232ad5e7c8a69a4b17cf7c",
+      "rawPublished": false
+    }
+  },
+  "independentVerification": [
+    "Fetched provider run, all38 jobs, artifact collection and decoded Intel job log; counts, conclusion, step ordering and log hash match the comparison.",
+    "Fetched immutable context-menu, test-runtime helper and verifier workflow source and independently matched all three hashes.",
+    "Fetched the old pinned helper at cbe45a7d7480d713b2c40a9ed348420126e6ccb0 and confirmed exact content equality with the daily helper, not merely matching class snippets.",
+    "Verified the already-local compact ZIP against the official artifact size/digest; checked all five member byte counts/hashes against the comparison and saved members.",
+    "Decoded the context result from the provider log and compared it exactly with the existing artifact result: one matching object.",
+    "Read immutable f5bca1ae Recovery2 terminal result and startup diagnosis and checked the old native failure and launcher/adoption limits.",
+    "Confirmed local raw/private files use mode0600; published comparison contains selected technical facts without signed URLs, raw logs/artifacts, process identities or internal conversation."
+  ],
+  "immutableSources": {
+    "contextMenu": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "path": "tools/app-shim/test-context-menu.py",
+      "bytes": 10299,
+      "sha256": "918c1db8904604d9b8f123aac232b66c9ada9bdde0abf1485eab2ac9eb5c8924"
+    },
+    "dailyAndOldPinnedHelper": {
+      "repository": "Floorp-Projects/Floorp",
+      "dailyCommit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "oldPin": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "path": "tools/app-shim/test-runtime.py",
+      "bytes": 47527,
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "fullContentsExactlyEqual": true
+    },
+    "workflow": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/verify-runtime-artifact.yml",
+      "bytes": 29147,
+      "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7"
+    },
+    "oldTerminal": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "f5bca1ae0542130b56874c382e687e249572dbe4",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_EXECUTION_RESULT.json",
+      "bytes": 65766,
+      "sha256": "39c0ee6f2c84dac2c2bd77d9b012c7ac5b43c9aca9d35466285bfacc3f03cbf1"
+    },
+    "oldDiagnosis": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "f5bca1ae0542130b56874c382e687e249572dbe4",
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_STARTUP_DIAGNOSIS.json",
+      "bytes": 5761,
+      "sha256": "01c7e2a06246f4ded936719c90faff4231d0b77a5bff6c0ad75e6313d4674dc8"
+    }
+  },
+  "existingCompactArtifact": {
+    "id": 12154687607,
+    "name": "native-pwa-x86_64-39162639256-1",
+    "bytes": 6836,
+    "zipSHA256": "8859297d0f8608de3d6625c7a97548b3fde55ced0fc7ce5aedcf0220a4dca301",
+    "providerExpired": false,
+    "members": 5,
+    "allMemberHashesMatch": true,
+    "emptyBrowserLogBytes": 0,
+    "contextResultBytes": 1098,
+    "contextResultSHA256": "41a2ae8d4de81c2d346f548ac5745f1e3000ddab20d61d9b582064ed71453325",
+    "contextResultExactlyMatchesProviderLog": true,
+    "rawArtifactPublished": false
+  },
+  "sourceBoundAssessment": {
+    "initialHostConnection": "Context lines70-76 construct the host, establish Marionette and verify its session before registration and launchApp. The recorded authentication wait error establishes execution beyond those statements.",
+    "firstFunctionalFailure": "Context line87 waits for a connected observer event and emits the recorded Shim authentication timeout. PWA window/context creation and the iteration loop begin later at lines88-108.",
+    "postFailureResponsiveness": "The exception handler at lines137-143 successfully retained nativeState through Marionette after the timeout. This is a response point, not a continuous host/kernel liveness timeline.",
+    "cleanup": "The sendControl NS_ERROR_NOT_AVAILABLE exception arises afterward in lines144-156 and is separately recorded. It does not identify the cause of the missing connected event.",
+    "observerScope": "Empty crashes/failures arrays are the selected browser observer state. They do not prove Shim launch success, absence of a native Shim crash, accepted signing or successful handshake.",
+    "guiFollowUp": {
+      "conclusion": "NOT_ESTABLISHED_AS_EXECUTED; source-bound inference is that it was not reached",
+      "evidence": "Verifier workflow set-euo-pipefail at line500; context-menu command at lines662-664 exits1, preceding test-runtime at lines665-667. The compact artifact has no GUI report. This is ordering evidence, not a separate successful GUI test."
+    },
+    "oldFailure": "The old native-cause guard reported cause-host-exited before adoption, with firstCause null. Under the identical old helper, poll at lines199-200 can return the open launcher status while pid is unobserved. This does not prove actual spontaneous browser exit.",
+    "crossRunConclusion": "Same Runtime base and identical helper bytes support a useful code comparison, but daily reached a later authentication boundary. No common root cause or interchangeable qualification cohort is established."
+  },
+  "remainingEvidenceNeeded": [
+    "Pre-cleanup launcher status must be separated from a verified browser identity, browser kernel exit code/signal and cleanup-requested signals.",
+    "A verified Shim identity and launch/exit status, connected event or earliest handshake rejection are needed to distinguish missing launch, early death, rejected authentication, delay and other causes.",
+    "Keep the first functional failure and observer state separately from cleanup errors, with unknowns retained when collection fails.",
+    "Verify effective binary/configuration/patch/SDK/toolchain/signature provenance before attributing a common cause or substituting daily artifact success for dedicated QA qualification."
+  ],
+  "limitsAndEffects": {
+    "newCIStarted": 0,
+    "newArtifactStored": 0,
+    "newDownloadByReviewer": 0,
+    "largeBinaryDownloadedOrInspected": false,
+    "signingOrPermissionChanges": false,
+    "sourceChanges": false,
+    "recovery38FrozenEvidenceChanged": false,
+    "oldNativeExitCause": "UNKNOWN",
+    "actualDailyShimFailureCause": "UNKNOWN",
+    "contextIterationsCompleted": "NOT_REACHED by source-bound inference; no results array or count recorded",
+    "sameProcessAsPreliminaryRenderingProved": false,
+    "noLongActivationFromThisReview": true
+  }
+}

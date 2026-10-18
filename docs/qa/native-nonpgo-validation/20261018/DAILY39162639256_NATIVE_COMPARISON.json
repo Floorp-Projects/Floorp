@@ -1,0 +1,316 @@
+{
+  "schema": 1,
+  "scope": "READ_ONLY_DAILY_NATIVE_COMPARISON_SEPARATE_FROM_CHECKPOINT_QUALIFICATION",
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39162639256,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39162639256",
+    "attempt": 1,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "jobs": {
+    "total": 38,
+    "success": 16,
+    "skipped": 21,
+    "failure": 1,
+    "platformBuilds": [
+      {
+        "id": 117779052224,
+        "name": "Linux x86_64 / Linux x86_64  Debug / Build linux-x86_64",
+        "conclusion": "success"
+      },
+      {
+        "id": 117779057756,
+        "name": "Linux aarch64 / Linux aarch64  Debug / Build linux-aarch64",
+        "conclusion": "success"
+      },
+      {
+        "id": 117779058510,
+        "name": "Windows x86_64 / Windows x64 Debug / Build windows-x86_64",
+        "conclusion": "success"
+      },
+      {
+        "id": 117779176963,
+        "name": "Mac build / part1-aarch64 / Build mac-aarch64",
+        "conclusion": "success"
+      },
+      {
+        "id": 117779177051,
+        "name": "Mac build / part1-x86_64 / Build mac-x86_64",
+        "conclusion": "success"
+      }
+    ],
+    "nativeVerifications": [
+      {
+        "id": 117812363248,
+        "name": "Verify Linux aarch64 runtime artifact / Verify Linux/aarch64 final runtime",
+        "conclusion": "success",
+        "labels": [
+          "ubuntu-24.04-arm"
+        ]
+      },
+      {
+        "id": 117813098267,
+        "name": "Verify Linux x86_64 runtime artifact / Verify Linux/x86_64 final runtime",
+        "conclusion": "success",
+        "labels": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "id": 117815830731,
+        "name": "Verify Windows x86_64 runtime artifact / Verify Windows/x86_64 final runtime",
+        "conclusion": "success",
+        "labels": [
+          "windows-2025"
+        ]
+      },
+      {
+        "id": 117820798288,
+        "name": "Verify macOS aarch64 runtime artifact / Verify Darwin/aarch64 final runtime",
+        "conclusion": "success",
+        "labels": [
+          "macos-14"
+        ]
+      },
+      {
+        "id": 117820798341,
+        "name": "Verify macOS x86_64 runtime artifact / Verify Darwin/x86_64 final runtime",
+        "conclusion": "failure",
+        "labels": [
+          "macos-15-intel"
+        ]
+      }
+    ]
+  },
+  "intelJob": {
+    "id": 117820798341,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39162639256/job/117820798341",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-18T23:29:21Z",
+    "completedAt": "2026-10-18T23:32:08Z",
+    "firstFailedStep": {
+      "name": "Verify macOS universal final runtime natively",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 11,
+      "started_at": "2026-10-18T23:29:52Z",
+      "completed_at": "2026-10-18T23:32:02Z"
+    },
+    "artifactId": 12154179350,
+    "artifactName": "floorp-mac-universal-moz-artifact",
+    "packagedBuildId": "20261018201738",
+    "nativeOS": "15.7.9",
+    "architecture": "x86_64",
+    "decodedJobLog": {
+      "bytes": 52011,
+      "sha256": "90eb46958f3ca845cde6a09249b13b802e7e489539232ad5e7c8a69a4b17cf7c",
+      "rawPublished": false
+    }
+  },
+  "sources": {
+    "contextMenu": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "path": "tools/app-shim/test-context-menu.py",
+      "bytes": 10299,
+      "sha256": "918c1db8904604d9b8f123aac232b66c9ada9bdde0abf1485eab2ac9eb5c8924"
+    },
+    "harness": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "path": "tools/app-shim/test-runtime.py",
+      "bytes": 47527,
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+    },
+    "workflow": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/verify-runtime-artifact.yml",
+      "bytes": 29147,
+      "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7"
+    }
+  },
+  "observations": {
+    "version": {
+      "at": "2026-10-18T23:30:44.5514450Z",
+      "applicationBuildId": "20261018201738",
+      "platformBuildId": "20261018201738"
+    },
+    "rendering": {
+      "at": "2026-10-18T23:30:56.5155510Z",
+      "success": true,
+      "dimensions": [
+        800,
+        600
+      ],
+      "screenshotSHA256": "0751ac4167e47c2ba21c1983255bb1b95983efe829cb609cf47444f120af787e",
+      "sameProcessAsContextMenuTestEstablished": false
+    },
+    "contextMenu": {
+      "reportedAt": "2026-10-18T23:32:02.0521890Z",
+      "status": "failed",
+      "requestedIterations": 20,
+      "error": "Timed out waiting for Shim authentication",
+      "nativeState": {
+        "crashes": [],
+        "failures": []
+      },
+      "cleanupError": {
+        "operation": "nsIMacWebAppService.sendControl",
+        "name": "NS_ERROR_NOT_AVAILABLE",
+        "nsresult": "0x80040111"
+      },
+      "completedIterationsRecorded": null,
+      "resultsArrayPresent": false,
+      "hostOrShimIdentityRecorded": false,
+      "firstCauseRecorded": false
+    },
+    "sourceBoundOrdering": {
+      "hostMarionetteConnectionAndVerifySession": "lines70-76 precede service identity and sealed bundle construction",
+      "launch": "lines78-86 obtain hostIdentityJSON, seal bundle, configure/registerApp/launchApp",
+      "authentication": "line87 waits up to20 seconds for a type=connected observer event",
+      "pwaWindowAndContext": "lines88-107 occur only after authentication",
+      "contextMenuIterationLoop": "line108 starts the iterations",
+      "exceptionState": "lines137-143 retain the first error and query the still-responsive browser through Marionette",
+      "cleanup": "lines144-156 execute after the caught authentication timeout; sendControl failure is recorded separately",
+      "inferredLoopReached": false,
+      "inference": "The recorded error string is emitted by the line87 wait before the loop. There is no evidence of any context-menu iteration, nor a right-click crash in this execution."
+    },
+    "nativeGuiFollowUp": "Workflow lines662-667 run context-menu before test-runtime under the enclosing set -e shell. Context-menu exit1 stops that later invocation; it was not a completed native GUI regression.",
+    "compactArtifact": {
+      "id": 12154687607,
+      "name": "native-pwa-x86_64-39162639256-1",
+      "size_in_bytes": 6836,
+      "expired": false,
+      "digest": "sha256:8859297d0f8608de3d6625c7a97548b3fde55ced0fc7ce5aedcf0220a4dca301",
+      "created_at": "2026-10-18T23:32:03Z",
+      "expires_at": "2026-11-01T23:32:02Z",
+      "ordinaryAuthorizedDownload": true,
+      "downloadedZIPBytes": 6836,
+      "downloadedZIPMatchesProviderDigest": true,
+      "members": [
+        {
+          "kind": "context browser log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "kind": "context result",
+          "bytes": 1098,
+          "sha256": "41a2ae8d4de81c2d346f548ac5745f1e3000ddab20d61d9b582064ed71453325"
+        },
+        {
+          "kind": "development-copy.json",
+          "bytes": 26258,
+          "sha256": "63728c3c8d478c44853d80a8573fed05c039fb7657917e7950daa173fe8450c5"
+        },
+        {
+          "kind": "development-signature.txt",
+          "bytes": 888,
+          "sha256": "2e4a13e213cc956fa85e59e3e9a84abec7dba4d42aae791fc5c2621a53f520a9"
+        },
+        {
+          "kind": "gui-permissions.json",
+          "bytes": 87,
+          "sha256": "c74ab829b7261ddfff6d8d6fbe61a331130d2cb0a24dc0823db4e053056aad25"
+        }
+      ],
+      "contextResultMatchesJobSummary": true,
+      "browserLogBytes": 0,
+      "developmentCopy": {
+        "sourceArtifactUnmodified": true
+      },
+      "guiPermissions": {
+        "eventPosting": true,
+        "screenCapture": true,
+        "permissionPromptOpened": false
+      },
+      "qualification": "Permission flags and ad-hoc copy verification do not establish Shim launch, handshake acceptance, uninterrupted host liveness or successful authentication."
+    }
+  },
+  "comparison": {
+    "oldRun": {
+      "run": 39020119793,
+      "job": 117360090798,
+      "native": {
+        "contextMenu": null,
+        "errorCode": "native-cause-exit",
+        "firstCause": null,
+        "firstFailureSnapshot": {
+          "cleanupComplete": true,
+          "errorCode": "cause-host-exited",
+          "phase": "host",
+          "status": "failed"
+        },
+        "gui": null,
+        "status": "failed"
+      },
+      "scope": {
+        "configure": "PASS",
+        "fullBuild": "PASS",
+        "fullHostTU": "PASS_MH_OBJECT",
+        "linkedXUL": "PASS_MH_DYLIB",
+        "adHocValidationCopy": "PASS_VERIFY",
+        "nativeCause": "FAIL_REPORTED_HOST_EXIT_BEFORE_MARIONETTE",
+        "nativeContext20": "NOT_RUN",
+        "nativeGUI": "NOT_RUN",
+        "nativeAuth": "NOT_QUALIFIED",
+        "productQualification": false
+      },
+      "cause": "UNKNOWN_NOT_RECORDED",
+      "sourceRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "evidenceCommit": "f5bca1ae0542130b56874c382e687e249572dbe4",
+      "resultPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_EXECUTION_RESULT.json",
+      "diagnosisPath": "docs/qa/native-nonpgo-validation/20261017/RECOVERY2_STARTUP_DIAGNOSIS.json"
+    },
+    "harnessBytesExactlySameSHA256AsOldPinnedHarness": true,
+    "sameRuntimeBase": true,
+    "materiallyDifferent": [
+      "The old execution was the dedicated full-host/XUL non-PGO debug QA route with its first-cause source patch; daily verifies a separately built final universal artifact and its disposable ad-hoc copy.",
+      "The daily context harness commit differs from the QA harness pin; its test-runtime helper bytes happen to match the old pinned helper. Daily does not contain the later QA harness startup repair or the dedicated QA first-cause orchestration.",
+      "Old reported failure occurred before Marionette/browser adoption. Daily's context test passed connection and verify_session, invoked launchApp and then timed out waiting for connected."
+    ],
+    "oldGuardLimit": "Before adoption the old helper poll() returns /usr/bin/open.poll() at lines199-200, so cause-host-exited did not prove actual browser death. Launcher exit code and actual browser exit cause were not preserved.",
+    "strongestNewInference": "For daily Intel, generic startup/rendering succeeded in the preliminary checks and the context-test browser answered Marionette beyond launchApp. The first recorded functional failure is missing Shim connected at the authentication boundary, before PWA window/context-menu delivery. Cleanup sendControl unavailability is subsequent evidence; it is not the original timeout cause.",
+    "sameUnderlyingCauseEstablished": false,
+    "notEstablished": [
+      "Shim executable launched successfully or remained alive.",
+      "Missing connected resulted from launch failure, early Shim exit, handshake rejection, scheduling delay or another cause.",
+      "The empty observer crash/failure arrays prove no native Shim crash or no signing/authentication rejection.",
+      "The old browser exited spontaneously, or the old failure shares this timeout's cause.",
+      "A continuous host liveness timeline or exact pre-cleanup host/Shim exit statuses.",
+      "Twenty context-menu iterations completed, or the later GUI suite ran.",
+      "The daily artifact qualifies the dedicated patched full-host/XUL non-PGO route."
+    ]
+  },
+  "nextEvidenceNeeded": [
+    "Retain pre-cleanup launcher status separately from a verified full browser identity and kernel exit status.",
+    "Bind Shim identity and record its launch/exit outcome plus authenticated connection or the earliest handshake failure.",
+    "Keep the original functional error, observer states and cleanup errors separately; preserve first-cause data even when cleanup or state collection fails.",
+    "Compare host/Shim binary, build/configuration, bundle/signature requirements and exact harness/source pins before attributing a common cause."
+  ],
+  "effects": {
+    "newCIStarted": 0,
+    "duplicateRunsStarted": 0,
+    "newArtifactsStored": 0,
+    "existingCompactArtifactDownloads": 1,
+    "productSigningPerformed": false,
+    "permissionsOrAuthenticationSettingsChanged": false,
+    "checkpointEligibilityEstablished": false,
+    "longExecution": "ON_HOLD",
+    "nativeAuthenticationQualification": "NOT_ESTABLISHED",
+    "originalExitCause": "UNKNOWN"
+  },
+  "privacy": {
+    "publishedRawLog": false,
+    "publishedRawArtifact": false,
+    "publishedSignedURL": false,
+    "publishedPrivateProcessIdentities": false,
+    "publishedInternalConversation": false
+  }
+}
