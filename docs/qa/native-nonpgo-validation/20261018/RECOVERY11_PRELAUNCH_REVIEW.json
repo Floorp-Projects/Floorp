@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "decision": "GO_FOR_ONE_FOCUSED_INTEL_MAC_RECHECK_AND_DURABLE_DIAGNOSTIC_JOB",
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "binding": {
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "fixtureCommit": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+    "baseReviewedPatch": "4ee7ba2b6552cd25b825a2e28178907b453afc40",
+    "preparation": {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY11_PREPARATION.json",
+      "bytes": 2200,
+      "sha256": "b415b2567b134fcb8b389e9b73bb0c527e1e1dc92fe8d85de19915bd47de5d7c"
+    },
+    "deltaFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+        "bytes": 5357,
+        "sha256": "94228ce441b62cf2cb3fd30aa3f728ea8dc9919ab9d9ff639e09cb3ff7e782e2"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 25486,
+        "sha256": "ae5013457b9471d566fff4f6c572447604e0d4cd743176f5d82c07671901ca01"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
+        "bytes": 14918,
+        "sha256": "07a86f9c16c0311ef188cebb7d01ec78cd856a3a331ca0bc64cb8d17f40b8edf"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_mac_recheck.py",
+        "bytes": 8051,
+        "sha256": "285cbad23a49f947bbb54068c831e6242734934ae558721785f1def0bd8ec3cc"
+      }
+    ],
+    "callerRepository": "Floorp-Projects/Floorp-Runtime",
+    "providerAndLocalCallerCommit": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "equivalentEarlierCallerCommit": "c1bbccf285078f39d60f6f7c1307f907e5c98a2a",
+    "callerTree": "a79c00142e8e0c368a2383c790d8fa89defae864",
+    "workflow": {
+      "path": ".github/workflows/mac-native-generation-recheck.yml",
+      "bytes": 1909,
+      "sha256": "34580134a95321d82d9ddb5219c8f275032d75cb0eb87b87b7016e719d0c6483"
+    },
+    "providerReadback": [
+      {
+        "key": "caller",
+        "bytes": 1909,
+        "sha256": "34580134a95321d82d9ddb5219c8f275032d75cb0eb87b87b7016e719d0c6483",
+        "matchesLocal": true
+      },
+      {
+        "key": "source",
+        "bytes": 5357,
+        "sha256": "94228ce441b62cf2cb3fd30aa3f728ea8dc9919ab9d9ff639e09cb3ff7e782e2",
+        "matchesLocal": true
+      },
+      {
+        "key": "support",
+        "bytes": 25486,
+        "sha256": "ae5013457b9471d566fff4f6c572447604e0d4cd743176f5d82c07671901ca01",
+        "matchesLocal": true
+      },
+      {
+        "key": "tests",
+        "bytes": 8051,
+        "sha256": "285cbad23a49f947bbb54068c831e6242734934ae558721785f1def0bd8ec3cc",
+        "matchesLocal": true
+      },
+      {
+        "key": "record",
+        "bytes": 2200,
+        "sha256": "b415b2567b134fcb8b389e9b73bb0c527e1e1dc92fe8d85de19915bd47de5d7c",
+        "matchesLocal": true
+      }
+    ],
+    "workingTreesClean": true
+  },
+  "deltaReview": {
+    "unchangedResourceAndPinBytes": {
+      "tools/qa/native-nonpgo/darwin_activity.py": true,
+      "tools/qa/native-nonpgo/plan.json": true,
+      "tools/qa/native-nonpgo/fetch_sdk.py": true,
+      "tools/qa/native-nonpgo/native_processes.py": true,
+      "tools/qa/native-nonpgo/launch-services-host.patch": true,
+      "tools/qa/native-nonpgo/pipeline.py": true,
+      "tools/qa/native-nonpgo/owned_native.py": true
+    },
+    "durability": "Both sanitized before/after cleanup objects emit immediately as JSON with flush. Emit and collector exceptions do not replace primary failure, cleanup result or stage evidence.",
+    "normalization": "ANSI CSI stripped; quoted strings, matched URL/path/assignment tokens and unknown words redacted. Fixed-vocabulary words or Rust Edddd code shapes only, at most 48 tokens and 240 characters.",
+    "retainedBounds": "128 KiB regular-file tail and 16 retained records per snapshot. No arbitrary raw line, source context, pathname, quoted value, argv, environment or exception message is emitted.",
+    "meaning": "Canonical allowlisted wording, not verbatim diagnostic text or a failure-cause verdict.",
+    "portableCoverage": "Durable JSON phase order/snapshot equality, ANSI/value redaction, throwing collector and cleanup-only chronology."
+  },
+  "macGates": [
+    {
+      "case": "controlled-esrch-live",
+      "scope": "First ESRCH injected only; subsequent full BSD/task queries use the actual owned child and must recover same-birth measured counters."
+    },
+    {
+      "case": "controlled-esrch-owned-zombie",
+      "scope": "Real live BSD snapshot followed by pipe-gated exact child exit and WNOWAIT; require real same-birth authoritative zombie and exact child reap."
+    },
+    {
+      "case": "natural-owned-churn",
+      "scope": "720 forked children under unchanged resource monitor; at least three complete samples, no terminal monitor failure, verified group cleanup and exact leader reap."
+    },
+    {
+      "case": "actual-clang-durable-excerpts",
+      "scope": "Deliberate clang -fsyntax-only source error must preserve nonzero-exit, emit classified before/after JSON without the private sentinel and verify cleanup."
+    }
+  ],
+  "naturalObservationLimit": "naturalRaceObserved aggregates returned final-sample rechecks only; partial-sample rechecks are not counted. Zero does not prove no natural race occurred. Historical race recreation is not required for the controlled ABI/lifecycle gate.",
+  "route": {
+    "branch": "codex/mac-native-recheck-recovery11-20261018",
+    "jobCount": 1,
+    "jobId": "native-recheck",
+    "runner": "macos-15-intel",
+    "platformTimeoutMinutes": 360,
+    "permissions": {
+      "contents": "read"
+    },
+    "guards": [
+      "Exact repository",
+      "Exact ref",
+      "push event",
+      "attempt 1",
+      "created=true",
+      "before=0000000000000000000000000000000000000000"
+    ],
+    "cancelInProgress": false,
+    "python": "Runner tool-cache Python 3.12.10 x64",
+    "checkoutActionCommit": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "persistCredentials": false,
+    "sparsePaths": [
+      "tools/qa/native-nonpgo",
+      "tools/app-shim"
+    ],
+    "testModules": [
+      "test_owned_cleanup",
+      "test_native_processes",
+      "test_ps_lifetime",
+      "test_guards",
+      "test_failure_recovery",
+      "test_mac_recheck"
+    ],
+    "workflowFilesInspected": 26,
+    "otherMatchingPushCreateOrWorkflowRunTriggers": 0,
+    "existingDedicatedBranchRuns": 0,
+    "treeVsRuntimeBase": "Prior full-validation workflow plus this diagnostic workflow; the former does not match this diagnostic branch.",
+    "SDKDownload": false,
+    "fullHostOrXULBuild": false,
+    "newArtifactUpload": false,
+    "productSigningOrPublication": false,
+    "permissionExpansion": false
+  },
+  "validation": {
+    "portable": {
+      "total": 118,
+      "passed": 111,
+      "skipped": 7,
+      "elapsedSeconds": 4.831,
+      "includesDurableJSONPhaseOrderAndRedaction": true,
+      "provenance": "Recorded in the immutable preparation manifest; full suite not rerun by reviewer."
+    },
+    "reviewerChecks": [
+      "Full delta and four actual-Mac gate implementations",
+      "Four manifest file hashes",
+      "Resource/plan/helper/harness byte equality to reviewed base",
+      "Python AST and YAML syntax",
+      "Provider caller commit/tree and workflow/source/preparation bytes",
+      "Other workflow triggers and branch-run lookup"
+    ],
+    "candidateMacExecution": "NOT_EXECUTED at review time; seven actual-Mac tests remain skipped on Linux."
+  },
+  "acceptanceBeforeFullValidation": [
+    "All 118 actual-Mac tests pass without skips or meaningful unresolved findings.",
+    "Actual-clang-error before-cleanup and after-cleanup failureExcerpt JSON events are present in job output with expected classification.",
+    "Private compiler sentinel and prohibited values are absent from public emitted evidence.",
+    "Controlled injection and final-sample natural observations retain their stated limits.",
+    "Current official SDK metadata/expiry must be rechecked at acquisition for the separately pinned full validation."
+  ],
+  "remainingScope": [
+    "Original ESRCH/compile-error causality remains unknown.",
+    "No full host/XUL completion or native authentication is established by this gate.",
+    "Persistent, permission and invalid resource uncertainty must remain fail-closed."
+  ],
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp/commit/1143be2b8acffa7394088bbbd9743e47c0e52315",
+    "https://github.com/Floorp-Projects/Floorp-Runtime/commit/e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs?branch=codex%2Fmac-native-recheck-recovery11-20261018&per_page=100"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "SDKDownloads": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0
+  }
+}
