@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39082226396,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082226396",
+    "head": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "branch": "codex/mac-native-recheck-recovery11-20261018",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-18T00:17:35Z",
+    "updatedAt": "2026-10-18T00:18:21Z"
+  },
+  "job": {
+    "id": 117541367131,
+    "status": "completed",
+    "conclusion": "success",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-18T00:17:41Z",
+    "completedAt": "2026-10-18T00:18:20Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-18T00:17:41Z",
+        "completed_at": "2026-10-18T00:17:43Z"
+      },
+      {
+        "name": "Bound the initial diagnostic execution",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-18T00:17:43Z",
+        "completed_at": "2026-10-18T00:17:44Z"
+      },
+      {
+        "name": "Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-18T00:17:44Z",
+        "completed_at": "2026-10-18T00:17:49Z"
+      },
+      {
+        "name": "Verify kernel generation rechecks churn and durable compiler excerpts",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-18T00:17:49Z",
+        "completed_at": "2026-10-18T00:18:15Z"
+      },
+      {
+        "name": "Post Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-10-18T00:18:15Z",
+        "completed_at": "2026-10-18T00:18:16Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-10-18T00:18:16Z",
+        "completed_at": "2026-10-18T00:18:17Z"
+      }
+    ]
+  },
+  "fixture": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+  "caller": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+  "tests": {
+    "total": 118,
+    "passed": 118,
+    "skipped": 0,
+    "seconds": 25.445
+  },
+  "macGates": [
+    {
+      "case": "natural-owned-churn",
+      "samples": 13,
+      "complete": 13,
+      "esrchRechecks": 0,
+      "forkedChildren": 720,
+      "initialESRCHInjected": false,
+      "naturalRaceObserved": false,
+      "groupCleanup": "verified-gone",
+      "leaderReaped": true
+    },
+    {
+      "case": "actual-clang-durable-excerpts",
+      "realCompilerError": true,
+      "beforeAndAfterPresent": true,
+      "freeTextPublished": false,
+      "leaderReaped": true
+    },
+    {
+      "case": "controlled-esrch-live",
+      "actualKernelQueries": true,
+      "initialESRCHInjected": true,
+      "sameGeneration": true,
+      "result": "measured"
+    },
+    {
+      "case": "controlled-esrch-owned-zombie",
+      "actualKernelQueries": true,
+      "initialESRCHInjected": true,
+      "sameGeneration": true,
+      "WNOWAITExitPending": true,
+      "signalZeroSucceeded": true,
+      "result": "authoritative-zombie"
+    }
+  ],
+  "actualClangExcerpts": [
+    {
+      "stage": "actual-clang-error",
+      "phase": "before-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 244,
+        "tailBytesRead": 244,
+        "tailTruncated": false,
+        "matchingRecords": 1,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 1,
+            "kind": "source-error",
+            "messageClass": "undeclared-identifier",
+            "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+          }
+        ]
+      }
+    },
+    {
+      "stage": "actual-clang-error",
+      "phase": "after-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 244,
+        "tailBytesRead": 244,
+        "tailTruncated": false,
+        "matchingRecords": 1,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 1,
+            "kind": "source-error",
+            "messageClass": "undeclared-identifier",
+            "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+          }
+        ]
+      }
+    }
+  ],
+  "otherRealMacEvidence": [
+    {
+      "ownedZombieCleanup": {
+        "pidTag": "c6d8039ffd8309bc",
+        "identityTag": "ebeaf56a940b94a4",
+        "liveGroupBeforeExit": true,
+        "unreapedExitPending": true,
+        "signalZeroSucceeded": true,
+        "unreapedGroupProbeErrno": 1,
+        "bsdZombieIdentityMatched": true,
+        "exactLeaderReapedExitCode": 0,
+        "postReapGroupProbeErrno": 3,
+        "signalsSent": 0
+      }
+    },
+    {
+      "ordinaryNativeInventory": {
+        "sameOwnedPID": true,
+        "fullBirthAvailable": true,
+        "exactArgvMatched": true,
+        "environmentExcluded": true,
+        "candidateMatched": true,
+        "validatedZombieNotLive": true,
+        "helperProcessesStarted": 0,
+        "privilegeChanges": false
+      }
+    }
+  ],
+  "log": {
+    "bytes": 46078,
+    "sha256": "c49f41a6826748554204fcd7df933be872b0105625382dbd743acf6e07600961",
+    "rawPublished": false
+  },
+  "artifacts": [],
+  "interpretation": {
+    "durableBeforeAndAfterCompilerDiagnostic": true,
+    "sentinelPublished": false,
+    "controlledInitialESRCH": true,
+    "laterGenerationQueriesUseRealKernel": true,
+    "naturalRaceEvidenceScope": "The naturalChurn esrchRechecks count covers returned final samples, not intermediate partial samples. Zero does not prove absence of all natural races.",
+    "historicalCompilationCause": "STILL_UNKNOWN_RAW_STAGE_LOG_NOT_RETAINED",
+    "productBuild": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "permissionsExpanded": false,
+    "newArtifacts": 0,
+    "fullRunConditionalOnIndependentTerminalReview": true
+  }
+}
