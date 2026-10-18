@@ -95,7 +95,11 @@ async function runScenario() {
   let cache;
   const originalLoad = JSONFile.prototype.load;
   JSONFile.prototype.load = function (...args) {
-    if (this.path.endsWith("/floorp-workspaces-sync-manual.json")) cache = this;
+    if (
+      PathUtils.filename(this.path) === "floorp-workspaces-sync-manual.json"
+    ) {
+      cache = this;
+    }
     return originalLoad.apply(this, args);
   };
   let unregister;
