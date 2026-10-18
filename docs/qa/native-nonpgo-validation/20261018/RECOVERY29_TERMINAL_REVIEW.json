@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "review": "Recovery29 terminal evidence",
+  "decision": "NO_GO_LONG; TEST_REPEAT_AND_STRESS_GATES_INCOMPLETE",
+  "run": {
+    "id": 39156840028,
+    "job": 117761700282,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "fixture": "4cdb788c12cbe3172786062e52e5cfaf6dd0fab8",
+    "caller": "55f924ccbe43f565adb7131d8463a5f9bad4847d",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "startedAt": "2026-10-18T19:01:34Z",
+    "completedAt": "2026-10-18T19:02:50Z"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_TERMINAL_RESULT.json",
+    "bytes": 11131,
+    "sha256": "ebe4dafd3cf61ca89ce265d62b2338a26bc19f876dbdb99098b5279cda7600d6"
+  },
+  "independentChecks": {
+    "readOnlyAPI": [
+      "run",
+      "jobs",
+      "decoded job log",
+      "artifacts"
+    ],
+    "providerExperimentExactReceiptMatch": true,
+    "providerJobLogExactSavedMatch": true,
+    "artifactCount": 0
+  },
+  "observed": {
+    "tests": {
+      "total": 279,
+      "passed": 278,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 50.035,
+      "privateTestLogSHA256": "5eee4a3ed7cec9e355c9492f29349e4a14056d52e1b2fc78677e8b9451a8b3c9"
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 71.52
+    },
+    "monitorFailure": null,
+    "soleFailure": {
+      "test": "test_native_processes.NativeInventoryGuards.test_real_mac_child_identity_and_argc_without_environment_or_ps",
+      "file": "tools/qa/native-nonpgo/test_native_processes.py",
+      "line": 143,
+      "exceptionType": "AssertionError",
+      "predicate": "Initial single-PID native argv tuple equals the literal Popen command tuple."
+    },
+    "diagnostic": {
+      "schema": 1,
+      "status": "failed",
+      "phase": "initial-row",
+      "readyAcknowledged": true,
+      "candidateListed": null,
+      "targetFiltered": null,
+      "targetBirthMatched": null,
+      "targetPathMatched": null,
+      "targetArgvMatched": null,
+      "filteredBirthMatched": null,
+      "filteredArgvMatched": null,
+      "exactRowIncluded": null,
+      "leaderReaped": true,
+      "groupGone": true,
+      "streamCloseFailed": false,
+      "selectionFailureTargetsChild": null,
+      "candidateCount": null,
+      "filteredCount": null,
+      "targetBSDReads": 0,
+      "targetGoneReads": 0,
+      "targetPathReads": 0,
+      "targetArgvReads": 0,
+      "beforeState": null,
+      "afterState": null,
+      "beforeErrno": null,
+      "afterErrno": null,
+      "selectionAPI": null,
+      "selectionErrorKind": null,
+      "selectionErrno": null,
+      "cleanupFailureKind": null
+    },
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "cleanupFailure": null
+      }
+    ],
+    "actualSelectionReached": false,
+    "candidateRepeatsReached": false,
+    "stressReached": false,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "checkpointStored": false,
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "interpretation": {
+    "established": "The controlled child acknowledged readiness; the initial native argv differed from the launch literal. The differing argument or count is not retained.",
+    "cause": "UNKNOWN: argv0 rewrite, tail difference and argument-count mismatch are not distinguished by this receipt.",
+    "monitorLimit": "No fatal monitor stop occurred. monitorFailure=null does not prove that no recovered inventory timeout/race occurred.",
+    "historicalLimit": "This later initial-row mismatch does not identify Run27\u2019s inclusion predicate or explain the Run26/Run28 helper timeouts.",
+    "gateLimit": "The candidate-selection wrapper, fresh-process repetitions and load test were not reached; no stable short-gate success can be claimed."
+  },
+  "nextContractAssessment": {
+    "status": "The proposed controlled-test comparison is reasonable pending implementation review and real Mac validation.",
+    "requirements": [
+      "Use a bounded private acknowledgement carrying the exact child sys.orig_argv; publish only schema-checked equality booleans.",
+      "Require native argv to equal the child interpreter orig_argv, require exact argument count and launch flags/script tail, and retain the existing native argv0-to-current-executable canonical check.",
+      "Treat argv0 equality to the launcher path, including canonical equality, as diagnostic information: the launcher may execute a distinct framework binary.",
+      "Keep exact child identity/lifetime, strict subsequent cross-selection row inclusion, API permissions, retries, unknown behavior and cleanup unchanged."
+    ],
+    "reason": "CPython 3.12.10 Mac/Tools/pythonw.c assigns argv[0]=exec_path and executes the framework interpreter using SETEXEC/execve. This is a legitimate mechanism, not proof of which argument differed here."
+  },
+  "sources": [
+    {
+      "url": "https://github.com/python/cpython/blob/v3.12.10/Mac/Tools/pythonw.c#L200",
+      "supports": "Mac launcher rewrites argv0 before executing the framework interpreter."
+    },
+    {
+      "url": "https://docs.python.org/3.12/library/sys.html#sys.orig_argv",
+      "supports": "sys.orig_argv preserves arguments passed to the Python interpreter, including interpreter arguments."
+    }
+  ],
+  "reviewerActions": {
+    "readOnlyEvidence": true,
+    "newRunActivated": false,
+    "sourceEdited": false,
+    "sdkDownloaded": false,
+    "published": false
+  }
+}

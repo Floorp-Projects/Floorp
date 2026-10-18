@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "review": "Recovery30 controlled argv contract and same-content SDK verification",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longTrial": "NO_GO",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "baselineFixture": "4cdb788c12cbe3172786062e52e5cfaf6dd0fab8",
+  "contentBindings": {
+    "tools/qa/native-nonpgo/native_selection_diagnostic.py": {
+      "bytes": 8047,
+      "sha256": "f4a009cd3283908c94079ea2b464217535b4723d7d2320f21cf2d157be5857b3"
+    },
+    "tools/qa/native-nonpgo/test_native_selection_diagnostic.py": {
+      "bytes": 8860,
+      "sha256": "4f19dcb1ffdcb1c135f0d910526373cf83afb31c369d756c45d604c8058aedb8"
+    },
+    "tools/qa/native-nonpgo/test_native_processes.py": {
+      "bytes": 9296,
+      "sha256": "02d6994d898d134c62f44c783a09a62a599df9594491a136f6c2e7b9b80f5e01"
+    },
+    "tools/qa/native-nonpgo/census_experiment.py": {
+      "bytes": 12793,
+      "sha256": "d5a7ec8fc2017107529ba1bb213b9e76792f7ebea9e189296b2716999dbea7dc"
+    },
+    "tools/qa/native-nonpgo/test_census_experiment.py": {
+      "bytes": 4412,
+      "sha256": "ca0ca5edb8d12c038a120a4fbb1650b32314a8037da220c4548897645553a984"
+    },
+    "tools/qa/native-nonpgo/plan.json": {
+      "bytes": 25898,
+      "sha256": "0e6bd64cffb9265b8b887a6b7ff31a8a9ffbe3a64388d6e0057202a3021a14a1"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_ARGV_SDK_WORKFLOW.yml.disabled": {
+      "bytes": 3381,
+      "sha256": "dc260f2e6150566ae22c4f356cf3c764be5fae3f69aa32214114418aee165c2d"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_ARGV_SDK_VERIFICATION.md": {
+      "bytes": 4123,
+      "sha256": "cc3fceaed2f15369c99f0a9807954dc2c91c361bccb32fde83d9c1e1be5261d0"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_LOCAL_RESULT.json": {
+      "bytes": 738,
+      "sha256": "dfc2cfd7d2888b7d2af4fefd0d25ca66ab7509f7d25c5f787db054a336df3518"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/SDK_12133086104_VERIFICATION.json": {
+      "bytes": 1262,
+      "sha256": "10ab568d3e6fd52a94794b461cc82c52bdf06a9cefc046e977052d530577d7af"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/SDK_12133086104_REVIEW.json": {
+      "bytes": 4508,
+      "sha256": "4107301e120f4c791fd545fa9923a1ae09e88e28ff35902db70d2807a75c2029"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_TERMINAL_RESULT.json": {
+      "bytes": 11131,
+      "sha256": "ebe4dafd3cf61ca89ce265d62b2338a26bc19f876dbdb99098b5279cda7600d6"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_TERMINAL_REVIEW.json": {
+      "bytes": 6347,
+      "sha256": "7267071a5cdb53e8cf9081ed5db5b3af15d87b8cc4743d5e94c4d3bbff9e182f"
+    }
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 282,
+    "passed": 268,
+    "skipped": 14,
+    "seconds": 9.497,
+    "exitCode": 0,
+    "sourceUnchanged": true,
+    "logSHA256": "5aab867c47ccfe59f7884adf84c4d7548b09a23b5037c35a92bceb2e13bd0358",
+    "syntax": {
+      "workflowYAML": "passed",
+      "bashScripts": 5,
+      "inlinePythonAST": 1
+    },
+    "additionalActualTestBodyChecks": "Portable injected launcher argv0 rewrite passes only with child orig_argv, exact launch tail and current native executable agreement; mismatching child ACK tail fails and safely retains diagnostics.",
+    "actualMac": "Pending; Darwin tests were skipped on Linux."
+  },
+  "resolvedFinding": {
+    "severity": "P2",
+    "area": "SDK acquisition evidence before early failure",
+    "resolution": "Requested SDK acquisition starts as null/unverified, with a separate requested flag. It becomes true after validating the acquisition receipt. Only an unrequested acquisition starts false. The actual main early-failure test covers both requested and unrequested cases."
+  },
+  "argvAssessment": {
+    "contract": "Native argv must equal the bounded private child sys.orig_argv; launch count and flags/script tail must match exactly. Native argv0 must canonically match current proc_pidpath. Launcher argv0 text/canonical equality is diagnostic only.",
+    "why": "CPython 3.12.10 Mac launcher explicitly replaces argv0 with a distinct framework interpreter before SETEXEC/execve.",
+    "preserved": "Production NativeProcesses discovery is unchanged. Exact child lifetime, task/BSD generation/path checks, the actual selection wrappers and strict subsequent complete-row inclusion remain.",
+    "privacy": "Schema2 publishes bool/null comparisons, bounded counters and fixed classifications only. The private ACK is byte-bounded, exact-key checked and excludes environment fields; malformed/oversized input fails."
+  },
+  "sdkAssessment": {
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "attempt": 1,
+    "sourceConclusion": "success",
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "independentContent": "Official metadata and local ZIP/TAR hashes, CRC/single entry, canonical 49701-member tree and Version 26.5 matched. All 760518144 decompressed TAR bytes directly matched the old c633-pinned archive.",
+    "planDelta": "Only artifact/run/expiresObserved/zipSHA256/tarSHA256 changed.",
+    "acquisition": "Existing official API, acquisition-time expiry, HTTP failure handling, 600-second download deadline and all ZIP/TAR/tree/version checks remain.",
+    "materialization": "The existing materialize.py is byte-identical to the baseline and enforces TAR hash, canonical tree, safe extraction and actual plist Version. The new monitored route reports success only after its exit-zero validation.",
+    "materializeSHA256": "61847df5681ad80fa4492716ed7553456c2aed4fe7ac5b978d53af824a58f6db",
+    "permissionsAndRetentionChanged": false,
+    "reviewerDownloadedPayload": false
+  },
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery30-20261018",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "sdkAcquisition": true,
+    "sdkMaterialization": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "SDKToken": "Only the SDK acquisition step receives SDK_READ_TOKEN; it is not a workflow-global environment value."
+  },
+  "monitoring": "The three reviewed Recovery29 monitoring/protocol source files are byte-identical. timeout=3, three attempts, retry gaps, null unknown values, resource ceilings, fixed phase evidence and exact owned cleanup remain.",
+  "activationConditions": [
+    "Bind and read back all 13 files and the rendered caller workflow at immutable commits; render only the reviewed fixture SHA placeholder.",
+    "Confirm a fresh unused recovery30 branch, zero prior branch runs and no overlapping owned validation; preserve initial-push/created/before-zero/attempt-one guards.",
+    "Fresh-check official SDK metadata and acquire through the existing unexpired ordinary API path; do not bypass expiry or change retention/permissions.",
+    "Require actual Mac 282 passes with zero skips, successful SDK materialization, five fresh-process candidate tests each with one passed diagnostic, the unchanged CPU/RSS/churn gate and known-child/background observations.",
+    "Review the successful safe terminal receipt, including firstFailure/monitorFailure null and verified cleanup, before any long-trial decision."
+  ],
+  "historicalLimits": [
+    "Run29 proves an initial native-argv/launch-literal mismatch after readiness, but the differing argument was not retained. The Mac launcher mechanism supports this corrected test contract; it does not identify the historical differing value.",
+    "Run27 candidate-inclusion cause remains UNKNOWN. Run26 external ps and Run28 replacement-helper timeouts remain distinct implementation stops with no established shared cause.",
+    "A passing controlled short run cannot prove multi-hour monitor stability, checkpoint eligibility, full host/XUL completion or native authentication."
+  ],
+  "primarySources": [
+    "https://github.com/python/cpython/blob/v3.12.10/Mac/Tools/pythonw.c#L200",
+    "https://docs.python.org/3.12/library/sys.html#sys.orig_argv"
+  ]
+}

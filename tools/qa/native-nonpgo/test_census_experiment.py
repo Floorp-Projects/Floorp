@@ -2,6 +2,8 @@
 import contextlib
 import io
 import json
+import sys
+import time
 from pathlib import Path
 import subprocess
 import tempfile
@@ -14,6 +16,20 @@ from support import Failure
 
 
 class ExperimentCleanup(unittest.TestCase):
+    def test_early_failure_preserves_unverified_requested_sdk_as_unknown(self):
+        for requested in (False,True):
+            with tempfile.TemporaryDirectory() as temporary,contextlib.redirect_stdout(io.StringIO()):
+                task=Path(temporary);(task/'started').write_text(str(time.time()))
+                argv=['census_experiment.py','--task',str(task),'--expected-tests','282']
+                if requested:argv.append('--verify-sdk')
+                with mock.patch.object(sys,'argv',argv),mock.patch.object(ce.sys,'platform','linux'):
+                    self.assertEqual(ce.main(),1)
+                value=json.loads((task/'census-experiment.json').read_text())
+            self.assertEqual(value['sdkAcquisitionRequested'],requested)
+            if requested:self.assertIsNone(value['sdkAcquired'])
+            else:self.assertIs(value['sdkAcquired'],False)
+            self.assertEqual(value['firstFailure']['code'],'census-experiment-platform')
+
     def test_primary_unknown_receipt_survives_before_exception_propagates(self):
         value={}
         with mock.patch.object(ce,'owned_processes',side_effect=Failure('census-sysctl-permission')), \

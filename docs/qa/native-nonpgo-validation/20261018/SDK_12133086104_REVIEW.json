@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "review": "SDK 12133086104 same-content transport pin refresh",
+  "decision": "STATIC_CONTENT_AND_PROVENANCE_CLEAR",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "officialMetadata": {
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "event": "schedule",
+    "artifact": 12133086104,
+    "name": "macos-sdk",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sizeBytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "runArtifacts": {
+      "pageSize": 100,
+      "total": 34,
+      "returned": 34
+    }
+  },
+  "localContentChecks": {
+    "zipBytes": 105082683,
+    "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "zipSingleExpectedEntry": true,
+    "zipEntryUnencrypted": true,
+    "zipEntryCRCReadCompleted": true,
+    "zipEntryMatchesLocalTar": true,
+    "tarBytes": 105567985,
+    "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+    "uncompressedTarSHA256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3",
+    "tree": {
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+    },
+    "version": "26.5"
+  },
+  "oldToNewComparison": {
+    "oldCompressedTarSHA256": "c63312b0c34b464e4d5127101377c6ce29a3703351b7da1d1846a6059a99fee1",
+    "uncompressedByteForByteMatch": true,
+    "uncompressedTarBytes": 760518144,
+    "uncompressedTarSHA256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+  },
+  "plan": {
+    "baselineFixture": "4cdb788c12cbe3172786062e52e5cfaf6dd0fab8",
+    "changedKeys": {
+      "expiresObserved": {
+        "before": "2026-10-18T20:19:27Z",
+        "after": "2026-10-19T10:00:38Z"
+      },
+      "zipSHA256": {
+        "before": "99234850e98cd87ccbf77cc702cf0e76bd80ee2ad431eda6ba8dfc8427159c20",
+        "after": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889"
+      },
+      "artifact": {
+        "before": 12113511845,
+        "after": 12133086104
+      },
+      "run": {
+        "before": 39066132056,
+        "after": 39117481043
+      },
+      "tarSHA256": {
+        "before": "c63312b0c34b464e4d5127101377c6ce29a3703351b7da1d1846a6059a99fee1",
+        "after": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4"
+      }
+    },
+    "allOtherPlanFieldsIdentical": true,
+    "sha256": "0e6bd64cffb9265b8b887a6b7ff31a8a9ffbe3a64388d6e0057202a3021a14a1"
+  },
+  "guards": {
+    "fetchImplementationExactBaselineMatch": true,
+    "expiryRequiredAtAcquisition": true,
+    "ordinaryAPIAndHTTPFailureHandlingUnchanged": true,
+    "downloadDeadlineSeconds": 600,
+    "zipTarTreeVersionValidationUnchanged": true,
+    "retentionChanged": false,
+    "permissionsChanged": false,
+    "sixHoursRemainingGuardReintroduced": false
+  },
+  "verificationReceipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/SDK_12133086104_VERIFICATION.json",
+    "bytes": 1262,
+    "sha256": "10ab568d3e6fd52a94794b461cc82c52bdf06a9cefc046e977052d530577d7af"
+  },
+  "interpretation": [
+    "The already downloaded local ZIP matches the official artifact digest and contains exactly the expected unencrypted TAR entry; reading it completed CRC validation.",
+    "The compressed TAR differs from the old transport pin, while all 760518144 decompressed TAR bytes compare equal to the old c633-pinned TAR. The canonical 49701-member SDK content and Version 26.5 also match.",
+    "The fixed materialized-tree pin remains unchanged. No additional extraction was needed for the byte-for-byte decompressed TAR comparison.",
+    "Only artifact/run/observed-expiry/ZIP-hash/TAR-hash fields change. This does not establish full-build or native-authentication qualification, authorize a long trial, or change acquisition permissions."
+  ],
+  "limits": [
+    "Metadata is a point-in-time observation; expiry and ordinary API acquisition checks remain required on future fetches.",
+    "Recovery29 uses an older immutable plan and acquires no SDK; this refresh does not change that run."
+  ],
+  "reviewerActions": {
+    "readOnlyOfficialMetadata": true,
+    "readExistingLocalArchives": true,
+    "downloadedPayload": false,
+    "activatedRun": false,
+    "published": false,
+    "privateDownloadURLReadOrPublished": false
+  }
+}

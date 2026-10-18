@@ -124,14 +124,14 @@ class NativeInventoryGuards(unittest.TestCase):
     def test_real_mac_child_identity_and_argc_without_environment_or_ps(self):
         import native_selection_diagnostic as diagnostic
         details=diagnostic.fresh()
-        command = [sys.executable, '-c', "import sys;print('ready',flush=True);sys.stdin.buffer.read(1)"]
+        command = [sys.executable, '-c', "import json,sys;print(json.dumps({'ready':True,'origArgv':sys.orig_argv}),flush=True);sys.stdin.buffer.read(1)"]
         child = subprocess.Popen(command, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,start_new_session=True,
                                  env={**os.environ, 'FLOORP_TEST_PRIVATE_ENV': 'never-in-process-rows'})
         try:
             details['phase']='readiness'
             self.assertTrue(select.select([child.stdout],[],[],5)[0])
-            self.assertEqual(child.stdout.readline(),b'ready\n')
+            reported=diagnostic.child_arguments(child.stdout.readline(65537))
             details['readyAcknowledged']=True
             details['phase']='initial-row'
             inventory = NativeProcesses()
@@ -140,10 +140,15 @@ class NativeInventoryGuards(unittest.TestCase):
                 rows = inventory.rows(child.pid)
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0][0], child.pid)
-            self.assertEqual(rows[0][2], tuple(command))
+            path = inventory.path(child.pid)
+            diagnostic.initial_arguments(rows[0][2],command,reported,path,details)
+            self.assertTrue(details['initialArgvCountMatches'])
+            self.assertTrue(details['initialArgvTailMatches'])
+            self.assertTrue(details['childOrigArgvTailMatches'])
+            self.assertTrue(details['initialArgv0MatchesNativePath'])
+            self.assertEqual(rows[0][2],reported)
             self.assertNotIn('never-in-process-rows', rows[0][2])
             self.assertRegex(rows[0][1], r'^[1-9][0-9]*\.[0-9]{6}$')
-            path = inventory.path(child.pid)
             details['phase']='selection'
             selected=diagnostic.select(inventory,rows[0],path,details)
             details['phase']='predicates'

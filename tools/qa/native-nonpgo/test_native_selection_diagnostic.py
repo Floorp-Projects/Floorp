@@ -14,6 +14,24 @@ from unittest_receipt import receipt
 
 
 class NativeSelectionDiagnostics(unittest.TestCase):
+    def test_private_ready_ack_is_bounded_exact_and_never_accepts_environment_fields(self):
+        self.assertEqual(diag.child_arguments(b'{"ready":true,"origArgv":["/private/python","-c","code"]}\n'),
+                         ('/private/python','-c','code'))
+        for raw in (b'{}\n',b'{"ready":true,"origArgv":["/a"],"ENV":"PRIVATE"}\n',
+                    b'{"ready":true,"origArgv":["/a"]}',b'X'*65537):
+            with self.assertRaises((Failure,ValueError)):diag.child_arguments(raw)
+
+    def test_initial_wrapper_argv_zero_change_keeps_exact_tail_child_and_native_path_checks(self):
+        actual=('/private/interpreter','-c','PRIVATE_CODE')
+        command=('/private/launcher','-c','PRIVATE_CODE');details=diag.fresh()
+        diag.initial_arguments(actual,command,actual,'/private/interpreter',details)
+        self.assertFalse(details['initialArgv0TextMatches'])
+        self.assertFalse(details['initialArgv0CanonicalMatches'])
+        for key in ('initialArgvCountMatches','initialArgvTailMatches','initialArgvMatchesChildOrigArgv',
+                    'childOrigArgvTailMatches','initialArgv0MatchesNativePath'):self.assertTrue(details[key],key)
+        self.assertNotIn('PRIVATE',json.dumps(diag.public(details)))
+        diag.initial_arguments(actual,('/private/launcher','-c','DIFFERENT'),actual,'/private/interpreter',details)
+        self.assertFalse(details['initialArgvTailMatches'])
     def inventory(self):
         value=object.__new__(NativeProcesses)
         value.pids=mock.Mock(return_value=[900])

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "scope": "Recovery30 short argv and SDK verification",
+  "linux": {
+    "total": 282,
+    "passed": 268,
+    "skipped": 14,
+    "seconds": 9.578,
+    "exitCode": 0,
+    "logSHA256": "d5204db281b8bf560d1856269048d682c177c1586e52fa51934f016841697e5d"
+  },
+  "actualMac": "pending",
+  "sdkArtifact": 12133086104,
+  "sdkExpiresAt": "2026-10-19T10:00:38Z",
+  "sdkContent": "independently verified identical decompressed TAR/tree/version",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 282,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "longRun": "not activated"
+}

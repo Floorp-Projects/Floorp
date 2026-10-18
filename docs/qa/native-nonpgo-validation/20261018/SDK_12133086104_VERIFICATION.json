@@ -1,0 +1,32 @@
+{
+  "artifact": 12133086104,
+  "sourceRun": 39117481043,
+  "expiresAt": "2026-10-19T10:00:38Z",
+  "verifiedAt": "2026-10-18T19:00:22.971886+00:00",
+  "zipBytes": 105082683,
+  "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+  "tarBytes": 105567985,
+  "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+  "tree": {
+    "members": 49701,
+    "logicalBytes": 704719765,
+    "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+  },
+  "version": "26.5",
+  "sameFixedCanonicalTree": true,
+  "status": "content-verified",
+  "uncompressedTarSHA256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3",
+  "sameUncompressedTar": true,
+  "schema": 1,
+  "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "sourceAttempt": 1,
+  "sourceStatus": "completed success",
+  "oldArtifact": 12113511845,
+  "oldTarSHA256": "c63312b0c34b464e4d5127101377c6ce29a3703351b7da1d1846a6059a99fee1",
+  "fixedMaterializedTreeSHA256": "5de94876abae191268e3cc9aae2c6389652a029e649948c08d03566af15d8059",
+  "retentionChanged": false,
+  "permissionsChanged": false,
+  "fetchImplementationChanged": false,
+  "downloadDeadlineSeconds": 600,
+  "oldCompressedTarMatchesPin": true
+}

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MPL-2.0
 """Observe a real native candidate selection without changing its API results."""
 import errno
+import json
+from pathlib import Path
 from unittest import mock
 
 from monitor_ps_lifetime import child_status
@@ -8,13 +10,16 @@ from support import require
 
 BOOLS=('readyAcknowledged','candidateListed','targetFiltered','targetBirthMatched','targetPathMatched',
        'targetArgvMatched','filteredBirthMatched','filteredArgvMatched','exactRowIncluded',
-       'leaderReaped','groupGone','streamCloseFailed','selectionFailureTargetsChild')
+       'leaderReaped','groupGone','streamCloseFailed','selectionFailureTargetsChild',
+       'initialArgvCountMatches','initialArgv0TextMatches','initialArgv0CanonicalMatches',
+       'initialArgvTailMatches','initialArgvMatchesChildOrigArgv','childOrigArgvTailMatches',
+       'initialArgv0MatchesNativePath')
 COUNTS=('candidateCount','filteredCount','targetBSDReads','targetGoneReads','targetPathReads','targetArgvReads')
 PHASES=('launch','readiness','initial-row','selection','predicates','release','zombie','cleanup','finished')
 
 
 def fresh():
-    return {'schema':1,'status':'failed','phase':'launch',
+    return {'schema':2,'status':'failed','phase':'launch',
             **{key:None for key in BOOLS},**{key:None if key in ('candidateCount','filteredCount') else 0
                                            for key in COUNTS},
             'beforeState':None,'afterState':None,'beforeErrno':None,'afterErrno':None,
@@ -23,7 +28,7 @@ def fresh():
 
 def public(value):
     require(isinstance(value,dict) and set(value)==set(fresh()) and type(value['schema']) is int and
-            value['schema']==1 and value['status'] in ('passed','failed') and value['phase'] in PHASES,
+            value['schema']==2 and value['status'] in ('passed','failed') and value['phase'] in PHASES,
             'native-selection-diagnostic-shape')
     require(all(value[k] is None or type(value[k]) is bool for k in BOOLS) and
             all((value[k] is None and k in ('candidateCount','filteredCount')) or
@@ -38,6 +43,29 @@ def public(value):
                                            'group-still-present'),
             'native-selection-diagnostic-kind')
     return dict(value)
+
+
+def child_arguments(raw):
+    require(isinstance(raw,bytes) and 0<len(raw)<=65536 and raw.endswith(b'\n'),
+            'native-selection-ready-bound')
+    value=json.loads(raw)
+    require(isinstance(value,dict) and set(value)=={'ready','origArgv'} and value['ready'] is True and
+            isinstance(value['origArgv'],list) and 0<len(value['origArgv'])<=4096 and
+            all(isinstance(arg,str) and 0<len(arg)<=16384 and '\0' not in arg for arg in value['origArgv']),
+            'native-selection-ready-schema')
+    return tuple(value['origArgv'])
+
+
+def initial_arguments(actual,command,reported,path,value):
+    require(all(isinstance(args,(tuple,list)) and args and all(isinstance(arg,str) for arg in args)
+                for args in (actual,command,reported)),'native-selection-initial-argv')
+    value.update(initialArgvCountMatches=len(actual)==len(command),
+                 initialArgv0TextMatches=actual[0]==command[0],
+                 initialArgv0CanonicalMatches=Path(actual[0]).resolve()==Path(command[0]).resolve(),
+                 initialArgvTailMatches=tuple(actual[1:])==tuple(command[1:]),
+                 initialArgvMatchesChildOrigArgv=tuple(actual)==tuple(reported),
+                 childOrigArgvTailMatches=tuple(reported[1:])==tuple(command[1:]),
+                 initialArgv0MatchesNativePath=Path(actual[0]).resolve()==Path(path).resolve())
 
 
 def lifetime(pid,value,prefix):
