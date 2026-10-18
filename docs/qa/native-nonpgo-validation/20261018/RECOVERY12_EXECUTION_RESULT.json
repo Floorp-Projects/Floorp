@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39082468600,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082468600",
+    "head": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "branch": "codex/mac-native-nonpgo-recovery12-20261018",
+    "status": "completed",
+    "conclusion": "failure",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-18T00:21:38Z",
+    "updatedAt": "2026-10-18T01:09:29Z"
+  },
+  "jobId": 117542094120,
+  "runner": "macos-15-intel",
+  "fixture": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+  "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "firstFailure": {
+    "stage": "full-build",
+    "code": "TimeoutExpired",
+    "elapsedSeconds": 2813.43
+  },
+  "monitorFailure": {
+    "stage": "full-build",
+    "elapsedSeconds": 2813.43,
+    "errorType": "TimeoutExpired"
+  },
+  "fullBuild": {
+    "stage": "full-build",
+    "exitCode": 254,
+    "failureEvidence": {
+      "beforeCleanup": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 7938522,
+        "tailBytesRead": 130816,
+        "tailTruncated": true,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      },
+      "leaderExitAlreadyObserved": null,
+      "afterCleanup": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 7940876,
+        "tailBytesRead": 130835,
+        "tailTruncated": true,
+        "matchingRecords": 6,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 653,
+            "kind": "termination",
+            "messageClass": "keyboard-interrupt",
+            "normalizedDiagnostic": "keyboardinterrupt"
+          },
+          {
+            "tailLine": 656,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 659,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 660,
+            "kind": "unclassified-error-marker",
+            "normalizedDiagnostic": "<redacted> error <redacted>"
+          },
+          {
+            "tailLine": 661,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 662,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          }
+        ]
+      }
+    },
+    "reason": "TimeoutExpired",
+    "failurePhase": "group-activity",
+    "cleanupFailure": null,
+    "cleanupDiagnostics": [],
+    "groupCleanup": "verified-gone",
+    "leaderReap": {
+      "status": "reaped",
+      "exitCode": 254
+    },
+    "logBytes": 7940876,
+    "peakRSSMiB": 7219,
+    "minimumFreeGiB": 95.32,
+    "lastActivity": {
+      "rssMiB": 6245.00390625,
+      "cpuSeconds": 899.18,
+      "rssLowerBoundMiB": 6245.00390625,
+      "cpuLowerBoundSeconds": 899.18,
+      "processes": 12,
+      "states": [
+        "R",
+        "S"
+      ],
+      "sampleComplete": true,
+      "unknownKinds": {},
+      "formatExamples": [
+        {
+          "kind": "measured",
+          "source": "libproc-taskallinfo",
+          "rssMiB": 562.921875,
+          "cpuSeconds": 45.617799102,
+          "state": "R",
+          "pidTag": "3da4cb8ad29507d0",
+          "identityTag": "f04d60a8f3748090"
+        }
+      ],
+      "confirmedGone": 0,
+      "counterSource": "libproc-taskallinfo",
+      "inventorySummary": {
+        "identityBound": false,
+        "sameOwner": 12,
+        "differentOwner": 0,
+        "metadataUnavailable": 0,
+        "roles": {
+          "other": 12
+        }
+      },
+      "esrchRechecks": 0,
+      "esrchExamples": [],
+      "statesSource": "libproc-runnable-summary",
+      "timebaseNumer": 1,
+      "timebaseDenom": 1,
+      "sampleAttempts": 1,
+      "partialSamples": []
+    },
+    "quietSeconds": 0
+  },
+  "completedStageOutcomes": [
+    {
+      "stage": "harness-startup-check",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "harness-startup-apply",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "sdk-materialize",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "tools-materialize",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "version-clang",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "version-rust",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "version-node",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "version-nasm",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-0",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-1",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-2",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-3",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-4",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-5",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-6",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-7",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-8",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-9",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-10",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-11",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-12",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-13",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-14",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-15",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-16",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-17",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-18",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-19",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-20",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-21",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-22",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-23",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-24",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-25",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-26",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-27",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-28",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "patch-29",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "baseline-provenance",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "first-cause-patch",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "apply-first-cause",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "configure",
+      "exitCode": 0,
+      "reason": null
+    },
+    {
+      "stage": "effective-config",
+      "exitCode": 0,
+      "reason": null
+    }
+  ],
+  "failureExcerpts": [
+    {
+      "stage": "full-build",
+      "phase": "before-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 7938522,
+        "tailBytesRead": 130816,
+        "tailTruncated": true,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      }
+    },
+    {
+      "stage": "full-build",
+      "phase": "after-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 7940876,
+        "tailBytesRead": 130835,
+        "tailTruncated": true,
+        "matchingRecords": 6,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 653,
+            "kind": "termination",
+            "messageClass": "keyboard-interrupt",
+            "normalizedDiagnostic": "keyboardinterrupt"
+          },
+          {
+            "tailLine": 656,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 659,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 660,
+            "kind": "unclassified-error-marker",
+            "normalizedDiagnostic": "<redacted> error <redacted>"
+          },
+          {
+            "tailLine": 661,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          },
+          {
+            "tailLine": 662,
+            "kind": "termination",
+            "messageClass": "interrupted",
+            "normalizedDiagnostic": "<redacted> interrupt <redacted>"
+          }
+        ]
+      }
+    }
+  ],
+  "buildDiagnosticMarkers": {},
+  "validationOutcome": {
+    "execution": "monitor-inconclusive",
+    "nativeAuthentication": "not-verified",
+    "monitorFailureEstablishesProductFailure": false
+  },
+  "newArtifacts": 0,
+  "diagnosis": {
+    "classification": "monitor-inconclusive",
+    "query": "/bin/ps -axo pgid=,pid=,ppid=,uid=,ruid=,comm=",
+    "timeoutSeconds": 3,
+    "queryAttribution": "Static identification: the immutable executed group-activity path has one timeout-bearing subprocess query; the prior schema retained exception type, not its command.",
+    "failureMechanism": "TimeoutExpired bypassed the existing three-sample loop and propagated into Runner.run failure and owned-group cleanup.",
+    "queryDelayCause": "unknown",
+    "compilerFailure": "not-established",
+    "beforeCleanupScope": "Only the bounded final tail was inspected; zero matched diagnostics does not establish absence of errors in earlier log content.",
+    "terminationEvidence": "KeyboardInterrupt and interruption records appear in after-cleanup excerpts only; leader exit was not observed before cleanup.",
+    "notReached": [
+      "package",
+      "ad-hoc-test-copy",
+      "native-authentication",
+      "trusted-GUI"
+    ],
+    "priorNativeExitCause": "unresolved",
+    "unchangedExpensiveRetry": false
+  },
+  "privateJobLog": {
+    "bytes": 170466,
+    "sha256": "d94db8b35ef3f3a0c3eba2ed9ac76cd9a83abf61cba46890dea989bfd16ca601",
+    "rawContentPublished": false,
+    "fullPrivateBuildLogRetained": false
+  },
+  "bounds": {
+    "excerptReadLimitBytes": 131072,
+    "excerptRecordLimit": 16,
+    "platformJobLimitMinutes": 360,
+    "permissionsExpanded": false,
+    "productSigning": false,
+    "artifactUpload": false
+  },
+  "job": {
+    "id": 117542094120,
+    "status": "completed",
+    "conclusion": "failure",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-18T00:21:44Z",
+        "completed_at": "2026-10-18T00:21:46Z"
+      },
+      {
+        "name": "Bound the initial authorized run",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-18T00:21:46Z",
+        "completed_at": "2026-10-18T00:21:47Z"
+      },
+      {
+        "name": "Checkout immutable preparation fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-18T00:21:47Z",
+        "completed_at": "2026-10-18T00:21:55Z"
+      },
+      {
+        "name": "Verify owned process sampling before source checkout",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-18T00:21:55Z",
+        "completed_at": "2026-10-18T00:22:00Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-18T00:22:00Z",
+        "completed_at": "2026-10-18T00:28:45Z"
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-10-18T00:28:45Z",
+        "completed_at": "2026-10-18T00:28:48Z"
+      },
+      {
+        "name": "Acquire only the existing fixed SDK",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-10-18T00:28:48Z",
+        "completed_at": "2026-10-18T00:29:01Z"
+      },
+      {
+        "name": "Compile full host and XUL then authenticate native Shim",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 8,
+        "started_at": "2026-10-18T00:29:01Z",
+        "completed_at": "2026-10-18T01:08:54Z"
+      },
+      {
+        "name": "Confirm bounded result exists",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 9,
+        "started_at": "2026-10-18T01:08:54Z",
+        "completed_at": "2026-10-18T01:08:55Z"
+      },
+      {
+        "name": "Post Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 16,
+        "started_at": "2026-10-18T01:08:55Z",
+        "completed_at": "2026-10-18T01:08:56Z"
+      },
+      {
+        "name": "Post Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17,
+        "started_at": "2026-10-18T01:08:56Z",
+        "completed_at": "2026-10-18T01:08:58Z"
+      },
+      {
+        "name": "Post Checkout immutable preparation fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18,
+        "started_at": "2026-10-18T01:08:58Z",
+        "completed_at": "2026-10-18T01:08:59Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19,
+        "started_at": "2026-10-18T01:08:59Z",
+        "completed_at": "2026-10-18T01:08:59Z"
+      }
+    ],
+    "startedAt": "2026-10-18T00:21:45Z",
+    "completedAt": "2026-10-18T01:09:28Z"
+  }
+}
