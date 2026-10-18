@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39082226396,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082226396",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-18T00:17:35Z"
+  },
+  "fixture": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+  "caller": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+  "jobId": 117541367131,
+  "runner": "macos-15-intel",
+  "jobCount": 1,
+  "sdkAcquisition": false,
+  "runtimeBuild": false,
+  "newArtifacts": 0
+}
