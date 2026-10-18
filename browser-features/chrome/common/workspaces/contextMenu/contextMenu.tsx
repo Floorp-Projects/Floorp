@@ -82,14 +82,16 @@ export function ContextMenu(props: {
         data-floorp-context-menu-key="floorp.workspaces.sync"
         type="checkbox"
         autocheck="false"
-        disabled={!props.ctx.syncController?.isAvailable()}
+        disabled={!props.ctx.syncController?.isAvailable() || undefined}
         label={props.ctx.syncController?.errorText(props.contextWorkspaceId)
           ? texts().syncPaused
           : texts().sync}
         tooltiptext={props.ctx.syncController?.errorText(
           props.contextWorkspaceId,
         ) ?? texts().syncHelp}
-        checked={props.ctx.syncController?.isSelected(props.contextWorkspaceId)}
+        checked={props.ctx.syncController?.isSelected(
+          props.contextWorkspaceId,
+        ) || undefined}
         onCommand={() => {
           const controller = props.ctx.syncController;
           controller?.select(
