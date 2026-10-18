@@ -1,6 +1,7 @@
 # Workspace and tab Sync v1
 
-Status: implementation contract, pending two-device FxA acceptance testing.
+Status: implementation contract, authenticated two-client cloud acceptance passed;
+physical-device acceptance remains pending.
 
 Floorp Desktop uses Firefox Sync's authenticated, encrypted transport for an
 independent `floorp-workspaces` collection. The engine version is `1`; its switch
@@ -191,6 +192,18 @@ per-tab entities, and large aggregates. Implementation validation also exercised
 the native Sync engine/record APIs and encryption in an isolated Gecko 158
 profile. The production Chrome loader and all 170 ESM modules also build
 successfully. A reproducible fresh-profile harness is documented in
-`tools/workspace-sync/README.md`. A patched full Runtime build and authenticated
-two-device FxA transport have not yet been exercised; those remain release
-acceptance checks.
+`tools/workspace-sync/README.md`.
+
+Authenticated cloud acceptance on 2026-10-18 passed eight scenarios with two
+independent QA app processes/profiles on one Mac and a dedicated Mozilla
+Account. The copied complete Floorp apps used production Chrome/ESM outputs and
+the native registration patch. Tests exercised actual HTTPS Sync transport,
+bidirectional metadata/tab changes, concurrent additions, close versus stale
+reorder, empty workspaces, local opt-out/re-selection and parent deletion.
+Successful cleanup removed only generated synced records; other engine metadata
+and declined settings had the same SHA-256 fingerprint before the first explicit
+acceptance Sync and after cleanup. The initial interactive account setup
+precedes that fingerprint boundary. The launcher, configuration preflight and
+repeatable driver are documented in the same README. A full patched Runtime
+rebuild, physical-device and iOS receiver acceptance remain separate release
+checks.
