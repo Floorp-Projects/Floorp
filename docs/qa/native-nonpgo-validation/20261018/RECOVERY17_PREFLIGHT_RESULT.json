@@ -1,0 +1,42 @@
+{
+  "build": "not-started",
+  "caller": "debd589527e670a8aba87e2ced97ebfb212ccbda",
+  "consumer": "skipped",
+  "diagnosticGap": "private unittest output was not retained outside the terminated runner; the public diagnostic removed test identity and exception type",
+  "exactFailedTestAndException": "UNKNOWN_NOT_RETAINED",
+  "firstFailure": {
+    "code": "nonzero-exit",
+    "elapsedSeconds": 67.21,
+    "stage": "checkpoint-tests"
+  },
+  "fixture": "1ce84724d484f28dd74c7e31091819a3f4ec2013",
+  "groupCleanup": "verified-gone",
+  "leaderReaped": true,
+  "minimumFreeGiB": 108.08,
+  "monitorFailure": null,
+  "peakRSSMiB": 101,
+  "producerJob": 117668117241,
+  "reproducedIndependentDefect": {
+    "appleSourceBlob": "aad756d34520c213286959a12615592376f919d7",
+    "appleSourceCommit": "79322b85cd1b82df301997a8e56eba4e354fdf6b",
+    "appleUIDFormat": "signed decimal",
+    "correctedFixtureNormalizesUIDThenChecksOwnership": true,
+    "identityOfOriginalFailureConfirmed": false,
+    "oldFixtureWithUnrelatedSignedNobodyUID": "checkpoint-process-inventory-format",
+    "scope": "Mac process census input representation"
+  },
+  "retainedDecodedJobLog": {
+    "bytes": 25357,
+    "rawContentPublished": false,
+    "sha256": "4df85a9806c71141bcc843f17ed5f9f217d62652322fe9ad0fdde893ad930295"
+  },
+  "run": 39124992995,
+  "runtimeCheckout": "skipped",
+  "schema": 1,
+  "sdkAcquisition": "skipped",
+  "status": "failure",
+  "storedArtifacts": 0,
+  "testExitCode": 1,
+  "upload": "skipped",
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39124992995"
+}

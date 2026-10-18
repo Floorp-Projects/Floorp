@@ -214,11 +214,19 @@ def owned_processes():
     births = set()
     for line in result.stdout.splitlines():
         fields = line.split()
-        require(len(fields) == 3 and all(item.isdecimal() for item in fields),
+        require(len(fields) == 3 and fields[0].isdecimal() and
+                all(re.fullmatch(r'-?[0-9]{1,10}', item) for item in fields[1:]),
                 'checkpoint-process-inventory-format')
-        if int(fields[1]) != os.geteuid() and int(fields[2]) != os.getuid():
+        pid, uid, ruid = map(int, fields)
+        # Apple's ps formats uid_t with %d: nobody (uint32 -2) is printed -2.
+        # Keep malformed/out-of-range/invalid uid_t unknown rather than zero.
+        require(0 <= pid < 2**31 and all(-2**31 <= value < 2**32 - 1 and value != -1
+                                        for value in (uid, ruid)), 'checkpoint-process-inventory-format')
+        uid, ruid = uid % 2**32, ruid % 2**32
+        if uid != os.geteuid() and ruid != os.getuid():
             continue
-        status, bsd, reason = probe().bsd(int(fields[0]))
+        require(pid > 0, 'checkpoint-process-worker-pid')
+        status, bsd, reason = probe().bsd(pid)
         require(status in ('measured', 'gone'), 'checkpoint-process-identity-unavailable')
         if status == 'measured':
             require(bsd.uid == os.geteuid() and bsd.ruid == os.getuid(), 'checkpoint-process-owner-changed')

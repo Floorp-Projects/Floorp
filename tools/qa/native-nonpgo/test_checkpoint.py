@@ -12,6 +12,7 @@ import tempfile
 import time
 import unittest
 from unittest import mock
+from types import SimpleNamespace
 
 import checkpoint as cp
 from support import Failure, Runner, digest
@@ -311,6 +312,37 @@ class CheckpointGuards(unittest.TestCase):
             child.terminate()
             child.wait(timeout=5)
         self.assertFalse(any(row[0] == child.pid for row in cp.owned_processes() - before))
+
+    def test_apple_signed_unrelated_uids_are_normalized_before_owner_filter(self):
+        value = SimpleNamespace(pid=41, uid=501, ruid=501, start_sec=123, start_usec=4)
+        probe = mock.Mock()
+        probe.bsd.return_value = ('measured', value, None)
+        inventory = SimpleNamespace(stdout='0 0 0\n41 501 501\n42 -2 -2\n43 4294967294 4294967294\n')
+        with mock.patch.object(cp.subprocess, 'run', return_value=inventory), \
+                mock.patch.object(cp.os, 'geteuid', return_value=501), \
+                mock.patch.object(cp.os, 'getuid', return_value=501), \
+                mock.patch('darwin_activity.probe', return_value=probe):
+            self.assertEqual(cp.owned_processes(), {(41, 123, 4)})
+        probe.bsd.assert_called_once_with(41)
+
+    def test_malformed_or_invalid_uid_inventory_remains_unavailable(self):
+        for uid in ('-1', '4294967295', '-2147483649', '4294967296', 'unknown', '+501'):
+            with self.subTest(uid=uid), \
+                    mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='42 '+uid+' 0\n')), \
+                    mock.patch('darwin_activity.probe') as probe:
+                with self.assertRaisesRegex(Failure, 'checkpoint-process-inventory-format'):
+                    cp.owned_processes()
+                probe.assert_not_called()
+
+    def test_real_uid_worker_still_requires_matching_bsd_effective_owner(self):
+        probe = mock.Mock()
+        probe.bsd.return_value = ('measured', SimpleNamespace(uid=0, ruid=501), None)
+        with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='41 0 501\n')), \
+                mock.patch.object(cp.os, 'geteuid', return_value=501), \
+                mock.patch.object(cp.os, 'getuid', return_value=501), \
+                mock.patch('darwin_activity.probe', return_value=probe):
+            with self.assertRaisesRegex(Failure, 'checkpoint-process-owner-changed'):
+                cp.owned_processes()
 
 
 if __name__ == '__main__':

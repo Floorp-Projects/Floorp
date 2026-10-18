@@ -1,0 +1,62 @@
+{
+  "bindings": [
+    {
+      "bytes": 26715,
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "c7a32244938c2859e8337755956b9905498ece4d77b614fa071dd1f697193a56"
+    },
+    {
+      "bytes": 18618,
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "dc3080c4ec370768a09da3e48cd809d2ea9f39dadbe614222e1bf0ad0b415ba0"
+    },
+    {
+      "bytes": 7131,
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "sha256": "aea729bdcd388388a090afb30567bdc563463bda64d8f8def4f3ffa85667b65d"
+    },
+    {
+      "bytes": 4291,
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "sha256": "33b32f4dec9ae8acf1c3500dc5d512888bf959363ea6601de48e0acf3ff8b9a4"
+    }
+  ],
+  "independentFocused": {
+    "passed": 8,
+    "seconds": 0.841,
+    "skipped": 0,
+    "total": 8
+  },
+  "independentFullRegression": {
+    "darwinSkipped": 10,
+    "passed": 176,
+    "resourceWarningsAreErrors": true,
+    "seconds": 8.456,
+    "total": 186
+  },
+  "independentReview": {
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "TECHNICAL_GO_WITH_IMMUTABLE_BIND_GATES"
+  },
+  "macGate": {
+    "required": 186,
+    "skipsAllowed": 0
+  },
+  "originalRunCauseConfirmed": false,
+  "schema": 1,
+  "scope": "corrected same-scope retry; signed UID normalization and safe exact unittest diagnostics",
+  "storageScope": {
+    "artifactsAtMost": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionDays": 1,
+    "serialStandardIntelJobs": 2
+  },
+  "tests": {
+    "darwinSkipped": 10,
+    "passed": 176,
+    "seconds": 8.539,
+    "total": 186
+  },
+  "workflowTemplateSHA256": "e69a2bfe36773627cad795b9089a42a91c79ea9d82ac71ed46d23eeb488176ae"
+}
