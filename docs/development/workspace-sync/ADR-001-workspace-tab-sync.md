@@ -1,7 +1,7 @@
 # Workspace and tab Sync v1
 
-Status: implementation contract, authenticated two-client cloud acceptance
-passed; physical-device acceptance remains pending.
+Status: implementation contract, authenticated two-client cloud acceptance and
+physical Mac-to-Windows round-trip acceptance passed.
 
 Floorp Desktop uses Firefox Sync's authenticated, encrypted transport for an
 independent `floorp-workspaces` collection. The engine version is `1`; its
@@ -209,6 +209,25 @@ acceptance Sync and after cleanup. The initial interactive account setup
 precedes that fingerprint boundary. The launcher, configuration preflight and
 repeatable driver are documented in the same README.
 
+Physical-device acceptance on 2026-10-18 paired the Mac QA client with a
+separate Windows x86-64 PC using the same dedicated account; the second Mac
+client was stopped. Windows received the selected workspace's name, Book icon
+and two web tabs, and did not receive the unselected local-only workspace.
+Windows then renamed the workspace, added and pinned a web tab, and closed one
+original tab. Actual native Sync and UI snapshots on Mac confirmed the new name,
+exact URLs, pin state, deletion and exactly two distinct stable tab IDs. The
+Windows steps were operated interactively; this is a physical transport/UI
+check, separate from the Windows PowerShell diagnostic helper's execution.
+
+Initial setup followed by three cold restarts in a separate, signed-out
+production QA profile preserved all three web-tab IDs and one pinned tab,
+including two intentionally distinct tabs at the same URL. Launching a restored
+profile with an explicit `about:preferences#sync` argument added another
+settings tab each time. The QA launcher therefore opens that URL only for a new
+profile and resumes existing profiles without an extra URL. No URL-based
+deduplication is applied to web tabs. These additional local restart checks do
+not claim authenticated multi-device restart coverage.
+
 Normal production package acceptance also passed using locked Runtime
 `daily-1155` / `7dd619742b25567e479eeda97ae071d10542ad0b` and Floorp tree
 `fbc1e274676fd45f966f30978eef5b5e647c0465`. This used the normal upstream/common
@@ -224,5 +243,5 @@ overrides it registered/enabled the engine, imported the module and initialized
 the workspace UI/providers. This local check used authenticated locked release
 assets, not the GitHub runtime-v2 manifest intake/signing/publishing jobs.
 Details and the engine hash are recorded in the README. This JavaScript feature
-does not require recompiling Gecko's native code. Release signing/notarization,
-physical-device and iOS receiver acceptance remain separate release checks.
+does not require recompiling Gecko's native code. Release signing/notarization
+and iOS receiver acceptance remain separate release checks.

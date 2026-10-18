@@ -56,8 +56,9 @@ deno task test --near browser-features/modules/test/workspaces
 
 Production loader builds validate the complete Chrome/SolidXUL and ESM import
 paths separately. Normal artifact-based packaging and authenticated two-process
-cloud acceptance are verified below. Physical-device and iOS receiver acceptance
-remain separate checks; this JavaScript feature needs no Gecko native recompile.
+cloud acceptance and a physical Mac-to-Windows round trip are verified below. An
+iOS receiver remains a separate check; this JavaScript feature needs no Gecko
+native recompile.
 
 ## Authenticated two-client acceptance
 
@@ -133,8 +134,8 @@ A sanitized result report records case names, cloud host names and build hashes.
 It contains no email, UID, password, token, key or account response payload. The
 profiles remain in the preparation directory for follow-up. They can contain the
 dedicated account's normal browser session and are not report artifacts. This
-proves two isolated Desktop clients on one Mac; physical-device and iOS receiver
-acceptance are separate checks.
+proves two isolated Desktop clients on one Mac; physical-device evidence is
+recorded separately below, and iOS receiver acceptance remains a separate check.
 
 On 2026-10-18, all eight live cases passed with two independently authenticated
 QA profiles using Mozilla's production HTTPS Sync service. The packaged loader
@@ -145,6 +146,42 @@ copied complete Gecko 158 Floorp app with production loader overlays and the
 native service-registration patch. That cloud run used the QA overlay workflow;
 the independent normal-package check below verifies the production packaging
 route and default engine wiring.
+
+## Physical Mac-to-Windows acceptance
+
+On 2026-10-18, a separate Windows x86-64 PC and the Mac QA A client completed an
+authenticated round trip through Mozilla's production Sync service. QA B was
+stopped so this run had two active test clients. Windows used a private QA
+overlay of the authenticated official Floorp `v12.20.2` complete application,
+with production Windows loader output from revision `620f0398f950`, the locked
+Gecko 158.0.1 Runtime, and the native registration/resource patches. Its engine
+SHA-256 matched the Mac engine recorded above. The distributed kit contained no
+profile or account data.
+
+The tester confirmed that Windows received the selected workspace's name, Book
+icon and two web tabs, while the local-only control workspace was absent. The
+tester then renamed the workspace, added and pinned a new web tab, and closed
+one original tab. A native Sync on Mac and read-only UI snapshots confirmed the
+expected name, exact URLs and pin state, the closed original tab's absence, and
+exactly two live web tabs with two distinct stable IDs. Windows interaction was
+manual; the successful physical round trip does not imply that its separate
+PowerShell report command completed successfully. That helper was updated to
+report progress and use explicit browser and transport timeouts. Its read-only
+check does not capture or synchronize local changes. Helper transport was
+checked against the real Mac QA browser using PowerShell 7, and against stalled,
+slow, erroneous and cleanup-timeout fake peers. Execution of the revised helper
+under Windows PowerShell 5.1 remains a separate check.
+
+Initial setup followed by three cold restarts in another fresh, signed-out
+production QA profile preserved three web tabs, their three stable IDs and one
+pinned tab; two tabs intentionally shared a URL and remained distinct. A
+negative control with the explicit startup URL `about:preferences#sync`
+accumulated one settings tab per restart. Open that page only on first profile
+creation; subsequent launches should resume the dedicated profile without a URL
+argument. These local restart checks do not claim authenticated multi-device
+restart coverage. The physical-run profiles and generated workspace were
+retained for follow-up; no credentials, account payloads or profile archives are
+part of the acceptance report.
 
 ## Normal production package acceptance
 
@@ -209,6 +246,5 @@ preference overriding engine registration or enablement**, native Service
 registered and enabled `floorp-workspaces`, the resource module imported, and
 the workspace UI/provider capture initialized successfully. The profile's
 account remained unconfigured. No profile or account data was included in the
-package. Release signing, notarization, physical-device sync and the iOS
-receiver are separate checks; rebuilding Gecko's native code is unnecessary for
-this feature.
+package. Release signing, notarization and the iOS receiver are separate checks;
+rebuilding Gecko's native code is unnecessary for this feature.
