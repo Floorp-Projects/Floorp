@@ -25,9 +25,10 @@ No account credentials or authenticated cloud service are required. A temporary
 loopback HTTP server supplies the test pages. Results and the isolated profile
 remain in the generated directory for inspection.
 
-The model and wire suites exercise 23 cases. Native engine scenarios cover
-CryptoWrapper encryption round trips, per-tab uploads, independent additions,
-delete wins, unacknowledged/partial/successful tombstone GC, local unsubscribe,
+The harness exercises 58 cases: 23 model/wire, 24 native engine and 11 adapter
+cases. Native engine scenarios cover CryptoWrapper encryption round trips,
+per-tab uploads, independent additions, delete wins,
+unacknowledged/partial/successful tombstone GC, local unsubscribe,
 unknown-parent and later-batch parent deletion, repeated incoming failure after
 the base retry list is pruned, repair/recovery, disabled workspaces, invalid
 local metadata and recovery, child-first metadata clock zero, pending local
@@ -35,7 +36,10 @@ navigation while unrelated records or tab closures arrive, and account
 start-over during an in-flight provider apply or signed-in-UID lookup. Failed UI
 apply recovery retains unopened remote additions, subsequent local navigation,
 explicit local tab closure and reordering without reclassifying unchanged
-pre-apply values as new local edits.
+pre-apply values as new local edits. Further cases cover no normal-window
+provider, one UI apply per changed workspace in an incoming batch, batch
+failures and intervening local edits, unsubscribed deferred closures, and
+invalid persisted baseline recovery.
 
 The engine scenario uses actual native Sync classes and record encryption. It
 simulates the base engine's repeated-failure pruning around real reconciliation
@@ -46,7 +50,18 @@ movement in the isolated browser. Its workspace store/context are isolated test
 adapters, so it checks native tab behavior without claiming to exercise every
 production entry-point wiring path. It covers stable IDs, receiving into the
 local container, physical-order baselines, moving/duplicating between
-workspaces, checkbox state ownership, and native Undo Close restoration.
+workspaces, checkbox state ownership, and native Undo Close restoration. It also
+covers source-first capture during physical tab moves, global workspace deletion
+from a private-window controller, and unsupported-page navigation. The latter
+preserves the canonical web record and stable ID, never captures an internal
+page's title, keeps the local page intact during incoming updates, and resumes
+synchronization on returning to HTTP(S).
+
+At revision `78aedc2cc830`, all 58 cases and the full smoke task passed. Nine
+isolated negative controls confirmed that removing the corresponding review
+fixes fails the intended assertions. Production Chrome and ESM builds also
+passed; earlier packaging and physical-device evidence below retains its own
+tested revision.
 
 The regular model tests remain runnable through the repository's browser runner:
 
@@ -67,8 +82,12 @@ fresh profile and app identity. It exercises actual Mozilla Account
 authentication and HTTPS Sync storage. Use an explicitly authorized dedicated
 test account and enter its credentials directly in the two browser windows.
 
-First produce the normal production Chrome and ESM loader outputs from the
-feature revision. Prepare copies of a complete installed Floorp application:
+First run `deno task feles-build build --phase before-mach` in the matching
+feature checkout to produce the normal production loader outputs. The builder
+supplies the Chrome resource base and ESM version/build metadata; standalone
+loader builds without those arguments are insufficient. Preparation rejects
+unresolved ESM metadata before copying an app or creating profiles. Prepare
+copies of a complete installed Floorp application:
 
 ```sh
 python3 tools/workspace-sync/prepare-acceptance-app.py \
@@ -146,6 +165,18 @@ copied complete Gecko 158 Floorp app with production loader overlays and the
 native service-registration patch. That cloud run used the QA overlay workflow;
 the independent normal-package check below verifies the production packaging
 route and default engine wiring.
+
+After the review fixes, all eight live cases passed again at revision
+`78aedc2cc830f803a54395f44c567ae1f40cf1ea`, source tree
+`c749dba5fe5f0fafb036ac05bfc25ad702f3e79f`, with engine SHA-256
+`d7f4503c81c534b2e0b4c3d0b1ac6d852980c71e3ef2894bda1a85e3e2a1c0a8`. The two apps
+used production Chrome/ESM outputs with the normal builder's base and metadata
+arguments. All 208 Chrome and 168 ESM archive entries matched the generated
+files byte for byte. Existing dedicated QA profiles retained their login
+sessions; the Windows QA client was stopped for this two-client run. Generated
+test records were cleaned up, and other engine metadata and declined settings
+retained the same before/after fingerprint. The earlier physical run and
+normal-package check below retain their original tested revisions.
 
 ## Physical Mac-to-Windows acceptance
 

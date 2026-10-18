@@ -52,6 +52,9 @@ def main():
     engine = "chrome/noraneko/nora-resource/modules/workspaces/FloorpWorkspacesSync.sys.mjs"
     if engine not in replacements:
         parser.error("Production build lacks the workspace sync engine")
+    constants = "chrome/noraneko/nora-resource/modules/NoranekoConstants.sys.mjs"
+    if constants not in modules or b"import.meta.env" in modules[constants]:
+        parser.error("Production build lacks resolved version/build metadata; run the normal before-mach build")
     output.mkdir(parents=True, mode=0o700)
     app = output / "Floorp Workspace Sync QA.app"
     subprocess.run(["ditto", str(args.source_app.resolve()), str(app)], check=True)

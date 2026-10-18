@@ -112,6 +112,13 @@ icons are at most 256 UTF-16 code units, titles 1024, and URLs 8192. Strings
 must be valid Unicode. Desktop truncates long titles without leaving unpaired
 surrogates.
 
+When an already-synced tab navigates to an unsupported local page, its last
+canonical web URL, title, pin state and ID remain cached. The local page's URL
+and title are never captured, and an incoming update does not navigate that
+local page or change its pin state. Returning to HTTP(S) resumes capture with
+the same ID. Moving the physical tab between workspaces creates a new ID even
+when capture of the source workspace has already retired its previous ID.
+
 Each canonical inner entity has a 16 KiB UTF-8 ceiling, leaving ample room for
 CryptoWrapper's ID, encryption padding, base64 expansion and BSO metadata under
 Firefox's normal 256 KiB record limit. The wire helpers validate outgoing and
@@ -138,12 +145,21 @@ initialization failures. A missing provider can fail this engine's attempt; it
 cannot leave the entire Firefox Sync operation waiting indefinitely. Private
 windows do not participate in the barrier.
 
+With no normal-window provider, incoming UI changes remain pending until a
+provider registers. Each native incoming batch applies the accumulated UI state
+once per changed workspace; provider failures stay associated with the affected
+record IDs for retry. Global workspace deletion also creates its tombstone when
+initiated in a private window, without registering that window as a tab
+provider.
+
 Incoming tab closures are persisted and deferred until all incoming batches and
 backfill have succeeded. A parent deletion then cancels its children's deferred
 UI closures, retaining the local workspace. Unresolved decrypt/reconcile/apply
 failures are independently persisted and retried even after Firefox's usual
 repeated-failure list would drop them. Pending closures remain deferred across
-restart; capture excludes their retired IDs.
+restart; capture excludes their retired IDs. Unsubscribing retains deferred tab
+closures until successful application after reselection, so a closed tab cannot
+be republished during that transition.
 
 Before merging incoming records or flushing tab closures, the engine captures
 local edits that occurred while network requests were in flight. An unrelated
@@ -177,6 +193,9 @@ Invalid local metadata pauses only that workspace and retains its last good
 record. Its menu shows an attention state and a localized explanation; failed
 initial selection rolls back and displays an alert. Other workspaces continue
 syncing. Correcting the metadata resumes capture and requests a fresh download.
+Invalid captured baselines are never persisted. An invalid baseline from an
+older cache is isolated without rejecting the entire cache or discarding its
+pending-apply marker.
 
 ## Build paths and validation
 
@@ -197,6 +216,15 @@ Gecko 158 profile. The production Chrome and ESM loader builds also succeed. A
 reproducible fresh-profile harness is documented in
 `tools/workspace-sync/README.md`.
 
+Review follow-up at revision `78aedc2cc830` passed 58 fresh-profile cases: 23
+model/wire, 24 native engine and 11 browser-tab/SessionStore cases. These
+include provider absence, batch UI application and failure recovery,
+unsubscribed tab closures, invalid persisted baselines, private-window global
+deletion, source-first tab moves, and unsupported-page transitions. Nine
+isolated negative controls failed their intended assertions when the
+corresponding fixes were removed. The full smoke task and production Chrome/ESM
+builds also passed at this revision.
+
 Authenticated cloud acceptance on 2026-10-18 passed eight scenarios with two
 independent QA app processes/profiles on one Mac and a dedicated Mozilla
 Account. The copied complete Floorp apps used production Chrome/ESM outputs and
@@ -208,6 +236,13 @@ and declined settings had the same SHA-256 fingerprint before the first explicit
 acceptance Sync and after cleanup. The initial interactive account setup
 precedes that fingerprint boundary. The launcher, configuration preflight and
 repeatable driver are documented in the same README.
+
+All eight cases passed again after the review fixes at `78aedc2cc830`, with the
+normal production Chrome/ESM build arguments, byte-verified app resources and
+the existing dedicated account profiles. The Windows QA client was stopped
+during this run. Cleanup again removed only generated records and preserved
+other engine metadata/declined settings. The README records this newer engine
+hash separately from the earlier physical and normal-package evidence.
 
 Physical-device acceptance on 2026-10-18 paired the Mac QA client with a
 separate Windows x86-64 PC using the same dedicated account; the second Mac
