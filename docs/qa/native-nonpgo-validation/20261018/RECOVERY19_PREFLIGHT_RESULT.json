@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "run": 39126513633,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39126513633",
+  "caller": "bfe29ead5c2a5a50334bc8cec111f559900f9ce5",
+  "fixture": "c898058d58808ee7d84de80e6b82a846adfab441",
+  "producerJob": 117672676328,
+  "status": "failure-before-acquisition",
+  "consumer": "skipped",
+  "sdkAcquisition": "skipped",
+  "build": "not-started",
+  "upload": "skipped",
+  "storedArtifacts": 0,
+  "preflight": {
+    "status": "failed",
+    "self": {
+      "status": "measured",
+      "rssMiB": 18.171875,
+      "cpuSeconds": 0.156956199,
+      "state": "R"
+    },
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 188,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "status": "failed",
+      "seconds": 68.417,
+      "bytes": 42165,
+      "sha256": "8bf8fceef54db73289d0ff8e67a16d9b9452e4693134c955342534c0c08e2b8f",
+      "cases": [
+        {
+          "outcome": "ERROR",
+          "test": "test_checkpoint.CheckpointGuards.test_real_mac_new_owned_process_is_observed",
+          "phase": "test_real_mac_new_owned_process_is_observed",
+          "frames": [
+            {
+              "file": "test_checkpoint.py",
+              "line": 306
+            },
+            {
+              "file": "checkpoint.py",
+              "line": 231
+            },
+            {
+              "file": "support.py",
+              "line": 27
+            }
+          ],
+          "exceptionType": "support.Failure",
+          "failureCode": "checkpoint-process-identity-unavailable"
+        }
+      ]
+    },
+    "stages": [
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "failureEvidence": {
+          "beforeCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 42165,
+            "tailBytesRead": 42165,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 229,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          },
+          "leaderExitAlreadyObserved": 1,
+          "afterCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 42165,
+            "tailBytesRead": 42165,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 229,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          }
+        },
+        "reason": "nonzero-exit",
+        "failurePhase": "wait",
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "logBytes": 42165,
+        "peakRSSMiB": 94,
+        "minimumFreeGiB": 107.1,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "monitorFailure": null,
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 70.34
+    }
+  },
+  "unavailableReason": "UNKNOWN_NOT_RECORDED",
+  "diagnosticCorrection": "Separate permission worker/mixed, short BSD, invalid identity and invalid state into fixed failure codes; every unavailable observation still fails"
+}

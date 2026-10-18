@@ -16,7 +16,7 @@ import sys
 import tarfile
 import time
 
-from support import digest, require, write_json
+from support import Failure, digest, require, write_json
 from failure_excerpt import classify, normalized_diagnostic
 
 
@@ -228,6 +228,17 @@ def owned_processes():
             continue
         require(pid > 0, 'checkpoint-process-worker-pid')
         status, bsd, reason = probe().bsd(pid)
+        if status == 'unavailable':
+            if reason == 'permission':
+                if uid == os.geteuid() and ruid == os.getuid():
+                    raise Failure('checkpoint-process-permission-worker')
+                raise Failure('checkpoint-process-permission-mixed')
+            if reason == 'short-bsd-info':
+                raise Failure('checkpoint-process-short-bsd-info')
+            if reason == 'invalid-identity':
+                raise Failure('checkpoint-process-invalid-identity')
+            if reason == 'invalid-bsd-state':
+                raise Failure('checkpoint-process-invalid-bsd-state')
         require(status in ('measured', 'gone'), 'checkpoint-process-identity-unavailable')
         if status == 'measured':
             require(bsd.uid == uid and bsd.ruid == ruid, 'checkpoint-process-owner-changed')

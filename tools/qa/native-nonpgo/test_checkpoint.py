@@ -368,6 +368,24 @@ class CheckpointGuards(unittest.TestCase):
         before = census(501)
         self.assertEqual(census(0)-before, {(41,123,4,0,501)})
 
+    def test_unavailable_census_keeps_permission_and_transient_reasons_distinct(self):
+        cases = [('permission',0,'checkpoint-process-permission-mixed'),
+                 ('permission',501,'checkpoint-process-permission-worker'),
+                 ('short-bsd-info',501,'checkpoint-process-short-bsd-info'),
+                 ('invalid-identity',501,'checkpoint-process-invalid-identity'),
+                 ('invalid-bsd-state',501,'checkpoint-process-invalid-bsd-state'),
+                 ('unknown',501,'checkpoint-process-identity-unavailable')]
+        for reason,uid,code in cases:
+            probe = mock.Mock()
+            probe.bsd.return_value = ('unavailable', None, reason)
+            with self.subTest(reason=reason,uid=uid), \
+                    mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout=f'41 {uid} 501\n')), \
+                    mock.patch.object(cp.os, 'geteuid', return_value=501), \
+                    mock.patch.object(cp.os, 'getuid', return_value=501), \
+                    mock.patch('darwin_activity.probe', return_value=probe):
+                with self.assertRaisesRegex(Failure, code):
+                    cp.owned_processes()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,42 @@
+{
+  "bindings": [
+    {
+      "bytes": 27587,
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "4df2503b110461bb74c15998084f84f3f87c905cbb14a7c9f3109519b38a71a6"
+    },
+    {
+      "bytes": 21364,
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "e0939f512922a0baf3f25957552848172f209f9b89c0e02346e2e3a89ef4a9c6"
+    }
+  ],
+  "requiredMacTests": 189,
+  "review": {
+    "fixedReasonCodesPreserved": 6,
+    "independentTests": {
+      "passed": 6,
+      "seconds": 0.789,
+      "total": 6
+    },
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "TECHNICAL_GO_WITH_IMMUTABLE_BIND_GATES"
+  },
+  "schema": 1,
+  "scope": "diagnostic classification only; every unavailable census still fails",
+  "skipsAllowed": 0,
+  "storageScopeUnchanged": {
+    "artifactsAtMost": 1,
+    "retentionDays": 1,
+    "serialStandardIntelJobs": 2,
+    "storedBytesAtMost": 10737418240
+  },
+  "templateSHA256": "5d09073d273f4af5626e1d41daf694eb01b3c4089314dde38a37cbafa9a44a4f",
+  "tests": {
+    "darwinSkipped": 10,
+    "passed": 179,
+    "seconds": 8.553,
+    "total": 189
+  }
+}
