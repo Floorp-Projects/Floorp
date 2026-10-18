@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39087195468,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087195468",
+    "createdAt": "2026-10-18T01:37:59Z",
+    "head": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "event": "push",
+    "attempt": 1
+  },
+  "jobId": 117556135754,
+  "jobCount": 1,
+  "runner": [
+    "macos-15-intel"
+  ],
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+  "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "sdkArtifact": 12096898807,
+  "sdkSourceRun": 39022451582,
+  "macGateRun": 39087022762,
+  "macGateTests": {
+    "passed": 133,
+    "skipped": 0
+  },
+  "reviewDecision": "CLEAR_GO_FOR_ONE_PINNED_FULL_VALIDATION",
+  "workflowSHA256": "3086a7db2e48714115e4cd0ed0babcee3c86654152014f072cf420bd0a392f50",
+  "newArtifacts": 0,
+  "productSigning": false,
+  "productPublishing": false,
+  "permissionsExpanded": false,
+  "manualElapsedTimeCap": false,
+  "platformJobLimitMinutes": 360,
+  "unchangedExpensiveRetry": false
+}
