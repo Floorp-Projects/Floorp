@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "decision": "FOCUSED_MAC_GATE_PASSED_GO_FOR_ONE_PINNED_FULL_HOST_XUL_NATIVE_RUN",
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "binding": {
+    "receiptCommit": "a96b5d18ce10cb69b55ae10bf92f2491b8e1e0ed",
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY11_EXECUTION_RESULT.json",
+    "receiptBytes": 6339,
+    "receiptSHA256": "c6be8f892369e6d5a6dd8a535c63a9f3bd999d5940c00b466ecb29995f99c080",
+    "providerReceiptBytesMatch": true,
+    "fixtureCommit": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+    "diagnosticCallerCommit": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "runId": 39082226396,
+    "jobId": 117541367131,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082226396",
+    "attempt": 1,
+    "decodedLogBytes": 46078,
+    "decodedLogSHA256": "c49f41a6826748554204fcd7df933be872b0105625382dbd743acf6e07600961",
+    "rawLogPublished": false,
+    "prelaunchReviewSHA256": "45786fe5aca3c9cdac7e26d3afd278e1d93d12223883aa4b3ec5d529318c5421"
+  },
+  "terminalProviderEvidence": {
+    "status": "completed",
+    "conclusion": "success",
+    "singleJob": true,
+    "runner": "macos-15-intel",
+    "durationSeconds": 39,
+    "allStepsSucceeded": true,
+    "newArtifacts": 0,
+    "headAndBranchMatchReviewedDiagnostic": true
+  },
+  "tests": {
+    "total": 118,
+    "passed": 118,
+    "skipped": 0,
+    "elapsedSeconds": 25.445,
+    "namedTestsFoundInDirectJobLog": 118,
+    "directUnittestVerdict": "OK",
+    "allSevenActualMacTestsRan": true
+  },
+  "macGenerationGates": [
+    {
+      "case": "natural-owned-churn",
+      "samples": 13,
+      "complete": 13,
+      "esrchRechecks": 0,
+      "forkedChildren": 720,
+      "initialESRCHInjected": false,
+      "naturalRaceObserved": false,
+      "groupCleanup": "verified-gone",
+      "leaderReaped": true
+    },
+    {
+      "case": "actual-clang-durable-excerpts",
+      "realCompilerError": true,
+      "beforeAndAfterPresent": true,
+      "freeTextPublished": false,
+      "leaderReaped": true
+    },
+    {
+      "case": "controlled-esrch-live",
+      "actualKernelQueries": true,
+      "initialESRCHInjected": true,
+      "sameGeneration": true,
+      "result": "measured"
+    },
+    {
+      "case": "controlled-esrch-owned-zombie",
+      "actualKernelQueries": true,
+      "initialESRCHInjected": true,
+      "sameGeneration": true,
+      "WNOWAITExitPending": true,
+      "signalZeroSucceeded": true,
+      "result": "authoritative-zombie"
+    }
+  ],
+  "actualCompilerDiagnostic": {
+    "events": [
+      {
+        "stage": "actual-clang-error",
+        "phase": "before-cleanup",
+        "evidence": {
+          "rawContentPublished": false,
+          "freeTextPublished": false,
+          "readLimitBytes": 131072,
+          "recordLimit": 16,
+          "available": true,
+          "fileBytes": 244,
+          "tailBytesRead": 244,
+          "tailTruncated": false,
+          "matchingRecords": 1,
+          "recordsTruncated": false,
+          "records": [
+            {
+              "tailLine": 1,
+              "kind": "source-error",
+              "messageClass": "undeclared-identifier",
+              "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+            }
+          ]
+        }
+      },
+      {
+        "stage": "actual-clang-error",
+        "phase": "after-cleanup",
+        "evidence": {
+          "rawContentPublished": false,
+          "freeTextPublished": false,
+          "readLimitBytes": 131072,
+          "recordLimit": 16,
+          "available": true,
+          "fileBytes": 244,
+          "tailBytesRead": 244,
+          "tailTruncated": false,
+          "matchingRecords": 1,
+          "recordsTruncated": false,
+          "records": [
+            {
+              "tailLine": 1,
+              "kind": "source-error",
+              "messageClass": "undeclared-identifier",
+              "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+            }
+          ]
+        }
+      }
+    ],
+    "bothOrderedEventsReadDirectlyFromJobLog": true,
+    "expectedClass": "source-error/undeclared-identifier",
+    "expectedNormalizedDiagnostic": "error use of undeclared identifier <redacted>",
+    "privateSentinelAbsentAcrossEntireJobLog": true,
+    "freeRawCompilerTextPublished": false,
+    "conclusion": "The deliberately failing real clang syntax check retained and immediately emitted both sanitized phases, independently of a final pipeline summary."
+  },
+  "resourceAndCleanupAssessment": {
+    "controlledInitialESRCH": "Injected only for the first task query; later BSD/task results and owned-child lifecycle observations used real Mac APIs. Same-generation live counters and authoritative same-generation zombie reconciliation passed.",
+    "naturalChurn": "720 owned forks completed, 13/13 returned samples complete, no terminal monitor failure, verified group disappearance and exact leader reap.",
+    "naturalObservationLimit": "Zero rechecks in returned final samples is not proof of absence of every natural race; partial-sample rechecks are not included in that aggregate. Historical ESRCH recreation was not established.",
+    "negativeControls": "Persistent live/permission/invalid uncertainty and generation-replacement controls remain fail-closed in the passing suite. No unknown resource total became zero.",
+    "otherRealMacEvidence": [
+      {
+        "ownedZombieCleanup": {
+          "pidTag": "c6d8039ffd8309bc",
+          "identityTag": "ebeaf56a940b94a4",
+          "liveGroupBeforeExit": true,
+          "unreapedExitPending": true,
+          "signalZeroSucceeded": true,
+          "unreapedGroupProbeErrno": 1,
+          "bsdZombieIdentityMatched": true,
+          "exactLeaderReapedExitCode": 0,
+          "postReapGroupProbeErrno": 3,
+          "signalsSent": 0
+        }
+      },
+      {
+        "ordinaryNativeInventory": {
+          "sameOwnedPID": true,
+          "fullBirthAvailable": true,
+          "exactArgvMatched": true,
+          "environmentExcluded": true,
+          "candidateMatched": true,
+          "validatedZombieNotLive": true,
+          "helperProcessesStarted": 0,
+          "privilegeChanges": false
+        }
+      }
+    ],
+    "permissionsExpanded": false,
+    "resourceLimitsAndOuterRetriesChanged": false
+  },
+  "independentChecks": [
+    "Terminal run/job API and artifacts queried directly",
+    "Decoded job log fetched directly; exact digest matches immutable receipt",
+    "118 named tests, Ran 118 tests in 25.445s and OK without skip/failure summary",
+    "All four macGenerationGate records and both actual-clang-error events match the receipt",
+    "Whole decoded log checked for absence of private compiler sentinel",
+    "Immutable receipt read back from provider and exact SHA256 verified"
+  ],
+  "fullExecutionRoute": {
+    "decision": "GO_FOR_ONE_FULL_VALIDATION",
+    "callerCommit": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "callerTree": "6b02fad82f6743440b6c7a488fc409ba3e879db1",
+    "parentCommit": "dbca173839e63b82fcca2f1a109dfd1ec671f0a3",
+    "workflowPath": ".github/workflows/mac-native-nonpgo.yml",
+    "workflowBytes": 6749,
+    "workflowSHA256": "9494f4cc6421ceee14ab19a16af13e9a42a47eb71b7964d90ec2d605ac2798a6",
+    "providerWorkflowBytesVerified": true,
+    "minimalDifference": "Exactly two dedicated-branch substitutions and fixture c127e001 to 1143be2b; reconstructed byte-for-byte from the prior reviewed full caller.",
+    "branch": "codex/mac-native-nonpgo-recovery12-20261018",
+    "fixtureCommit": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+    "RuntimeSourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "jobCount": 1,
+    "runner": "macos-15-intel",
+    "platformTimeoutMinutes": 360,
+    "initialPushAndAttemptOneGuardsRetained": true,
+    "readOnlyContentsAndActionsPermissionsRetained": true,
+    "otherRuntimeWorkflowsInspected": 24,
+    "otherMatchingPushCreateOrWorkflowRunTriggers": 0,
+    "dedicatedBranchRunsAtCheck": 0,
+    "newArtifactUpload": false,
+    "productSigningPublishingMergeOrPermissionChanges": false,
+    "hypothesis": "Exercise the real full host/XUL/native sequence with validated bounded resource reconciliation and durable sanitized error evidence. Completion and native authentication still require actual results."
+  },
+  "SDKMetadataAtReview": {
+    "artifact": 12096898807,
+    "sourceRun": 39022451582,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "zipBytes": 105082683,
+    "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "expired": false,
+    "expiresAtUTC": "2026-10-18T09:48:20Z",
+    "currentOfficialMetadataReadOnlyCheckMatched": true,
+    "payloadDownloadedByReviewer": false,
+    "acquisitionCondition": "The full job must recheck current official metadata and expiry and retain the 600-second HTTP/hash/tree/version guards; this snapshot does not replace the acquisition check."
+  },
+  "remainingUncertainty": [
+    "Historical run 39077252234 ESRCH transition and original compiler error cause remain unknown.",
+    "Controlled first-ESRCH injection is not proof of the historical natural race.",
+    "The focused gate did not build the full host or XUL and did not test native Shim authentication.",
+    "Persistent resource uncertainty, new compiler failures and other native lifecycle failures must retain failure evidence and stop under unchanged limits."
+  ],
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082226396",
+    "https://github.com/Floorp-Projects/Floorp/blob/a96b5d18ce10cb69b55ae10bf92f2491b8e1e0ed/docs/qa/native-nonpgo-validation/20261018/RECOVERY11_EXECUTION_RESULT.json",
+    "https://github.com/Floorp-Projects/Floorp-Runtime/commit/f6173d1ff8db0a3d309e0502272248d0f79924c1"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "SDKDownloads": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0
+  }
+}
