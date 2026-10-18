@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "run": 39127153110,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39127153110",
+  "caller": "fd3608dc6d1ec79de561f243893ca903d44032e4",
+  "fixture": "46b268ebc0a633cdca0ef0a83e3af8c0870a1a9e",
+  "producerJob": 117674575081,
+  "status": "failure-before-acquisition",
+  "consumer": "skipped",
+  "sdkAcquisition": "skipped",
+  "build": "not-started",
+  "upload": "skipped",
+  "storedArtifacts": 0,
+  "preflight": {
+    "status": "failed",
+    "self": {
+      "status": "measured",
+      "rssMiB": 18.32421875,
+      "cpuSeconds": 0.190481774,
+      "state": "R"
+    },
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 189,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "status": "failed",
+      "seconds": 53.965,
+      "bytes": 42172,
+      "sha256": "a0037a095af46381b3b35ea2d78e73b86e4c32a1a5857c9c1ec7d0dbc9566b49",
+      "cases": [
+        {
+          "outcome": "ERROR",
+          "test": "test_checkpoint.CheckpointGuards.test_real_mac_new_owned_process_is_observed",
+          "phase": "test_real_mac_new_owned_process_is_observed",
+          "frames": [
+            {
+              "file": "test_checkpoint.py",
+              "line": 306
+            },
+            {
+              "file": "checkpoint.py",
+              "line": 235
+            }
+          ],
+          "exceptionType": "support.Failure",
+          "failureCode": "checkpoint-process-permission-mixed"
+        }
+      ]
+    },
+    "stages": [
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "failureEvidence": {
+          "beforeCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 42172,
+            "tailBytesRead": 42172,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 230,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          },
+          "leaderExitAlreadyObserved": 1,
+          "afterCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 42172,
+            "tailBytesRead": 42172,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 230,
+                "kind": "unclassified-error-marker",
+                "normalizedDiagnostic": "error <redacted>"
+              }
+            ]
+          }
+        },
+        "reason": "nonzero-exit",
+        "failurePhase": "wait",
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "logBytes": 42172,
+        "peakRSSMiB": 86,
+        "minimumFreeGiB": 107.33,
+        "lastActivity": {
+          "rssMiB": 70.86328125,
+          "cpuSeconds": 7.612,
+          "rssLowerBoundMiB": 70.86328125,
+          "cpuLowerBoundSeconds": 7.612,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 70.86328125,
+              "cpuSeconds": 7.611921681,
+              "state": "R",
+              "pidTag": "fc14bf97c1a080dc",
+              "identityTag": "3939c1878dc40e57"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "monitorFailure": null,
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 59.82
+    }
+  },
+  "confirmedFailure": "checkpoint-process-permission-mixed",
+  "classificationScope": "prior ps inventory matched one worker UID; the denied process birth and actual BSD credentials are unavailable",
+  "nextContract": "Primary in-process read-only KERN_PROC census with header-derived ABI and self binding; no libproc-permission fallback and no permission configuration changes"
+}

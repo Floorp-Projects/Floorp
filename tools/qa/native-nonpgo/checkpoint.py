@@ -16,7 +16,7 @@ import sys
 import tarfile
 import time
 
-from support import Failure, digest, require, write_json
+from support import digest, require, write_json
 from failure_excerpt import classify, normalized_diagnostic
 
 
@@ -206,46 +206,13 @@ def context(plan_path, source, task, sdk):
             'pythonSHA256': digest(Path(sys.executable).resolve())}
 
 
-def owned_processes():
-    """Read-only UID-associated census; this does not grant signal ownership."""
-    from darwin_activity import probe
-    result = subprocess.run(['/bin/ps', '-axo', 'pid=,uid=,ruid='], capture_output=True,
-                            text=True, check=True, timeout=3)
-    require(len(result.stdout) <= 1024**2, 'checkpoint-process-inventory-size')
-    births = set()
-    for line in result.stdout.splitlines():
-        fields = line.split()
-        require(len(fields) == 3 and fields[0].isdecimal() and
-                all(re.fullmatch(r'-?[0-9]{1,10}', item) for item in fields[1:]),
-                'checkpoint-process-inventory-format')
-        pid, uid, ruid = map(int, fields)
-        # Apple's ps formats uid_t with %d: nobody (uint32 -2) is printed -2.
-        # Keep malformed/out-of-range/invalid uid_t unknown rather than zero.
-        require(0 <= pid < 2**31 and all(-2**31 <= value < 2**32 - 1 and value != -1
-                                        for value in (uid, ruid)), 'checkpoint-process-inventory-format')
-        uid, ruid = uid % 2**32, ruid % 2**32
-        if uid != os.geteuid() and ruid != os.getuid():
-            continue
-        require(pid > 0, 'checkpoint-process-worker-pid')
-        status, bsd, reason = probe().bsd(pid)
-        if status == 'unavailable':
-            if reason == 'permission':
-                if uid == os.geteuid() and ruid == os.getuid():
-                    raise Failure('checkpoint-process-permission-worker')
-                raise Failure('checkpoint-process-permission-mixed')
-            if reason == 'short-bsd-info':
-                raise Failure('checkpoint-process-short-bsd-info')
-            if reason == 'invalid-identity':
-                raise Failure('checkpoint-process-invalid-identity')
-            if reason == 'invalid-bsd-state':
-                raise Failure('checkpoint-process-invalid-bsd-state')
-        require(status in ('measured', 'gone'), 'checkpoint-process-identity-unavailable')
-        if status == 'measured':
-            require(bsd.uid == uid and bsd.ruid == ruid, 'checkpoint-process-owner-changed')
-            # Retain mixed credentials as well. Existing OS helpers belong in
-            # the baseline; a new identity or changed credential rejects pack.
-            births.add((bsd.pid, bsd.start_sec, bsd.start_usec, bsd.uid, bsd.ruid))
-    return births
+def owned_processes(details=None):
+    """Read-only primary census; this does not grant signal ownership."""
+    from process_census import load_abi, snapshot
+    value = snapshot(load_abi(Path(os.environ['FLOORP_CENSUS_ABI'])))
+    if details is not None:
+        details.update(value['measurement'])
+    return value['identities']
 
 
 def full_log_receipt(path):

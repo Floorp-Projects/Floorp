@@ -12,7 +12,6 @@ import tempfile
 import time
 import unittest
 from unittest import mock
-from types import SimpleNamespace
 
 import checkpoint as cp
 from support import Failure, Runner, digest
@@ -20,6 +19,8 @@ from support import Failure, Runner, digest
 
 class CheckpointGuards(unittest.TestCase):
     def setUp(self):
+        from process_census import BINDING_KEYS
+        self.real_census_binding = {key:os.environ[key] for key in BINDING_KEYS if key in os.environ}
         self.temporary = tempfile.TemporaryDirectory(prefix='floorp-checkpoint-contract-')
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
@@ -303,88 +304,16 @@ class CheckpointGuards(unittest.TestCase):
 
     @unittest.skipUnless(sys.platform == 'darwin', 'actual Darwin ownership census gate')
     def test_real_mac_new_owned_process_is_observed(self):
-        before = cp.owned_processes()
-        child = subprocess.Popen(['/bin/sleep', '10'], start_new_session=True)
-        try:
-            after = cp.owned_processes()
-            self.assertTrue(any(row[0] == child.pid for row in after - before))
-        finally:
-            child.terminate()
-            child.wait(timeout=5)
-        self.assertFalse(any(row[0] == child.pid for row in cp.owned_processes() - before))
-
-    def test_apple_signed_unrelated_uids_are_normalized_before_owner_filter(self):
-        value = SimpleNamespace(pid=41, uid=501, ruid=501, start_sec=123, start_usec=4)
-        probe = mock.Mock()
-        probe.bsd.return_value = ('measured', value, None)
-        inventory = SimpleNamespace(stdout='0 0 0\n41 501 501\n42 -2 -2\n43 4294967294 4294967294\n')
-        with mock.patch.object(cp.subprocess, 'run', return_value=inventory), \
-                mock.patch.object(cp.os, 'geteuid', return_value=501), \
-                mock.patch.object(cp.os, 'getuid', return_value=501), \
-                mock.patch('darwin_activity.probe', return_value=probe):
-            self.assertEqual(cp.owned_processes(), {(41, 123, 4, 501, 501)})
-        probe.bsd.assert_called_once_with(41)
-
-    def test_malformed_or_invalid_uid_inventory_remains_unavailable(self):
-        for uid in ('-1', '4294967295', '-2147483649', '4294967296', 'unknown', '+501'):
-            with self.subTest(uid=uid), \
-                    mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='42 '+uid+' 0\n')), \
-                    mock.patch('darwin_activity.probe') as probe:
-                with self.assertRaisesRegex(Failure, 'checkpoint-process-inventory-format'):
-                    cp.owned_processes()
-                probe.assert_not_called()
-
-    def test_mixed_owner_identity_is_bound_to_inventory_and_retained_in_census(self):
-        probe = mock.Mock()
-        probe.bsd.return_value = ('measured', SimpleNamespace(pid=41, start_sec=123, start_usec=4,
-                                                           uid=0, ruid=501), None)
-        with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='41 0 501\n')), \
-                mock.patch.object(cp.os, 'geteuid', return_value=501), \
-                mock.patch.object(cp.os, 'getuid', return_value=501), \
-                mock.patch('darwin_activity.probe', return_value=probe):
-            self.assertEqual(cp.owned_processes(), {(41,123,4,0,501)})
-        probe.bsd.assert_called_once_with(41)
-
-    def test_credentials_changed_since_inventory_remain_unavailable(self):
-        probe = mock.Mock()
-        probe.bsd.return_value = ('measured', SimpleNamespace(uid=501, ruid=501), None)
-        with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout='41 0 501\n')), \
-                mock.patch.object(cp.os, 'geteuid', return_value=501), \
-                mock.patch.object(cp.os, 'getuid', return_value=501), \
-                mock.patch('darwin_activity.probe', return_value=probe):
-            with self.assertRaisesRegex(Failure, 'checkpoint-process-owner-changed'):
-                cp.owned_processes()
-
-    def test_same_birth_with_changed_credentials_is_not_in_baseline(self):
-        probe = mock.Mock()
-        def census(uid):
-            probe.bsd.return_value = ('measured', SimpleNamespace(pid=41, start_sec=123, start_usec=4,
-                                                               uid=uid, ruid=501), None)
-            with mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout=f'41 {uid} 501\n')), \
-                    mock.patch.object(cp.os, 'geteuid', return_value=501), \
-                    mock.patch.object(cp.os, 'getuid', return_value=501), \
-                    mock.patch('darwin_activity.probe', return_value=probe):
-                return cp.owned_processes()
-        before = census(501)
-        self.assertEqual(census(0)-before, {(41,123,4,0,501)})
-
-    def test_unavailable_census_keeps_permission_and_transient_reasons_distinct(self):
-        cases = [('permission',0,'checkpoint-process-permission-mixed'),
-                 ('permission',501,'checkpoint-process-permission-worker'),
-                 ('short-bsd-info',501,'checkpoint-process-short-bsd-info'),
-                 ('invalid-identity',501,'checkpoint-process-invalid-identity'),
-                 ('invalid-bsd-state',501,'checkpoint-process-invalid-bsd-state'),
-                 ('unknown',501,'checkpoint-process-identity-unavailable')]
-        for reason,uid,code in cases:
-            probe = mock.Mock()
-            probe.bsd.return_value = ('unavailable', None, reason)
-            with self.subTest(reason=reason,uid=uid), \
-                    mock.patch.object(cp.subprocess, 'run', return_value=SimpleNamespace(stdout=f'41 {uid} 501\n')), \
-                    mock.patch.object(cp.os, 'geteuid', return_value=501), \
-                    mock.patch.object(cp.os, 'getuid', return_value=501), \
-                    mock.patch('darwin_activity.probe', return_value=probe):
-                with self.assertRaisesRegex(Failure, code):
-                    cp.owned_processes()
+        with mock.patch.dict(os.environ,self.real_census_binding):
+            before = cp.owned_processes()
+            child = subprocess.Popen(['/bin/sleep', '10'], start_new_session=True)
+            try:
+                after = cp.owned_processes()
+                self.assertTrue(any(row[0] == child.pid for row in after - before))
+            finally:
+                child.terminate()
+                child.wait(timeout=5)
+            self.assertFalse(any(row[0] == child.pid for row in cp.owned_processes() - before))
 
 
 if __name__ == '__main__':

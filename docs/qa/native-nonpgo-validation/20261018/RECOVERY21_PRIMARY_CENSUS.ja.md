@@ -1,0 +1,11 @@
+run [39127153110](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39127153110) は Mac189テスト中188成功・1 error・skip0でした。安全な診断で `test_real_mac_new_owned_process_is_observed` の最初の census が `checkpoint-process-permission-mixed` で失敗したと確認しました。先行 ps inventory では UID/RUID の一方が worker と一致した候補ですが、拒否対象の出生や実際の BSD 資格情報までは取得できていません。monitorFailure は null、group 消滅と leader reap は成功、SDK/build/upload は未実行、consumer は skip、artifact は0件です。終了記録は `RECOVERY20_PREFLIGHT_RESULT.json` です。
+
+補足 census の主経路を、in-process の read-only `sysctl(KERN_PROC_ALL)` に変更します。[Apple の libproc 実装](https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L2051) と [KERN_PROC 実装](https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_sysctl.c#L754) で取得契約が異なります。新経路は正常な sysctl snapshot を直接要求し、libproc が EPERM を返した後に別の結果を成功扱いする fallback はありません。sysctl の拒否・不正応答も停止します。権限設定や認証は変更しません。
+
+固定 fixture の `census_abi.c` は system cc で Runner 監視下に compile・実行し、現在の Mac ヘッダーから kinfo_proc の sizeof、必要な field の offset・width・signedness だけを出力します。source/binary hash、同 job origin・fixture・run/head/image、完全な stage 成功・group 消滅・reap に binding した readonly ABI receipt を作ります。推測した ctypes struct offset を採用しません。helper は ABI 取得だけで終了し、snapshot は Python caller の中で行うため、helper 自身を新規残存 process と誤認しません。
+
+sysctl は常に newp=NULL/newlen=0 の read-only 呼出しです。size/data 両方の return code・errno、8 MiB cap、完全 record 長、PID 重複、UID sentinel、候補の出生・状態を検査します。ENOMEM の partial bytes は破棄し、最大3回まで fresh size query から全量を取得し直します。他の拒否や不完全応答は失敗します。自PIDが必須で、既存 libproc の自PID読取りと出生・UID/RUIDを照合します。公開記録は完全 snapshot の件数、mixed 候補件数、ABI hash、固定エラーコードだけです。raw kinfo bytes・PID/UID値・名前・pointer・環境は公開しません。
+
+producer は準備前と自然成功境界後に候補 `(pid,startSec,startUsec,uid,ruid)` を比較します。これは snapshot 時点の worker EUID OR RUID 候補内の検査であり、全体 atomic snapshot や、その後の writer 不在、両UIDが候補外へ変わる場合の検出は保証しません。自然成功境界・所有 group cleanup を補足する条件として用います。資源監視、signal 所有確認、cleanup、SDK/Runtime/toolchain pins、任意中断状態の不適格条件は維持します。
+
+Linux 全195件中185 PASS／Darwin専用10 skip、8.532秒。Mac では ABI compile/layout/self snapshot・子processの出生観測と、全195件PASS・skip0を取得前に要求します。この Mac gate に通るまでは API 可用性や checkpoint 適格性を成功と呼びません。直列2 jobs、checkpoint 最大1件・10 GiB・保持1日を維持し、成功時も resumed build と記録します。

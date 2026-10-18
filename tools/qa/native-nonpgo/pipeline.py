@@ -332,7 +332,8 @@ def main():
         owned_baseline = None
         if checkpoint_role == 'producer':
             from checkpoint import owned_processes
-            owned_baseline = owned_processes()
+            report['checkpointCensusBaseline'] = {}
+            owned_baseline = owned_processes(report['checkpointCensusBaseline'])
         stage = 'harness'
         report['harness'] = prepare_harness(plan, args.harness, args.fixture, runner, basic_env)
         stage = 'sdk'
@@ -409,14 +410,16 @@ def main():
             host = task / 'obj/widget/cocoa/MacWebAppService.o'
             require(not host.exists() and not host.is_symlink(), 'checkpoint-host-already-built')
             require(not any((task / 'obj/dist/bin').glob('XUL*')), 'checkpoint-xul-already-built')
-            require(not (owned_processes() - owned_baseline), 'checkpoint-owned-survivors')
+            census_completion = {}
+            require(not (owned_processes(census_completion) - owned_baseline), 'checkpoint-owned-survivors')
             require(runner.failure is None and runner.monitor_failure is None and
                     all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
                         row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None
                         for row in runner.records), 'checkpoint-stage-completion')
             boundary.update(status='passed', interrupted=False, newOwnedSurvivors=0,
                             archiveSHA256=digest(archive), depInfoSHA256=digest(depinfo),
-                            censusScope='BSD identities with worker effective or real UID; baseline before all build preparation',
+                            censusScope='primary KERN_PROC snapshot identities with worker effective or real UID; baseline before all build preparation',
+                            census={'baseline':report['checkpointCensusBaseline'],'completion':census_completion},
                             logs={name: full_log_receipt(task / (name + '.private.log'))
                                   for name in ('checkpoint-exports', 'checkpoint-rust')},
                             stages=[row for row in runner.records if row['stage'].startswith('checkpoint-')])

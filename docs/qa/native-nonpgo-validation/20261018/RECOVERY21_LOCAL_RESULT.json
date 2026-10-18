@@ -1,0 +1,83 @@
+{
+  "actualMacGateRequired": 195,
+  "actualPrimaryMacAvailabilityVerified": false,
+  "bindings": [
+    {
+      "bytes": 25530,
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "284ed18b842d491a8d7258848f5f146c9ad94159c6ec8b1a492dec9421bd36bb"
+    },
+    {
+      "bytes": 16855,
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "ad93dbe17e8b8eadbb3db6d0f7c13979518b9b71a078f7650125abf62b596538"
+    },
+    {
+      "bytes": 37531,
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "653ab1fddbbc0266671bbe9ce2b0aefb4f06fe7b938ccbb039adbd3a1da1cb96"
+    },
+    {
+      "bytes": 25898,
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "22532973923b62e3037a121e9b6a4b2b0ebcf980bffe4c7730b2fef684341daa"
+    },
+    {
+      "bytes": 1577,
+      "path": "tools/qa/native-nonpgo/census_abi.c",
+      "sha256": "120031546128e000d6b0ee2a725934b832e97084ffb309ea452d2a943669e347"
+    },
+    {
+      "bytes": 8534,
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "sha256": "e6d8faaa9d39c91bfa3fd7994fe64e4ce796ea370bdad7739fbedebda6eaab2d"
+    },
+    {
+      "bytes": 8304,
+      "path": "tools/qa/native-nonpgo/test_process_census.py",
+      "sha256": "26289572b0b7ad58716a25ea6f2090a9388307fc5b37abd03d364185d7f10e9c"
+    },
+    {
+      "bytes": 4268,
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "sha256": "d9c513c7dc4ca8e7393a0df30a95d6c09c8b7257dd7efa9a209866655b8b6ab1"
+    }
+  ],
+  "independentFinalDelta": {
+    "actualDarwinHeaderCompile": false,
+    "c11SignednessFixtureCompiled": true,
+    "censusTestsPassed": 12,
+    "unsignedCharFixtureCompiled": true
+  },
+  "independentFullBeforeFinalCountAndSignednessDelta": {
+    "darwinSkipped": 10,
+    "passed": 185,
+    "resourceWarningsAreErrors": true,
+    "seconds": 8.505,
+    "total": 195
+  },
+  "permissionSettingsChanged": false,
+  "resourceMonitorChanged": false,
+  "review": {
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "TECHNICAL_GO_WITH_IMMUTABLE_BIND_GATES"
+  },
+  "schema": 1,
+  "scope": "primary in-process read-only KERN_PROC census; no permission fallback",
+  "signalOwnershipExpanded": false,
+  "skipsAllowed": 0,
+  "storageScope": {
+    "artifactsAtMost": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionDays": 1,
+    "serialStandardIntelJobs": 2
+  },
+  "templateSHA256": "10774922fc833e828b3c2ebf08bfc7925e771519f4191a543c790527b1ad5f67",
+  "tests": {
+    "darwinSkipped": 10,
+    "passed": 185,
+    "seconds": 8.532,
+    "total": 195
+  }
+}
