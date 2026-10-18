@@ -215,6 +215,48 @@ def owned_processes(details=None):
     return value['identities']
 
 
+def verify_owned_boundary(baseline, receipt):
+    """Retain safe census evidence before rejecting any new candidate identity."""
+    receipt.update(status='collecting', signalOwnershipGranted=False,
+                   rawProcessMetadataPublished=False, newCandidateIdentities=None,
+                   removedCandidateIdentities=None, deltaKinds=None, deltaRecords=None,
+                   deltaRecordsTruncated=None)
+    try:
+        completion = owned_processes(receipt)
+    except BaseException:
+        receipt['status'] = 'unavailable'
+        raise
+    added = completion - baseline
+    previous = {row[0]: row for row in baseline}
+    counts, classified = {}, []
+    for row in sorted(added):
+        prior = previous.get(row[0])
+        kind = ('new-pid' if prior is None else
+                'pid-generation-changed' if prior[1:3] != row[1:3] else
+                'candidate-credentials-changed')
+        counts[kind] = counts.get(kind, 0) + 1
+        classified.append((kind, row))
+    receipt.update(status='rejected' if added else 'passed',
+                   newCandidateIdentities=len(added), removedCandidateIdentities=len(baseline-completion),
+                   deltaKinds=counts,
+                   deltaScope='worker effective or real UID candidates; ancestry and writer role unproven')
+    if not added:
+        receipt.update(deltaRecords=[], deltaRecordsTruncated=False, deltaDiagnosticStatus='complete')
+        return receipt
+    try:
+        key = os.urandom(16)
+        records = [{'kind': kind,
+                    'identityTag': hashlib.blake2s(json.dumps(row).encode(), key=key,
+                                                   digest_size=8).hexdigest()}
+                   for kind, row in classified[:16]]
+        receipt.update(deltaRecords=records, deltaRecordsTruncated=len(added)>16,
+                       deltaDiagnosticStatus='complete')
+    except Exception:
+        receipt['deltaDiagnosticStatus'] = 'unavailable'
+    require(not added, 'checkpoint-owned-survivors')
+    return receipt
+
+
 def full_log_receipt(path):
     first, last, counts, matches = [], deque(maxlen=8), {}, 0
     checksum = hashlib.sha256()

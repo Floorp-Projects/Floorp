@@ -385,7 +385,7 @@ def main():
                        args.source, env, plan['limits']['jobMinutes'])
         verify_config(plan, task, tools, sdk)
         if checkpoint_role == 'producer':
-            from checkpoint import full_log_receipt, owned_processes, verify_graph
+            from checkpoint import full_log_receipt, verify_owned_boundary, verify_graph
             stage = 'checkpoint-exports'
             runner.run(stage, [sys.executable, 'mach', 'build', '-j', '3', 'pre-export', 'export'],
                        args.source, env, plan['limits']['jobMinutes'],
@@ -410,8 +410,9 @@ def main():
             host = task / 'obj/widget/cocoa/MacWebAppService.o'
             require(not host.exists() and not host.is_symlink(), 'checkpoint-host-already-built')
             require(not any((task / 'obj/dist/bin').glob('XUL*')), 'checkpoint-xul-already-built')
-            census_completion = {}
-            require(not (owned_processes(census_completion) - owned_baseline), 'checkpoint-owned-survivors')
+            stage = 'checkpoint-census'
+            census_completion = report['checkpointCensusCompletion'] = {}
+            verify_owned_boundary(owned_baseline, census_completion)
             require(runner.failure is None and runner.monitor_failure is None and
                     all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
                         row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None

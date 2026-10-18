@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "run": {
+    "id": "39128271619",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39128271619",
+    "attempt": 1,
+    "executionHead": "ffbe2147b5a8aeee375ae04668b1b8614df61bd7",
+    "fixture": "a05e45c6d6ac1230451c4511c18e8dc45e10e4bd",
+    "producerJob": "117677901339",
+    "consumerJob": "117693264169"
+  },
+  "status": "failed",
+  "firstFailure": {
+    "stage": "checkpoint-rust",
+    "code": "checkpoint-owned-survivors",
+    "elapsedSeconds": 4311.85
+  },
+  "monitorFailure": null,
+  "elapsedMinutes": 71.93,
+  "macPreflight": {
+    "tests": {
+      "bytes": 42290,
+      "cases": [],
+      "complete": true,
+      "errors": 0,
+      "exceptionTextPublished": false,
+      "failures": 0,
+      "rawContentPublished": false,
+      "seconds": 37.101,
+      "sha256": "d61e993a6e5195407d29f490173cde809259778762ff785e522f2555456dde36",
+      "skipped": 0,
+      "status": "passed",
+      "total": 195
+    },
+    "census": {
+      "api": "sysctl-kern-proc-all",
+      "attempts": 1,
+      "candidateIdentities": 235,
+      "candidateZombies": 0,
+      "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+      "mixedCandidateIdentities": 2,
+      "rawProcessMetadataPublished": false,
+      "retryErrnos": [],
+      "selfBindingVerified": true,
+      "snapshotBytes": 294192,
+      "snapshotEntries": 454
+    }
+  },
+  "baseline": {
+    "api": "sysctl-kern-proc-all",
+    "snapshotBytes": 322704,
+    "snapshotEntries": 498,
+    "candidateIdentities": 268,
+    "candidateZombies": 0,
+    "mixedCandidateIdentities": 2,
+    "selfBindingVerified": true,
+    "rawProcessMetadataPublished": false,
+    "attempts": 1,
+    "retryErrnos": [],
+    "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+  },
+  "completion": {
+    "status": "not-retained",
+    "newCandidateIdentities": null,
+    "ancestry": null,
+    "reason": "require raised before completion census was attached to report"
+  },
+  "boundary": {
+    "exportsExitCode": 0,
+    "rustExitCode": 0,
+    "archiveListExitCode": 0,
+    "archiveFormatAndDependencyInfoVerified": true,
+    "hostObjectAbsentAtCheck": true,
+    "xulAbsentAtCheck": true,
+    "eligible": false
+  },
+  "stages": [
+    {
+      "stage": "checkpoint-exports",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 1426,
+      "minimumFreeGiB": 97.98,
+      "logBytes": 2778702
+    },
+    {
+      "stage": "checkpoint-rust",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 7815,
+      "minimumFreeGiB": 90.07,
+      "logBytes": 5487705
+    },
+    {
+      "stage": "checkpoint-rust-archive",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 59,
+      "minimumFreeGiB": 90.07,
+      "logBytes": 58343
+    }
+  ],
+  "logs": {
+    "checkpoint-exports": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 2778702,
+      "sha256": "6fa3a684f8d9dbc7a68a17b459c0aad66aaa9dca378221164a25ecc105f7d102",
+      "lines": 1749,
+      "diagnosticCounts": {},
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": [],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    },
+    "checkpoint-rust": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 5487705,
+      "sha256": "01699c82173f47cb2d81e20fb930809306513d8c7cdd0706a60354c3e90696f2",
+      "lines": 33260,
+      "diagnosticCounts": {
+        "unclassified-error-marker": 53
+      },
+      "matchingRecords": 53,
+      "recordsTruncated": true,
+      "records": [
+        {
+          "line": 1871,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2831,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2839,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 3595,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3604,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3658,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3664,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3669,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 18975,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> use of <redacted> use the <redacted> or <redacted>"
+        },
+        {
+          "line": 25197,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 25207,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 26020,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 30528,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 32465,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 33139,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error <redacted>"
+        },
+        {
+          "line": 33148,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error <redacted>"
+        }
+      ],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    }
+  },
+  "artifacts": 0,
+  "consumerStatus": "skipped",
+  "newArtifacts": 0,
+  "fullHostBuild": "NOT_TESTED",
+  "nativeAuthentication": "NOT_TESTED",
+  "productQualification": false,
+  "conclusion": "Successful Rust commands followed by conservative census rejection; origin of candidate delta unproven."
+}

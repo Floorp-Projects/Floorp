@@ -1,0 +1,9 @@
+run [39128271619](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39128271619) は、195件の実Macテスト（skip0）と primary KERN_PROC census を通過しました。準備前の snapshot は498件、候補268件、mixed候補2件で、自processの出生・資格情報照合にも成功しています。`checkpoint-exports`、`checkpoint-rust`、archive一覧検査はいずれも exit0、所有group消滅・leader回収が成功し、monitorFailure/cleanupFailure はありません。Rust段階の最大RSSは7815 MiB、空き容量の最小値は90.07 GiBでした。
+
+最初の失敗は71.86分時点の `checkpoint-owned-survivors` です。Rust archive形式・依存情報と、host object/XUL未生成の検査を通過した後、準備前に存在しなかった候補identityを検出して保存を拒否しました。pack/uploadは未実行、artifact0件、consumerはskip、full host/XUL/native認証は未検証です。終了証拠は `RECOVERY21_TERMINAL_RESULT.json` にあります。Rustログ中の一般的なerror文字列はexit0をコンパイル失敗へ置き換える根拠にはしません。
+
+現行実装は completion census をlocal変数に取得した直後にrequireで停止し、失敗時にはreportへ残しません。そのため差分件数、PID世代・資格情報の変化、残存processの由来は今回の証拠から復元できません。buildから離脱した子processとrunner側の背景変動のどちらかを断定できず、同じownerであることもsignal所有やwriterの証明にはなりません。
+
+修正は診断の保存順序に限定します。report内にcompletion receiptを先に作り、snapshotの測定、追加・消滅件数、全件の固定分類集計をrequireより前に残します。分類は新PID、既知PIDの出生変更、同出生の候補資格情報変更です。最大16件は非公開ランダム鍵によるBLAKE2sタグと固定分類だけを残し、生PID・出生時刻・UID・名前・argv・環境・鍵は公開しません。取得不能の件数はnullのままです。タグ診断の例外は元の拒否理由を置き換えず、差分が空なら乱数取得もしません。新候補が1件でもあれば従来どおり `checkpoint-owned-survivors` で拒否し、資源制限・所有確認・cleanup・保存上限は変更しません。
+
+次に判別する仮説は、広いUID/RUID候補集合の変動がbuildなしのrunnerでも生じるか、それともbuild期間のみに残るかです。SDK・Floorpビルドを行わない短い実Mac census 診断で、既知の所有子processと自然な背景変動に対するreceiptを検証できます。ただし短時間の無変動は約72分の安定性を証明せず、分類タグだけでは祖先やwriter役割も証明しません。長時間再実行前に、必要な祖先・役割の安全な観測方法と判定条件を確定する必要があります。今回の差分を成功扱いする変更や、同じ長時間ビルドの再実行は行っていません。

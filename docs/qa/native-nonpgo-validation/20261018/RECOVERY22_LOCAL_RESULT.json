@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "scope": "failure evidence preservation only; checkpoint eligibility and cleanup unchanged",
+  "baseFixture": "a05e45c6d6ac1230451c4511c18e8dc45e10e4bd",
+  "tests": {
+    "total": 199,
+    "passed": 189,
+    "darwinSkipped": 10,
+    "seconds": 8.537,
+    "resourceWarningsAreErrors": true
+  },
+  "actualMacTestsAtBaseFixture": {
+    "total": 195,
+    "passed": 195,
+    "skipped": 0,
+    "run": "39128271619"
+  },
+  "postPatchActualMacTested": false,
+  "checkpointsSaved": 0,
+  "newMacRunLaunched": false,
+  "sdkPinsChanged": false,
+  "permissionSettingsChanged": false,
+  "signalOwnershipExpanded": false,
+  "eligibilityRelaxed": false,
+  "independentReviewFile": "RECOVERY22_INDEPENDENT_REVIEW.json",
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "2382eca9c0edceba6eb70ba0205ba9b3f4e74752beb478a6a453d19a3f313a04"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "5b327a6846ddbc57736920bc9790605d6e190f2911fdd9911e6732f34dd1914f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "abf149f4fd2940a59b3f1473833b0fbd08cb670e294cd119206bf1dbace1dd76"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY21_TERMINAL_RESULT.json",
+      "sha256": "f0062bf85c0cc3fd1f15e19d020adfda3e52e72ab18e45f07bd415de8a851c5e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY22_CENSUS_EVIDENCE.ja.md",
+      "sha256": "f30866bd7c96e62e3a2d2c1925f9d7ddbe662de350a33c83f4e50bbc5287d9cb"
+    }
+  ],
+  "nextWorkflowGateRequirement": {
+    "total": 199,
+    "skipsAllowed": 0
+  },
+  "independentReview": {
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "verdict": "ACCEPT_FOR_EVIDENCE_RETENTION",
+    "tests": {
+      "total": 199,
+      "passed": 189,
+      "darwinSkipped": 10,
+      "seconds": 8.605,
+      "resourceWarningsAreErrors": true
+    },
+    "reviewSHA256": "542aaf2c1b53cefa356adc6728ae3e37da981509283fdd70c795809f076a09fb"
+  }
+}

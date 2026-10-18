@@ -65,6 +65,74 @@ class CheckpointGuards(unittest.TestCase):
     def save_plan(self):
         self.plan_path.write_text(json.dumps(self.plan))
 
+    def test_boundary_rejection_retains_full_counts_and_bounded_safe_deltas(self):
+        before = {(90001, 123456789, 654321, 501, 501), (90002, 123456789, 654321, 0, 501)}
+        after = {(90001, 123456790, 654321, 501, 501), (90002, 123456789, 654321, 501, 501)}
+        after.update((pid, 123456791, 654321, 501, 501) for pid in range(90003, 90023))
+        receipt = {}
+        def snapshot(details):
+            details.update(candidateIdentities=len(after), selfBindingVerified=True)
+            return after
+        with mock.patch.object(cp, 'owned_processes', side_effect=snapshot), \
+                self.assertRaisesRegex(Failure, 'checkpoint-owned-survivors'):
+            cp.verify_owned_boundary(before, receipt)
+        self.assertEqual(receipt['status'], 'rejected')
+        self.assertEqual(receipt['candidateIdentities'], 22)
+        self.assertEqual(receipt['newCandidateIdentities'], 22)
+        self.assertEqual(receipt['removedCandidateIdentities'], 2)
+        self.assertEqual(receipt['deltaKinds'], {'new-pid': 20, 'pid-generation-changed': 1,
+                                                'candidate-credentials-changed': 1})
+        self.assertEqual(len(receipt['deltaRecords']), 16)
+        self.assertTrue(receipt['deltaRecordsTruncated'])
+        self.assertFalse(receipt['signalOwnershipGranted'])
+        self.assertTrue(all(set(row)=={'kind','identityTag'} for row in receipt['deltaRecords']))
+        for row in receipt['deltaRecords']:
+            self.assertRegex(row['identityTag'], r'^[0-9a-f]{16}$')
+        self.assertTrue(set(receipt).isdisjoint({'pid', 'uid', 'ruid', 'startSec', 'startUsec',
+                                                'identities', 'tagKey'}))
+
+    def test_boundary_unavailable_keeps_unknown_and_original_failure(self):
+        receipt = {}
+        with mock.patch.object(cp, 'owned_processes', side_effect=Failure('census-sysctl-permission')), \
+                self.assertRaisesRegex(Failure, 'census-sysctl-permission'):
+            cp.verify_owned_boundary(set(), receipt)
+        self.assertEqual(receipt['status'], 'unavailable')
+        self.assertIsNone(receipt['newCandidateIdentities'])
+        self.assertIsNone(receipt['deltaRecords'])
+
+    def test_optional_delta_diagnostic_failure_cannot_replace_boundary_rejection(self):
+        receipt = {}
+        with mock.patch.object(cp, 'owned_processes', return_value={(101, 123, 4, 501, 501)}), \
+                mock.patch.object(cp.os, 'urandom', side_effect=OSError('private diagnostic text')), \
+                self.assertRaisesRegex(Failure, 'checkpoint-owned-survivors'):
+            cp.verify_owned_boundary(set(), receipt)
+        self.assertEqual(receipt['status'], 'rejected')
+        self.assertEqual(receipt['newCandidateIdentities'], 1)
+        self.assertEqual(receipt['deltaKinds'], {'new-pid': 1})
+        self.assertEqual(receipt['deltaDiagnosticStatus'], 'unavailable')
+        self.assertIsNone(receipt['deltaRecords'])
+        self.assertIsNone(receipt['deltaRecordsTruncated'])
+        self.assertNotIn('private diagnostic text', json.dumps(receipt))
+
+    def test_boundary_identical_or_removed_candidates_pass_and_tags_are_unlinkable(self):
+        baseline = {(101, 123, 4, 501, 501), (102, 124, 5, 501, 501)}
+        receipt = {}
+        with mock.patch.object(cp, 'owned_processes', return_value={next(iter(baseline))}), \
+                mock.patch.object(cp.os, 'urandom', side_effect=AssertionError('unnecessary random call')):
+            self.assertIs(cp.verify_owned_boundary(baseline, receipt), receipt)
+        self.assertEqual(receipt['status'], 'passed')
+        self.assertEqual(receipt['newCandidateIdentities'], 0)
+        self.assertEqual(receipt['removedCandidateIdentities'], 1)
+        self.assertEqual(receipt['deltaRecords'], [])
+        records = []
+        for _ in range(2):
+            receipt = {}
+            with mock.patch.object(cp, 'owned_processes', return_value={(103, 125, 6, 501, 501)}), \
+                    self.assertRaisesRegex(Failure, 'checkpoint-owned-survivors'):
+                cp.verify_owned_boundary(baseline, receipt)
+            records.append(receipt['deltaRecords'])
+        self.assertNotEqual(records[0][0]['identityTag'], records[1][0]['identityTag'])
+
     def pack(self):
         return cp.pack(self.plan_path, self.source, self.task, self.sdk, time.monotonic() + 20)
 

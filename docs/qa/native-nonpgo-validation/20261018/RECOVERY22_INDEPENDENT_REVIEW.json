@@ -1,0 +1,89 @@
+{
+  "bindingMethod": "SHA256 of reviewed files",
+  "controls": {
+    "classificationCountsCoverEntireDelta": true,
+    "completionStoredBeforeRejection": true,
+    "maxTagRecords": 16,
+    "nonemptyDeltaStillRejected": true,
+    "rawProcessMetadataPublished": false,
+    "resourceAndCleanupPathsUnchanged": true,
+    "signalOwnershipGranted": false,
+    "tags": "BLAKE2s with unpublished random key; full identity tuple input",
+    "unknownDeltaCountsRemainNull": true
+  },
+  "decision": {
+    "currentRunEligibility": "REJECTED",
+    "eligibilityRelaxed": false,
+    "longRunRetry": "NOT_JUSTIFIED_BY_THIS_DIAGNOSTIC_PATCH_ALONE",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "patch": "ACCEPT_FOR_EVIDENCE_RETENTION"
+  },
+  "executionEvidence": {
+    "directProviderTerminalRecheckPerformed": false,
+    "newCIOrArtifactUploadPerformed": false,
+    "newMacExecutionPerformed": false,
+    "receiptReviewed": true,
+    "run": 39128271619
+  },
+  "findings": [],
+  "independentTests": {
+    "faultInjection": {
+      "emptyDelta": "randomness not called",
+      "optionalDiagnosticOSError": "original rejection preserved",
+      "privateExceptionTextPublished": false
+    },
+    "fullSuite": {
+      "darwinSkipped": 10,
+      "exitCode": 0,
+      "logSHA256": "bde597b49683a3c90b9f0dd22cc625efa4491667cf715cdcbf2c90f4400839e4",
+      "passed": 189,
+      "seconds": 8.605,
+      "total": 199
+    },
+    "platform": "Linux",
+    "resourceWarningsAreErrors": true,
+    "targeted": {
+      "passed": 4,
+      "seconds": 0.008,
+      "total": 4
+    }
+  },
+  "limits": [
+    "Run 39128271619 did not retain completion census or delta identities; their counts and origins cannot be recovered from its receipt.",
+    "New PID, generation change and credential change are snapshot comparisons; they do not establish build ancestry or writer role.",
+    "Candidate scope remains worker effective or real UID; candidates leaving both UID categories are outside this census scope.",
+    "Short background census observations cannot prove stability over the approximately 72-minute build interval.",
+    "The diagnostic retention change has not executed on macOS; no checkpoint, resumed full host/XUL or native authentication success is claimed."
+  ],
+  "resolvedFinding": {
+    "issue": "Optional tag-generation failure could replace checkpoint-owned-survivors and lose counts",
+    "severity": "P2",
+    "verification": "Counts and rejection status survive injected OSError; optional diagnostic becomes unavailable; empty delta does not request randomness"
+  },
+  "schema": 1,
+  "scope": "Checkpoint census diagnostic retention; eligibility and cleanup unchanged",
+  "sourceBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "2382eca9c0edceba6eb70ba0205ba9b3f4e74752beb478a6a453d19a3f313a04"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "5b327a6846ddbc57736920bc9790605d6e190f2911fdd9911e6732f34dd1914f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "sha256": "abf149f4fd2940a59b3f1473833b0fbd08cb670e294cd119206bf1dbace1dd76"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY21_TERMINAL_RESULT.json",
+      "sha256": "f0062bf85c0cc3fd1f15e19d020adfda3e52e72ab18e45f07bd415de8a851c5e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY22_CENSUS_EVIDENCE.ja.md",
+      "sha256": "f30866bd7c96e62e3a2d2c1925f9d7ddbe662de350a33c83f4e50bbc5287d9cb"
+    }
+  ]
+}
