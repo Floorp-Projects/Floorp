@@ -209,6 +209,26 @@ class FailureExcerptTests(unittest.TestCase):
         self.assertEqual(runner.records[-1]['groupCleanup'], 'verified-gone')
         self.assertFalse(runner.records[-1]['failureEvidence']['beforeCleanup']['available'])
 
+    def test_cleanup_only_failure_does_not_mislabel_a_postcleanup_excerpt(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        registry = mock.Mock()
+        registry.outside_group_rss.return_value = 0
+        def finish():
+            (self.root / 'late.private.log').write_text('error: SECRET created during cleanup\n')
+            raise Failure('cleanup-late-error')
+        registry.finish.side_effect = finish
+        runner.native_registry = registry
+        complete = {'sampleComplete': True, 'rssMiB': 1, 'cpuSeconds': 0,
+                    'processes': 1, 'states': ['R'], '_pids': ()}
+        with mock.patch.object(runner, 'group_activity', return_value=complete):
+            with self.assertRaisesRegex(Failure, 'cleanup-late-error'):
+                runner.run('late', [sys.executable, '-c', 'pass'], self.root, os.environ.copy(), 360)
+        evidence = runner.records[-1]['failureEvidence']
+        self.assertEqual(evidence['beforeCleanup'], {'available': False, 'reason': 'not-captured-before-cleanup'})
+        self.assertEqual(evidence['afterCleanup']['records'][0]['kind'], 'unclassified-error-marker')
+        self.assertNotIn('SECRET', json.dumps(evidence))
+
 
 if __name__ == '__main__':
     unittest.main()

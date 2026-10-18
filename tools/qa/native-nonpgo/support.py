@@ -322,10 +322,12 @@ class Runner:
         leader_reap = {'status': 'not-launched'}
         group_cleanup = 'not-launched'
         failure_evidence = None
-        def capture_failure_evidence():
+        def capture_failure_evidence(before_cleanup=True):
             nonlocal failure_evidence
             if failure_evidence is None:
-                failure_evidence = {'beforeCleanup': excerpt(path),
+                before = excerpt(path) if before_cleanup else {
+                    'available': False, 'reason': 'not-captured-before-cleanup'}
+                failure_evidence = {'beforeCleanup': before,
                                     'leaderExitAlreadyObserved': process.returncode if process is not None else None}
         try:
             with path.open('xb') as output:
@@ -438,7 +440,7 @@ class Runner:
                                 self.fail(stage, 'owned-native-cleanup-incomplete')
                                 raise Failure('owned-native-cleanup-incomplete')
             except BaseException as error:
-                capture_failure_evidence()
+                capture_failure_evidence(before_cleanup=False)
                 cleanup_failure = str(error) if isinstance(error, Failure) else type(error).__name__
                 reason = reason or cleanup_failure
                 failure_phase = failure_phase or 'cleanup'
