@@ -1,13 +1,13 @@
 # Workspace and tab Sync v1
 
-Status: implementation contract, authenticated two-client cloud acceptance passed;
-physical-device acceptance remains pending.
+Status: implementation contract, authenticated two-client cloud acceptance
+passed; physical-device acceptance remains pending.
 
 Floorp Desktop uses Firefox Sync's authenticated, encrypted transport for an
-independent `floorp-workspaces` collection. The engine version is `1`; its switch
-is `services.sync.engine.floorp-workspaces`. It is enabled by default, but does
-not run while `floorp.workspaces.enabled` is false. Signing into a Mozilla
-Account and enabling Firefox Sync are prerequisites for transport.
+independent `floorp-workspaces` collection. The engine version is `1`; its
+switch is `services.sync.engine.floorp-workspaces`. It is enabled by default,
+but does not run while `floorp.workspaces.enabled` is false. Signing into a
+Mozilla Account and enabling Firefox Sync are prerequisites for transport.
 
 A workspace's context menu has **Sync This Workspace and Its Tabs**. This is a
 local subscription choice, separate from the currently displayed workspace.
@@ -26,10 +26,11 @@ cannot be reused: archive restoration and new workspaces generate new UUIDs.
 ## Records
 
 There is one BSO for workspace metadata and one BSO for each live tab. Workspace
-and tab IDs are distinct, random UUID strings, globally unique in the collection.
-Preserve received IDs exactly; new implementations should generate lowercase
-UUIDs. Moving a tab to another workspace or explicitly reopening a closed tab
-uses a new tab ID. Session restoration alone must not revive a retired ID.
+and tab IDs are distinct, random UUID strings, globally unique in the
+collection. Preserve received IDs exactly; new implementations should generate
+lowercase UUIDs. Moving a tab to another workspace or explicitly reopening a
+closed tab uses a new tab ID. Session restoration alone must not revive a
+retired ID.
 
 The following examples are the **decrypted CryptoWrapper cleartext**, including
 its outer `entity` field. They are not the encrypted HTTP BSO envelope.
@@ -73,20 +74,20 @@ its outer `entity` field. They are not the encrypted HTTP BSO envelope.
 ```
 
 A deletion is a standard Sync tombstone for the same BSO ID. Its decrypted
-cleartext is `{ "id": "…", "deleted": true }`, with no `entity` required.
-There is no custom REST client, token storage, encryption scheme, or account
-system. Application Services clients must use the normal collection keys and
-Sync `meta/global` engine contract, not upload the inner `entity` unwrapped.
+cleartext is `{ "id": "…", "deleted": true }`, with no `entity` required. There
+is no custom REST client, token storage, encryption scheme, or account system.
+Application Services clients must use the normal collection keys and Sync
+`meta/global` engine contract, not upload the inner `entity` unwrapped.
 
 `modifiedAt` is a non-negative safe integer in Unix milliseconds. A local edit
 advances beyond both the wall clock and every clock already observed in that
 workspace. `modifiedBy` is a persisted random device UUID, not an account token
 or FxA device identifier. Metadata and each tab merge independently by
-`(modifiedAt, modifiedBy)`. Equal clock/device conflicts use the lexically larger
-JSON value with the canonical field order produced by the TypeScript parser;
-receivers should reproduce that order and standard JSON escaping. UUID ordering
-is case-sensitive. Duplicate-ID records and workspace ownership changes for an
-existing tab ID are rejected.
+`(modifiedAt, modifiedBy)`. Equal clock/device conflicts use the lexically
+larger JSON value with the canonical field order produced by the TypeScript
+parser; receivers should reproduce that order and standard JSON escaping. UUID
+ordering is case-sensitive. Duplicate-ID records and workspace ownership changes
+for an existing tab ID are rejected.
 
 Deletion wins over every live version of the same UUID, including an offline
 client's newer navigation or changed position. Closed-tab payloads are removed
@@ -97,27 +98,28 @@ The set contains IDs only, and does not consume wire payload space. There is no
 cumulative tab-count limit or monolithic workspace payload.
 
 Tabs may arrive before metadata; they are staged without opening a placeholder
-workspace. The first actual metadata record supplies its name and icon even
-when its valid clock is zero. Subsequent metadata records use the normal merge.
-A parent tombstone suppresses its later metadata and child records regardless of
+workspace. The first actual metadata record supplies its name and icon even when
+its valid clock is zero. Subsequent metadata records use the normal merge. A
+parent tombstone suppresses its later metadata and child records regardless of
 arrival order, including on a client that never saw that workspace before.
 
 ## Tab content and order
 
-Only HTTP(S) URLs without embedded credentials are synchronized. Private windows,
-local files, privileged/internal pages, extension URLs, forms, cookies, history,
-SessionStore state and local container numbers are excluded. Names and icons are
-at most 256 UTF-16 code units, titles 1024, and URLs 8192. Strings must be valid
-Unicode. Desktop truncates long titles without leaving unpaired surrogates.
+Only HTTP(S) URLs without embedded credentials are synchronized. Private
+windows, local files, privileged/internal pages, extension URLs, forms, cookies,
+history, SessionStore state and local container numbers are excluded. Names and
+icons are at most 256 UTF-16 code units, titles 1024, and URLs 8192. Strings
+must be valid Unicode. Desktop truncates long titles without leaving unpaired
+surrogates.
 
 Each canonical inner entity has a 16 KiB UTF-8 ceiling, leaving ample room for
 CryptoWrapper's ID, encryption padding, base64 expansion and BSO metadata under
 Firefox's normal 256 KiB record limit. The wire helpers validate outgoing and
 incoming entities before they are saved or used to navigate.
 
-Container assignment remains local. A received tab uses that workspace's existing
-local default container; a newly discovered workspace uses container 0. The
-sender's numeric container ID is never interpreted on another installation.
+Container assignment remains local. A received tab uses that workspace's
+existing local default container; a newly discovered workspace uses container 0.
+The sender's numeric container ID is never interpreted on another installation.
 
 A tab's position is synchronized, but window placement, active workspace and
 active tab are local. Receiving a new window distribution does not itself change
@@ -146,13 +148,14 @@ restart; capture excludes their retired IDs.
 Before merging incoming records or flushing tab closures, the engine captures
 local edits that occurred while network requests were in flight. An unrelated
 incoming tab or metadata record therefore does not rewind a pending local
-navigation. A persisted pending-apply marker and pre-apply local baseline protect
-remote tabs from being mistaken for locally closed tabs after a failed or
-partially completed UI apply. Recovery captures only changes since that baseline,
-including navigation, explicit closure and reordering of previously observed
-tabs, while retaining remote additions that never opened. Registration and the next capture
-retry the desired state. Pending remote closures are retried only after a
-completed incoming pass, so a later parent deletion can still cancel them.
+navigation. A persisted pending-apply marker and pre-apply local baseline
+protect remote tabs from being mistaken for locally closed tabs after a failed
+or partially completed UI apply. Recovery captures only changes since that
+baseline, including navigation, explicit closure and reordering of previously
+observed tabs, while retaining remote additions that never opened. Registration
+and the next capture retry the desired state. Pending remote closures are
+retried only after a completed incoming pass, so a later parent deletion can
+still cancel them.
 
 If a failed server record is physically removed rather than repaired, this
 conservative policy can keep deferred closures pending. Turning off workspace
@@ -166,9 +169,9 @@ records retain their originating session; store mutations, outgoing reads and
 asynchronous continuations reject invalidated sessions. Providers recheck the
 cancellation signal before changing UI after an asynchronous wait. Every engine
 startup also checks the signed-in FxA UID against the stored owner before
-uploading, and rejects a UID lookup that crossed account invalidation. A different
-account starts with local-only workspaces and no inherited remote subscriptions
-or retired IDs.
+uploading, and rejects a UID lookup that crossed account invalidation. A
+different account starts with local-only workspaces and no inherited remote
+subscriptions or retired IDs.
 
 Invalid local metadata pauses only that workspace and retains its last good
 record. Its menu shows an attention state and a localized explanation; failed
@@ -178,20 +181,20 @@ syncing. Correcting the metadata resumes capture and requests a fresh download.
 ## Build paths and validation
 
 Production registration is in
-`.github/patches/floorp-runtime/common/workspace-sync.patch`. `package.yml` applies
-all common source patches before packaging even when native Runtime artifacts
-are reused; this JavaScript-only patch needs no Gecko native recompilation.
-Development patches extracted Runtime code using
+`.github/patches/floorp-runtime/common/workspace-sync.patch`. `package.yml`
+applies all common source patches before packaging even when native Runtime
+artifacts are reused; this JavaScript-only patch needs no Gecko native
+recompilation. Development patches extracted Runtime code using
 `tools/patches/modules-services-sync-service.sys.patch`. The host compatibility
 test asserts that these changes are identical after path mapping.
 
 The pure model and wire tests are browser tests under
 `browser-features/modules/test/workspaces/`. They cover concurrent additions,
-offline close plus reorder, clock regression/ties, payload and Unicode boundaries,
-per-tab entities, and large aggregates. Implementation validation also exercised
-the native Sync engine/record APIs and encryption in an isolated Gecko 158
-profile. The production Chrome loader and all 170 ESM modules also build
-successfully. A reproducible fresh-profile harness is documented in
+offline close plus reorder, clock regression/ties, payload and Unicode
+boundaries, per-tab entities, and large aggregates. Implementation validation
+also exercised the native Sync engine/record APIs and encryption in an isolated
+Gecko 158 profile. The production Chrome and ESM loader builds also succeed. A
+reproducible fresh-profile harness is documented in
 `tools/workspace-sync/README.md`.
 
 Authenticated cloud acceptance on 2026-10-18 passed eight scenarios with two
@@ -204,6 +207,22 @@ Successful cleanup removed only generated synced records; other engine metadata
 and declined settings had the same SHA-256 fingerprint before the first explicit
 acceptance Sync and after cleanup. The initial interactive account setup
 precedes that fingerprint boundary. The launcher, configuration preflight and
-repeatable driver are documented in the same README. A full patched Runtime
-rebuild, physical-device and iOS receiver acceptance remain separate release
-checks.
+repeatable driver are documented in the same README.
+
+Normal production package acceptance also passed using locked Runtime
+`daily-1155` / `7dd619742b25567e479eeda97ae071d10542ad0b` and Floorp tree
+`fbc1e274676fd45f966f30978eef5b5e647c0465`. This used the normal upstream/common
+and packaging patches, production before/after-mach asset stages, Gecko's
+artifact-mode `mach configure`, `mach build` and `mach package`, the production
+macOS omnijar synchronizer and the normal preference override. The final
+unsigned DMG was remounted read-only: all 208 Chrome and 168 ESM manifest
+entries matched the generated files byte for byte, and all 22 patched Runtime
+resources verified. Native engine registration, resource mapping and default
+enablement were present. A locally ad-hoc-signed copy launched with a fresh,
+unauthenticated profile; without engine-registration or enablement user
+overrides it registered/enabled the engine, imported the module and initialized
+the workspace UI/providers. This local check used authenticated locked release
+assets, not the GitHub runtime-v2 manifest intake/signing/publishing jobs.
+Details and the engine hash are recorded in the README. This JavaScript feature
+does not require recompiling Gecko's native code. Release signing/notarization,
+physical-device and iOS receiver acceptance remain separate release checks.

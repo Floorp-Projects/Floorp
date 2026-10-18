@@ -55,9 +55,9 @@ deno task test --near browser-features/modules/test/workspaces
 ```
 
 Production loader builds validate the complete Chrome/SolidXUL and ESM import
-paths separately. A full patched Runtime build and physical-device FxA
-acceptance remain release checks. Authenticated two-process cloud acceptance is
-described below.
+paths separately. Normal artifact-based packaging and authenticated two-process
+cloud acceptance are verified below. Physical-device and iOS receiver acceptance
+remain separate checks; this JavaScript feature needs no Gecko native recompile.
 
 ## Authenticated two-client acceptance
 
@@ -142,4 +142,73 @@ source tree was `3535afc0af7d155429addda07e4bcbc47648357f` (the tree of feature
 revision `42e38a9d2e35`), and the workspace engine SHA-256 was
 `91c19e6960523b14a270598f2ae04e5546abad4415f1408876548b3a8ebc85b7`. This used a
 copied complete Gecko 158 Floorp app with production loader overlays and the
-native service-registration patch, rather than a full Runtime rebuild.
+native service-registration patch. That cloud run used the QA overlay workflow;
+the independent normal-package check below verifies the production packaging
+route and default engine wiring.
+
+## Normal production package acceptance
+
+This check is separate from `prepare-acceptance-app.py`. It uses the source and
+artifact preparation steps in `.github/workflows/package.yml` and the actual
+Gecko artifact build and packager. Keep the Runtime checkout, Floorp checkout,
+object directory, build state and output under an isolated working directory.
+Use the pinned Runtime revision and authenticate the selected artifacts before
+building. No account or release signing credentials are required.
+
+Apply the Runtime's upstream patches first, including its branding/configure
+patches, followed by Floorp's common Runtime patches and the Runtime packaging
+patches. Check out Floorp as `noraneko` within that Runtime tree. Keep artifact
+mode enabled and select the normal release branding. Follow the workflow's
+version, buildid2, symlink-expansion and preference-override steps as well. The
+central commands are:
+
+```sh
+# Floorp checkout: production startup, Chrome, all pages and ESM assets.
+NODE_ENV=production deno task feles-build build --phase before-mach
+
+# Runtime checkout, with --enable-artifact-builds in its mozconfig.
+./mach configure
+MOZ_ARTIFACT_FILE="/path/to/runtime.dmg:/path/to/update_framework_artifacts.zip" ./mach build
+
+# Floorp checkout, using the workflow's normal object directory layout.
+CANON_PLATFORM=macOS-x86_64 deno task feles-build build --phase after-mach
+./static/gecko/pref/override.sh /path/to/app/Contents/Resources/browser/defaults/preferences/firefox.js
+
+# Runtime checkout: package, then apply the workflow's macOS post-package step.
+./mach package
+./mach python -m mozbuild.action.unpack_dmg /path/to/generated.dmg /path/to/unpacked
+python3 noraneko/tools/app-shim/sync-omnijar-patches.py --sync \
+  --resources /path/to/unpacked/Floorp.app/Contents/Resources \
+  --patch-dir noraneko/tools/patches
+python3 noraneko/tools/app-shim/sync-omnijar-patches.py --verify \
+  --resources /path/to/unpacked/Floorp.app/Contents/Resources \
+  --patch-dir noraneko/tools/patches
+```
+
+Recreate the unsigned DMG with the workflow's `mozbuild.action.make_dmg` command
+and official installer artwork, then mount that final image read-only and repeat
+verification. Source patch checks alone are insufficient for cached Runtime
+omnijars; the post-package synchronizer is part of the normal macOS route.
+
+On 2026-10-18 this route succeeded using locked Runtime `daily-1155`, commit
+`7dd619742b25567e479eeda97ae071d10542ad0b` (Gecko 158.0.1), and Floorp source
+tree `fbc1e274676fd45f966f30978eef5b5e647c0465` (feature revision
+`d4b38a77c644`). The final image contained all **208 Chrome and 168 ESM `jar.mn`
+entries**, byte for byte matching the generated production files. Its resource
+manifest, native Sync registration patch and default
+`services.sync.engine.floorp-workspaces=true` preference were present. All 22
+packed Runtime resources passed the production patch verifier. This local macOS
+check used the authenticated locked release assets; it did not execute the
+GitHub runtime-v2 manifest intake, signing or publishing jobs. The engine
+SHA-256 remained
+`91c19e6960523b14a270598f2ae04e5546abad4415f1408876548b3a8ebc85b7`.
+
+A copy of that packaged app was signed locally with an ad-hoc identity solely
+for launch verification. With a fresh, unauthenticated profile and **no user
+preference overriding engine registration or enablement**, native Service
+registered and enabled `floorp-workspaces`, the resource module imported, and
+the workspace UI/provider capture initialized successfully. The profile's
+account remained unconfigured. No profile or account data was included in the
+package. Release signing, notarization, physical-device sync and the iOS
+receiver are separate checks; rebuilding Gecko's native code is unnecessary for
+this feature.
