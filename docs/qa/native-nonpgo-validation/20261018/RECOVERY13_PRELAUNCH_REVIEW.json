@@ -1,0 +1,177 @@
+{
+  "createdAtUTC": "2026-10-18T01:25:26.064026+00:00",
+  "decision": {
+    "fullRun": "CONDITIONAL_GO_AFTER_SHORT_GATE_TERMINAL_REVIEW_CLEAR",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "shortGate": "GO"
+  },
+  "fixture": {
+    "commit": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+    "parent": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+    "providerTreeMatchesReviewedTree": true,
+    "repository": "Floorp-Projects/Floorp",
+    "reviewedPatchSHA256": "4ee81948ca68efc7c9081a9e57aa52b50f9f4d89f18a9917c84efc323306e480",
+    "tree": "20cf2f84cfce233501f6415a12480ae8ede07abf"
+  },
+  "fullRun": {
+    "branch": "codex/mac-native-nonpgo-recovery14-20261018",
+    "commit": "f365b666c238a24413a561e2e249d98fc2734c99",
+    "conditionsBeforeActivation": [
+      "The exact short gate must reach terminal success with all 126 tests passed and skipped=0.",
+      "Independent terminal review must confirm the actual Mac timeout/recovery and persistent-unknown cleanup paths, existing real process/generation gates and durable diagnostic privacy checks with no new meaningful finding.",
+      "Recovery must preserve partial inventory-timeout diagnostics and use only fresh complete counters; persistent timeout must retain monitor-unavailable and null resource totals with safe owned cleanup.",
+      "Actual clang before/after-cleanup diagnostics must remain bounded and normalized; the nonpublic sentinel must be absent from the entire diagnostic job log.",
+      "Recheck that no other owned native run is active before full activation. Activate this full branch once and do not rerun a prior attempt.",
+      "Existing fetch-time official metadata, unexpired status, HTTP failure handling, 600-second acquisition bound and ZIP/TAR/tree/version validations must all pass before use."
+    ],
+    "controls": {
+      "artifactUploadSteps": 0,
+      "attempt": 1,
+      "event": "push",
+      "existingDisposableAdHocTestCopyScopeUnchanged": true,
+      "firstFailureAndBoundedDiagnosticRetentionUnchanged": true,
+      "initialCreatedPushRequired": true,
+      "jobs": [
+        "validate"
+      ],
+      "permissions": {
+        "actions": "read",
+        "contents": "read"
+      },
+      "platformTimeoutMinutes": 360,
+      "privilegeExpansion": false,
+      "productSigningPublicationOrMerge": false,
+      "resourceLimitsUnchanged": true,
+      "runner": "macos-15-intel",
+      "zeroBeforeSHARequired": true
+    },
+    "delta": "Exact reconstruction from the reviewed parent workflow using only two branch substitutions and one fixture substitution.",
+    "otherWorkflowCheck": {
+      "candidateYAMLWorkflows": 25,
+      "createTriggers": 0,
+      "matchingPushWorkflow": ".github/workflows/mac-native-nonpgo.yml",
+      "otherMatchingPushWorkflows": 0,
+      "workflowRunTriggers": 0
+    },
+    "parent": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "pins": {
+      "fixture": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+      "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "sdkArtifact": 12096898807
+    },
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "tree": "b12bf89ef715131b0a1629121c9f943ab0de6a30",
+    "workflow": {
+      "bytes": 6749,
+      "onlyChangedFile": true,
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "providerBytesMatchLocalCandidate": true,
+      "sha256": "e57c80d76afb79f4b903eee1a0f7e4aab3955fe46ff0ce9011c9292b26a13d1f"
+    }
+  },
+  "limits": [
+    "GO is an execution-route review, not evidence that the diagnostic job, full build or native authentication has succeeded.",
+    "The historical inventory timeout root cause and original compiler cause remain unknown.",
+    "The short gate and full caller are separate push routes. The full dependency is an activation condition; the full workflow itself does not fetch or enforce the diagnostic run result.",
+    "The SDK is checked as currently unexpired metadata only; normal acquisition must independently pass its existing guards and fixed-content checks.",
+    "No new large artifact storage, privilege change, protection relaxation, product signature, publication or merge is included."
+  ],
+  "prelaunchSnapshot": {
+    "fullBranchMatchingRefs": 0,
+    "fullBranchPriorRuns": 0,
+    "ownedNativeInProgressOrQueuedRuns": 0,
+    "runtimeInProgressRuns": 0,
+    "runtimeQueuedRuns": 1,
+    "scope": "Read-only API snapshot before candidate branch activation; mutable state must be refreshed at dependent activation.",
+    "shortBranchMatchingRefs": 0,
+    "shortBranchPriorRuns": 0,
+    "unrelatedQueuedRun": {
+      "branch": "nora-0.2.0",
+      "id": 37616796159,
+      "workflow": ".github/workflows/daily-build.yml"
+    }
+  },
+  "reviewType": "independent read-only immutable caller prelaunch review",
+  "reviewerActions": [
+    "Read provider commit/tree/parent metadata and regular commit file lists for both immutable caller candidates.",
+    "Read provider workflow bytes, compare exact local bytes and compare each reviewed parent diff.",
+    "Read and parse all YAML workflow files in both candidate snapshots to check push, create and workflow_run trigger overlap.",
+    "Read candidate branch refs, branch run histories, active and queued Runtime runs and current official fixed-SDK artifact metadata.",
+    "No CI, SDK payload download, source mutation, branch activation or other external write was performed."
+  ],
+  "schemaVersion": 1,
+  "sdkMetadataSnapshot": {
+    "bytes": 105082683,
+    "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "expired": false,
+    "expiresAt": "2026-10-18T09:48:20Z",
+    "id": 12096898807,
+    "matchesFixedTransportPin": true,
+    "name": "macos-sdk",
+    "sdkPayloadDownloadedByReviewer": false,
+    "source": "Official run-artifacts API, run 39022451582",
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceRun": 39022451582
+  },
+  "shortGate": {
+    "branch": "codex/mac-native-inventory-recovery13-20261018",
+    "commit": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "controls": {
+      "artifactUploadSteps": 0,
+      "attempt": 1,
+      "browserAuthentication": false,
+      "build": false,
+      "checkoutAction": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+      "event": "push",
+      "initialCreatedPushRequired": true,
+      "jobs": [
+        "native-recheck"
+      ],
+      "permissions": {
+        "contents": "read"
+      },
+      "persistCredentials": false,
+      "platformTimeoutMinutes": 360,
+      "python": "3.12.10/x64 from existing runner tool cache",
+      "runner": "macos-15-intel",
+      "sdkAcquisition": false,
+      "sparseCheckout": [
+        "tools/qa/native-nonpgo",
+        "tools/app-shim"
+      ],
+      "zeroBeforeSHARequired": true
+    },
+    "delta": "Workflow and step display names, two exact branch substitutions, one fixture substitution and addition of test_inventory_timeout to the existing unittest command. No other file changed.",
+    "expectedTestTotal": 126,
+    "otherWorkflowCheck": {
+      "candidateYAMLWorkflows": 26,
+      "createTriggers": 0,
+      "matchingPushWorkflow": ".github/workflows/mac-native-generation-recheck.yml",
+      "otherMatchingPushWorkflows": 0,
+      "workflowRunTriggers": 0
+    },
+    "parent": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "testModules": [
+      "test_owned_cleanup",
+      "test_native_processes",
+      "test_ps_lifetime",
+      "test_guards",
+      "test_failure_recovery",
+      "test_mac_recheck",
+      "test_inventory_timeout"
+    ],
+    "tree": "601d6c59c89d7ad8b9fea9aa764ebb30748529b2",
+    "workflow": {
+      "bytes": 1937,
+      "onlyChangedFile": true,
+      "path": ".github/workflows/mac-native-generation-recheck.yml",
+      "providerBytesMatchLocalCandidate": true,
+      "sha256": "b3f0537f4cf5f16022c7fa9e198e427172bae0d744fcb934fe281a68fa00191a"
+    }
+  }
+}
