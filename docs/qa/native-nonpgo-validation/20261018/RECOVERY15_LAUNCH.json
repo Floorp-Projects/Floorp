@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39087022762,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087022762",
+    "head": "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+    "branch": "codex/mac-native-cleanup-recovery15-20261018",
+    "createdAt": "2026-10-18T01:35:03Z",
+    "event": "push",
+    "attempt": 1
+  },
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+  "runner": "macos-15-intel",
+  "jobs": 1,
+  "testCount": 133,
+  "requiredSkips": 0,
+  "newCleanupMacChecks": [
+    "controlled exact child wait/reap after injected denial",
+    "20 rapid monitor-stop iterations"
+  ],
+  "sdkRequired": false,
+  "runtimeBuild": false,
+  "newArtifacts": 0,
+  "productSigning": false,
+  "permissionsExpanded": false,
+  "prelaunchReview": "GO_SHORT_MAC_GATE_ONLY_THEN_CONDITIONAL_FULL",
+  "conditionalFullCaller": "fe81758dd639efdadefa570b0399ca1f2004bca3"
+}
