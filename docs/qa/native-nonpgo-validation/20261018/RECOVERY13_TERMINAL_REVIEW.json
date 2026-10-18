@@ -1,0 +1,224 @@
+{
+  "boundedExactWaitCandidate": {
+    "acceptanceRule": "A newly confirmed exact-child reap permits one fresh group probe. Reap itself does not establish an empty group.",
+    "alternativesRejected": [
+      "A delay followed by a new group probe without exact-child reap does not provide the required lifecycle evidence.",
+      "Ignoring EPERM, declaring the group gone, or signalling first would weaken ownership/cleanup evidence."
+    ],
+    "assessment": "Supported as a minimal fail-closed candidate; independent immutable patch review and a new short Mac gate are separate requirements.",
+    "boundary": "Only an exact Popen child with returncode still unset after the existing polls may receive one wait(timeout=0.05).",
+    "negativeRules": [
+      "Already-reaped child must not permit an extra wait or bypass a denied group.",
+      "Wait timeout preserves the original PermissionError without publishing TimeoutExpired command context.",
+      "Wait without a confirmed returncode must not permit a fresh probe.",
+      "Fresh probe true remains alive; fresh EPERM or other errors remain unverified/fail-closed.",
+      "No extra signal, privilege, target exclusion, unknown-to-zero counter or query retry is introduced."
+    ]
+  },
+  "decision": {
+    "fullRun": "NO_GO_NEW_CLEANUP_FINDING",
+    "inventoryTimeoutTargetedTests": "PASSED_ON_REAL_MAC",
+    "nativeAuthentication": "NOT_TESTED",
+    "openBlocking": 1,
+    "openP1": 1,
+    "openP2": 0,
+    "shortGate": "FAILED"
+  },
+  "executedSource": {
+    "caller": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "exactCheckoutCommitOutputObserved": true,
+    "fixture": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+    "fixtureTree": "20cf2f84cfce233501f6415a12480ae8ede07abf",
+    "jobCount": 1,
+    "jobSeconds": 48,
+    "newArtifacts": 0,
+    "runner": "macos-15-intel"
+  },
+  "findings": [
+    {
+      "cleanupGuarantee": "This failed test does not establish successful group cleanup. Successful cleanup in other tests cannot fill that gap.",
+      "id": "owned-cleanup-denied-before-exact-leader-reap",
+      "observation": "Expected monitor-unavailable was raised first. During finally cleanup, stop called owned_group_alive, whose initial group signal-zero probe raised EPERM. The existing already-reaped-or-second-poll guard did not permit a fresh group probe and PermissionError escaped. The log does not expose the runtime returncode/poll values or which guard operand rejected recovery.",
+      "rootCause": "UNKNOWN: leader state, waitability, birth and group membership were not captured at the denied instant. An exit-to-waitable transition is a hypothesis, not a demonstrated cause.",
+      "severity": "P1",
+      "staticTrace": [
+        {
+          "file": "tools/qa/native-nonpgo/support.py",
+          "line": 408,
+          "phase": "initial monitor-unavailable"
+        },
+        {
+          "file": "tools/qa/native-nonpgo/support.py",
+          "line": 463,
+          "phase": "finally cleanup"
+        },
+        {
+          "file": "tools/qa/native-nonpgo/support.py",
+          "line": 527,
+          "phase": "stop loop"
+        },
+        {
+          "file": "tools/qa/native-nonpgo/support.py",
+          "line": 214,
+          "phase": "owned group check"
+        },
+        {
+          "file": "tools/qa/native-nonpgo/support.py",
+          "line": 200,
+          "phase": "group signal-zero probe"
+        }
+      ],
+      "test": "test_guards.Guards.test_unavailable_monitor_preserves_failure_and_reclaims_owned_group"
+    }
+  ],
+  "fullCandidate": {
+    "activationDecision": "NO_GO because the required complete diagnostic pass was not obtained",
+    "branch": "codex/mac-native-nonpgo-recovery14-20261018",
+    "commit": "f365b666c238a24413a561e2e249d98fc2734c99",
+    "postFailureMatchingRefs": 0,
+    "postFailureRuns": 0
+  },
+  "jobs": [
+    {
+      "completedAt": "2026-10-18T01:25:39Z",
+      "conclusion": "failure",
+      "id": 117553745436,
+      "labels": [
+        "macos-15-intel"
+      ],
+      "name": "native-recheck",
+      "startedAt": "2026-10-18T01:24:51Z",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job"
+        },
+        {
+          "conclusion": "success",
+          "name": "Bound the initial diagnostic execution"
+        },
+        {
+          "conclusion": "success",
+          "name": "Checkout immutable reviewed fixture"
+        },
+        {
+          "conclusion": "failure",
+          "name": "Verify inventory timeout recovery and existing native monitor gates"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Checkout immutable reviewed fixture"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Natural churn reported zero ESRCH reconciliations only in returned final samples; it does not prove race absence or recreate the historical race.",
+    "Controlled initial ESRCH, controlled denial and deferred poll cases must remain labelled as injected conditions.",
+    "The original native exit cause, historical inventory timeout cause and compiler cause remain unknown.",
+    "No new Mac job, full build, SDK acquisition, source edit or external write was performed by this review."
+  ],
+  "privacy": {
+    "actualClangExcerpts": {
+      "afterCleanup": true,
+      "beforeCleanup": true,
+      "classification": "source-error / undeclared-identifier",
+      "fileAndReadBytesPerPhase": 244,
+      "freeTextPublished": false,
+      "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+    },
+    "decodedLogBytes": 50393,
+    "decodedLogSHA256": "4397a6d29b35643b51ac55556b2657da69fb4d7b83ce69b547e6cbd40376015a",
+    "entireLogSentinelAbsent": true,
+    "rawContentPublished": false,
+    "timeoutPrivateCommandOutputAndStderrMarkersAbsent": true
+  },
+  "realMacEvents": [
+    {
+      "case": "natural-owned-churn",
+      "complete": 23,
+      "esrchRechecks": 0,
+      "forkedChildren": 720,
+      "groupCleanup": "verified-gone",
+      "initialESRCHInjected": false,
+      "leaderReaped": true,
+      "naturalRaceObserved": false,
+      "samples": 23
+    },
+    {
+      "beforeAndAfterPresent": true,
+      "case": "actual-clang-durable-excerpts",
+      "freeTextPublished": false,
+      "leaderReaped": true,
+      "realCompilerError": true
+    },
+    {
+      "actualKernelQueries": true,
+      "case": "controlled-esrch-live",
+      "initialESRCHInjected": true,
+      "result": "measured",
+      "sameGeneration": true
+    },
+    {
+      "WNOWAITExitPending": true,
+      "actualKernelQueries": true,
+      "case": "controlled-esrch-owned-zombie",
+      "initialESRCHInjected": true,
+      "result": "authoritative-zombie",
+      "sameGeneration": true,
+      "signalZeroSucceeded": true
+    }
+  ],
+  "receipt": {
+    "bytes": 6090,
+    "commit": "e97ec609ad2a753c4af241696f65e6f539429d7b",
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY13_EXECUTION_RESULT.json",
+    "providerBytesMatchLocal": true,
+    "sha256": "7739e1f7dffff47c9027d6ceb55426e25807326a6de9b0480896865c7161a958"
+  },
+  "reviewType": "independent terminal Mac diagnostic review",
+  "run": {
+    "attempt": 1,
+    "branch": "codex/mac-native-inventory-recovery13-20261018",
+    "conclusion": "failure",
+    "createdAt": "2026-10-18T01:24:46Z",
+    "event": "push",
+    "head": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "id": 39086387102,
+    "status": "completed",
+    "updatedAt": "2026-10-18T01:25:40Z"
+  },
+  "schemaVersion": 1,
+  "tests": {
+    "errors": 1,
+    "existingRealMacGates": {
+      "passed": 7,
+      "total": 7
+    },
+    "failures": 0,
+    "inventoryTimeoutTests": {
+      "passed": 8,
+      "scope": [
+        "transient recovery on both dispatch paths",
+        "three-attempt exhaustion with null totals",
+        "mixed partial/timeout/recovery retention",
+        "non-timeout exceptions propagate",
+        "counter-probe/interrupt exceptions not misclassified",
+        "actual timeout child killed and reaped",
+        "persistent timeout stage safe cleanup",
+        "actual stage continues after recovered timeout"
+      ],
+      "total": 8
+    },
+    "passed": 125,
+    "result": "FAILED (errors=1)",
+    "seconds": 39.092,
+    "skipped": 0,
+    "total": 126
+  }
+}
