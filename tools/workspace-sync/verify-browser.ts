@@ -166,6 +166,7 @@ try {
   }
   client = await MarionetteClient.connect(port);
   await client.setContext("chrome");
+  await client.send("WebDriver:SetTimeouts", { script: 45_000 });
   await client.executeScript(
     `if(!Services.prefs.getBoolPref("floorp.workspaces.sync.manual-test",false))throw new Error("Dedicated test profile required");if(Services.dirsvc.get("ProfD",Ci.nsIFile).path!==arguments[1])throw new Error("Unexpected browser profile");const file=Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);file.initWithPath(arguments[0]);Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler).setSubstitution("floorp-workspace-sync-validation",Services.io.newFileURI(file));`,
     [scratch, realProfile],
@@ -193,7 +194,6 @@ try {
         script:
           `const done=arguments[arguments.length-1];${script}\nrunScenario().then(done,error=>done({error:String(error),stack:error.stack}));`,
         args: [],
-        scriptTimeout: 45_000,
       },
       50_000,
     );

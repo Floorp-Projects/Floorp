@@ -60,7 +60,6 @@ async function operation<T>(
       script:
         `const done=arguments[arguments.length-1];${fixture}\nliveOperation(arguments[0],arguments[1]).then(done,()=>done({qaOperationFailed:true}));`,
       args: [action, { ...args, profile: target.profile, client: target.name }],
-      scriptTimeout: 120_000,
     },
     125_000,
   );
@@ -79,6 +78,7 @@ try {
   for (const target of setup.clients) {
     const client = await MarionetteClient.connect(target.marionettePort);
     await client.setContext("chrome");
+    await client.send("WebDriver:SetTimeouts", { script: 120_000 });
     clients.set(target.name, client);
   }
   if (options.phase === "preflight") {
