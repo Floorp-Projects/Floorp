@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUTC": "2026-10-18 01:37:48 UTC",
+  "artifact": {
+    "id": 12096898807,
+    "name": "macos-sdk",
+    "expired": false,
+    "expiresAt": "2026-10-18T09:48:20Z",
+    "bytes": 105082683,
+    "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "sourceRun": 39022451582,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "sourceRun": {
+    "id": 39022451582,
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "caller": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+  "macGate": 39087022762,
+  "tests": {
+    "passed": 133,
+    "skipped": 0
+  },
+  "terminalReview": "CLEAR_GO_FOR_ONE_PINNED_FULL_VALIDATION",
+  "acquisitionGuard": {
+    "officialAPI": true,
+    "unexpiredAtAcquisitionRequired": true,
+    "httpErrorsStop": true,
+    "downloadDeadlineSeconds": 600,
+    "zipTarTreeVersionFixed": true,
+    "buildDurationCoupling": false,
+    "retentionChanged": false,
+    "permissionsChanged": false,
+    "expiredRetrievalBypass": false
+  }
+}
