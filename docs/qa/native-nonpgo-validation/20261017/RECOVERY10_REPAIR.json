@@ -11,8 +11,8 @@
     },
     {
       "path": "tools/qa/native-nonpgo/support.py",
-      "bytes": 24787,
-      "sha256": "d1d8e6e884ebe9631768379c3aa2eb7b63dc8abe53c042a5062d938f58342382"
+      "bytes": 25051,
+      "sha256": "c052368c61535c5d806a0c25239332e87eece6bc3984f3c4f47409d830fdac48"
     },
     {
       "path": "tools/qa/native-nonpgo/pipeline.py",
@@ -26,13 +26,13 @@
     },
     {
       "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
-      "bytes": 12412,
-      "sha256": "e3cfd704de0b31634eb18264ff58557fc9d1c731a5b21d4796ea90982f9050db"
+      "bytes": 13713,
+      "sha256": "8bc7f36f7e89727d88fdda7d4a83de6467383639eb5495e6b2a8ee776b52b11a"
     }
   ],
   "changes": {
     "esrch": "Only zero-byte ESRCH with complete valid live same-owner/group BSD anchors one immediate additional task read; no added sleep or recursion. Recovered full counters require the same birth; a new live generation stays unknown for group inventory. Explicit owned-generation replacement semantics remain distinct.",
-    "failureEvidence": "Separate bounded before/after cleanup diagnostic-shape records, maximum 128 KiB read and 16 retained records, fixed message classes and Rust diagnostic codes only; no arbitrary text, paths, argv, environment or quoted values. A failure first discovered during cleanup explicitly marks the before-cleanup snapshot unavailable rather than mislabelling later output.",
+    "failureEvidence": "Separate bounded before/after cleanup diagnostic-shape records, maximum 128 KiB read and 16 retained records, fixed message classes and Rust diagnostic codes only; no arbitrary text, paths, argv, environment or quoted values. A failure first discovered during cleanup explicitly marks the before-cleanup snapshot unavailable rather than mislabelling later output. Unexpected diagnostic collector exceptions are reduced to a fixed unavailable record at the call boundary; they cannot replace the original failure or prevent a stage record.",
     "markerMeaning": "Rename the generic compiler-error regex count to error-marker; explicitly label it as post-cleanup text matches, not a compiler verdict."
   },
   "retained": {
@@ -50,12 +50,12 @@
   },
   "tests": {
     "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_owned_cleanup test_native_processes test_ps_lifetime test_guards test_failure_recovery -q",
-    "total": 112,
-    "passed": 109,
+    "total": 113,
+    "passed": 110,
     "skipped": 3,
     "skipReason": "Existing actual macOS libproc gates; current development host is Linux.",
-    "elapsedSeconds": 4.739,
-    "newTargetedTests": 15,
+    "elapsedSeconds": 4.809,
+    "newTargetedTests": 16,
     "realLinuxMonitorStopAndReap": true,
     "secretRedactionAndBounds": true
   },

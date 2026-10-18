@@ -229,6 +229,25 @@ class FailureExcerptTests(unittest.TestCase):
         self.assertEqual(evidence['afterCleanup']['records'][0]['kind'], 'unclassified-error-marker')
         self.assertNotIn('SECRET', json.dumps(evidence))
 
+    def test_throwing_collector_cannot_replace_failure_or_stage_record(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        activity = {'sampleComplete': False, 'rssMiB': None, 'cpuSeconds': None,
+                    'rssLowerBoundMiB': 0, 'cpuLowerBoundSeconds': 0}
+        with mock.patch.object(runner, 'group_activity', return_value=activity), \
+                mock.patch('support.excerpt', side_effect=RuntimeError('PRIVATE SECRET')):
+            with self.assertRaisesRegex(Failure, 'monitor-unavailable'):
+                runner.run('throwing', [sys.executable, '-c', 'import time; time.sleep(30)'],
+                           self.root, os.environ.copy(), 360)
+        self.assertEqual(runner.failure['code'], 'monitor-unavailable')
+        record = runner.records[-1]
+        self.assertEqual(record['groupCleanup'], 'verified-gone')
+        self.assertEqual(record['leaderReap']['status'], 'reaped')
+        self.assertEqual(record['failurePhase'], 'group-activity')
+        for name in ('beforeCleanup', 'afterCleanup'):
+            self.assertEqual(record['failureEvidence'][name]['errorType'], 'diagnostic-collector-error')
+        self.assertNotIn('SECRET', json.dumps(record))
+
 
 if __name__ == '__main__':
     unittest.main()

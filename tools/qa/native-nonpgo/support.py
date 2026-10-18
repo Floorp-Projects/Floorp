@@ -322,10 +322,16 @@ class Runner:
         leader_reap = {'status': 'not-launched'}
         group_cleanup = 'not-launched'
         failure_evidence = None
+        def collect_excerpt():
+            try:
+                return excerpt(path)
+            except Exception:
+                return {'available': False, 'errorType': 'diagnostic-collector-error',
+                        'rawContentPublished': False}
         def capture_failure_evidence(before_cleanup=True):
             nonlocal failure_evidence
             if failure_evidence is None:
-                before = excerpt(path) if before_cleanup else {
+                before = collect_excerpt() if before_cleanup else {
                     'available': False, 'reason': 'not-captured-before-cleanup'}
                 failure_evidence = {'beforeCleanup': before,
                                     'leaderExitAlreadyObserved': process.returncode if process is not None else None}
@@ -464,7 +470,7 @@ class Runner:
                 except OSError:
                     log_bytes = None
                 if failure_evidence is not None:
-                    failure_evidence['afterCleanup'] = excerpt(path)
+                    failure_evidence['afterCleanup'] = collect_excerpt()
                 self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
                                      'failureEvidence': failure_evidence,
                                      'reason': reason, 'failurePhase': failure_phase,
