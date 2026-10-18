@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "scope": "Recovery31 synchronized workload short Mac gate",
+  "linux": {
+    "total": 289,
+    "passed": 275,
+    "skipped": 14,
+    "seconds": 10.271,
+    "exitCode": 0,
+    "logSHA256": "9fb36bbd6b9cfbf08301fa8ca80b0f2f91d26b049bfe21b71dc06d9062255b97"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 289,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "readinessSeconds": 60,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "historicalWorkloadCause": "UNKNOWN",
+  "longRun": "not activated"
+}

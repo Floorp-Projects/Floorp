@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "review": "Recovery30 terminal evidence",
+  "decision": "NO_GO_LONG; STRESS_GATE_INCOMPLETE",
+  "run": {
+    "id": 39157844373,
+    "job": 117764680302,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "fixture": "8bb686e70e6076e0f99efb80a44f4cf25d85ceb4",
+    "caller": "5e244fd908470e6bcbddf8e031e50faf4302acd8",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "startedAt": "2026-10-18T19:14:27Z",
+    "completedAt": "2026-10-18T19:17:54Z"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_TERMINAL_RESULT.json",
+    "bytes": 36287,
+    "sha256": "945a65682ef1ed5ed8d2854e7366edaf8110a0fb2415d8203d8b671dfb82c6c6"
+  },
+  "independentChecks": {
+    "readOnlyAPI": [
+      "run",
+      "jobs",
+      "decoded job log",
+      "artifacts"
+    ],
+    "providerExperimentExactReceiptMatch": true,
+    "providerLogExactSavedMatch": true,
+    "fixtureCheckoutMatched": true,
+    "artifacts": 0
+  },
+  "passedGates": {
+    "sdk": {
+      "ordinaryOfficialAcquisitionStep": "success",
+      "acquisitionVerified": true,
+      "materialization": {
+        "status": "passed",
+        "artifact": 12133086104,
+        "run": 39117481043,
+        "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+        "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+        "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+        "members": 49701,
+        "logicalBytes": 704719765,
+        "version": "26.5"
+      }
+    },
+    "actualMacTests": {
+      "total": 282,
+      "passed": 282,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 60.547,
+      "privateTestLogSHA256": "b7f4f31dd3dc28b9dd8f36bc251719f275847b5435cf378e94289de4c27195db"
+    },
+    "candidateFreshProcessRepeats": 5,
+    "controlledCandidateObservations": {
+      "total": 6,
+      "passed": 6,
+      "launcherArgv0TextEquality": false,
+      "launcherArgv0CanonicalEquality": false,
+      "exactCountTailChildOrigArgvAndNativePath": true,
+      "strictCrossSelectionRowIncluded": true,
+      "beforeAndAfterExactChildState": "live",
+      "cleanup": "exact child reaped and group gone"
+    }
+  },
+  "failedGate": {
+    "name": "inventory-stress",
+    "firstFailure": {
+      "stage": "inventory-stress",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 195.89
+    },
+    "monitorFailure": null,
+    "sampleCount": 6,
+    "completeSamples": 6,
+    "unknownSamples": 0,
+    "retriedSamples": 0,
+    "timeoutAttempts": 0,
+    "maxSampleSeconds": 2.6313,
+    "peakRSSMiB": 2167.18359375,
+    "peakCPUSeconds": 23.428,
+    "backend": {
+      "kern-proc-pgrp-helper": 6
+    },
+    "workloadStatus": "failed",
+    "workloadExitCode": 1,
+    "workerCleanup": [
+      {
+        "failure": null,
+        "index": 0,
+        "reaped": true
+      },
+      {
+        "failure": null,
+        "index": 1,
+        "reaped": true
+      },
+      {
+        "failure": null,
+        "index": 2,
+        "reaped": true
+      }
+    ],
+    "cause": "UNKNOWN: no workload failure phase/code or pre-cleanup worker exit status was retained."
+  },
+  "allStageCleanup": {
+    "stages": 11,
+    "allVerifiedGone": true,
+    "allExactLeadersReaped": true,
+    "allCleanupFailureNull": true
+  },
+  "interpretation": [
+    "The corrected controlled argv contract was observed consistently in six trials. This current evidence isolates a launcher argv0 text/canonical difference while exact count, tail, child interpreter argv, current executable identity and subsequent native selection agree.",
+    "These results do not retrospectively identify the Run27 inclusion failure or the unretained differing argument in Run29.",
+    "The workload failed before completing the required CPU/RSS/churn gate. Six complete samples at the observed partial load do not prove the intended full three-worker, 60-second condition.",
+    "The stress observations contain no unknown/retried/timeout samples; monitorFailure=null does not establish that every other stage had no recovered race.",
+    "Readiness timeout is plausible from the old workload design but unproven. Worker startup/allocation failure, early exit and other exceptions remain unclassified."
+  ],
+  "nextMinimalExperiment": {
+    "status": "Implementation review and actual Mac validation required.",
+    "proposal": "Allocate and acknowledge all workers before releasing a fixed start barrier into the 60-second CPU phase. Transparently change only the workload readiness budget from 15 to 60 seconds; keep the resource monitor budgets unchanged.",
+    "requiredEvidence": [
+      "Primary failure phase and allowlisted Failure code must survive cleanup.",
+      "Retain launched/ready worker counts and readiness elapsed time.",
+      "Distinguish each exact child exit status observed before cleanup from its return code after exact reap.",
+      "Retain cleanup operations/failures and preserve a pending original exception."
+    ],
+    "requiredTests": [
+      "No worker starts CPU work before the complete readiness barrier.",
+      "Readiness timeout, malformed/EOF acknowledgement, partial launch and early worker nonzero exit remain failures.",
+      "Cleanup failure cannot skip other owned children or replace the original failure."
+    ],
+    "unchanged": "No timeout extension for inventory: timeout=3, three sample attempts, resource ceilings, unknown null values, no process exclusion, no permission changes and exact owned cleanup remain.",
+    "comparison": "Keeping the already reviewed ordinary SDK route preserves comparable preparation conditions; it must still use a fresh valid official acquisition. Omitting it would need to be described as a changed setup."
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "area": "Workload failure evidence",
+      "status": "Open for the next revision",
+      "description": "The failed workload receipt omits phase/code and pre-cleanup worker exit states, so this nonzero exit cannot yet be classified."
+    }
+  ],
+  "remaining": [
+    "Successful complete stress gate and known-child/background observations",
+    "Independent terminal review before any long-trial decision"
+  ],
+  "productQualification": false,
+  "fullHostXULBuildPerformed": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "reviewerActions": {
+    "readOnlyEvidence": true,
+    "newRunActivated": false,
+    "sourceEdited": false,
+    "payloadDownloaded": false,
+    "published": false
+  }
+}

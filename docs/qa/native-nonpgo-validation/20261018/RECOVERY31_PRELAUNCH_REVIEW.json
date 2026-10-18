@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "review": "Recovery31 synchronized workload preparation and failure evidence",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longTrial": "NO_GO",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "baselineFixture": "8bb686e70e6076e0f99efb80a44f4cf25d85ceb4",
+  "contentBindings": {
+    "tools/qa/native-nonpgo/inventory_stress.py": {
+      "bytes": 11425,
+      "sha256": "340e57e2ab1d7baf0fd326fc838401cf5ec41fa3402937e80cefc387cf1c683a"
+    },
+    "tools/qa/native-nonpgo/test_inventory_stress.py": {
+      "bytes": 11391,
+      "sha256": "524875560ccd1629c8fa0adb625a3cec55daa605cda5d8eb4dbbc4c937c1c3c6"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_STRESS_VERIFICATION.md": {
+      "bytes": 3687,
+      "sha256": "fb3b5f9910bf37286baaccad2bcd5055adb4d4de7db67bbcb125be480c30c591"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_STRESS_WORKFLOW.yml.disabled": {
+      "bytes": 3398,
+      "sha256": "85e431ae675f0d64625082ad7b74a7cd6baa3fa2d80e628b9d31b3361c7c2441"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_LOCAL_RESULT.json": {
+      "bytes": 658,
+      "sha256": "376aed96b1cd162b59ce14635c7e220a246070748c2bc96dcabd404d84663ebb"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_TERMINAL_RESULT.json": {
+      "bytes": 36287,
+      "sha256": "945a65682ef1ed5ed8d2854e7366edaf8110a0fb2415d8203d8b671dfb82c6c6"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY30_TERMINAL_REVIEW.json": {
+      "bytes": 6545,
+      "sha256": "49656326c8ba6b0a0660146cb646e269bfc1e7f66f480808c76eaef811d30092"
+    }
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 289,
+    "passed": 275,
+    "skipped": 14,
+    "seconds": 10.335,
+    "exitCode": 0,
+    "sourceUnchanged": true,
+    "logSHA256": "34d753eabddab3adabae33616f0d8b476ba9832d4b87642f820c281b195de42d",
+    "syntax": {
+      "workflowYAML": "passed",
+      "bashScripts": 5,
+      "inlinePythonAST": 1
+    },
+    "actualMac": "Pending. Fourteen Darwin tests were skipped on Linux."
+  },
+  "assessment": {
+    "workloadChange": "Three workers still touch 1536 MiB each, but now wait on a private stdin-byte barrier. The supervisor releases them only after all readiness acknowledgements, then runs the 60-second CPU/process-churn phase.",
+    "budgetChange": "The readiness budget explicitly changes from 15 to 60 seconds. Its timer starts after launching the workers; the existing outer phase/job and resource guards also cover launch and cleanup.",
+    "evidence": "The safe workload receipt retains fixed phase/allowlisted firstFailure code and kind, optional numeric errno, readiness count/elapsed, barrier release count, completed load duration, exact worker pre-cleanup exit status and post-cleanup return codes.",
+    "unknown": "Unavailable exit observations remain null/unavailable. Resource unknown values remain null. Fixed controller phase/code identifies where the workload failed, not necessarily the internal reason for a worker exit.",
+    "cleanup": "Only exact created children receive signals. Cleanup continues across child failures, closes both streams, preserves the original pending exception and retains cleanup operations/errors. The outer Runner still requires verified-gone process group and exact leader reap.",
+    "qualification": "The outer gate rejects incomplete readiness/barrier/load duration, unknown samples, timeout attempts, insufficient measured RSS/CPU and unverified cleanup. It still requires the reviewed native helper backend.",
+    "unchanged": "Recovery29 monitoring sources and Recovery30 SDK/argv sources and plan are byte-identical to their reviewed versions. Inventory timeout=3, three attempts/retry gaps, resource ceilings, ownership checks, SDK permissions/retention and artifact policy are unchanged."
+  },
+  "resolvedFinding": {
+    "severity": "P2",
+    "area": "Cleanup-only failure evidence",
+    "resolution": "When cleanup is the first failure, a fixed cleanup phase/code/kind is now stored before receipt publication and raising. An earlier primary failure remains unchanged. A real small workload/cleanup test injects a cleanup failure after recovery and verifies failure evidence, reaping and the raised Failure."
+  },
+  "meaningfulTests": [
+    "Actual worker remains alive behind the start barrier until release; EOF fails.",
+    "Actual small supervisor observes all workers ready, releases every barrier and reaps every child.",
+    "Readiness timeout and malformed/EOF readiness fail with phase/code and exact recovery.",
+    "Worker nonzero exit retains before-cleanup and after-reap exit codes.",
+    "Partial launch and earlier cleanup denial cannot skip other children or replace a primary failure.",
+    "Outer gate rejects incomplete barrier/load, resource unknown and unverified cleanup."
+  ],
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery31-20261018",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "sdkAcquisition": true,
+    "sdkMaterialization": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "activationConditions": [
+    "Bind and read back the seven reviewed files plus the rendered caller workflow at immutable commits; render only the fixture SHA placeholder.",
+    "Confirm an unused recovery31 branch, no prior run and no overlapping owned validation; preserve exact repository/ref/push/created/before-zero/attempt-one guards.",
+    "Fresh-check artifact12133086104 and acquire through the ordinary unexpired API route with all ZIP/TAR/tree/version and 600-second download guards intact.",
+    "Require actual Mac 289 passes with zero skips, verified SDK materialization, five fresh candidate passes with passed diagnostics, a complete synchronized workload with three ready/released/reaped workers, at least 60 seconds of load and the unchanged resource/sample thresholds.",
+    "Require successful known-child/background observations and safe terminal receipt with firstFailure/monitorFailure null and verified cleanup; review the terminal evidence before any long-trial decision."
+  ],
+  "run30Evidence": {
+    "run": 39157844373,
+    "sdk": "Official acquisition and SDK materialization/tree/version passed.",
+    "actualMacTests": "282 passed with zero skips.",
+    "candidateObservations": "Six controlled passes with launcher argv0 text/canonical difference and exact count/tail/child orig_argv/current native executable/strict row inclusion.",
+    "stress": "Only six complete samples at the observed partial load; workload exited nonzero before its required completion.",
+    "cause": "UNKNOWN: old workload phase/code and pre-cleanup exit states were absent.",
+    "cleanup": "All eleven monitored stages had exact leader reap, verified-gone groups and no cleanup failure; artifact zero."
+  },
+  "limitations": [
+    "The synchronized setup and longer readiness budget are a new controlled experiment, not a proven explanation of Run30.",
+    "A passing short workload cannot establish multi-hour Rust monitoring stability, checkpoint eligibility or full host/XUL/native-authentication success.",
+    "Run27 inclusion failure, Run26/Run28 timeout shared cause and the original native-host exit remain unresolved historical observations."
+  ]
+}
