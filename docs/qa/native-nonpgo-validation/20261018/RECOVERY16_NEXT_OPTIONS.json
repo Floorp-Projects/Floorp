@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUTC": "2026-10-18 07:57:27 UTC",
+  "failedRun": 39087195468,
+  "terminalReceiptCommit": "14e98236bc6fff26ba9deb789499731f298e4ecd",
+  "decision": "NO_IDENTICAL_SIX_HOUR_RETRY",
+  "currentGoal": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+    "firstCausePatchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "sdkCanonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "freshObjdir": true,
+    "sameJob": true,
+    "fullHostAndXUL": true,
+    "debug": true,
+    "pgo": false,
+    "tests": true,
+    "maxOwnedRSSMiB": 10240,
+    "minFreeDuringBuildGiB": 8,
+    "parallelBuildJobs": 3
+  },
+  "budget": {
+    "jobLimitMinutes": 360,
+    "firstFullBuildStatusElapsedMinutes": 13.7,
+    "approximateRemainingMinutesAtFullBuildStart": 346.3,
+    "fullBuildDidNotCompleteWithinRemainingBudget": true,
+    "packageAndNativeReserveMeasured": false,
+    "remainingBuildWorkKnown": false,
+    "peakOwnedRSSMiB": 7598,
+    "minimumFreeGiB": 83.92,
+    "monitorFailure": null,
+    "stallEvidence": false
+  },
+  "knownRetainedInputs": {
+    "fullMacQAArtifactCounts": [
+      {
+        "run": 39020119793,
+        "count": 0
+      },
+      {
+        "run": 39045848018,
+        "count": 0
+      },
+      {
+        "run": 39087195468,
+        "count": 0
+      }
+    ],
+    "partialObjectTreeFromCancelledRunnerAvailable": false,
+    "privateCompilerLogRetained": false,
+    "sourceHeadRunCollectionCount": 19,
+    "existingDebugBinaryCandidates": [
+      {
+        "id": 12081765205,
+        "name": "floorp-mac-x86_64-moz-artifact",
+        "bytes": 604236390,
+        "expired": false,
+        "expiresAt": "2027-01-14T20:40:15Z",
+        "digest": "sha256:9a359d24bc3ac150ca065bde3926cfcdcf5734eb49ca39bc49c4eb680cfe1f7d",
+        "sourceRun": 38963901545,
+        "head": "7dd619742b25567e479eeda97ae071d10542ad0b"
+      },
+      {
+        "id": 12116595907,
+        "name": "floorp-mac-x86_64-moz-artifact",
+        "bytes": 604231197,
+        "expired": false,
+        "expiresAt": "2027-01-15T20:18:12Z",
+        "digest": "sha256:6db8d826d30d4b5a18d577b46510bafebebbeb107e501d17eabb8661825d8ec9",
+        "sourceRun": 39066132056,
+        "head": "7dd619742b25567e479eeda97ae071d10542ad0b"
+      }
+    ],
+    "latestDebugCompile": {
+      "run": 39066132056,
+      "job": 117494372714,
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "kind": "Linux-host cross compilation"
+    },
+    "laterExistingSDKCandidate": {
+      "id": 12113511845,
+      "name": "macos-sdk",
+      "bytes": 105082683,
+      "expired": false,
+      "expiresAt": "2026-10-18T20:19:27Z",
+      "digest": "sha256:99234850e98cd87ccbf77cc702cf0e76bd80ee2ad431eda6ba8dfc8427159c20",
+      "sourceRun": 39066132056,
+      "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "canonicalContentVerified": false,
+      "switchedIntoPlan": false
+    },
+    "artifactPackagingSource": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/scripts/build-and-package.sh",
+      "nonPGOMac": "Package contains dist/, not the full object tree.",
+      "profileGenerationMac": "PGO generation packages can include the object directory, but their instrumentation/configuration is incompatible with the non-PGO debug cohort."
+    }
+  },
+  "options": [
+    {
+      "id": "standard-runner-analysis",
+      "additionalArtifactStorage": false,
+      "additionalRunnerApproval": false,
+      "work": "Add bounded structured build milestones and timing/object/link verification status to future job logs. Assess a reviewed optimization using existing verified source/toolchain inputs before another full attempt.",
+      "canResumeThisRun": false,
+      "fitsSixHoursEstablished": false,
+      "parallelismChange": "Current -j3 is retained. Any -j4 proposal needs explicit review of the current resource boundary and measurement under the same RSS guard; a linear speedup is not assumed.",
+      "dispatchNow": false
+    },
+    {
+      "id": "existing-binary-native-diagnostic",
+      "additionalArtifactStorage": false,
+      "additionalRunnerApproval": false,
+      "work": "Validate an existing unexpired x86_64 package's archive/content hash, full source/patch provenance, compiled debug/non-PGO configuration, XUL/native-helper identities and harness compatibility before a short native-only diagnostic.",
+      "payloadDownloaded": false,
+      "provenanceValidationComplete": false,
+      "canEstablishFreshMacFullBuild": false,
+      "qaFirstCausePatchPresenceVerified": false,
+      "scopeDecisionRequired": "This is a separate diagnostic scope, not completion of the current fresh full-host/XUL objective.",
+      "dispatchNow": false
+    },
+    {
+      "id": "checkpointed-standard-jobs",
+      "additionalArtifactStorage": true,
+      "additionalRunnerApproval": false,
+      "work": "Design phase-bounded build checkpoints with a measured size cap, provenance/hash manifest and verification before restore; finish linking, package and native tests from the verified state.",
+      "currentPermissionBlockers": [
+        "New large object-tree/compiler-cache artifact storage is outside scope.",
+        "Cross-job restore changes freshObjdir/sameJob criteria."
+      ],
+      "retentionOrPermissionsChanged": false,
+      "checkpointAlreadyExistsForThisQACohort": false,
+      "uploadPerformed": false,
+      "dispatchNow": false
+    },
+    {
+      "id": "faster-intel-hosted-runner",
+      "additionalArtifactStorage": false,
+      "additionalRunnerApproval": true,
+      "candidate": "GitHub macos-15-large, Intel 12 CPU / 30 GB RAM",
+      "work": "Obtain runner/billing authorization and review any CPU parallelism/RSS policy change. Measure a cohort build budget, including setup, package, native tests and cleanup, before full execution.",
+      "stillSixHourJobLimit": true,
+      "currentThreeJobTenGiBLimitsNotSilentlyRaised": true,
+      "diskPreflightStillRequired": true,
+      "fitsSixHoursEstablished": false,
+      "dispatchNow": false
+    },
+    {
+      "id": "approved-long-lived-intel-runner",
+      "additionalArtifactStorage": false,
+      "additionalRunnerApproval": true,
+      "work": "Use an explicitly approved self-hosted Intel Mac for the same fresh single-job build, fixed inputs and monitored resource limits. Set a platform-supported budget sufficient for measured build plus tests.",
+      "documentedSelfHostedMaximumDays": 5,
+      "requiresRunnerConnectionAndSecurityBoundaryApproval": true,
+      "blacksmithLoginApproved": false,
+      "runnerConfigured": false,
+      "dispatchNow": false
+    }
+  ],
+  "sdkRule": "The currently pinned SDK may be acquired only before its official expiry (2026-10-18T09:48:20Z); build duration is not coupled to expiry. Any later existing artifact requires official metadata, unexpired acquisition, HTTP-error/600-second guards and full ZIP/TAR/tree/version verification before considering a transport-pin update. No expired retrieval bypass.",
+  "officialReferences": [
+    {
+      "url": "https://docs.github.com/en/actions/reference/limits",
+      "claims": [
+        "All GitHub-hosted jobs, including larger runners, have a six-hour execution limit.",
+        "Self-hosted jobs have a five-day execution limit."
+      ]
+    },
+    {
+      "url": "https://docs.github.com/en/actions/reference/runners/github-hosted-runners",
+      "claims": [
+        "Standard public macos-15-intel provides Intel four CPU / 14 GB RAM and a fresh VM."
+      ]
+    },
+    {
+      "url": "https://docs.github.com/en/actions/reference/runners/larger-runners",
+      "claims": [
+        "macos-15-large is Intel twelve CPU / 30 GB RAM; larger runner billing/organization access must be configured."
+      ]
+    }
+  ],
+  "newCIExecutions": 0,
+  "newArtifactUploads": 0,
+  "newLargeArtifactDownloads": 0,
+  "productSigning": false,
+  "productPublishing": false,
+  "merge": false,
+  "authenticationOrPermissionChanges": false,
+  "originalNativeExitCause": "unresolved"
+}
