@@ -1,0 +1,469 @@
+{
+  "schema": 1,
+  "run": {
+    "id": "39136105689",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39136105689",
+    "producerJob": "117700825584",
+    "consumerJob": "117723910285",
+    "fixture": "9f6d94d19b1248a1bb6d0da018fd975bad4ac751",
+    "executionHead": "8d0e91b9d3756ed960d660bcc34fe8510e66b498",
+    "attempt": 1
+  },
+  "status": "failed",
+  "firstFailure": {
+    "stage": "checkpoint-census",
+    "code": "checkpoint-owned-survivors",
+    "elapsedSeconds": 6231.23
+  },
+  "monitorFailure": null,
+  "elapsedMinutes": 103.95,
+  "macTests": {
+    "bytes": 44874,
+    "cases": [],
+    "complete": true,
+    "errors": 0,
+    "exceptionTextPublished": false,
+    "failures": 0,
+    "rawContentPublished": false,
+    "seconds": 53.788,
+    "sha256": "d8fd6693675c6b3cde3ffb77d061f08e6b8e112d34b3452ac5779cf948b9905e",
+    "skipped": 0,
+    "status": "passed",
+    "total": 210
+  },
+  "baseline": {
+    "api": "sysctl-kern-proc-all",
+    "snapshotBytes": 328536,
+    "snapshotEntries": 507,
+    "candidateIdentities": 278,
+    "candidateZombies": 0,
+    "mixedCandidateIdentities": 2,
+    "selfBindingVerified": true,
+    "rawProcessMetadataPublished": false,
+    "attempts": 1,
+    "retryErrnos": [],
+    "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+  },
+  "completion": {
+    "status": "rejected",
+    "signalOwnershipGranted": false,
+    "rawProcessMetadataPublished": false,
+    "newCandidateIdentities": 13,
+    "removedCandidateIdentities": 17,
+    "deltaKinds": {
+      "new-pid": 13
+    },
+    "deltaRecords": [
+      {
+        "kind": "new-pid",
+        "identityTag": "069d868a7ae6e791",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "732b37c60f8a0d1f",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "314251ea2fdea57d",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "92fb53c1d9f1c0eb",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "1899fc84354a8abd",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "93696c43a3a89e4b",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "fb7d936420029093",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "6f0a75b40d86f4ca",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "e9d9cbbfeb7409be",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "39932a28461edf80",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "15e70460c2cf18ae",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "b794ed6431596a69",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      },
+      {
+        "kind": "new-pid",
+        "identityTag": "68c75f2d512b83b5",
+        "processHint": {
+          "status": "identity-verified",
+          "role": "metadata-worker",
+          "parentRelation": "pid-one",
+          "observedInStageGroup": "not-observed",
+          "ancestryComplete": false,
+          "writerRoleEstablished": false,
+          "query": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "credentialRelation": "worker-both"
+        }
+      }
+    ],
+    "deltaRecordsTruncated": false,
+    "api": "sysctl-kern-proc-all",
+    "snapshotBytes": 328536,
+    "snapshotEntries": 507,
+    "candidateIdentities": 274,
+    "candidateZombies": 0,
+    "mixedCandidateIdentities": 2,
+    "selfBindingVerified": true,
+    "attempts": 1,
+    "retryErrnos": [],
+    "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+    "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+    "deltaDiagnosticStatus": "complete"
+  },
+  "stageObservations": {
+    "status": "sampling",
+    "identities": 1023,
+    "scope": "sampled measured stage-group identities; absence is not proof of unrelated ancestry"
+  },
+  "stages": [
+    {
+      "stage": "checkpoint-exports",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 1429,
+      "minimumFreeGiB": 98.53,
+      "logBytes": 2778702
+    },
+    {
+      "stage": "checkpoint-rust",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 7262,
+      "minimumFreeGiB": 91.26,
+      "logBytes": 5487705
+    },
+    {
+      "stage": "checkpoint-rust-archive",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "cleanupFailure": null,
+      "peakRSSMiB": 62,
+      "minimumFreeGiB": 91.26,
+      "logBytes": 58343
+    }
+  ],
+  "logs": {
+    "checkpoint-exports": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 2778702,
+      "sha256": "1977b88780fb038d33a00e7ad7aff8f1a5e69f2400820845060bf7c40cc1830f",
+      "lines": 1749,
+      "diagnosticCounts": {},
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": [],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    },
+    "checkpoint-rust": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 5487705,
+      "sha256": "868630a9c6a5b4f6d2dfdf49120258c527b5a4ebdcd967f175b8d81c894490dd",
+      "lines": 33260,
+      "diagnosticCounts": {
+        "unclassified-error-marker": 53
+      },
+      "matchingRecords": 53,
+      "recordsTruncated": true,
+      "records": [
+        {
+          "line": 1871,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2831,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 2839,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted>"
+        },
+        {
+          "line": 3578,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3587,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3641,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3647,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 3652,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 19095,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error"
+        },
+        {
+          "line": 25199,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 25209,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error <redacted>"
+        },
+        {
+          "line": 26020,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 30526,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 32463,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> failed to <redacted> no such file or directory <redacted> error <redacted> non fatal <redacted>"
+        },
+        {
+          "line": 33131,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error <redacted>"
+        },
+        {
+          "line": 33140,
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "error error <redacted>"
+        }
+      ],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    }
+  },
+  "artifacts": 0,
+  "consumerStatus": "skipped",
+  "fullHostXUL": "NOT_TESTED",
+  "nativeAuthentication": "NOT_TESTED",
+  "eligibilityRelaxed": false,
+  "conclusion": "13 new candidates all had identity-bound metadata-worker name hints and current parent PID 1; none matched sampled stage births. Original ancestry and writer absence remain unproven, so the existing boundary rejected the checkpoint."
+}

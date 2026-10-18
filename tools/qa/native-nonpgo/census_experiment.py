@@ -95,6 +95,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--task',type=Path,required=True)
     parser.add_argument('--expected-tests',type=int,required=True)
+    parser.add_argument('--original-parent',action='store_true')
     args=parser.parse_args()
     task=args.task
     plan=json.loads((HERE/'plan.json').read_text())
@@ -128,6 +129,21 @@ def main():
         stage='baseline'
         baseline_details=result['baseline']={}
         baseline=take_owned(baseline_details)
+        if args.original_parent:
+            stage='original-parent-control'
+            from origin_control import run_control
+            result['originalParentControl']={}
+            run_control(task,result['originalParentControl'])
+            stage='initial-metadata-origin'
+            from darwin_origin import describe_origin
+            roles=[(row,describe(row,baseline,baseline,set())) for row in sorted(baseline)]
+            metadata=[row for row,hint in roles if hint.get('role')=='metadata-worker']
+            result['initialMetadataOrigins']={'candidateIdentities':len(baseline),
+                'roleVerifiedMetadataCandidates':len(metadata),
+                'roleUnavailableCandidates':sum(hint['status']!='identity-verified' for _,hint in roles),
+                'truncated':len(metadata)>16,
+                'records':[describe_origin(row,set()) for row in metadata[:16]],
+                'exclusionAuthorized':False}
         stage='known-child'
         ready=task/'known-child-ready'
         script=('import os,pathlib,time; '

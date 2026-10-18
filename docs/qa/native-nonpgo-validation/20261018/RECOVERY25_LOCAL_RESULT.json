@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "platform": "linux",
+  "testReceipt": {
+    "complete": true,
+    "rawContentPublished": false,
+    "exceptionTextPublished": false,
+    "total": 226,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 10,
+    "status": "passed",
+    "seconds": 8.758,
+    "bytes": 44488,
+    "sha256": "c3dcbe4a7c7d3a88739a910929ce42cb45f9eb682b2768d8e530024f346bc757",
+    "cases": []
+  },
+  "sourceHashes": {
+    "tools/qa/native-nonpgo/darwin_origin.py": "05c5d5d594661f8fee4f749ecf45b1e7596ed7cbe4079505d6ed4a4203da6420",
+    "tools/qa/native-nonpgo/origin_control.py": "ac33ca3d41669f21c071abb82f62e9009995b41a962f27db5df406d11b7a88b1",
+    "tools/qa/native-nonpgo/process_census.py": "31b1457bf14b29850f888e470f1c5287bc9236b68229f4d4f7ea0128b0def3af",
+    "tools/qa/native-nonpgo/census_experiment.py": "69b0f275ac99e2316c7a39dd24fa97ecc229033eda19a73c5313e61c83c84963",
+    "tools/qa/native-nonpgo/test_darwin_origin.py": "8a377af5cb7ef6e04bcf854d5d308106762809af7a7bcd058c0ea428114ecb0e",
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_ORIGIN_WORKFLOW.yml.disabled": "d067506591c438efb084b33e5e524d433acc431a6e9c91541e6a7976e3f7ebec",
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_ORIGIN_DIAGNOSTIC.ja.md": "b352d66711ac19c69e82e181b790af07d61d1149cc602028719c9e4248bbb4db"
+  },
+  "actualMacRequired": true,
+  "eligibilityChanged": false,
+  "newArtifacts": 0
+}

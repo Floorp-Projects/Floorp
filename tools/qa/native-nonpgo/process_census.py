@@ -87,10 +87,10 @@ def load_abi(path):
     return layout
 
 
-def decode(data, layout, uid, ruid, own_pid, own_birth):
+def decode(data, layout, uid, ruid, own_pid, own_birth, include_pid_one=False):
     size = layout['recordBytes']
     require(0 < len(data) <= CAP and len(data)%size==0, 'census-snapshot-length')
-    seen, births, own, zombies = set(), set(), None, 0
+    seen, births, own, zombies, pid_one = set(), set(), None, 0, None
     for offset in range(0,len(data),size):
         row = {name:int.from_bytes(data[offset+field['offset']:offset+field['offset']+field['bytes']],
                                   'little',signed=field['signed']) for name,field in layout['fields'].items()}
@@ -98,6 +98,10 @@ def decode(data, layout, uid, ruid, own_pid, own_birth):
         require(0 <= pid < 2**31 and pid not in seen, 'census-snapshot-pid')
         seen.add(pid)
         require(all(0 <= row[name] < 2**32-1 for name in ('uid','ruid')), 'census-snapshot-credentials')
+        if include_pid_one and pid == 1:
+            require(row['startSec'] > 0 and 0 <= row['startUsec'] < 1000000 and
+                    row['state'] in (1,2,3,4), 'census-pid-one-identity')
+            pid_one = (pid,row['startSec'],row['startUsec'],row['uid'],row['ruid'])
         if row['uid']!=uid and row['ruid']!=ruid:
             continue
         require(pid>0 and row['startSec']>0 and 0<=row['startUsec']<1000000 and
@@ -110,13 +114,17 @@ def decode(data, layout, uid, ruid, own_pid, own_birth):
         if pid==own_pid:
             own=identity
     require(own==(own_pid,*own_birth,uid,ruid), 'census-snapshot-self-binding')
-    return {'identities':births,'measurement':{'api':'sysctl-kern-proc-all','snapshotBytes':len(data),
+    result = {'identities':births,'measurement':{'api':'sysctl-kern-proc-all','snapshotBytes':len(data),
             'snapshotEntries':len(seen),'candidateIdentities':len(births),'candidateZombies':zombies,
             'mixedCandidateIdentities':sum(row[3]!=uid or row[4]!=ruid for row in births),
             'selfBindingVerified':True,'rawProcessMetadataPublished':False}}
+    if include_pid_one:
+        require(pid_one is not None, 'census-pid-one-unavailable')
+        result['pidOne'] = pid_one
+    return result
 
 
-def snapshot(layout, system=None, self_probe=None):
+def snapshot(layout, system=None, self_probe=None, include_pid_one=False):
     validate_layout(layout)
     system = system if system is not None else ctypes.CDLL('/usr/lib/libSystem.B.dylib',use_errno=True)
     system.sysctl.argtypes = [ctypes.POINTER(ctypes.c_int),ctypes.c_uint,ctypes.c_void_p,
@@ -158,7 +166,7 @@ def snapshot(layout, system=None, self_probe=None):
             raise Failure('census-sysctl-data-unavailable')
         require(0 < length.value <= capacity, 'census-sysctl-returned-size')
         value = decode(data.raw[:length.value],layout,os.geteuid(),os.getuid(),os.getpid(),
-                       (own.start_sec,own.start_usec))
+                       (own.start_sec,own.start_usec),include_pid_one=include_pid_one)
         value['measurement'].update(attempts=attempt+1,retryErrnos=retries,
                                     layoutSHA256=hashlib.sha256(canonical(layout)).hexdigest())
         return value

@@ -1,0 +1,146 @@
+{
+  "schema": 1,
+  "scope": "Recovery25 short diagnostic-only original-parent observation",
+  "decision": "GO_SHORT25_AFTER_IMMUTABLE_BINDING",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "binding": {
+    "kind": "exact content SHA256",
+    "fixtureCommit": null,
+    "callerCommit": null,
+    "files": {
+      "tools/qa/native-nonpgo/darwin_origin.py": {
+        "bytes": 4040,
+        "sha256": "05c5d5d594661f8fee4f749ecf45b1e7596ed7cbe4079505d6ed4a4203da6420"
+      },
+      "tools/qa/native-nonpgo/origin_control.py": {
+        "bytes": 6614,
+        "sha256": "ac33ca3d41669f21c071abb82f62e9009995b41a962f27db5df406d11b7a88b1"
+      },
+      "tools/qa/native-nonpgo/test_darwin_origin.py": {
+        "bytes": 10354,
+        "sha256": "8a377af5cb7ef6e04bcf854d5d308106762809af7a7bcd058c0ea428114ecb0e"
+      },
+      "tools/qa/native-nonpgo/process_census.py": {
+        "bytes": 9052,
+        "sha256": "31b1457bf14b29850f888e470f1c5287bc9236b68229f4d4f7ea0128b0def3af"
+      },
+      "tools/qa/native-nonpgo/census_experiment.py": {
+        "bytes": 9864,
+        "sha256": "69b0f275ac99e2316c7a39dd24fa97ecc229033eda19a73c5313e61c83c84963"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_ORIGIN_WORKFLOW.yml.disabled": {
+        "bytes": 2978,
+        "sha256": "d067506591c438efb084b33e5e524d433acc431a6e9c91541e6a7976e3f7ebec"
+      },
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY25_ORIGIN_DIAGNOSTIC.ja.md": {
+        "bytes": 2734,
+        "sha256": "b352d66711ac19c69e82e181b790af07d61d1149cc602028719c9e4248bbb4db"
+      }
+    }
+  },
+  "validation": {
+    "reviewerExecuted": true,
+    "platform": "Linux x86_64",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 226,
+    "passed": 216,
+    "skipped": 10,
+    "seconds": 8.691,
+    "exitCode": 0,
+    "macResult": "NOT_EXECUTED in these review results",
+    "focusedOriginPrimaryAndExperimentTests": {
+      "total": 32,
+      "passed": 32,
+      "skipped": 0
+    },
+    "syntax": [
+      "Python AST",
+      "workflow YAML",
+      "all workflow bash scripts",
+      "inline Python AST"
+    ]
+  },
+  "apiContract": {
+    "uniqueInfo": "Ordinary proc_pidinfo flavor17, arg0; 56 bytes and errno0; checked ctypes layout, nonzero uniqueid/UUID and zero reserved fields",
+    "candidateBinding": "Two complete BSD five-tuple reads with stable PPID/PGID; two matching uniqueid/parent-uniqueid/idversion/original-parent-version/UUID reads",
+    "pidOneBinding": "Two primary KERN_PROC PID1 birth/credential tuples and two matching flavor17 results; root EUID/RUID required",
+    "signedVersions": "Signed int32 supported; positivity not assumed",
+    "primaryCensus": "include_pid_one defaults false; optional PID1 metadata does not add root identities to worker candidates",
+    "failureBehavior": "Denied, short, missing, changed or invalid optional observations remain diagnostic-unavailable; no privilege or alternate API fallback"
+  },
+  "control": {
+    "sequence": "Exact Popen supervisor -> forked child -> supervisor exit -> orphan reparent -> orphan exec",
+    "requiredNegative": "After orphan exec, parent uniqueid matches PID1 while original-parent version remains the supervisor version; classification must remain original-parent-not-established",
+    "orphanLifetime": "Dedicated pipe EOF or per-image 30-second self-expiry; exec begins a new self-expiry interval",
+    "signalScope": "Only exact Popen supervisor; no signal to arbitrary PID or adopted orphan",
+    "cleanup": "Close pipe, bounded exact supervisor wait/termination, separate group-gone check; failure remains unverified and fails the experiment",
+    "primaryFailure": "Original failure survives additional cleanup failure; otherwise cleanup failure becomes a fixed Failure",
+    "environment": "Explicit clean environment; unrelated job environment not inherited",
+    "stageObservation": "Origin-control hints use no invented sampler history"
+  },
+  "privacy": {
+    "publicData": "Fixed classifications/booleans/counts/API byte lengths and errno only",
+    "rawPIDBirthUIDUniqueIDUUIDVersionsPublished": false,
+    "rawExceptionTextPublished": false,
+    "metadataCoverage": "Unavailable role classifications counted separately from verified metadata-worker candidates"
+  },
+  "invariants": {
+    "checkpointEligibility": "Unchanged strict baseline delta=0",
+    "roleOrParentExclusions": false,
+    "convergenceWaitImplemented": false,
+    "signalOwnershipExpanded": false,
+    "resourceSamplerRetriesLimitsChanged": false,
+    "permissionsExpanded": false
+  },
+  "workflow": {
+    "templateHasFixturePlaceholder": true,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 20,
+    "internalPhaseDeadlineMinutes": 15,
+    "expectedActualMacTests": 226,
+    "requiredSkipped": 0,
+    "trigger": "Initial created push to codex/mac-native-census-recovery25-20261018 with zero before SHA and attempt1",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "artifactUpload": false,
+    "sdkAcquisition": false,
+    "floorpBuild": false
+  },
+  "activationConditions": [
+    "Publish immutable fixture with these reviewed bytes, render only the fixture placeholder, and read back exact caller/fixture content",
+    "Retain one matching workflow/job and verify no overlapping owned run before activation",
+    "Require actual Mac 226/226 tests with no skips and all controlled lifecycle/cleanup assertions; preserve failed or unavailable receipts"
+  ],
+  "limitations": [
+    "This diagnosis does not establish non-job causation, non-writer status, complete ancestry or process-code signing identity",
+    "Original parent version is a 32-bit counter; wrap and parent exec limit inference; mismatch is not proof of an unrelated parent",
+    "Read sequences are observations, not an atomic lifetime lock; changed observations stay unknown",
+    "No long checkpoint/full-build/native-authentication execution or eligibility change is covered"
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "Cleanup failure could reference an undefined variable and replace the primary failure",
+      "status": "fixed; two real run_control negative tests"
+    },
+    {
+      "severity": "P2",
+      "issue": "Origin-control after-exec hint was supplied a synthetic observed-stage birth",
+      "status": "fixed; empty history and assertions for all three hints"
+    }
+  ],
+  "sources": [
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/proc_info_private.h#L41",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L2023",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_fork.c#L910",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exec.c#L6679",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_proc.c#L2394"
+  ]
+}
