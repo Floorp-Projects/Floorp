@@ -312,6 +312,36 @@ function testSnapshotsAreDetachedAndSerializable(): void {
   );
 }
 
+function testRefreshCollectsOwnersAndUnregistersClosedWindows(): void {
+  const store = new ContextMenuCatalogStore();
+  let refreshCount = 0;
+  store.registerRefresh("window-a", () => {
+    refreshCount++;
+    store.report(
+      "window-a",
+      makeSnapshot("en-US", [makeSurface("browser.content", "Fresh menu")]),
+    );
+  });
+  assertEquals(
+    surfaceLabel(store.refresh(), "browser.content"),
+    "Fresh menu",
+    "refresh returns newly collected items in the same request",
+  );
+  assertEquals(refreshCount, 1, "the live window is refreshed");
+  store.removeOwner("window-a");
+  store.refresh();
+  assertEquals(
+    refreshCount,
+    1,
+    "a closed window is never refreshed or retained",
+  );
+  assertEquals(
+    store.getSnapshot().surfaces.length,
+    0,
+    "a refresh cannot restore a removed owner",
+  );
+}
+
 function testRejectsEmptyOwnerId(): void {
   const store = new ContextMenuCatalogStore();
   let threw = false;
@@ -354,6 +384,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "snapshots are detached and serializable",
       fn: testSnapshotsAreDetachedAndSerializable,
+    },
+    {
+      name: "refresh collects live windows and releases closed windows",
+      fn: testRefreshCollectsOwnersAndUnregistersClosedWindows,
     },
     { name: "empty owner id is rejected", fn: testRejectsEmptyOwnerId },
   ];

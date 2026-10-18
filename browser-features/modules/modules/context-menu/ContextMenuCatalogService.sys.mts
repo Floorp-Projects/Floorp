@@ -24,6 +24,7 @@ interface ContainerContribution {
 export interface ContextMenuCatalogServiceType
   extends ContextMenuCatalogReporter {
   getSnapshot(): ContextMenuCatalogSnapshot;
+  refresh(): ContextMenuCatalogSnapshot;
   getRevision(): number;
 }
 
@@ -152,6 +153,7 @@ function collectContributions(
  */
 export class ContextMenuCatalogStore implements ContextMenuCatalogServiceType {
   readonly #owners = new Map<string, OwnerCatalogSnapshot>();
+  readonly #refreshers = new Map<string, () => void>();
   #revision = 0;
   #sequence = 0;
 
@@ -175,7 +177,26 @@ export class ContextMenuCatalogStore implements ContextMenuCatalogServiceType {
     this.#revision++;
   }
 
+  registerRefresh(ownerId: string, refresh: () => void): void {
+    if (ownerId.length === 0) {
+      throw new TypeError("Context menu catalog ownerId must not be empty");
+    }
+    this.#refreshers.set(ownerId, refresh);
+  }
+
+  refresh(): ContextMenuCatalogSnapshot {
+    for (const refresh of this.#refreshers.values()) {
+      try {
+        refresh();
+      } catch (error) {
+        console.error("[ContextMenuCustomizer] Catalog refresh failed", error);
+      }
+    }
+    return this.getSnapshot();
+  }
+
   removeOwner(ownerId: string): void {
+    this.#refreshers.delete(ownerId);
     if (this.#owners.delete(ownerId)) {
       this.#revision++;
     }
