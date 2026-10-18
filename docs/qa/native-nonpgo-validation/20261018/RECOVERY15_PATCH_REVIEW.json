@@ -1,0 +1,125 @@
+{
+  "behaviorVerified": [
+    "Capture whether the exact Popen child was unreaped at function entry. An entry-already-reaped child cannot obtain another group probe from this recovery path.",
+    "Keep the initial exact-child poll and group signal-zero probe. A denial can obtain at most one fresh probe only after that exact child has newly acquired a confirmed returncode during this call.",
+    "Newly confirmed reap by the initial poll, the post-denial poll, or one exact-child wait is accepted as lifecycle evidence. The source is recorded as a fixed enum.",
+    "Only when both polls still leave the entry-unreaped child unreaped, allow one process.wait(timeout=0.05). A timeout rethrows the original PermissionError with timeout exception context suppressed.",
+    "An unconfirmed returncode after wait cannot authorize a fresh probe, even if a test double returns an exit code. Unexpected wait failures remain fail-closed.",
+    "A newly reaped child merely authorizes a fresh group query. Fresh False is authoritative group absence, fresh True remains alive, and fresh denial/error remains unverified and propagates.",
+    "No additional signal, role exclusion, process target, privilege, resource measurement, retry count, resource limit or unknown-to-zero conversion is introduced.",
+    "Fixed-schema cleanup diagnostics record entry reap availability, observed exact-child exit codes, reap result/source, optional bounded-wait seconds and whether a fresh probe was attempted. They include no raw PID, UID, command, output or exception text and retain the existing latest-16 bound.",
+    "Timeout diagnostics use wait-timeout rather than claiming a kernel running state. A child cannot be declared gone by timeout alone.",
+    "AST comparison after removing only Runner.owned_group_alive confirms the remainder of support.py is unchanged from the parent, including inventory retries, resource handling, first failure, excerpts, stage records and independent final leader wait.",
+    "The only other changed files are cleanup tests. Plan, SDK transport/content pins, Darwin counter validation, native discovery/ownership, pipeline, harness and Runtime workflows are unchanged."
+  ],
+  "decision": {
+    "executionReady": false,
+    "fullRun": "NO_GO_UNTIL_SHORT_MAC_TERMINAL_REVIEW_CLEAR",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "staticReady": true,
+    "status": "STATIC_READY_FOR_SHORT_MAC_GATE"
+  },
+  "findings": [],
+  "limits": [
+    "The historical run13 group denial cause is unknown. This patch covers call-local exact-child lifecycle windows without identifying the original denied state.",
+    "The first-poll reap precedes the first denied group query, so its acceptance does not itself explain why a second group query would improve. Only the fresh query result establishes current group state.",
+    "The 0.05-second exact-child wait is bounded and may still time out under real scheduling conditions; such timeout intentionally preserves the denial.",
+    "A controlled injected denial establishes the recovery-path mechanics, not reproduction of the historical kernel denial. Twenty successful rapid stops would not by themselves prove that the historical race occurred during those iterations.",
+    "Original native exit, inventory helper delay and compiler causes remain unknown. Actual native authentication has not been tested by this review.",
+    "No new Mac job, full build, SDK acquisition, repository source modification or external write was performed by this review."
+  ],
+  "patch": {
+    "changedFiles": [
+      {
+        "bytes": 28177,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "f0ac94b5266a7bd557e5782e8d26520c3f0a7ca8f9a7ee772b04d57a8c95df7d"
+      },
+      {
+        "bytes": 15236,
+        "path": "tools/qa/native-nonpgo/test_owned_cleanup.py",
+        "sha256": "c43e7f382ab321d160e588ee4d610e1aba5063ae74f2a6266713e65833bfc8c4"
+      },
+      {
+        "bytes": 82596,
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "sha256": "f3553c1ab97e76df7d9c72234a3e82da7314ba39107f83672c97684fa9d63542"
+      }
+    ],
+    "fullDiffSHA256": "7f9590dabd32624349331d88fd598d761db0411c21dbed6f6628d732d6aeb259",
+    "localCommit": "c8a2be747f99792fb6168e78e9f9ca817c0fc645",
+    "parent": "e97ec609ad2a753c4af241696f65e6f539429d7b",
+    "providerCommit": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+    "providerTreeAndParentIndependentlyVerified": true,
+    "trackedSourceMatchesCommit": true,
+    "tree": "5af58181b8325b9947bf7d396e42b7f58f682736"
+  },
+  "requiredMacGate": {
+    "execution": "NOT_EXECUTED for this patch; reviewer environment is Linux.",
+    "existingCases": "Re-run all prior seven real Mac gates, eight inventory-timeout cases and negative cleanup guards, including the run13 failing test.",
+    "fullCondition": "Only terminal success and a clear independent review of this short gate can unlock a separately reviewed single full validation caller.",
+    "newCases": [
+      "Controlled live exact child with a ready handshake: inject one initial denial and defer both polls, then require actual exact wait/reap and a fresh real ESRCH group probe. Injection must remain explicit.",
+      "Twenty actual rapid monitor-stop iterations must retain monitor-unavailable as first failure, establish group verified-gone, reap every exact leader and have no cleanupFailure."
+    ],
+    "privacy": "Actual clang before/after excerpts remain bounded and normalized; the nonpublic sentinel and private timeout values must remain absent from the full log.",
+    "requiredResult": "133 tests passed, skipped=0, terminal success, artifacts=0 and independent terminal review clear.",
+    "scope": "One short SDK-free standard macos-15-intel diagnostic job using the exact reviewed source. No build or browser authentication qualification."
+  },
+  "reviewType": "independent immutable owned-cleanup patch review",
+  "schemaVersion": 1,
+  "tests": {
+    "diffWhitespaceCheck": "PASS",
+    "negativeAndBoundaryCoverage": [
+      "Initial-poll new reap followed by fresh False, True or EPERM preserves the fresh result without waiting.",
+      "Post-denial-poll new reap permits one fresh probe.",
+      "Bounded-wait new reap followed by fresh False, True or EPERM preserves the fresh result.",
+      "Live child wait timeout rethrows the same original denial and does not query the group again.",
+      "Entry-already-reaped child neither waits nor gains a recovery probe.",
+      "Wait success without a confirmed returncode does not permit a recovery probe.",
+      "Unexpected exact-wait error fails closed.",
+      "Group denial and denied signals retain primary monitor failure, unverified cleanup and independent exact-child final wait."
+    ],
+    "recordedSuite": {
+      "logBytes": 28909,
+      "logSHA256": "725a5c820518cfe8b512e31ef4b70ea1d502776efefdfbfc5195e06e68d0fee3",
+      "passed": 124,
+      "provenance": "Recorded full-suite log independently inspected; full suite not rerun by reviewer.",
+      "result": "OK",
+      "seconds": 6.658,
+      "skipped": 9,
+      "skippedScope": "real Mac gates in Linux development environment",
+      "total": 133
+    },
+    "reviewerExecution": [
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_owned_cleanup -v",
+        "environment": "Linux",
+        "passed": 10,
+        "result": "OK",
+        "seconds": 0.005,
+        "skipped": 3,
+        "total": 13
+      },
+      {
+        "environment": "Linux",
+        "passed": 4,
+        "result": "OK",
+        "scope": "Four related guard tests: prior failing unavailable-monitor cleanup, denied group/signal exact child reap, live denied child remains unverified, and descendants outliving leader",
+        "seconds": 0.287,
+        "skipped": 0,
+        "total": 4
+      }
+    ]
+  },
+  "triggerEvidence": {
+    "observedFailure": "A cleanup group signal-zero EPERM escaped after an expected monitor-unavailable. Runtime leader returncode/poll operands at denial were not recorded; neither a zombie race nor a specific operand is established.",
+    "receiptCommit": "e97ec609ad2a753c4af241696f65e6f539429d7b",
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY13_EXECUTION_RESULT.json",
+    "receiptSHA256": "7739e1f7dffff47c9027d6ceb55426e25807326a6de9b0480896865c7161a958",
+    "runId": 39086387102,
+    "terminalReviewSHA256": "0d9ea98f503a957d6b244881d2a1f9b1f7a72dbd56aa2a58aea4525e95d1884d"
+  }
+}
