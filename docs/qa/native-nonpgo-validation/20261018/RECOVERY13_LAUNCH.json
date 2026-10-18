@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39086387102,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39086387102",
+    "head": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "branch": "codex/mac-native-inventory-recovery13-20261018",
+    "createdAt": "2026-10-18T01:24:46Z",
+    "event": "push",
+    "attempt": 1
+  },
+  "fixture": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+  "runner": "macos-15-intel",
+  "jobs": 1,
+  "testCount": 126,
+  "sdkRequired": false,
+  "runtimeBuild": false,
+  "newArtifacts": 0,
+  "productSigning": false,
+  "permissionsExpanded": false,
+  "prelaunchReview": "GO_SHORT_MAC_GATE_ONLY_THEN_CONDITIONAL_FULL",
+  "conditionalFullCaller": "f365b666c238a24413a561e2e249d98fc2734c99"
+}
