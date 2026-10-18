@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "scope": "Recovery32 recovered query diagnostic retention",
+  "linux": {
+    "total": 291,
+    "passed": 277,
+    "skipped": 14,
+    "seconds": 10.329,
+    "exitCode": 0,
+    "logSHA256": "89923347dcae221a8fdcc807af58748f8f5b3f84d4f13768344d39a237b8ac77"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 291,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "readinessSeconds": 60,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "historicalRecoveredTimeoutPhase": "UNKNOWN: omitted from the old experiment output",
+  "longRun": "not activated"
+}

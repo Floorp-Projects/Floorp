@@ -168,6 +168,24 @@ class InventoryStressTests(unittest.TestCase):
                     stress.run_experiment(task,runner,{},receipt)
                 self.assertIs(runner.group_activity,original)
 
+    def test_first_recovered_timeout_survives_later_good_samples_without_raw_pids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            task,runner,original=self.exercise(directory);good=dict(original.return_value)
+            recovered={**good,'sampleAttempts':2,'_pids':(123456,),
+                'partialSamples':[{'unknownKinds':{'inventory-timeout':1},
+                    'knownRSSLowerBoundMiB':None,'knownCPULowerBoundSeconds':None,
+                    'queryFailure':{'helperProgress':{'phase':'project-imports','events':1}}}]}
+            original.side_effect=[recovered]+[good]*19;receipt={}
+            with self.assertRaisesRegex(Failure,'inventory-stress-monitor'):
+                stress.run_experiment(task,runner,{},receipt)
+        self.assertEqual(receipt['timeoutAttempts'],1);self.assertEqual(receipt['completeSamples'],20)
+        saved=receipt['firstTimeoutSample'];self.assertEqual(saved['sampleIndex'],1)
+        self.assertEqual(saved['partialSamples'][0]['queryFailure']['helperProgress'],
+                         {'phase':'project-imports','events':1})
+        self.assertIsNone(saved['partialSamples'][0]['knownRSSLowerBoundMiB'])
+        self.assertNotIn('_pids',saved);self.assertNotIn('123456',json.dumps(receipt))
+        self.assertIs(runner.group_activity,original)
+
     def test_one_cleanup_denial_does_not_skip_other_child_or_replace_primary_failure(self):
         first=mock.Mock(stdout=io.StringIO(),returncode=None);first.poll.return_value=None
         first.terminate.side_effect=PermissionError('PRIVATE')

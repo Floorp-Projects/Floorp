@@ -50,7 +50,7 @@ class ExperimentCleanup(unittest.TestCase):
         child.poll.return_value=None
         child.terminate.side_effect=PermissionError('PRIVATE-TEXT')
         original={'stage':'known-child','code':'original'}
-        runner=SimpleNamespace(failure=original,monitor_failure=None,records=[],elapsed=lambda:0)
+        runner=SimpleNamespace(failure=original,monitor_failure=None,monitor_diagnostics=[],records=[],elapsed=lambda:0)
         runner.fail=lambda *_args:None
         value={'status':'failed'}
         with tempfile.TemporaryDirectory() as temporary,contextlib.redirect_stdout(io.StringIO()) as output:
@@ -62,6 +62,28 @@ class ExperimentCleanup(unittest.TestCase):
         self.assertEqual(receipt['failureChildCleanup']['cleanupFailure'],{'operation':'terminate','kind':'permission'})
         self.assertNotIn('PRIVATE-TEXT',output.getvalue())
         child.kill.assert_not_called()
+
+    def test_recovered_monitor_diagnostics_survive_finish_and_later_good_sample(self):
+        with tempfile.TemporaryDirectory() as temporary,contextlib.redirect_stdout(io.StringIO()):
+            task=Path(temporary)
+            runner=ce.Runner(task,time.time(),{'stallQuietMinutes':20})
+            for index in range(19):
+                runner.record_monitor('inventory-stress',{'sampleComplete':True,'sampleAttempts':2,
+                    'partialSamples':[{'unknownKinds':{'inventory-timeout':1},
+                        'queryFailure':{'helperProgress':{'phase':'project-imports','events':1}}}],
+                    'sequence':index})
+            runner.records=[{'stage':'inventory-stress','lastActivity':{'sampleComplete':True,'sampleAttempts':1}}]
+            original={'stage':'inventory-stress','code':'inventory-stress-monitor'}
+            runner.failure=original
+            stopping={'stage':'earlier-stop','sampleComplete':False,'sampleAttempts':3}
+            runner.monitor_failure=stopping
+            ce.finish_result({'status':'failed'},runner,task,None)
+            value=json.loads((task/'census-experiment.json').read_text())
+        self.assertEqual(len(value['monitorDiagnostics']),16)
+        self.assertEqual([row['sequence'] for row in value['monitorDiagnostics']],list(range(3,19)))
+        self.assertEqual(value['monitorDiagnostics'][-1]['partialSamples'][0]['queryFailure']['helperProgress'],
+                         {'phase':'project-imports','events':1})
+        self.assertEqual(value['firstFailure'],original);self.assertEqual(value['monitorFailure'],stopping)
 
     def test_second_wait_timeout_is_retained_and_never_claims_reap(self):
         child=mock.Mock(returncode=None)

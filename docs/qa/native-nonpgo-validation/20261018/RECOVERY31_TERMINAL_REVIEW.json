@@ -1,0 +1,191 @@
+{
+  "schema": 1,
+  "review": "Recovery31 terminal evidence",
+  "decision": "NO_GO_LONG; STRICT_ZERO_TIMEOUT_STRESS_GATE_FAILED",
+  "run": {
+    "id": 39159084328,
+    "job": 117768366129,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "fixture": "10604dd72b7f5764e4d2f7a5f76bf67f530a1a1f",
+    "caller": "0fe12c50cb2fe5dcea1f60b9c5c8a4d6b9a37dfd",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "startedAt": "2026-10-18T19:30:40Z",
+    "completedAt": "2026-10-18T19:35:33Z"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_TERMINAL_RESULT.json",
+    "bytes": 38488,
+    "sha256": "e5f698a3fa29131c6947a2db64702b4d49e62a57d2d87ad6a713c35a749009b9"
+  },
+  "independentChecks": {
+    "readOnlyAPI": [
+      "run",
+      "jobs",
+      "decoded job log",
+      "artifacts"
+    ],
+    "providerExperimentExactReceiptMatch": true,
+    "artifactCount": 0,
+    "immutableCallerExactRenderedWorkflowMatch": true,
+    "callerWorkflowSHA256": "14c839ad2e7408358e8bc208f224331bbe66dbea1c26a733b5edba6607479dd4",
+    "immutableStressSourceAndTestMatchedReviewedHashes": true,
+    "jobLog": {
+      "providerBytes": 47824,
+      "providerSHA256": "fd2c10e9ef420b2ac5fe7e8b0b62937234a21342624262ade8482b50e93f82fe",
+      "savedBytes": 47824,
+      "savedSHA256": "fd2c10e9ef420b2ac5fe7e8b0b62937234a21342624262ade8482b50e93f82fe",
+      "byteExact": true
+    }
+  },
+  "passedGates": {
+    "sdk": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "run": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5"
+    },
+    "actualMacTests": {
+      "total": 289,
+      "passed": 289,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 53.247
+    },
+    "freshCandidateRepeats": {
+      "count": 5,
+      "passed": 5,
+      "skipped": 0
+    },
+    "synchronizedWorkload": {
+      "barriersReleased": 3,
+      "churnChildren": 880,
+      "churnReaped": 880,
+      "cleanup": [
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 0,
+          "reaped": true
+        },
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 1,
+          "reaped": true
+        },
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 2,
+          "reaped": true
+        }
+      ],
+      "firstFailure": null,
+      "loadSeconds": 60.059,
+      "phase": "finished",
+      "readyBudgetSeconds": 60,
+      "readyElapsedSeconds": 57.72,
+      "readyWorkers": 3,
+      "seconds": 118.309,
+      "status": "passed",
+      "workerExitBeforeCleanup": [
+        {
+          "exitCode": 0,
+          "index": 0,
+          "status": "exited"
+        },
+        {
+          "exitCode": 0,
+          "index": 1,
+          "status": "exited"
+        },
+        {
+          "exitCode": 0,
+          "index": 2,
+          "status": "exited"
+        }
+      ],
+      "workerMiB": 1536,
+      "workers": 3,
+      "workersReaped": 3
+    }
+  },
+  "failedGate": {
+    "name": "inventory-stress-monitor",
+    "firstFailure": {
+      "stage": "inventory-stress",
+      "code": "inventory-stress-monitor",
+      "elapsedSeconds": 281.03
+    },
+    "monitorFailure": null,
+    "stageExitCode": 0,
+    "samples": 61,
+    "completeSamples": 61,
+    "unknownFinalSamples": 0,
+    "retriedSamples": 2,
+    "timeoutAttempts": 1,
+    "peakRSSMiB": 4703.53125,
+    "peakCPUSeconds": 173.02,
+    "maxSampleSeconds": 5.9406,
+    "backend": {
+      "kern-proc-pgrp-helper": 61
+    }
+  },
+  "cleanup": {
+    "stages": 11,
+    "allVerifiedGone": true,
+    "allExactLeadersReapedExitZero": true,
+    "allCleanupFailureNull": true
+  },
+  "interpretation": [
+    "Memory readiness and all three barriers completed, then the full 60.059-second CPU/churn workload completed with 880 churn children reaped and three worker exit codes zero. The workload change succeeded in this observation.",
+    "The strict monitor gate failed after the workload because one inventory attempt timed out. All 61 returned final samples were complete, including two retried samples. Complete final samples do not mean all attempts were complete.",
+    "monitorFailure=null means there was no fatal monitor-unavailable stop; it does not override the timeout-attempt count or turn the strict gate into a pass.",
+    "Current repeated argv passes support the corrected controlled contract. Historical Run27 inclusion cause, Run26/Run28 timeout common cause and the original native-host exit remain unproven.",
+    "Readiness took 57.720 seconds under the revised synchronized setup. This does not retrospectively prove Run30 failed at its old 15-second readiness deadline."
+  ],
+  "finding": {
+    "severity": "P2",
+    "area": "Recovered monitor diagnostic export",
+    "status": "Requires correction before the next diagnostic",
+    "evidence": "Runner keeps a capped recent monitor_diagnostics list, but the reviewed census finish_result omits it. Unlike pipeline.py, this terminal experiment did not export monitorDiagnostics. The decoded log contains no helperProgress/monitorDiagnostics record.",
+    "impact": "The recovered timeout\u2019s last validated helper phase and the second retry reason cannot be recovered from the retained terminal evidence. Their causes remain UNKNOWN."
+  },
+  "nextMinimalCorrection": {
+    "scope": "Evidence retention only; implementation and tests require separate prelaunch review.",
+    "requirements": [
+      "Export existing latest-16 diagnostics and retain the separate stopping monitorFailure without replacing firstFailure.",
+      "Retain the first timeout-bearing safe activity separately so later complete samples or history overflow cannot erase the strict gate failure evidence.",
+      "Remove private _pids fields; retain the existing classified diagnostic schema.",
+      "Keep timeout=3, three attempts, resource/ownership/null rules and strict zero-timeout gate unchanged."
+    ],
+    "tests": [
+      "Recovered timeout survives later complete samples and more than 16 diagnostics.",
+      "Separate stopping failure and original firstFailure survive export.",
+      "Private process fields are not projected."
+    ]
+  },
+  "remaining": [
+    "Successful strict monitor stress gate and known-child/background observations",
+    "Independent terminal review before a long-trial decision"
+  ],
+  "fullHostXULBuildPerformed": false,
+  "checkpointStored": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "reviewerActions": {
+    "sourceEdited": false,
+    "newRunActivated": false,
+    "payloadDownloaded": false,
+    "published": false
+  }
+}

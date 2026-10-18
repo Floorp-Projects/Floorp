@@ -143,7 +143,7 @@ def run_experiment(task,runner,env,receipt):
     receipt.update(status='collecting',seconds=SECONDS,workers=WORKERS,workerMiB=WORKER_MIB,
                    samples=0,completeSamples=0,retriedSamples=0,unknownSamples=0,
                    timeoutAttempts=0,peakRSSMiB=None,peakCPUSeconds=None,
-                   maxSampleSeconds=0,backends={})
+                   maxSampleSeconds=0,backends={},firstTimeoutSample=None)
     original=runner.group_activity
     had_override='group_activity' in runner.__dict__
     def observe(pgid):
@@ -156,8 +156,11 @@ def run_experiment(task,runner,env,receipt):
         receipt['completeSamples']+=int(value['sampleComplete'])
         receipt['unknownSamples']+=int(not value['sampleComplete'])
         receipt['retriedSamples']+=int(value['sampleAttempts']>1)
-        receipt['timeoutAttempts']+=sum(row['unknownKinds'].get('inventory-timeout',0)
-                                        for row in value['partialSamples'])
+        timeouts=sum(row['unknownKinds'].get('inventory-timeout',0) for row in value['partialSamples'])
+        receipt['timeoutAttempts']+=timeouts
+        if timeouts and receipt['firstTimeoutSample'] is None:
+            receipt['firstTimeoutSample']={'sampleIndex':receipt['samples'],
+                **{key:item for key,item in value.items() if not key.startswith('_')}}
         for source,target in (('rssMiB','peakRSSMiB'),('cpuSeconds','peakCPUSeconds')):
             if value[source] is not None:receipt[target]=max(receipt[target] or 0,value[source])
         return value

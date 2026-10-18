@@ -58,7 +58,8 @@ def finish_result(result,runner,task,child):
                 result['status']='failed'
                 runner.fail('known-child-cleanup','census-experiment-child-cleanup')
     finally:
-        result.update(firstFailure=runner.failure,monitorFailure=runner.monitor_failure,stages=runner.records,
+        result.update(firstFailure=runner.failure,monitorFailure=runner.monitor_failure,
+                      monitorDiagnostics=runner.monitor_diagnostics,stages=runner.records,
                       elapsedMinutes=round(runner.elapsed()/60,3))
         try:
             write_json(task/'census-experiment.json',result)

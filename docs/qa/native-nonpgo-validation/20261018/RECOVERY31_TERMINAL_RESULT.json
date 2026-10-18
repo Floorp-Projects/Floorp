@@ -1,0 +1,1205 @@
+{
+  "schema": 1,
+  "run": {
+    "id": 39159084328,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39159084328",
+    "job": 117768366129,
+    "fixture": "10604dd72b7f5764e4d2f7a5f76bf67f530a1a1f",
+    "caller": "0fe12c50cb2fe5dcea1f60b9c5c8a4d6b9a37dfd",
+    "attempt": 1,
+    "startedAt": "2026-10-18T19:30:40Z",
+    "completedAt": "2026-10-18T19:35:33Z"
+  },
+  "status": "failed",
+  "experiment": {
+    "status": "failed",
+    "observationOnly": true,
+    "checkpointEligibilityNotEvaluated": true,
+    "newArtifacts": 0,
+    "sdkAcquisitionRequested": true,
+    "sdkAcquired": true,
+    "floorpBuildPerformed": false,
+    "productQualification": false,
+    "background": [],
+    "sdkVerification": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "run": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5"
+    },
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 289,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 53.247,
+      "bytes": 61323,
+      "sha256": "87fe30f41e9773701d6ba61b98cb6e36db112e61160fd78296a9a4e62eaedd7e",
+      "cases": [],
+      "nativeSelectionDiagnostics": [
+        {
+          "schema": 2,
+          "status": "passed",
+          "phase": "finished",
+          "readyAcknowledged": true,
+          "candidateListed": true,
+          "targetFiltered": true,
+          "targetBirthMatched": true,
+          "targetPathMatched": true,
+          "targetArgvMatched": true,
+          "filteredBirthMatched": true,
+          "filteredArgvMatched": true,
+          "exactRowIncluded": true,
+          "leaderReaped": true,
+          "groupGone": true,
+          "streamCloseFailed": false,
+          "selectionFailureTargetsChild": null,
+          "initialArgvCountMatches": true,
+          "initialArgv0TextMatches": false,
+          "initialArgv0CanonicalMatches": false,
+          "initialArgvTailMatches": true,
+          "initialArgvMatchesChildOrigArgv": true,
+          "childOrigArgvTailMatches": true,
+          "initialArgv0MatchesNativePath": true,
+          "candidateCount": 279,
+          "filteredCount": 3,
+          "targetBSDReads": 2,
+          "targetGoneReads": 0,
+          "targetPathReads": 2,
+          "targetArgvReads": 2,
+          "beforeState": "live",
+          "afterState": "live",
+          "beforeErrno": 0,
+          "afterErrno": 0,
+          "selectionAPI": null,
+          "selectionErrorKind": null,
+          "selectionErrno": null,
+          "cleanupFailureKind": null
+        }
+      ]
+    },
+    "nativeSelectionRepeats": [
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.192,
+        "bytes": 1527,
+        "sha256": "86267f892dbf0ddef9a041e6f2385c09b084bd66f19e0e0866074878c696158b",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 273,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.155,
+        "bytes": 1527,
+        "sha256": "8343ca934aa60422ffe33d1fe48ed1b48448330aad79c54d0479858930bed497",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 273,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.106,
+        "bytes": 1527,
+        "sha256": "2df67ca2d986f9bb079928a62a592bd600bb07a7ffa85081e513571285cf8f5f",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 273,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.103,
+        "bytes": 1527,
+        "sha256": "f264913e0ccf58c400c4b2d07523bc12cc92063a8a4e1a7ea551f7ad7ec1c952",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 273,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.136,
+        "bytes": 1527,
+        "sha256": "1ae66382dab14e1334bb2809bcce646025864cb4ef15f8e102bec163dd9e7c83",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 273,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      }
+    ],
+    "inventoryStress": {
+      "status": "failed",
+      "seconds": 60,
+      "workers": 3,
+      "workerMiB": 1536,
+      "samples": 61,
+      "completeSamples": 61,
+      "retriedSamples": 2,
+      "unknownSamples": 0,
+      "timeoutAttempts": 1,
+      "peakRSSMiB": 4703.53125,
+      "peakCPUSeconds": 173.02,
+      "maxSampleSeconds": 5.9406,
+      "backends": {
+        "kern-proc-pgrp-helper": 61
+      },
+      "workload": {
+        "barriersReleased": 3,
+        "churnChildren": 880,
+        "churnReaped": 880,
+        "cleanup": [
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 0,
+            "reaped": true
+          },
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 1,
+            "reaped": true
+          },
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 2,
+            "reaped": true
+          }
+        ],
+        "firstFailure": null,
+        "loadSeconds": 60.059,
+        "phase": "finished",
+        "readyBudgetSeconds": 60,
+        "readyElapsedSeconds": 57.72,
+        "readyWorkers": 3,
+        "seconds": 118.309,
+        "status": "passed",
+        "workerExitBeforeCleanup": [
+          {
+            "exitCode": 0,
+            "index": 0,
+            "status": "exited"
+          },
+          {
+            "exitCode": 0,
+            "index": 1,
+            "status": "exited"
+          },
+          {
+            "exitCode": 0,
+            "index": 2,
+            "status": "exited"
+          }
+        ],
+        "workerMiB": 1536,
+        "workers": 3,
+        "workersReaped": 3
+      }
+    },
+    "firstFailure": {
+      "stage": "inventory-stress",
+      "code": "inventory-stress-monitor",
+      "elapsedSeconds": 281.03
+    },
+    "monitorFailure": null,
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 62,
+        "minimumFreeGiB": 107.88,
+        "lastActivity": {
+          "rssMiB": 30.16796875,
+          "cpuSeconds": 0.728,
+          "rssLowerBoundMiB": 30.16796875,
+          "cpuLowerBoundSeconds": 0.728,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 7.19140625,
+              "cpuSeconds": 0.344389815,
+              "state": "S",
+              "pidTag": "21a72729e4598bec",
+              "identityTag": "bcf1b99e2e55afba"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 2,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 2
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.88,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.88,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "sdk-materialize",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 82,
+        "minimumFreeGiB": 106.98,
+        "lastActivity": {
+          "rssMiB": 53.375,
+          "cpuSeconds": 60.539,
+          "rssLowerBoundMiB": 53.375,
+          "cpuLowerBoundSeconds": 60.539,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 53.375,
+              "cpuSeconds": 60.539169322,
+              "state": "R",
+              "pidTag": "62892a19e0b8497b",
+              "identityTag": "28bd289690e1947f"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 61323,
+        "peakRSSMiB": 106,
+        "minimumFreeGiB": 106.86,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 2,
+          "partialSamples": [
+            {
+              "unknownKinds": {
+                "short-task-info": 1
+              },
+              "formatExamples": [
+                {
+                  "kind": "short-task-info",
+                  "pidTag": "f220f476b636e19a",
+                  "identityTag": "8ece2ba9c0f16e82",
+                  "source": "libproc-taskallinfo",
+                  "inventory": {
+                    "identityBound": false,
+                    "available": false
+                  },
+                  "taskQuery": {
+                    "bytes": 0,
+                    "expectedBytes": 232,
+                    "errno": 3
+                  },
+                  "bsdQuery": {
+                    "bytes": 136,
+                    "expectedBytes": 136,
+                    "errno": 0
+                  },
+                  "fallbackReason": "measured"
+                }
+              ],
+              "esrchRechecks": 1,
+              "esrchExamples": [
+                {
+                  "pidTag": "f220f476b636e19a",
+                  "firstTaskQuery": {
+                    "bytes": 0,
+                    "expectedBytes": 232,
+                    "errno": 3
+                  },
+                  "firstBSDQuery": {
+                    "bytes": 136,
+                    "expectedBytes": 136,
+                    "errno": 0
+                  },
+                  "firstIdentityTag": "8ece2ba9c0f16e82",
+                  "sameGeneration": true,
+                  "taskQuery": {
+                    "bytes": 0,
+                    "expectedBytes": 232,
+                    "errno": 3
+                  },
+                  "outcome": "unavailable",
+                  "bsdQuery": {
+                    "bytes": 136,
+                    "expectedBytes": 136,
+                    "errno": 0
+                  },
+                  "reason": "short-task-info",
+                  "identityTag": "8ece2ba9c0f16e82"
+                }
+              ],
+              "inventorySummary": {
+                "identityBound": false,
+                "sameOwner": 0,
+                "differentOwner": 0,
+                "metadataUnavailable": 1,
+                "roles": {}
+              },
+              "knownRSSLowerBoundMiB": 0,
+              "knownCPULowerBoundSeconds": 0
+            }
+          ]
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-1",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 106.86,
+        "lastActivity": {
+          "rssMiB": 19.83203125,
+          "cpuSeconds": 0.296,
+          "rssLowerBoundMiB": 19.83203125,
+          "cpuLowerBoundSeconds": 0.296,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 19.83203125,
+              "cpuSeconds": 0.295655796,
+              "state": "R",
+              "pidTag": "8ccc419a9892d965",
+              "identityTag": "49349fac04410b2c"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-2",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 106.85,
+        "lastActivity": {
+          "rssMiB": 20.375,
+          "cpuSeconds": 0.212,
+          "rssLowerBoundMiB": 20.375,
+          "cpuLowerBoundSeconds": 0.212,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 20.375,
+              "cpuSeconds": 0.21246862,
+              "state": "R",
+              "pidTag": "09a6403a2de7e1f7",
+              "identityTag": "710fcda77abcc353"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-3",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 106.85,
+        "lastActivity": {
+          "rssMiB": 20.30078125,
+          "cpuSeconds": 0.217,
+          "rssLowerBoundMiB": 20.30078125,
+          "cpuLowerBoundSeconds": 0.217,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 20.30078125,
+              "cpuSeconds": 0.217188272,
+              "state": "R",
+              "pidTag": "e39dc37f0dfb76b5",
+              "identityTag": "b9ba8404e5470174"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-4",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 106.85,
+        "lastActivity": {
+          "rssMiB": 19.83203125,
+          "cpuSeconds": 0.206,
+          "rssLowerBoundMiB": 19.83203125,
+          "cpuLowerBoundSeconds": 0.206,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 19.83203125,
+              "cpuSeconds": 0.205823237,
+              "state": "R",
+              "pidTag": "55d2c4415c5dc6c6",
+              "identityTag": "dfc5cff1286ea6b0"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-5",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 106.85,
+        "lastActivity": {
+          "rssMiB": 19.89453125,
+          "cpuSeconds": 0.197,
+          "rssLowerBoundMiB": 19.89453125,
+          "cpuLowerBoundSeconds": 0.197,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 19.89453125,
+              "cpuSeconds": 0.197361756,
+              "state": "R",
+              "pidTag": "fafaaaa48add4229",
+              "identityTag": "8b5d8e668ba9740c"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "inventory-stress",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 704,
+        "peakRSSMiB": 4704,
+        "minimumFreeGiB": 106.81,
+        "lastActivity": {
+          "rssMiB": 68.1875,
+          "cpuSeconds": 173.02,
+          "rssLowerBoundMiB": 68.1875,
+          "cpuLowerBoundSeconds": 173.02,
+          "processes": 4,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.02734375,
+              "cpuSeconds": 3.316038517,
+              "state": "S",
+              "pidTag": "4f461b1936a2af5a",
+              "identityTag": "2f479bc2d144eb25"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 4,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 4.684
+  },
+  "artifacts": 0,
+  "established": [
+    "Official unexpired SDK acquisition and fixed Mac materialized SDK tree/version passed.",
+    "All 289 actual Mac tests and five fresh-process candidate tests passed with zero skips.",
+    "Synchronized workload naturally completed 60.059 seconds with all three workers and 880 churn children reaped.",
+    "All 61 final stress samples were complete, but one query timeout was recovered across two retried samples; the unchanged zero-timeout gate rejected qualification.",
+    "All 11 monitored groups verified gone and exact leaders reaped with exit0 and no cleanup failure."
+  ],
+  "failureCause": "Strict inventory-stress-monitor gate: timeoutAttempts=1, required0. Underlying recovered timeout phase/cause UNKNOWN because census_experiment did not export the Runner's retained monitorDiagnostics; lastActivity contains only the final sample.",
+  "historicalLimits": [
+    "Successful synchronized workload does not retrospectively prove Run30 failed from readiness starvation.",
+    "Current candidate observations do not identify Run27 historical inclusion failure.",
+    "Short load observations cannot establish multi-hour monitoring stability.",
+    "The original native-host exit remains unknown."
+  ],
+  "fullBuildReached": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "longTrial": "NOT_ACTIVATED"
+}

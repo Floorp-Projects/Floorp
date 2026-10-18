@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "review": "Recovery32 recovered monitor evidence retention",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longTrial": "NO_GO",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "baselineFixture": "10604dd72b7f5764e4d2f7a5f76bf67f530a1a1f",
+  "contentBindings": {
+    "tools/qa/native-nonpgo/inventory_stress.py": {
+      "bytes": 11662,
+      "sha256": "b3954e8fdc47986e8f82947e6cdb5f8bfdeb2de3e1174fa6d8f17b3c196991b9"
+    },
+    "tools/qa/native-nonpgo/test_inventory_stress.py": {
+      "bytes": 12716,
+      "sha256": "3c9d0f132a33961f6f6c8c318e7dfe816f7402b7a1e7bf2878055ee4329266e5"
+    },
+    "tools/qa/native-nonpgo/census_experiment.py": {
+      "bytes": 12862,
+      "sha256": "cbea01e0686eeec41eb2edd48f2c15bf38f15eb155e168f4f03421d1888d293c"
+    },
+    "tools/qa/native-nonpgo/test_census_experiment.py": {
+      "bytes": 6039,
+      "sha256": "0d898587f5f272f1a994b74e3b463c7e670ff1da84948a3aeecea2d70833dab0"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_MONITOR_VERIFICATION.md": {
+      "bytes": 3484,
+      "sha256": "35d5ed3709642a98b87537400cc56190149ee0224cbd6b71aa96aa4e55be13bc"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_MONITOR_WORKFLOW.yml.disabled": {
+      "bytes": 3397,
+      "sha256": "2a52e92cb8f1e00fbd9aeb8058d2ea9790eadb183c02732439758540bb9d03b4"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_LOCAL_RESULT.json": {
+      "bytes": 706,
+      "sha256": "b3b139585029b7ebaaa63368a3e464a448f04b6f4f7270c26780afcb1e14d7f1"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_TERMINAL_RESULT.json": {
+      "bytes": 38488,
+      "sha256": "e5f698a3fa29131c6947a2db64702b4d49e62a57d2d87ad6a713c35a749009b9"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY31_TERMINAL_REVIEW.json": {
+      "bytes": 6913,
+      "sha256": "b8c3b3bd02eabfc33cc2a31079e6bd567244c44df96823d5808497c28e2003fd"
+    }
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 291,
+    "passed": 277,
+    "skipped": 14,
+    "seconds": 10.405,
+    "exitCode": 0,
+    "sourceUnchanged": true,
+    "logSHA256": "3412ce400ac5736d9f225321da091957ea1b4c71f8c235a6b120d241b4a8e7b0",
+    "syntax": {
+      "workflowYAML": "passed",
+      "bashScripts": 5,
+      "inlinePythonAST": 1
+    },
+    "diff": "Both changed production files were independently compared with immutable Recovery31 source. The only production deltas are exporting existing monitorDiagnostics and retaining the first timeout-bearing sample.",
+    "actualMac": "Pending; fourteen Darwin tests were skipped on Linux."
+  },
+  "resolvedFinding": {
+    "severity": "P2",
+    "area": "Recovered query diagnostic retention",
+    "resolution": "The short experiment now exports Runner\u2019s existing latest-16 diagnostic history separately from firstFailure and stopping monitorFailure. Its stress receipt retains the first timeout-bearing safe sample independently, preventing later complete samples or history overflow from erasing strict-gate evidence."
+  },
+  "assessment": {
+    "sampling": "The observer still calls and returns the original group_activity result. It changes neither resource selection nor query behavior.",
+    "firstTimeout": "Stored once with sample index and the existing safe activity fields, including partial query/helperProgress evidence. Later complete samples do not replace it.",
+    "privacy": "The new saved sample omits underscore-prefixed private fields, including raw _pids. The exported history uses the existing record_monitor filtering. Fixed phase/query classifications and opaque tags remain; no raw helper output, argv, environment, paths or arbitrary exception text is added.",
+    "unknown": "Unknown resource/lower-bound values remain null, including in retained partial attempts.",
+    "primaryFailure": "Original firstFailure and separate stopping monitorFailure are exported without replacement. Latest-16 retention does not govern the independently stored first timeout.",
+    "unchanged": "Recovery29 monitoring/protocol, Recovery30 SDK/argv and the Recovery31 workload barrier/readiness/load are unchanged. timeout=3, three attempts/retry gaps, resource/ownership/cleanup guards and strict timeoutAttempts=0 remain."
+  },
+  "meaningfulTests": [
+    "Nineteen diagnostic records export exactly the latest sixteen even with a later good lastActivity, retaining helper phase and separate stopping/original failures.",
+    "One recovered timeout followed by nineteen good samples retains its first progress record and null lower bound, removes raw _pids, restores the original sampler and still fails the strict zero-timeout gate.",
+    "Existing real small-child workload, cleanup-only/primary cleanup failures and unknown-resource negative tests remain passing."
+  ],
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery32-20261018",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "sdkAcquisition": true,
+    "sdkMaterialization": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "activationConditions": [
+    "Bind and read back all nine reviewed files and the rendered caller workflow at immutable commits; render only the fixture SHA placeholder.",
+    "Confirm an unused recovery32 branch, zero prior runs and no overlapping owned validation; preserve exact repository/ref/push/created/before-zero/attempt-one guards.",
+    "Fresh-check SDK12133086104 and use the ordinary unexpired API acquisition route with all fixed ZIP/TAR/tree/version and 600-second guards unchanged.",
+    "Require actual Mac291 passes with zero skips, verified SDK, five fresh candidate passes, the complete synchronized workload with zero inventory timeout attempts, and known-child/background observations.",
+    "Review terminal firstFailure/monitorFailure, retained diagnostic evidence and verified cleanup before any long-trial decision."
+  ],
+  "run31Evidence": {
+    "run": 39159084328,
+    "passed": "SDK, all289 Mac tests, five fresh candidate checks and complete synchronized workload.",
+    "workload": "Three ready/released workers; 57.720-second readiness; 60.059-second load; 880 churn reaps; three worker exit codes zero.",
+    "failed": "The strict post-workload monitor gate: 61 complete final samples, two retried samples, one timeout attempt; no fatal monitor stop.",
+    "cleanup": "All eleven stages exit-zero exact leader reap and verified-gone groups, no cleanup failure; artifact zero.",
+    "timeoutPhase": "UNKNOWN because the old short result omitted the retained diagnostics."
+  },
+  "limits": [
+    "This changes evidence retention only and does not repair or explain the historical timeout.",
+    "A last observed helper phase does not prove that its following API was entered or blocked.",
+    "Successful final samples do not imply all attempts were complete; strict zero-timeout qualification is preserved.",
+    "No short result establishes multi-hour monitoring, checkpoint eligibility or full host/XUL/native-authentication success."
+  ]
+}
