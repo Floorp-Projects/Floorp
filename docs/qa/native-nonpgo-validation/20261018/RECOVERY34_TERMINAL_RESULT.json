@@ -1,0 +1,4731 @@
+{
+  "schema": 1,
+  "scope": "Recovery34 short actual Intel Mac anchored census resource recheck validation",
+  "run": {
+    "id": 39168760383,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39168760383",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "headSHA": "27c3304e9bb749ef21593eb551ac0bcdaafd95cc",
+    "branch": "codex/mac-native-inventory-recovery34-20261018"
+  },
+  "job": {
+    "id": 117797220618,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-18T21:38:54Z",
+    "completedAt": "2026-10-18T21:45:51Z",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "bindings": {
+    "fixture": "4b0b67a0afc68433508f8bc97e23903140cbad29",
+    "fixtureTree": "e26c685b4f19ddaddf4641478cc8396ab4bbf3c9",
+    "caller": "27c3304e9bb749ef21593eb551ac0bcdaafd95cc",
+    "callerTree": "90d91a7e2936603220c7cf36c1676413047621a9",
+    "prelaunchReviewSHA256": "33035f1ba96708de89192829a52d483f97e0b66971f67bb85be81e772f063c7a"
+  },
+  "decodedProviderLog": {
+    "bytes": 193064,
+    "sha256": "40fee0bb12f9058cae6dee9408ad41e5052c466c408609cfcaf063bc02d47089",
+    "rawContentPublished": false
+  },
+  "artifactCount": 0,
+  "experiment": {
+    "status": "passed",
+    "observationOnly": true,
+    "checkpointEligibilityNotEvaluated": true,
+    "newArtifacts": 0,
+    "sdkAcquisitionRequested": true,
+    "sdkAcquired": true,
+    "floorpBuildPerformed": false,
+    "productQualification": false,
+    "background": [
+      {
+        "index": 0,
+        "elapsedSeconds": 0,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 2,
+        "removedCandidateIdentities": 0,
+        "deltaKinds": {
+          "new-pid": 2
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "abdab8756cb1610b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "ba1dc0b82055af9c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 327888,
+        "snapshotEntries": 506,
+        "candidateIdentities": 277,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 1,
+        "elapsedSeconds": 10.035,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 13,
+        "removedCandidateIdentities": 9,
+        "deltaKinds": {
+          "new-pid": 13
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "467bc31ddf064c08",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "5d534f532c003b77",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "b7bbf23a98f9928c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "55d1e64aaf12eeb3",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "ee54f3431daa9ce6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fe7a8f88f7e76a7c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "e0d2cd37fd732de6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f6259934e338d2dc",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "5fc2c09de31dc5b2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "13c1414c0d722178",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a9dc1df949b2790e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a81e09c4ab6a2412",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "9e92b4e765cb8ad1",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 2,
+        "elapsedSeconds": 20.141,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 13,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 13
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "935b81321ec8acd3",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f0adf69fb15d9af9",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f40ebdcef83ad022",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "12401d2111413c52",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2d079e80706baf1b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "cf9988b62e1415b1",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2b84302f68baf6db",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "521ba7601a138f6e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fbc40e314506b7b2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "9cfe396392fce07c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "234a94cba560c1a2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "060e7985813675ca",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "12bbe7bbaaab9aa6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 327240,
+        "snapshotEntries": 505,
+        "candidateIdentities": 276,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 3,
+        "elapsedSeconds": 30.186,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "80d82869cf6254b2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "7c482c60e4435dc6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "14735f03655d126b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f000a63166d57e6a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "39a6adc3619b1f40",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "56629a603fad7f1a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4ee2499c653b38da",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f0f14d517b9079af",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "df0adc965342f00d",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "9222cbb12903444c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c5e86cafdf0d6587",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a67bbfbd818e85b8",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "31a44f7debcf51f5",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "75bb4a6e059896eb",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "10a9138cca2b7664",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "9eafdb3d0614b524",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 4,
+        "elapsedSeconds": 40.193,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "847f253bfbddca75",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "bae02fbabd1748d4",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "773f14a54b48399c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "1101f42f5573d084",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4f6b38b5c21a92dd",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "5e9a1dd3d61fc57c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "921600e876ee0be2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "bfeac86788d64427",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "7a3253f5f110e3d8",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "393165c0e006d8f3",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4c6f7c5da302e5dc",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "7cdf70d0b7b167f1",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f53f8ac239a2a8f2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "8f641142b1c7bb68",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "e952618d6e2906b0",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "865ddf5bec7af2c2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 330480,
+        "snapshotEntries": 510,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 5,
+        "elapsedSeconds": 50.302,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "b43a263ee2a6b4bc",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "55007fbc0bfd95d5",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4f41508f90932553",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a1530f3e95ac3d80",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "21a4c6df4a46ab00",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "d16bdf26d73ccf30",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2fd573dfa5c2106a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a72f926505d53df6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "51514f7aed0f8125",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "b8815ff84fe23549",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fe679bee2a99e1ed",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "b8a68ba8e51e0633",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "3a8c78e14b1ef90c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "7e8c2ac4f3488186",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "1ed894541b6af7b6",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2368726929e33684",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 6,
+        "elapsedSeconds": 60.397,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "a94d7547946bd6b2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c756184dc9f4262b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "639a9a22e46d4e94",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "697d40eefae1b22b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fc5f7d4f7fae3529",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "131001390175259b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "3ab1fbc64cce5686",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "84ab2eef82efde6e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "d2bd6bd4029361fb",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "59a25ee399c5a220",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "1f4ff09dc5797737",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2e010ae762b743f2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4cd038175167f67c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4b43695a752aaf42",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a52ccf65e1eb77e1",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "83b394ebcc31cd8e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 7,
+        "elapsedSeconds": 70.488,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "49258718a98998e2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "264ae6cc223a7db9",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "7a41a84fe88e576e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "037b90fef26470c7",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "aa60a8a18a1c9b88",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "97906067bfc66af2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c70fd8d69f508707",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4950debd66a48a53",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "3144ebb231673ef4",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c12df471bd64a11a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "80a4b6c524b1ff55",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "04f1df490b57980a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "8f6b0df167ffbdee",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "41a0274f604b5db4",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "968bcd8cb779be02",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "60b35a832ef75d99",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 8,
+        "elapsedSeconds": 80.613,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "9c92cb26ae29f836",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fedabef42bf65bb5",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fb1e87086df98795",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a5fd1cb64d2bf824",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2afed22f59690b56",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "aecfbeea23a902aa",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "8ee1aee0a92533f2",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "b77ec83ae9ca1164",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "6bd3b71f2620ca20",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a77fa97167fd8070",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "0cc6f0056e4c4339",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "1316e178ae0266ee",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "88816561bc7de3a3",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "90e6e829e5bcdc25",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a7bf5bb0aa6c790d",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f52f4c2583c54955",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329184,
+        "snapshotEntries": 508,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 9,
+        "elapsedSeconds": 90.739,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 12,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "957f9bfdbe65b902",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fb87932705bd8e11",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "bc7a9adcd823f579",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "b4244fbd3101f4f1",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a02ecfdb4719fbba",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "41ae1a849f919727",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c8d23c806901e45a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "1d529346adddbc91",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "98bfaffb87d3a226",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "bc37ca7aeab20d14",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "6b23fbf26ab85e2d",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2802649cb46214d0",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2ad7f649e208e8fa",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "eba79192d8868e1f",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "6e377ec213b5daea",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "de52d4f2d90f9cc8",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 329832,
+        "snapshotEntries": 509,
+        "candidateIdentities": 279,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 10,
+        "elapsedSeconds": 100.886,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 16,
+        "removedCandidateIdentities": 13,
+        "deltaKinds": {
+          "new-pid": 16
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "c99b37a486f83954",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "fd42a45d750747fc",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "4d80094f475a72b0",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2ef18a578702454e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "a1f9fa7282b9cd3c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "8cc523f932f2d66e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "953d532bcd5cd464",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "dc13a3cbee1c402b",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "65f4af0ab5db15d3",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "362aa623dfb20438",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "0e4b3c437ca3da91",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "66b84c86cd2ce5bf",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "26086f69c572fe67",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "278c258cbffaa029",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "6b1b8ae036bcc9eb",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "ae1705cf02eb04fa",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 328536,
+        "snapshotEntries": 507,
+        "candidateIdentities": 278,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 11,
+        "elapsedSeconds": 110.988,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 10,
+        "removedCandidateIdentities": 13,
+        "deltaKinds": {
+          "new-pid": 10
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "526e9101bb73d955",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "acdbbc0fa8367c2c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "dde7109aa2062b57",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "2a429aa49ab5a36a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "e1c2c2cc359270fd",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "55ec0feb22c712b7",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c15ae9a3b26ee066",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "e718722c2fa40e1a",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "f7d8ef9fa5b5507f",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "c05553e2a7ea9e00",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 325944,
+        "snapshotEntries": 503,
+        "candidateIdentities": 272,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      {
+        "index": 12,
+        "elapsedSeconds": 121.052,
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 3,
+        "removedCandidateIdentities": 13,
+        "deltaKinds": {
+          "new-pid": 3
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "8fc6744f67f78e7d",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "d549dc972ac1ec1c",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "695cde0fcbb3ca09",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 320112,
+        "snapshotEntries": 494,
+        "candidateIdentities": 265,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      }
+    ],
+    "sdkVerification": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "run": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5"
+    },
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 307,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 55.109,
+      "bytes": 64740,
+      "sha256": "e8c47c585a2787847dcda189e1725e9e42794adfa20ffe64ece0392cf1b069c4",
+      "cases": [],
+      "nativeSelectionDiagnostics": [
+        {
+          "schema": 2,
+          "status": "passed",
+          "phase": "finished",
+          "readyAcknowledged": true,
+          "candidateListed": true,
+          "targetFiltered": true,
+          "targetBirthMatched": true,
+          "targetPathMatched": true,
+          "targetArgvMatched": true,
+          "filteredBirthMatched": true,
+          "filteredArgvMatched": true,
+          "exactRowIncluded": true,
+          "leaderReaped": true,
+          "groupGone": true,
+          "streamCloseFailed": false,
+          "selectionFailureTargetsChild": null,
+          "initialArgvCountMatches": true,
+          "initialArgv0TextMatches": false,
+          "initialArgv0CanonicalMatches": false,
+          "initialArgvTailMatches": true,
+          "initialArgvMatchesChildOrigArgv": true,
+          "childOrigArgvTailMatches": true,
+          "initialArgv0MatchesNativePath": true,
+          "candidateCount": 275,
+          "filteredCount": 3,
+          "targetBSDReads": 2,
+          "targetGoneReads": 0,
+          "targetPathReads": 2,
+          "targetArgvReads": 2,
+          "beforeState": "live",
+          "afterState": "live",
+          "beforeErrno": 0,
+          "afterErrno": 0,
+          "selectionAPI": null,
+          "selectionErrorKind": null,
+          "selectionErrno": null,
+          "cleanupFailureKind": null
+        }
+      ]
+    },
+    "nativeSelectionRepeats": [
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.096,
+        "bytes": 1527,
+        "sha256": "6d5ee97fd6afc6f4492c782dba0463e1bae526a6e37ab662286e993633411dc4",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 274,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.088,
+        "bytes": 1527,
+        "sha256": "25cd2a92d8a64ec6dc6f2303e689025bef583e0b97c3925fc5af029e014493aa",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 274,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.267,
+        "bytes": 1527,
+        "sha256": "9392bdb98e094b4a214bce7f7e6dfe568a7d89889a088a8cb193179f8198976d",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 274,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.269,
+        "bytes": 1527,
+        "sha256": "9729cca9e5592f70e473695277c919e2faaf4cec170bac95c62fcb8178a8394a",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 274,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      },
+      {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.117,
+        "bytes": 1527,
+        "sha256": "ebdafccfcbeae4893ccb571f9a2ba2b1dbbf0b1700f29c33c0155be88e240f42",
+        "cases": [],
+        "nativeSelectionDiagnostics": [
+          {
+            "schema": 2,
+            "status": "passed",
+            "phase": "finished",
+            "readyAcknowledged": true,
+            "candidateListed": true,
+            "targetFiltered": true,
+            "targetBirthMatched": true,
+            "targetPathMatched": true,
+            "targetArgvMatched": true,
+            "filteredBirthMatched": true,
+            "filteredArgvMatched": true,
+            "exactRowIncluded": true,
+            "leaderReaped": true,
+            "groupGone": true,
+            "streamCloseFailed": false,
+            "selectionFailureTargetsChild": null,
+            "initialArgvCountMatches": true,
+            "initialArgv0TextMatches": false,
+            "initialArgv0CanonicalMatches": false,
+            "initialArgvTailMatches": true,
+            "initialArgvMatchesChildOrigArgv": true,
+            "childOrigArgvTailMatches": true,
+            "initialArgv0MatchesNativePath": true,
+            "candidateCount": 274,
+            "filteredCount": 3,
+            "targetBSDReads": 2,
+            "targetGoneReads": 0,
+            "targetPathReads": 2,
+            "targetArgvReads": 2,
+            "beforeState": "live",
+            "afterState": "live",
+            "beforeErrno": 0,
+            "afterErrno": 0,
+            "selectionAPI": null,
+            "selectionErrorKind": null,
+            "selectionErrno": null,
+            "cleanupFailureKind": null
+          }
+        ]
+      }
+    ],
+    "inventoryStress": {
+      "status": "passed",
+      "seconds": 60,
+      "workers": 3,
+      "workerMiB": 1536,
+      "samples": 63,
+      "completeSamples": 63,
+      "retriedSamples": 0,
+      "unknownSamples": 0,
+      "timeoutAttempts": 0,
+      "peakRSSMiB": 4704.23828125,
+      "peakCPUSeconds": 152.407,
+      "maxSampleSeconds": 2.8055,
+      "backends": {
+        "kern-proc-pgrp-helper": 63
+      },
+      "firstTimeoutSample": null,
+      "workload": {
+        "barriersReleased": 3,
+        "churnChildren": 956,
+        "churnReaped": 956,
+        "cleanup": [
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 0,
+            "reaped": true
+          },
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 1,
+            "reaped": true
+          },
+          {
+            "exitCode": 0,
+            "failure": null,
+            "index": 2,
+            "reaped": true
+          }
+        ],
+        "firstFailure": null,
+        "loadSeconds": 60.163,
+        "phase": "finished",
+        "readyBudgetSeconds": 60,
+        "readyElapsedSeconds": 39.889,
+        "readyWorkers": 3,
+        "seconds": 100.241,
+        "status": "passed",
+        "workerExitBeforeCleanup": [
+          {
+            "exitCode": 0,
+            "index": 0,
+            "status": "exited"
+          },
+          {
+            "exitCode": 0,
+            "index": 1,
+            "status": "exited"
+          },
+          {
+            "exitCode": 0,
+            "index": 2,
+            "status": "exited"
+          }
+        ],
+        "workerMiB": 1536,
+        "workers": 3,
+        "workersReaped": 3
+      }
+    },
+    "baseline": {
+      "status": "passed",
+      "candidateIdentities": 275,
+      "api": "sysctl-kern-proc-all",
+      "snapshotBytes": 326592,
+      "snapshotEntries": 504,
+      "candidateZombies": 0,
+      "mixedCandidateIdentities": 2,
+      "selfBindingVerified": true,
+      "rawProcessMetadataPublished": false,
+      "attempts": 1,
+      "retryErrnos": [],
+      "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+    },
+    "knownChild": {
+      "snapshot": {
+        "status": "passed",
+        "candidateIdentities": 276,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 327240,
+        "snapshotEntries": 505,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "rawProcessMetadataPublished": false,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+      },
+      "hint": {
+        "status": "identity-verified",
+        "role": "python",
+        "parentRelation": "caller",
+        "observedInStageGroup": "observed",
+        "ancestryComplete": false,
+        "writerRoleEstablished": false,
+        "query": {
+          "bytes": 136,
+          "expectedBytes": 136,
+          "errno": 0
+        },
+        "credentialRelation": "worker-both"
+      },
+      "sampler": {
+        "rssMiB": 9.12890625,
+        "cpuSeconds": 0.055,
+        "rssLowerBoundMiB": 9.12890625,
+        "cpuLowerBoundSeconds": 0.055,
+        "processes": 1,
+        "states": [
+          "S"
+        ],
+        "sampleComplete": true,
+        "unknownKinds": {},
+        "formatExamples": [
+          {
+            "kind": "measured",
+            "source": "libproc-taskallinfo",
+            "rssMiB": 9.12890625,
+            "cpuSeconds": 0.055345534,
+            "state": "S",
+            "pidTag": "d0364a785b813677",
+            "identityTag": "672b89297b360e7d"
+          }
+        ],
+        "confirmedGone": 0,
+        "counterSource": "libproc-taskallinfo",
+        "inventorySummary": {
+          "identityBound": false,
+          "sameOwner": 0,
+          "differentOwner": 0,
+          "metadataUnavailable": 1,
+          "roles": {}
+        },
+        "esrchRechecks": 0,
+        "esrchExamples": [],
+        "statesSource": "libproc-runnable-summary",
+        "timebaseNumer": 1,
+        "timebaseDenom": 1,
+        "inventoryMeasurement": {
+          "api": "sysctl-kern-proc-pgrp",
+          "snapshotBytes": 648,
+          "snapshotEntries": 1,
+          "selfBindingVerified": true,
+          "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+        },
+        "inventoryBackend": "kern-proc-pgrp-helper",
+        "sampleAttempts": 1,
+        "partialSamples": []
+      },
+      "boundaryObservation": {
+        "status": "rejected",
+        "signalOwnershipGranted": false,
+        "rawProcessMetadataPublished": false,
+        "newCandidateIdentities": 3,
+        "removedCandidateIdentities": 0,
+        "deltaKinds": {
+          "new-pid": 3
+        },
+        "deltaRecords": [
+          {
+            "kind": "new-pid",
+            "identityTag": "a847dd80e694053d",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "python",
+              "parentRelation": "caller",
+              "observedInStageGroup": "observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "11a27a14ed07bef5",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          },
+          {
+            "kind": "new-pid",
+            "identityTag": "84264701b246ed1e",
+            "processHint": {
+              "status": "identity-verified",
+              "role": "metadata-worker",
+              "parentRelation": "pid-one",
+              "observedInStageGroup": "not-observed",
+              "ancestryComplete": false,
+              "writerRoleEstablished": false,
+              "query": {
+                "bytes": 136,
+                "expectedBytes": 136,
+                "errno": 0
+              },
+              "credentialRelation": "worker-both"
+            }
+          }
+        ],
+        "deltaRecordsTruncated": false,
+        "api": "sysctl-kern-proc-all",
+        "snapshotBytes": 328536,
+        "snapshotEntries": 507,
+        "candidateIdentities": 278,
+        "candidateZombies": 0,
+        "mixedCandidateIdentities": 2,
+        "selfBindingVerified": true,
+        "attempts": 1,
+        "retryErrnos": [],
+        "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+        "deltaScope": "worker effective or real UID candidates; ancestry and writer role unproven",
+        "deltaDiagnosticStatus": "complete"
+      },
+      "cleanup": {
+        "leaderReaped": true,
+        "exitCode": -15,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      }
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 52,
+        "minimumFreeGiB": 107.96,
+        "lastActivity": {
+          "rssMiB": 7.1875,
+          "cpuSeconds": 0.514,
+          "rssLowerBoundMiB": 7.1875,
+          "cpuLowerBoundSeconds": 0.514,
+          "processes": 1,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 7.1875,
+              "cpuSeconds": 0.514183048,
+              "state": "S",
+              "pidTag": "32e75a36c63029b3",
+              "identityTag": "ec3ae508e80a5759"
+            }
+          ],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 2,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 2
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.96,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.96,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "sdk-materialize",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 81,
+        "minimumFreeGiB": 107.14,
+        "lastActivity": {
+          "rssMiB": 51.68359375,
+          "cpuSeconds": 68.196,
+          "rssLowerBoundMiB": 51.68359375,
+          "cpuLowerBoundSeconds": 68.196,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 51.68359375,
+              "cpuSeconds": 68.19568482,
+              "state": "R",
+              "pidTag": "5daaa38df86259e2",
+              "identityTag": "505cc16be175273d"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 64740,
+        "peakRSSMiB": 114,
+        "minimumFreeGiB": 107.04,
+        "lastActivity": {
+          "rssMiB": 70.96484375,
+          "cpuSeconds": 10.581,
+          "rssLowerBoundMiB": 70.96484375,
+          "cpuLowerBoundSeconds": 10.581,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 70.96484375,
+              "cpuSeconds": 10.581441702,
+              "state": "R",
+              "pidTag": "9afc7785e3d79455",
+              "identityTag": "8b2771ef21e4130c"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-1",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 21,
+        "minimumFreeGiB": 107.04,
+        "lastActivity": {
+          "rssMiB": 21.17578125,
+          "cpuSeconds": 0.179,
+          "rssLowerBoundMiB": 21.17578125,
+          "cpuLowerBoundSeconds": 0.179,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 21.17578125,
+              "cpuSeconds": 0.179276591,
+              "state": "R",
+              "pidTag": "7aa9b8432d846bf0",
+              "identityTag": "d9ccb728341c15aa"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-2",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 19,
+        "minimumFreeGiB": 107.04,
+        "lastActivity": {
+          "rssMiB": 19.453125,
+          "cpuSeconds": 0.211,
+          "rssLowerBoundMiB": 19.453125,
+          "cpuLowerBoundSeconds": 0.211,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 19.453125,
+              "cpuSeconds": 0.211167842,
+              "state": "R",
+              "pidTag": "540cb6e071595537",
+              "identityTag": "13dcbc64ffcdecd7"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-3",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 20,
+        "minimumFreeGiB": 107.04,
+        "lastActivity": {
+          "rssMiB": 19.5390625,
+          "cpuSeconds": 0.158,
+          "rssLowerBoundMiB": 19.5390625,
+          "cpuLowerBoundSeconds": 0.158,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 19.5390625,
+              "cpuSeconds": 0.158477038,
+              "state": "R",
+              "pidTag": "ecf3eebb1e64123d",
+              "identityTag": "ee7d810d58c94b21"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-4",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 19,
+        "minimumFreeGiB": 107.04,
+        "lastActivity": {
+          "rssMiB": 18.9921875,
+          "cpuSeconds": 0.176,
+          "rssLowerBoundMiB": 18.9921875,
+          "cpuLowerBoundSeconds": 0.176,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 18.9921875,
+              "cpuSeconds": 0.176323061,
+              "state": "R",
+              "pidTag": "d8a4d55929b9f50f",
+              "identityTag": "202da598907d1a5f"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "native-selection-repeat-5",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 1527,
+        "peakRSSMiB": 22,
+        "minimumFreeGiB": 107.01,
+        "lastActivity": {
+          "rssMiB": 22.13671875,
+          "cpuSeconds": 0.185,
+          "rssLowerBoundMiB": 22.13671875,
+          "cpuLowerBoundSeconds": 0.185,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 22.13671875,
+              "cpuSeconds": 0.185144054,
+              "state": "R",
+              "pidTag": "930cfff50a5ef64a",
+              "identityTag": "9f5fad6c62a5edcd"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "inventory-stress",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 705,
+        "peakRSSMiB": 4704,
+        "minimumFreeGiB": 106.97,
+        "lastActivity": {
+          "rssMiB": 4676.79296875,
+          "cpuSeconds": 152.407,
+          "rssLowerBoundMiB": 4676.79296875,
+          "cpuLowerBoundSeconds": 152.407,
+          "processes": 4,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 17.13671875,
+              "cpuSeconds": 2.733376613,
+              "state": "S",
+              "pidTag": "4edb434a957581ce",
+              "identityTag": "4757dacd360c7071"
+            }
+          ],
+          "confirmedGone": 4,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 8,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 5184,
+            "snapshotEntries": 8,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 6.782
+  },
+  "interpretation": {
+    "actualMac307PassedZeroSkips": true,
+    "controlledLifecycleTests": "Both controlled tests were included in the complete307-test discovery with zero skips; their exact source is bound by the fixture/prelaunch review.",
+    "multiHourMonitoringEstablished": false,
+    "naturalConvergenceEstablished": false,
+    "checkpointEligibilityEstablished": false,
+    "fullHostXULPackagePerformed": false,
+    "nativeAuthenticationPerformed": false,
+    "originalNativeExitCause": "unknown",
+    "historicalRecovery33ExitRaceCause": "not established",
+    "qualification": "Short observation and controlled lifecycle gates only. All13 background deltas were nonzero, final3; no candidate exclusion or checkpoint permission is inferred."
+  }
+}

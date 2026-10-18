@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "review": "Recovery34 independent actual-Mac terminal review",
+  "decision": "PASS_SHORT_CONDITIONAL_GO_RECOVERY35",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39168760383,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39168760383",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "headSHA": "27c3304e9bb749ef21593eb551ac0bcdaafd95cc",
+    "branch": "codex/mac-native-inventory-recovery34-20261018"
+  },
+  "job": {
+    "id": 117797220618,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-18T21:38:54Z",
+    "completedAt": "2026-10-18T21:45:51Z",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "bindings": {
+    "fixture": "4b0b67a0afc68433508f8bc97e23903140cbad29",
+    "fixtureTree": "e26c685b4f19ddaddf4641478cc8396ab4bbf3c9",
+    "caller": "27c3304e9bb749ef21593eb551ac0bcdaafd95cc",
+    "callerTree": "90d91a7e2936603220c7cf36c1676413047621a9",
+    "prelaunchReviewSHA256": "33035f1ba96708de89192829a52d483f97e0b66971f67bb85be81e772f063c7a"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_TERMINAL_RESULT.json",
+    "bytes": 156484,
+    "sha256": "b44ac88bab0ed504655837e8d70b742fb1a4471b90448cf00f65bef9d2c8a471",
+    "completeExperimentProviderExact": true
+  },
+  "independentVerification": {
+    "runJobsAPI": "Run39168760383 and sole job117797220618 independently read as completed-success, push/attempt1, standard macos-15-intel.",
+    "source": "Immutable provider compare from7243ea17 to4b0b67a0 contains exactly the two reviewed source modifications and seven evidence/review docs; both changed source SHA256 match the prelaunch review.",
+    "caller": "Immutable provider caller27c3304e is a single workflow modification froma00aa4db. It matches reviewed template rendered with fixture4b0b67a0 only,3416bytes/SHA2563867a059cdbdfd964233110edfc2d01f28112a2df5a97e4d37efb0b018d2d9bd.",
+    "providerLogBytes": 193064,
+    "providerLogSHA256": "40fee0bb12f9058cae6dee9408ad41e5052c466c408609cfcaf063bc02d47089",
+    "savedLogByteExact": true,
+    "completeExperimentParsed": true,
+    "artifactAPI": "Empty run-artifact collection independently fetched.",
+    "artifacts": 0,
+    "privacy": "Decoded public log and final experiment contain no NONPUBLIC_SENTINEL, FLOORP_TEST_PRIVATE_ENV or raw _pids field. Review publishes no raw native text, process IDs, argv, environment or signed URLs.",
+    "reviewerActions": "Read-only API/source/local evidence inspection; no CI activation, SDK payload retrieval or artifact operation."
+  },
+  "actualMac": {
+    "tests": {
+      "total": 307,
+      "passed": 307,
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "seconds": 55.109
+    },
+    "controlledResourceRecheckGates": "Both real-child/real-BSD-task-ABI tests occur in immutable discovery source and complete307-test receipt with zero skips. Passing assertions verify the live case after two injected ESRCH task reads measures on its third native task read, and the exited unreaped-child case receives gone credit only at fresh same-identity BSD zombie confirmation.",
+    "controlledScope": "Only the first two task reads are injected; these gates prove the new controlled boundary, not occurrence or cause of the historical natural race.",
+    "candidateSelection": "Five fresh repeats plus the suite case: six schema2 passed/live/exact-row diagnostics. Count/tail/child-orig-argv/native-path/identity predicates pass; launcher argv0 text/canonical differences remain diagnostic only.",
+    "sdk": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "run": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5"
+    },
+    "sdkAcquired": true,
+    "stress": {
+      "samples": 63,
+      "completeSamples": 63,
+      "retriedSamples": 0,
+      "unknownSamples": 0,
+      "timeoutAttempts": 0,
+      "firstTimeoutSample": null,
+      "peakRSSMiB": 4704.23828125,
+      "peakCPUSeconds": 152.407,
+      "maxSampleSeconds": 2.8055,
+      "backends": {
+        "kern-proc-pgrp-helper": 63
+      }
+    },
+    "workload": {
+      "status": "passed",
+      "phase": "finished",
+      "workers": 3,
+      "workerMiB": 1536,
+      "readyWorkers": 3,
+      "readyElapsedSeconds": 39.889,
+      "readyBudgetSeconds": 60,
+      "barriersReleased": 3,
+      "loadSeconds": 60.163,
+      "churnChildren": 956,
+      "churnReaped": 956,
+      "workersReaped": 3,
+      "workerExitCodes": [
+        0,
+        0,
+        0
+      ],
+      "firstFailure": null
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnosticsCount": 0,
+    "cleanup": "All11 monitored stages exited0 with exact leader reap0, verified-gone groups and cleanupFailure null. Known child separately reaped-15, group verified-gone, no cleanup failure.",
+    "knownChild": "Same-birth actual sampler measurement, identity-verified python/caller/positive observed-stage birth. Strict boundary rejected three new identities: known child plus two metadata candidates.",
+    "background": {
+      "snapshots": 13,
+      "elapsedSeconds": 121.052,
+      "allPrimarySnapshotsComplete": true,
+      "newCandidates": [
+        2,
+        13,
+        13,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        16,
+        10,
+        3
+      ],
+      "finalDelta": 3,
+      "zeroDeltaSnapshots": 0,
+      "strictCheckpointEligibilityEstablished": false
+    }
+  },
+  "assessment": [
+    "The short actual-Mac307/zero-skip, SDK, five-repeat, complete strict-zero-timeout stress and known-child/background prerequisites all pass; no new meaningful blocking finding was observed.",
+    "The controlled same-five-field recheck and authoritative-gone cases now pass on the real ABI, while source-bound negative tests retain replacement/credential/permission/self-gone/unknown rejection and bounded cleanup.",
+    "All13 background deltas remain nonzero, ending3. Observation-only short success does not establish natural convergence or checkpoint eligibility; no role or PID1 parent authorizes exclusion.",
+    "No naturally occurring candidate ESRCH recovery outside the controlled unit cases is established by this short result. The original Recovery33 branch/cause remains unproven.",
+    "Multi-hour monitoring, resumed full host/XUL/package, actual native authentication and the original native-host cause remain unestablished."
+  ],
+  "Recovery35": {
+    "decision": "CONDITIONAL_TECHNICAL_GO_AFTER_IMMUTABLE_ROUTE_AND_FRESH_CHECKS",
+    "structureReview": {
+      "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_STRUCTURE_REVIEW.json",
+      "sha256": "db5d5a1ac50a97d66701db35a4c4a19d66b2bef3ea79b7d0450eb7816b21db65"
+    },
+    "conditions": [
+      "Read back an immutable fixture containing these exact reviewed source/plan bytes and the frozen evidence; any evidence-only additions must not change code.",
+      "Render/read back the independently reviewed Recovery35 template with only that fixture SHA; confirm caller ancestry/one workflow change, exact unused branch, initial-created-push/before-zero/attempt1 and no overlapping owned validation.",
+      "Fresh-check official SDK12133086104 unexpired source/head/attempt/content metadata at activation and independently in both jobs; ordinary API/HTTP/600-second/ZIP/TAR/tree/version checks remain.",
+      "Keep exactly two serial standard Intel jobs,360-minute platform caps, same resource/stall/phase/ownership/unknown/cleanup guards, one raw checkpoint <=10GiB/one-day retention.",
+      "Require natural export/Rust/archive success and actual final fixed-baseline delta0 before any upload; only verified same-run producer success may start consumer restore/build/package/native.",
+      "Independently review producer artifact provenance/bytes/hash/retention, consumer effective configuration and actual native evidence/cleanup through terminal."
+    ],
+    "qualification": "Resumed across two jobs, freshObjdir=false and sameJob=false; no successful product or native qualification is inferred from this GO.",
+    "activatedByReviewer": false
+  },
+  "fullHostXULPackagePerformed": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "productQualification": false
+}

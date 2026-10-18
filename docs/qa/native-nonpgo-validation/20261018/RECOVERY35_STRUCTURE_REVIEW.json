@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "review": "Recovery35 conditional long structure and discriminating hypotheses",
+  "decision": "STRUCTURE_CLEAR_ACTIVATION_NO_GO_PENDING_RECOVERY34",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_LONG_WORKFLOW.yml.disabled": {
+      "bytes": 18260,
+      "sha256": "aa02d364c133b9db9103412c2f2c883ff8d5bb6666a38dec4b8e77ad9e1b5f9f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_LONG_HYPOTHESES.md": {
+      "bytes": 4828,
+      "sha256": "0a50744ba17737b0c3c6e5e8d383cf7c858ee0885b046a58604ae1080189cc86"
+    }
+  },
+  "baselineWorkflow": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_WORKFLOW.yml.disabled",
+    "sha256": "b0ccdb052553b5efb928a4ce1236b29e919fb8c360deb044b4a1cc220443002e",
+    "exactDelta": "Three branch strings plus two expected-test-count literals291 to307; all other workflow bytes identical."
+  },
+  "validation": {
+    "YAML": "passed",
+    "bashSyntaxScripts": 15,
+    "inlinePythonAST": 5,
+    "reviewedCensusPatch": "Recovery34 prelaunch review SHA25633035f1ba96708de89192829a52d483f97e0b66971f67bb85be81e772f063c7a",
+    "executionByReviewer": false
+  },
+  "controls": {
+    "logicalJobs": 2,
+    "order": "consumer needs successful producer",
+    "runner": "macos-15-intel",
+    "platformMinutesEach": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "route": "Fixed recovery35 initial-created-push/before-zero/attempt-one guards in both jobs; cancel-in-progress=false.",
+    "testGate": "Producer requires307 actual Mac tests with zero skips; consumer separately prepares ABI and performs native resource preflight.",
+    "pins": {
+      "fixture": "Placeholder; immutable reviewed fixture/rendered caller readback required",
+      "Runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "SDK": 12133086104,
+      "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
+    },
+    "storage": "Only one raw checkpoint.tar.gz <=10GiB, one-day retention, archive=false/overwrite=false, preupload size/hash/deadline and service confirmation unchanged.",
+    "producer": "Natural export/Rust/archive completion, exact source/tool/path state bindings, safe cleanup and strict original-baseline final delta0; no arbitrary interrupted checkpoint.",
+    "consumer": "Same-run successful producer provenance/size/hash/manifest and verified restore/effective configuration before resumed build/package/native.",
+    "qualification": "Explicit resumed-across-two-jobs, freshObjdir=false, sameJob=false; actual native evidence required and productQualification=false.",
+    "unchanged": "Resource/RSS/disk/log/stall/phase/platform limits, inventory3-second/three-attempt budget, ownership, fail-closed unknown/null behavior and cleanup; no role-based exclusion or new privilege."
+  },
+  "hypothesesAssessment": [
+    "Recovery33 natural Rust/archive success is correctly separated from failure of census resource measurement and never-zero deltas. No checkpoint/native success is inferred.",
+    "The original candidate task ESRCH/fallback branch is explicitly unproven because old diagnostics dropped the internal retry evidence.",
+    "Recovery34 narrow same-five-field recheck may preserve a complete sample, but future trace evidence must distinguish inner/outer paths; success cannot retroactively establish the old cause.",
+    "Final delta0 is an independent qualification requirement; candidates cannot be waived by metadata role, PID1 parent or negative stage observation.",
+    "Five recovered inventory timeout attempts and fixed project-imports/abi-binding progress are correctly described without a kernel-hang or startup-cause assertion.",
+    "Fresh ordinary SDK acquisition/expiry and fixed content validation remain required in both jobs. Valid local SDK use is distinguished from expired new acquisition.",
+    "Actual native authentication and the original native-host first cause remain separate, unresolved evidence gates."
+  ],
+  "activationConditions": [
+    "Recovery34 actual Mac307/307 with zero skips, both controlled lifecycle gates, SDK, five candidate repeats, strict-zero-timeout full synchronized stress and known-child/background observations must pass independent terminal review.",
+    "Bind current reviewed source/plan/proposal and rendered caller through immutable exact provider readbacks; render fixture SHA only.",
+    "Fresh-check unused exact branch/no prior run/no overlapping owned validation and unexpired official SDK source/content metadata at activation and acquisition.",
+    "Keep the two serial standard jobs and existing single <=10GiB/one-day storage boundary; actual producer qualification must precede any upload/consumer."
+  ],
+  "limits": [
+    "No long workflow was activated by this review.",
+    "A successful short run cannot establish multi-hour monitoring or natural convergence; no long execution GO is issued before its terminal review.",
+    "The unchanged producer can still reject persistent candidates, unavailable readings, phase or resource limits; no checkpoint may be stored after such failure.",
+    "No source, SDK payload, artifact, permission or public repository was modified by the reviewer."
+  ]
+}
