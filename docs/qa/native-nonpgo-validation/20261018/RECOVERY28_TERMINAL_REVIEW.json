@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "review": "Recovery28 short diagnostic terminal evidence",
+  "decision": "NO_GO_LONG; SHORT_TEST_AND_STRESS_GATES_INCOMPLETE",
+  "run": {
+    "id": 39156152713,
+    "job": 117759672619,
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "fixture": "faedc038212af6c2f6cc461ffb831675792d0f7b",
+    "caller": "555696f8ef42af034197d2b1f32a9b4641779689",
+    "branch": "codex/mac-native-inventory-recovery28-20261018",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "startedAt": "2026-10-18T18:52:29Z",
+    "completedAt": "2026-10-18T18:53:29Z"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_TERMINAL_RESULT.json",
+    "bytes": 12370,
+    "sha256": "086296c51eb25389857d48c4d3f23a1c85873f629d826128b9e3e76c7b2156ce"
+  },
+  "independentChecks": {
+    "readOnlyAPI": [
+      "run metadata",
+      "job metadata",
+      "decoded job log",
+      "artifacts"
+    ],
+    "jobLogBytes": 28765,
+    "jobLogSHA256": "f514ab9a348e23f2d17156c5c3c1681607bd826daa629ff05e9d573919f620b6",
+    "providerLogExactSavedMatch": true,
+    "providerExperimentExactReceiptMatch": true,
+    "fixtureCheckoutMatched": true,
+    "artifacts": 0
+  },
+  "observed": {
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 38.46
+    },
+    "monitorFailureStage": "checkpoint-tests",
+    "failurePhase": "group-activity",
+    "inventoryBackend": "kern-proc-pgrp-helper",
+    "sampleAttempts": 3,
+    "timeoutSeconds": 3,
+    "observedQueryElapsedSeconds": [
+      3.344,
+      3.059,
+      3.135
+    ],
+    "resourceTotals": {
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "processes": null
+    },
+    "tests": {
+      "complete": false,
+      "status": "unknown",
+      "total": null,
+      "failures": null,
+      "errors": null,
+      "skipped": null
+    },
+    "cleanup": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": -2,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": -2
+        },
+        "cleanupFailure": null
+      }
+    ],
+    "candidateDiagnosticAvailable": false,
+    "candidateRepeatsReached": false,
+    "stressReached": false,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "checkpointStored": false,
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "interpretation": {
+    "establishedStop": "Three successive native inventory-helper subprocess timeouts caused a fail-closed monitor stop during the test suite.",
+    "underlyingDelay": "UNKNOWN; the current evidence cannot identify Python startup/import, ABI binding, self BSD, sysctl or decode as the delayed phase.",
+    "testsInterrupted": "The test suite did not produce a complete summary. Its cleanup exit code -2 and post-cleanup KeyboardInterrupt are consistent with the guard interruption, not evidence identifying the original helper delay.",
+    "run26Relation": "Run26 stopped on external ps inventory timeout. Run28 stopped on the replacement helper. The normal-stage ps dependency was removed, but that change alone did not establish reliable monitoring. A shared underlying cause is unproven.",
+    "run27Relation": "The earlier candidate inclusion failure remains UNKNOWN. This run did not reach the diagnostic needed to classify it.",
+    "limits": "No product/native-authentication result or successful short gate can be claimed."
+  },
+  "nextMinimalDiagnostic": {
+    "decision": "Static design is reasonable for a diagnostic-only revision; implementation and negative tests still require review.",
+    "contract": [
+      "Emit a fixed startup marker only in __main__ before project imports; distinguish no observed output from a reported startup/import phase.",
+      "Emit bounded fixed phase markers before ABI binding, self BSD, self/group size/data and decode; sequence and validate records with a finite phase allowlist and strict length/count limits.",
+      "Handle TimeoutExpired.output as bytes or text without publishing raw output, stderr, arbitrary exception text, arguments or paths.",
+      "Retain only validated phase information on timeout. Partial final resource payload remains unusable and resource totals remain null.",
+      "Preserve timeout=3, three sample attempts, existing retry gaps, exact helper kill/reap, fail-closed behavior and owned-group cleanup.",
+      "Describe the last validated marker as the last observed execution point. It does not prove that a particular syscall was blocked or exclude scheduling delay after that marker."
+    ],
+    "negativeTests": [
+      "No output before timeout",
+      "Partial or malformed phase lines",
+      "Unknown phase, duplicate/out-of-order sequence and oversized output",
+      "Bytes output despite text=True",
+      "Valid phase followed by truncated resource JSON",
+      "Recovered retry retains phase diagnostics",
+      "Persistent three timeouts retain null totals, firstFailure and safe cleanup"
+    ]
+  },
+  "scope": "Review only. No source changes, new run activation, SDK acquisition, artifact storage or permission changes were performed."
+}

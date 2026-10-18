@@ -39,6 +39,46 @@ def reply(pids=None):
 
 
 class DarwinInventoryGuards(unittest.TestCase):
+    def progress(self,*phases):
+        return ''.join(json.dumps({'inventoryProgress':phase,'sequence':i+1})+'\n'
+                       for i,phase in enumerate(phases))
+
+    def test_progress_requires_bounded_complete_lines_fixed_phases_and_exact_sequence(self):
+        prefix=self.progress('project-imports','abi-binding','self-bsd')
+        for output in (prefix,prefix.encode(),prefix+'{"PRIVATE_PARTIAL_RESOURCE":'):
+            self.assertEqual(inv.progress_reply(output),{'phase':'self-bsd','events':3})
+        for output in (None,b'\xff','PRIVATE',prefix[:30],prefix*1000,
+                       self.progress('PRIVATE_SENTINEL'),self.progress('self-bsd').replace('1','2'),
+                       '{"inventoryProgress":"self-bsd","sequence":true}\n'):
+            value=inv.progress_reply(output)
+            self.assertEqual(value,{'phase':'unobserved','events':0})
+            self.assertNotIn('PRIVATE',json.dumps(value))
+
+    def test_final_protocol_ignores_only_valid_progress_and_rejects_invalid_prefix(self):
+        prefix=self.progress('project-imports','abi-binding','group-data')
+        self.assertEqual(inv.decode_reply(prefix+json.dumps(reply()),900)['pids'],[42])
+        for output in (prefix+'PRIVATE\n'+json.dumps(reply()),prefix+json.dumps(reply())[:-2],
+                       self.progress('PRIVATE')+json.dumps(reply())):
+            with self.assertRaises((Failure,ValueError)):inv.decode_reply(output,900)
+
+    def test_timeout_keeps_last_progress_but_never_partial_resource_measurement(self):
+        output=(self.progress('project-imports','abi-binding','group-data')+
+                '{"rssMiB":0,"PRIVATE":"hidden"').encode()
+        with mock.patch('support.sys.platform','darwin'),mock.patch.dict(os.environ,self.native_env()), \
+             mock.patch('support.subprocess.run',side_effect=subprocess.TimeoutExpired('private',3,output=output)), \
+             mock.patch('support.time.sleep'):
+            value=Runner.group_activity(900)
+        self.assertFalse(value['sampleComplete']);self.assertIsNone(value['rssMiB'])
+        self.assertEqual(value['sampleAttempts'],3)
+        self.assertEqual(value['queryFailure']['helperProgress'],{'phase':'group-data','events':3})
+        self.assertNotIn('PRIVATE',json.dumps(value))
+
+    def test_script_entry_progress_precedes_project_import_and_is_silent_when_imported(self):
+        source=Path(inv.__file__).read_text()
+        self.assertLess(source.index('"inventoryProgress":"project-imports"'),source.index('import argparse'))
+        result=subprocess.run([sys.executable,'-c','import darwin_inventory'],check=True,capture_output=True,
+                              text=True,timeout=5)
+        self.assertEqual(result.stdout,'')
     def read(self,responses):
         queries=[];query=Query(responses)
         data=inv.read_records(layout(),2,900,queries,allow_empty=True,system=SimpleNamespace(sysctl=query))

@@ -1,0 +1,402 @@
+{
+  "schema": 1,
+  "run": {
+    "id": "39156152713",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39156152713",
+    "job": "117759672619",
+    "fixture": "faedc038212af6c2f6cc461ffb831675792d0f7b",
+    "caller": "555696f8ef42af034197d2b1f32a9b4641779689",
+    "attempt": 1,
+    "startedAt": "2026-10-18T18:52:29Z",
+    "completedAt": "2026-10-18T18:53:29Z"
+  },
+  "status": "failed",
+  "experiment": {
+    "status": "failed",
+    "observationOnly": true,
+    "checkpointEligibilityNotEvaluated": true,
+    "newArtifacts": 0,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "productQualification": false,
+    "background": [],
+    "tests": {
+      "complete": false,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": null,
+      "failures": null,
+      "errors": null,
+      "skipped": null,
+      "status": "unknown",
+      "errorType": "Failure"
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 38.46
+    },
+    "monitorFailure": {
+      "stage": "checkpoint-tests",
+      "elapsedSeconds": 38.45,
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "rssLowerBoundMiB": null,
+      "cpuLowerBoundSeconds": null,
+      "processes": null,
+      "states": [
+        "?"
+      ],
+      "sampleComplete": false,
+      "unknownKinds": {
+        "inventory-timeout": 1
+      },
+      "formatExamples": [],
+      "queryFailure": {
+        "operation": "kern-proc-pgrp-inventory",
+        "errorType": "TimeoutExpired",
+        "timeoutSeconds": 3,
+        "elapsedSeconds": 3.135
+      },
+      "inventoryBackend": "kern-proc-pgrp-helper",
+      "sampleAttempts": 3,
+      "partialSamples": [
+        {
+          "unknownKinds": {
+            "inventory-timeout": 1
+          },
+          "formatExamples": [],
+          "queryFailure": {
+            "operation": "kern-proc-pgrp-inventory",
+            "errorType": "TimeoutExpired",
+            "timeoutSeconds": 3,
+            "elapsedSeconds": 3.344
+          },
+          "knownRSSLowerBoundMiB": null,
+          "knownCPULowerBoundSeconds": null
+        },
+        {
+          "unknownKinds": {
+            "inventory-timeout": 1
+          },
+          "formatExamples": [],
+          "queryFailure": {
+            "operation": "kern-proc-pgrp-inventory",
+            "errorType": "TimeoutExpired",
+            "timeoutSeconds": 3,
+            "elapsedSeconds": 3.059
+          },
+          "knownRSSLowerBoundMiB": null,
+          "knownCPULowerBoundSeconds": null
+        },
+        {
+          "unknownKinds": {
+            "inventory-timeout": 1
+          },
+          "formatExamples": [],
+          "queryFailure": {
+            "operation": "kern-proc-pgrp-inventory",
+            "errorType": "TimeoutExpired",
+            "timeoutSeconds": 3,
+            "elapsedSeconds": 3.135
+          },
+          "knownRSSLowerBoundMiB": null,
+          "knownCPULowerBoundSeconds": null
+        }
+      ]
+    },
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 53,
+        "minimumFreeGiB": 107.35,
+        "lastActivity": {
+          "rssMiB": 12.03515625,
+          "cpuSeconds": 1.495,
+          "rssLowerBoundMiB": 12.03515625,
+          "cpuLowerBoundSeconds": 1.495,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 7.22265625,
+              "cpuSeconds": 0.522643541,
+              "state": "S",
+              "pidTag": "ef7a7f4e4a2f3171",
+              "identityTag": "7ba4a7038c4d2e44"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 2,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 2
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.35,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.35,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": -2,
+        "failureEvidence": {
+          "beforeCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 11524,
+            "tailBytesRead": 11524,
+            "tailTruncated": false,
+            "matchingRecords": 0,
+            "recordsTruncated": false,
+            "records": []
+          },
+          "leaderExitAlreadyObserved": null,
+          "afterCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 14648,
+            "tailBytesRead": 14648,
+            "tailTruncated": false,
+            "matchingRecords": 1,
+            "recordsTruncated": false,
+            "records": [
+              {
+                "tailLine": 115,
+                "kind": "termination",
+                "messageClass": "keyboard-interrupt",
+                "normalizedDiagnostic": "keyboardinterrupt"
+              }
+            ]
+          }
+        },
+        "reason": "monitor-unavailable",
+        "failurePhase": "group-activity",
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": -2
+        },
+        "logBytes": 14648,
+        "peakRSSMiB": 53,
+        "minimumFreeGiB": 107.35,
+        "lastActivity": {
+          "rssMiB": null,
+          "cpuSeconds": null,
+          "rssLowerBoundMiB": null,
+          "cpuLowerBoundSeconds": null,
+          "processes": null,
+          "states": [
+            "?"
+          ],
+          "sampleComplete": false,
+          "unknownKinds": {
+            "inventory-timeout": 1
+          },
+          "formatExamples": [],
+          "queryFailure": {
+            "operation": "kern-proc-pgrp-inventory",
+            "errorType": "TimeoutExpired",
+            "timeoutSeconds": 3,
+            "elapsedSeconds": 3.135
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 3,
+          "partialSamples": [
+            {
+              "unknownKinds": {
+                "inventory-timeout": 1
+              },
+              "formatExamples": [],
+              "queryFailure": {
+                "operation": "kern-proc-pgrp-inventory",
+                "errorType": "TimeoutExpired",
+                "timeoutSeconds": 3,
+                "elapsedSeconds": 3.344
+              },
+              "knownRSSLowerBoundMiB": null,
+              "knownCPULowerBoundSeconds": null
+            },
+            {
+              "unknownKinds": {
+                "inventory-timeout": 1
+              },
+              "formatExamples": [],
+              "queryFailure": {
+                "operation": "kern-proc-pgrp-inventory",
+                "errorType": "TimeoutExpired",
+                "timeoutSeconds": 3,
+                "elapsedSeconds": 3.059
+              },
+              "knownRSSLowerBoundMiB": null,
+              "knownCPULowerBoundSeconds": null
+            },
+            {
+              "unknownKinds": {
+                "inventory-timeout": 1
+              },
+              "formatExamples": [],
+              "queryFailure": {
+                "operation": "kern-proc-pgrp-inventory",
+                "errorType": "TimeoutExpired",
+                "timeoutSeconds": 3,
+                "elapsedSeconds": 3.135
+              },
+              "knownRSSLowerBoundMiB": null,
+              "knownCPULowerBoundSeconds": null
+            }
+          ]
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 0.674
+  },
+  "artifacts": [],
+  "candidateRepeatsReached": false,
+  "stressReached": false,
+  "cause": "UNKNOWN: no per-phase progress was retained for the timed-out helper",
+  "interpretation": "The normal-stage external ps dependency was removed, but the replacement bounded Python helper also hit three 3-second timeouts. This run does not identify startup, ABI binding or a kernel query as the delayed phase. Replacing ps alone did not establish a reliable monitor.",
+  "run26Relation": "Both executions stopped on inventory timeout, through distinct query implementations. A shared underlying cause or timing relationship has not been established.",
+  "fullBuildReached": false,
+  "nativeAuthentication": "not-verified"
+}

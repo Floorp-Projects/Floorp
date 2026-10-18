@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "scope": "Recovery29 short inventory phase diagnosis",
+  "linux": {
+    "total": 279,
+    "passed": 265,
+    "skipped": 14,
+    "seconds": 9.487,
+    "exitCode": 0,
+    "logSHA256": "7795529e7ae5e8969eae960f42d2bdb1e0ecd2f4f18b9b515d557abfe976cae8"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 279,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "sdk": false,
+    "build": false,
+    "artifactUpload": false
+  },
+  "queryTimeoutSeconds": 3,
+  "sampleAttempts": 3,
+  "resourceUnknown": "null",
+  "longRun": "not activated"
+}

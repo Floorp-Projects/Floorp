@@ -360,7 +360,7 @@ class Runner:
                 else:
                     result = subprocess.run(['/bin/ps', '-axo', columns], capture_output=True,
                                             check=True, timeout=3, text=True)
-            except subprocess.TimeoutExpired:
+            except subprocess.TimeoutExpired as error:
                 # run() kills and reaps its exact query child before raising.
                 # Partial output is not a complete process inventory. Retain
                 # the failure inside the existing bounded sample retry budget.
@@ -372,6 +372,9 @@ class Runner:
                         'queryFailure': {'operation': 'kern-proc-pgrp-inventory' if native else 'process-group-inventory',
                              'errorType': 'TimeoutExpired', 'timeoutSeconds': 3,
                              'elapsedSeconds': round(time.monotonic() - query_started, 3)}}
+                if native:
+                    from darwin_inventory import progress_reply
+                    value['queryFailure']['helperProgress']=progress_reply(error.output)
             except Exception as error:
                 if not native:
                     raise
@@ -379,7 +382,7 @@ class Runner:
                 allowed={'inventory-abi-missing','inventory-group-id','inventory-protocol-size',
                          'inventory-protocol','inventory-protocol-keys','inventory-protocol-queries',
                          'inventory-protocol-query','inventory-protocol-unknown','inventory-protocol-failure',
-                         'inventory-protocol-pids','inventory-protocol-measurement'}
+                         'inventory-protocol-pids','inventory-protocol-measurement','inventory-protocol-progress'}
                 value={'rssMiB':None,'cpuSeconds':None,'rssLowerBoundMiB':None,'cpuLowerBoundSeconds':None,
                        'processes':None,'states':['?'],'_pids':(),'sampleComplete':False,
                        'unknownKinds':{'inventory-unavailable':1},'formatExamples':[],
@@ -389,6 +392,8 @@ class Runner:
                     value['queryFailure']['errno']=error.errno
                 if isinstance(error,subprocess.CalledProcessError):
                     value['queryFailure']['exitCode']=error.returncode
+                    from darwin_inventory import progress_reply
+                    value['queryFailure']['helperProgress']=progress_reply(error.output)
             else:
                 if native and reply['status']=='measured':
                     from darwin_activity import probe

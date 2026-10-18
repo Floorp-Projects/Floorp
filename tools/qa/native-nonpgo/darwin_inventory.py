@@ -4,6 +4,13 @@
 No alternate API after failure. The caller owns the 3s subprocess timeout/reap.
 No raw inventory or exception text is published by the parent.
 """
+import sys
+_PROGRESS_SEQUENCE=0
+if __name__=='__main__':
+    # Distinguish reaching the script from loading the project and ctypes APIs.
+    print('{"inventoryProgress":"project-imports","sequence":1}',flush=True)
+    _PROGRESS_SEQUENCE=1
+
 import argparse
 import ctypes
 import errno
@@ -12,13 +19,40 @@ import json
 import os
 from pathlib import Path
 import re
-import sys
 
 from process_census import CAP,canonical,decode,load_abi,validate_layout
 from support import Failure,require
 
+PHASES=('project-imports','abi-binding','self-bsd','self-snapshot','self-size','self-data',
+        'group-snapshot','group-size','group-data','group-decode')
 
-def read_records(layout,selector,subject,queries,*,allow_empty=False,system=None):
+
+def progress_reply(output):
+    """Read fixed progress only; incomplete inventory never becomes a measurement."""
+    if isinstance(output,bytes):
+        if len(output)>65536:return {'phase':'unobserved','events':0}
+        try:output=output.decode('utf-8')
+        except UnicodeError:return {'phase':'unobserved','events':0}
+    if not isinstance(output,str):return {'phase':'unobserved','events':0}
+    try:size=len(output.encode())
+    except UnicodeError:return {'phase':'unobserved','events':0}
+    if size>65536:
+        return {'phase':'unobserved','events':0}
+    phases=[]
+    for line in output.splitlines(keepends=True):
+        if not line.endswith('\n'):break
+        try:value=json.loads(line)
+        except (ValueError,RecursionError):break
+        if (not isinstance(value,dict) or set(value)!={'inventoryProgress','sequence'} or
+                value['inventoryProgress'] not in PHASES or type(value['sequence']) is not int or
+                value['sequence']!=len(phases)+1):
+            break
+        phases.append(value['inventoryProgress'])
+        if len(phases)>32:return {'phase':'unobserved','events':0}
+    return {'phase':phases[-1] if phases else 'unobserved','events':len(phases)}
+
+
+def read_records(layout,selector,subject,queries,*,allow_empty=False,system=None,progress=None):
     validate_layout(layout)
     require(type(subject) is int and 0<subject<2**31 and type(selector) is int and
             selector in (1,2),'inventory-selector')
@@ -29,6 +63,7 @@ def read_records(layout,selector,subject,queries,*,allow_empty=False,system=None
     mib=(ctypes.c_int*4)(1,14,selector,subject)
     for attempt in range(3):
         needed=ctypes.c_size_t()
+        if progress:progress('self-size' if selector==1 else 'group-size')
         ctypes.set_errno(0)
         code=system.sysctl(mib,4,None,ctypes.byref(needed),None,0)
         error=ctypes.get_errno()
@@ -43,6 +78,7 @@ def read_records(layout,selector,subject,queries,*,allow_empty=False,system=None
         capacity=min(CAP,needed.value+32*layout['recordBytes'])
         data=ctypes.create_string_buffer(capacity)
         length=ctypes.c_size_t(capacity)
+        if progress:progress('self-data' if selector==1 else 'group-data')
         ctypes.set_errno(0)
         code=system.sysctl(mib,4,data,ctypes.byref(length),None,0)
         error=ctypes.get_errno()
@@ -74,25 +110,28 @@ def pids_from_records(data,layout):
     return sorted(pids)
 
 
-def collect(pgid,queries,*,layout=None,reader=None,system=None,progress=None):
+def collect(pgid,queries,*,layout=None,reader=None,system=None,progress=None,notify=None):
     require(type(pgid) is int and 0<pgid<2**31,'inventory-group-id')
     progress={} if progress is None else progress
-    progress['phase']='abi-binding'
+    def mark(phase):
+        progress['phase']=phase
+        if notify:notify(phase)
+    mark('abi-binding')
     layout=layout or load_abi(Path(os.environ['FLOORP_CENSUS_ABI']))
     if reader is None:
         from darwin_activity import probe
         reader=probe()
-    progress['phase']='self-bsd'
+    mark('self-bsd')
     state,own,_=reader.bsd(os.getpid())
     require(state=='measured' and own is not None and own.pid==os.getpid() and
             own.uid==os.geteuid() and own.ruid==os.getuid(),'inventory-self-unavailable')
-    progress['phase']='self-snapshot'
-    data=read_records(layout,1,os.getpid(),queries,system=system)
+    mark('self-snapshot')
+    data=read_records(layout,1,os.getpid(),queries,system=system,progress=mark)
     bound=decode(data,layout,os.geteuid(),os.getuid(),os.getpid(),(own.start_sec,own.start_usec))
     require(bound['measurement']['snapshotEntries']==1,'inventory-self-count')
-    progress['phase']='group-snapshot'
-    data=read_records(layout,2,pgid,queries,allow_empty=True,system=system)
-    progress['phase']='group-decode'
+    mark('group-snapshot')
+    data=read_records(layout,2,pgid,queries,allow_empty=True,system=system,progress=mark)
+    mark('group-decode')
     pids=pids_from_records(data,layout)
     return {'status':'measured','pids':pids,'group':pgid,
             'measurement':{'api':'sysctl-kern-proc-pgrp','snapshotBytes':len(data),
@@ -103,7 +142,13 @@ def collect(pgid,queries,*,layout=None,reader=None,system=None,progress=None):
 def decode_reply(text,pgid):
     """Strict private protocol; only its safe measurement/query fields reach reports."""
     require(isinstance(text,str) and len(text.encode())<=1024**2,'inventory-protocol-size')
-    value=json.loads(text)
+    lines=text.splitlines()
+    require(bool(lines),'inventory-protocol')
+    if len(lines)>1:
+        prefix='\n'.join(lines[:-1])+'\n'
+        observed=progress_reply(prefix)
+        require(observed['events']==len(lines)-1 and observed['events']>0,'inventory-protocol-progress')
+    value=json.loads(lines[-1])
     require(isinstance(value,dict) and type(value.get('group')) is int and value.get('group')==pgid and
             value.get('status') in ('measured','unavailable'),'inventory-protocol')
     require(set(value)<= {'status','pids','group','measurement','queries','failureCode','errorType','errno','phase'},
@@ -116,8 +161,7 @@ def decode_reply(text,pgid):
                 all(type(item) is int for key,item in row.items() if key!='query'),'inventory-protocol-query')
     if value['status']=='unavailable':
         require(value.get('pids') is None,'inventory-protocol-unknown')
-        require(value.get('phase') in ('startup','abi-binding','self-bsd','self-snapshot',
-                                      'group-snapshot','group-decode'),'inventory-protocol-failure')
+        require(value.get('phase') in ('startup',*PHASES),'inventory-protocol-failure')
         require(value.get('failureCode') in {'inventory-helper-exception','inventory-query-permission',
                 'inventory-size-unavailable','inventory-data-unavailable','inventory-size',
                 'inventory-returned-size','inventory-record-length','inventory-record-pid',
@@ -142,10 +186,14 @@ def decode_reply(text,pgid):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--pgid',type=int,required=True)
-    args=parser.parse_args();queries=[];progress={}
+    args=parser.parse_args();queries=[];progress={};sequence=_PROGRESS_SEQUENCE
+    def emit(phase):
+        nonlocal sequence
+        sequence+=1
+        print(json.dumps({'inventoryProgress':phase,'sequence':sequence}),flush=True)
     try:
         require(sys.platform=='darwin','inventory-platform')
-        value=collect(args.pgid,queries,progress=progress)
+        value=collect(args.pgid,queries,progress=progress,notify=emit)
     except Exception as error:
         code=str(error) if isinstance(error,Failure) else 'inventory-helper-exception'
         if code.startswith('census-'):code='inventory-abi-unavailable'

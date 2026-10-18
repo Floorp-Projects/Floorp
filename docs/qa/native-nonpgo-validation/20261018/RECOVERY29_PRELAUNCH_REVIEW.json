@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "review": "Recovery29 bounded inventory-helper phase evidence",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longTrial": "NO_GO",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "tools/qa/native-nonpgo/darwin_inventory.py": {
+      "bytes": 11237,
+      "sha256": "e288841181a9240a9a45cb7fe65885e6eb04a696ea770162d4b94271a68c429f"
+    },
+    "tools/qa/native-nonpgo/support.py": {
+      "bytes": 34591,
+      "sha256": "6dc4a5241578b54c5ff954a88cd78191250c629cec5fbb4d43b157d71fa343bc"
+    },
+    "tools/qa/native-nonpgo/test_darwin_inventory.py": {
+      "bytes": 17736,
+      "sha256": "00fb07197a555525c971fddc47b4130643253f3724167ead5be91359d6e20ea1"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_PHASE_WORKFLOW.yml.disabled": {
+      "bytes": 3021,
+      "sha256": "05571fd5b1f8ade6407c3481bd9a2d5cd255991cac542bd613052a740b6859f8"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_PHASE_DIAGNOSTIC.md": {
+      "bytes": 2824,
+      "sha256": "8682a0a9222b2828a75af19de773068bd306170e705d22b70b05ae610c479da3"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY29_LOCAL_RESULT.json": {
+      "bytes": 648,
+      "sha256": "f491d02f6799356fa8cd04cddadc1535837e36e25f6edb3693ffb118c89cfd8f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_TERMINAL_RESULT.json": {
+      "bytes": 12370,
+      "sha256": "086296c51eb25389857d48c4d3f23a1c85873f629d826128b9e3e76c7b2156ce"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY28_TERMINAL_REVIEW.json": {
+      "bytes": 5884,
+      "sha256": "25121924feef89b889473c8230db9b1e7e42413b27bfe4ec036b255edcc10531"
+    }
+  },
+  "reviewerTests": {
+    "environment": "Linux",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 279,
+    "passed": 265,
+    "skipped": 14,
+    "seconds": 9.554,
+    "exitCode": 0,
+    "sourceUnchanged": true,
+    "logSHA256": "540abc46b3c96a1d45b9f44c4e08837a3c9a9f09397d791e0dec57b8a1afb1a8",
+    "workflowSyntax": {
+      "yaml": "passed",
+      "bashScripts": 4,
+      "inlinePythonAST": 1
+    },
+    "additionalChecks": [
+      "Actual Linux script entry emits the first fixed marker before the platform-unavailable result; library import is silent.",
+      "A timeout followed by complete recovery retains the failed-attempt phase in partialSamples.",
+      "Nonzero helper exit retains fixed progress while resource totals remain null."
+    ],
+    "actualMac": "Pending; 14 Darwin tests were skipped on Linux."
+  },
+  "assessment": {
+    "entry": "The literal sequenced project-imports marker is emitted only in __main__, before argparse and project imports.",
+    "progress": "Complete JSON lines are accepted only with exact keys, a fixed phase enum and contiguous integer sequences. Both bytes and text inputs are supported. Processing is capped at 64 KiB and 32 events.",
+    "partialData": "Timeout/nonzero output contributes only the last validated phase and event count. Partial inventory/resource payload is not decoded or measured. Invalid or oversized progress is unobserved, not a resource measurement.",
+    "finalProtocol": "Successful resource decoding still requires a complete validated final private payload. Any preceding lines must all be valid sequenced progress; malformed prefixes reject the reply.",
+    "privacy": "Only fixed phase names/counts reach helperProgress. Raw output, partial payload, stderr, process identifiers, paths, arguments, environment and arbitrary exception text remain outside that projection.",
+    "boundaries": "timeout=3, three attempts, retry gaps, exact helper kill/reap, null unknown totals, no fallback, per-process task/BSD checks, resource limits and owned cleanup remain unchanged.",
+    "binding": "The existing ABI job/source binding includes the modified inventory helper source hash.",
+    "inheritedRecovery28DiagnosticBytesUnchanged": true
+  },
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery29-20261018",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "activationConditions": [
+    "Bind and read back the eight reviewed files plus the rendered caller workflow at immutable commits. Render only the reviewed fixture SHA placeholder.",
+    "Preserve initial push, created, before-zero, attempt-one and exact repository/ref guards; confirm an unused branch, no prior run and no overlapping owned validation.",
+    "Require 279 actual Mac passes with zero skips, five fresh-process candidate-selection checks each with one passed diagnostic, then the unchanged stress and known-child/background gates.",
+    "Review terminal evidence before any long-trial decision. A failed or missing diagnostic/load receipt remains a failed gate."
+  ],
+  "historicalEvidence": {
+    "run26": {
+      "id": 39148209748,
+      "stop": "External ps inventory timeout during Rust; replaced normal-stage ps dependency, without establishing a reliable monitor."
+    },
+    "run27": {
+      "id": 39154799561,
+      "cause": "UNKNOWN candidate-inclusion predicate; no retrospective claim from readiness-controlled tests."
+    },
+    "run28": {
+      "id": 39156152713,
+      "stop": "Three native helper timeouts interrupted checkpoint-tests; tests unknown, candidate repeats and stress unreached, all monitored groups gone and exact leaders reaped, artifact zero.",
+      "delayPhase": "UNKNOWN",
+      "relationToRun26": "Both are inventory-timeout stops through different implementations; common underlying cause unproven."
+    }
+  },
+  "limitations": [
+    "A marker identifies the last observed execution point. It does not prove the following kernel call was entered or blocked; scheduling and termination may occur after the marker.",
+    "Unobserved progress may mean no complete output, invalid encoding/protocol or exceeded bounds. It does not uniquely identify interpreter startup/import failure.",
+    "Emitting phase evidence adds observation overhead and does not repair or prove the historical timeout cause.",
+    "The existing communicate timeout excludes process creation and kill/reap overhead; there is no strict 9.5-second wall-clock guarantee.",
+    "No full-build, checkpoint or native-authentication qualification follows from a short diagnostic result."
+  ]
+}
