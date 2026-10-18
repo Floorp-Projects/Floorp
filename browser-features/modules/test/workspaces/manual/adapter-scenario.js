@@ -190,8 +190,19 @@ async function runScenario() {
         ),
       }),
     );
-    await new Promise((resolve) => win.setTimeout(resolve, 200));
-    const reopened = SessionStore.undoCloseTab(win, 0);
+    let closedIndex = -1;
+    for (let attempt = 0; attempt < 200; attempt++) {
+      closedIndex = SessionStore.getClosedTabDataForWindow(win).findIndex((
+        entry,
+      ) => entry.state.extData?.["floorp-workspace-sync-id"] === tabA);
+      if (closedIndex >= 0) break;
+      await new Promise((resolve) => win.setTimeout(resolve, 20));
+    }
+    assert(
+      closedIndex >= 0,
+      "SessionStore finished recording the specific closed tab",
+    );
+    const reopened = SessionStore.undoCloseTab(win, closedIndex);
     await new Promise((resolve) => win.setTimeout(resolve, 400));
     const restoredSnapshot = controller.capture(
       reopened.getAttribute("floorpWorkspaceId"),
@@ -223,6 +234,129 @@ async function runScenario() {
       !menu.hasAttribute("checked"),
       "checkbox does not toggle ahead of asynchronous selection",
     );
+    const fixtureWorkspace = (name) => {
+      const id = win.workspacesFuncs.createNoNameWorkspace();
+      testingStore.data.set(id, { ...metadata, name });
+      return id;
+    };
+    const open = (id, url) => {
+      const tab = win.gBrowser.addTab(url, {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+      tab.setAttribute("floorpWorkspaceId", id);
+      return tab;
+    };
+    const navigate = async (tab, url) => {
+      const browser = win.gBrowser.getBrowserForTab(tab);
+      browser.loadURI(Services.io.newURI(url), {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+      for (let attempt = 0; attempt < 200; attempt++) {
+        if (
+          browser.currentURI?.spec === url &&
+          !browser.webProgress.isLoadingDocument
+        ) return;
+        await new Promise((resolve) => win.setTimeout(resolve, 20));
+      }
+      throw new Error("Regression page did not finish loading");
+    };
+    const safeWorkspace = fixtureWorkspace("Internal navigation regression");
+    const safeURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/safe";
+    const safeTab = open(safeWorkspace, safeURL);
+    await navigate(safeTab, safeURL);
+    safeTab.setAttribute("label", "Public title");
+    await api.select(safeWorkspace, true);
+    const safeID = SessionStore.getCustomTabValue(
+      safeTab,
+      "floorp-workspace-sync-id",
+    );
+    const safeRecord = api.getSyncedTab(safeWorkspace, safeID);
+    assert(
+      safeRecord && safeRecord.url === safeURL,
+      "public record captured before internal navigation",
+    );
+    for (const internalURL of ["about:blank", "about:preferences#privacy"]) {
+      await navigate(safeTab, internalURL);
+      safeTab.setAttribute("label", "PRIVATE INTERNAL TITLE");
+      win.gBrowser.pinTab(safeTab);
+      await api.capture();
+      const retained = api.getSyncedTab(safeWorkspace, safeID);
+      assert(
+        !api.isRetired(safeID) && retained?.url === safeURL &&
+          retained.title === safeRecord.title &&
+          retained.pinned === safeRecord.pinned,
+        "internal navigation retains the public record without leaking its title or retiring its ID",
+      );
+      await controller.apply({
+        version: 1,
+        workspaceId: safeWorkspace,
+        name: "Internal navigation regression",
+        icon: null,
+        metadata: { modifiedAt: 200, modifiedBy: device },
+        tabs: [{
+          ...safeRecord,
+          deleted: false,
+          position: 0,
+          modifiedAt: 200,
+          modifiedBy: device,
+        }],
+      }, new Set());
+      assert(
+        win.gBrowser.getBrowserForTab(safeTab).currentURI.spec ===
+            internalURL &&
+          safeTab.hasAttribute("pinned"),
+        "incoming apply preserves a local internal page and pin state",
+      );
+    }
+    const resumedURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/resumed";
+    await navigate(safeTab, resumedURL);
+    safeTab.setAttribute("label", "Public resumed title");
+    await api.capture();
+    assert(
+      SessionStore.getCustomTabValue(safeTab, "floorp-workspace-sync-id") ===
+          safeID &&
+        api.getSyncedTab(safeWorkspace, safeID)?.url === resumedURL,
+      "returning to a public page resumes Sync with the same stable ID",
+    );
+
+    const moveSource = fixtureWorkspace("Move source regression");
+    const moveDestination = fixtureWorkspace("Move destination regression");
+    const moving = open(moveSource, "__WORKSPACE_SYNC_TEST_ORIGIN__/moving");
+    await navigate(moving, "__WORKSPACE_SYNC_TEST_ORIGIN__/moving");
+    await api.select(moveSource, true);
+    await api.select(moveDestination, true);
+    await api.capture();
+    const oldMoveID = SessionStore.getCustomTabValue(
+      moving,
+      "floorp-workspace-sync-id",
+    );
+    moving.setAttribute("floorpWorkspaceId", moveDestination);
+    await api.capture();
+    const newMoveID = SessionStore.getCustomTabValue(
+      moving,
+      "floorp-workspace-sync-id",
+    );
+    assert(
+      api.isRetired(oldMoveID) && newMoveID !== oldMoveID &&
+        api.getSyncedTab(moveDestination, newMoveID)?.url ===
+          "__WORKSPACE_SYNC_TEST_ORIGIN__/moving",
+      "source-first capture gives a moved physical tab a new live destination ID",
+    );
+
+    const privateDeletion = fixtureWorkspace(
+      "Private metadata deletion regression",
+    );
+    await api.select(privateDeletion, true);
+    const privateController = Object.create(WorkspacesSyncController.prototype);
+    privateController.api = api;
+    privateController.privateWindow = true;
+    await privateController.deleteWorkspace(privateDeletion);
+    assert(
+      api.isRetired(privateDeletion) && !api.isSelected(privateDeletion),
+      "profile-wide deletion from a private controller sends only the workspace tombstone",
+    );
     return {
       passed: true,
       cases: [
@@ -232,6 +366,11 @@ async function runScenario() {
         "global ID regeneration on workspace move",
         "checkbox state ownership",
         "native Undo Close after SessionStore restoration",
+        "internal navigation preserves public records and private titles",
+        "incoming apply preserves local internal pages and pin state",
+        "return to a public page retains its stable ID",
+        "source-first workspace move replaces a retired ID",
+        "private-window profile-wide metadata deletion",
       ],
     };
   } finally {

@@ -48,7 +48,6 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   private revision = createSignal(0);
   private explicitlyOpened = new WeakSet<XULElement>();
   private openedAfterStartup = new WeakSet<XULElement>();
-  private locallyExcluded = new WeakSet<XULElement>();
   private physicalOrder = new Map<string, string[]>();
 
   constructor(private ctx: WorkspacesService) {
@@ -188,7 +187,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   }
 
   async deleteWorkspace(id: TWorkspaceID): Promise<void> {
-    if (!this.privateWindow) await this.api.deleteWorkspace(id);
+    await this.api.deleteWorkspace(id);
   }
 
   private scheduleCapture(): void {
@@ -237,33 +236,56 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     return this.tabs(id).map((tab) => this.tabId(tab));
   }
 
+  private syncableURL(tab: XULElement): string | undefined {
+    const current = gBrowser.getBrowserForTab(tab).currentURI?.spec;
+    if (isSyncableWorkspaceURL(current)) return current;
+    // Explicit internal/file navigation must not fall back to stale HTTP
+    // history. Only a restoring tab or an incoming tab still loading may use
+    // SessionStore's pending public URL.
+    if (current && current !== "about:blank") return undefined;
+    const pending = this.sessionStore.getCustomTabValue(
+      tab,
+      TAB_PENDING_URL_KEY,
+    );
+    if (!tab.hasAttribute("pending") && !isSyncableWorkspaceURL(pending)) {
+      return undefined;
+    }
+    try {
+      const state = JSON.parse(
+        this.sessionStore.getTabState(tab),
+      ) as Record<string, unknown>;
+      const restored = extractUrlFromState(state);
+      if (isSyncableWorkspaceURL(restored)) return restored;
+    } catch (error) {
+      console.error("[WorkspacesSync] Could not read pending tab", error);
+    }
+    return isSyncableWorkspaceURL(pending) ? pending : undefined;
+  }
+
   capture(id: string, seenIds: Set<string>): WorkspaceSyncSnapshot | null {
     const workspace = this.ctx.getRawWorkspace(id as TWorkspaceID);
     if (!workspace) return null;
     const tabs: WorkspaceSyncSnapshot["tabs"] = [];
     for (const tab of this.tabs(id)) {
       const previousId = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
+      const previousOwner = this.sessionStore.getCustomTabValue(
+        tab,
+        TAB_OWNER_KEY,
+      );
+      const moved = Boolean(previousOwner && previousOwner !== id);
       if (
-        this.api.isPendingClose(previousId) ||
-        (this.api.isRetired(previousId) && !this.explicitlyOpened.has(tab))
+        (!moved && this.api.isPendingClose(previousId)) ||
+        (!moved && this.api.isRetired(previousId) &&
+          !this.explicitlyOpened.has(tab))
       ) continue;
       const browser = gBrowser.getBrowserForTab(tab);
-      let url = browser.currentURI?.spec;
+      const url = this.syncableURL(tab);
+      const known = this.api.getSyncedTab(id, previousId);
       if (!isSyncableWorkspaceURL(url)) {
-        try {
-          const state = JSON.parse(
-            this.sessionStore.getTabState(tab),
-          ) as Record<string, unknown>;
-          url = extractUrlFromState(state) ?? undefined;
-        } catch (error) {
-          console.error("[WorkspacesSync] Could not read pending tab", error);
-        }
-      }
-      if (!isSyncableWorkspaceURL(url)) {
-        url = this.sessionStore.getCustomTabValue(tab, TAB_PENDING_URL_KEY);
-      }
-      if (!isSyncableWorkspaceURL(url)) {
-        this.locallyExcluded.add(tab);
+        // The physical tab remains open. Preserve its previous public record,
+        // including its safe title, rather than tombstoning it or exporting an
+        // internal page's title. A new/moved internal tab has no public record.
+        if (known && this.tabId(tab, seenIds) === known.id) tabs.push(known);
         continue;
       }
       if (browser.currentURI?.spec === url) {
@@ -272,11 +294,12 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       tabs.push({
         id: this.tabId(tab, seenIds),
         url,
-        title: (tab.getAttribute("label") ?? "").slice(0, 1024).toWellFormed(),
+        title: isSyncableWorkspaceURL(browser.currentURI?.spec)
+          ? (tab.getAttribute("label") ?? "").slice(0, 1024).toWellFormed()
+          : known?.title ?? "",
         pinned: tab.hasAttribute("pinned"),
       });
       this.explicitlyOpened.delete(tab);
-      this.locallyExcluded.delete(tab);
     }
     const order = this.tabs(id).map((tab) => this.tabId(tab)).filter((tabId) =>
       !this.api.isRetired(tabId)
@@ -359,6 +382,12 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           this.ctx.tabManagerCtx.setWorkspaceIdToAttribute(tab, id);
         }
         if (!tab) continue;
+        if (!this.syncableURL(tab)) {
+          // Keep an existing local internal/file page and its local pin/order
+          // state. Explicit remote tab tombstones were handled above.
+          previousTab = tab;
+          continue;
+        }
         const browser = gBrowser.getBrowserForTab(tab);
         if (browser.currentURI?.spec !== remoteTab.url) {
           browser.loadURI(Services.io.newURI(remoteTab.url), {

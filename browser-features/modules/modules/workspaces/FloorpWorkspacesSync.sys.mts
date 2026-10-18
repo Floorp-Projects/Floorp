@@ -132,11 +132,16 @@ const file = new JSONFile({
       }
     }
     for (const [id, snapshot] of Object.entries(raw?.pendingBaselines ?? {})) {
-      if (!isWorkspaceSyncId(id) || snapshot.workspaceId !== id) {
-        throw new Error("Invalid pending workspace baseline");
+      try {
+        if (!isWorkspaceSyncId(id) || snapshot?.workspaceId !== id) {
+          throw new Error("Invalid pending workspace baseline");
+        }
+        result.pendingBaselines[id] = validatedSnapshot(snapshot);
+      } catch {
+        // A baseline is only an observation of local UI, not desired remote
+        // data. Quarantine it without discarding the pending-apply marker: a
+        // missing baseline preserves additions that have never reached the UI.
       }
-      const validated = updateWorkspaceSyncDocument(null, snapshot, id, 0);
-      result.pendingBaselines[id] = documentSnapshot(validated);
     }
     return result;
   },
@@ -278,6 +283,7 @@ async function apply(
   assertAccountEpoch(expected);
   const signal = accountAbort.signal;
   const targets = [...providers].filter((provider) => !provider.window.closed);
+  if (!targets.length) throw new Error("No workspace window is available");
   const known = new Set(
     targets.flatMap((provider) => provider.tabIds(document.workspaceId)),
   );
@@ -286,17 +292,20 @@ async function apply(
       !known.has(id)
     ),
   );
+  let applied = false;
   for (let index = 0; index < targets.length; index++) {
     if (!targets[index].window.closed) {
       assertAccountEpoch(expected);
       await targets[index].apply(
         document,
-        index === 0 ? missing : new Set(),
+        !applied ? missing : new Set(),
         signal,
       );
       assertAccountEpoch(expected);
+      applied = true;
     }
   }
+  if (!applied) throw new Error("No workspace window is available");
 }
 function captureSnapshot(
   id: string,
@@ -327,6 +336,23 @@ function documentSnapshot(
       pinned,
     })),
   };
+}
+function validatedSnapshot(
+  snapshot: WorkspaceSyncSnapshot,
+): WorkspaceSyncSnapshot {
+  const document = updateWorkspaceSyncDocument(
+    null,
+    snapshot,
+    snapshot.workspaceId,
+    0,
+  );
+  parseWorkspaceSyncRecord(workspaceMetadataRecord(document));
+  for (const tab of document.tabs) {
+    if (!tab.deleted) {
+      parseWorkspaceSyncRecord(workspaceTabRecord(document.workspaceId, tab));
+    }
+  }
+  return { ...documentSnapshot(document), orderChanged: snapshot.orderChanged };
 }
 function pendingSnapshot(
   desired: WorkspaceSyncDocument,
@@ -402,6 +428,9 @@ function captureNow(): void {
     try {
       const observed = captureSnapshot(id, seenIds);
       if (!observed) continue;
+      // Validate the physical observation even when a missing pending baseline
+      // means pendingSnapshot will intentionally retain the desired document.
+      validatedSnapshot(observed);
       const pending = state().pendingApplies.includes(id);
       const snapshot = pending && state().records[id]
         ? pendingSnapshot(state().records[id], observed)
@@ -455,13 +484,18 @@ async function applySelected(
   document: WorkspaceSyncDocument,
   expected = accountEpoch,
   completesClosures = false,
+  deferred?: Set<string>,
 ): Promise<void> {
   assertAccountEpoch(expected);
   const id = document.workspaceId;
   if (!state().pendingApplies.includes(id)) state().pendingApplies.push(id);
   const baseline = captureSnapshot(id);
-  if (baseline) state().pendingBaselines[id] = baseline;
+  if (baseline) state().pendingBaselines[id] = validatedSnapshot(baseline);
   changed(id);
+  if (deferred) {
+    deferred.add(id);
+    return;
+  }
   await apply(document, expected);
   assertAccountEpoch(expected);
   if (completesClosures || !state().pendingCloses[id]?.length) {
@@ -471,7 +505,7 @@ async function applySelected(
     delete state().pendingBaselines[id];
   } else {
     const current = captureSnapshot(id);
-    if (current) state().pendingBaselines[id] = current;
+    if (current) state().pendingBaselines[id] = validatedSnapshot(current);
   }
   changed(id);
 }
@@ -482,9 +516,9 @@ async function retryPendingApplies(expected: number): Promise<void> {
     if (document && state().selected.includes(id) && !retired.has(id)) {
       // Only a completed incoming pass can decide whether a later parent
       // tombstone cancels these closures. Ordinary capture must not flush them.
-      if (state().pendingCloses[id]?.length) continue;
+      if (state().pendingCloses[id]?.length || captureErrors.has(id)) continue;
       await applySelected(document, expected);
-    } else {
+    } else if (!document || retired.has(id)) {
       state().pendingApplies = state().pendingApplies.filter((value) =>
         value !== id
       );
@@ -521,6 +555,20 @@ export const FloorpWorkspacesSync = {
   ready,
   isSelected(id: string): boolean {
     return initialized && state().selected.includes(id);
+  },
+  getSyncedTab(
+    workspaceId: string,
+    tabId: string,
+  ): WorkspaceSyncSnapshot["tabs"][number] | null {
+    if (!initialized || retired.has(workspaceId) || retired.has(tabId)) {
+      return null;
+    }
+    const tab = state().records[workspaceId]?.tabs.find((tab) =>
+      tab.id === tabId && !tab.deleted
+    );
+    if (!tab) return null;
+    const { id, url, title, pinned } = tab;
+    return { id, url, title, pinned };
   },
   errorFor(id: string): string | null {
     if (retired.has(id)) return "deleted-workspace";
@@ -563,7 +611,7 @@ export const FloorpWorkspacesSync = {
         }
         captureNow();
         for (const id of state().selected) {
-          if (state().records[id]) {
+          if (state().records[id] && !captureErrors.has(id)) {
             await applySelected(state().records[id], expected);
           }
         }
@@ -805,7 +853,12 @@ class FloorpWorkspaceStore extends Store {
       state().records[entity.workspaceId] = document;
       changed(entity.workspaceId);
       if (state().selected.includes(entity.workspaceId)) {
-        await applySelected(document, expected);
+        await applySelected(
+          document,
+          expected,
+          false,
+          this.engine.incomingWorkspaces,
+        );
         this.engine.assertAccountSession(expected);
       }
     });
@@ -891,6 +944,7 @@ class FloorpWorkspaceTracker extends LegacyTracker {
 /** Firefox owns authenticated transport, encryption, collection state and retry. */
 export class FloorpWorkspacesEngine extends SyncEngine {
   accountSessionEpoch = accountEpoch;
+  incomingWorkspaces: Set<string> | undefined;
   private accountUid: string | undefined;
   constructor(service: unknown) {
     super(WORKSPACE_SYNC_COLLECTION, service);
@@ -963,10 +1017,49 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     for (const record of records) {
       if (!recordEpochs.has(record)) recordEpochs.set(record, expected);
     }
-    const failed = await super._applyRecords(records, telemetry) as string[];
+    const pending = new Set<string>();
+    this.incomingWorkspaces = pending;
+    let failed: string[];
+    try {
+      failed = await super._applyRecords(records, telemetry) as string[];
+    } finally {
+      if (this.incomingWorkspaces === pending) {
+        this.incomingWorkspaces = undefined;
+      }
+    }
     await ready();
-    await mutate(() => {
+    await mutate(async () => {
       this.assertAccountSession(expected);
+      captureNow();
+      for (const id of pending) {
+        const document = state().records[id];
+        if (
+          !document || !state().selected.includes(id) || retired.has(id) ||
+          captureErrors.has(id)
+        ) continue;
+        try {
+          await applySelected(document, expected);
+        } catch (error) {
+          this.assertAccountSession(expected);
+          // Base Store catches per-record failures, but deferred UI work runs
+          // after it returns. Preserve native retry and our closure fence for
+          // every incoming entity whose workspace could not reach the UI.
+          for (const record of records) {
+            if (
+              record.entity?.workspaceId === id && !failed.includes(record.id)
+            ) {
+              failed.push(record.id);
+            }
+          }
+          (telemetry as { addIncomingFailedReason(reason: string): void })
+            .addIncomingFailedReason("Workspace UI apply failed");
+          console.error(
+            "[WorkspacesSync] Deferred workspace apply failed",
+            id,
+            error,
+          );
+        }
+      }
       const failures = new Set(state().incomingFailures);
       for (const record of records) {
         if (failed.includes(record.id)) failures.add(record.id);
@@ -987,7 +1080,8 @@ export class FloorpWorkspacesEngine extends SyncEngine {
       captureNow();
       for (const [id, tabs] of Object.entries(state().pendingCloses)) {
         const document = state().records[id];
-        if (document && state().selected.includes(id) && !retired.has(id)) {
+        if (document && !retired.has(id)) {
+          if (!state().selected.includes(id) || captureErrors.has(id)) continue;
           await applySelected(
             { ...document, tabs: [...document.tabs, ...tabs] },
             expected,

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { WorkspaceSyncProvider } from "#modules/common/workspace-sync-types.ts";
+import type {
+  WorkspaceSyncProvider,
+  WorkspaceSyncSnapshot,
+} from "#modules/common/workspace-sync-types.ts";
 
 export interface SyncSessionStore {
   promiseAllWindowsRestored: Promise<void>;
@@ -15,6 +18,10 @@ export interface WorkspaceSyncAPI {
   isRetired(id: string): boolean;
   errorFor(id: string): string | null;
   isPendingClose(id: string): boolean;
+  getSyncedTab(
+    workspaceId: string,
+    tabId: string,
+  ): WorkspaceSyncSnapshot["tabs"][number] | null;
   register(
     provider: WorkspaceSyncProvider,
     signal?: AbortSignal,

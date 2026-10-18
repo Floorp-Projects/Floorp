@@ -29,6 +29,7 @@ async function runScenario() {
   const workspace = uuid(), tabA = uuid(), tabB = uuid(), device = uuid();
   const snapshots = new Map();
   const closed = [];
+  const applyCalls = new Map();
   let nextApplyGate = null;
   let failNextApply = false;
   const makeSnapshot = (id, tabs) => ({
@@ -58,6 +59,10 @@ async function runScenario() {
     },
     tabIds: (id) => snapshots.get(id)?.tabs.map((tab) => tab.id) ?? [],
     apply: async (document, _missingTabIds, signal) => {
+      applyCalls.set(
+        document.workspaceId,
+        (applyCalls.get(document.workspaceId) ?? 0) + 1,
+      );
       if (nextApplyGate) {
         const gate = nextApplyGate;
         nextApplyGate = null;
@@ -84,7 +89,25 @@ async function runScenario() {
       });
     },
   };
-  const unregister = await api.register(provider);
+  const { JSONFile } = ChromeUtils.importESModule(
+    "resource://gre/modules/JSONFile.sys.mjs",
+  );
+  let cache;
+  const originalLoad = JSONFile.prototype.load;
+  JSONFile.prototype.load = function (...args) {
+    if (this.path.endsWith("/floorp-workspaces-sync-manual.json")) cache = this;
+    return originalLoad.apply(this, args);
+  };
+  let unregister;
+  try {
+    unregister = await api.register(provider);
+  } finally {
+    JSONFile.prototype.load = originalLoad;
+  }
+  assert(
+    cache,
+    "isolated engine state is available for persistence regression",
+  );
   const engine = new FloorpWorkspacesEngine(Service);
   await engine.initialize();
   Services.prefs.setBoolPref("services.sync.engine.floorp-workspaces", true);
@@ -523,6 +546,232 @@ async function runScenario() {
   completed.push(
     "failed UI retry distinguishes unchanged tabs and later local closes",
   );
+  const batchParents = [uuid(), uuid()];
+  const batchRecords = batchParents.flatMap((id) => [
+    record(id, metaEntity(id)),
+    ...Array.from({ length: 30 }, () => {
+      const tab = uuid();
+      return record(tab, tabEntity(tab, id));
+    }),
+  ]);
+  assert(
+    (await engine._applyRecords(batchRecords, {
+      addIncomingFailedReason: () => {},
+    })).length === 0,
+    "multi-workspace native incoming batch applies",
+  );
+  for (const id of batchParents) {
+    assert(
+      applyCalls.get(id) === 1 && snapshots.get(id).tabs.length === 30,
+      "each changed workspace reaches the UI once per native batch",
+    );
+  }
+  completed.push("native batch coalesces workspace UI mutations");
+  const beforeBatchEdit = await engine._store.createRecord(
+    tabAfterLocalClose,
+    "floorp-workspaces",
+  );
+  const batchEdit = tabEntity(tabAfterLocalClose);
+  batchEdit.tab.url = "https://example.com/remote-update-in-batch";
+  batchEdit.tab.pinned = true;
+  batchEdit.tab.modifiedAt = beforeBatchEdit.entity.tab.modifiedAt + 1000;
+  const batchAddition = uuid();
+  const originalCreate = engine._store.create;
+  const callsBeforeBatchEdit = applyCalls.get(workspace);
+  try {
+    engine._store.create = async function (item) {
+      await originalCreate.call(this, item);
+      if (item.id === tabAfterLocalClose) {
+        const current = snapshots.get(workspace);
+        snapshots.set(workspace, {
+          ...current,
+          tabs: current.tabs.map((tab) =>
+            tab.id === item.id
+              ? { ...tab, title: "Local edit between batch records" }
+              : tab
+          ),
+        });
+      }
+    };
+    assert(
+      (await engine._applyRecords([
+        record(tabAfterLocalClose, batchEdit),
+        record(batchAddition, tabEntity(batchAddition)),
+      ], { addIncomingFailedReason: () => {} })).length === 0,
+      "native batch merges a local edit between records",
+    );
+  } finally {
+    engine._store.create = originalCreate;
+  }
+  const afterBatchEdit = snapshots.get(workspace).tabs.find((tab) =>
+    tab.id === tabAfterLocalClose
+  );
+  assert(
+    applyCalls.get(workspace) === callsBeforeBatchEdit + 1 &&
+      afterBatchEdit.url === batchEdit.tab.url && afterBatchEdit.pinned &&
+      afterBatchEdit.title === "Local edit between batch records" &&
+      snapshots.get(workspace).tabs.some((tab) => tab.id === batchAddition),
+    "coalesced apply keeps unobserved remote fields, later local fields, and additions",
+  );
+  completed.push("coalesced batch preserves edits between incoming records");
+  const failedBatch = [uuid(), uuid()].map((id) => record(id, tabEntity(id)));
+  failNextApply = true;
+  const failedBatchIDs = await engine._applyRecords(failedBatch, {
+    addIncomingFailedReason: () => {},
+  });
+  assert(
+    failedBatchIDs.length === 2 &&
+      failedBatch.every((item) =>
+        failedBatchIDs.includes(item.id) &&
+        cache.data.incomingFailures.includes(item.id)
+      ) && api.errorFor(workspace) === "incoming-failed",
+    "deferred UI failure reports affected records to native and durable retry state",
+  );
+  await api.capture();
+  assert(
+    failedBatch.every((item) =>
+      snapshots.get(workspace).tabs.some((tab) => tab.id === item.id)
+    ),
+    "deferred UI failure retains unobserved additions for recovery",
+  );
+  assert(
+    (await engine._applyRecords(failedBatch, {
+          addIncomingFailedReason: () => {},
+        })).length === 0 &&
+      failedBatch.every((item) =>
+        !cache.data.incomingFailures.includes(item.id)
+      ),
+    "successful batch retry clears only repaired incoming failures",
+  );
+  completed.push("coalesced UI failure retains native retry bookkeeping");
+  const unsubscribedParent = uuid(), unsubscribedChild = uuid();
+  await engine._store.create(
+    record(unsubscribedParent, metaEntity(unsubscribedParent)),
+  );
+  await engine._store.create(
+    record(unsubscribedChild, tabEntity(unsubscribedChild, unsubscribedParent)),
+  );
+  await api.select(unsubscribedParent, false);
+  await engine._store.remove(tomb(unsubscribedChild));
+  await engine._flushIncomingTabs();
+  assert(
+    api.isPendingClose(unsubscribedChild) &&
+      !closed.includes(unsubscribedChild),
+    "excluded workspace retains pending remote closure without changing its UI",
+  );
+  await api.select(unsubscribedParent, true);
+  await engine._flushIncomingTabs();
+  assert(
+    !api.isPendingClose(unsubscribedChild) &&
+      closed.includes(unsubscribedChild) &&
+      !snapshots.get(unsubscribedParent).tabs.some((tab) =>
+        tab.id === unsubscribedChild
+      ),
+    "reselecting applies and then clears the retained remote closure",
+  );
+  completed.push("unsubscribe retains closures until selected UI applies");
+  const unavailableParent = uuid(), unavailableChild = uuid();
+  const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  );
+  const originalIsPrivate = PrivateBrowsingUtils.isWindowPrivate;
+  unregister();
+  try {
+    // Simulate the native no-normal-window boundary without opening private
+    // browsing content or replacing the test profile's real browser window.
+    PrivateBrowsingUtils.isWindowPrivate = () => true;
+    for (
+      const item of [
+        record(unavailableParent, metaEntity(unavailableParent)),
+        record(
+          unavailableChild,
+          tabEntity(unavailableChild, unavailableParent),
+        ),
+      ]
+    ) {
+      assert(
+        await engine._store.create(item).then(() => false, () => true),
+        "incoming UI application cannot succeed with zero normal providers",
+      );
+    }
+    assert(
+      api.errorFor(unavailableParent) === "incoming-failed" &&
+        (await engine._store.getAllIDs())[unavailableChild] &&
+        !api.isRetired(unavailableChild),
+      "unapplied remote child stays pending rather than becoming a local closure",
+    );
+  } finally {
+    PrivateBrowsingUtils.isWindowPrivate = originalIsPrivate;
+    unregister = await api.register(provider);
+  }
+  assert(
+    snapshots.get(unavailableParent).tabs.some((tab) =>
+      tab.id === unavailableChild
+    ) &&
+      !api.errorFor(unavailableParent),
+    "a later normal provider materializes the pending remote workspace and tab",
+  );
+  completed.push("zero normal providers preserve unobserved remote additions");
+  const invalidPendingChild = uuid();
+  failNextApply = true;
+  assert(
+    await engine._store.create(
+      record(invalidPendingChild, tabEntity(invalidPendingChild)),
+    ).then(() => false, () => true),
+    "baseline validation fixture has an unapplied remote addition",
+  );
+  snapshots.set(workspace, {
+    ...snapshots.get(workspace),
+    name: "x".repeat(257),
+  });
+  await api.capture();
+  unregister();
+  unregister = await api.register(provider);
+  assert(
+    snapshots.get(workspace).name.length === 257 &&
+      !snapshots.get(workspace).tabs.some((tab) =>
+        tab.id === invalidPendingChild
+      ) &&
+      Object.values(cache.data.pendingBaselines).every((value) =>
+        value.name.length <= 256
+      ),
+    "invalid local metadata pauses retry and registration without persisting an invalid baseline or overwriting the UI",
+  );
+  const invalidPersisted = JSON.parse(JSON.stringify(cache.data));
+  invalidPersisted.pendingBaselines[workspace] = snapshots.get(workspace);
+  invalidPersisted.pendingBaselines[uuid()] = null;
+  const reloadPath = PathUtils.join(
+    PathUtils.profileDir,
+    "invalid-baseline-reload.json",
+  );
+  await IOUtils.writeJSON(reloadPath, invalidPersisted);
+  const reloaded = new JSONFile({
+    path: reloadPath,
+    dataPostProcessor: cache._dataPostProcessor,
+  });
+  await reloaded.load();
+  assert(
+    !reloaded.data.pendingBaselines[workspace] &&
+      reloaded.data.pendingApplies.includes(workspace) &&
+      reloaded.data.records[workspace].tabs.some((tab) =>
+        tab.id === invalidPendingChild
+      ),
+    "loading malformed legacy baselines quarantines only observations and retains desired remote additions and pending marker",
+  );
+  await reloaded.finalize();
+  snapshots.set(workspace, {
+    ...snapshots.get(workspace),
+    name: "Valid after pending error",
+  });
+  await api.capture();
+  assert(
+    snapshots.get(workspace).tabs.some((tab) =>
+      tab.id === invalidPendingChild
+    ) &&
+      !api.errorFor(workspace),
+    "correcting invalid metadata resumes the retained remote apply",
+  );
+  completed.push("invalid baseline persistence is isolated and recoverable");
   const oldAccountWorkspace = uuid();
   let enteredApply, releaseApply;
   const applyEntered = new Promise((resolve) => {
