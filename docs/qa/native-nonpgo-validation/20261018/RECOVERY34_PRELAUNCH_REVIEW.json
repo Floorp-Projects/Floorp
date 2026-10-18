@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "review": "Recovery34 anchored census resource recovery and short Mac prelaunch",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longActivation": "NO_GO_PENDING_SHORT_TERMINAL_REVIEW",
+  "baselineFixture": "7243ea175465b3e12c86bf018e9c4c1bb19096c1",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "tools/qa/native-nonpgo/census_convergence.py": {
+      "bytes": 14987,
+      "sha256": "78b6ca234d0f87b1370a7559968474c9cfa5fff42d0dae06d54f80a2b46d224b"
+    },
+    "tools/qa/native-nonpgo/test_census_convergence.py": {
+      "bytes": 33281,
+      "sha256": "16441926ff0fba6eaca62ab092abb3048b7b2179a1a602d12c5ea54b7dbe1b4e"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_CENSUS_VERIFICATION.md": {
+      "bytes": 4839,
+      "sha256": "78aa1733330566257d4c92f7412226668e49a42c953044bc3e4e6a86a9c19f08"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_CENSUS_WORKFLOW.yml.disabled": {
+      "bytes": 3398,
+      "sha256": "3deb2667d31734ccd906f751acfcd31e8b530473331e2cb22666411c33d960d1"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_LOCAL_RESULT.json": {
+      "bytes": 832,
+      "sha256": "ec1e3a5d0abd3a46dd14709b04cd4e1b8c5919cbf78f52ad24712d9492e6d89d"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_TERMINAL_RESULT.json": {
+      "bytes": 277194,
+      "sha256": "4487c144ba0466d890e644a182d88a534e94275754ec8e493e564c4028ff565c"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_TERMINAL_REVIEW.json": {
+      "bytes": 8603,
+      "sha256": "5ce2603413f3b87b60662e42b18e80f2f4451aef389917737b7da574ac59d12b"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_INITIAL_REVIEW.json": {
+      "bytes": 5429,
+      "sha256": "68398964f2059d56b164b4cb2227c49fe2bb78c8ee0350d97e8029567a9a5bf1"
+    }
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "workingDirectory": "tools/qa/native-nonpgo",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 307,
+    "passed": 291,
+    "DarwinSkipped": 16,
+    "seconds": 10.307,
+    "exitCode": 0,
+    "logSHA256": "bdc746eb48a459db0beadf96b5e17395d2cf97d7573d9693ad85be5861b16b6d",
+    "sourceSyntax": "passed",
+    "workflowYAML": "passed",
+    "bashSyntaxScripts": 5,
+    "inlinePythonAST": 1,
+    "cleanupFaultInjectionsIndependentlyRepeated": 3,
+    "actualMac": "Pending; sixteen Darwin tests were skipped on Linux."
+  },
+  "comparison": {
+    "baselineSource": "Immutable provider census_convergence.py at baseline fixture independently read.",
+    "waitForBoundary": "The complete wait_for_boundary implementation is byte-identical to the baseline: phase, cadence, stall, resource/disk/log, fixed baseline and final delta-zero checks remain.",
+    "inheritedHashChecks": "plan.json, support.py, darwin_inventory.py, inventory_stress.py/test and census_experiment.py/test match previously reviewed hashes.",
+    "workflowDelta": "Compared with Recovery32 short workflow, only display name, two fixed branch strings and expected test count291 to307 change."
+  },
+  "assessment": {
+    "trigger": "Non-self candidate only; unavailable/short-task-info; bytes0/expected232/errnoESRCH; fallback measured; candidate birth unchanged. Permission, non-ESRCH, malformed lengths and missing/unbound birth do not gain retries.",
+    "identity": "Fresh BSD must match original PID/birth-seconds/microseconds/UID/RUID before the extra read. The original five-field anchor is never refreshed to a replacement.",
+    "boundedCalls": "At most two reader.read calls. Each inherited read permits at most two native task queries: maximum four task queries per candidate, with no added sleep or expanded phase budget.",
+    "measurement": "Only a same-birth full measured result is accepted, with final original five-field BSD verification. Resource addition occurs once; all candidates and self remain included.",
+    "gone": "Only independent signal-zero ESRCH or authoritative full same-identity BSD zombie permits gone credit; task-reported gone receives fresh five-field confirmation. Generation replacement, changed credentials, short/invalid BSD and self-gone remain unavailable.",
+    "failure": "Unknown resource totals remain null and the monitor fails closed; permission classification remains fixed and distinguishes identity from task operations. Original strict final primary-census delta0 remains mandatory.",
+    "retention": "The current candidate retains up to two safe read diagnostics with fallback BSD and inherited internal ESRCH trace. Complete resource samples retain total rechecked candidate count and the latest16 candidate traces; stopping detail stays separate.",
+    "privacy": "Fixed statuses/reasons, integer byte/errno metadata and match booleans only; no raw PID/birth/UID/path/argv, arbitrary reason text, internal identity tags or private extensions are projected. Per-candidate fields are reset.",
+    "ownership": "No role exclusion, baseline reset, new signal authority, privilege or protected-process workaround is introduced."
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "area": "Historical candidate-read evidence loss",
+      "resolution": "Fixed safe fallback/internal retry and outer anchor/gone confirmation diagnostics are retained, including recovered complete samples."
+    },
+    {
+      "severity": "P2",
+      "area": "Controlled actual-Mac test child cleanup",
+      "reproduction": "The initial test finally could replace an original assertion with wait timeout, omit kill/re-wait and skip stdout close; independently reproduced with mocks.",
+      "resolution": "The actual-child context now uses inherited bounded exact-child terminate/wait5/kill/wait5, independently closes stdin/stdout, preserves the original exception with a fixed note and rejects cleanup-only failures. Three new fault-injection tests pass."
+    }
+  ],
+  "meaningfulCoverage": [
+    "Bound recovery measures once and retains the inherited internal recheck trace; latest16 trace overflow keeps full rechecked counts.",
+    "Birth/UID/RUID replacement, live or zombie replacement, malformed/short/permission BSD and post-measurement credential change fail.",
+    "EPERM/EACCES, other errno/lengths and unbound missing reads do not gain outer retry; persistent missing data remains bounded with null totals.",
+    "Fresh authoritative same-identity zombie/independent ESRCH are distinguished from generation-replaced and self-gone.",
+    "Fixed task permission routing and private diagnostic extension/reason removal are asserted.",
+    "Two actual-Mac gates use real children and real BSD/task ABI with only the first two task reads controlled to ESRCH; live recovery and unreaped-child zombie confirmation are distinct. Their execution is still pending."
+  ],
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobMinutes": 20,
+    "internalExperimentMinutes": 15,
+    "branch": "codex/mac-native-inventory-recovery34-20261018",
+    "expectedActualMacTests": 307,
+    "requiredSkips": 0,
+    "freshCandidateRepeats": 5,
+    "sdkAcquisition": true,
+    "sdkMaterialization": true,
+    "stress": "Unchanged three1536MiB workers, barrier,60-second CPU/process churn, strict zero-timeout gate.",
+    "knownChildAndBackground": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "activationConditions": [
+    "Bind/read back all eight reviewed files and rendered caller at immutable commits; render fixture SHA only.",
+    "Confirm unused exact branch, zero prior branch runs, no overlapping owned validation, initial push/created/before-zero/attempt-one guards and single standard Intel job.",
+    "Fresh-check official unexpired SDK12133086104 source/content metadata and preserve ordinary API,600-second, ZIP/TAR/tree/version and HTTP-error guards.",
+    "Require307 actual Mac passes with zero skips, including both controlled lifecycle gates, five fresh candidate checks, full strict-zero-timeout stress, SDK materialization and known-child/background observation; independently inspect terminal primary/monitor failures and cleanup before any long decision."
+  ],
+  "limits": [
+    "The repair does not establish that Recovery33 failed because of an exit race; its old internal read branch remains unreconstructable.",
+    "Recovery33 natural Rust/archive success did not qualify a checkpoint: all460 deltas remained nonzero before the final resource unknown.",
+    "Controlled missing-task injection demonstrates the new boundary on the real ABI, not occurrence of the historical natural race.",
+    "Short success cannot establish multi-hour monitoring, strict convergence, resumed full host/XUL/package or native authentication.",
+    "Review actions were source/evidence reads and local tests; no CI activation, SDK payload retrieval, artifact storage or publication was performed."
+  ]
+}

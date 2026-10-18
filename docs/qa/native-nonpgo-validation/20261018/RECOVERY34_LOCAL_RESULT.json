@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "scope": "Recovery34 anchored census candidate recheck",
+  "linux": {
+    "total": 307,
+    "passed": 291,
+    "skipped": 16,
+    "seconds": 10.307,
+    "exitCode": 0,
+    "logSHA256": "07b90f212ba0d9d293139494afd4d6c75f7ba672132971fe47db476ee2a8f293"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 307,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "candidateRecheck": {
+    "outerReadMaximum": 2,
+    "nativeTaskQueryMaximum": 4,
+    "sleepAdded": false,
+    "baselineReset": false,
+    "roleExclusions": false
+  },
+  "historicalExitRaceCause": "NOT_ESTABLISHED",
+  "longRun": "no active run; short validation required"
+}

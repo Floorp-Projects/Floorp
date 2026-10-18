@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "review": "Recovery33 initial immutable route and scope",
+  "decision": "INITIAL_BINDINGS_VERIFIED_EXECUTION_IN_PROGRESS",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39161034365,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39161034365",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-checkpoint-recovery33-20261018",
+    "createdAt": "2026-10-18T19:56:35Z",
+    "caller": "a00aa4dbdb42217f56802c7eb712cf1a30c93894",
+    "callerTree": "1e298a150763a8dfe02f3cf904c779557a57dfe1",
+    "callerParent": "e68d1b0d1f4a2dd21708d01cc5f7587c11eb8a23",
+    "producerJob": 117774201785,
+    "producerStartedAt": "2026-10-18T19:56:43Z",
+    "runner": "macos-15-intel"
+  },
+  "fixture": {
+    "sha": "7243ea175465b3e12c86bf018e9c4c1bb19096c1",
+    "comparisonBaseline": "8be9cb98df0940ac372474f459a99aca105ac0bb",
+    "independentProviderComparison": "Exactly one new commit containing five evidence/proposal documentation files only; all previously reviewed source and plan bytes unchanged.",
+    "addedFiles": [
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_TERMINAL_RESULT.json",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_TERMINAL_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_HYPOTHESES.md",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_WORKFLOW.yml.disabled",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_STRUCTURE_REVIEW.json"
+    ]
+  },
+  "caller": {
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "providerCommitDiff": "Only this one workflow file changed from caller parent.",
+    "renderedBytes": 18278,
+    "sha256": "39367d1629d8314bf8cb7a88f084b689509023ba260635f1548190507b038a2c",
+    "independentExactReadback": true,
+    "templatePath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_WORKFLOW.yml.disabled",
+    "templateSHA256": "b0ccdb052553b5efb928a4ce1236b29e919fb8c360deb044b4a1cc220443002e",
+    "renderChange": "Fixture SHA placeholder only."
+  },
+  "APIObservation": {
+    "run": "in_progress",
+    "producerJobCountCurrently": 1,
+    "producerState": "in_progress",
+    "initialPushGuard": "success",
+    "fixtureCheckout": "success",
+    "clockInitialization": "success",
+    "actualMacPreflight": "in_progress",
+    "sdkAcquisition": "pending at initial observation; success not yet asserted",
+    "otherActiveOwnedNativeRuns": 0,
+    "queuedOwnedNativeRuns": 0,
+    "expectedLogicalJobs": 2,
+    "consumerDependency": "needs producer; not eligible to start before successful producer"
+  },
+  "sdkFreshMetadata": {
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "sourceRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sizeBytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "source": "Official source-run artifact collection with per_page=100; independently read during initial review.",
+    "consumerRequirement": "Ordinary fresh unexpired acquisition and all unchanged ZIP/TAR/tree/version/HTTP/600-second guards; expiry metadata here does not substitute for consumer-time checks."
+  },
+  "boundaries": {
+    "jobs": "Two serial standard macos-15-intel jobs, each platform limit360min.",
+    "resources": "Existing RSS/disk/log/stall/phase, three-attempt three-second inventory, unknown-null/fail-closed and ownership/cleanup guards unchanged.",
+    "checkpoint": "Only successful natural boundary and strict fixed-original-baseline delta=0; arbitrary interrupted state remains ineligible.",
+    "artifact": "One raw single-file checkpoint <=10GiB with one-day retention; digest/size/same-run producer provenance required.",
+    "qualification": "Resumed evidence across two jobs, freshObjdir=false and sameJob=false; full host/XUL/package/native each requires actual completion evidence.",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "Runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0"
+  },
+  "prerequisite": "Recovery32 independent terminal review PASS:291 Mac passes, five fresh checks, complete synchronized stress with zero timeout/retry/unknown and successful cleanup. Its final background delta29 did not establish checkpoint eligibility.",
+  "pendingGates": [
+    "Producer actual291 Mac tests with zero skips and native monitor preflight.",
+    "Official SDK acquisition and source/effective-config bindings.",
+    "Natural export/Rust/archive completion, bounded convergence with actual final delta=0, resource/cleanup completeness.",
+    "Checkpoint cap/hash/retention service confirmation, successful same-run consumer verified restore.",
+    "Resumed full host/XUL, package/disposable test copy and actual native-authentication evidence; consumer terminal cleanup."
+  ],
+  "limits": [
+    "This initial check does not establish producer, checkpoint, resumed build, native authentication or product success.",
+    "Recovered timeout phase means last observed progress, not proof of a blocked syscall. Historical timeout/native causes remain UNKNOWN.",
+    "Review actions are read-only API/source/evidence checks; no workflow activation, SDK payload retrieval or artifact operation was performed."
+  ]
+}

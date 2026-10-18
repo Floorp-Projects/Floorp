@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 """Bounded read-only wait for the original strict census boundary to pass."""
+import errno
 import os
 import shutil
 import time
@@ -23,6 +24,71 @@ def safe_reason(value):
     return value if value is None or value in allowed else 'unknown-query-reason'
 
 
+def read_diagnostic(value,row):
+    """Fixed projections only; raw identities and arbitrary native text stay private."""
+    status=value.get('status')
+    result={'status':status if status in ('measured','gone','unavailable') else 'unavailable',
+            'reason':safe_reason(value.get('reason')),'taskQuery':safe_query(value.get('taskQuery')),
+            'sameCandidateBirth':value.get('_birth')==row[:3] if '_birth' in value else None}
+    if 'bsdQuery' in value:result['fallbackBSDQuery']=safe_query(value['bsdQuery'])
+    if 'fallbackReason' in value:
+        reason=value['fallbackReason']
+        result['fallbackReason']=reason if reason in ('measured','gone','unavailable') else safe_reason(reason)
+    source=value.get('esrchRecheck')
+    if isinstance(source,dict):
+        trace={key:safe_query(source[key]) for key in
+               ('firstTaskQuery','firstBSDQuery','taskQuery','bsdQuery') if key in source}
+        if source.get('sameGeneration') is None or type(source.get('sameGeneration')) is bool:
+            trace['sameGeneration']=source.get('sameGeneration')
+        if source.get('outcome') in ('measured','gone','unavailable'):trace['outcome']=source['outcome']
+        if 'reason' in source:trace['reason']=safe_reason(source['reason'])
+        result['esrchRecheck']=trace
+    return result
+
+
+def candidate_read(row,reader,details):
+    """At most two read() calls (each has at most two native task queries)."""
+    def read():
+        value=reader.read(row[0],expected={'pid':row[0],'startSec':row[1],'startUsec':row[2]})
+        details.update(reason=safe_reason(value.get('reason')),taskQuery=safe_query(value.get('taskQuery')))
+        details['readDiagnostics'].append(read_diagnostic(value,row))
+        return value
+    details['readDiagnostics']=[]
+    value=read()
+    query=value.get('taskQuery',{})
+    retry=(row[0]!=os.getpid() and value.get('status')=='unavailable' and
+           value.get('reason')=='short-task-info' and value.get('fallbackReason')=='measured' and
+           value.get('_birth')==row[:3] and query.get('bytes')==0 and
+           query.get('expectedBytes')==232 and query.get('errno')==errno.ESRCH)
+    if retry:
+        details.update(operation='candidate-bsd-recheck',reason=None)
+        query={};state,anchor,reason=reader.bsd(row[0],query)
+        matches=anchor is not None and identity(anchor)==row
+        details.update(bsdQuery=safe_query(query),retryBSDQuery=safe_query(query),
+                       reason=safe_reason(reason),retryBSDState=state if state in ('measured','gone','unavailable') else 'unavailable',
+                       retryBSDReason=safe_reason(reason),retryIdentityMatches=matches)
+        if state=='gone' and (matches or reason=='signal-zero-esrch'):
+            return {'status':'gone','reason':reason,'_birth':row[:3],
+                    '_goneConfirmed':True}
+        require(state=='measured' and matches,'census-wait-identity-unavailable')
+        details.update(operation='candidate-task-recheck',reason=None)
+        value=read()
+    if row[0]!=os.getpid() and value.get('status')=='gone' and (
+            (value.get('reason')=='bsd-zombie' and value.get('_birth')==row[:3]) or
+            value.get('reason')=='signal-zero-esrch'):
+        # Bind credentials as well as birth after the internal task/BSD fallback.
+        details.update(operation='candidate-bsd-confirm-gone',reason=None)
+        query={};state,anchor,reason=reader.bsd(row[0],query)
+        matches=anchor is not None and identity(anchor)==row
+        details.update(bsdQuery=safe_query(query),goneBSDQuery=safe_query(query),
+                       reason=safe_reason(reason),goneBSDState=state if state in ('measured','gone','unavailable') else 'unavailable',
+                       goneBSDReason=safe_reason(reason),goneIdentityMatches=matches)
+        require(state=='gone' and (matches or reason=='signal-zero-esrch'),
+                'census-wait-identity-changed')
+        return {**value,'_goneConfirmed':True}
+    return value
+
+
 def resources(rows,reader,details=None):
     """Upper bound self plus every new candidate; unknown is never zero."""
     details={} if details is None else details
@@ -34,8 +100,13 @@ def resources(rows,reader,details=None):
     all_rows=set(rows)|{identity(own)}
     rss,cpu,births,states,gone=0.,0.,[],set(),0
     candidate_rss,candidate_cpu,candidate_births,candidate_states=0.,0.,[],set()
+    rechecks=[];recheck_candidates=0
+    details.update(resourceRecheckCandidates=0,resourceRecheckDiagnostics=rechecks)
     for index,row in enumerate(sorted(all_rows)):
         details.pop('taskQuery',None)
+        for key in ('readDiagnostics','retryBSDQuery','retryBSDState','retryBSDReason','retryIdentityMatches',
+                    'goneBSDQuery','goneBSDState','goneBSDReason','goneIdentityMatches'):
+            details.pop(key,None)
         details.update(operation='candidate-bsd-before',candidateIndex=index,reason=None,bsdQuery={})
         query={}
         state,before,reason=reader.bsd(row[0],query)
@@ -47,11 +118,16 @@ def resources(rows,reader,details=None):
         require(state=='measured' and before is not None and identity(before)==row,
                 'census-wait-identity-unavailable')
         details.update(operation='candidate-task',reason=None)
-        value=reader.read(row[0],expected={'pid':row[0],'startSec':row[1],'startUsec':row[2]})
-        details.update(reason=safe_reason(value.get('reason')),taskQuery=safe_query(value.get('taskQuery',{})))
-        if (row[0]!=os.getpid() and value['status']=='gone' and
-                ((value.get('reason')=='bsd-zombie' and value.get('_birth')==row[:3]) or
-                 value.get('reason')=='signal-zero-esrch')):
+        value=candidate_read(row,reader,details)
+        reads=details['readDiagnostics']
+        if len(reads)>1 or any('esrchRecheck' in item for item in reads):
+            recheck_candidates+=1
+            rechecks.append({key:item for key,item in details.items() if key in
+                ('candidateIndex','readDiagnostics','retryBSDQuery','retryBSDState','retryBSDReason',
+                 'retryIdentityMatches','goneBSDQuery','goneBSDState','goneBSDReason','goneIdentityMatches')})
+            del rechecks[:-16]
+            details['resourceRecheckCandidates']=recheck_candidates
+        if row[0]!=os.getpid() and value.get('_goneConfirmed'):
             gone+=1
             continue
         require(value['status']=='measured' and value.get('_birth')==row[:3],
@@ -72,6 +148,7 @@ def resources(rows,reader,details=None):
     return {'status':'measured','sampleComplete':True,'rssMiB':rss,'cpuSeconds':cpu,
             'processes':len(births),'states':sorted(states),'_pids':tuple(births),
             'newCandidateIdentities':len(rows),'confirmedGoneCandidates':gone,
+            'resourceRecheckCandidates':recheck_candidates,'resourceRecheckDiagnostics':rechecks,
             '_progress':{'rssMiB':candidate_rss,'cpuSeconds':candidate_cpu,
                          'processes':len(candidate_births),'states':sorted(candidate_states),
                          '_pids':tuple(candidate_births)},
@@ -90,7 +167,7 @@ def metadata_resource_gate(rows,reader,details):
                     details.get('taskQuery',{}).get('errno') in (1,13) or
                     details.get('bsdQuery',{}).get('errno') in (1,13))
         if permission:
-            if details.get('operation')=='candidate-task':
+            if details.get('operation') in ('candidate-task','candidate-task-recheck'):
                 raise Failure('census-wait-metadata-task-permission') from None
             raise Failure('census-wait-metadata-identity-permission') from None
         raise Failure('census-wait-metadata-query-unavailable') from None

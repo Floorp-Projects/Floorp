@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "review": "Recovery33 independent terminal and narrow recovery design assessment",
+  "decision": "RUN_FAILED_CLOSED_BEFORE_STORAGE_NEXT_PATCH_REVIEW_REQUIRED",
+  "run": {
+    "id": 39161034365,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39161034365",
+    "caller": "a00aa4dbdb42217f56802c7eb712cf1a30c93894",
+    "fixture": "7243ea175465b3e12c86bf018e9c4c1bb19096c1",
+    "event": "push",
+    "attempt": 1,
+    "conclusion": "failure",
+    "producerJob": 117774201785,
+    "producerConclusion": "failure",
+    "consumerJob": 117793061148,
+    "consumerConclusion": "skipped",
+    "producerStartedAt": "2026-10-18T19:56:43Z",
+    "producerCompletedAt": "2026-10-18T21:20:17Z",
+    "runner": "macos-15-intel"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_TERMINAL_RESULT.json",
+    "bytes": 277194,
+    "sha256": "4487c144ba0466d890e644a182d88a534e94275754ec8e493e564c4028ff565c",
+    "providerProjectionExact": true,
+    "compared": "firstFailure, monitorFailure, all14 monitorDiagnostics, all46 stage projections, Mac tests, all460 count rows, first/recent16/stopping boundaries and resource extrema"
+  },
+  "independentEvidence": {
+    "runJobsAPI": "Run and both job terminal metadata independently fetched.",
+    "logBytes": 800358,
+    "logSHA256": "53f94037179c02ec43859fd35d09a74098012341f835dcce5d81265e070af16b",
+    "savedLogByteExact": true,
+    "completeFinalSummaryParsed": true,
+    "artifacts": 0,
+    "artifactAPI": "Independent run-artifact read returned an empty collection.",
+    "source": "Existing resources() and DarwinActivity.read() inspected; no source edited.",
+    "tests": {
+      "command": "python -m unittest test_census_convergence -q",
+      "environment": "Linux",
+      "total": 18,
+      "passed": 16,
+      "DarwinSkipped": 2,
+      "seconds": 0.076,
+      "exitCode": 0
+    }
+  },
+  "outcome": {
+    "macTests": {
+      "total": 291,
+      "passed": 291,
+      "skipped": 0,
+      "seconds": 56.417
+    },
+    "sdk": "Official acquisition/materialization passed before build.",
+    "naturalBuild": "checkpoint-exports, checkpoint-rust and checkpoint-rust-archive all exited0; this is a natural Rust boundary, not a completed full host/XUL build.",
+    "peakBuildRSSMiB": 7205,
+    "censusMinimumFreeGiB": 90.158,
+    "cleanup": "All46 pipeline stage groups verified-gone, exact leaders reaped0, no cleanupFailure; preflight separately passed four monitored stages.",
+    "firstFailure": {
+      "stage": "checkpoint-census",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 4977.56
+    },
+    "monitorFailure": {
+      "stage": "checkpoint-census-wait",
+      "elapsedSeconds": 4977.56,
+      "status": "unavailable",
+      "sampleComplete": false,
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "operation": "candidate-task",
+      "reason": "short-task-info",
+      "bsdQuery": {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      "candidateIndex": 8,
+      "taskQuery": {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "failureCode": "census-wait-resource-unavailable"
+    },
+    "noRecordedResourceOrPermissionViolation": "The stopping sample records ESRCH, with null resource totals; it records neither permission denial nor a resource-limit violation. This is limited to retained evidence.",
+    "storage": "No checkpoint artifact stored; consumer, package and native authentication unreached.",
+    "productQualification": false
+  },
+  "census": {
+    "samples": 460,
+    "completeResourceSamples": 459,
+    "unknownResourceSamples": 1,
+    "firstElapsedSeconds": 4483.141,
+    "lastElapsedSeconds": 4977.553,
+    "spanSeconds": 494.412,
+    "firstDelta": 10,
+    "lastDelta": 13,
+    "minDelta": 6,
+    "maxDelta": 19,
+    "zeroDeltaSamples": 0,
+    "peakRSSMiB": 282.15625,
+    "baselineReset": false,
+    "roleExclusions": false,
+    "signalsSent": false,
+    "stoppingResource": {
+      "status": "unavailable",
+      "sampleComplete": false,
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "operation": "candidate-task",
+      "reason": "short-task-info",
+      "bsdQuery": {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      "candidateIndex": 8,
+      "taskQuery": {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "failureCode": "census-wait-resource-unavailable"
+    },
+    "interpretation": "Strict qualification never passed. Full BSD-before success plus task0/232 errno3 establishes retrieval unavailability, not a proven child exit race, generation, writer role or permission cause."
+  },
+  "recoveredInventoryTimeouts": {
+    "attempts": 5,
+    "RustSamples": 4,
+    "lastProgressCounts": {
+      "project-imports": 4,
+      "abi-binding": 1
+    },
+    "configuredTimeoutSeconds": 3,
+    "elapsedSeconds": [
+      3.048,
+      3.557,
+      8.923,
+      3.022,
+      3.097
+    ],
+    "subsequentFinalSamplesComplete": true,
+    "meaning": "Fixed last observed progress is retained for the first time in this long trial. It cannot prove the next phase/API was entered or blocked; subprocess startup and cleanup scheduling can exceed communicate timeout."
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "path": "tools/qa/native-nonpgo/census_convergence.py",
+      "issue": "resources() retains taskQuery but drops the reader fallbackReason, fallback BSD query and esrchRecheck evidence; its bsdQuery still denotes the outer before-read.",
+      "impact": "DarwinActivity.read already performs one immediate re-read for ESRCH with valid live fallback BSD. The historical stopping receipt cannot determine whether that branch ran or which final fallback identity/state was observed.",
+      "requiredNextChange": "Preserve bounded safe read/fallback/recheck traces with explicit before/read/after operation labels; reset per-candidate fields and keep totals null on failure."
+    }
+  ],
+  "proposedRecovery": {
+    "assessment": "A narrow bounded same-candidate revalidation can be reviewed safely; no implementation or Mac effectiveness is approved by this design assessment.",
+    "eligibleTrigger": "Only final task bytes0/expected232/errnoESRCH, with a fresh fully validated live BSD matching the original PID/birth/UID/RUID identity.",
+    "success": "At most one additional documented read attempt, preserving the original identity anchor; accept full same-birth task counters only after matching full BSD identity. Add RSS/CPU once.",
+    "gone": "Only authoritative same-identity full BSD zombie or independent kill0 ESRCH; never role, missing counters or generation replacement. Self disappearance is never accepted.",
+    "unknown": "Any permission, malformed/short BSD, changed birth/credentials/state, persistent missing task or unsupported error remains unknown/null and fail-closed.",
+    "bounds": "Account explicitly for existing reader internal re-read when declaring the maximum task-query count; retain phase/stall/resource limits and query/resource target scope.",
+    "negativeTests": [
+      "Recovered same-identity measurement with no RSS double counting and retained first/retry trace.",
+      "Same-PID different-generation live and zombie, or same-birth credential change, stay unknown.",
+      "EPERM/EACCES and non-ESRCH short/invalid counters do not gain general retries.",
+      "Persistent ESRCH and fresh-BSD unavailability exhaust a fixed call budget and preserve null totals/first failure.",
+      "Authoritative same-birth zombie and independent ESRCH may be confirmed gone; generation-replaced and self-gone may not.",
+      "A complete final zero primary-census delta remains mandatory even after candidate-resource recovery.",
+      "Safe fixed operation/query/reason metadata survives; raw PID/path/argv/exception text and stale previous-candidate fields do not."
+    ],
+    "remainingGate": "Immutable patch review, focused negative tests and representative actual-Mac candidate lifecycle/API revalidation are still required before retrying the long path."
+  },
+  "limits": [
+    "Historical helper, candidate-inclusion and original native-host causes remain UNKNOWN.",
+    "No unchanged long retry is justified by this result; resource-recovery and evidence changes must be reviewed first.",
+    "No native authentication or product failure is established by this monitoring stop.",
+    "Reviewer performed read-only evidence/API inspection and local existing tests; no new CI, SDK retrieval, artifact upload or permission change."
+  ]
+}

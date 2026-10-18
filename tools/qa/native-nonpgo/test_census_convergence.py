@@ -1,16 +1,23 @@
 # SPDX-License-Identifier: MPL-2.0
+import copy
+from contextlib import contextmanager
+import ctypes
+import errno
 import json
 import os
+import select
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 import unittest
 from unittest import mock
 
 import census_convergence as cc
 from checkpoint import owned_processes,measure_owned_boundary
+from census_experiment import cleanup_child
 from support import Failure,Runner,clean_environment
 
 
@@ -27,6 +34,27 @@ def activity(rows):
             'processes':len(rows)+1,'states':['S'],'_pids':tuple(row[:3] for row in rows),
             '_progress':{'rssMiB':10.,'cpuSeconds':2.,'processes':len(rows),
                          'states':['S'],'_pids':tuple(row[:3] for row in rows)}}
+
+
+@contextmanager
+def controlled_child(child):
+    try:
+        yield child
+    finally:
+        primary=sys.exception()
+        cleanup=cleanup_child(child)
+        stream_failures=[]
+        for name in ('stdin','stdout'):
+            stream=getattr(child,name,None)
+            try:
+                if stream is not None and not stream.closed:stream.close()
+            except BaseException:
+                stream_failures.append(name)
+        failed=(not cleanup['leaderReaped'] or cleanup['groupCleanup']!='verified-gone' or
+                cleanup['cleanupFailure'] is not None or bool(stream_failures))
+        if failed:
+            if primary is not None:primary.add_note('controlled-child-cleanup-failed')
+            else:raise AssertionError('controlled-child-cleanup-failed')
 
 
 class ConvergenceGuards(unittest.TestCase):
@@ -151,6 +179,7 @@ class ConvergenceGuards(unittest.TestCase):
             reader=mock.Mock()
             reader.bsd.side_effect=[('measured',bsd(OWN),None),('measured',bsd(OWN),None),
                                     ('measured',bsd(OWN),None),('measured',bsd(ROW),None)]
+            if passes:reader.bsd.side_effect=list(reader.bsd.side_effect)+[('gone',bsd(ROW),'bsd-zombie')]
             reader.read.side_effect=[{'status':'measured','_birth':OWN[:3],'rssMiB':10.,'cpuSeconds':1.,'state':'S'},
                                      {'status':'gone','reason':reason,'_birth':birth}]
             with mock.patch.object(cc.os,'getpid',return_value=41):
@@ -291,3 +320,233 @@ class ConvergenceGuards(unittest.TestCase):
                     try:child.wait(timeout=5)
                     except subprocess.TimeoutExpired:
                         child.kill();child.wait(timeout=5)
+
+
+class CandidateRecheckGuards(unittest.TestCase):
+    def missing(self,row=ROW):
+        return {'status':'unavailable','reason':'short-task-info','fallbackReason':'measured',
+                '_birth':row[:3],'taskQuery':{'bytes':0,'expectedBytes':232,'errno':errno.ESRCH},
+                'bsdQuery':{'bytes':136,'expectedBytes':136,'errno':0},
+                'esrchRecheck':{'firstTaskQuery':{'bytes':0,'expectedBytes':232,'errno':errno.ESRCH},
+                    'firstBSDQuery':{'bytes':136,'expectedBytes':136,'errno':0},
+                    'sameGeneration':True,'outcome':'unavailable','reason':'short-task-info'}}
+
+    def measured(self,row=ROW):
+        return {'status':'measured','_birth':row[:3],'rssMiB':10.,'cpuSeconds':5.,'state':'S',
+                'taskQuery':{'bytes':232,'expectedBytes':232,'errno':0}}
+
+    def stable_bsd(self,pid,details=None):
+        if details is not None:details.update(bytes=136,expectedBytes=136,errno=0)
+        return 'measured',bsd(OWN if pid==41 else ROW),None
+
+    def test_bound_recheck_measures_once_and_preserves_internal_retry_trace(self):
+        reader=mock.Mock();reader.bsd.side_effect=self.stable_bsd
+        reader.read.side_effect=[self.measured(OWN),self.missing(),self.measured()]
+        details={}
+        with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.resources({ROW},reader,details)
+        self.assertEqual(value['rssMiB'],20.);self.assertEqual(value['_progress']['rssMiB'],10.)
+        self.assertEqual(reader.read.call_count,3);self.assertEqual(len(details['readDiagnostics']),2)
+        self.assertEqual(value['resourceRecheckCandidates'],1)
+        self.assertEqual(value['resourceRecheckDiagnostics'][0]['readDiagnostics'],details['readDiagnostics'])
+        self.assertTrue(details['retryIdentityMatches'])
+        self.assertEqual(details['readDiagnostics'][0]['esrchRecheck']['firstTaskQuery']['errno'],errno.ESRCH)
+        self.assertEqual(details['readDiagnostics'][1]['status'],'measured')
+
+    def test_anchor_replacement_credential_change_and_invalid_bsd_fail(self):
+        bad=[('measured',bsd((42,124,4,501,501)),None),
+             ('measured',bsd((42,123,4,0,501)),None),
+             ('measured',bsd((42,123,4,501,0)),None),
+             ('gone',bsd((42,124,4,501,501)),'bsd-zombie'),
+             ('gone',bsd((42,123,4,0,501)),'bsd-zombie'),
+             ('unavailable',None,'permission'),('unavailable',None,'short-bsd-info'),
+             ('unavailable',None,'invalid-identity'),('unavailable',None,'invalid-bsd-state')]
+        for anchor in bad:
+            reader=mock.Mock();reader.read.return_value=self.missing();reader.bsd.return_value=anchor
+            with mock.patch.object(cc.os,'getpid',return_value=41), \
+                 self.assertRaisesRegex(Failure,'census-wait-identity-unavailable'):
+                cc.candidate_read(ROW,reader,{})
+            self.assertEqual(reader.read.call_count,1)
+
+    def test_permission_other_errno_and_unbound_missing_do_not_retry(self):
+        changes=[{'reason':'permission','taskQuery':{'bytes':0,'expectedBytes':232,'errno':code}} for code in (1,13)]
+        changes += [{'taskQuery':{'bytes':0,'expectedBytes':232,'errno':5}},
+                    {'taskQuery':{'bytes':1,'expectedBytes':232,'errno':3}},
+                    {'taskQuery':{'bytes':0,'expectedBytes':999,'errno':3}},
+                    {'_birth':(42,124,4)},{'fallbackReason':'permission'},
+                    {'status':'gone','reason':'generation-replaced'}]
+        for change in changes:
+            reader=mock.Mock();reader.read.return_value={**self.missing(),**change}
+            with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.candidate_read(ROW,reader,{})
+            self.assertNotIn('_goneConfirmed',value);reader.bsd.assert_not_called()
+            self.assertEqual(reader.read.call_count,1)
+
+    def test_persistent_missing_is_bounded_and_cannot_produce_resource_totals(self):
+        reader=mock.Mock();reader.bsd.side_effect=self.stable_bsd
+        reader.read.side_effect=[self.measured(OWN),self.missing(),self.missing()]
+        details={'rssMiB':None,'cpuSeconds':None}
+        with mock.patch.object(cc.os,'getpid',return_value=41), \
+             self.assertRaisesRegex(Failure,'census-wait-resource-unavailable'):
+            cc.resources({ROW},reader,details)
+        self.assertEqual(reader.read.call_count,3);self.assertEqual(len(details['readDiagnostics']),2)
+        self.assertIsNone(details['rssMiB']);self.assertIsNone(details['cpuSeconds'])
+
+    def test_fresh_anchor_accepts_only_matching_zombie_or_independent_esrch(self):
+        for anchor in [('gone',bsd(ROW),'bsd-zombie'),('gone',None,'signal-zero-esrch')]:
+            reader=mock.Mock();reader.read.return_value=self.missing();reader.bsd.return_value=anchor
+            with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.candidate_read(ROW,reader,{})
+            self.assertTrue(value['_goneConfirmed']);self.assertEqual(reader.read.call_count,1)
+
+    def test_second_gone_read_requires_new_five_field_confirmation(self):
+        for final,passes in [(ROW,True),((42,123,4,0,501),False),((42,124,4,501,501),False)]:
+            reader=mock.Mock();reader.read.side_effect=[self.missing(),{'status':'gone','reason':'bsd-zombie','_birth':ROW[:3]}]
+            reader.bsd.side_effect=[('measured',bsd(ROW),None),('gone',bsd(final),'bsd-zombie')]
+            with mock.patch.object(cc.os,'getpid',return_value=41):
+                if passes:self.assertTrue(cc.candidate_read(ROW,reader,{})['_goneConfirmed'])
+                else:
+                    with self.assertRaisesRegex(Failure,'census-wait-identity-changed'):cc.candidate_read(ROW,reader,{})
+
+    def test_post_measurement_credentials_still_must_match_after_recheck(self):
+        reader=mock.Mock();count=0
+        def query(pid,details=None):
+            nonlocal count
+            if pid==42:
+                count+=1
+                if count==3:return 'measured',bsd((42,123,4,501,0)),None
+            return self.stable_bsd(pid,details)
+        reader.bsd.side_effect=query
+        reader.read.side_effect=[self.measured(OWN),self.missing(),self.measured()]
+        with mock.patch.object(cc.os,'getpid',return_value=41), \
+             self.assertRaisesRegex(Failure,'census-wait-identity-changed'):
+            cc.resources({ROW},reader,{})
+
+    def test_self_cannot_retry_or_receive_gone_credit(self):
+        for value in [self.missing(OWN),{'status':'gone','reason':'bsd-zombie','_birth':OWN[:3]}]:
+            reader=mock.Mock();reader.read.return_value=value;reader.bsd.side_effect=self.stable_bsd
+            with mock.patch.object(cc.os,'getpid',return_value=41), \
+                 self.assertRaisesRegex(Failure,'census-wait-resource-unavailable'):
+                cc.resources(set(),reader,{})
+            self.assertEqual(reader.read.call_count,1)
+
+    def test_private_trace_extensions_and_reasons_are_not_projected(self):
+        value=self.missing();value['pidTag']='PRIVATE';value['bsdQuery']['private']='PRIVATE'
+        value['esrchRecheck'].update(reason='PRIVATE',identityTag='PRIVATE',private=1234567)
+        value['esrchRecheck']['firstTaskQuery']['private']='PRIVATE'
+        result=cc.read_diagnostic(value,ROW)
+        self.assertEqual(result['esrchRecheck']['reason'],'unknown-query-reason')
+        self.assertNotIn('PRIVATE',json.dumps(result));self.assertNotIn('1234567',json.dumps(result))
+
+    def test_recheck_task_permission_remains_a_fixed_task_permission_failure(self):
+        reader=mock.Mock();reader.bsd.side_effect=self.stable_bsd
+        reader.read.side_effect=[self.measured(OWN),self.missing(),
+            {'status':'unavailable','reason':'permission','taskQuery':{'bytes':0,'expectedBytes':232,'errno':1}}]
+        with mock.patch.object(cc.os,'getpid',return_value=41), \
+             self.assertRaisesRegex(Failure,'census-wait-metadata-task-permission'):
+            cc.metadata_resource_gate({ROW},reader,{})
+        self.assertEqual(reader.read.call_count,3)
+
+    def test_success_keeps_last_sixteen_rechecks_and_all_candidate_counts(self):
+        rows={(pid,123,4,501,501) for pid in range(42,62)};reader=mock.Mock();seen={}
+        def query(pid,details=None):
+            return 'measured',bsd(OWN if pid==41 else (pid,123,4,501,501)),None
+        def read(pid,**kwargs):
+            row=OWN if pid==41 else (pid,123,4,501,501)
+            seen[pid]=seen.get(pid,0)+1
+            return self.missing(row) if pid!=41 and seen[pid]==1 else self.measured(row)
+        reader.bsd.side_effect=query;reader.read.side_effect=read
+        with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.resources(rows,reader,{})
+        self.assertEqual(value['resourceRecheckCandidates'],20)
+        self.assertEqual(len(value['resourceRecheckDiagnostics']),16)
+        self.assertEqual([v['candidateIndex'] for v in value['resourceRecheckDiagnostics']],list(range(5,21)))
+        self.assertEqual(value['rssMiB'],210.)
+
+    def cleanup_mock(self):
+        child=mock.Mock(returncode=None)
+        child.poll.return_value=None
+        child.stdin.closed=False;child.stdout.closed=False
+        return child
+
+    def test_controlled_child_kills_after_timeout_and_preserves_primary(self):
+        child=self.cleanup_mock();primary=AssertionError('original-controlled-failure')
+        def reaped(**kwargs):child.returncode=-9;return -9
+        calls=0
+        def wait(**kwargs):
+            nonlocal calls
+            calls+=1
+            if calls==1:raise subprocess.TimeoutExpired(['private'],5)
+            return reaped(**kwargs)
+        child.wait.side_effect=wait
+        with mock.patch.object(Runner,'group_alive',return_value=False):
+            with self.assertRaises(AssertionError) as caught:
+                with controlled_child(child):raise primary
+        self.assertIs(caught.exception,primary)
+        child.terminate.assert_called_once();child.kill.assert_called_once()
+        self.assertEqual(child.wait.call_args_list,[mock.call(timeout=5),mock.call(timeout=5)])
+        child.stdin.close.assert_called_once();child.stdout.close.assert_called_once()
+
+    def test_controlled_child_second_timeout_and_stream_failure_preserve_primary(self):
+        child=self.cleanup_mock();primary=RuntimeError('original-api-failure')
+        child.wait.side_effect=subprocess.TimeoutExpired(['private'],5)
+        child.stdin.close.side_effect=OSError('private')
+        with self.assertRaises(RuntimeError) as caught:
+            with controlled_child(child):raise primary
+        self.assertIs(caught.exception,primary)
+        self.assertEqual(primary.__notes__,['controlled-child-cleanup-failed'])
+        child.kill.assert_called_once();self.assertEqual(child.wait.call_count,2)
+        child.stdout.close.assert_called_once()
+
+    def test_controlled_child_cleanup_failure_is_not_silent_without_primary(self):
+        child=self.cleanup_mock();child.wait.side_effect=subprocess.TimeoutExpired(['private'],5)
+        with self.assertRaisesRegex(AssertionError,'^controlled-child-cleanup-failed$'):
+            with controlled_child(child):pass
+        child.kill.assert_called_once();self.assertEqual(child.wait.call_count,2)
+        child.stdin.close.assert_called_once();child.stdout.close.assert_called_once()
+
+    def actual_case(self,exit_after_unknown):
+        from darwin_activity import DarwinActivity,probe
+        from monitor_ps_lifetime import child_status
+        real=probe();forced=0;task_calls=0
+        with controlled_child(subprocess.Popen([sys.executable,'-c',"import sys;print('ready',flush=True);sys.stdin.buffer.read(1)"],
+                stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,start_new_session=True)) as child:
+            self.assertTrue(select.select([child.stdout],[],[],5)[0])
+            self.assertEqual(child.stdout.readline(),b'ready\n')
+            state,before,_=real.bsd(child.pid);self.assertEqual(state,'measured');row=cc.identity(before)
+            def query(pid,flavor,arg,buffer,size):
+                nonlocal forced,task_calls
+                if pid==child.pid and flavor==2:task_calls+=1
+                if pid==child.pid and flavor==2 and forced<2:
+                    forced+=1;ctypes.set_errno(errno.ESRCH);return 0
+                return real.lib.proc_pidinfo(pid,flavor,arg,buffer,size)
+            sensor=DarwinActivity(lib=SimpleNamespace(proc_pidinfo=query))
+            native_read=sensor.read
+            def read(pid,*args,**kwargs):
+                value=native_read(pid,*args,**kwargs)
+                if exit_after_unknown and pid==child.pid and value['status']=='unavailable':
+                    child.stdin.write(b'1');child.stdin.close();deadline=time.monotonic()+5
+                    while not child_status(child.pid)['exitPending']:
+                        self.assertLess(time.monotonic(),deadline);time.sleep(.01)
+                    self.assertIsNone(child.returncode)
+                return value
+            sensor.read=read;details={};observed={};original=cc.candidate_read
+            def capture(actual,reader,evidence):
+                value=original(actual,reader,evidence)
+                if actual==row:observed.update(copy.deepcopy(evidence))
+                return value
+            with mock.patch.object(cc,'candidate_read',side_effect=capture):
+                result=cc.resources({row},sensor,details)
+            self.assertEqual(forced,2)
+            self.assertEqual(task_calls,2 if exit_after_unknown else 3)
+            self.assertEqual(result['resourceRecheckCandidates'],1)
+            self.assertTrue(observed['readDiagnostics'][0]['esrchRecheck']['sameGeneration'])
+            self.assertEqual(result['confirmedGoneCandidates'],int(exit_after_unknown))
+            self.assertEqual(result['_progress']['processes'],int(not exit_after_unknown))
+            self.assertEqual(len(observed['readDiagnostics']),1 if exit_after_unknown else 2)
+            if not exit_after_unknown:child.stdin.write(b'1');child.stdin.close()
+            self.assertEqual(child.wait(timeout=5),0);self.assertFalse(Runner.group_alive(child.pid))
+
+    @unittest.skipUnless(sys.platform=='darwin','actual Darwin task recheck')
+    def test_actual_live_child_recovers_after_two_controlled_missing_task_reads(self):
+        self.actual_case(False)
+
+    @unittest.skipUnless(sys.platform=='darwin','actual Darwin task recheck')
+    def test_actual_unreaped_child_is_gone_only_after_fresh_bound_bsd(self):
+        self.actual_case(True)
