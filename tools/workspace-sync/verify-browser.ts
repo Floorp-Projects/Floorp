@@ -174,10 +174,16 @@ try {
   const scenarios = [
     `async function runScenario(){await ChromeUtils.importESModule("resource://floorp-workspace-sync-validation/model-test.sys.mjs").runAllTests();await ChromeUtils.importESModule("resource://floorp-workspace-sync-validation/record-test.sys.mjs").runAllTests();return {passed:true,modelCases:23};}`,
     await Deno.readTextFile(
-      join(root, "tools/workspace-sync/engine-scenario.js"),
+      join(
+        root,
+        "browser-features/modules/test/workspaces/manual/engine-scenario.js",
+      ),
     ),
     (await Deno.readTextFile(
-      join(root, "tools/workspace-sync/adapter-scenario.js"),
+      join(
+        root,
+        "browser-features/modules/test/workspaces/manual/adapter-scenario.js",
+      ),
     )).replaceAll("__WORKSPACE_SYNC_TEST_ORIGIN__", origin),
   ];
   for (const script of scenarios) {

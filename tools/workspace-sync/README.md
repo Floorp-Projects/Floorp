@@ -12,6 +12,11 @@ Runtime without Floorp's workspace UI. This manual driver is separate from test
 discovery. It requires a local esbuild installation available through the
 repository's usual `node_modules/.bin/esbuild` link (macOS/Linux).
 
+The injected browser scenarios live alongside the workspace browser tests under
+`browser-features/modules/test/workspaces/manual/`. The driver reads them as
+scripts and executes them in Gecko's privileged context; they are not host-side
+Deno programs.
+
 The driver always creates a fresh profile under `_dist/workspace-sync-manual/`.
 It never accepts an existing profile or port. It launches the supplied browser
 with `--no-remote`, verifies both its exact profile path and a dedicated marker
@@ -24,13 +29,13 @@ The model and wire suites exercise 23 cases. Native engine scenarios cover
 CryptoWrapper encryption round trips, per-tab uploads, independent additions,
 delete wins, unacknowledged/partial/successful tombstone GC, local unsubscribe,
 unknown-parent and later-batch parent deletion, repeated incoming failure after
-the base retry list is pruned, repair/recovery, disabled workspaces, invalid local
-metadata and recovery, child-first metadata clock zero, pending local navigation
-while unrelated records or tab closures arrive, and account start-over during an
-in-flight provider apply or signed-in-UID lookup. Failed UI apply recovery retains
-unopened remote additions, subsequent local navigation, explicit local tab
-closure and reordering without reclassifying unchanged pre-apply values as new
-local edits.
+the base retry list is pruned, repair/recovery, disabled workspaces, invalid
+local metadata and recovery, child-first metadata clock zero, pending local
+navigation while unrelated records or tab closures arrive, and account
+start-over during an in-flight provider apply or signed-in-UID lookup. Failed UI
+apply recovery retains unopened remote additions, subsequent local navigation,
+explicit local tab closure and reordering without reclassifying unchanged
+pre-apply values as new local edits.
 
 The engine scenario uses actual native Sync classes and record encryption. It
 simulates the base engine's repeated-failure pruning around real reconciliation
@@ -40,8 +45,8 @@ The adapter scenario uses actual `gBrowser`, containers, SessionStore and tab
 movement in the isolated browser. Its workspace store/context are isolated test
 adapters, so it checks native tab behavior without claiming to exercise every
 production entry-point wiring path. It covers stable IDs, receiving into the
-local container, physical-order baselines, moving/duplicating between workspaces,
-checkbox state ownership, and native Undo Close restoration.
+local container, physical-order baselines, moving/duplicating between
+workspaces, checkbox state ownership, and native Undo Close restoration.
 
 The regular model tests remain runnable through the repository's browser runner:
 

@@ -132,7 +132,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           "[WorkspacesSync] Initialization failed; retrying",
           error,
         );
-        retryTimer = globalThis.setTimeout(initialize, retryDelay);
+        retryTimer = this.window.setTimeout(initialize, retryDelay);
         retryDelay = Math.min(retryDelay * 2, 30_000);
       }
     };
@@ -141,9 +141,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     onCleanup(() => {
       this.stopped = true;
       registration.abort();
-      globalThis.clearTimeout(retryTimer);
+      this.window.clearTimeout(retryTimer);
       unregister?.();
-      globalThis.clearTimeout(this.timer);
+      this.window.clearTimeout(this.timer);
       for (const event of events) {
         gBrowser.tabContainer.removeEventListener(event, onChange);
       }
@@ -193,8 +193,8 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
 
   private scheduleCapture(): void {
     if (!this.active || this.applying || this.stopped) return;
-    globalThis.clearTimeout(this.timer);
-    this.timer = globalThis.setTimeout(() => {
+    this.window.clearTimeout(this.timer);
+    this.timer = this.window.setTimeout(() => {
       this.api.capture().catch((error: unknown) =>
         console.error("[WorkspacesSync] Capture failed", error)
       );
@@ -304,7 +304,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       return Promise.reject(new Error("Workspace Sync account changed"));
     }
     this.applying = true;
-    globalThis.clearTimeout(this.timer);
+    this.window.clearTimeout(this.timer);
     try {
       const id = document.workspaceId as TWorkspaceID;
       const localContainerId = this.ctx.getRawWorkspace(id)?.userContextId ?? 0;
