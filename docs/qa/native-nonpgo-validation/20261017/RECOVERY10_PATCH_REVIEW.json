@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "decision": "STATIC_READY_PENDING_TARGETED_MAC_RECHECK_GATE",
+  "staticReady": true,
+  "executionReady": false,
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "findings": [],
+  "binding": {
+    "repository": "Floorp-Projects/Floorp",
+    "patchCommit": "4ee7ba2b6552cd25b825a2e28178907b453afc40",
+    "terminalBaseCommit": "96bf0e1d436acbe356dcf2e76d802a84a902abdf",
+    "executedFixtureCommit": "c127e001c5337e47a842c7453177da286bc02c54",
+    "fullDiffBytes": 43506,
+    "fullDiffSHA256": "94580d02ae28d3301ca2b52f4f5fe2b63ce3f216ad9c99ec7188f0489b4a417b",
+    "fiveSourceDiffSHA256": "9fae060ff620e73f8c44a2c72a72451f6ed9cc2a064d4d748ffce33b90e521fd",
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "bytes": 13139,
+        "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 25051,
+        "sha256": "c052368c61535c5d806a0c25239332e87eece6bc3984f3c4f47409d830fdac48"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 29005,
+        "sha256": "a6dc0bf40692b75f59b3813c5dae21169530625cc7cecc435c7b4aed8b56cb49"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+        "bytes": 3347,
+        "sha256": "428e42b3b9fd7dd15d92bb36e302574e8ea83ca350a436379120c61509156bf8"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
+        "bytes": 13713,
+        "sha256": "8bc7f36f7e89727d88fdda7d4a83de6467383639eb5495e6b2a8ee776b52b11a"
+      }
+    ],
+    "repairRecord": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY10_REPAIR.json",
+      "bytes": 3958,
+      "sha256": "828fe59d49d6cdab9be73317fd874157a44cc305de0079eae95cce38e7ec7f59"
+    },
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY10_EXECUTION_RESULT.json",
+      "bytes": 111251,
+      "sha256": "f16c408d88471ed75243161a77bd6694d7da9188938543b9e404fb0707a607b1"
+    },
+    "diagnosisReview": {
+      "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY10_DIAGNOSIS_REVIEW.json",
+      "bytes": 8945,
+      "sha256": "1cf5b9d44d95f404533afa73c9c971239b5d89229a719da8d02b5f587be5334b"
+    },
+    "workingTreeClean": true,
+    "immutableProviderReadback": [
+      {
+        "path": "tools/qa/native-nonpgo/darwin_activity.py",
+        "bytes": 13139,
+        "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb",
+        "providerMatchesLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 25051,
+        "sha256": "c052368c61535c5d806a0c25239332e87eece6bc3984f3c4f47409d830fdac48",
+        "providerMatchesLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 29005,
+        "sha256": "a6dc0bf40692b75f59b3813c5dae21169530625cc7cecc435c7b4aed8b56cb49",
+        "providerMatchesLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+        "bytes": 3347,
+        "sha256": "428e42b3b9fd7dd15d92bb36e302574e8ea83ca350a436379120c61509156bf8",
+        "providerMatchesLocal": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_failure_recovery.py",
+        "bytes": 13713,
+        "sha256": "8bc7f36f7e89727d88fdda7d4a83de6467383639eb5495e6b2a8ee776b52b11a",
+        "providerMatchesLocal": true
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261017/RECOVERY10_REPAIR.json",
+        "bytes": 3958,
+        "sha256": "828fe59d49d6cdab9be73317fd874157a44cc305de0079eae95cce38e7ec7f59",
+        "providerMatchesLocal": true
+      }
+    ]
+  },
+  "esrchReview": {
+    "trigger": "The first task query must return exactly zero bytes and ESRCH, followed by a full valid live BSD identity matching UID/group and any externally expected generation. Other failures do not trigger the additional read.",
+    "bound": "Exactly one immediate call to _read_once; no sleep, recursion or widening of the existing three group samples and two 0.25-second sleeps.",
+    "identity": "The fallback full birth is an internal reconciliation anchor. The external owned-generation expectation remains separate. A recovered measured result must retain the same internal birth and all original resource validations.",
+    "replacement": "A new live or zombie generation cannot be excluded through the internal anchor; it remains unknown. Only replacement of an externally expected owned generation retains the existing gone meaning.",
+    "disappearance": "Same-birth authoritative zombie or independent ESRCH may reconcile absence. ESRCH or flags alone do not imply disappearance.",
+    "uncertainty": "Persistent live ESRCH, permission, invalid/short identity, wrong owner/group and invalid counters remain unavailable; no unknown RSS/CPU becomes zero.",
+    "singleReadValidationAST": "The former read body equals _read_once after removing the two internal birth assignments and renaming the function. Existing task/BSD validation logic is unchanged.",
+    "diagnosticBounds": "Per-group recheck count plus at most three examples; successful reconciliation enters the existing most-recent-16 retention. Reconciliation resets the progress watcher rather than treating an unobserved interval as stall evidence."
+  },
+  "failureEvidenceReview": {
+    "publicContent": "Only fixed message-kind enums, Rust Edddd codes, relative tail-line indices, counts, sizes and truncation/availability fields. No original free text, paths, identifiers, quoted values, argv, environment or exception messages are copied.",
+    "inputBounds": "Each snapshot reads at most 131072 bytes of a regular file, refuses symlinks and non-regular files, and opens nonblocking to avoid a FIFO hang.",
+    "recordBounds": "At most 16 retained shapes: all when within the cap, otherwise the first eight and last eight.",
+    "chronology": "Failure snapshots are taken before cleanup where possible and separately after cleanup. A failure first discovered during cleanup records beforeCleanup unavailable/not-captured-before-cleanup.",
+    "failureIsolation": "Both snapshot call sites catch ordinary collector exceptions and return a fixed diagnostic-collector-error record. Original Failure, firstFailure, phase, stage record, cleanup result and exact child reap remain preserved.",
+    "markerMeaning": "The broad compiler-error text counter becomes error-marker, explicitly scoped as post-cleanup text matches rather than a compiler-failure verdict.",
+    "limit": "These are canonical substring classifications, not verbatim diagnostic excerpts or proof of cause. Unclassified, colored, truncated or unsupported diagnostics may lose details."
+  },
+  "closedReviewPoints": [
+    {
+      "severity": "P1",
+      "topic": "Internal generation anchor could discard a new group member",
+      "resolution": "New same-PID/different-birth live and zombie results remain unknown unless an external expected owned generation was replaced; group regression requires null totals and zero confirmed-gone increment."
+    },
+    {
+      "severity": "P2",
+      "topic": "Cleanup-only failure could mislabel later output as before cleanup",
+      "resolution": "Explicit unavailable pre-cleanup marker and regression through prepared cleanup failure."
+    },
+    {
+      "severity": "P2",
+      "topic": "A throwing collector could replace the primary failure or suppress its stage record",
+      "resolution": "Fixed unavailable conversion at both collector boundaries plus a real Linux monitor-stop regression injecting a secret-bearing exception."
+    }
+  ],
+  "invariants": {
+    "planBytesUnchanged": true,
+    "SDKConfigurationAndFetcherUnchanged": true,
+    "harnessPinsAndPatchUnchanged": true,
+    "RuntimeSourceUnchanged": true,
+    "nativeIdentityHelperUnchanged": true,
+    "ownedNativeAccountingUnchanged": true,
+    "resourceLimitsUnchanged": true,
+    "globalAttempts": 3,
+    "globalSleepSeconds": 0.25,
+    "resourceRoleOrUIDExclusionsAdded": false,
+    "permissionsExpanded": false,
+    "rawPrivateContentPublished": false,
+    "originalTerminalFailureReclassifiedAsSuccess": false
+  },
+  "validation": {
+    "recordedLinuxSuite": {
+      "total": 113,
+      "passed": 110,
+      "skipped": 3,
+      "elapsedSeconds": 4.809,
+      "newTargetedTests": 16,
+      "testLogBytes": 656,
+      "testLogSHA256": "98953f459500bac914c9bba739c3de7baf0d12c9d7fbb6943a89741549013e98",
+      "provenance": "Execution recorded in the immutable repair manifest and local test output; full suite not rerun by reviewer."
+    },
+    "negativeCasesRead": [
+      "Initial and recheck permission",
+      "Invalid BSD identity and owner/group mismatch",
+      "Partial task response with ESRCH",
+      "Persistent same-birth missing task data",
+      "Same PID/new live generation in group sampling",
+      "New zombie generation",
+      "External owned-generation replacement",
+      "Three distinct unresolved members with exact global attempt/sleep bounds",
+      "Private path/token/quoted-text suppression",
+      "Byte/record limits and missing/symlink/FIFO inputs",
+      "Real Linux monitor-triggered SIGINT with before/after snapshots",
+      "Diagnostic unavailable and throwing collector",
+      "Cleanup-only failure chronology"
+    ],
+    "reviewerChecks": [
+      "Full source diff and targeted regression review",
+      "All QA Python AST parsing",
+      "Normalized old single-read validator AST comparison",
+      "Five source byte lengths and hashes against repair manifest",
+      "Six immutable provider files read back and compared exactly",
+      "Plan, SDK fetcher, owned accounting, harness patch and native identity helper byte equality to executed fixture"
+    ],
+    "actualMacCandidateExecution": false,
+    "newCIExecutions": 0,
+    "newFullBuilds": 0
+  },
+  "remainingGate": {
+    "required": "Representative SDK-free actual-Mac recheck/churn validation with fixed negative controls before execution qualification.",
+    "coverage": [
+      "Exercise the real BSD/task ABI and exact owned-child lifecycle through one bounded recheck.",
+      "Verify same-birth counter recovery, authoritative disappearance and exact child reaping.",
+      "Retain persistent live/permission/invalid uncertainty and same-PID generation-replacement controls.",
+      "Collect natural short-lived-process churn without claiming a race was observed if it was not."
+    ],
+    "notEstablished": [
+      "That the new bounded reconciliation resolves the exact historical ESRCH sequence",
+      "The original compiler or signal failure cause",
+      "Successful current full host/XUL completion",
+      "Native Shim authentication"
+    ],
+    "fullBuildNeededForThisReview": false
+  },
+  "historicalEvidence": {
+    "runId": 39077252234,
+    "firstFailure": {
+      "stage": "full-build",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 2969.82
+    },
+    "threeDistinctPIDAndBirthSnapshots": true,
+    "taskQueries": "0/232 bytes, ESRCH; subsequent BSD queries 136/136 bytes, errno 0, live identities.",
+    "groupCleanup": "verified-gone",
+    "leaderExitCode": 1,
+    "errorMarkerCount": 1,
+    "cause": "UNKNOWN; original private full-build log not retained in collected evidence. The patch cannot reconstruct it retroactively."
+  },
+  "sources": [
+    "https://github.com/Floorp-Projects/Floorp/commit/4ee7ba2b6552cd25b825a2e28178907b453afc40",
+    "https://github.com/Floorp-Projects/Floorp/blob/96bf0e1d436acbe356dcf2e76d802a84a902abdf/docs/qa/native-nonpgo-validation/20261017/RECOVERY10_EXECUTION_RESULT.json",
+    "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c"
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "fullSuiteReruns": 0,
+    "MacExecutions": 0,
+    "CIExecutions": 0,
+    "SDKDownloads": 0,
+    "fullBuilds": 0,
+    "externalWrites": 0
+  }
+}
