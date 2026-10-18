@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39082468600,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39082468600",
+    "createdAt": "2026-10-18T00:21:38Z",
+    "head": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "event": "push",
+    "attempt": 1
+  },
+  "jobId": 117542094120,
+  "jobCount": 1,
+  "runner": "macos-15-intel",
+  "fixture": "1143be2b8acffa7394088bbbd9743e47c0e52315",
+  "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "sdkArtifact": 12096898807,
+  "sdkSourceRun": 39022451582,
+  "macGateRun": 39082226396,
+  "macGateTests": {
+    "passed": 118,
+    "skipped": 0
+  },
+  "reviewDecision": "FOCUSED_MAC_GATE_PASSED_GO_FOR_ONE_PINNED_FULL_HOST_XUL_NATIVE_RUN",
+  "workflowSHA256": "9494f4cc6421ceee14ab19a16af13e9a42a47eb71b7964d90ec2d605ac2798a6",
+  "newArtifacts": 0,
+  "productSigning": false,
+  "publishing": false,
+  "permissionsExpanded": false,
+  "manualElapsedTimeCap": false,
+  "platformJobLimitMinutes": 360,
+  "beforeAfterFailureExcerptsEmittedImmediately": true
+}
