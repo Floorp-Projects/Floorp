@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "checkedAtUTC": "2026-10-18 01:46:36 UTC",
+  "run": 39087195468,
+  "caller": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "job": {
+    "id": 117556135754,
+    "status": "in_progress",
+    "conclusion": null,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-18T01:38:08Z",
+        "completed_at": "2026-10-18T01:38:10Z"
+      },
+      {
+        "name": "Bound the initial authorized run",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-18T01:38:10Z",
+        "completed_at": "2026-10-18T01:38:11Z"
+      },
+      {
+        "name": "Checkout immutable preparation fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-18T01:38:11Z",
+        "completed_at": "2026-10-18T01:38:20Z"
+      },
+      {
+        "name": "Verify owned process sampling before source checkout",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-18T01:38:20Z",
+        "completed_at": "2026-10-18T01:38:24Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5,
+        "started_at": "2026-10-18T01:38:24Z",
+        "completed_at": "2026-10-18T01:45:04Z"
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6,
+        "started_at": "2026-10-18T01:45:05Z",
+        "completed_at": "2026-10-18T01:45:08Z"
+      },
+      {
+        "name": "Acquire only the existing fixed SDK",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7,
+        "started_at": "2026-10-18T01:45:08Z",
+        "completed_at": "2026-10-18T01:45:31Z"
+      },
+      {
+        "name": "Compile full host and XUL then authenticate native Shim",
+        "status": "in_progress",
+        "conclusion": null,
+        "number": 8,
+        "started_at": "2026-10-18T01:45:31Z",
+        "completed_at": null
+      },
+      {
+        "name": "Confirm bounded result exists",
+        "status": "pending",
+        "conclusion": null,
+        "number": 9,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable native harness",
+        "status": "pending",
+        "conclusion": null,
+        "number": 16,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable Runtime source",
+        "status": "pending",
+        "conclusion": null,
+        "number": 17,
+        "started_at": null,
+        "completed_at": null
+      },
+      {
+        "name": "Post Checkout immutable preparation fixture",
+        "status": "pending",
+        "conclusion": null,
+        "number": 18,
+        "started_at": null,
+        "completed_at": null
+      }
+    ]
+  },
+  "sdkAcquisitionStep": {
+    "name": "Acquire only the existing fixed SDK",
+    "status": "completed",
+    "conclusion": "success",
+    "number": 7,
+    "started_at": "2026-10-18T01:45:08Z",
+    "completed_at": "2026-10-18T01:45:31Z"
+  },
+  "currentStep": "Compile full host and XUL then authenticate native Shim",
+  "scope": "Actions step metadata only; full build, package and native outcomes are not established.",
+  "sourceSDKArtifact": 12096898807,
+  "newArtifacts": 0,
+  "permissionsExpanded": false
+}
