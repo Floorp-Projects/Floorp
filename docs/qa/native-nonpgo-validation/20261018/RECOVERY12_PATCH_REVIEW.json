@@ -1,0 +1,131 @@
+{
+  "decision": {
+    "executionReady": false,
+    "nextValidation": "Short SDK-free macos-15-intel gate only; no additional full-build retry is included in this review.",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "staticReady": true,
+    "status": "STATIC_READY_PORTABLE_TESTS_PASSED_MAC_GATE_REQUIRED"
+  },
+  "findings": [],
+  "invariantsVerified": [
+    "Only subprocess.TimeoutExpired from the inventory subprocess call is caught; Darwin counter-probe exceptions, parsing failures, query non-timeout errors and KeyboardInterrupt retain their prior propagation behavior.",
+    "Inventory invocation, platform-specific fixed columns, subprocess timeout=3, at most three attempts, and at most two 0.25-second retry intervals are unchanged. Process creation and stdlib timeout cleanup are outside the communicate timeout; no strict 9.5-second wall-clock bound is asserted.",
+    "Partial output and stderr attached to TimeoutExpired are never parsed, merged into a complete inventory, or published.",
+    "Timeout samples keep RSS, CPU, their lower bounds and process count null, sampleComplete false and state unknown. No previous complete counters or membership snapshot are substituted.",
+    "The null lower-bound comparison is explicit; non-null known lower bounds retain the existing memory-limit comparison.",
+    "Public queryFailure contains only fixed operation/error classification, configured timeout seconds and measured elapsed seconds. It includes no command, arguments, raw output or exception text.",
+    "Each timeout is retained in partialSamples, including when a later complete sample recovers. The final complete sample supplies its own counters and membership.",
+    "Recovered samples with sampleAttempts greater than one enter recent monitor diagnostics. An unobserved interval resets ProgressWatch before the next progress inference.",
+    "Three failed inventory attempts remain incomplete and enter monitor-unavailable with null totals. The first-failure record, failure excerpts, existing owned cleanup and independent exact-child reap remain active.",
+    "Process selection, birth/generation verification, resource limits, cleanup signals, monitor retention limits, SDK inputs, plan, harness, pipeline and Runtime workflows are unchanged by this two-file patch."
+  ],
+  "limits": [
+    "The historical helper timeout root cause is unknown. Its last complete 12-process R/S sample is preceding evidence, not proof of build health at the timeout instant.",
+    "The bounded pre-cleanup tail contains no classified records; that does not exclude compiler errors outside the retained tail. The historical compiler cause remains unknown.",
+    "The patch permits bounded recovery from a transient query timeout; persistent slowness still fails closed and no historical success is inferred.",
+    "Other query failures intentionally preserve existing fail-closed exception behavior. They are not silently converted into successful or empty samples.",
+    "No new Mac job, SDK acquisition, long build, native authentication execution, repository source modification or external write was performed by this review.",
+    "Package, full host/XUL completion and actual native authentication remain unverified by this patch review."
+  ],
+  "macGate": {
+    "execution": "NOT_EXECUTED for this patch; development and reviewer test environment is Linux.",
+    "requiredChecks": [
+      "Run the eight targeted inventory-timeout tests and the existing real Mac process/generation/cleanup gates against this exact source. Prefer the complete 126-test suite with every real Mac gate executed and no skips.",
+      "Confirm injected transient inventory timeout followed by real Darwin ps/libproc sampling retains its timeout diagnostic and permits a normally exiting owned stage to complete.",
+      "Confirm persistent timeout remains monitor-unavailable with null totals, first-failure evidence and safe owned group cleanup/exact child reap.",
+      "Confirm actual timed-out helper termination and reap, native census behavior and existing generation/resource-limit guards without privilege changes."
+    ],
+    "requiredScope": "One short SDK-free standard macos-15-intel diagnostic job, without a build or browser authentication claim."
+  },
+  "patch": {
+    "changedFiles": [
+      {
+        "bytes": 26606,
+        "path": "tools/qa/native-nonpgo/support.py",
+        "sha256": "d9c2e621d7c9fbc573a053c7f06798fc1d52cd893e39022b41f8550c1842bdce"
+      },
+      {
+        "bytes": 10867,
+        "path": "tools/qa/native-nonpgo/test_inventory_timeout.py",
+        "sha256": "c4f034c3dc55799e24fb59d657f45f7d1424705adf61f4814d33e887508ce8ee"
+      }
+    ],
+    "commit": "dadccda72261131bf07fbd2c44f5328589e36bab",
+    "fullDiffSHA256": "733f3b67a783aa0f33b81b66027e05aef5e45c65305357fbfd2e81dbd7f265ea",
+    "parent": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+    "providerCommit": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+    "providerVerification": {
+      "matchesLocalTree": true,
+      "method": "Independent read-only GitHub Git commit API",
+      "parent": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+      "tree": "20cf2f84cfce233501f6415a12480ae8ede07abf"
+    },
+    "trackedSourceMatchesCommit": true,
+    "tree": "20cf2f84cfce233501f6415a12480ae8ede07abf"
+  },
+  "resolvedFinding": {
+    "description": "A single inventory subprocess timeout escaped the existing sample retry loop and immediately stopped the owned build group. The patch now converts only that query-boundary exception to a classified incomplete sample within the existing loop.",
+    "severity": "P1"
+  },
+  "reviewType": "independent immutable inventory-timeout patch review",
+  "schemaVersion": 1,
+  "terminalEvidence": {
+    "bytes": 15374,
+    "commit": "ab067ae56f7d515aa824f309452c2a7684bacca9",
+    "decodedJobLogBytes": 170466,
+    "decodedJobLogSHA256": "d94db8b35ef3f3a0c3eba2ed9ac76cd9a83abf61cba46890dea989bfd16ca601",
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY12_EXECUTION_RESULT.json",
+    "rawContentPublished": false,
+    "runId": 39082468600,
+    "sha256": "2b3f6cbd3dbe34c185f9872f2676485822733cd25400daab0b77ac2874353857"
+  },
+  "tests": {
+    "diffWhitespaceCheck": "PASS",
+    "recordedSuite": {
+      "logBytes": 27565,
+      "logSHA256": "6e70ed7fb22ce92765bb523e79863644297baf78e3528d0fb6188317f2cb2d1b",
+      "passed": 119,
+      "provenance": "Execution recorded in supplied test log; full suite not rerun by reviewer.",
+      "result": "OK",
+      "seconds": 6.7,
+      "skipped": 7,
+      "skippedScope": "real Mac gates on Linux",
+      "total": 126
+    },
+    "reviewerAdditionalPortableCheck": {
+      "assertions": {
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "exitCode": 0,
+          "status": "reaped"
+        },
+        "partialUnknownKind": "inventory-timeout",
+        "recoveredSampleAttempts": 2,
+        "stageSucceeded": true,
+        "watchInstances": 2
+      },
+      "method": "Read-only real-stage execution with an injected first query timeout and a wrapped ProgressWatch factory; repository source unchanged. This is an ad-hoc reviewer check, not a committed reset-specific test."
+    },
+    "reviewerTargetedExecution": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_inventory_timeout -v",
+      "environment": "Linux, Python 3.12",
+      "passed": 8,
+      "result": "OK",
+      "seconds": 1.872,
+      "skipped": 0,
+      "total": 8
+    },
+    "targetedCasesVerified": [
+      "Timeout followed by complete measurement on both Darwin and Linux dispatch paths, preserving one partial diagnostic and one retry interval.",
+      "Exactly three inventory timeouts produce three calls, two retry intervals and null unavailable fields; private exception values are absent.",
+      "PermissionError and CalledProcessError remain non-retried exceptions.",
+      "Counter-incomplete, inventory-timeout and complete observations preserve both partial classifications within one three-attempt budget.",
+      "TimeoutExpired and KeyboardInterrupt raised by the Darwin counter probe are not misclassified as inventory timeouts.",
+      "An actual timed-out query child is killed and reaped before the next sample.",
+      "Persistent timeout in an actual owned stage records monitor-unavailable, durable first failure, before/after excerpts, verified group cleanup and exact leader reap.",
+      "An actual owned stage continues to successful exit after an injected first inventory timeout followed by real inventory queries."
+    ]
+  }
+}
