@@ -72,7 +72,7 @@
   "preActivationSnapshot": {
     "fullMatchingRefs": 0,
     "fullPriorRuns": 0,
-    "note": "Snapshot preceded short branch activation. Mutable state must be rechecked before dependent full activation.",
+    "note": "Branch ref/history checks preceded GO. The later repository-wide active/queued collection reads can lag activation and do not prove absence after the short route starts. Exact run/job metadata and a fresh dependent-activation check remain required.",
     "ownedNativeInProgress": 0,
     "ownedNativeQueued": 0,
     "runtimeInProgress": 0,
