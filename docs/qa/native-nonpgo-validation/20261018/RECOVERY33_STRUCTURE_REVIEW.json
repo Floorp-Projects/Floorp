@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "review": "Recovery33 conditional long proposal structure",
+  "decision": "STRUCTURE_CLEAR_NOT_ACTIVATED",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "contentBindings": {
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_WORKFLOW.yml.disabled": {
+      "bytes": 18260,
+      "sha256": "b0ccdb052553b5efb928a4ce1236b29e919fb8c360deb044b4a1cc220443002e"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY33_LONG_HYPOTHESES.md": {
+      "bytes": 4989,
+      "sha256": "c77e6f93db1679992b6d3e88c629abf0b41a3404e5176e038d6addc8b4f33770"
+    }
+  },
+  "baselineWorkflow": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_WORKFLOW.yml.disabled",
+    "sha256": "65a608cd8773aee5a2196f701fe5790a6124888ab50b4834c619886ffb9833dd",
+    "exactDelta": "Three fixed branch strings and two test-count literals, 244 to 291; no other workflow bytes change."
+  },
+  "validation": {
+    "workflowYAML": "passed",
+    "bashSyntaxScripts": 15,
+    "inlinePythonAST": 5,
+    "sourceChangesInProposal": false,
+    "executionByReviewer": false
+  },
+  "controls": {
+    "jobs": 2,
+    "serialDependency": "consumer needs producer; producer failure skips consumer",
+    "runner": "macos-15-intel",
+    "platformMinutesEach": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "initialPushGuards": "Exact repository/ref, push, created=true, before-zero and attempt-one in both jobs; cancel-in-progress=false.",
+    "pins": {
+      "fixture": "FIXTURE_PENDING_REVIEW; immutable rendering/readback required",
+      "Runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+      "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
+    },
+    "producerGate": "All291 actual Mac tests must pass with zero skips before SDK/build; consumer separately prepares ABI and runs its native monitor preflight.",
+    "sdk": "Both jobs acquire through the fixed ordinary official API and unchanged expiry, HTTP, 600-second and ZIP/TAR/tree/version checks. Fresh metadata must be checked again; observed expiry is not an activation-time guarantee.",
+    "checkpoint": "Only natural successful pre-export/export and exact root Rust target-objects boundary, verified static archives and strict original-baseline delta=0; interrupted state remains ineligible.",
+    "storage": "One raw regular checkpoint.tar.gz, premeasured nonzero size <=10GiB, SHA256, reserved monotonic upload-start deadline <305min, immutable upload input, archive=false, retention=1day, overwrite=false; service digest/size/retention confirmed before producer success.",
+    "consumer": "Same-run successful producer artifact provenance/size/hash plus restore/effective-config checks remain; no producer-independent consumer activation.",
+    "qualification": "Explicit resumed-across-two-jobs; freshObjdir=false and sameJob=false. Native authentication requires the actual native evidence, independently of package/build success.",
+    "unchanged": "Inherited resource, unknown-null/fail-closed, ownership, cleanup, phase/stall and platform guards; no role-based exclusions, permission changes or product signing/publication."
+  },
+  "hypothesisAssessment": [
+    "Run26 external-ps timeouts and Run28 replacement-helper timeouts are distinct observations; a shared cause or replacement fix is not proven.",
+    "Fixed helper phase retention can show last observed progress under future Rust load, not prove the following syscall was entered or hung.",
+    "Convergence keeps the original baseline fixed and requires actual final delta=0. No role, parent or stage-observation-negative result grants eligibility.",
+    "Actual short SDK/argv/workload observations do not establish multi-hour monitoring, checkpoint success, resumed full host/XUL or native authentication.",
+    "Historical Run27 candidate-inclusion, Run30 workload and original native first-cause remain unexplained.",
+    "The revised note accurately separates Recovery31 completed synchronized load from its strict-gate failure on one recovered timeout, and describes Recovery32 as evidence retention only; the old timeout cause remains UNKNOWN."
+  ],
+  "resolvedWording": "Final note now states disappearance of candidates absent from the fixed original baseline, matching delta=0; existing baseline identities need not all disappear.",
+  "activationConditions": [
+    "Recovery32 terminal short prerequisites are independently clear. Report the separate long proposal with its unchanged boundaries and unresolved multi-hour/strict-convergence uncertainty; this structure review does not activate it.",
+    "Bind the unchanged reviewed code, plan, rendered caller and these proposal files to immutable exact provider readbacks; render only the fixture placeholder.",
+    "Recheck unused branch/no prior run/no overlapping owned validation and SDK unexpired official source/content metadata immediately before activation and acquisition.",
+    "Keep two serial standard jobs, one <=10GiB raw artifact and one-day retention; no additional run or enlarged storage is implied by this structure review."
+  ],
+  "limits": [
+    "No new workflow was activated, artifact saved or SDK fetched by this review.",
+    "A failed or timed-out natural build or convergence remains ineligible and must not upload a checkpoint.",
+    "A short pass is a prerequisite for a separate conditional long decision, not proof of long stability."
+  ],
+  "recovery32Status": "PASS_SHORT_DIAGNOSTIC; exact immutable receipt and provider run/jobs/log/artifacts independently verified.",
+  "recovery32Receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_TERMINAL_RESULT.json",
+    "bytes": 167815,
+    "sha256": "1f6402d044dfa95ef2f7a7797557c16e6ee41a6eae5f567860c34ab2154c9d67",
+    "completeExperimentMatchesProviderLog": true
+  }
+}

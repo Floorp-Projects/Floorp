@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "review": "Recovery32 independent terminal review",
+  "decision": "PASS_SHORT_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39160137466,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39160137466",
+    "job": 117771529247,
+    "fixture": "8be9cb98df0940ac372474f459a99aca105ac0bb",
+    "caller": "e68d1b0d1f4a2dd21708d01cc5f7587c11eb8a23",
+    "attempt": 1,
+    "startedAt": "2026-10-18T19:44:31Z",
+    "completedAt": "2026-10-18T19:50:10Z",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "jobCount": 1,
+    "runner": "macos-15-intel"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY32_TERMINAL_RESULT.json",
+    "bytes": 167815,
+    "sha256": "1f6402d044dfa95ef2f7a7797557c16e6ee41a6eae5f567860c34ab2154c9d67",
+    "completeExperimentMatchesProviderLog": true
+  },
+  "independentChecks": {
+    "runAPI": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39160137466",
+    "jobsAPI": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39160137466/jobs?per_page=100",
+    "jobLogs": "Decoded provider job log independently fetched and parsed; complete final experiment structurally equals receipt.",
+    "logBytes": 200012,
+    "logSHA256": "f15d9c131c18ef9fff2822436b74937e427d1d85e21da5ac33676c8f52e1cd87",
+    "savedLogByteExact": true,
+    "nonJSONTruncationMarker": false,
+    "artifactsAPI": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/39160137466/artifacts",
+    "artifacts": 0,
+    "caller": "Immutable provider workflow exactly matches the reviewed disabled template rendered only with fixture SHA; 3415 bytes, SHA256 946b6e0502ca8d94cab421cae11bde52d733651c8925a0b2f003a8c4d6d8bb65.",
+    "source": "Immutable fixture inventory_stress.py and census_experiment.py independently fetched and exactly match reviewed local bytes.",
+    "privacy": "NONPUBLIC_SENTINEL and raw _pids absent from the decoded public log/final structured experiment; no raw helper output or free exception text added to review.",
+    "executionByReviewer": "Read-only provider/local evidence verification; no Mac execution, SDK download, publication or artifact upload performed."
+  },
+  "actualMac": {
+    "sdk": {
+      "status": "passed",
+      "artifact": 12133086104,
+      "run": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "treeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5"
+    },
+    "sdkAcquired": true,
+    "unitTests": {
+      "total": 291,
+      "passed": 291,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 51.763
+    },
+    "freshCandidateRepeats": 5,
+    "candidateDiagnostics": 6,
+    "candidateEvidence": "All six exact child orig_argv/count/tail/native path and cross-selection row predicates pass, live before/after and exact cleanup. Launcher argv0 text/canonical comparisons are false in all six, as permitted by the corrected launcher contract.",
+    "stress": {
+      "status": "passed",
+      "samples": 52,
+      "completeSamples": 52,
+      "retriedSamples": 0,
+      "unknownSamples": 0,
+      "timeoutAttempts": 0,
+      "peakRSSMiB": 4704.015625,
+      "peakCPUSeconds": 109.121,
+      "maxSampleSeconds": 0.4021,
+      "backend": {
+        "kern-proc-pgrp-helper": 52
+      },
+      "firstTimeoutSample": null
+    },
+    "workload": {
+      "status": "passed",
+      "phase": "finished",
+      "workers": 3,
+      "workerMiB": 1536,
+      "readyWorkers": 3,
+      "readyElapsedSeconds": 2.778,
+      "readyBudgetSeconds": 60,
+      "barriersReleased": 3,
+      "loadSeconds": 60.01,
+      "churnChildren": 988,
+      "churnReaped": 988,
+      "workersReaped": 3,
+      "allWorkerExitCodesZero": true,
+      "firstFailure": null
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnosticsCount": 0,
+    "cleanup": "All eleven monitored stages exited zero, exact leaders reaped zero and groups verified-gone, with no cleanup failure. Known child separately reaped -15, group verified-gone, cleanupFailure null.",
+    "knownChild": "Actual same-birth sampler measurement; identity-verified python role, caller parent and positive observed-stage birth; strict boundary correctly rejected its one new identity.",
+    "background": {
+      "snapshots": 13,
+      "elapsedSeconds": 120.906,
+      "newCandidates": [
+        0,
+        15,
+        40,
+        39,
+        38,
+        38,
+        38,
+        38,
+        43,
+        42,
+        37,
+        38,
+        29
+      ],
+      "finalDelta": 29,
+      "checkpointEligibilityEstablished": false,
+      "signalOwnershipGranted": false
+    }
+  },
+  "interpretation": [
+    "The strict zero-timeout stress and all short prerequisites passed; no query/retry/resource/ownership/cleanup boundary was relaxed.",
+    "Recovery32 latest-16 and independent first-timeout retention are regression-tested. This Mac trial had no timeout/retry, so it did not exercise those paths with a real recovered timeout.",
+    "Thirteen complete background snapshots ended at delta29. These are observation-only and do not establish strict checkpoint eligibility or natural convergence; neither roles nor PID1 parents grant exclusion.",
+    "The short pass does not establish multi-hour Rust monitoring, natural checkpoint eligibility, resumed full host/XUL, package completion or native authentication.",
+    "Run26/Run28/Run31 timeout causes, historical Run27 inclusion failure and the original native-host first cause remain UNKNOWN."
+  ],
+  "nextProposal": {
+    "Recovery33": "Structure reviewed separately; no long run activated by this review. A long diagnostic proposal can now be reported with its unchanged constraints and uncertainty.",
+    "conditions": [
+      "Bind the exact reviewed source, current plan, proposal and rendered caller through immutable provider readback.",
+      "Fresh-check legitimate unexpired SDK source/content metadata, unused branch and zero overlapping owned validation at activation.",
+      "Retain exactly two serial standard Intel jobs, 360-minute platform limits, one <=10GiB raw artifact/one-day retention, natural-success-only checkpoint, final baseline delta=0 and all resource/unknown/cleanup guards."
+    ],
+    "qualification": "Any eventual result is explicitly resumed across two jobs; actual native evidence remains necessary."
+  },
+  "fullBuildReached": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "productQualification": false
+}
