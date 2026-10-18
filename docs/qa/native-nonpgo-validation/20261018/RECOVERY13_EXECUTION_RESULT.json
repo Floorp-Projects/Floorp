@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39086387102,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39086387102",
+    "status": "completed",
+    "conclusion": "failure",
+    "head": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "branch": "codex/mac-native-inventory-recovery13-20261018",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-18T01:24:46Z",
+    "updatedAt": "2026-10-18T01:25:40Z"
+  },
+  "job": {
+    "id": 117553745436,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "status": "completed",
+    "conclusion": "failure",
+    "startedAt": "2026-10-18T01:24:51Z",
+    "completedAt": "2026-10-18T01:25:39Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-18T01:24:52Z",
+        "completed_at": "2026-10-18T01:24:53Z"
+      },
+      {
+        "name": "Bound the initial diagnostic execution",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-18T01:24:53Z",
+        "completed_at": "2026-10-18T01:24:53Z"
+      },
+      {
+        "name": "Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-18T01:24:53Z",
+        "completed_at": "2026-10-18T01:24:56Z"
+      },
+      {
+        "name": "Verify inventory timeout recovery and existing native monitor gates",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 4,
+        "started_at": "2026-10-18T01:24:56Z",
+        "completed_at": "2026-10-18T01:25:36Z"
+      },
+      {
+        "name": "Post Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-10-18T01:25:36Z",
+        "completed_at": "2026-10-18T01:25:36Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-10-18T01:25:36Z",
+        "completed_at": "2026-10-18T01:25:37Z"
+      }
+    ]
+  },
+  "fixture": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+  "tests": {
+    "total": 126,
+    "passed": 125,
+    "errors": 1,
+    "failedAssertions": 0,
+    "skipped": 0,
+    "seconds": 39.092,
+    "newInventoryTests": 8,
+    "newInventoryTestsPassed": 8
+  },
+  "failure": {
+    "test": "test_guards.Guards.test_unavailable_monitor_preserves_failure_and_reclaims_owned_group",
+    "expectedPrimary": "monitor-unavailable",
+    "unexpectedCleanupError": {
+      "type": "PermissionError",
+      "errno": 1,
+      "operation": "group-probe",
+      "signal": 0,
+      "callPath": [
+        "Runner.run",
+        "Runner.stop",
+        "Runner.owned_group_alive",
+        "Runner.group_alive",
+        "os.killpg"
+      ]
+    },
+    "leaderStateAtDeniedProbe": "not-captured",
+    "causeHypothesis": "Leader exit/reap visibility race; historical state and birth were not captured, so this is not an established zombie-only diagnosis.",
+    "compilerFailure": false,
+    "nativeAuthenticationExecuted": false
+  },
+  "realMacEvents": [
+    {
+      "ownedZombieCleanup": {
+        "pidTag": "d80e1a171ecafb91",
+        "identityTag": "5ae84d56c1e60a45",
+        "liveGroupBeforeExit": true,
+        "unreapedExitPending": true,
+        "signalZeroSucceeded": true,
+        "unreapedGroupProbeErrno": 1,
+        "bsdZombieIdentityMatched": true,
+        "exactLeaderReapedExitCode": 0,
+        "postReapGroupProbeErrno": 3,
+        "signalsSent": 0
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "natural-owned-churn",
+        "samples": 23,
+        "complete": 23,
+        "esrchRechecks": 0,
+        "forkedChildren": 720,
+        "initialESRCHInjected": false,
+        "naturalRaceObserved": false,
+        "groupCleanup": "verified-gone",
+        "leaderReaped": true
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "actual-clang-durable-excerpts",
+        "realCompilerError": true,
+        "beforeAndAfterPresent": true,
+        "freeTextPublished": false,
+        "leaderReaped": true
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "controlled-esrch-live",
+        "actualKernelQueries": true,
+        "initialESRCHInjected": true,
+        "sameGeneration": true,
+        "result": "measured"
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "controlled-esrch-owned-zombie",
+        "actualKernelQueries": true,
+        "initialESRCHInjected": true,
+        "sameGeneration": true,
+        "WNOWAITExitPending": true,
+        "signalZeroSucceeded": true,
+        "result": "authoritative-zombie"
+      }
+    }
+  ],
+  "failingTestExcerpts": [
+    {
+      "stage": "monitor-test",
+      "phase": "before-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 0,
+        "tailBytesRead": 0,
+        "tailTruncated": false,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      }
+    },
+    {
+      "stage": "monitor-test",
+      "phase": "after-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 0,
+        "tailBytesRead": 0,
+        "tailTruncated": false,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      }
+    }
+  ],
+  "privacy": {
+    "rawContentPublished": false,
+    "privateSentinelAbsentFromEntireDecodedLog": true
+  },
+  "privateLog": {
+    "bytes": 50393,
+    "sha256": "4397a6d29b35643b51ac55556b2657da69fb4d7b83ce69b547e6cbd40376015a"
+  },
+  "newArtifacts": 0,
+  "fullValidationLaunched": false,
+  "fullDecision": "NO_GO_PENDING_JUSTIFIED_CLEANUP_CORRECTION_AND_NEW_MAC_GATE",
+  "originalNativeExitCause": "unresolved"
+}
