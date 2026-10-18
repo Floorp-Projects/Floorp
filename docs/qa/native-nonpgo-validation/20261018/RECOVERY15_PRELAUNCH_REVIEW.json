@@ -1,0 +1,133 @@
+{
+  "commonControls": {
+    "artifactUploadSteps": 0,
+    "attemptOneRequired": true,
+    "createdTrueRequired": true,
+    "event": "push",
+    "jobCountPerRoute": 1,
+    "platformTimeoutMinutes": 360,
+    "privilegeExpansion": false,
+    "productSigningPublicationOrMerge": false,
+    "python": "3.12.10/x64 from existing runner tool cache",
+    "resourceLimitsUnchanged": true,
+    "runner": "macos-15-intel",
+    "zeroBeforeSHARequired": true
+  },
+  "decision": {
+    "fullRun": "CONDITIONAL_GO_AFTER_SHORT_GATE_TERMINAL_REVIEW_CLEAR",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "shortGate": "GO"
+  },
+  "fixture": {
+    "commit": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+    "localEquivalentCommit": "c8a2be747f99792fb6168e78e9f9ca817c0fc645",
+    "patchReviewSHA256": "26b8505d617777ea8333eb8d1f48f5c4665104758158a7888d4e4da47c54372e",
+    "tree": "5af58181b8325b9947bf7d396e42b7f58f682736"
+  },
+  "fullRun": {
+    "baseline": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "commit": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "conditions": [
+      "Exact short-gate fixture/caller reaches terminal success with 133 tests passed and skipped=0.",
+      "Independent terminal review confirms all nine actual Mac gates, including controlled delayed exact reap and 20 rapid monitor-stop iterations, and all eight inventory-timeout tests.",
+      "Fresh group state remains authoritative; wait timeout/residual denial remains fail-closed, null resource totals and primary failure/cleanup evidence are preserved.",
+      "Bounded actual-clang before/after diagnostics remain safe and the nonpublic sentinel/private timeout command-output markers are absent from the entire log.",
+      "No other owned native validation is active before full activation; activate this full branch once as initial push attempt1.",
+      "Current official SDK metadata and normal fetch-time HTTP, unexpired, 600-second acquisition, fixed ZIP/TAR/tree/version guards all pass."
+    ],
+    "createOrWorkflowRunTriggers": 0,
+    "jobs": [
+      "validate"
+    ],
+    "netDelta": "Two exact branch substitutions and one fixture substitution only. Each intervening commit changes only this workflow.",
+    "otherMatchingPushWorkflows": 0,
+    "parent": "dc052aff9d13a09312d8c948d80fa4fd89ca98e3",
+    "permissions": {
+      "actions": "read",
+      "contents": "read"
+    },
+    "tree": "032ae2fbd2bdef592d2ea797db210abd03420dd3",
+    "verifiedAncestry": [
+      "fe81758dd639efdadefa570b0399ca1f2004bca3",
+      "dc052aff9d13a09312d8c948d80fa4fd89ca98e3",
+      "f365b666c238a24413a561e2e249d98fc2734c99",
+      "f6173d1ff8db0a3d309e0502272248d0f79924c1"
+    ],
+    "workflow": {
+      "bytes": 6749,
+      "path": ".github/workflows/mac-native-nonpgo.yml",
+      "providerBytesEqualLocal": true,
+      "sha256": "3086a7db2e48714115e4cd0ed0babcee3c86654152014f072cf420bd0a392f50"
+    }
+  },
+  "limits": [
+    "The full route does not itself enforce the short-gate result; the activation condition must be checked before creating its ref.",
+    "This route review does not establish Mac cleanup recovery, full host/XUL success or native authentication.",
+    "The original group denial, inventory delay and native exit causes remain unknown. Controlled injection and ordinary rapid stops must not be presented as historical race reproduction."
+  ],
+  "observedAtUTC": "2026-10-18T01:35:08Z",
+  "preActivationSnapshot": {
+    "fullMatchingRefs": 0,
+    "fullPriorRuns": 0,
+    "note": "Snapshot preceded short branch activation. Mutable state must be rechecked before dependent full activation.",
+    "ownedNativeInProgress": 0,
+    "ownedNativeQueued": 0,
+    "runtimeInProgress": 0,
+    "runtimeQueued": 2,
+    "shortMatchingRefs": 0,
+    "shortPriorRuns": 0
+  },
+  "reviewType": "independent read-only minimal caller prelaunch review",
+  "reviewerActions": [
+    "Read provider exact bytes, commit metadata and each intervening commit file list; assert local byte equality and exact net reconstruction.",
+    "Re-evaluate branch trigger matching using the previously read immutable sibling workflow files, whose trees are unchanged across the verified one-file ancestry chains.",
+    "Read branch refs/run counts and fresh active/queued run and official SDK metadata snapshots.",
+    "No CI, SDK payload acquisition, source mutation, ref creation or external write was performed."
+  ],
+  "schemaVersion": 1,
+  "sdkMetadataSnapshot": {
+    "bytes": 105082683,
+    "digest": "sha256:9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4",
+    "expired": false,
+    "expiresAt": "2026-10-18T09:48:20Z",
+    "id": 12096898807,
+    "payloadDownloadedByReviewer": false,
+    "source": "Official run-artifacts API",
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceRun": 39022451582
+  },
+  "shortGate": {
+    "baseline": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "branch": "codex/mac-native-cleanup-recovery15-20261018",
+    "browserAuthentication": false,
+    "build": false,
+    "commit": "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+    "createOrWorkflowRunTriggers": 0,
+    "expectedTests": 133,
+    "jobs": [
+      "native-recheck"
+    ],
+    "netDelta": "Two exact branch substitutions and one fixture substitution only. Existing seven-module unittest command is unchanged and collects 133 tests. Each intervening commit changes only this workflow.",
+    "otherMatchingPushWorkflows": 0,
+    "parent": "434edc9be2171c23e35a946759116ff69f1bf96a",
+    "permissions": {
+      "contents": "read"
+    },
+    "sdkAcquisition": false,
+    "tree": "f228892afcd32c416b6408c8602de16a3d3e869c",
+    "verifiedAncestry": [
+      "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+      "434edc9be2171c23e35a946759116ff69f1bf96a",
+      "1176b39666e791c61d272f7d7c5066ab45e0e33f"
+    ],
+    "workflow": {
+      "bytes": 1933,
+      "path": ".github/workflows/mac-native-generation-recheck.yml",
+      "providerBytesEqualLocal": true,
+      "sha256": "7fabed22d9bba2fbe2cf69861ca7e9f42dee09d5eaf7e50994df5c17164ab2aa"
+    }
+  }
+}
