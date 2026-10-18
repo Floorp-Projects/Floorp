@@ -52,6 +52,8 @@ interface SyncState {
   retired: string[];
   pendingCloses: Record<string, WorkspaceSyncTab[]>;
   incomingFailures: string[];
+  pendingApplies: string[];
+  pendingBaselines: Record<string, WorkspaceSyncSnapshot>;
 }
 
 function emptyState(accountUid: string | null = null): SyncState {
@@ -66,6 +68,8 @@ function emptyState(accountUid: string | null = null): SyncState {
     retired: [],
     pendingCloses: {},
     incomingFailures: [],
+    pendingApplies: [],
+    pendingBaselines: {},
   };
 }
 const providers = new Set<WorkspaceSyncProvider>();
@@ -102,6 +106,7 @@ const file = new JSONFile({
         "metadataKnown",
         "retired",
         "incomingFailures",
+        "pendingApplies",
       ] as const
     ) result[key] = (raw?.[key] ?? []).filter(isWorkspaceSyncId);
     for (const [id, timestamp] of Object.entries(raw?.deleted ?? {})) {
@@ -126,6 +131,13 @@ const file = new JSONFile({
         result.pendingCloses[id] = pending.tabs;
       }
     }
+    for (const [id, snapshot] of Object.entries(raw?.pendingBaselines ?? {})) {
+      if (!isWorkspaceSyncId(id) || snapshot.workspaceId !== id) {
+        throw new Error("Invalid pending workspace baseline");
+      }
+      const validated = updateWorkspaceSyncDocument(null, snapshot, id, 0);
+      result.pendingBaselines[id] = documentSnapshot(validated);
+    }
     return result;
   },
 });
@@ -138,6 +150,14 @@ const ready = (): Promise<void> =>
     for (const id of state().retired) retired.add(id);
     initialized = true;
   });
+// Invalidate synchronously: Firefox startOver does not wait for an active sync.
+let accountEpoch = 0;
+let accountAbort = new AbortController();
+function assertAccountEpoch(expected: number): void {
+  if (expected !== accountEpoch) {
+    throw new Error("Workspace Sync account session was invalidated");
+  }
+}
 let mutationTail = Promise.resolve();
 function mutate<T>(operation: () => T | Promise<T>): Promise<T> {
   const result = mutationTail.then(operation);
@@ -251,7 +271,12 @@ Services.obs.addObserver(() => {
   }
 }, "quit-application-granted");
 
-async function apply(document: WorkspaceSyncDocument): Promise<void> {
+async function apply(
+  document: WorkspaceSyncDocument,
+  expected = accountEpoch,
+): Promise<void> {
+  assertAccountEpoch(expected);
+  const signal = accountAbort.signal;
   const targets = [...providers].filter((provider) => !provider.window.closed);
   const known = new Set(
     targets.flatMap((provider) => provider.tabIds(document.workspaceId)),
@@ -263,28 +288,124 @@ async function apply(document: WorkspaceSyncDocument): Promise<void> {
   );
   for (let index = 0; index < targets.length; index++) {
     if (!targets[index].window.closed) {
-      await targets[index].apply(document, index === 0 ? missing : new Set());
+      assertAccountEpoch(expected);
+      await targets[index].apply(
+        document,
+        index === 0 ? missing : new Set(),
+        signal,
+      );
+      assertAccountEpoch(expected);
     }
   }
+}
+function captureSnapshot(
+  id: string,
+  seenIds = new Set<string>(Object.keys(state().records)),
+): WorkspaceSyncSnapshot | null {
+  const snapshots = [...providers].filter((provider) => !provider.window.closed)
+    .map((provider) => provider.capture(id, seenIds))
+    .filter((value): value is WorkspaceSyncSnapshot => value !== null);
+  if (!snapshots.length) return null;
+  return {
+    ...snapshots[0],
+    orderChanged: snapshots.some((snapshot) => snapshot.orderChanged !== false),
+    tabs: snapshots.flatMap((value) => value.tabs),
+  };
+}
+function documentSnapshot(
+  document: WorkspaceSyncDocument,
+): WorkspaceSyncSnapshot {
+  return {
+    workspaceId: document.workspaceId,
+    name: document.name,
+    icon: document.icon,
+    orderChanged: false,
+    tabs: liveWorkspaceSyncTabs(document).map(({ id, url, title, pinned }) => ({
+      id,
+      url,
+      title,
+      pinned,
+    })),
+  };
+}
+function pendingSnapshot(
+  desired: WorkspaceSyncDocument,
+  observed: WorkspaceSyncSnapshot,
+): WorkspaceSyncSnapshot {
+  const snapshot = documentSnapshot(desired);
+  const baseline = state().pendingBaselines[desired.workspaceId];
+  if (!baseline) return snapshot;
+  if (observed.name !== baseline.name) snapshot.name = observed.name;
+  if (observed.icon !== baseline.icon) snapshot.icon = observed.icon;
+  const before = new Map(baseline.tabs.map((tab) => [tab.id, tab]));
+  const current = new Map(observed.tabs.map((tab) => [tab.id, tab]));
+  const ids = new Set(snapshot.tabs.map((tab) => tab.id));
+  snapshot.tabs = snapshot.tabs.filter((tab) => {
+    // A tab observed before the failed apply can still be explicitly closed by
+    // the user. A missing remote addition was never observed, so retain it.
+    return !before.has(tab.id) || current.has(tab.id);
+  }).map((tab) => {
+    const previous = before.get(tab.id);
+    const local = current.get(tab.id);
+    // An unchanged physical tab may still contain the old value because the UI
+    // apply failed. Only actual edits since the baseline supersede desired data.
+    if (!local) return tab;
+    if (!previous) return local;
+    return {
+      ...tab,
+      url: local.url !== previous.url ? local.url : tab.url,
+      title: local.title !== previous.title ? local.title : tab.title,
+      pinned: local.pinned !== previous.pinned ? local.pinned : tab.pinned,
+    };
+  });
+  const localAddition = observed.tabs.some((tab) =>
+    !ids.has(tab.id) && !retired.has(tab.id)
+  );
+  for (const tab of observed.tabs) {
+    if (!ids.has(tab.id) && !retired.has(tab.id)) snapshot.tabs.push(tab);
+  }
+  const sharedIds = new Set(
+    baseline.tabs.map((tab) => tab.id).filter((id) =>
+      current.has(id) && ids.has(id)
+    ),
+  );
+  const beforeOrder = baseline.tabs.filter((tab) => sharedIds.has(tab.id))
+    .map((tab) => tab.id);
+  const currentOrder = observed.tabs.filter((tab) => sharedIds.has(tab.id))
+    .map((tab) => tab.id);
+  if (
+    observed.orderChanged !== false && (
+      localAddition ||
+      beforeOrder.some((id, index) => id !== currentOrder[index])
+    )
+  ) {
+    const desiredTabs = new Map(snapshot.tabs.map((tab) => [tab.id, tab]));
+    const localOrder = observed.tabs.map((tab) => desiredTabs.get(tab.id))
+      .filter((tab): tab is WorkspaceSyncSnapshot["tabs"][number] =>
+        Boolean(tab)
+      );
+    const localIds = new Set(localOrder.map((tab) => tab.id));
+    snapshot.tabs = [
+      ...localOrder,
+      ...snapshot.tabs.filter((tab) => !localIds.has(tab.id)),
+    ];
+    snapshot.orderChanged = true;
+  }
+  // Remote additions absent from the baseline remain desired until the failed
+  // apply completes, rather than being mistaken for local closures.
+  return snapshot;
 }
 function captureNow(): void {
   if (!Services.prefs.getBoolPref("floorp.workspaces.enabled", true)) return;
   const seenIds = new Set<string>(Object.keys(state().records));
   for (const id of state().selected) {
     try {
-      const snapshots = [...providers].filter((provider) =>
-        !provider.window.closed
-      )
-        .map((provider) => provider.capture(id, seenIds))
-        .filter((value): value is WorkspaceSyncSnapshot => value !== null);
-      if (!snapshots.length) continue;
-      const snapshot = {
-        ...snapshots[0],
-        orderChanged: snapshots.some((snapshot) =>
-          snapshot.orderChanged !== false
-        ),
-        tabs: snapshots.flatMap((value) => value.tabs),
-      };
+      const observed = captureSnapshot(id, seenIds);
+      if (!observed) continue;
+      const pending = state().pendingApplies.includes(id);
+      const snapshot = pending && state().records[id]
+        ? pendingSnapshot(state().records[id], observed)
+        : observed;
       const previous = state().records[id] ?? null;
       const next = updateWorkspaceSyncDocument(
         previous,
@@ -298,6 +419,7 @@ function captureNow(): void {
         if (!tab.deleted) parseWorkspaceSyncRecord(workspaceTabRecord(id, tab));
       }
       state().records[id] = next;
+      if (pending) state().pendingBaselines[id] = observed;
       if (!state().metadataKnown.includes(id)) state().metadataKnown.push(id);
       if (
         !previous ||
@@ -329,12 +451,58 @@ function captureNow(): void {
     }
   }
 }
+async function applySelected(
+  document: WorkspaceSyncDocument,
+  expected = accountEpoch,
+  completesClosures = false,
+): Promise<void> {
+  assertAccountEpoch(expected);
+  const id = document.workspaceId;
+  if (!state().pendingApplies.includes(id)) state().pendingApplies.push(id);
+  const baseline = captureSnapshot(id);
+  if (baseline) state().pendingBaselines[id] = baseline;
+  changed(id);
+  await apply(document, expected);
+  assertAccountEpoch(expected);
+  if (completesClosures || !state().pendingCloses[id]?.length) {
+    state().pendingApplies = state().pendingApplies.filter((value) =>
+      value !== id
+    );
+    delete state().pendingBaselines[id];
+  } else {
+    const current = captureSnapshot(id);
+    if (current) state().pendingBaselines[id] = current;
+  }
+  changed(id);
+}
+async function retryPendingApplies(expected: number): Promise<void> {
+  for (const id of [...state().pendingApplies]) {
+    assertAccountEpoch(expected);
+    const document = state().records[id];
+    if (document && state().selected.includes(id) && !retired.has(id)) {
+      // Only a completed incoming pass can decide whether a later parent
+      // tombstone cancels these closures. Ordinary capture must not flush them.
+      if (state().pendingCloses[id]?.length) continue;
+      await applySelected(document, expected);
+    } else {
+      state().pendingApplies = state().pendingApplies.filter((value) =>
+        value !== id
+      );
+      delete state().pendingBaselines[id];
+      file.saveSoon();
+    }
+  }
+}
 async function disarmAccount(): Promise<void> {
+  ++accountEpoch;
+  accountAbort.abort();
+  accountAbort = new AbortController();
   await ready();
   await mutate(() => {
     file.data = emptyState();
     retired.clear();
     captureErrors.clear();
+    sentTombstones.clear();
     file.saveSoon();
     Services.obs.notifyObservers(
       null as unknown as nsISupports,
@@ -356,6 +524,9 @@ export const FloorpWorkspacesSync = {
   },
   errorFor(id: string): string | null {
     if (retired.has(id)) return "deleted-workspace";
+    if (initialized && state().pendingApplies.includes(id)) {
+      return "incoming-failed";
+    }
     if (
       initialized && state().incomingFailures.length &&
       state().pendingCloses[id]?.length
@@ -386,12 +557,15 @@ export const FloorpWorkspacesSync = {
       await ready();
       await waitForProviders(signal);
       await mutate(async () => {
+        const expected = accountEpoch;
         if (signal?.aborted) {
           throw new Error("Workspace window registration cancelled");
         }
         captureNow();
         for (const id of state().selected) {
-          if (state().records[id]) await apply(state().records[id]);
+          if (state().records[id]) {
+            await applySelected(state().records[id], expected);
+          }
         }
       });
       return () => {
@@ -405,10 +579,12 @@ export const FloorpWorkspacesSync = {
     }
   },
   async select(id: string, selected: boolean): Promise<void> {
+    const expected = accountEpoch;
     await ready();
     await waitForProviders();
     if (!isWorkspaceSyncId(id)) throw new Error("Invalid workspace ID");
     await mutate(() => {
+      assertAccountEpoch(expected);
       if (selected) {
         const previousSelected = [...state().selected];
         const previousExcluded = [...state().excluded];
@@ -439,19 +615,31 @@ export const FloorpWorkspacesSync = {
     });
   },
   async capture(): Promise<void> {
+    const expected = accountEpoch;
     await ready();
-    await waitForProviders();
-    await mutate(captureNow);
+    await waitForProviders(accountAbort.signal);
+    await mutate(async () => {
+      assertAccountEpoch(expected);
+      captureNow();
+      await retryPendingApplies(expected);
+    });
   },
   async deleteWorkspace(id: string): Promise<void> {
+    const expected = accountEpoch;
     await ready();
     await mutate(() => {
+      assertAccountEpoch(expected);
       if (!state().selected.includes(id)) return;
       for (const tab of state().records[id]?.tabs ?? []) {
         retire(tab.id);
         tombstone(tab.id);
       }
       delete state().records[id];
+      delete state().pendingCloses[id];
+      delete state().pendingBaselines[id];
+      state().pendingApplies = state().pendingApplies.filter((value) =>
+        value !== id
+      );
       state().metadataKnown = state().metadataKnown.filter((value) =>
         value !== id
       );
@@ -471,10 +659,15 @@ export class FloorpWorkspaceRecord extends CryptoWrapper {
 }
 Utils.deferGetSet(FloorpWorkspaceRecord, "cleartext", ["entity"]);
 const sentTombstones = new Map<string, number>();
+// Native decrypt/reconcile callbacks can resume after startOver. Preserve the
+// session in which each incoming record entered the engine, even after rebind.
+const recordEpochs = new WeakMap<FloorpWorkspaceRecord, number>();
 
 class FloorpWorkspaceStore extends Store {
   async getAllIDs(): Promise<Record<string, boolean>> {
+    const expected = this.engine.accountSessionEpoch;
     await ready();
+    this.engine.assertAccountSession(expected);
     const ids = [...Object.keys(state().deleted)];
     for (const id of state().selected) {
       if (!state().records[id] || captureErrors.has(id)) continue;
@@ -488,7 +681,9 @@ class FloorpWorkspaceStore extends Store {
     return Object.fromEntries(ids.map((id) => [id, true]));
   }
   async itemExists(id: string): Promise<boolean> {
+    const expected = this.engine.accountSessionEpoch;
     await ready();
+    this.engine.assertAccountSession(expected);
     if (state().records[id]) return state().selected.includes(id);
     const entry = findTab(id);
     return Boolean(
@@ -500,7 +695,9 @@ class FloorpWorkspaceStore extends Store {
     id: string,
     collection: string,
   ): Promise<FloorpWorkspaceRecord> {
+    const expected = this.engine.accountSessionEpoch;
     await ready();
+    this.engine.assertAccountSession(expected);
     const record = new FloorpWorkspaceRecord(collection, id);
     if (Object.hasOwn(state().deleted, id)) {
       record.deleted = true;
@@ -522,9 +719,13 @@ class FloorpWorkspaceStore extends Store {
     return record;
   }
   async create(record: FloorpWorkspaceRecord): Promise<void> {
+    const expected = recordEpochs.get(record) ??
+      this.engine.accountSessionEpoch;
     await ready();
-    await waitForProviders();
+    this.engine.assertAccountSession(expected);
+    await waitForProviders(accountAbort.signal);
     await mutate(async () => {
+      this.engine.assertAccountSession(expected);
       const entity = parseWorkspaceSyncRecord(record.entity);
       if (
         record.id !==
@@ -536,6 +737,9 @@ class FloorpWorkspaceStore extends Store {
       if (entity.kind === "tab" && state().records[record.id]) {
         throw new Error("Workspace and tab IDs must be distinct");
       }
+      // Capture edits made while the network was in flight before applying a
+      // complete merged workspace. Pending applies/closures are excluded.
+      captureNow();
       if (
         state().excluded.includes(entity.workspaceId) ||
         captureErrors.has(entity.workspaceId)
@@ -600,20 +804,32 @@ class FloorpWorkspaceStore extends Store {
       }
       state().records[entity.workspaceId] = document;
       changed(entity.workspaceId);
-      if (state().selected.includes(entity.workspaceId)) await apply(document);
+      if (state().selected.includes(entity.workspaceId)) {
+        await applySelected(document, expected);
+        this.engine.assertAccountSession(expected);
+      }
     });
   }
   async update(record: FloorpWorkspaceRecord): Promise<void> {
     await this.create(record);
   }
   async remove(record: FloorpWorkspaceRecord): Promise<void> {
+    const expected = recordEpochs.get(record) ??
+      this.engine.accountSessionEpoch;
     await ready();
+    this.engine.assertAccountSession(expected);
     await mutate(() => {
+      this.engine.assertAccountSession(expected);
       delete state().deleted[record.id];
       retire(record.id);
       if (state().records[record.id]) {
         // Workspace deletion disables sync while preserving this device's content.
         delete state().records[record.id];
+        delete state().pendingCloses[record.id];
+        delete state().pendingBaselines[record.id];
+        state().pendingApplies = state().pendingApplies.filter((id) =>
+          id !== record.id
+        );
         state().metadataKnown = state().metadataKnown.filter((id) =>
           id !== record.id
         );
@@ -642,8 +858,11 @@ class FloorpWorkspaceStore extends Store {
     return Promise.reject(new Error("Workspace Sync IDs are immutable"));
   }
   async wipe(): Promise<void> {
+    const expected = this.engine.accountSessionEpoch;
     await ready();
+    this.engine.assertAccountSession(expected);
     await mutate(() => {
+      this.engine.assertAccountSession(expected);
       const next = emptyState(state().accountUid);
       next.excluded = [...new Set([...state().excluded, ...state().selected])];
       file.data = next;
@@ -671,8 +890,21 @@ class FloorpWorkspaceTracker extends LegacyTracker {
 
 /** Firefox owns authenticated transport, encryption, collection state and retry. */
 export class FloorpWorkspacesEngine extends SyncEngine {
+  accountSessionEpoch = accountEpoch;
+  private accountUid: string | undefined;
   constructor(service: unknown) {
     super(WORKSPACE_SYNC_COLLECTION, service);
+  }
+  assertAccountSession(expected = this.accountSessionEpoch): void {
+    assertAccountEpoch(expected);
+    if (expected !== this.accountSessionEpoch) {
+      throw new Error("Workspace Sync engine session changed");
+    }
+    if (
+      this.accountUid !== undefined && state().accountUid !== this.accountUid
+    ) {
+      throw new Error("Workspace Sync account identity changed");
+    }
   }
   get enabled(): boolean {
     return super.enabled &&
@@ -682,7 +914,10 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     super.enabled = value;
   }
   async _processIncoming(): Promise<void> {
+    const expected = this.accountSessionEpoch;
+    this.assertAccountSession(expected);
     await super._processIncoming();
+    this.assertAccountSession(expected);
     // The base engine can resolve with failed or backlogged records. A parent
     // tombstone may still be among them, so defer UI closure until all incoming
     // records have been applied, across every download batch.
@@ -698,9 +933,13 @@ export class FloorpWorkspacesEngine extends SyncEngine {
   async _maybeReconcile(
     record: FloorpWorkspaceRecord,
   ): Promise<{ shouldApply: boolean; error: unknown }> {
+    const expected = recordEpochs.get(record) ?? this.accountSessionEpoch;
+    recordEpochs.set(record, expected);
+    this.assertAccountSession(expected);
     const result = await super._maybeReconcile(record);
     await ready();
     await mutate(() => {
+      this.assertAccountSession(expected);
       if (result.error) {
         if (
           isWorkspaceSyncId(record.id) &&
@@ -719,9 +958,15 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     records: FloorpWorkspaceRecord[],
     telemetry: unknown,
   ): Promise<string[]> {
+    const expected = this.accountSessionEpoch;
+    this.assertAccountSession(expected);
+    for (const record of records) {
+      if (!recordEpochs.has(record)) recordEpochs.set(record, expected);
+    }
     const failed = await super._applyRecords(records, telemetry) as string[];
     await ready();
     await mutate(() => {
+      this.assertAccountSession(expected);
       const failures = new Set(state().incomingFailures);
       for (const record of records) {
         if (failed.includes(record.id)) failures.add(record.id);
@@ -733,13 +978,22 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     return failed;
   }
   async _flushIncomingTabs(): Promise<void> {
+    const expected = this.accountSessionEpoch;
     await ready();
-    await waitForProviders();
+    this.assertAccountSession(expected);
+    await waitForProviders(accountAbort.signal);
     await mutate(async () => {
+      this.assertAccountSession(expected);
+      captureNow();
       for (const [id, tabs] of Object.entries(state().pendingCloses)) {
         const document = state().records[id];
         if (document && state().selected.includes(id) && !retired.has(id)) {
-          await apply({ ...document, tabs: [...document.tabs, ...tabs] });
+          await applySelected(
+            { ...document, tabs: [...document.tabs, ...tabs] },
+            expected,
+            true,
+          );
+          this.assertAccountSession(expected);
         }
         delete state().pendingCloses[id];
       }
@@ -747,11 +1001,14 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     });
   }
   async getChangedIDs(): Promise<Record<string, number>> {
+    const expected = this.accountSessionEpoch;
     await ready();
+    this.assertAccountSession(expected);
     const tracked = await this._tracker.getChangedIDs() as Record<
       string,
       number
     >;
+    this.assertAccountSession(expected);
     return Object.fromEntries(
       Object.entries(tracked).filter(([id]) => {
         if (Object.hasOwn(state().deleted, id)) return true;
@@ -764,7 +1021,9 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     );
   }
   async _syncStartup(): Promise<void> {
+    let expected = accountEpoch;
     await accountReset;
+    assertAccountEpoch(expected);
     const { getFxAccountsSingleton } = ChromeUtils.importESModule(
       "resource://gre/modules/FxAccounts.sys.mjs",
     );
@@ -773,19 +1032,31 @@ export class FloorpWorkspacesEngine extends SyncEngine {
       throw new Error("Workspace Sync requires a signed-in Mozilla Account");
     }
     await ready();
+    assertAccountEpoch(expected);
     if (state().accountUid && state().accountUid !== user.uid) {
-      await disarmAccount();
+      const reset = disarmAccount();
+      expected = accountEpoch;
+      accountReset = reset;
+      await reset;
     }
     await mutate(() => {
+      assertAccountEpoch(expected);
+      this.accountSessionEpoch = expected;
+      this.accountUid = user.uid;
       state().accountUid = user.uid;
       file.saveSoon();
     });
     await FloorpWorkspacesSync.capture();
     await trackedChanges;
+    this.assertAccountSession(expected);
     await super._syncStartup();
+    this.assertAccountSession(expected);
   }
   async _reconcile(record: FloorpWorkspaceRecord): Promise<boolean> {
+    const expected = recordEpochs.get(record) ?? this.accountSessionEpoch;
+    recordEpochs.set(record, expected);
     await ready();
+    this.assertAccountSession(expected);
     if (!isWorkspaceSyncId(record.id)) {
       throw new Error("Invalid incoming Sync record ID");
     }
@@ -809,15 +1080,21 @@ export class FloorpWorkspacesEngine extends SyncEngine {
       Object.hasOwn(state().deleted, record.id) ||
       (retired.has(record.id) || retired.has(entity.workspaceId))
     ) {
-      await mutate(() => tombstone(record.id));
+      await mutate(() => {
+        this.assertAccountSession(expected);
+        tombstone(record.id);
+      });
+      this.assertAccountSession(expected);
       this._modified.set(record.id, Date.now() / 1000);
       return false;
     }
     return true;
   }
   async _onRecordsWritten(succeeded: string[]): Promise<void> {
+    const expected = this.accountSessionEpoch;
     await ready();
     await mutate(() => {
+      this.assertAccountSession(expected);
       for (const id of succeeded) {
         if (
           !sentTombstones.has(id) ||

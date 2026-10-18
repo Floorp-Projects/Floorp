@@ -298,7 +298,11 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   apply(
     document: WorkspaceSyncDocument,
     missingTabIds: ReadonlySet<string>,
+    signal?: AbortSignal,
   ): Promise<void> {
+    if (signal?.aborted) {
+      return Promise.reject(new Error("Workspace Sync account changed"));
+    }
     this.applying = true;
     globalThis.clearTimeout(this.timer);
     try {

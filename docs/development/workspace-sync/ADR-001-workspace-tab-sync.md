@@ -142,16 +142,32 @@ failures are independently persisted and retried even after Firefox's usual
 repeated-failure list would drop them. Pending closures remain deferred across
 restart; capture excludes their retired IDs.
 
+Before merging incoming records or flushing tab closures, the engine captures
+local edits that occurred while network requests were in flight. An unrelated
+incoming tab or metadata record therefore does not rewind a pending local
+navigation. A persisted pending-apply marker and pre-apply local baseline protect
+remote tabs from being mistaken for locally closed tabs after a failed or
+partially completed UI apply. Recovery captures only changes since that baseline,
+including navigation, explicit closure and reordering of previously observed
+tabs, while retaining remote additions that never opened. Registration and the next capture
+retry the desired state. Pending remote closures are retried only after a
+completed incoming pass, so a later parent deletion can still cancel them.
+
 If a failed server record is physically removed rather than repaired, this
 conservative policy can keep deferred closures pending. Turning off workspace
 sync preserves local content; disconnecting Firefox Sync clears the account's
 workspace cache and subscriptions, after which the user can reconnect and opt in
 again. This reset is intentional and does not delete local browser content.
 
-`weave:service:start-over` disarms the cached account state. In addition, every
-engine startup checks the signed-in FxA UID against the stored owner before
-uploading. A different account starts with local-only workspaces and no inherited
-remote subscriptions or retired IDs.
+`weave:service:start-over` synchronously invalidates the account session and
+aborts pending provider work before queuing the cached-state reset. Incoming
+records retain their originating session; store mutations, outgoing reads and
+asynchronous continuations reject invalidated sessions. Providers recheck the
+cancellation signal before changing UI after an asynchronous wait. Every engine
+startup also checks the signed-in FxA UID against the stored owner before
+uploading, and rejects a UID lookup that crossed account invalidation. A different
+account starts with local-only workspaces and no inherited remote subscriptions
+or retired IDs.
 
 Invalid local metadata pauses only that workspace and retains its last good
 record. Its menu shows an attention state and a localized explanation; failed
@@ -173,5 +189,8 @@ The pure model and wire tests are browser tests under
 offline close plus reorder, clock regression/ties, payload and Unicode boundaries,
 per-tab entities, and large aggregates. Implementation validation also exercised
 the native Sync engine/record APIs and encryption in an isolated Gecko 158
-profile. A patched full Runtime build and authenticated two-device FxA transport
-have not yet been exercised; those remain release acceptance checks.
+profile. The production Chrome loader and all 170 ESM modules also build
+successfully. A reproducible fresh-profile harness is documented in
+`tools/workspace-sync/README.md`. A patched full Runtime build and authenticated
+two-device FxA transport have not yet been exercised; those remain release
+acceptance checks.

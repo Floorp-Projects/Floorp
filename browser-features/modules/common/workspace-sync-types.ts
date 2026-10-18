@@ -40,6 +40,8 @@ export interface WorkspaceSyncProvider {
   apply(
     document: WorkspaceSyncDocument,
     missingTabIds: ReadonlySet<string>,
+    /** Async providers must recheck cancellation before changing browser UI. */
+    signal?: AbortSignal,
   ): Promise<void>;
   tabIds(workspaceId: string): string[];
 }
