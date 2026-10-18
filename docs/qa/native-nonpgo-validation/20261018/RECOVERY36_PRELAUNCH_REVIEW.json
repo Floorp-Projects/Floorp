@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "review": "Recovery36 sample-bounded delayed census recheck prelaunch",
+  "decision": "GO_SHORT_DIAGNOSTIC_AFTER_IMMUTABLE_BINDING",
+  "longActivation": "NO_GO_PENDING_SHORT_TERMINAL_REVIEW",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "baselineFixture": "4848f4cc7090d5910d776c6ab9fec93753ee7631",
+  "contentBindings": {
+    "tools/qa/native-nonpgo/census_convergence.py": {
+      "bytes": 18238,
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594"
+    },
+    "tools/qa/native-nonpgo/test_census_convergence.py": {
+      "bytes": 40322,
+      "sha256": "d42830fff51d005852b7c283ba416f842e4f12e56ef333a59ad84456600857ea"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_CENSUS_VERIFICATION.md": {
+      "bytes": 5801,
+      "sha256": "c884c50b802fa48ab96dc08e578f49e8b90335e3a38b86e8ffe009c2c5d4443f"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_CENSUS_WORKFLOW.yml.disabled": {
+      "bytes": 3399,
+      "sha256": "08be919546efd2fe69482d0f90c9f617b914639e7993b64f1cb60c79a3841f08"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY36_LOCAL_RESULT.json": {
+      "bytes": 1112,
+      "sha256": "03088e63f45b6b27febf040a471e2e1b413ccc239381a2bee860e52976ea74bd"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_TERMINAL_RESULT.json": {
+      "bytes": 266863,
+      "sha256": "dbc466baf3ce72e5b30d7ea0c88213f32410cb44594d40e8fb6504d5d2586e01"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_TERMINAL_REVIEW.json": {
+      "bytes": 11726,
+      "sha256": "9422fb0477413cefab0c559259eb08e670cbc252d585aae105264c43af0cf237"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_INITIAL_REVIEW.json": {
+      "bytes": 5536,
+      "sha256": "a7b562c6c9e0703fa518ff20ba52306297a0bfa06c4309532a7811093cd6e809"
+    }
+  },
+  "reviewerValidation": {
+    "environment": "Linux",
+    "workingDirectory": "tools/qa/native-nonpgo",
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+    "total": 312,
+    "passed": 296,
+    "DarwinSkipped": 16,
+    "seconds": 11.203,
+    "exitCode": 0,
+    "logSHA256": "ab627063af2266502a19c1c41e8c4f69b825e61fd257b2b27fcaf73ffa3dc6ac",
+    "workflowYAML": "passed",
+    "bashSyntaxScripts": 5,
+    "inlinePythonAST": 1,
+    "actualMac": "Pending; sixteen Darwin tests skipped on Linux."
+  },
+  "comparison": {
+    "trigger": "The narrow candidate retry predicate is byte-identical to Recovery34/35.",
+    "acceptance": "The resource/disk/log/native-private/stall, final primary delta0 and loop-end deadline portion is byte-identical; the additional deadline gate applies only around the new pause.",
+    "inheritedHashChecks": "plan.json, support.py, darwin_inventory.py, inventory_stress.py/test and census_experiment.py/test remain at previously reviewed hashes.",
+    "independentProviderSourceComparison": "darwin_activity.py and fetch_sdk.py independently fetched at immutable baseline and exactly match current source.",
+    "shortWorkflow": "Compared with Recovery34, only display name, two branch strings and expected307 to312 test count differ."
+  },
+  "assessment": {
+    "scope": "Only census candidate resource timing/diagnostics and its tests change. Group inventory/API, ordinary task/BSD reader, source/tool/SDK content, product, authentication and permissions remain unchanged.",
+    "pause": "At most one requested0.25-second sleep for the whole resources() sample. The same non-self bound-birth ESRCH0/232/fallback-measured predicate is required. Later matching candidates receive no extra pause.",
+    "queryBudget": "At most two read calls and four native task queries per candidate, unchanged from Recovery34. No added query authority for permission, other errno, malformed/unbound data, replacement or self.",
+    "order": "Original read and trace precede pause; existing monotonic clock reserves0.25seconds before sleep and is checked afterwards before any fresh BSD or second task read. Fresh BSD remains bound to the original PID/birth/UID/RUID tuple.",
+    "deadlines": "Budget rejection/overshoot preserves the fixed census-wait-phase-deadline Failure and null totals; it is not reclassified as monitor/API failure. Requested sleep is not a strict wallclock cap. Existing final deadline gate prevents late qualification.",
+    "unknown": "Interrupted sleep/native query failures remain unknown/null and fail closed. Fixed interrupted status and elapsed duration are retained; arbitrary error text is not published.",
+    "retention": "One-shot requested/actual elapsed/status/count/candidate index is retained as sample aggregate independently of the latest16 candidate traces. Trace overflow cannot erase the pause evidence.",
+    "lifecycle": "Only an original-five-field-bound accepted full BSD object produces a fixed status enum and inExit bool/null. Invalid/unavailable/replacement data is unbound/null. INEXIT never grants gone, measurement, exclusion, ownership or qualification.",
+    "resources": "Measured RSS/CPU still counted once after complete task and original-five-field BSD checks. Gone credit remains authoritative same-identity full BSD zombie or independent ESRCH; generation replacement, changed credentials, persistent missing data and self-gone fail.",
+    "cleanup": "Inherited bounded exact-child cleanup/stream closes and primary-preserving fault injections remain for the two actual Mac controls.",
+    "privacy": "No raw status/flag values, PID/birth/UID, argv/path, free exception text or native stdout is added; enums, bool/null and numeric duration/query fields only."
+  },
+  "meaningfulTests": [
+    "Twenty rechecked candidates request only one sleep, retain total pause evidence after latest16 overflow and measure each candidate once.",
+    "Permission/non-ESRCH/shape/birth negatives cause no pause; original anchor mismatch after the pause cannot become a replacement identity.",
+    "Insufficient reserved time rejects before sleeping; scheduling overshoot rejects before further BSD/task calls, preserving fixed phase failure and null totals.",
+    "Interrupted sleep retains fixed unavailable stopping evidence without private exception text.",
+    "Bound INEXIT true/false and missing/invalid flags are projected safely, and INEXIT plus persistent missing counters never grants gone.",
+    "Existing replacement/credentials/self/permission/bounded missing reads, resource/phase/stall/strict delta0 and cleanup tests continue passing.",
+    "Two actual Mac controls are extended to require the real single pause and bound BSD diagnostic types around real child/BSD/task APIs; their actual execution remains pending."
+  ],
+  "priorRun35": {
+    "receiptPath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_TERMINAL_RESULT.json",
+    "naturalRustAndArchive": "passed",
+    "resourceOutcome": "All four immediate task queries returned ESRCH while validated BSD observations remained same identity. The sample failed safely with null totals; immediate retry alone was insufficient.",
+    "census": "All244 deltas nonzero, min7/max17/first16/last16. No checkpoint stored; consumer/native unreached.",
+    "cause": "The exit-transition mechanism is plausible in published XNU, but actual historical cause and exact deployed kernel-source match are not established."
+  },
+  "scope": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-inventory-recovery36-20261018",
+    "jobMinutes": 20,
+    "internalExperimentMinutes": 15,
+    "expectedActualMacTests": 312,
+    "requiredSkipped": 0,
+    "freshCandidateRepeats": 5,
+    "sdkAcquisition": true,
+    "sdkMaterialization": true,
+    "stress": "Unchanged synchronized3x1536MiB/60-second CPU+churn, strict zero-timeout qualification.",
+    "knownChildAndBackground": true,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    }
+  },
+  "activationConditions": [
+    "Bind/read back these eight files and rendered caller at immutable commits; fixture placeholder replacement only.",
+    "Confirm unused exact branch/no prior run/no overlapping owned validation, exact repository/ref, initial-created-push/before-zero/attempt1 and single standard Intel job.",
+    "Fresh-check SDK12133086104 official unexpired source/head/attempt/content metadata; preserve ordinary API/HTTP/600-second/fixed ZIP/TAR/tree/version and no expired-access workaround.",
+    "Require312 actual Mac passes with zero skips, both delayed real-child lifecycle gates, five candidate repeats, full strict-zero-timeout stress, SDK and known-child/background evidence; independently review primary/monitor failures, pause/query traces and cleanup before any long decision."
+  ],
+  "limits": [
+    "This is a bounded timing hypothesis, not proof that Recovery35 failed in exit transition or that0.25seconds always permits recovery.",
+    "No unknown is converted to zero and no role, parent or exit flag waives the original strict primary delta0 requirement.",
+    "Short success cannot establish multi-hour monitoring, natural convergence, resumed full host/XUL/package or native authentication.",
+    "No CI, SDK payload retrieval, artifact upload, public write, source edit or permission change was performed by the reviewer."
+  ]
+}

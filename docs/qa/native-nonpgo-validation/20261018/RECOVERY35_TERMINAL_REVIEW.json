@@ -1,0 +1,257 @@
+{
+  "schema": 1,
+  "review": "Recovery35 independent terminal and bounded-delay design assessment",
+  "decision": "RUN_FAILED_CLOSED_NEXT_PATCH_REVIEW_REQUIRED",
+  "longActivation": "NO_GO_PENDING_REVIEWED_PATCH_AND_ACTUAL_MAC_REVALIDATION",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39169539108,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39169539108",
+    "caller": "a655f430c5db25c0aee2c802e41d00097da5493a",
+    "fixture": "4848f4cc7090d5910d776c6ab9fec93753ee7631",
+    "event": "push",
+    "attempt": 1,
+    "conclusion": "failure",
+    "producer": {
+      "job": 117799533224,
+      "conclusion": "failure",
+      "startedAt": "2026-10-18T21:49:44Z",
+      "completedAt": "2026-10-18T23:03:26Z"
+    },
+    "consumer": {
+      "job": 117815383493,
+      "conclusion": "skipped"
+    },
+    "runner": "macos-15-intel"
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_TERMINAL_RESULT.json",
+    "bytes": 266863,
+    "sha256": "dbc466baf3ce72e5b30d7ea0c88213f32410cb44594d40e8fb6504d5d2586e01",
+    "providerProjectionExact": true,
+    "compared": "Original/monitor failures, all5 diagnostic records, all46 stage summaries, Mac tests, all244 count rows, first/recent16/stopping evidence and resource extrema."
+  },
+  "independentEvidence": {
+    "providerRunJobs": "Both terminal jobs and run independently fetched.",
+    "decodedLogBytes": 573691,
+    "decodedLogSHA256": "d89214833b45e6d2461c644bf3003f68906d54356d065ff622373f69a4f1cf09",
+    "savedLogByteExact": true,
+    "completeFinalSummaryParsed": true,
+    "artifactCount": 0,
+    "artifactAPI": "Independent run-artifact collection returned empty.",
+    "testProvenance": "Actual307-test receipt independently parsed; no new test suite rerun for this terminal-only review. The source is bound to the previously reviewed and actual-Mac-tested fixture."
+  },
+  "outcome": {
+    "MacTests": {
+      "total": 307,
+      "passed": 307,
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "seconds": 55.795
+    },
+    "sdk": "Official fixed acquisition/materialization passed.",
+    "naturalBuild": "Export, Rust target command and archive verification all exited0 naturally. Full host/XUL/package was not reached.",
+    "peakBuildRSSMiB": 7760,
+    "minimumBuildFreeGiB": 90.53,
+    "cleanup": "All46 pipeline stages exited0, exact leaders reaped0, groups verified-gone and cleanupFailure null.",
+    "firstFailure": {
+      "stage": "checkpoint-census",
+      "code": "monitor-unavailable",
+      "elapsedSeconds": 4376.53
+    },
+    "resourceFailure": {
+      "candidateIndex": 12,
+      "operation": "candidate-task-recheck",
+      "reason": "short-task-info",
+      "rssMiB": null,
+      "cpuSeconds": null,
+      "sampleComplete": false,
+      "failureCode": "census-wait-resource-unavailable"
+    },
+    "storage": "No checkpoint stored; consumer skipped; native authentication not tested.",
+    "validationOutcome": {
+      "execution": "monitor-inconclusive",
+      "nativeAuthentication": "not-verified",
+      "monitorFailureEstablishesProductFailure": false
+    }
+  },
+  "newDiscriminatingEvidence": {
+    "candidateReadCalls": 2,
+    "nativeTaskQueries": 4,
+    "allTaskResults": "Each returned0/232bytes with errnoESRCH.",
+    "firstAndSecondReadDiagnostics": [
+      {
+        "status": "unavailable",
+        "reason": "short-task-info",
+        "taskQuery": {
+          "bytes": 0,
+          "expectedBytes": 232,
+          "errno": 3
+        },
+        "sameCandidateBirth": true,
+        "fallbackBSDQuery": {
+          "bytes": 136,
+          "expectedBytes": 136,
+          "errno": 0
+        },
+        "fallbackReason": "measured",
+        "esrchRecheck": {
+          "firstTaskQuery": {
+            "bytes": 0,
+            "expectedBytes": 232,
+            "errno": 3
+          },
+          "firstBSDQuery": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "taskQuery": {
+            "bytes": 0,
+            "expectedBytes": 232,
+            "errno": 3
+          },
+          "bsdQuery": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "sameGeneration": true,
+          "outcome": "unavailable",
+          "reason": "short-task-info"
+        }
+      },
+      {
+        "status": "unavailable",
+        "reason": "short-task-info",
+        "taskQuery": {
+          "bytes": 0,
+          "expectedBytes": 232,
+          "errno": 3
+        },
+        "sameCandidateBirth": true,
+        "fallbackBSDQuery": {
+          "bytes": 136,
+          "expectedBytes": 136,
+          "errno": 0
+        },
+        "fallbackReason": "measured",
+        "esrchRecheck": {
+          "firstTaskQuery": {
+            "bytes": 0,
+            "expectedBytes": 232,
+            "errno": 3
+          },
+          "firstBSDQuery": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "taskQuery": {
+            "bytes": 0,
+            "expectedBytes": 232,
+            "errno": 3
+          },
+          "bsdQuery": {
+            "bytes": 136,
+            "expectedBytes": 136,
+            "errno": 0
+          },
+          "sameGeneration": true,
+          "outcome": "unavailable",
+          "reason": "short-task-info"
+        }
+      }
+    ],
+    "outerBSD": {
+      "query": {
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0
+      },
+      "state": "measured",
+      "reason": null,
+      "originalFiveFieldIdentityMatches": true
+    },
+    "conclusion": "The narrowly triggered immediate outer recheck was actually used and remained unavailable. Immediate rechecking alone is insufficient in this run; it was correctly not converted to gone or zero resources.",
+    "timingLimit": "Sample elapsed4376.523s to failure4376.53s is approximately7ms at receipt precision and includes other sample work. Individual native call timestamps and a minimum observation interval are absent.",
+    "livenessLimit": "BSD measured is the implementation classification for a validated BSD record with non-zombie status. It is not a guarantee that ordinary task lookup or resource access is currently possible."
+  },
+  "census": {
+    "samples": 244,
+    "completeResourceSamples": 243,
+    "unknownResourceSamples": 1,
+    "firstElapsedSeconds": 4114.498,
+    "lastElapsedSeconds": 4376.523,
+    "spanSeconds": 262.025,
+    "firstDelta": 16,
+    "lastDelta": 16,
+    "minimumDelta": 7,
+    "maximumDelta": 17,
+    "zeroDeltaSamples": 0,
+    "peakRSSMiB": 300.73828125,
+    "minimumFreeGiB": 90.233,
+    "baselineReset": false,
+    "candidatesExcluded": false,
+    "signalsSent": false,
+    "qualificationEstablished": false
+  },
+  "retainedInventoryDiagnostics": {
+    "recoveredShortTaskSamples": 4,
+    "nativeHelperTimeoutAttempts": 0,
+    "stoppingCensusRecord": 1,
+    "interpretation": "The retained history has four recovered short-task-info samples and the separate stopping resource record. The stop is distinct from the earlier native-helper timeout cases."
+  },
+  "primarySourceAssessment": {
+    "scope": "Published XNU xnu-11417.101.15 supplies a mechanism consistent with these observations, not proof of the exact running kernel path or this candidate cause.",
+    "sources": [
+      {
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/proc_info.h#L105",
+        "supports": "The public BSD flags define PROC_FLAG_INEXIT=4 as an exit-in-progress indicator."
+      },
+      {
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L718",
+        "supports": "BSD info derives INEXIT from P_LEXIT."
+      },
+      {
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/proc_info.c#L2142",
+        "supports": "The BSD(arg1) path can use a zombie reference when ordinary proc_find fails; taskallinfo(arg0) cannot use that fallback."
+      },
+      {
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exit.c#L2108",
+        "relatedURL": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exit.c#L2612",
+        "supports": "Exit preparation moves the process to the zombie list and marks its reference dead before a later proc_exit assignment of SZOMB. Cleanup between those points may block."
+      }
+    ],
+    "inference": "A transition can therefore be consistent with BSD non-zombie metadata and task ESRCH. INEXIT was not recorded in this trial, so no retrospective attribution is justified.",
+    "lineAnchors": "Independently verified from immutable-tag provider raw source bytes."
+  },
+  "nextMinimalDesign": {
+    "assessment": "A delayed revalidation is a reasonable bounded experiment; implementation and actual-Mac effectiveness still require separate review.",
+    "scope": "Preserve the same narrow non-self ESRCH0/232 + valid matching fallback birth trigger. No delay or extra read for permission, changed generation/credentials, malformed metadata, other errno or self.",
+    "sampleBudget": "At most one requested0.25-second pause across the entire resource sample, not per candidate. Record aggregate requested/count/actual elapsed independently of latest16 candidate traces.",
+    "deadline": "Check the existing monotonic phase/platform budget with0.25seconds reserved before waiting and again afterwards. Preserve the original fixed phase Failure instead of recategorizing it as monitor unknown. Requested sleep is not a hard wallclock duration.",
+    "order": "Original read and evidence, bounded budget check, pause, budget recheck, fresh original-five-field BSD, then existing second read only when justified. Total task-query maximum stays four. Later candidates cannot acquire additional pauses.",
+    "acceptance": "Only complete same-identity measurement or separately authoritative same-identity zombie/independent ESRCH may recover; persistent unknown stays null and fails. Final primary baseline delta0 remains mandatory.",
+    "diagnosticOnly": "Project verified BSD state as a fixed enum and INEXIT as bool/null from existing metadata. Bind it to the same verified candidate, and never use it alone for gone, exclusion, ownership or product failure.",
+    "negativeTests": [
+      "Twenty eligible candidates request only one total pause and keep aggregate evidence after trace overflow.",
+      "Permission, generation/credential change, self and unsupported query shapes cause no pause or new reads.",
+      "Insufficient reserved time and scheduling overshoot preserve the fixed phase failure and original receipt.",
+      "Order/identity changes during pause and persistent4-query ESRCH remain fail-closed with null totals.",
+      "Real-child controlled live and unreaped-zombie paths use real BSD/task APIs around the real pause and retain exact cleanup.",
+      "INEXIT and BSD-state metadata remain diagnostic only, missing data remains null and private fields are not projected."
+    ]
+  },
+  "limits": [
+    "Natural convergence never occurred in this run; a timing change cannot waive the16 final candidates.",
+    "No recorded resource-limit violation or permission denial explains the stopping sample. Absence is limited to retained evidence.",
+    "Historical native-host, helper timeout and candidate causes remain unresolved; no product/native failure or success is inferred.",
+    "Reviewer performed read-only API/source/evidence inspection and primary-source research; no source edit, CI activation, SDK payload retrieval, artifact storage or permission change."
+  ]
+}

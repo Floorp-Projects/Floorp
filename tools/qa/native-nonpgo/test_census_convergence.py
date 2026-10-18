@@ -74,7 +74,7 @@ class ConvergenceGuards(unittest.TestCase):
                 rows=next(series)
                 value.update(status='rejected' if rows else 'passed',newCandidateIdentities=len(rows))
                 return rows
-            with mock.patch.object(cc,'resources',side_effect=resource or (lambda rows,reader,details:activity(rows))), \
+            with mock.patch.object(cc,'resources',side_effect=lambda rows,reader,details,**kwargs:(resource(rows,reader,details) if resource else activity(rows))), \
                  mock.patch.object(cc.shutil,'disk_usage',return_value=SimpleNamespace(free=90*1024**3)):
                 result=cc.wait_for_boundary(baseline,receipt,runner,reader=mock.Mock(),measure=measure,
                                             sleep=lambda _:None)
@@ -376,7 +376,9 @@ class CandidateRecheckGuards(unittest.TestCase):
                     {'status':'gone','reason':'generation-replaced'}]
         for change in changes:
             reader=mock.Mock();reader.read.return_value={**self.missing(),**change}
-            with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.candidate_read(ROW,reader,{})
+            pause=mock.Mock()
+            with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.candidate_read(ROW,reader,{},pause=pause)
+            pause.assert_not_called()
             self.assertNotIn('_goneConfirmed',value);reader.bsd.assert_not_called()
             self.assertEqual(reader.read.call_count,1)
 
@@ -444,6 +446,94 @@ class CandidateRecheckGuards(unittest.TestCase):
             cc.metadata_resource_gate({ROW},reader,{})
         self.assertEqual(reader.read.call_count,3)
 
+    def phase_pause_case(self,initial,after_sleep=None,interrupt=False):
+        clock=[initial];reader=mock.Mock();reader.bsd.side_effect=self.stable_bsd
+        reader.read.side_effect=[self.measured(OWN),self.missing(),self.measured()]
+        with tempfile.TemporaryDirectory() as temporary:
+            runner=ConvergenceGuards.runner(self,Path(temporary));runner.elapsed=lambda:clock[0]
+            receipt={}
+            def measure(baseline,value,observed):
+                value.update(status='rejected',newCandidateIdentities=1);return {ROW}
+            def pause(seconds):
+                if interrupt:raise OSError(errno.EINTR,'PRIVATE-INTERRUPT')
+                clock[0]=after_sleep
+            expected='monitor-unavailable' if interrupt else 'census-wait-phase-deadline'
+            with mock.patch.object(cc.os,'getpid',return_value=41), \
+                 mock.patch.object(cc.time,'sleep',side_effect=pause) as sleeping, \
+                 mock.patch.object(cc.time,'monotonic',side_effect=[100.,101.1]), \
+                 self.assertRaisesRegex(Failure,'^'+expected+'$'):
+                cc.wait_for_boundary({OWN},receipt,runner,deadline_minutes=1,reader=reader,measure=measure)
+            return receipt,runner,reader,sleeping
+
+    def test_pause_reservation_rejects_before_sleep_at_phase_boundary(self):
+        receipt,runner,reader,sleeping=self.phase_pause_case(59.9)
+        sleeping.assert_not_called();self.assertEqual(reader.read.call_count,2)
+        resource=receipt['samples'][0]['resource']
+        self.assertEqual(resource['resourceRetryPause']['status'],'budget-rejected')
+        self.assertEqual(resource['resourceRetryPause']['pauses'],0)
+        self.assertEqual(resource['failureCode'],'census-wait-phase-deadline')
+        self.assertIsNone(resource['rssMiB']);self.assertIsNone(runner.monitor_failure)
+        self.assertIsNone(receipt['finalBoundary'])
+
+    def test_scheduler_overshoot_rechecks_budget_before_fresh_bsd_or_task(self):
+        receipt,runner,reader,sleeping=self.phase_pause_case(59.,60.1)
+        sleeping.assert_called_once_with(.25);self.assertEqual(reader.read.call_count,2)
+        self.assertEqual(reader.bsd.call_count,4)
+        resource=receipt['samples'][0]['resource']
+        self.assertEqual(resource['resourceRetryPause']['elapsedSeconds'],1.1)
+        self.assertEqual(resource['resourceRetryPause']['pauses'],1)
+        self.assertEqual(resource['failureCode'],'census-wait-phase-deadline')
+        self.assertIsNone(resource['rssMiB']);self.assertIsNone(runner.monitor_failure)
+        self.assertEqual(receipt['status'],'failed');self.assertIsNone(receipt['finalBoundary'])
+
+    def test_interrupted_pause_is_unknown_and_preserves_safe_stop_detail(self):
+        receipt,runner,reader,sleeping=self.phase_pause_case(10.,interrupt=True)
+        sleeping.assert_called_once_with(.25);self.assertEqual(reader.read.call_count,2)
+        resource=receipt['samples'][0]['resource']
+        self.assertEqual(resource['resourceRetryPause']['status'],'interrupted')
+        self.assertEqual(resource['resourceRetryPause']['elapsedSeconds'],1.1)
+        self.assertEqual(resource['failureCode'],'resource-query-exception')
+        self.assertIsNone(resource['rssMiB']);self.assertIsNone(resource['cpuSeconds'])
+        self.assertEqual(runner.monitor_failure['operation'],'candidate-recheck-delay')
+        self.assertNotIn('PRIVATE-INTERRUPT',json.dumps(receipt))
+
+    def test_pause_is_before_original_five_field_anchor_and_never_refreshes_it(self):
+        events=[];reader=mock.Mock();reader.read.side_effect=lambda *a,**k:(events.append('read') or self.missing())
+        reader.bsd.side_effect=lambda *a,**k:(events.append('bsd') or ('measured',bsd((42,124,4,501,501)),None))
+        def pause(details):events.append('pause')
+        details={}
+        with mock.patch.object(cc.os,'getpid',return_value=41), \
+             self.assertRaisesRegex(Failure,'census-wait-identity-unavailable'):
+            cc.candidate_read(ROW,reader,details,pause=pause)
+        self.assertEqual(events,['read','pause','bsd'])
+        self.assertEqual(details['retryBSDObservation'],{'status':'unbound','inExit':None})
+        self.assertEqual(reader.read.call_count,1)
+
+    def test_bsd_in_exit_is_fixed_bound_diagnostic_and_never_gone_authority(self):
+        value=bsd(ROW);value.status=3;value.flags=4
+        self.assertEqual(cc.bsd_observation('measured',value,ROW),{'status':'sleeping','inExit':True})
+        value.flags=0
+        self.assertEqual(cc.bsd_observation('measured',value,ROW),{'status':'sleeping','inExit':False})
+        for flags in (None,True,'PRIVATE',-1,2**32):
+            value.flags=flags;self.assertIsNone(cc.bsd_observation('measured',value,ROW)['inExit'])
+        value.flags=4;value.status=999
+        self.assertEqual(cc.bsd_observation('measured',value,ROW),{'status':'unavailable','inExit':None})
+        value.status=3
+        for state,row in [('unavailable',ROW),('measured',(42,123,4,0,501)),('gone',(42,124,4,501,501))]:
+            self.assertEqual(cc.bsd_observation(state,value,row),{'status':'unbound','inExit':None})
+        reader=mock.Mock()
+        def query(pid,details=None):
+            anchor=bsd(OWN if pid==41 else ROW);anchor.status=3;anchor.flags=4
+            return 'measured',anchor,None
+        reader.bsd.side_effect=query;reader.read.side_effect=[self.measured(OWN),self.missing(),self.missing()]
+        details={'rssMiB':None,'cpuSeconds':None}
+        with mock.patch.object(cc.os,'getpid',return_value=41),mock.patch.object(cc.time,'sleep') as sleeping, \
+             self.assertRaisesRegex(Failure,'census-wait-resource-unavailable'):
+            cc.resources({ROW},reader,details)
+        sleeping.assert_called_once_with(.25)
+        self.assertEqual(details['retryBSDObservation'],{'status':'sleeping','inExit':True})
+        self.assertIsNone(details['rssMiB']);self.assertIsNone(details['cpuSeconds'])
+
     def test_success_keeps_last_sixteen_rechecks_and_all_candidate_counts(self):
         rows={(pid,123,4,501,501) for pid in range(42,62)};reader=mock.Mock();seen={}
         def query(pid,details=None):
@@ -453,7 +543,14 @@ class CandidateRecheckGuards(unittest.TestCase):
             seen[pid]=seen.get(pid,0)+1
             return self.missing(row) if pid!=41 and seen[pid]==1 else self.measured(row)
         reader.bsd.side_effect=query;reader.read.side_effect=read
-        with mock.patch.object(cc.os,'getpid',return_value=41):value=cc.resources(rows,reader,{})
+        with mock.patch.object(cc.os,'getpid',return_value=41),mock.patch.object(cc.time,'sleep') as sleeping:
+            value=cc.resources(rows,reader,{})
+        sleeping.assert_called_once_with(.25)
+        self.assertEqual(value['resourceRetryPause']['pauses'],1)
+        self.assertEqual(value['resourceRetryPause']['candidateIndex'],1)
+        self.assertEqual(value['resourceRetryPause']['requestedSeconds'],.25)
+        self.assertEqual(value['resourceRetryPause']['status'],'completed')
+        self.assertTrue(all(v['retryPauseStatus']=='sample-already-used' for v in value['resourceRecheckDiagnostics']))
         self.assertEqual(value['resourceRecheckCandidates'],20)
         self.assertEqual(len(value['resourceRecheckDiagnostics']),16)
         self.assertEqual([v['candidateIndex'] for v in value['resourceRecheckDiagnostics']],list(range(5,21)))
@@ -527,8 +624,8 @@ class CandidateRecheckGuards(unittest.TestCase):
                     self.assertIsNone(child.returncode)
                 return value
             sensor.read=read;details={};observed={};original=cc.candidate_read
-            def capture(actual,reader,evidence):
-                value=original(actual,reader,evidence)
+            def capture(actual,reader,evidence,**kwargs):
+                value=original(actual,reader,evidence,**kwargs)
                 if actual==row:observed.update(copy.deepcopy(evidence))
                 return value
             with mock.patch.object(cc,'candidate_read',side_effect=capture):
@@ -536,6 +633,11 @@ class CandidateRecheckGuards(unittest.TestCase):
             self.assertEqual(forced,2)
             self.assertEqual(task_calls,2 if exit_after_unknown else 3)
             self.assertEqual(result['resourceRecheckCandidates'],1)
+            self.assertEqual(result['resourceRetryPause']['pauses'],1)
+            self.assertEqual(result['resourceRetryPause']['requestedSeconds'],.25)
+            self.assertGreaterEqual(result['resourceRetryPause']['elapsedSeconds'],.25)
+            self.assertIn(observed['beforeBSDObservation']['status'],('initializing','runnable','sleeping','stopped'))
+            self.assertIs(type(observed['beforeBSDObservation']['inExit']),bool)
             self.assertTrue(observed['readDiagnostics'][0]['esrchRecheck']['sameGeneration'])
             self.assertEqual(result['confirmedGoneCandidates'],int(exit_after_unknown))
             self.assertEqual(result['_progress']['processes'],int(not exit_after_unknown))

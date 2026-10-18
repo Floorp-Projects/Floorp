@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "scope": "Recovery36 sample-bounded delayed same-identity resource recheck",
+  "linux": {
+    "total": 312,
+    "passed": 296,
+    "skipped": 16,
+    "seconds": 11.384,
+    "exitCode": 0,
+    "logSHA256": "a98f5ce6639807ffc198efef2d95c572b53f2596feece5c9f02a10a865c94224"
+  },
+  "actualMac": "pending",
+  "workflow": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "expectedTests": 312,
+    "requiredSkipped": 0,
+    "candidateRepeats": 5,
+    "stressSeconds": 60,
+    "sdkAcquisition": true,
+    "floorpBuild": false,
+    "artifactUpload": false
+  },
+  "candidateRecheck": {
+    "outerReadMaximum": 2,
+    "nativeTaskQueryMaximum": 4,
+    "requestedPauseSeconds": 0.25,
+    "maximumPausesPerResourceSample": 1,
+    "phaseReservationBeforeSleep": true,
+    "phaseAndPlatformCheckAfterSleep": true,
+    "elapsedDiagnosticIndependentOfLatest16": true,
+    "baselineReset": false,
+    "roleExclusions": false,
+    "inExitAuthorizesGone": false
+  },
+  "historicalExitTransitionCause": "NOT_ESTABLISHED",
+  "longRun": "none active; short validation and independent terminal review required"
+}

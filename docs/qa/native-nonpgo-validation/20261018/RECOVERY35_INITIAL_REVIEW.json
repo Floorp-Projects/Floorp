@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "review": "Recovery35 independent initial immutable route check",
+  "decision": "INITIAL_BINDINGS_VERIFIED_EXECUTION_IN_PROGRESS",
+  "checkedAt": "2026-10-18T21:50:14Z",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "run": {
+    "id": 39169539108,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39169539108",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-checkpoint-recovery35-20261018",
+    "createdAt": "2026-10-18T21:49:40Z",
+    "head": "a655f430c5db25c0aee2c802e41d00097da5493a",
+    "status": "in_progress",
+    "producerJob": 117799533224,
+    "producerStartedAt": "2026-10-18T21:49:44Z",
+    "runner": "macos-15-intel"
+  },
+  "fixture": {
+    "sha": "4848f4cc7090d5910d776c6ab9fec93753ee7631",
+    "tree": "09a253fb8f8d1753160935e65d5d008fcb2778bf",
+    "parent": "4b0b67a0afc68433508f8bc97e23903140cbad29",
+    "independentCompare": "Exactly five added evidence/proposal documents, no source or plan change from the actual-Mac307-pass fixture.",
+    "addedFiles": [
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_TERMINAL_RESULT.json",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY34_TERMINAL_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_LONG_HYPOTHESES.md",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_LONG_WORKFLOW.yml.disabled",
+      "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_STRUCTURE_REVIEW.json"
+    ]
+  },
+  "caller": {
+    "sha": "a655f430c5db25c0aee2c802e41d00097da5493a",
+    "tree": "d2b68f387c0e5bdb8d27b2394e2302d51d031d31",
+    "parent": "27c3304e9bb749ef21593eb551ac0bcdaafd95cc",
+    "changedFiles": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "bytes": 18278,
+    "sha256": "f2de9a1ddad2798dde57bbd33f60c62359f315005c2a58815b26db72bc754c91",
+    "exactRender": "Reviewed template rendered with fixture SHA only.",
+    "templatePath": "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_LONG_WORKFLOW.yml.disabled",
+    "templateSHA256": "aa02d364c133b9db9103412c2f2c883ff8d5bb6666a38dec4b8e77ad9e1b5f9f"
+  },
+  "APIObservation": {
+    "initialGuard": "success",
+    "fixtureCheckout": "success",
+    "clock": "success",
+    "actualMacPreflight": "in_progress",
+    "sdkAcquisition": "pending; success not asserted at initial observation",
+    "currentlyVisibleJobs": 1,
+    "logicalWorkflowJobs": 2,
+    "consumerOrder": "needs successful producer",
+    "otherActiveOwnedNativeRuns": 0,
+    "queuedOwnedNativeRuns": 0
+  },
+  "sdkFreshMetadata": {
+    "artifact": 12133086104,
+    "sizeBytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sourceRun": 39117481043,
+    "sourceRunAttempt": 1,
+    "sourceRunStatus": "completed-success",
+    "sourceEvent": "schedule",
+    "sourceRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "independentRead": "Official full artifact collection and source-run API independently checked.",
+    "consumerRequirement": "Fresh ordinary unexpired acquisition with all fixed ZIP/TAR/tree/version, HTTP-error and600-second guards; this observation cannot replace consumer-time validation."
+  },
+  "priorGates": {
+    "prelaunchReviewSHA256": "33035f1ba96708de89192829a52d483f97e0b66971f67bb85be81e772f063c7a",
+    "actualMacTerminalReviewSHA256": "382ed3c584248f51b325285b52debfa4ff1b0e9d6a4b6fd85eb34fa846107258",
+    "structureReviewSHA256": "db5d5a1ac50a97d66701db35a4c4a19d66b2bef3ea79b7d0450eb7816b21db65"
+  },
+  "boundaries": {
+    "jobs": "Two serial standard Intel jobs, each360-minute platform cap.",
+    "storage": "Exactly one verified raw checkpoint <=10GiB, retention1day; same-run provenance/hash/size/manifest verification remains.",
+    "eligibility": "Natural export/Rust/archive success, stage cleanup, complete resource measurement and original-baseline final delta0 before checkpoint; interrupted state remains ineligible.",
+    "resources": "Existing RSS/disk/log/stall/phase, inventory3-second/three-attempt, anchored candidate max-four-task-query, unknown-null/fail-closed and ownership/cleanup guards unchanged.",
+    "qualification": "Explicit resumed across two jobs, freshObjdir=false, sameJob=false; full host/XUL/package/native authentication each requires actual terminal evidence.",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "Runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0"
+  },
+  "pending": [
+    "Producer actual307 tests/zero skips and resource preflight.",
+    "SDK/source/tool/effective-config proof and natural Rust/archive completion.",
+    "Complete bounded convergence with actual final delta0 and safe cleanup; verified upload input/service cap/hash/retention.",
+    "Successful producer and same-run verified consumer restore/effective configuration.",
+    "Resumed full host/XUL build, package/disposable ad-hoc test copy, actual native authentication and all terminal cleanup."
+  ],
+  "limits": [
+    "The initial check establishes neither checkpoint eligibility nor consumer/build/native success.",
+    "Short controlled ESRCH recovery does not resolve the original natural race or establish long stability; all background roles remain candidates.",
+    "Reviewer performed read-only API/source/evidence inspection; no CI activation, SDK payload retrieval, artifact operation or public write."
+  ]
+}
