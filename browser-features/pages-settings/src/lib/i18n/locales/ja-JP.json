@@ -170,7 +170,7 @@
                 "tabSharingIndicator": "タブのカメラ、マイク、画面共有インジケーターを非表示",
                 "tabSharingIndicatorNote": "アドレスバーには引き続き共有中の表示が出ます。この機能が有効になっている場合、サイトが録画を行っていないと決めつける前に、まずはそこを確認してください。",
                 "tabNoteIcon": "タブノートのアイコンを非表示",
-                "tabAttentionIndicator": "タブの注意表示を非表示",
+                "tabAttentionIndicator": "タブの注意インジケーターを非表示",
                 "tabbar": "タブバーを隠す",
                 "navbar": "ツールバーを隠す",
                 "sidebarHeader": "サイドバーのヘッダーを隠す",
@@ -973,7 +973,7 @@
             "workspace": "ワークスペース",
             "floorp": "Floorp",
             "media": "メディア",
-            "open-tabs": "タブを開く",
+            "open-tabs": "開いているタブ (動的検索)",
             "switcher": "スイッチャー",
             "history-suggestions": "履歴 (動的検索)",
             "bookmark-suggestions": "ブックマーク (動的検索)"

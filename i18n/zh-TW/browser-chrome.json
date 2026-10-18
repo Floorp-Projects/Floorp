@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "新工作區 ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "向上移動此工作區",
       "move-down": "向下移動此工作區",
       "delete": "刪除工作區",
       "manage": "管理工作區",
-      "archive": "存檔工作區"
+      "archive": "存檔工作區",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "建立新工作區...",
