@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "atUTC": "2026-10-18 01:23:38 UTC",
+  "fixture": "928e266c79ea4b4a73ec3ef7c12c279a6d295f8e",
+  "fixtureTree": "20cf2f84cfce233501f6415a12480ae8ede07abf",
+  "priorPatchReviewCommit": "55ad73ac792e150b2647556f8150132623fab8c4",
+  "shortGate": {
+    "n": 13,
+    "parent": "e0c9bd46dd6a0edc0e4c1eafb1906cc637c6b848",
+    "tree": "601d6c59c89d7ad8b9fea9aa764ebb30748529b2",
+    "path": ".github/workflows/mac-native-generation-recheck.yml",
+    "message": "ci(qa): gate inventory timeout recovery on Intel Mac",
+    "commit": "1176b39666e791c61d272f7d7c5066ab45e0e33f",
+    "blob": "ec5b71e5e39919d33f1fea1ba5d85748d8565553",
+    "branch": "codex/mac-native-inventory-recovery13-20261018",
+    "workflowSHA256": "b3f0537f4cf5f16022c7fa9e198e427172bae0d744fcb934fe281a68fa00191a",
+    "testCount": 126,
+    "sdkRequired": false,
+    "runtimeBuild": false
+  },
+  "conditionalFullValidation": {
+    "n": 14,
+    "parent": "f6173d1ff8db0a3d309e0502272248d0f79924c1",
+    "tree": "b12bf89ef715131b0a1629121c9f943ab0de6a30",
+    "path": ".github/workflows/mac-native-nonpgo.yml",
+    "message": "ci(qa): bind reviewed inventory recovery for one full Intel validation",
+    "commit": "f365b666c238a24413a561e2e249d98fc2734c99",
+    "blob": "c86cc896d797971e8d3e41b29fb61b2ba354bd01",
+    "branch": "codex/mac-native-nonpgo-recovery14-20261018",
+    "workflowSHA256": "e57c80d76afb79f4b903eee1a0f7e4aab3955fe46ff0ce9011c9292b26a13d1f",
+    "allowedExecutions": 1,
+    "criteria": [
+      "All 126 short Mac gate tests pass with no skips",
+      "Independent terminal review has no unresolved meaningful findings",
+      "SDK metadata remains valid at acquisition"
+    ]
+  },
+  "sourcePins": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "sdkArtifact": 12096898807,
+    "sdkRun": 39022451582,
+    "sdkExpiresAt": "2026-10-18T09:48:20Z",
+    "sdkZIPDigest": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4"
+  },
+  "bounds": {
+    "runner": "macos-15-intel",
+    "concurrentQAJobs": 1,
+    "platformMinutes": 360,
+    "permissionsExpanded": false,
+    "newArtifacts": 0,
+    "productSigning": false,
+    "productPublishing": false,
+    "merge": false
+  },
+  "hypothesis": "A transient inventory query timeout can recover through the existing sampling budget while retaining unknown/null evidence; repeated query timeouts still stop as monitor-inconclusive. This does not establish the cause of historical native exits.",
+  "workflowProviderExactReadback": true,
+  "prelaunchActiveRuns": 0,
+  "branchPriorRuns": {
+    "short": 0,
+    "full": 0
+  }
+}
