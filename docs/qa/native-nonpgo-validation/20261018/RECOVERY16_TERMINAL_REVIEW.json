@@ -1,0 +1,450 @@
+{
+  "bindings": {
+    "allThreeExactCheckoutCommitOutputsObserved": true,
+    "caller": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+    "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "jobCount": 1,
+    "newArtifacts": 0,
+    "planSHA256": "17b812f12ed49589f7f7b2d785133ba330fbbfe2c23d214b1ffdfabd0b7f1ceb",
+    "runner": "macos-15-intel",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "compileEvidence": {
+    "adHocCopyVerificationInvoked": false,
+    "completedExit0Stages": 43,
+    "completedTranslationUnits": null,
+    "currentCompileUnit": null,
+    "effectiveConfig": {
+      "HOST_CPU_ARCH": "x86_64",
+      "TARGET_CPU": "x86_64",
+      "allFourCompilerPathsPinned": true,
+      "artifact": false,
+      "debug": true,
+      "pgo": false,
+      "sdkPathPinned": true
+    },
+    "estimatedRemainingSeconds": null,
+    "firstObservedStatus": {
+      "elapsedMinutes": 13.7,
+      "freeGiB": 98.5,
+      "logBytes": 0,
+      "ownedGroupCPUSeconds": 0.06,
+      "ownedGroupRSSMiB": 10,
+      "processes": 1,
+      "quietSeconds": 0,
+      "stage": "full-build",
+      "states": [
+        "R"
+      ],
+      "timestamp": "2026-10-18T01:51:55.1276450Z"
+    },
+    "fullBuildInvocation": "Pinned Python mach build -j 3",
+    "globalBudget": "The global 360-minute task timer includes source checkout and preparation. The first published full-build sample occurs at elapsed13.7 minutes, leaving less than the full six hours for compilation. No new larger budget is inferred.",
+    "hostObjectVerificationReached": false,
+    "lastPublishedStatus": {
+      "elapsedMinutes": 359.7,
+      "freeGiB": 83.9,
+      "logBytes": 22587526,
+      "ownedGroupCPUSeconds": 283.182,
+      "ownedGroupRSSMiB": 1436,
+      "processes": 13,
+      "quietSeconds": 0,
+      "stage": "full-build",
+      "states": [
+        "R",
+        "S"
+      ],
+      "timestamp": "2026-10-18T07:37:52.1587130Z"
+    },
+    "lastSample": {
+      "cpuSeconds": 291.355,
+      "processes": 13,
+      "rssMiB": 1033.58984375,
+      "sampleAttempts": 1,
+      "sampleComplete": true,
+      "states": [
+        "R",
+        "S"
+      ],
+      "unknownKinds": {}
+    },
+    "lastStage": "full-build",
+    "linkStartedOrCompleted": null,
+    "linkedXULVerificationReached": false,
+    "nativeSuiteInvoked": false,
+    "nativeSummaryPresent": false,
+    "percentComplete": null,
+    "proofBoundary": "The build command was active and emitted private output; configure/effective-config and preparation checks completed. Resource states, elapsed time and log size do not establish any particular translation unit, linking phase or completion percentage. Absent hostObject/XUL validation receipts do not prove those files never existed.",
+    "publishedStatusCount": 678,
+    "stagePackageInvoked": false,
+    "stoppingStage": {
+      "cleanupDiagnostics": [],
+      "cleanupFailure": null,
+      "exitCode": 254,
+      "failurePhase": "wait",
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "exitCode": 254,
+        "status": "reaped"
+      },
+      "logBytes": 22607406,
+      "minimumFreeGiB": 83.92,
+      "peakRSSMiB": 7598,
+      "quietSeconds": 0,
+      "reason": "platform-job-limit",
+      "stage": "full-build"
+    },
+    "totalRecordedStages": 44
+  },
+  "decision": {
+    "hostObjectQualification": "NOT_REACHED",
+    "linkedXULQualification": "NOT_REACHED",
+    "manualCancellationEvidenceFound": false,
+    "nativeAuthentication": "NOT_STARTED",
+    "newExecutionRequested": false,
+    "originalNativeCause": "UNKNOWN",
+    "recordedPrimaryStop": "platform-job-limit",
+    "status": "PLATFORM_TIME_LIMIT_SUPPORTED_PRODUCT_QUALIFICATION_INCOMPLETE",
+    "unchangedSixHourRetry": "NO_GO"
+  },
+  "failureExcerptEvidence": {
+    "afterCleanup": {
+      "available": true,
+      "fileBytes": 22607406,
+      "freeTextPublished": false,
+      "matchingRecords": 8,
+      "rawContentPublished": false,
+      "readLimitBytes": 131072,
+      "recordLimit": 16,
+      "records": [
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 111
+        },
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 114
+        },
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 115
+        },
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 117
+        },
+        {
+          "kind": "unclassified-error-marker",
+          "normalizedDiagnostic": "<redacted> error <redacted>",
+          "tailLine": 120
+        },
+        {
+          "kind": "termination",
+          "messageClass": "keyboard-interrupt",
+          "normalizedDiagnostic": "keyboardinterrupt",
+          "tailLine": 143
+        },
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 144
+        },
+        {
+          "kind": "termination",
+          "messageClass": "interrupted",
+          "normalizedDiagnostic": "<redacted> interrupt <redacted>",
+          "tailLine": 145
+        }
+      ],
+      "recordsTruncated": false,
+      "tailBytesRead": 128409,
+      "tailTruncated": true
+    },
+    "beforeCleanup": {
+      "available": true,
+      "fileBytes": 22604870,
+      "freeTextPublished": false,
+      "matchingRecords": 0,
+      "rawContentPublished": false,
+      "readLimitBytes": 131072,
+      "recordLimit": 16,
+      "records": [],
+      "recordsTruncated": false,
+      "tailBytesRead": 131020,
+      "tailTruncated": true
+    },
+    "interpretation": "The pre-cleanup excerpt has zero classified records in a truncated 131020-byte tail. The post-cleanup excerpt has interruption and broad error markers. These are consistent with guard cleanup and are not a compiler-error or natural browser-exit verdict. Earlier compiler output outside the bounded tail is not covered."
+  },
+  "jobs": [
+    {
+      "checkRunURL": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/check-runs/117556135754",
+      "completedAt": "2026-10-18T07:39:34Z",
+      "conclusion": "cancelled",
+      "id": 117556135754,
+      "labels": [
+        "macos-15-intel"
+      ],
+      "name": "validate",
+      "startedAt": "2026-10-18T01:38:06Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-18T01:38:10Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "startedAt": "2026-10-18T01:38:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:11Z",
+          "conclusion": "success",
+          "name": "Bound the initial authorized run",
+          "startedAt": "2026-10-18T01:38:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:20Z",
+          "conclusion": "success",
+          "name": "Checkout immutable preparation fixture",
+          "startedAt": "2026-10-18T01:38:11Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:38:24Z",
+          "conclusion": "success",
+          "name": "Verify owned process sampling before source checkout",
+          "startedAt": "2026-10-18T01:38:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:45:04Z",
+          "conclusion": "success",
+          "name": "Checkout immutable Runtime source",
+          "startedAt": "2026-10-18T01:38:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:45:08Z",
+          "conclusion": "success",
+          "name": "Checkout immutable native harness",
+          "startedAt": "2026-10-18T01:45:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T01:45:31Z",
+          "conclusion": "success",
+          "name": "Acquire only the existing fixed SDK",
+          "startedAt": "2026-10-18T01:45:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:37Z",
+          "conclusion": "failure",
+          "name": "Compile full host and XUL then authenticate native Shim",
+          "startedAt": "2026-10-18T01:45:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:40Z",
+          "conclusion": "failure",
+          "name": "Confirm bounded result exists",
+          "startedAt": "2026-10-18T07:38:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:42Z",
+          "conclusion": "success",
+          "name": "Post Checkout immutable native harness",
+          "startedAt": "2026-10-18T07:38:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:45Z",
+          "conclusion": "success",
+          "name": "Post Checkout immutable Runtime source",
+          "startedAt": "2026-10-18T07:38:42Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:46Z",
+          "conclusion": "success",
+          "name": "Post Checkout immutable preparation fixture",
+          "startedAt": "2026-10-18T07:38:45Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-18T07:38:48Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "startedAt": "2026-10-18T07:38:46Z",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No independent existing binary artifact content or reuse eligibility assessment was performed in this terminal review.",
+    "No new CI, SDK download, large artifact storage, signature, publication, merge, permission change or source edit was performed.",
+    "The original native exit, historical inventory delay and earlier cleanup-denial causes remain unknown.",
+    "Preserve the failed/cancelled terminal result and incomplete product qualification. Native authentication was not reached."
+  ],
+  "monitorAndCleanup": {
+    "cleanupBoundary": "Recorded group absence and exact leader reap were established for this stopped build group. Native cleanup is absent because the native suite did not start. The successful cleanup record does not identify any historical denial cause.",
+    "cleanupFailure": null,
+    "groupCleanup": "verified-gone",
+    "interpretation": "At least two real inventory timeouts are classified with null partial lower bounds and recover to complete measurements on attempt2, allowing the build to continue. This is production-path recovery evidence for the bounded query fix. Latest16 retention is not a whole-run timeout frequency/count. No monitor failure was the terminal trigger.",
+    "lastPublishedQuietSeconds": 0,
+    "leaderReap": {
+      "exitCode": 254,
+      "status": "reaped"
+    },
+    "minimumObservedFreeGiB": 83.92,
+    "monitorFailure": null,
+    "observedPeakRSSMiB": 7598,
+    "recoveredInventoryTimeoutsAtLeast": 2,
+    "retainedRecentDiagnosticCount": 16,
+    "retainedTimeoutRecoveries": [
+      {
+        "elapsedSeconds": 19396.13,
+        "partialKnownCPULowerBoundSeconds": null,
+        "partialKnownRSSLowerBoundMiB": null,
+        "queryFailure": {
+          "elapsedSeconds": 3.413,
+          "errorType": "TimeoutExpired",
+          "operation": "process-group-inventory",
+          "timeoutSeconds": 3
+        },
+        "sampleAttempts": 2,
+        "sampleComplete": true
+      },
+      {
+        "elapsedSeconds": 20867.43,
+        "partialKnownCPULowerBoundSeconds": null,
+        "partialKnownRSSLowerBoundMiB": null,
+        "queryFailure": {
+          "elapsedSeconds": 3.904,
+          "errorType": "TimeoutExpired",
+          "operation": "process-group-inventory",
+          "timeoutSeconds": 3
+        },
+        "sampleAttempts": 2,
+        "sampleComplete": true
+      }
+    ],
+    "retentionLimit": 16
+  },
+  "nextReadOnlyAssessment": [
+    "Do not repeat the unchanged six-hour full route. The public evidence does not show remaining build work or identify a targeted compiler fix.",
+    "Inspect existing artifact/cohort provenance before considering reuse. Exact Runtime/C++ patch set, patched host hash, architecture, non-PGO/debug profile, toolchain/SDK and content binding are required to claim the original qualification.",
+    "An accessible binary without that cohort proof can at most support explicitly limited diagnostic work; SDK equality or Runtime head equality alone cannot establish fresh Mac full-host/XUL equivalence.",
+    "Before a further expensive compilation, obtain a concrete bounded progress evidence plan with safe phase/milestone or compile counts. Current resource samples cannot substitute for compile-unit/link progress.",
+    "New runner class, cross-job object-directory reuse, large checkpoint/artifact retention or changed freshness/budget boundaries are outside this reviewed route and require a separately evaluated plan."
+  ],
+  "publicEvidenceScope": {
+    "artifactCount": 0,
+    "checksAPI": "Check-run and annotations endpoint not exposed by the connector (INVALID_ARGUMENT); public job page supplied the explicit platform annotation.",
+    "compilerLogStreamedToJobLog": false,
+    "decodedJobLogBytes": 327110,
+    "decodedJobLogSHA256": "b97bae993b5df2908aa310767f9f33655c48a29e505d35d7a7e775ced2573562",
+    "privateCompilerLogBytes": 22607406,
+    "privateCompilerLogRetainedArtifactFound": false,
+    "rawContentPublished": false,
+    "sentinelAbsentFromDecodedLog": true
+  },
+  "receipt": {
+    "all43CompletedOutcomeProjectionsMatchIndependentLog": true,
+    "bytes": 74567,
+    "commit": "14e98236bc6fff26ba9deb789499731f298e4ecd",
+    "fullBuildFirstFailureRecentDiagnosticsSDKSourcePlanOutcomeMatchIndependentLog": true,
+    "independentlyFetchedFromProvider": true,
+    "path": "docs/qa/native-nonpgo-validation/20261018/RECOVERY16_EXECUTION_RESULT.json",
+    "sha256": "b018b5f2dcfa8264070f58ff217d678cc04950ff5dbbc2d12e2a1c3614eeeaae"
+  },
+  "reviewType": "independent terminal full-validation review",
+  "run": {
+    "attempt": 1,
+    "branch": "codex/mac-native-nonpgo-recovery16-20261018",
+    "conclusion": "cancelled",
+    "createdAt": "2026-10-18T01:37:59Z",
+    "event": "push",
+    "head": "fe81758dd639efdadefa570b0399ca1f2004bca3",
+    "id": 39087195468,
+    "status": "completed",
+    "updatedAt": "2026-10-18T07:39:35Z",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087195468"
+  },
+  "schemaVersion": 1,
+  "sdkAndSource": {
+    "initialPendingStateResolved": true,
+    "sdk": {
+      "artifact": 12096898807,
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "sourceRun": 39022451582,
+      "tarSHA256": "521469830e9439d8b8ecc1e5742b5fda85fe04162d9828e4ceceff179d74d062",
+      "zipSHA256": "9b65e952a29fe44fe67fba7e832ccff0b418240dd648524ab22e99cfb1643ab4"
+    },
+    "sdkAcquisitionStep": {
+      "completedAt": "2026-10-18T01:45:31Z",
+      "conclusion": "success",
+      "startedAt": "2026-10-18T01:45:08Z"
+    },
+    "sdkMaterializationExpectedVersion": "26.5",
+    "sdkMaterializationStage": "exit0",
+    "sourceCohort": {
+      "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+      "baselineProvenanceVerified": true,
+      "mozconfigSHA256": "501544b92cb62b34ba7591fe6bfb2d957b1bdb66d71bded2806bad74a89535c6",
+      "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+      "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+    }
+  },
+  "termination": {
+    "classification": "The first recorded program stop is its global 360-minute platform-job-limit guard. GitHub independently annotates its own six-hour maximum. These establish platform-budget termination as the supported cause category.",
+    "exitCodeLayers": {
+      "boundedResultActionStep": "failure; public annotation reports process exit1",
+      "compilePipelineActionStep": "failure; public annotation reports process exit1",
+      "gitHubJob": "cancelled",
+      "gitHubRun": "cancelled",
+      "ownedMachBuildChildAfterCleanup": 254
+    },
+    "firstFailure": {
+      "code": "platform-job-limit",
+      "elapsedSeconds": 21600.95,
+      "stage": "full-build"
+    },
+    "jobSeconds": 21688,
+    "manualCancellation": "No manual-cancel actor, action or annotation was found in the obtained run/job API, decoded log and public job page. This is not an organization-audit proof excluding every possible concurrent manual action.",
+    "monitorFailure": null,
+    "ordering": "The platform timeout annotation has no firing timestamp in the retrieved page. Do not infer which timer first initiated cancellation or equate cancelled alone with a manual user cancel.",
+    "otherAnnotations": "The two exit1 annotations are downstream failed steps. A checkout Node runtime deprecation warning is present; setup and all checkouts succeeded, so it is not evidence of the stopping cause.",
+    "pipelineStepSeconds": 21186,
+    "platformAnnotation": {
+      "annotationCount": {
+        "errors": 3,
+        "warnings": 1
+      },
+      "method": "Independently read official public GitHub job page",
+      "observed": "2026-10-18",
+      "sourceURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087195468/job/117556135754",
+      "text": "The job has exceeded the maximum execution time of 6h0m0s"
+    },
+    "summaryElapsedMinutes": 360.42
+  }
+}
