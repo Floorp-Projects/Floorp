@@ -342,6 +342,8 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
   const calls = [];
   /** @type {number[]} */
   const waits = [];
+  /** @type {string[]} */
+  const warnings = [];
   let clock = 1000;
   /** @type {(delay:number) => Promise<void>} */
   const wait = (delay) => {
@@ -362,10 +364,15 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
     now: () => clock++,
     wait,
     fetchImpl,
+    onRetry: (/** @type {string} */ message) => warnings.push(message),
   });
   assert.equal(status, 202);
   assert.equal(calls.length, 3);
   assert.deepEqual(waits, [2000, 4000]);
+  assert.deepEqual(warnings, [
+    "OpenBot delivery attempt 1/7 failed (transport error)",
+    "OpenBot delivery attempt 2/7 failed (HTTP 503)",
+  ]);
   assert.equal(new Set(calls.map((x) => x.body)).size, 1);
   assert.equal(
     new Set(calls.map((x) => x.headers["X-OpenBot-Delivery-Id"])).size,
@@ -385,6 +392,60 @@ test("HTTP retry keeps immutable bytes and ID and recomputes the correct signatu
     );
   }
 });
+test("transport failures log only safe cause codes, never the private webhook URL", async () => {
+  const event = formatEvent(issueEvent("opened"), "issues");
+  /** @type {string[]} */
+  const warnings = [];
+  let calls = 0;
+  const transportError = new Error("fetch failed: https://private.example/hook?token=secret-value");
+  transportError.cause = { code: "ENOTFOUND" };
+  await assert.rejects(
+    sendEvent(event, {
+      url: "https://private.example/hook?token=secret-value",
+      secret: "synthetic",
+      attempts: 2,
+      wait: () => Promise.resolve(),
+      onRetry: (/** @type {string} */ message) => warnings.push(message),
+      fetchImpl: () => {
+        calls++;
+        return Promise.reject(transportError);
+      },
+    }),
+    error => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /last: transport ENOTFOUND/);
+      assert.doesNotMatch(error.message, /secret-value|private\.example/);
+      return true;
+    },
+  );
+  assert.equal(calls, 2);
+  assert.deepEqual(warnings, [
+    "OpenBot delivery attempt 1/2 failed (transport ENOTFOUND)",
+    "OpenBot delivery attempt 2/2 failed (transport ENOTFOUND)",
+  ]);
+});
+
+test("unrecognized transport causes are redacted", async () => {
+  const event = formatEvent(issueEvent("opened"), "issues");
+  /** @type {string[]} */
+  const warnings = [];
+  await assert.rejects(
+    sendEvent(event, {
+      url: "https://example.invalid/hook",
+      secret: "synthetic",
+      attempts: 1,
+      onRetry: (/** @type {string} */ message) => warnings.push(message),
+      fetchImpl: () => {
+        const error = new Error("private-secret");
+        error.cause = { code: "private-secret" };
+        return Promise.reject(error);
+      },
+    }),
+    /last: transport error/
+  );
+  assert.deepEqual(warnings, ["OpenBot delivery attempt 1/1 failed (transport error)"]);
+});
+
 test("duplicates finish without retry; permanent rejects never retry", async () => {
   const event = formatEvent(issueEvent("opened"), "issues");
   for (const status of [200, 400, 401, 403, 404, 409, 413, 302]) {

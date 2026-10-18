@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Générer un code QR pour cette page",
   "qrcode-generate-page-action-title": "Générateur de code QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Ouvrir ou épingler la barre latérale de Firefox",
+    "resize": "Redimensionner la barre latérale de Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionner la barre latérale du panneau",
     "modal": {
       "type": "Type de panneau",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Média",
       "open-tabs": "Onglets ouverts",
       "switcher": "Commuter",
-      "history-suggestions": "Historique",
-      "bookmark-suggestions": "Marque-pages"
+      "history-suggestions": "Historique (Recherche dynamique)",
+      "bookmark-suggestions": "Marque-pages (Recherche Dynamique)"
     },
     "noResults": "Aucune commande trouvée",
     "noResultsHint": "Essayez un autre terme de recherche",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Où ouvrir",
     "bookmarkSwitcherWhereNewTab": "Nouvel onglet",
     "bookmarkSwitcherWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
-    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir..."
+    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Recherche \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Rechercher dans les onglets ouverts",
+      "reservedBookmarkSearch": "Recherche de marque-pages",
+      "reservedHistorySearch": "Rechercher dans l’historique"
+    }
   },
   "commandPaletteReadings": {}
 }

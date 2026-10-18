@@ -274,6 +274,10 @@ export default defineConfig({
         replacement: r("./link-features-chrome"),
       },
       {
+        find: "#modules",
+        replacement: r("../../browser-features/modules"),
+      },
+      {
         find: "#features-modules",
         replacement: r("../../browser-features/modules"),
       },

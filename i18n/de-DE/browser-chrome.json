@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "QR-Code für diese Seite generieren",
   "qrcode-generate-page-action-title": "QR-Code-Generator",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "Panel-Typ",
       "typeOptions": {
@@ -433,7 +438,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "In geteilter Ansicht öffnen",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "In Split-Ansicht öffnen (bis zu {{max}} Tabs)",
       "addPane": "Bereich zur geteilten Ansicht hinzufügen",
       "moveToPane": "In Bereich verschieben",
       "moveToPaneN": "Bereich {{n}} ({{title}})"
@@ -510,8 +515,8 @@
       "media": "Medien",
       "open-tabs": "Geöffnete Tabs",
       "switcher": "Wechsler",
-      "history-suggestions": "Verlauf",
-      "bookmark-suggestions": "Lesezeichen"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "Keine Befehle gefunden",
     "noResultsHint": "Anderen Suchbegriff versuchen",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Ort zum Öffnen",
     "bookmarkSwitcherWhereNewTab": "Neuer Tab",
     "bookmarkSwitcherWhereNewTabDesc": "In einem neuen Vordergrund-Tab öffnen",
-    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen..."
+    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Verlauf durchsuchen"
+    }
   },
   "commandPaletteReadings": {}
 }

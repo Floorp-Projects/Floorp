@@ -45,3 +45,19 @@ Deno.test("Firefox 157 session and split patches match in production and local b
     assertEquals(actual.replaceAll("\r\n", "\n"), expected, filename);
   }
 });
+
+Deno.test("Workspace Sync engine registration matches in production and local builds", async () => {
+  const source = await Deno.readTextFile(
+    ".github/patches/floorp-runtime/common/workspace-sync.patch",
+  );
+  const packed = await Deno.readTextFile(
+    "tools/patches/modules-services-sync-service.sys.patch",
+  );
+  assertEquals(
+    packed,
+    source.replaceAll(
+      "services/sync/modules/service.sys.mjs",
+      "modules/services-sync/service.sys.mjs",
+    ),
+  );
+});

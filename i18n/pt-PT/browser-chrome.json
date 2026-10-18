@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Gerar código QR para esta página",
   "qrcode-generate-page-action-title": "Gerador de código QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "Tipo de painel",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Media",
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
-      "history-suggestions": "Histórico",
-      "bookmark-suggestions": "Favoritos"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Where to open",
     "bookmarkSwitcherWhereNewTab": "Novo separador",
     "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
-    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
+    "bookmarkSwitcherWherePlaceholder": "Select where to open...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Histórico de pesquisa"
+    }
   },
   "commandPaletteReadings": {}
 }

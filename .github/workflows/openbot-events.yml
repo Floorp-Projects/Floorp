@@ -55,6 +55,19 @@ jobs:
             value && typeof value === "object" ? Object.fromEntries(
               Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 
+          // Only log known network error codes; arbitrary messages may include a private URL.
+          const transportErrorCodes = new Set([
+            "ECONNREFUSED", "ECONNRESET", "ENOTFOUND", "EAI_AGAIN",
+            "ETIMEDOUT", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT",
+            "UND_ERR_SOCKET", "CERT_HAS_EXPIRED", "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+          ]);
+          function safeTransportFailure(error) {
+            const code = error?.cause?.code;
+            if (transportErrorCodes.has(code)) return `transport ${code}`;
+            if (error?.name === "TimeoutError" || error?.name === "AbortError") return "transport timeout";
+            return "transport error";
+          }
+
           function numberAndUrl(object, kind) {
             if (!positiveInteger(object?.number)) return null;
             const expected = `https://github.com/${repository}/${kind}/${object.number}`;
@@ -155,6 +168,7 @@ jobs:
           export async function sendEvent(event, {
             url, secret, deliveryId = deliveryIdFor(event), fetchImpl = fetch, wait = sleep,
             now = () => Math.floor(Date.now() / 1000), attempts = 7,
+            onRetry = message => console.warn(message),
           }) {
             const target = new URL(url);
             if (target.protocol !== "https:" || target.username || target.password || target.hash) {
@@ -166,6 +180,7 @@ jobs:
             }
             const body = JSON.stringify(event);
             if (Buffer.byteLength(body, "utf8") > 65536) throw new Error("Event exceeds 64 KiB");
+            let lastFailure = "unknown";
             for (let attempt = 0; attempt < attempts; attempt++) {
               const timestamp = String(now());
               const signature = createHmac("sha256", secret)
@@ -181,13 +196,16 @@ jobs:
                 if (status !== 429 && status < 500) {
                   throw new Error(`OpenBot rejected the event (HTTP ${status})`);
                 }
+                lastFailure = `HTTP ${status}`;
               } catch (error) {
                 if (status !== undefined) throw error;
                 // A timeout can have reached OpenBot: retain exact body and ID.
+                lastFailure = safeTransportFailure(error);
               }
+              onRetry(`OpenBot delivery attempt ${attempt + 1}/${attempts} failed (${lastFailure})`);
               if (attempt + 1 < attempts) await wait(Math.min(30000, 2000 * 2 ** attempt));
             }
-            throw new Error("OpenBot event was not accepted after retries; rerun this job to retry");
+            throw new Error(`OpenBot event was not accepted after retries (last: ${lastFailure}); rerun this job to retry`);
           }
 
           export async function main(env = process.env) {

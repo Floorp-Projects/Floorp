@@ -285,7 +285,12 @@
   },
   "qrcode-generate-page-action": "Generera QR-kod för den här sidan",
   "qrcode-generate-page-action-title": "QR-kodgenerator",
+  "firefoxSidebar": {
+    "edgeToggle": "Öppna eller fäst Firefox sidofältet",
+    "resize": "Ändra storlek på Firefox sidofältet"
+  },
   "panelSidebar": {
+    "resize": "Ändra storlek på sidopanel",
     "modal": {
       "type": "Paneltyp",
       "typeOptions": {
@@ -510,8 +515,8 @@
       "media": "Media",
       "open-tabs": "Öppna flikar",
       "switcher": "Växlare",
-      "history-suggestions": "Historik",
-      "bookmark-suggestions": "Bokmärken"
+      "history-suggestions": "Historik (dynamisk sökning)",
+      "bookmark-suggestions": "Bokmärken (dynamisk sökning)"
     },
     "noResults": "Inga kommandon hittades",
     "noResultsHint": "Prova en annan sökterm",
@@ -596,7 +601,15 @@
     "bookmarkSwitcherWhereLabel": "Var att öppna",
     "bookmarkSwitcherWhereNewTab": "Ny flik",
     "bookmarkSwitcherWhereNewTabDesc": "Öppna i en ny förgrundsflik",
-    "bookmarkSwitcherWherePlaceholder": "Välj var du vill öppna..."
+    "bookmarkSwitcherWherePlaceholder": "Välj var du vill öppna...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Sök \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Sök öppna flikar",
+      "reservedBookmarkSearch": "Sök bokmärken",
+      "reservedHistorySearch": "Sökhistorik"
+    }
   },
   "commandPaletteReadings": {}
 }
