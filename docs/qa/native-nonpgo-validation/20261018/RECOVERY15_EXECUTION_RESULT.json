@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "run": {
+    "id": 39087022762,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39087022762",
+    "head": "8f44536d4134aa07fabd0bebc9b05644935a77eb",
+    "branch": "codex/mac-native-cleanup-recovery15-20261018",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "event": "push",
+    "createdAt": "2026-10-18T01:35:03Z",
+    "updatedAt": "2026-10-18T01:36:11Z"
+  },
+  "job": {
+    "id": 117555617355,
+    "status": "completed",
+    "conclusion": "success",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-18T01:35:07Z",
+    "completedAt": "2026-10-18T01:36:10Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-18T01:35:09Z",
+        "completed_at": "2026-10-18T01:35:10Z"
+      },
+      {
+        "name": "Bound the initial diagnostic execution",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-18T01:35:10Z",
+        "completed_at": "2026-10-18T01:35:10Z"
+      },
+      {
+        "name": "Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3,
+        "started_at": "2026-10-18T01:35:10Z",
+        "completed_at": "2026-10-18T01:35:19Z"
+      },
+      {
+        "name": "Verify inventory timeout recovery and existing native monitor gates",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4,
+        "started_at": "2026-10-18T01:35:19Z",
+        "completed_at": "2026-10-18T01:36:07Z"
+      },
+      {
+        "name": "Post Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8,
+        "started_at": "2026-10-18T01:36:07Z",
+        "completed_at": "2026-10-18T01:36:08Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9,
+        "started_at": "2026-10-18T01:36:08Z",
+        "completed_at": "2026-10-18T01:36:08Z"
+      }
+    ]
+  },
+  "fixture": "2ea8714e51b903ced44ce123220109b93ad65f1f",
+  "fixtureTree": "5af58181b8325b9947bf7d396e42b7f58f682736",
+  "tests": {
+    "total": 133,
+    "passed": 133,
+    "skipped": 0,
+    "errors": 0,
+    "seconds": 46.597,
+    "realMacTests": 9,
+    "inventoryTimeoutTestsPassed": 8
+  },
+  "macGates": [
+    {
+      "ownedCleanupRecheck": {
+        "case": "controlled-delayed-exact-reap",
+        "initialDenialInjected": true,
+        "pollDeferralInjected": true,
+        "actualKernelGroupQueries": true,
+        "liveChildBeforeRelease": true,
+        "exactLeaderReapedExitCode": 0,
+        "postReapGroupProbeErrno": 3,
+        "pidTag": "e9977e7739ba5822",
+        "identityTag": "872fc098563a6776"
+      }
+    },
+    {
+      "ownedZombieCleanup": {
+        "pidTag": "fe299528806cece4",
+        "identityTag": "9affef385e474368",
+        "liveGroupBeforeExit": true,
+        "unreapedExitPending": true,
+        "signalZeroSucceeded": true,
+        "unreapedGroupProbeErrno": 1,
+        "bsdZombieIdentityMatched": true,
+        "exactLeaderReapedExitCode": 0,
+        "postReapGroupProbeErrno": 3,
+        "signalsSent": 0
+      }
+    },
+    {
+      "ownedCleanupRecheck": {
+        "case": "rapid-monitor-stop",
+        "iterations": 20,
+        "groupCleanup": "verified-gone",
+        "allLeadersReaped": true
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "natural-owned-churn",
+        "samples": 22,
+        "complete": 22,
+        "esrchRechecks": 0,
+        "forkedChildren": 720,
+        "initialESRCHInjected": false,
+        "naturalRaceObserved": false,
+        "groupCleanup": "verified-gone",
+        "leaderReaped": true
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "actual-clang-durable-excerpts",
+        "realCompilerError": true,
+        "beforeAndAfterPresent": true,
+        "freeTextPublished": false,
+        "leaderReaped": true
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "controlled-esrch-live",
+        "actualKernelQueries": true,
+        "initialESRCHInjected": true,
+        "sameGeneration": true,
+        "result": "measured"
+      }
+    },
+    {
+      "macGenerationGate": {
+        "case": "controlled-esrch-owned-zombie",
+        "actualKernelQueries": true,
+        "initialESRCHInjected": true,
+        "sameGeneration": true,
+        "WNOWAITExitPending": true,
+        "signalZeroSucceeded": true,
+        "result": "authoritative-zombie"
+      }
+    }
+  ],
+  "actualCompilerControlExcerpts": [
+    {
+      "stage": "actual-clang-error",
+      "phase": "before-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 244,
+        "tailBytesRead": 244,
+        "tailTruncated": false,
+        "matchingRecords": 1,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 1,
+            "kind": "source-error",
+            "messageClass": "undeclared-identifier",
+            "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+          }
+        ]
+      }
+    },
+    {
+      "stage": "actual-clang-error",
+      "phase": "after-cleanup",
+      "evidence": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 244,
+        "tailBytesRead": 244,
+        "tailTruncated": false,
+        "matchingRecords": 1,
+        "recordsTruncated": false,
+        "records": [
+          {
+            "tailLine": 1,
+            "kind": "source-error",
+            "messageClass": "undeclared-identifier",
+            "normalizedDiagnostic": "error use of undeclared identifier <redacted>"
+          }
+        ]
+      }
+    }
+  ],
+  "privateLog": {
+    "bytes": 49780,
+    "sha256": "8ec715845e04f3e4c3f90c73e262b387b87ea5fdf768bc489955c582113e3ee0",
+    "rawContentPublished": false
+  },
+  "privacy": {
+    "nonpublicSentinelAbsent": true,
+    "privateCommandAndPartialInventorySentinelsAbsent": true
+  },
+  "newArtifacts": 0,
+  "sdkAcquired": false,
+  "fullBuildExecuted": false,
+  "nativeAuthenticationExecuted": false,
+  "productQualification": "not-established",
+  "priorFailedGate": 39086387102,
+  "priorFailureStatusUnchanged": true,
+  "originalNativeExitCause": "unresolved",
+  "scopeLimitations": [
+    "Controlled delayed reap injects the initial denial and deferred polls; actual child wait/reap and fresh kernel group probes are real.",
+    "Twenty rapid monitor stops all completed cleanup; the summary does not count natural denial occurrences.",
+    "Natural churn esrchRechecks counts final returned samples, not every partial attempt."
+  ]
+}
