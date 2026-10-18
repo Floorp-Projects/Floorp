@@ -515,8 +515,8 @@
       "media": "Medien",
       "open-tabs": "Geöffnete Tabs",
       "switcher": "Wechsler",
-      "history-suggestions": "History (Dynamic Search)",
-      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
+      "history-suggestions": "Verlauf",
+      "bookmark-suggestions": "Lesezeichen"
     },
     "noResults": "Keine Befehle gefunden",
     "noResultsHint": "Anderen Suchbegriff versuchen",
