@@ -246,7 +246,8 @@ export function codeToXulKey(code: string): XulKeyDefinition | null {
 export function xulKeyToCode(xul: XulKeyLookup): string | null {
   const key = xul.key;
   if (typeof key === "string" && key.length > 0) {
-    return XUL_KEY_TO_CODE_LOOKUPS.byKey.get(key) ?? null;
+    return XUL_KEY_TO_CODE_LOOKUPS.byKey.get(key) ??
+      XUL_KEY_TO_CODE_LOOKUPS.byKey.get(key.toUpperCase()) ?? null;
   }
   const keycode = xul.keycode;
   if (typeof keycode === "string" && keycode.length > 0) {

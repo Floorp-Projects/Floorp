@@ -156,7 +156,7 @@ function testExistingZenBindingIsPreserved(): void {
   );
 }
 
-function testV2DeletionSurvivesRoundTrip(): void {
+function testV3DeletionSurvivesRoundTrip(): void {
   const deleted = {
     schemaVersion: 3 as const,
     enabled: true,
@@ -223,7 +223,7 @@ const tests: TestCase[] = [
   },
   {
     name: "v3 deletion survives round trip",
-    fn: testV2DeletionSurvivesRoundTrip,
+    fn: testV3DeletionSurvivesRoundTrip,
   },
   {
     name: "invalid JSON recovers to v3 defaults",
