@@ -531,7 +531,7 @@ def main():
             run_build(args.source, task, runner, env,
                       consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
             stage = 'mozilla-target-assets'
-            report['mozillaTargets']['assets'] = verify_assets(task, runner, macho)
+            report['mozillaTargets']['assets'] = verify_assets(task, runner, macho, source=args.source)
             object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
             report['hostObject'] = macho(object_path, 1)
             require(object_path.stat().st_mtime >= started, 'object-not-fresh')

@@ -128,6 +128,43 @@ class TargetBuildTests(unittest.TestCase):
             'MOZ_MACBUNDLE_NAME':'Test.app','MOZ_APP_NAME':'test'}}))
         with self.assertRaises(Failure): target.verify_assets(self.task, self.runner, mock.Mock())
 
+    def test_channel_static_source_link_is_fixed_hash_bound_and_other_external_links_fail(self):
+        root = self.task/'obj'; app = root/'dist/Test.app/Contents'
+        (self.task/'effective-config.private.log').write_text(json.dumps({'substs':{
+            'MOZ_MACBUNDLE_NAME':'Test.app','MOZ_APP_NAME':'test'}}))
+        for relative in ('MacOS/xpcshell','MacOS/XUL','MacOS/test',
+                         'Library/LaunchServices/org.mozilla.updater',
+                         'Frameworks/ChannelPrefs.framework/ChannelPrefs',
+                         'Library/LaunchServices/org.mozilla.dmgInstallHelper'):
+            path=app/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'binary');path.chmod(0o755)
+        http3=root/'dist/bin/http3server';http3.parent.mkdir(parents=True);http3.write_bytes(b'binary');http3.chmod(0o755)
+        for relative in ('Resources/modules/AppConstants.sys.mjs','Resources/application.ini','Resources/dependentlibs.list'):
+            path=app/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'resource')
+        source=self.task/'source'; reference=source/target.CHANNEL_INFO_SOURCE
+        reference.parent.mkdir(parents=True);reference.write_bytes(b'fixed source plist')
+        link=app/'Frameworks/ChannelPrefs.framework/Resources/Info.plist';link.parent.mkdir(parents=True)
+        link.symlink_to(reference)
+        checksum=hashlib.sha256(reference.read_bytes()).hexdigest()
+        with mock.patch.object(target,'CHANNEL_INFO_SHA256',checksum):
+            assets=target.verify_assets(self.task,self.runner,lambda *_:{'uuid':'a'*32},source=source)
+            self.assertEqual(assets['resources']['channelInfo']['sha256'],checksum)
+            with self.assertRaises(Failure):target.verify_assets(self.task,self.runner,lambda *_:{'uuid':'a'*32})
+            outside=self.task/'unrelated.plist';outside.write_bytes(reference.read_bytes())
+            original_verify=target._FixedRead.verify
+            def retarget_after_verify(reader):
+                original_verify(reader)
+                link.unlink();link.symlink_to(outside)
+            for content in (reference.read_bytes(), b'foreign source plist'):
+                outside.write_bytes(content)
+                with mock.patch.object(target._FixedRead,'verify',retarget_after_verify):
+                    with self.assertRaises(Failure):
+                        target.verify_assets(self.task,self.runner,lambda *_:{'uuid':'a'*32},source=source)
+                link.unlink();link.symlink_to(reference)
+            link.unlink();link.symlink_to(outside)
+            with self.assertRaises(Failure):target.verify_assets(self.task,self.runner,lambda *_:{'uuid':'a'*32},source=source)
+            link.unlink();link.symlink_to(reference);reference.write_bytes(b'changed source plist')
+            with self.assertRaises(Failure):target.verify_assets(self.task,self.runner,lambda *_:{'uuid':'a'*32},source=source)
+
     def test_typed_case_and_stage_gate_rejects_missing_unknown_or_wrong_negative(self):
         def asset(kind=2):
             return {'bytes':100,'sha256':'a'*64,'filetype':kind,'uuid':'b'*32,

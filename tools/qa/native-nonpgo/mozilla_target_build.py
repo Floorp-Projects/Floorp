@@ -9,11 +9,13 @@ import sys
 import time
 
 from firefox_target_graph import _assignment, target_graph_proof
-from firefox_target_observer import _FixedRead, _graph_safe, Unknown as GraphUnknown
+from firefox_target_observer import _FixedRead, _graph_safe, identity, Unknown as GraphUnknown
 from support import Failure, digest, require, write_json
 
 
 CONTRACT = 'verified-origin-root-target-mozilla-smoke-v1'
+CHANNEL_INFO_SOURCE = 'toolkit/mozapps/macos-frameworks/ChannelPrefs/Info.plist'
+CHANNEL_INFO_SHA256 = 'e851be4e2ee0eadcbdff747b17e6766f05924801258d842bcfbe8ba892b17d0a'
 TARGETS = (
     ('mozilla-shell-build', 'js/xpconnect/shell/target'),
     ('mozilla-http3-build', 'netwerk/test/http3server/target'),
@@ -102,7 +104,7 @@ def run_build(source, task, runner, env, deadline, result):
     _journal(task, runner, result)
 
 
-def verify_assets(task, runner, macho):
+def verify_assets(task, runner, macho, *, source=None):
     config = json.loads((task / 'effective-config.private.log').read_text())['substs']
     bundle, app_name = config.get('MOZ_MACBUNDLE_NAME'), config.get('MOZ_APP_NAME')
     require(type(bundle) is str and re.fullmatch(r'[A-Za-z0-9 _.-]+\.app', bundle) is not None and
@@ -132,9 +134,27 @@ def verify_assets(task, runner, macho):
         ('dependentLibs', app / 'Resources/dependentlibs.list'),
         ('channelInfo', app / 'Frameworks/ChannelPrefs.framework/Resources/Info.plist'),
     ):
-        require(path.is_file() and path.resolve().is_relative_to(root) and
+        require(path.is_file() and
                 path.stat().st_uid == os.geteuid() and 0 < path.stat().st_size <= 1024**2,
                 'mozilla-target-resource')
+        resolved = path.resolve()
+        if not resolved.is_relative_to(root):
+            # FasterMake's default absolute_symlink installation and stock
+            # rsync -a preserve this one static source plist through the move.
+            require(label == 'channelInfo' and source is not None and
+                    resolved == Path(source) / CHANNEL_INFO_SOURCE, 'mozilla-target-resource')
+            link_identity = identity(path.lstat())
+            require(path.resolve() == resolved, 'mozilla-target-resource-source')
+            with ExitStack() as stack:
+                reader = _FixedRead(source, stack, time.monotonic() + 30)
+                raw, receipt = reader.read(CHANNEL_INFO_SOURCE, 1024**2)
+                require(raw is not None and receipt['sha256'] == CHANNEL_INFO_SHA256,
+                        'mozilla-target-resource-source')
+                reader.verify()
+                require(identity(path.lstat()) == link_identity and path.resolve() == resolved,
+                        'mozilla-target-resource-source')
+            result['resources'][label] = {key: receipt[key] for key in ('bytes', 'sha256')}
+            continue
         result['resources'][label] = {'bytes': path.stat().st_size, 'sha256': digest(path)}
     return result
 

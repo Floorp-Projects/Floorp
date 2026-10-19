@@ -3,7 +3,8 @@
     {
       "affectedOriginalHelperSHA256": "f45713443ebf6bedf4f2c497bf9f4a24e0f0472348d7385045617d36e88c203a",
       "counterexample": "The final proof accepted a missing graph, unstable binding, unfinished currentStage or contradictory minimum-suffix/native qualification although the normal execution precondition ran earlier.",
-      "fixedHelperSHA256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005",
+      "firstFixedHelperSHA256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005",
+      "fixedHelperSHA256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3",
       "id": "R57-P2-FINAL-GRAPH-AND-SCOPE",
       "resolution": "Strict final graph schema, exact three pins and binding/closure/status/scope checks plus explicit currentStage null and limited qualification fields.",
       "severity": "P2",
@@ -12,14 +13,42 @@
     {
       "affectedOriginalPipelineSHA256": "b637b939a929d945009d18fb0cbf72f80322a5919dc13b69680e494c0d893f37",
       "counterexample": "After the last natural case cleanup, pure proof/hash work could advance elapsed time to346 minutes while the pipeline still returned targeted-ready/zero.",
-      "fixedPipelineSHA256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665",
+      "firstFixedPipelineSHA256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665",
+      "fixedPipelineSHA256": "e0f750a8905ee49f32ed0cb4f5b78b3b56e6c3ac122ce85e780856db06368eb5",
       "id": "R57-P2-FINAL-ORIGINAL-DEADLINE",
       "resolution": "Original elapsed clock checks before and after target evidence, in the targeted final gate, after summary writing and at return. No timer reset or budget change.",
       "severity": "P2",
       "verification": "Actual main rejects post-case elapsed345 and346 minutes, retains the existing origin bytes and reports failed with a primary failure."
+    },
+    {
+      "affectedOriginalHelperSHA256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005",
+      "counterexample": "The stock FasterMake absolute_symlink installation plus rsync-a/move leaves ChannelPrefs Info.plist pointing to its tracked static source; a generic resolve-within-obj rule rejected that legitimate required asset.",
+      "discoveredBy": "owner",
+      "fixedHelperSHA256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3",
+      "id": "R57-P2-LEGITIMATE-STATIC-SOURCE-LINK",
+      "resolution": "One fixed channelInfo-only source exception with explicit source argument, exact path and immutable SHA, existing bounded source FD read and owner/nlink/identity checks. No source/configuration/product content change.",
+      "severity": "P2",
+      "verification": "Actual immutable7dd731-byte source accepted through the legitimate owned-temp symlink; same bytes at another outside path, missing source argument, changed source hash, hardlinks, leaf symlinks and all other outside resource/binary labels rejected."
+    },
+    {
+      "affectedOriginalHelperSHA256": "c7d4cb04d77b3ea7759a18e224ebc5db6b68a74b71d2da324e6218c32329322f",
+      "counterexample": "After the source FD verified the fixed plist, retargeting the bundle link caused the subsequent ordinary stat/digest reopen to accept a foreign outside file and return its unpinned metadata. Retargeting to a different path with identical bytes also passed.",
+      "fixedHelperSHA256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3",
+      "id": "R57-P2-CHANNEL-SOURCE-REOPEN-BINDING",
+      "resolution": "Compare link lstat identity and exact resolution around source verification and use the verified FD receipt bytes/SHA directly, followed by continue so no asset-path reopen occurs.",
+      "severity": "P2",
+      "verification": "The identical12-control suite failed exactly the two retarget cases before this fix and passes all12 after it, with the real fixed source hash unmocked."
     }
   ],
   "decision": "CODE_CLEAR",
+  "deltaBaseline": {
+    "fixture": "11edac56d9ac984ea9d4d1dc2f9d746a8aaf1de0",
+    "helperDelta": "Only verify_assets changes, plus fixed source path/hash constants and the existing reader identity import. stage_complete, graph_precondition, _journal, run_build and proof_complete remain byte-identical.",
+    "helperSHA256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005",
+    "pipelineDelta": "Only forwards the existing args.source keyword to verify_assets.",
+    "pipelineSHA256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665",
+    "status": "historical-unexecuted-implementation-replaced-by-current-source-freeze"
+  },
   "findings": [],
   "immutableBaseline": {
     "acquisition": "Normal read-only GitHub immutable raw source API.",
@@ -32,6 +61,11 @@
   },
   "openP1": 0,
   "openP2": 0,
+  "priorReview": {
+    "basename": "floorp-recovery57-implementation-review.pre-channel-source-link.json",
+    "bytes": 10644,
+    "sha256": "a90ccf13c08c0a86d3141858fe389f7191677cc2ce4fcde2ae4e21cf420036b3"
+  },
   "qualificationLimits": {
     "actualCurrentSourceMozillaCasesExecutedByReviewer": false,
     "actualMacTargetRouteVerified": false,
@@ -44,7 +78,8 @@
     "nativeAuthenticationVerified": false
   },
   "remainingExecutionPrerequisites": [
-    "Final complete QA suite on the frozen source.",
+    "Final complete QA suite on the current four-file freeze.",
+    "Refresh immutable source fixture and final rendered caller pins; historical fixture11edac does not bind the current implementation.",
     "Independent frozen caller/gate and immutable source/readback review.",
     "Short Mac route/gate validation and actual target/resources/three-case receipts before claiming current-source Mozilla smoke success."
   ],
@@ -57,6 +92,7 @@
     "The same parent Runner, object tree, clean build environment and existing original monotonic origin are reused. Each stage uses platform360 and the existing explicitly selected absolute345 work limit; restore remains60 and the15-minute cleanup reserve/profile are unchanged.",
     "Every target stage is individually recorded and journaled. Exact int exit0, explicit null reason/failurePhase/cleanupFailure, exact leader reap0, verified-gone group and absent main monitor/primary failure are required before the next stage.",
     "Actual seven current native assets and four nonempty resources are checked. The seven assets are xpcshell, XUL, HTTP3 server, browser, updater, ChannelPrefs and dmg helper; checks retain in-objdir resolution, current owner, execute permission, job-start freshness and Mach-O kind/UUID requirements. ChannelPrefs and dmg moved outputs are affirmative asset requirements.",
+    "Stock absolute_symlink installation preserves the static ChannelPrefs Info.plist source link through main repackage. Only channelInfo may resolve outside obj, and only to the exact fixed source path under the existing source root. The source is read by the existing bounded no-follow/owner/nlink1 FD reader, checked against the fixed731-byte source SHA, and descriptor/directory bindings are verified. Asset link identity and exact resolution are compared before and after source verification; returned metadata comes directly from that verified FD receipt without reopening the asset path. Other outside resources and all outside binaries remain rejected; ordinary inside-obj behavior remains unchanged.",
     "The unchanged run_smoke validates actual current source and fixture inputs, three exact cases, lifecycle-bound compiled-debug proof and current upstream source/head. XUL/xpcshell content hashes are rechecked after each case.",
     "The new strict final proof revalidates the fixed graph pins/schema/bindings, limited qualification flags, completed stage order, assets and exact three-case receipts. Expected exits remain0,1,0 and actual statuses remain passed,failed,passed with complete logs and exact owned cleanup. The intentional failure is retained as an actual failed child.",
     "The dedicated mozilla-target-ready status preserves fullHostXUL NOT_TESTED, fullHostQualification false, stagePackage NOT_TESTED, nativeAuthentication NOT_TESTED, productQualification false and no fresh-objdir/same-job qualification. No full-build, package, native-suite, signature or upload stage is reached.",
@@ -71,23 +107,24 @@
     "normalImmutableSourceRead": true,
     "repositorySourceEdits": false
   },
+  "revision": "channel-static-source-link-delta-and-binding-fix",
   "schema": 1,
   "scope": "Frozen pipeline targeted branch, new target helper and focused tests. The workflow caller, immutable publication and actual Mac target/smoke execution are separate validation steps.",
   "sourceFiles": [
     {
-      "bytes": 52185,
+      "bytes": 52205,
       "path": "tools/qa/native-nonpgo/pipeline.py",
-      "sha256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665"
+      "sha256": "e0f750a8905ee49f32ed0cb4f5b78b3b56e6c3ac122ce85e780856db06368eb5"
     },
     {
-      "bytes": 12270,
+      "bytes": 13587,
       "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
-      "sha256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005"
+      "sha256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3"
     },
     {
-      "bytes": 11654,
+      "bytes": 14623,
       "path": "tools/qa/native-nonpgo/test_mozilla_target_build.py",
-      "sha256": "aad06d119c022f6872659ec286d2e4b7c13c1faeae4c0fa80a5aef372a30bf05"
+      "sha256": "5de80e01099b56062f5b556243618cf47899dc794e467572536c5f211825a389"
     },
     {
       "bytes": 36200,
@@ -98,9 +135,19 @@
   "sourceFreeze": {
     "basename": "floorp-recovery57-source-freeze.json",
     "bytes": 685,
-    "sha256": "5f4cf7ed0f5d376efc7f4b6bcfb490efffb6e940537dada7842cb56c664703ba"
+    "sha256": "6f1dd6ce0e919425086688b0a62a95c5dfd78bec761a507aa7ad3906bd6733db"
   },
   "sourceResourceAssessment": "The parallel fixed-source resource review resolves the optional five test-program manifest entries: they do not require compilation for the unchanged version-comparator/head. Ordinary stock generated/fallback/test installation remains active and must fail normally on any actual required missing input.",
+  "staticSourceBinding": {
+    "bytes": 731,
+    "independentNormalAPIReadbackExact": true,
+    "path": "toolkit/mozapps/macos-frameworks/ChannelPrefs/Info.plist",
+    "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "resourceReceiptSchemaChanged": false,
+    "sha256": "e851be4e2ee0eadcbdff747b17e6766f05924801258d842bcfbe8ba892b17d0a",
+    "sourcePinMocked": false
+  },
   "supportingEvidence": [
     {
       "basename": "floorp-recovery57-implementation-controls.py",
@@ -110,7 +157,22 @@
     {
       "basename": "floorp-recovery57-implementation-controls-result.json",
       "bytes": 1991,
-      "sha256": "8201d87c752b7b60aa3e2c982a18dd2fe246eaa001da23879f6c04f972bc1777"
+      "sha256": "2676e517104ad545f3701b72e0b70604957cc76ea6dae9ebc8c41a2f591f2592"
+    },
+    {
+      "basename": "floorp-recovery57-channel-source-controls.py",
+      "bytes": 7316,
+      "sha256": "4be5f20f96d81423fbd7a0901a4b0be62aafc6f17e36f28f10c933c2f8cf04b7"
+    },
+    {
+      "basename": "floorp-recovery57-channel-source-controls-result.json",
+      "bytes": 1148,
+      "sha256": "0bdebc85b1d675316eefe4826824ed183c9996017fa85d44818b5345e7213d2b"
+    },
+    {
+      "basename": "floorp-recovery57-channel-source-controls-before-fix.json",
+      "bytes": 1312,
+      "sha256": "59e310dc2bc74856fd91d6f9e7ada78f2c0404e6b02acd037c43e5e815fdd6dd"
     },
     {
       "basename": "floorp-recovery57-target-gate-review.json",
@@ -135,7 +197,7 @@
   ],
   "validation": {
     "controlledTestsScope": "Owned small temporary fixtures and existing mocks; no native target build, SDK/checkpoint payload or live Mac process was exercised.",
-    "fullRepositorySuite": "Not repeated by this reviewer. The owner is running the final complete suite against this freeze.",
+    "fullRepositorySuite": "Not repeated by this reviewer. The owner is running final full758 QA against this current freeze; the earlier757 result belongs to the historical prior source.",
     "independentControls": {
       "actualAssetFixtureControls": 14,
       "actualMacOrMachOQualified": false,
@@ -164,11 +226,34 @@
         "test_consumer_time",
         "test_failure_excerpt"
       ],
-      "passed": 132,
+      "passed": 133,
       "resourceWarningPolicy": "error",
-      "seconds": 2.47,
+      "seconds": 2.519,
       "skipped": 0,
-      "total": 132
+      "total": 133
+    },
+    "independentSourceLinkControls": {
+      "actualMacOrMachOQualified": false,
+      "actualSourcePinMocked": false,
+      "coverage": [
+        "legitimate fixed static source link",
+        "legacy regular inside-obj resource",
+        "source argument required",
+        "same bytes at unrelated external path rejected",
+        "changed source hash rejected",
+        "source hardlink rejected",
+        "source leaf symlink rejected",
+        "three other resource labels rejected outside",
+        "outside binary rejected",
+        "source replacement before FD verification rejected",
+        "foreign-content post-verify asset retarget rejected",
+        "same-bytes wrong-path post-verify asset retarget rejected"
+      ],
+      "errors": 0,
+      "failures": 0,
+      "passed": 12,
+      "resourceWarningPolicy": "error",
+      "total": 12
     },
     "sourceFreezeMatchedBeforeAndAfterControls": true
   }

@@ -8,18 +8,18 @@
     "sourceFreeze": [
       {
         "path": "tools/qa/native-nonpgo/pipeline.py",
-        "bytes": 52185,
-        "sha256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665"
+        "bytes": 52205,
+        "sha256": "e0f750a8905ee49f32ed0cb4f5b78b3b56e6c3ac122ce85e780856db06368eb5"
       },
       {
         "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
-        "bytes": 12270,
-        "sha256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005"
+        "bytes": 13587,
+        "sha256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3"
       },
       {
         "path": "tools/qa/native-nonpgo/test_mozilla_target_build.py",
-        "bytes": 11654,
-        "sha256": "aad06d119c022f6872659ec286d2e4b7c13c1faeae4c0fa80a5aef372a30bf05"
+        "bytes": 14623,
+        "sha256": "5de80e01099b56062f5b556243618cf47899dc794e467572536c5f211825a389"
       },
       {
         "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
@@ -131,7 +131,18 @@
       "dependentLibs",
       "channelInfo"
     ],
-    "requirements": "Actual owned current-job executable x86_64 Mach-O/UUID and fixed current resources; silent missing bundle moves do not qualify."
+    "requirements": "Actual owned current-job executable x86_64 Mach-O/UUID and fixed current resources; silent missing bundle moves do not qualify.",
+    "fixedSourceLink": {
+      "resource": "channelInfo",
+      "path": "toolkit/mozapps/macos-frameworks/ChannelPrefs/Info.plist",
+      "bytes": 731,
+      "sha256": "e851be4e2ee0eadcbdff747b17e6766f05924801258d842bcfbe8ba892b17d0a",
+      "exactSourcePathOnly": true,
+      "sourceFDOwnedNoFollowSingleLink": true,
+      "bundleLinkIdentityAndResolutionBeforeAfter": true,
+      "reopenAfterVerification": false,
+      "allOtherExternalResourcesRejected": true
+    }
   },
   "smokeCases": [
     "compiled-debug",
@@ -190,25 +201,26 @@
     },
     {
       "path": "RECOVERY57_IMPLEMENTATION_REVIEW.json",
-      "bytes": 10644,
-      "sha256": "a90ccf13c08c0a86d3141858fe389f7191677cc2ce4fcde2ae4e21cf420036b3"
+      "bytes": 16608,
+      "sha256": "e8f3e9550ce90f534a2569f4dabd328db7986f67669ed8a17b7be0e984571675"
     }
   ],
   "localFullQA": {
     "status": "passed",
-    "total": 757,
+    "total": 758,
     "skipped": 17,
     "failures": 0,
     "errors": 0,
     "complete": true,
-    "wallSeconds": 56.34,
+    "wallSeconds": 58.174,
     "returnCode": 0,
-    "bytes": 145678,
-    "sha256": "bac25418cbf909fd33969775ec14de39a3114b6c2006592f709048eb2b31adb3"
+    "bytes": 145892,
+    "sha256": "1596d75be16716dab1fc92c914ffc393c8a38c038e1ff77a1548c310e0943cf4"
   },
   "actualExecution": "NOT_STARTED",
   "timeRemaining": "UNKNOWN",
   "cacheReuse": "UNKNOWN",
   "minimalSufficientSuffixEstablished": false,
-  "originalNativeExitCause": "UNKNOWN"
+  "originalNativeExitCause": "UNKNOWN",
+  "selectedMacPreflightExpected": 543
 }
