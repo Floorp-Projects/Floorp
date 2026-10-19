@@ -77,14 +77,18 @@ jobs:
           env['PYTHONWARNINGS']='error::ResourceWarning'
           env['PATH']+=':/usr/local/bin'
           result={'status':'failed'}
+          primary_error=None
+          phase='self-probe'
           try:
               own=probe().read(os.getpid(),os.getpgrp())
               require(own['status']=='measured' and own['rssMiB']>0,'monitor-native-self-unavailable')
               result['self']={key:own[key] for key in ('status','rssMiB','cpuSeconds','state')}
+              phase='abi'
               abi=prepare_abi(task,runner,env)
               os.environ['FLOORP_CENSUS_ABI']=str(abi)
               env.update({key:os.environ[key] for key in (*BINDING_KEYS,'TASK_ROOT')})
               env['FLOORP_CENSUS_ABI']=str(abi)
+              phase='identity-snapshot'
               result['census']=snapshot(load_abi(abi))['measurement']
               with pathlib.Path(os.environ['GITHUB_ENV']).open('a') as output:
                   output.write('FLOORP_CENSUS_ABI='+str(abi)+'\n')
@@ -95,6 +99,7 @@ jobs:
                       ('failure-recording-tests',[sys.executable,'-m','unittest','discover','-v',
                       '-s',str(helper.parents[1]/'app-shim'),'-p','test_shim_failure_diagnostics.py'],14,True)]
                   for test_stage,command,expected,recording in suites:
+                      phase=test_stage
                       try:
                           runner.run(test_stage,command,helper,env,360,phase_deadline_minutes=15)
                       finally:
@@ -102,16 +107,31 @@ jobs:
                       tests=result[test_stage]
                       require(tests['complete'] and tests['status']=='passed' and
                               tests['total']==expected and tests['skipped']==0,'checkpoint-mac-tests')
+              phase='owned-monitor-control'
               script="import subprocess; [subprocess.run(['/bin/sh','-c','/bin/sleep 0.1'],check=True) for _ in range(20)]"
               runner.run('monitor-preflight',[sys.executable,'-c',script],task,env,360,phase_deadline_minutes=15)
               require(any(row['stage']=='monitor-preflight' and (row['lastActivity'] or {}).get('sampleComplete') is True and
                           (row['lastActivity'] or {}).get('counterSource')=='libproc-taskallinfo' for row in runner.records),
                       'monitor-preflight-no-complete-sample')
               result['status']='passed'
+          except BaseException as error:
+              primary_error=error
+              result.update(status='failed',failurePhase=phase)
+              runner.fail('monitor-preflight','checkpoint-preflight-failure')
+              raise
           finally:
-              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,firstFailure=runner.failure)
-              write_json(task/'monitor-preflight.json',result)
+              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,
+                            monitorDiagnostics=runner.monitor_diagnostics,firstFailure=runner.failure)
+              evidence_error=False
+              try:
+                  write_json(task/'monitor-preflight.json',result)
+              except OSError:
+                  evidence_error=True
+                  runner.fail('preflight-evidence','checkpoint-preflight-evidence-write')
+                  result.update(status='failed',evidenceWriteFailure=True,firstFailure=runner.failure)
               print(json.dumps({'monitorPreflight':result}),flush=True)
+              if evidence_error and primary_error is None:
+                  require(False,'checkpoint-preflight-evidence-write')
           PYCODE
       - name: Checkout immutable Runtime source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -263,14 +283,18 @@ jobs:
           env['PYTHONWARNINGS']='error::ResourceWarning'
           env['PATH']+=':/usr/local/bin'
           result={'status':'failed'}
+          primary_error=None
+          phase='self-probe'
           try:
               own=probe().read(os.getpid(),os.getpgrp())
               require(own['status']=='measured' and own['rssMiB']>0,'monitor-native-self-unavailable')
               result['self']={key:own[key] for key in ('status','rssMiB','cpuSeconds','state')}
+              phase='abi'
               abi=prepare_abi(task,runner,env)
               os.environ['FLOORP_CENSUS_ABI']=str(abi)
               env.update({key:os.environ[key] for key in (*BINDING_KEYS,'TASK_ROOT')})
               env['FLOORP_CENSUS_ABI']=str(abi)
+              phase='identity-snapshot'
               result['census']=snapshot(load_abi(abi))['measurement']
               with pathlib.Path(os.environ['GITHUB_ENV']).open('a') as output:
                   output.write('FLOORP_CENSUS_ABI='+str(abi)+'\n')
@@ -281,6 +305,7 @@ jobs:
                       ('failure-recording-tests',[sys.executable,'-m','unittest','discover','-v',
                       '-s',str(helper.parents[1]/'app-shim'),'-p','test_shim_failure_diagnostics.py'],14,True)]
                   for test_stage,command,expected,recording in suites:
+                      phase=test_stage
                       try:
                           runner.run(test_stage,command,helper,env,360,phase_deadline_minutes=15)
                       finally:
@@ -288,16 +313,31 @@ jobs:
                       tests=result[test_stage]
                       require(tests['complete'] and tests['status']=='passed' and
                               tests['total']==expected and tests['skipped']==0,'checkpoint-mac-tests')
+              phase='owned-monitor-control'
               script="import subprocess; [subprocess.run(['/bin/sh','-c','/bin/sleep 0.1'],check=True) for _ in range(20)]"
               runner.run('monitor-preflight',[sys.executable,'-c',script],task,env,360,phase_deadline_minutes=15)
               require(any(row['stage']=='monitor-preflight' and (row['lastActivity'] or {}).get('sampleComplete') is True and
                           (row['lastActivity'] or {}).get('counterSource')=='libproc-taskallinfo' for row in runner.records),
                       'monitor-preflight-no-complete-sample')
               result['status']='passed'
+          except BaseException as error:
+              primary_error=error
+              result.update(status='failed',failurePhase=phase)
+              runner.fail('monitor-preflight','checkpoint-preflight-failure')
+              raise
           finally:
-              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,firstFailure=runner.failure)
-              write_json(task/'monitor-preflight.json',result)
+              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,
+                            monitorDiagnostics=runner.monitor_diagnostics,firstFailure=runner.failure)
+              evidence_error=False
+              try:
+                  write_json(task/'monitor-preflight.json',result)
+              except OSError:
+                  evidence_error=True
+                  runner.fail('preflight-evidence','checkpoint-preflight-evidence-write')
+                  result.update(status='failed',evidenceWriteFailure=True,firstFailure=runner.failure)
               print(json.dumps({'monitorPreflight':result}),flush=True)
+              if evidence_error and primary_error is None:
+                  require(False,'checkpoint-preflight-evidence-write')
           PYCODE
       - name: Checkout immutable Runtime source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

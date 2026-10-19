@@ -1,0 +1,353 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY42_TRUSTED_RUNNER_SERIAL_CHECKPOINT_PRELAUNCH_REVIEW",
+  "decision": "GO",
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "boundaryContract": "trusted-single-purpose-runner-v1",
+  "sourceBasis": {
+    "fixture": "e473170251a03285727571657394ce05f2f4f2be",
+    "tree": "c3b9317a04a987b91f58b57b7508a9fec18a9eeb",
+    "sameExecutableSourceAsSuccessfulRecovery41": true,
+    "sourceAndHarnessBindings": [
+      {
+        "path": "tools/qa/native-nonpgo/checkpoint.py",
+        "bytes": 35186,
+        "sha256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 38473,
+        "sha256": "b2d4afdbf59771ef1090f8c7470dae99b198fd4eab1b1df4810e05e8e9bbfe6a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 27325,
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/process_census.py",
+        "bytes": 10804,
+        "sha256": "d150348dc76e454227108354e9b49c38675b694ce078bb598564c44bceed22b4"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/native_suite.py",
+        "bytes": 11562,
+        "sha256": "c4270e18440e9c4079347cc9a67f58e399cca9913bc11b7eed8fe034db6f5499"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+        "bytes": 7565,
+        "sha256": "873ccd2ee7458c796d5517e28f020d6f53b6902ba3123c211049c01cb5f25731"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/completion_preflight.py",
+        "bytes": 5567,
+        "sha256": "1313296dd1645ed2201c1a3bb3976d534ce9b84602728bda37d874648a54bd66"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+        "bytes": 34204,
+        "sha256": "94d0af617c1142df439b9654666a26b112ec79da657b92ca7bb1ca049c8e899b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_process_census.py",
+        "bytes": 9576,
+        "sha256": "b785634ae2ef674bef0af993ba43472a90c818f0018eb21f38c83c133106278b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_guards.py",
+        "bytes": 85486,
+        "sha256": "894c25af906b0923d294d8c4234fe8514883c5ca817125b7bbd61e94895a7231"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_shim_failure_patch.py",
+        "bytes": 13890,
+        "sha256": "e273d0cd0919241a4e18069c22baa3f4347bc3e65ca045f00f59ec42814a2d0d"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_completion_preflight.py",
+        "bytes": 4981,
+        "sha256": "bb9211286187390f5fc3f59a27bdc83604c3ff66aebed872cb67819f0cb00235"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/shim-failure-recording.patch",
+        "bytes": 12717,
+        "sha256": "367f7095a17602fc986f90c344d44098366124e66384d1e2e8d3ba92f34ff3ad"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fixtures/harness-test-runtime.py",
+        "bytes": 47527,
+        "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fixtures/harness-test-context-menu.py",
+        "bytes": 18363,
+        "sha256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fixtures/harness-shim_diagnostics.py",
+        "bytes": 5731,
+        "sha256": "4607da57c3ae874952f26b8926ec2bbe16e5ccdb86374b2a8a261c5f7be95a18"
+      },
+      {
+        "path": "tools/app-shim/test-runtime.py",
+        "bytes": 48679,
+        "sha256": "601341a644d89382dd8f30b6025146b87407fb7c8a52260efff9f8ecccfdce76"
+      },
+      {
+        "path": "tools/app-shim/test-context-menu.py",
+        "bytes": 11394,
+        "sha256": "f3cc372b9e07d47e5865f9d9dfbfbe981d662848fc8e87b32e01806cfe195400"
+      },
+      {
+        "path": "tools/app-shim/shim_failure_diagnostics.py",
+        "bytes": 19910,
+        "sha256": "9c9dd722725577dd31b4389e3244c4199e124c3dee468e91458e01c059e6976d"
+      },
+      {
+        "path": "tools/app-shim/test_shim_failure_diagnostics.py",
+        "bytes": 18620,
+        "sha256": "bc8259f2124d12d2f63fe8ccb90be98dedd7a7da14819297ae4564706bb9c5f0"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+        "bytes": 17454,
+        "sha256": "048e0318543519af7eca67db44faa28c3a97b6d336828b16078c4fb10ee4d746"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+        "bytes": 14596,
+        "sha256": "4564a491de8fea6cce5a1b4a02ddcf3de060f270d622379f993753a427f86292"
+      }
+    ],
+    "independentProviderReadbackPreviouslyMatched": 29,
+    "independentCurrentLocalSourceAndHarnessMatches": 22,
+    "workflowAmendmentDoesNotChangeBuildHelpers": true
+  },
+  "priorReviews": {
+    "sourcePrelaunch": {
+      "bytes": 18752,
+      "sha256": "8c7dc31853150e02017e18d6c84319fb89088b28f7abb9c05276b97176d3d356"
+    },
+    "actualMacShortTerminal": {
+      "bytes": 8343,
+      "sha256": "987b9e91fa2f257e81ced39f76b6aab8ff88b517f5e5188111e542d00042ee31"
+    },
+    "shortRun": 39183820397,
+    "shortJob": 117841961354,
+    "actualQAPasses": 151,
+    "actualRecordingPasses": 14,
+    "skips": 0,
+    "allFiveStagesNaturalZeroExactReapAndGroupsGone": true,
+    "artifactCount": 0,
+    "firstAndMonitorFailure": null
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "d546c37feedfdfcb718b20fa7a89eb0d338df839",
+    "tree": "272715554d0c36457a18357da62e85e66feab1ac",
+    "parent": "1930f0e677ec55be0d747c76f981b9022b779901",
+    "commitsAhead": 1,
+    "onlyChangedFile": ".github/workflows/mac-native-checkpoint.yml",
+    "providerWorkflowBytes": 21541,
+    "providerWorkflowSHA256": "87480036c85351e8bd2d15c711b8cec6c00f3818e4f41cde4c2bc16d28ae86fd",
+    "providerBytesMatchReviewedRender": true,
+    "unusedEarlierCandidateNotSelected": "a126c047a508c15a95d216d1b19ede691e7395de"
+  },
+  "workflowBindings": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 21523,
+      "sha256": "3c0949a7e52061207e88af3dc0563688113f6a5cb93a1bccc969425f1441f87a"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.rendered.yml.disabled",
+      "bytes": 21541,
+      "sha256": "87480036c85351e8bd2d15c711b8cec6c00f3818e4f41cde4c2bc16d28ae86fd"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_SDK_RECHECK.json",
+      "bytes": 1550,
+      "sha256": "56bd32d5e40194600acc11c571ba7dcdc3fdb53cd5342693d0ed0d67139578cb"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_PREFLIGHT_CONTROLS.json",
+      "bytes": 1320,
+      "sha256": "83a228fd0daf53e8a3912b46d4d7f27aa4e8b7416e40dedf005cb28886393578"
+    }
+  ],
+  "routeSnapshot": {
+    "branch": "codex/mac-native-checkpoint-recovery42-20261019",
+    "branchLookupHTTP": 404,
+    "previousBranchRuns": 0,
+    "ownedNativeInProgress": 0,
+    "ownedNativeQueued": 0,
+    "unrelatedQueued": 1,
+    "initialCreatedPushOnly": true,
+    "beforeZeroRequired": true,
+    "attempt": 1,
+    "snapshotRequiresFreshCheckAtActivation": true
+  },
+  "executionBounds": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "rawHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "jobs": [
+      "producer",
+      "consumer"
+    ],
+    "consumerNeeds": "producer",
+    "runner": "macos-15-intel",
+    "jobMinutesEach": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "artifactUploads": 1,
+    "rawArtifactFiles": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionDays": 1,
+    "uploadArchive": false,
+    "uploadOverwrite": false,
+    "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+    "consumerAdditionalUpload": false,
+    "freshObjdirQualification": false,
+    "sameJobQualification": false,
+    "qualification": "verified-resumed-build-across-two-standard-intel-jobs",
+    "alternativeRunnerOrPermissionExpansion": false
+  },
+  "phaseAndResourceBounds": {
+    "producerNaturalBuildMinutes": 240,
+    "producerScanMinutes": 260,
+    "producerPackAndLatestUploadStartMinutes": 305,
+    "uploadTimeoutMinutes": 30,
+    "consumerRestoreMinutes": 60,
+    "consumerBuildMinutes": 300,
+    "consumerPackageMinutes": 315,
+    "consumerNativeMinutes": 335,
+    "finalMinutes": 345,
+    "maximumOwnedRSSMiB": 10240,
+    "minimumFreeDuringBuildGiB": 8,
+    "stallQuietMinutes": 20,
+    "ownedResourceUnknownStops": true,
+    "noGlobalAmbientTaskAccounting": true,
+    "backgroundUsage": "NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE",
+    "phaseMinuteValuesAreElapsedFromFreshJobClock": true
+  },
+  "completionAndEvidenceChecks": [
+    "Producer checkpoint requires natural success of required configure/configuration/export/Rust/archive stages, every prior owned leader exactly reaped with zero status, verified gone groups, no cleanup failure or first/monitor failure, and available untruncated sampled birth history.",
+    "Fresh self-bound full census rejects any known live or zombie build birth independently of its current credentials/group. Unavailable required identity evidence fails; unrelated UID births do not define build ownership or receive implicit zero counters.",
+    "Archive and dependency hashes bind the selected successful Rust boundary to the object manifest. Exact descriptor-stream hashing, archive readback and full selected-root rescans must pass before readiness; interrupted state is not eligible.",
+    "Upload follows verified ready summary, premeasured archive size/hash and reserved-time checks. The consumer accepts only the same run/attempt successful producer artifact with fixed service/archive/manifest/content/configuration checks.",
+    "Build failure excerpts retain bounded classified before-cleanup and after-cleanup observations without changing the primary failure. The fixed context/GUI recorder separately retains pre-cleanup functional failure, reported event cause, host/launcher/child facts and cleanup results with fixed public projection.",
+    "The corrected producer and consumer preflights retain non-Runner phase failures, existing first failure, recovered monitor diagnostics and persistence failure without publishing arbitrary exception text."
+  ],
+  "resolvedFinding": {
+    "severity": "P2",
+    "issue": "The prior inline preflight could report failed status with null firstFailure for a direct probe/snapshot/count failure, and omitted recovered monitor diagnostics.",
+    "resolution": "Both roles now capture a fixed failure code/phase without replacing a preexisting first failure, export monitorDiagnostics, and preserve the primary exception on persistence failure. A persistence-only failure prints failed evidence and raises a fixed failure."
+  },
+  "independentInlineControls": {
+    "actualReviewedInlineCodeExecuted": true,
+    "cases": 11,
+    "passed": 11,
+    "failures": 0,
+    "roles": [
+      "producer",
+      "consumer"
+    ],
+    "coverage": [
+      "normal completion",
+      "direct self-probe primary failure",
+      "primary plus evidence-write error",
+      "existing owned-stage primary plus evidence-write error",
+      "otherwise-successful evidence-write error",
+      "producer nonzero-skip rejection"
+    ],
+    "primaryExceptionIdentityPreserved": true,
+    "firstFailurePreserved": true,
+    "recoveredDiagnosticsPreserved": true,
+    "unknownOrSkippedTestsReject": true,
+    "privateExceptionSentinelAbsent": true,
+    "privateLogBytes": 899,
+    "privateLogSHA256": "d7f2c23ed425e91a098878691f7e7cc0d859f3aa35b1f2556ce3bda6cccf735a",
+    "monitoredWorkloadCommandsActuallyExecuted": 0
+  },
+  "syntaxChecks": {
+    "workflowYAML": "passed",
+    "bashScripts": 15,
+    "bashSyntaxFailures": 0,
+    "inlinePythonASTs": 5,
+    "ASTFailures": 0
+  },
+  "sdk": {
+    "ordinaryMetadataIndependentlyRead": true,
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceAttempt": 1,
+    "sourceStatus": "completed",
+    "sourceConclusion": "success",
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "tarBytes": 105567985,
+    "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+    "canonicalTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "members": 49701,
+    "logicalBytes": 704719765,
+    "version": "26.5",
+    "expiredAtMetadataCheck": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "localContentReverificationReceiptBound": true,
+    "localContentCRCAndTreeReverificationNotRepeatedByThisReview": true,
+    "localContentReceiptBytes": 802,
+    "localContentReceiptSHA256": "10281ccf32f322c0f74db256d92988c745fade91c83ef55bed82d25af72f71a4",
+    "payloadDownloadedByReviewer": false,
+    "ordinaryUnexpiredAcquisitionRequiredInEachJob": true,
+    "HTTPDeadlineZIPTARTreeVersionChecksUnchanged": true,
+    "noBuildDurationRemainingLifetimeGuard": true,
+    "retentionOrPermissionsChanged": false
+  },
+  "validationHypotheses": [
+    "A natural completed build can reach capture under the declared trusted completion contract without waiting for unrelated new UID candidates.",
+    "Production selected-state archive/transfer/restore and effective-configuration checks can succeed.",
+    "Consumer can finish full host translation unit, XUL, package and native Shim authentication within the retained bounds.",
+    "If native authentication fails, pre-cleanup diagnostics can distinguish first observed failure and later cleanup effects; reported reasons remain observations, not proven root cause."
+  ],
+  "limitsOfThisGO": [
+    "This is a validation launch assessment, not full build/native or product qualification. Those outcomes remain untested by the source review and short fixture success.",
+    "Sampled birth history is not exhaustive ancestry, and rescans are not atomic filesystem snapshots. Hostile arbitrary same-UID immutability is outside the stated trusted-runner contract and is not used as a launch blocker.",
+    "A successful old or short run does not prove current long-term runtime reliability or explain earlier native/task-query failure causes.",
+    "The source-bound short success applies to the fixed implementation; new environment, required query, capture, integrity or cleanup failures must still stop the corresponding stage."
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIActivations": 0,
+    "remoteWrites": 0,
+    "artifactOperations": 0,
+    "SDKPayloadDownloads": 0,
+    "signingOrAuthSettingsChanges": 0
+  },
+  "recordedAdditionalControls": {
+    "publicSummary": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_PREFLIGHT_CONTROLS.json",
+    "controls": 40,
+    "passed": 40,
+    "failed": 0,
+    "producerControls": 25,
+    "consumerControls": 15,
+    "usesExtractedActualInlineCodeWithFakeAPIsOnly": true,
+    "script": {
+      "bytes": 16265,
+      "sha256": "f95a385f16f124c62a83e5ae7625dd9fe40785c7040c796c219627887de45215"
+    },
+    "fullPrivateResult": {
+      "bytes": 58234,
+      "sha256": "7c6da76a4deb17e67b9d486f3e27cc5d85833a8710d743039c7d3b17f4e426cc",
+      "rawPublished": false
+    },
+    "provenance": "Execution recorded in the bound controls summary; these additional 40 cases were not rerun by this review. The 11 independent cases above were executed separately.",
+    "actualProcessesOrSDKOrNativeAuthenticationExercised": false
+  }
+}

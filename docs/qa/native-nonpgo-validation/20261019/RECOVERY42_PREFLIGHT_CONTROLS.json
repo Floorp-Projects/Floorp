@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY42_INLINE_PREFLIGHT_FAILURE_EVIDENCE_CONTROLS",
+  "workflowBytes": 21541,
+  "workflowSHA256": "87480036c85351e8bd2d15c711b8cec6c00f3818e4f41cde4c2bc16d28ae86fd",
+  "controls": 40,
+  "passed": 40,
+  "failed": 0,
+  "producerControls": 25,
+  "consumerControls": 15,
+  "script": {
+    "bytes": 16265,
+    "sha256": "f95a385f16f124c62a83e5ae7625dd9fe40785c7040c796c219627887de45215"
+  },
+  "fullPrivateResult": {
+    "bytes": 58234,
+    "sha256": "7c6da76a4deb17e67b9d486f3e27cc5d85833a8710d743039c7d3b17f4e426cc",
+    "rawPublished": false
+  },
+  "checks": [
+    "First Runner failure remains first when an outer failure or evidence write failure follows.",
+    "Original exception identity survives simultaneous evidence-write failure.",
+    "Successful work with evidence-write failure exits nonzero.",
+    "Self/ABI/identity snapshot/test count/skip/owned-monitor failures are captured with fixed phase.",
+    "Recovered monitor diagnostics remain in the receipt."
+  ],
+  "limits": "Fault injection uses extracted actual inline code with fake Runner/probe/ABI/filesystem/receipt. Actual Runner, SDK, processes and native authentication are not exercised by these controls.",
+  "actualProcessesExecuted": false,
+  "networkUsed": false,
+  "ciActivated": false,
+  "sdkAcquired": false
+}

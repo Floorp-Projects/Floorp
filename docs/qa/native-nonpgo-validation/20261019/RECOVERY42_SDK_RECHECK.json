@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY42_PRE_ACTIVATION_OFFICIAL_SDK_AND_LOCAL_CONTENT_RECHECK",
+  "officialMetadata": {
+    "artifact": 12133086104,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceAttempt": 1,
+    "sourceStatus": "completed",
+    "sourceConclusion": "success"
+  },
+  "localContent": {
+    "schema": 1,
+    "status": "content-reverified",
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "zipBytes": 105082683,
+    "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "tarBytes": 105567985,
+    "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+    "tree": {
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+    },
+    "version": "26.5",
+    "zipCRCVerified": true,
+    "previouslyAcquiredLocalBytesUsed": true,
+    "newDownloadPerformed": false,
+    "freshOfficialMetadataRequiredAndCheckedSeparately": true,
+    "runnerAcquisition": "ordinary unexpired API plus fixed ZIP/TAR/tree/version validation",
+    "retentionOrPermissionsChanged": false
+  },
+  "retentionOrPermissionsChanged": false,
+  "runnerMustRecheckUnexpiredAtActualAcquisition": true,
+  "noBuildDurationRemainingLifetimeGuard": true
+}
