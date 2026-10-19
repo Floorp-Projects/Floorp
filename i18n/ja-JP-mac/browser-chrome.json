@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "新規ワークスペース ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "このワークスペースを上に移動",
       "move-down": "このワークスペースを下に移動",
       "delete": "ワークスペースを削除",
       "manage": "ワークスペースを管理",
-      "archive": "ワークスペースをアーカイブ"
+      "archive": "ワークスペースをアーカイブ",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "新規ワークスペースを作成...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "このページの QR コードを生成",
   "qrcode-generate-page-action-title": "QR コードジェネレーター",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "パネルの種類",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "メディア",
       "open-tabs": "タブを開く",
       "switcher": "スイッチャー",
-      "history-suggestions": "履歴",
-      "bookmark-suggestions": "ブックマーク"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "コマンドが見つかりません",
     "noResultsHint": "別の検索語句をお試しください",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "開く場所",
     "bookmarkSwitcherWhereNewTab": "新規タブ",
     "bookmarkSwitcherWhereNewTabDesc": "新しいタブに切り替えて開く",
-    "bookmarkSwitcherWherePlaceholder": "開く場所を選択..."
+    "bookmarkSwitcherWherePlaceholder": "開く場所を選択...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "履歴を検索"
+    }
   },
   "commandPaletteReadings": {}
 }

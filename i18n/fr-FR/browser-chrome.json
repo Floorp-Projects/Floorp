@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Nouvel espace de travail ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "Déplacer cet espace de travail vers le haut",
       "move-down": "Déplacer cet espace de travail vers le bas",
       "delete": "Supprimer l’espace de travail",
       "manage": "Gérer l'espace de travail",
-      "archive": "Archiver l'espace de travail"
+      "archive": "Archiver l'espace de travail",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "Générer un code QR pour cette page",
   "qrcode-generate-page-action-title": "Générateur de code QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Ouvrir ou épingler la barre latérale de Firefox",
+    "resize": "Redimensionner la barre latérale de Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionner la barre latérale du panneau",
     "modal": {
       "type": "Type de panneau",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "Média",
       "open-tabs": "Onglets ouverts",
       "switcher": "Commuter",
-      "history-suggestions": "Historique",
-      "bookmark-suggestions": "Marque-pages"
+      "history-suggestions": "Historique (Recherche dynamique)",
+      "bookmark-suggestions": "Marque-pages (Recherche Dynamique)"
     },
     "noResults": "Aucune commande trouvée",
     "noResultsHint": "Essayez un autre terme de recherche",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "Où ouvrir",
     "bookmarkSwitcherWhereNewTab": "Nouvel onglet",
     "bookmarkSwitcherWhereNewTabDesc": "Ouvrir dans un nouvel onglet au premier plan",
-    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir..."
+    "bookmarkSwitcherWherePlaceholder": "Sélectionnez l'endroit où ouvrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Recherche \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Rechercher dans les onglets ouverts",
+      "reservedBookmarkSearch": "Recherche de marque-pages",
+      "reservedHistorySearch": "Rechercher dans l’historique"
+    }
   },
   "commandPaletteReadings": {}
 }

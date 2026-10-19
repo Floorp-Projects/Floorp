@@ -80,9 +80,15 @@ function installOrRunWithManagerLike(
   asPwa = true,
   userContextId?: number,
 ): Promise<void> {
+  // Keep real private helper methods available while avoiding the constructor's
+  // browser listeners; only the test's external dependencies are replaced.
+  const manager = Object.assign(
+    Object.create(SiteSpecificBrowserManager.prototype),
+    managerLike,
+  ) as SiteSpecificBrowserManager;
   return SiteSpecificBrowserManager.prototype.installOrRunCurrentPageAsSsb
     .call(
-      managerLike as unknown as SiteSpecificBrowserManager,
+      manager,
       browser,
       asPwa,
       userContextId,

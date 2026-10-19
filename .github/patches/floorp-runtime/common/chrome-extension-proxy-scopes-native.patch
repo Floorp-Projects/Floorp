@@ -1,3 +1,103 @@
+diff --git a/netwerk/base/ProxyAutoConfig.cpp b/netwerk/base/ProxyAutoConfig.cpp
+index a884180..e01ad45 100644
+--- a/netwerk/base/ProxyAutoConfig.cpp
++++ b/netwerk/base/ProxyAutoConfig.cpp
+@@ -23,6 +23,7 @@
+ #include "mozilla/net/ProxyAutoConfigParent.h"
+ #include "mozilla/net/SocketProcessChild.h"
+ #include "mozilla/net/SocketProcessParent.h"
++#include "nsReadableUtils.h"
+ #include "nsICancelable.h"
+ #include "nsIConsoleService.h"
+ #include "nsIDNSListener.h"
+@@ -491,7 +492,8 @@ nsresult ProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
+                                        const nsACString& aPACScriptData,
+                                        bool aIncludePath,
+                                        uint32_t aExtraHeapSize,
+-                                       nsISerialEventTarget* aEventTarget) {
++                                       nsISerialEventTarget* aEventTarget,
++                                       bool aChromeURLSemantics) {
+   mShutdown = false;  // Shutdown needs to be called prior to destruction
+ 
+   mPACURI = aPACURI;
+@@ -514,6 +516,7 @@ nsresult ProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
+   }
+ 
+   mIncludePath = aIncludePath;
++  mChromeURLSemantics = aChromeURLSemantics;
+   mExtraHeapSize = aExtraHeapSize;
+   mMainThreadEventTarget = aEventTarget;
+ 
+@@ -648,7 +651,12 @@ nsresult ProxyAutoConfig::GetProxyForURI(const nsACString& aTestURI,
+   nsresult rv = NS_ERROR_FAILURE;
+   nsCString clensedURI(aTestURI);
+ 
+-  if (!mIncludePath) {
++  // Chrome exposes complete HTTP URLs to PAC, while hiding HTTPS paths.
++  // Ordinary Firefox retains its existing preference-controlled behavior.
++  const bool includePath = mChromeURLSemantics
++                               ? StringBeginsWith(aTestURI, "http://"_ns)
++                               : mIncludePath;
++  if (!includePath) {
+     nsCOMPtr<nsIURLParser> urlParser =
+         do_GetService(NS_STDURLPARSER_CONTRACTID);
+     int32_t pathLen = 0;
+@@ -907,9 +915,11 @@ nsresult RemoteProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
+                                              const nsACString& aPACScriptData,
+                                              bool aIncludePath,
+                                              uint32_t aExtraHeapSize,
+-                                             nsISerialEventTarget*) {
++                                             nsISerialEventTarget*,
++                                             bool aChromeURLSemantics) {
+   (void)mProxyAutoConfigParent->SendConfigurePAC(aPACURI, aPACScriptData,
+-                                                 aIncludePath, aExtraHeapSize);
++                                                 aIncludePath, aExtraHeapSize,
++                                                 aChromeURLSemantics);
+   return NS_OK;
+ }
+ 
+diff --git a/netwerk/base/ProxyAutoConfig.h b/netwerk/base/ProxyAutoConfig.h
+index acc5cd3..984f0c5 100644
+--- a/netwerk/base/ProxyAutoConfig.h
++++ b/netwerk/base/ProxyAutoConfig.h
+@@ -32,7 +32,8 @@ class ProxyAutoConfigBase {
+   virtual nsresult ConfigurePAC(const nsACString& aPACURI,
+                                 const nsACString& aPACScriptData,
+                                 bool aIncludePath, uint32_t aExtraHeapSize,
+-                                nsISerialEventTarget* aEventTarget) = 0;
++                                nsISerialEventTarget* aEventTarget,
++                                bool aChromeURLSemantics = false) = 0;
+   virtual void SetThreadLocalIndex(uint32_t index) {}
+   virtual void Shutdown() = 0;
+   virtual void GC() = 0;
+@@ -54,7 +55,8 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
+   nsresult ConfigurePAC(const nsACString& aPACURI,
+                         const nsACString& aPACScriptData, bool aIncludePath,
+                         uint32_t aExtraHeapSize,
+-                        nsISerialEventTarget* aEventTarget) override;
++                        nsISerialEventTarget* aEventTarget,
++                        bool aChromeURLSemantics = false) override;
+   void SetThreadLocalIndex(uint32_t index) override;
+   void Shutdown() override;
+   void GC() override;
+@@ -121,6 +123,7 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
+   nsCString mConcatenatedPACData;
+   nsCString mPACURI;
+   bool mIncludePath{false};
++  bool mChromeURLSemantics{false};
+   uint32_t mExtraHeapSize{0};
+   nsCString mRunningHost;
+   nsCOMPtr<nsITimer> mTimer;
+@@ -136,7 +139,8 @@ class RemoteProxyAutoConfig : public ProxyAutoConfigBase {
+   nsresult ConfigurePAC(const nsACString& aPACURI,
+                         const nsACString& aPACScriptData, bool aIncludePath,
+                         uint32_t aExtraHeapSize,
+-                        nsISerialEventTarget* aEventTarget) override;
++                        nsISerialEventTarget* aEventTarget,
++                        bool aChromeURLSemantics = false) override;
+   void Shutdown() override;
+   void GC() override;
+   void GetProxyForURIWithCallback(
 diff --git a/netwerk/base/moz.build b/netwerk/base/moz.build
 index c09cd25..39a52ad 100644
 --- a/netwerk/base/moz.build
@@ -67,9 +167,20 @@ index d2f3ca3..6c371d6 100644
 +  void retainChromeScopeCaches(in Array<AUTF8String> keys);
  };
 diff --git a/netwerk/base/nsPACMan.cpp b/netwerk/base/nsPACMan.cpp
-index d00eae3..a711e4b 100644
+index d00eae3..b3f36a0 100644
 --- a/netwerk/base/nsPACMan.cpp
 +++ b/netwerk/base/nsPACMan.cpp
+@@ -274,8 +274,8 @@ class ExecutePACThreadAction final : public Runnable {
+ 
+       nsCOMPtr<nsISerialEventTarget> target = mPACMan->GetNeckoTarget();
+       mPACMan->mPAC->ConfigurePAC(mSetupPACURI, mSetupPACData,
+-                                  mPACMan->mIncludePath, mExtraHeapSize,
+-                                  target);
++                                  mPACMan->mIncludePath, mExtraHeapSize, target,
++                                  mPACMan->mChromeURLSemantics);
+ 
+       RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
+       mPACMan->Dispatch(runnable.forget());
 @@ -549,7 +549,11 @@ nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec,
    // if we're on the main thread here so we can get hold of prefs,
    // we check that we have WPAD preffed on if we're auto-detecting
@@ -97,21 +208,26 @@ index d00eae3..a711e4b 100644
        NS_WARNING(
            "Could not retrieve Network Proxy Type pref when auto-detecting "
 diff --git a/netwerk/base/nsPACMan.h b/netwerk/base/nsPACMan.h
-index e52c0c5..6710151 100644
+index e52c0c5..e56c54a 100644
 --- a/netwerk/base/nsPACMan.h
 +++ b/netwerk/base/nsPACMan.h
-@@ -168,6 +168,10 @@ class nsPACMan final : public nsIStreamLoaderObserver,
+@@ -168,6 +168,11 @@ class nsPACMan final : public nsIStreamLoaderObserver,
    bool IsUsingWPAD() { return mAutoDetect; }
  
    nsresult Init(nsISystemProxySettings*);
 +  // Scoped Chrome settings must not consult the regular profile's proxy type.
++  void SetChromeURLSemantics() { mChromeURLSemantics = true; }
 +  void SetProxyConfigTypeOverride(uint32_t aType) {
 +    mProxyConfigTypeOverride = aType;
 +  }
    static nsPACMan* sInstance;
  
    // PAC thread operations only
-@@ -286,6 +290,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
+@@ -283,9 +288,11 @@ class nsPACMan final : public nsIStreamLoaderObserver,
+ 
+   bool mInProgress;
+   bool mIncludePath;
++  bool mChromeURLSemantics{false};
    bool mAutoDetect;
    bool mWPADOverDHCPEnabled;
    int32_t mProxyConfigType;
@@ -120,7 +236,7 @@ index e52c0c5..6710151 100644
  
  extern LazyLogModule gProxyLog;
 diff --git a/netwerk/base/nsProtocolProxyService.cpp b/netwerk/base/nsProtocolProxyService.cpp
-index e7923af..9c59a7d 100644
+index e7923af..18baf31 100644
 --- a/netwerk/base/nsProtocolProxyService.cpp
 +++ b/netwerk/base/nsProtocolProxyService.cpp
 @@ -120,7 +120,7 @@ nsProtocolProxyService::FilterLink::~FilterLink() {
@@ -152,7 +268,7 @@ index e7923af..9c59a7d 100644
      }
    }
  
-@@ -145,11 +152,111 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
+@@ -145,11 +152,112 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
  // The nsPACManCallback portion of this implementation should be run
  // on the main thread - so call nsPACMan::AsyncGetProxyForURI() with
  // a true mainThreadResponse parameter.
@@ -168,6 +284,7 @@ index e7923af..9c59a7d 100644
 +  }
 +  nsresult Init(uint32_t aType, const nsACString& aPACURI) {
 +    mPAC->SetProxyConfigTypeOverride(aType);
++    mPAC->SetChromeURLSemantics();
 +    nsCOMPtr<nsISystemProxySettings> system;
 +    if (aType == nsIProtocolProxyService::PROXYCONFIG_SYSTEM) {
 +      system = do_GetService(NS_SYSTEMPROXYSETTINGS_CONTRACTID);
@@ -265,7 +382,7 @@ index e7923af..9c59a7d 100644
  
    nsAsyncResolveRequest(nsProtocolProxyService* pps, nsIChannel* channel,
                          uint32_t aResolveFlags,
-@@ -163,8 +270,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -163,8 +271,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
    }
  
   private:
@@ -281,7 +398,7 @@ index e7923af..9c59a7d 100644
        // these xpcom pointers might need to be proxied back to the
        // main thread to delete safely, but if this request had its
        // callbacks called normally they will all be null and this is a nop
-@@ -355,7 +469,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -355,7 +470,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
    void DoCallback() {
      bool pacAvailable = true;
@@ -295,7 +412,7 @@ index e7923af..9c59a7d 100644
        // If the PAC service is not avail (e.g. failed pac load
        // or shutdown) then we will be going direct. Make that
        // mapping now so that any filters are still applied.
-@@ -397,7 +516,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -397,7 +517,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
          self->EnsureResolveFlagsMatch();
          nsProtocolProxyService::CallOnProxyAvailableCallback(
              self->mPPS, self->mCallback, self, self->mChannel, self->mProxyInfo,
@@ -304,7 +421,7 @@ index e7923af..9c59a7d 100644
  
          return NS_OK;
        };
-@@ -416,6 +535,20 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -416,6 +536,20 @@ class nsAsyncResolveRequest final : public nsIRunnable,
        nsCOMPtr<nsIURI> proxyURI;
        GetProxyURI(mChannel, getter_AddRefs(proxyURI));
  
@@ -325,7 +442,7 @@ index e7923af..9c59a7d 100644
        // trigger load of new pac url
        nsresult rv = mPPS->ConfigureFromPAC(mPACURL, false);
        if (NS_SUCCEEDED(rv)) {
-@@ -428,7 +561,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -428,7 +562,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
        if (NS_FAILED(rv)) {
          nsProtocolProxyService::CallOnProxyAvailableCallback(
@@ -335,7 +452,7 @@ index e7923af..9c59a7d 100644
        }
  
        // do not call onproxyavailable() in SUCCESS case - the newRequest will
-@@ -439,13 +573,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -439,13 +574,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
        if (NS_SUCCEEDED(mStatus)) mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
        EnsureResolveFlagsMatch();
        nsProtocolProxyService::CallOnProxyAvailableCallback(
@@ -352,7 +469,7 @@ index e7923af..9c59a7d 100644
      mPPS = nullptr;
      mXPComPPS = nullptr;
      mChannel = nullptr;
-@@ -454,6 +590,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -454,6 +591,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
   private:
    nsresult mStatus{NS_OK};
@@ -365,7 +482,7 @@ index e7923af..9c59a7d 100644
    nsCString mPACString;
    nsCString mPACURL;
    bool mDispatched{false};
-@@ -468,7 +610,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -468,7 +611,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
    RefPtr<AsyncApplyFilters> mAsyncFilterApplier;
  };
  
@@ -375,7 +492,7 @@ index e7923af..9c59a7d 100644
  
  NS_IMPL_ISUPPORTS(nsAsyncResolveRequest::AsyncApplyFilters,
                    nsIProxyProtocolFilterResult, nsICancelable, nsIRunnable)
-@@ -946,6 +1089,11 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
+@@ -946,6 +1090,11 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
      // cleanup
      mHostFiltersArray.Clear();
      mFilters.Clear();
@@ -387,7 +504,7 @@ index e7923af..9c59a7d 100644
  
      if (mPACMan) {
        mPACMan->Shutdown();
-@@ -1577,6 +1725,40 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
+@@ -1577,6 +1726,40 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
    rv = GetProtocolInfo(uri, &info);
    if (NS_FAILED(rv)) return rv;
  
@@ -428,7 +545,7 @@ index e7923af..9c59a7d 100644
    nsCOMPtr<nsIProxyInfo> pi;
    bool usePACThread;
  
-@@ -1607,18 +1789,88 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
+@@ -1607,18 +1790,88 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
    if (!usePACThread || !mPACMan) {
      // we can do it locally
      rv = ctx->ProcessLocally(info, pi, isSyncOK);
@@ -521,7 +638,7 @@ index e7923af..9c59a7d 100644
  // nsIProtocolProxyService
  NS_IMETHODIMP
  nsProtocolProxyService::AsyncResolve2(
-@@ -2534,7 +2786,7 @@ bool nsProtocolProxyService::IsEffectivelyDirect() {
+@@ -2534,7 +2787,7 @@ bool nsProtocolProxyService::IsEffectivelyDirect() {
      return false;
    }
  
@@ -590,12 +707,56 @@ index 104a1a6..4bd9723 100644
    RefPtr<nsPACMan> mPACMan;  // non-null if we are using PAC
    nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
  
+diff --git a/netwerk/ipc/PProxyAutoConfig.ipdl b/netwerk/ipc/PProxyAutoConfig.ipdl
+index f84ded6..a8b706e 100644
+--- a/netwerk/ipc/PProxyAutoConfig.ipdl
++++ b/netwerk/ipc/PProxyAutoConfig.ipdl
+@@ -10,7 +10,7 @@ sync protocol PProxyAutoConfig
+ {
+ child:
+   async ConfigurePAC(nsCString aPACURI, nsCString aPACScriptData,
+-                     bool aIncludePath, uint32_t aExtraHeapSize);
++                     bool aIncludePath, uint32_t aExtraHeapSize, bool aChromeURLSemantics);
+   async GetProxyForURI(nsCString aTestURI, nsCString aTestHost)
+     returns (nsresult aStatus, nsCString aResult);
+ };
+diff --git a/netwerk/ipc/ProxyAutoConfigChild.cpp b/netwerk/ipc/ProxyAutoConfigChild.cpp
+index 01099f4..67b63c9 100644
+--- a/netwerk/ipc/ProxyAutoConfigChild.cpp
++++ b/netwerk/ipc/ProxyAutoConfigChild.cpp
+@@ -149,9 +149,10 @@ ProxyAutoConfigChild::~ProxyAutoConfigChild() = default;
+ 
+ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
+     const nsACString& aPACURI, const nsACString& aPACScriptData,
+-    const bool& aIncludePath, const uint32_t& aExtraHeapSize) {
++    const bool& aIncludePath, const uint32_t& aExtraHeapSize,
++    const bool& aChromeURLSemantics) {
+   mPAC->ConfigurePAC(aPACURI, aPACScriptData, aIncludePath, aExtraHeapSize,
+-                     GetMainThreadSerialEventTarget());
++                     GetMainThreadSerialEventTarget(), aChromeURLSemantics);
+   mPACLoaded = true;
+   NS_DispatchToCurrentThread(
+       NewRunnableMethod("ProxyAutoConfigChild::ProcessPendingQ", this,
+diff --git a/netwerk/ipc/ProxyAutoConfigChild.h b/netwerk/ipc/ProxyAutoConfigChild.h
+index 3e0f9de..5c64570 100644
+--- a/netwerk/ipc/ProxyAutoConfigChild.h
++++ b/netwerk/ipc/ProxyAutoConfigChild.h
+@@ -29,7 +29,8 @@ class ProxyAutoConfigChild final : public PProxyAutoConfigChild {
+   mozilla::ipc::IPCResult RecvConfigurePAC(const nsACString& aPACURI,
+                                            const nsACString& aPACScriptData,
+                                            const bool& aIncludePath,
+-                                           const uint32_t& aExtraHeapSize);
++                                           const uint32_t& aExtraHeapSize,
++                                           const bool& aChromeURLSemantics);
+   mozilla::ipc::IPCResult RecvGetProxyForURI(
+       const nsACString& aTestURI, const nsACString& aTestHost,
+       GetProxyForURIResolver&& aResolver);
 diff --git a/netwerk/test/unit/test_chrome_proxy_scopes.js b/netwerk/test/unit/test_chrome_proxy_scopes.js
 new file mode 100644
-index 0000000..95e7377
+index 0000000..738cdec
 --- /dev/null
 +++ b/netwerk/test/unit/test_chrome_proxy_scopes.js
-@@ -0,0 +1,138 @@
+@@ -0,0 +1,165 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -617,13 +778,16 @@ index 0000000..95e7377
 +  };
 +}
 +
-+function channel(privateBrowsingId = 0) {
++function channel(
++  privateBrowsingId = 0,
++  uri = "http://floorp-scopes.invalid/route"
++) {
 +  const principal = Services.scriptSecurityManager.createContentPrincipal(
 +    Services.io.newURI("http://floorp-scopes.invalid/"),
 +    { privateBrowsingId }
 +  );
 +  return NetUtil.newChannel({
-+    uri: "http://floorp-scopes.invalid/route",
++    uri,
 +    loadingPrincipal: principal,
 +    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
 +    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
@@ -673,6 +837,30 @@ index 0000000..95e7377
 +    pps.unregisterChromeScopeProvider(provider);
 +    Services.prefs.clearUserPref("network.proxy.type");
 +    Services.prefs.clearUserPref("network.proxy.autoconfig_url");
++  }
++});
++
++add_task(async function chrome_pac_retains_http_path_and_hides_https_path() {
++  const source =
++    "function FindProxyForURL(url){return url.indexOf('/route')>=0 ? 'PROXY full.invalid:80' : 'PROXY stripped.invalid:80';}";
++  const provider = {
++    QueryInterface: ChromeUtils.generateQI(["nsIChromeProxyScopeProvider"]),
++    getConfiguration(_target, callback) {
++      callback.onConfiguration(configuration("chrome-paths", source));
++      return true;
++    },
++  };
++  pps.registerChromeScopeProvider(provider);
++  try {
++    Assert.equal((await resolve(channel())).info.host, "full.invalid");
++    Assert.equal((await resolve(channel(1))).info.host, "full.invalid");
++    Assert.equal(
++      (await resolve(channel(0, "https://floorp-scopes.invalid/route"))).info
++        .host,
++      "stripped.invalid"
++    );
++  } finally {
++    pps.unregisterChromeScopeProvider(provider);
 +  }
 +});
 +

@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Novo espaço de trabalho ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "Mover este espaço de trabalho para cima",
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Eliminar espaço de trabalho",
       "manage": "Gerir o espaço de trabalho",
-      "archive": "Arquivar Espaço de Trabalho"
+      "archive": "Arquivar Espaço de Trabalho",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "Gerar código QR para esta página",
   "qrcode-generate-page-action-title": "Gerador de código QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "Tipo de painel",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "Media",
       "open-tabs": "Open Tabs",
       "switcher": "Switcher",
-      "history-suggestions": "Histórico",
-      "bookmark-suggestions": "Favoritos"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "No commands found",
     "noResultsHint": "Try a different search term",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "Where to open",
     "bookmarkSwitcherWhereNewTab": "Novo separador",
     "bookmarkSwitcherWhereNewTabDesc": "Open in a new foreground tab",
-    "bookmarkSwitcherWherePlaceholder": "Select where to open..."
+    "bookmarkSwitcherWherePlaceholder": "Select where to open...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Histórico de pesquisa"
+    }
   },
   "commandPaletteReadings": {}
 }

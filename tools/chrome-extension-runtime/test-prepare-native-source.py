@@ -110,6 +110,20 @@ class IncrementalSourceTests(unittest.TestCase):
                                         self.snapshot("snapshot-refused"), [self.patch], self.previous)
         self.assertEqual(before, (self.source / "header.h").read_bytes())
 
+    def test_only_identical_upstream_duplicates_are_inherited_in_production(self):
+        upstream = self.original / ".github/patches/upstream"
+        upstream.mkdir(parents=True)
+        common = self.root / "common"
+        common.mkdir()
+        (upstream / "inherited.patch").write_bytes(self.patch.read_bytes())
+        (common / "inherited.patch").write_bytes(self.patch.read_bytes())
+        selected = PREPARE.select_patches(self.original, common, True)
+        self.assertEqual([name for name, _ in selected], ["runtime-upstream/inherited.patch"])
+        self.assertEqual([name for name, _ in PREPARE.select_patches(self.original, common, False)], ["inherited.patch"])
+        (common / "inherited.patch").write_bytes(self.patch.read_bytes() + b"\n")
+        self.assertEqual([name for name, _ in PREPARE.select_patches(self.original, common, True)],
+                         ["runtime-upstream/inherited.patch", "inherited.patch"])
+
 
 if __name__ == "__main__":
     unittest.main()

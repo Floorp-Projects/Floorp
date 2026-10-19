@@ -11,18 +11,23 @@ import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
   activeChromeSidePanelId,
   isFloating,
+  isPanelSidebarHoverPreview,
   panelSidebarConfig,
   panelSidebarData,
   selectedPanelId,
+  setIsPanelSidebarHoverOpen,
+  setIsPanelSidebarHoverPreview,
   setPanelSidebarData,
   setSelectedPanelId,
 } from "../data/data.ts";
 import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
-import { toggleChromeSidePanel } from "../chrome-side-panels.ts";
+import {
+  getChromeSidePanelManager,
+  toggleChromeSidePanel,
+} from "../chrome-side-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
-import "../utils/webRequest.ts";
 
 export class CPanelSidebar {
   private panelDisposers: Map<string, () => void> = new Map();
@@ -182,6 +187,9 @@ export class CPanelSidebar {
   }
 
   public changePanel(panelId: string): void {
+    const wasPreview = isPanelSidebarHoverPreview();
+    setIsPanelSidebarHoverPreview(false);
+    setIsPanelSidebarHoverOpen(false);
     const nativePanel = this.getPanelData(panelId);
     if (
       nativePanel?.type === "extension" && nativePanel.extensionId &&
@@ -190,17 +198,47 @@ export class CPanelSidebar {
       setSelectedPanelId(null);
       return;
     }
+    // Clicking a preview pins it, including a preview that has retracted.
+    if (wasPreview && panelId === selectedPanelId()) {
+      this.openPanel(panelId);
+      return;
+    }
     if (panelId === selectedPanelId()) {
-      setSelectedPanelId(null);
-      if (panelSidebarConfig().autoUnload) {
-        this.unloadPanel(panelId);
-      }
+      this.closePanel();
       return;
     }
 
+    this.openPanel(panelId);
+  }
+
+  public closePanel(): void {
+    const panelId = selectedPanelId();
+    setIsPanelSidebarHoverPreview(false);
+    setIsPanelSidebarHoverOpen(false);
+    setSelectedPanelId(null);
+    if (panelId && panelSidebarConfig().autoUnload) {
+      this.unloadPanel(panelId);
+    }
+  }
+
+  public openPanel(panelId: string): void {
     const panel = this.getPanelData(panelId);
     if (!panel) {
       throw new Error(`Panel not found: ${panelId}`);
+    }
+
+    if (
+      panel.type === "extension" && panel.extensionId &&
+      getChromeSidePanelManager(panel.extensionId)
+    ) {
+      const preview = isPanelSidebarHoverPreview();
+      setIsPanelSidebarHoverPreview(false);
+      setIsPanelSidebarHoverOpen(false);
+      if (!preview && activeChromeSidePanelId() !== panel.extensionId) {
+        toggleChromeSidePanel(panel.extensionId);
+      }
+      setSelectedPanelId(null);
+      return;
     }
 
     setSelectedPanelId(panelId);

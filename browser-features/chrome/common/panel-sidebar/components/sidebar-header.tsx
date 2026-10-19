@@ -8,7 +8,6 @@ import {
   isFloating,
   selectedPanelId,
   setIsFloating,
-  setSelectedPanelId,
 } from "../data/data";
 import { PanelNavigator } from "../panel-navigator";
 import type { CPanelSidebar } from "./panel-sidebar";
@@ -63,7 +62,7 @@ export function SidebarHeader(props: { ctx: CPanelSidebar }) {
       </Show>
       <xul:toolbarbutton
         id="panel-sidebar-close"
-        onCommand={() => setSelectedPanelId(null)}
+        onCommand={() => gPanelSidebar.closePanel()}
         class="panel-sidebar-actions"
       />
     </xul:box>

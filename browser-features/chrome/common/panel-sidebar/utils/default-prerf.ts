@@ -13,6 +13,8 @@ const defaultConfig: PanelSidebarConfig = {
   position_start: true,
   displayed: true,
   webExtensionRunningEnabled: false,
+  overlay: false,
+  openOnHover: false,
 };
 
 const defaultData: PanelSidebarData = {

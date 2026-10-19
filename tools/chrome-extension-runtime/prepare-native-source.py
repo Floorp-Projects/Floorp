@@ -31,6 +31,26 @@ def affected_paths(patches):
     return paths
 
 
+def select_patches(original, common, production):
+    selected = []
+    upstream = {}
+    if production:
+        upstream = {patch.name: patch for patch in sorted((original / ".github/patches/upstream").glob("*.patch"))}
+        selected.extend(("runtime-upstream/" + name, patch) for name, patch in upstream.items())
+    for patch in sorted(common.glob("*.patch")):
+        inherited = upstream.get(patch.name)
+        # A maintained Floorp patch can migrate into the locked Runtime. Only
+        # identical postimages may be inherited; divergent patches still compose
+        # normally and expose any overlap through git apply --check.
+        if inherited and inherited.read_bytes() == patch.read_bytes():
+            continue
+        selected.append((patch.name, patch))
+    if production:
+        selected.extend(("runtime-packaging/" + patch.name, patch)
+                        for patch in sorted((original / ".github/patches/packaging").glob("*.patch")))
+    return selected
+
+
 def file_identity(path):
     if path.is_symlink():
         raise RuntimeError(f"Patched source must not be a symbolic link: {path}")
@@ -148,15 +168,7 @@ def main():
     state = ROOT / "_dist/native-runtime"
     source = state / "source"
     revision = json.loads((ROOT / "floorp-runtime.lock.json").read_text())["source"]["commit"]
-    selected = []
-    if args.production:
-        selected.extend(("runtime-upstream/" + patch.name, patch)
-                        for patch in sorted((original / ".github/patches/upstream").glob("*.patch")))
-    selected.extend((patch.name, patch)
-                    for patch in sorted((ROOT / ".github/patches/floorp-runtime/common").glob("*.patch")))
-    if args.production:
-        selected.extend(("runtime-packaging/" + patch.name, patch)
-                        for patch in sorted((original / ".github/patches/packaging").glob("*.patch")))
+    selected = select_patches(original, ROOT / ".github/patches/floorp-runtime/common", args.production)
     if args.check_only:
         with tempfile.TemporaryDirectory(prefix="floorp-native-source-check-") as temporary:
             fixture = Path(temporary)

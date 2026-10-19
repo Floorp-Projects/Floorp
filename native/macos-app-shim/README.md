@@ -35,6 +35,18 @@ window. WindowServer ownership is checked without capturing the screen. Tests
 also exercise atomic layer transactions, raw compositor geometry, and the
 Japanese text-input cache. They do not access a user browser profile.
 
+The conversion tests retain AppKit's selected clause across Gecko's collapsed
+composition-caret acknowledgements, including repeated candidate changes and
+commit, unmark, cancellation, empty composition, blur, and disconnection.
+`tools/app-shim/test-ime.py --browser /path/to/TestCopy.app --shim /path/to/floorp-app-shim`
+also exercises the installed Japanese input method with native hardware-key
+events in an isolated profile. It checks repeated Space conversion, Return
+commit, trusted composition events, and ordinary Space after commit. Japanese
+input must be enabled in macOS and native input needs existing event-posting
+permission. Run both `--editor textarea` and `--editor contenteditable`; candidate
+text can vary with the input method's dictionary, so the test checks conversion
+and composition behavior without requiring a particular candidate spelling.
+
 For a compiled, signed Runtime, `tools/app-shim/test-runtime.py --browser /path/to/Nightly.app`
 creates an isolated profile and signed temporary Shim bundle. It requires an
 authenticated second process, WindowServer ownership, real Gecko compositor
@@ -325,6 +337,14 @@ position and width at 100% and 150% zoom, and option commands reached the page.
 Injected phased trackpad packets produced APZ top-edge overscroll, presented
 compositor frames, and settled back to zero scroll offset. Physical trackpad
 gestures remain unverified.
+
+On 2026-10-06, the isolated `tools/app-shim/test-context-menu.py` regression
+confirmed that right-click input reaches a remote page as a trusted mouse
+`PointerEvent`. Twenty injected right-click packet pairs opened the fixture's
+custom menu without a content-process crash or presentation failure. The
+previous event class crashed the remote content process after one packet pair
+with `Error deserializing 'WidgetMouseEvent'`. This check does not exercise the
+live ChatGPT site or a physical right click.
 
 The final signed package also passed frontend lifecycle runs `run-5o38ue6c`
 (keep apps running) and `run-f602_v7x` (quit all). Both exercised the real signed

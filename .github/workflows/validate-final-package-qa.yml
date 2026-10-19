@@ -1,0 +1,397 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: Validate final Floorp package regressions
+
+"on":
+  workflow_dispatch:
+    inputs:
+      package_run_id:
+        description: Successful normal Package and Publish Release run
+        required: true
+        type: string
+      floorp_head_sha:
+        description: Exact Floorp source commit recorded by that package run
+        required: true
+        type: string
+      validation_only:
+        description: Select the normal pipeline's unsigned validation artifacts
+        required: false
+        type: boolean
+        default: true
+      pre_publication:
+        description: Verify signed packages awaiting protected public release approval
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  final-package:
+    name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            arch: x86_64
+            runner: ubuntu-24.04
+            package: noraneko-linux-x86_64-installer
+            file: floorp-linux-x86_64.tar.xz
+          - platform: mac
+            arch: x86_64
+            runner: macos-15-intel
+            package: noraneko-mac-universal-installer
+            file: floorp-macOS-universal.dmg
+          - platform: mac
+            arch: aarch64
+            runner: macos-14
+            package: noraneko-mac-universal-installer
+            file: floorp-macOS-universal.dmg
+    steps:
+      - name: Checkout regression probes
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Authenticate the normal package run and exact artifacts
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN_ID: ${{ inputs.package_run_id }}
+          FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
+          VALIDATION_ONLY: ${{ inputs.validation_only }}
+          PRE_PUBLICATION: ${{ inputs.pre_publication }}
+          PACKAGE_NAME: ${{ matrix.package }}
+          TARGET_PLATFORM: ${{ matrix.platform }}
+          TARGET_ARCH: ${{ matrix.arch }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const crypto = require('node:crypto');
+            const {validateSourceIdentity,validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
+            if (!/^[1-9][0-9]*$/.test(process.env.SOURCE_RUN_ID || '') ||
+                !Number.isSafeInteger(Number(process.env.SOURCE_RUN_ID)) ||
+                !/^[0-9a-f]{40}$/.test(process.env.FLOORP_HEAD_SHA || '') ||
+                !['true', 'false'].includes(process.env.VALIDATION_ONLY) ||
+                !['true', 'false'].includes(process.env.PRE_PUBLICATION)) {
+              throw new Error('Invalid immutable package input');
+            }
+            const runId = Number(process.env.SOURCE_RUN_ID);
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: runId});
+            validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
+              {...context.repo, run_id: runId, per_page: 100});
+            for (const target of ['windows/x86_64', 'linux/x86_64', 'linuxAarch64/aarch64',
+                                  'mac/x86_64', 'mac/aarch64']) {
+              if (!jobs.some(job => job.conclusion === 'success' &&
+                  job.name.includes(`Verify ${target} package`))) {
+                throw new Error(`Missing successful final native gate: ${target}`);
+              }
+            }
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo, run_id: runId, per_page: 100});
+            const {data: sourcePackage} = await github.rest.repos.getContent({
+              ...context.repo, path:'package.json', ref:run.head_sha});
+            const {data: sourceLock} = await github.rest.repos.getContent({
+              ...context.repo, path:'floorp-runtime.lock.json', ref:run.head_sha});
+            const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
+            const lock = JSON.parse(Buffer.from(sourceLock.content, 'base64').toString());
+            if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(version || '') ||
+                lock.schemaVersion !== 1 || !Array.isArray(lock.artifacts)) {
+              throw new Error('Invalid version metadata at the exact package source');
+            }
+            const runtimePlatform = process.env.TARGET_PLATFORM === 'mac' ? 'macos' : process.env.TARGET_PLATFORM;
+            const runtimeArch = process.env.TARGET_PLATFORM === 'mac' ? 'universal' : process.env.TARGET_ARCH;
+            const runtimes = lock.artifacts.filter(artifact =>
+              artifact.platform === runtimePlatform && artifact.architecture === runtimeArch);
+            if (runtimes.length !== 1 ||
+                !/^[0-9]+(?:\.[0-9]+){1,3}(?:[ab][0-9]+|esr)?$/.test(runtimes[0].version || '') ||
+                !/^[0-9]{14}$/.test(runtimes[0].buildId || '')) {
+              throw new Error('Missing unique pinned Runtime version and BuildID for this target');
+            }
+            const {version: firefoxVersion, buildId: runtimeBuildId} = runtimes[0];
+            let prePublicationEvidence = {};
+            if (process.env.PRE_PUBLICATION === 'true') {
+              const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+                {...context.repo, run_id: runId});
+              let release = null;
+              try {
+                ({data: release} = await github.rest.repos.getReleaseByTag(
+                  {...context.repo, tag:`v${version}`}));
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              prePublicationEvidence = {pendingDeployments,release,
+                bundleArtifacts:artifacts.filter(artifact => artifact.name === 'floorp-release-bundle-v2')};
+            }
+            const sourceEligibility = validateFinalPackageSource({run,
+              headSha:process.env.FLOORP_HEAD_SHA,jobs,
+              prePublication:process.env.PRE_PUBLICATION === 'true',
+              unsigned:process.env.VALIDATION_ONLY === 'true',...prePublicationEvidence});
+            const packageName = process.env.PACKAGE_NAME +
+              (process.env.VALIDATION_ONLY === 'true' ? '-unsigned' : '');
+            const recordName = `floorp-native-verification-${process.env.TARGET_PLATFORM}-${process.env.TARGET_ARCH}-v2`;
+            const selected = {};
+            for (const [kind, name] of [['package', packageName], ['record', recordName]]) {
+              const matches = artifacts.filter(artifact => artifact.name === name && !artifact.expired);
+              if (matches.length !== 1 || !/^sha256:[0-9a-f]{64}$/.test(matches[0].digest || '') ||
+                  matches[0].workflow_run.id !== runId || matches[0].workflow_run.head_sha !== run.head_sha) {
+                throw new Error(`Missing or ambiguous authenticated ${name}`);
+              }
+              const artifact = matches[0];
+              const response = await github.rest.actions.downloadArtifact(
+                {...context.repo, artifact_id: artifact.id, archive_format: 'zip'});
+              const bytes = Buffer.from(response.data);
+              const digest = 'sha256:' + crypto.createHash('sha256').update(bytes).digest('hex');
+              if (digest !== artifact.digest) throw new Error(`Downloaded ${name} digest mismatch`);
+              fs.writeFileSync(path.join(process.env.RUNNER_TEMP, `${kind}.zip`), bytes);
+              selected[kind] = {id:artifact.id, name, digest};
+            }
+            fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
+              JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
+                firefoxVersion, runtimeBuildId,
+                sourceEligibility, probeHead:context.sha,
+                platform:process.env.TARGET_PLATFORM, arch:process.env.TARGET_ARCH,
+                unsigned:process.env.VALIDATION_ONLY === 'true', ...selected}, null, 2));
+
+      - name: Validate the native record and extract the exact package
+        shell: bash
+        env:
+          PACKAGE_FILE: ${{ matrix.file }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import zipfile
+
+          root = Path(os.environ['RUNNER_TEMP'])
+          expected = json.loads((root / 'final-package-qa/input.json').read_text())
+          with zipfile.ZipFile(root / 'record.zip') as archive:
+              if archive.namelist() != ['native-verification.json']:
+                  raise ValueError('Unexpected native record ZIP contents')
+              record = json.loads(archive.read('native-verification.json'))
+          if (record['schema_version'] != 2 or record['verification']['status'] != 'verified' or
+              record['floorp']['head_sha'] != expected['floorpHead'] or
+              record['floorp']['workflow_run_id'] != expected['runId'] or
+              record['floorp']['repository'] != 'Floorp-Projects/Floorp' or
+              record['target_key'] != expected['platform'] or record['native_arch'] != expected['arch'] or
+              record['firefox_version'] != expected['firefoxVersion'] or
+              record['runtime']['expected_build_id'] != expected['runtimeBuildId'] or
+              record['app_build_id'] != expected['runtimeBuildId'] or
+              record['platform_build_id'] != expected['runtimeBuildId'] or
+              record['floorp_package'] != {
+                  'artifact_id': expected['package']['id'],
+                  'artifact_name': expected['package']['name'],
+                  'artifact_digest': expected['package']['digest'],
+                  'unsigned': expected['unsigned'],
+              }):
+              raise ValueError('Final native record does not bind this exact package/source')
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              output.write(f"QA_FLOORP_VERSION={expected['floorpVersion']}\n")
+              output.write(f"QA_FIREFOX_VERSION={expected['firefoxVersion']}\n")
+          (root / 'final-package-qa/native-verification.json').write_text(json.dumps(record, indent=2) + '\n')
+          with zipfile.ZipFile(root / 'package.zip') as archive:
+              if archive.namelist() != [os.environ['PACKAGE_FILE']]:
+                  raise ValueError('Unexpected final package ZIP contents')
+              archive.extract(os.environ['PACKAGE_FILE'], root / 'package')
+          PY
+
+      - name: Set up the Linux display and extract the package
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/browser"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import tarfile
+
+          root = Path(os.environ['RUNNER_TEMP'])
+          with tarfile.open(root / 'package/floorp-linux-x86_64.tar.xz') as archive:
+              archive.extractall(root / 'browser', filter='data')
+          binaries = [file for file in (root / 'browser').rglob('floorp') if file.is_file()]
+          if len(binaries) != 1:
+              raise ValueError('Expected exactly one final Floorp executable')
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              output.write(f'QA_BROWSER={binaries[0]}\n')
+          PY
+          command -v Xvfb
+          Xvfb :99 -screen 0 1280x1024x24 > "$RUNNER_TEMP/final-package-qa/xvfb.log" 2>&1 &
+          for attempt in {1..50}; do
+            [[ -S /tmp/.X11-unix/X99 ]] && break
+            sleep 0.1
+          done
+          test -S /tmp/.X11-unix/X99
+          echo 'DISPLAY=:99' >> "$GITHUB_ENV"
+
+      - name: Stage a disposable macOS test copy
+        if: matrix.platform == 'mac'
+        shell: bash
+        env:
+          UNSIGNED_PACKAGE: ${{ inputs.validation_only }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/package-mount"
+          hdiutil attach -readonly -nobrowse -mountpoint "$RUNNER_TEMP/package-mount" \
+            "$RUNNER_TEMP/package/floorp-macOS-universal.dmg"
+          trap 'hdiutil detach "$RUNNER_TEMP/package-mount" || true' EXIT
+          python3 - <<'PY'
+          import ctypes
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          root = Path(os.environ['RUNNER_TEMP'])
+          apps = list((root / 'package-mount').glob('*.app'))
+          if len(apps) != 1:
+              raise ValueError('Expected exactly one final Floorp application')
+          app = root / 'Floorp-final-qa.app'
+          subprocess.run(['ditto', str(apps[0]), str(app)], check=True)
+          copied = {}
+          for path in apps[0].rglob('*'):
+              if not path.is_file() or path.is_symlink():
+                  continue
+              relative = path.relative_to(apps[0])
+              with path.open('rb') as stream:
+                  before = hashlib.file_digest(stream, 'sha256').hexdigest()
+              with (app / relative).open('rb') as stream:
+                  after = hashlib.file_digest(stream, 'sha256').hexdigest()
+              if before != after:
+                  raise ValueError(f'Disposable copy changed {relative}')
+              copied[str(relative)] = before
+          removed = []
+          for path in [app, *app.rglob('*')] if os.environ['UNSIGNED_PACKAGE'] == 'true' else []:
+              if path.is_symlink():
+                  continue
+              for attribute in subprocess.check_output(['xattr', str(path)], text=True).splitlines():
+                  if attribute in {'com.apple.FinderInfo', 'com.apple.ResourceFork'}:
+                      subprocess.run(['xattr', '-d', attribute, str(path)], check=True)
+                      removed.append({'path':str(path.relative_to(app)), 'attribute':attribute})
+          evidence = root / 'final-package-qa'
+          (evidence / 'development-copy.json').write_text(json.dumps({
+              'filesBeforeDevelopmentSigning':copied, 'removedMetadata':removed,
+              'sourceArtifactUnmodified':True,
+          }, indent=2) + '\n')
+          graphics = ctypes.CDLL('/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics')
+          graphics.CGPreflightPostEventAccess.restype = ctypes.c_bool
+          graphics.CGPreflightScreenCaptureAccess.restype = ctypes.c_bool
+          permissions = {'eventPosting':bool(graphics.CGPreflightPostEventAccess()),
+                         'screenCapture':bool(graphics.CGPreflightScreenCaptureAccess()),
+                         'permissionPromptOpened':False}
+          (evidence / 'gui-permissions.json').write_text(json.dumps(permissions, indent=2) + '\n')
+          if not permissions['eventPosting'] or not permissions['screenCapture']:
+              raise RuntimeError('Required existing GUI permissions are unavailable')
+          PY
+          if [[ "$UNSIGNED_PACKAGE" == 'true' ]]; then
+            codesign --force --deep --sign - --timestamp=none "$RUNNER_TEMP/Floorp-final-qa.app"
+          fi
+          codesign --verify --deep --strict "$RUNNER_TEMP/Floorp-final-qa.app"
+          codesign --display --verbose=4 "$RUNNER_TEMP/Floorp-final-qa.app" \
+            > "$RUNNER_TEMP/final-package-qa/development-signature.txt" 2>&1
+          echo "QA_BROWSER=$RUNNER_TEMP/Floorp-final-qa.app" >> "$GITHUB_ENV"
+
+      - name: Verify shipped Web Panel HTTP User-Agent behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
+            --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
+
+      - name: Verify shipped Fluent lookup and Flasco context-menu availability
+        if: inputs.validation_only == false
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/test-final-context-menu.py --browser "$QA_BROWSER" \
+            --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
+
+      - name: Verify final macOS PWA context menus and native GUI input
+        if: matrix.platform == 'mac'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/app-shim/test-context-menu.py --browser "$QA_BROWSER" \
+            --output "$RUNNER_TEMP/final-package-qa/context-menu" --iterations 20
+          python3 tools/app-shim/test-runtime.py --browser "$QA_BROWSER" \
+            --output "$RUNNER_TEMP/final-package-qa/native-gui" --launch-services --capture-window
+
+      - name: Verify the source still awaits publication after GUI QA
+        if: inputs.pre_publication == true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
+            const inputPath = path.join(process.env.RUNNER_TEMP,'final-package-qa/input.json');
+            const input = JSON.parse(fs.readFileSync(inputPath,'utf8'));
+            const {data: run} = await github.rest.actions.getWorkflowRun(
+              {...context.repo,run_id:input.runId});
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
+              {...context.repo,run_id:input.runId,per_page:100});
+            const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+              {...context.repo,run_id:input.runId});
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo,run_id:input.runId,per_page:100});
+            let release = null;
+            try {
+              ({data: release} = await github.rest.repos.getReleaseByTag(
+                {...context.repo,tag:`v${input.floorpVersion}`}));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const after = validateFinalPackageSource({run,headSha:input.floorpHead,jobs,
+              prePublication:true,unsigned:input.unsigned,pendingDeployments,release,
+              bundleArtifacts:artifacts.filter(a => a.name === 'floorp-release-bundle-v2')});
+            if (JSON.stringify(after) !== JSON.stringify(input.sourceEligibility)) {
+              throw new Error('The immutable bundle or publication approval state changed during QA');
+            }
+            // This read-only attestation is not a publisher dependency or lock.
+            // The owner's existing publication approval remains a separate action.
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'final-package-qa/source-after-qa.json'),
+              JSON.stringify({sourceEligibility:after,checkedAt:new Date().toISOString()},null,2));
+
+      - name: Upload compact final package regression evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/final-package-qa/*.json
+            ${{ runner.temp }}/final-package-qa/*.txt
+            ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stdout.log
+            ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stderr.log
+            ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser-window.png
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stdout.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stderr.log
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/result.json
+            ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/native-gui/run-*/fixture-window.png
+          if-no-files-found: warn
+          retention-days: 14

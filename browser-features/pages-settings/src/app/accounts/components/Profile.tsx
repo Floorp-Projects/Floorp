@@ -27,7 +27,7 @@ export function Profile({ accountAndProfileData }: ProfileProps) {
           {t("accounts.profileManagement")}
         </CardTitle>
       </CardHeader>
-      <CardContent className={`${styles.details} space-y-6`}>
+      <CardContent className={`${styles.details} space-y-3`}>
         <p className="text-base-content/90">
           {t("accounts.profileManagementDescription")}
         </p>

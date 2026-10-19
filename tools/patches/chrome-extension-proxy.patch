@@ -1,5 +1,5 @@
 diff --git a/chrome/toolkit/content/extensions/parent/ext-proxy.js b/chrome/toolkit/content/extensions/parent/ext-proxy.js
-index e69606d..a6e96a5 100644
+index e69606d..6193fb9 100644
 --- a/chrome/toolkit/content/extensions/parent/ext-proxy.js
 +++ b/chrome/toolkit/content/extensions/parent/ext-proxy.js
 @@ -6,6 +6,7 @@
@@ -61,7 +61,7 @@ index e69606d..a6e96a5 100644
        "signon.autologin.proxy": value.autoLogin,
        "network.proxy.socks_remote_dns": value.proxyDNS,
        "network.proxy.socks5_remote_dns": value.proxyDNS,
-@@ -91,6 +95,1059 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
+@@ -91,6 +95,1074 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
    },
  });
  
@@ -602,7 +602,10 @@ index e69606d..a6e96a5 100644
 +    Ci.nsIProtocolProxyService2
 +  ),
 +  get available() {
-+    return typeof this.native.registerChromeScopeProvider === "function";
++    return (
++      typeof this.native.registerChromeScopeProvider === "function" &&
++      typeof this.native.retainChromeScopeCaches === "function"
++    );
 +  },
 +  get policyControlled() {
 +    return (
@@ -716,7 +719,12 @@ index e69606d..a6e96a5 100644
 +      chrome,
 +      force:
 +        chrome &&
-+        (kind === "regularOnly" || !!item.value?.floorpChromeMandatory),
++        (kind === "regularOnly" ||
++          !!item.value?.floorpChromeMandatory ||
++          (this.available &&
++            ["autoConfig", "autoDetect", "system"].includes(
++              item.value?.proxyType
++            ))),
 +    };
 +  },
 +  refresh() {
@@ -749,7 +757,12 @@ index e69606d..a6e96a5 100644
 +          if (global.value.floorpChromeConfig.pacScript)
 +            global.value.floorpChromeConfig.pacScript.mandatory =
 +              !!global.value.floorpChromeMandatory;
-+          global.force = !!global.value.floorpChromeMandatory;
++          global.force =
++            !!global.value.floorpChromeMandatory ||
++            (this.available &&
++              ["autoConfig", "autoDetect", "system"].includes(
++                actual.proxyType
++              ));
 +        }
 +        const regularOnly = await this.activeRecord(
 +          chromeProxyScopeModules.ExtensionSettingsStore.getSetting(
@@ -842,14 +855,14 @@ index e69606d..a6e96a5 100644
 +      allowLoopback: !!native.floorpChromeLoopback,
 +    };
 +  },
-+  validate(extension, scope) {
++  validate(extension, scope, setting = true) {
 +    if (AppConstants.platform === "android")
 +      throw new ExtensionError("proxy.settings is not supported on android.");
-+    if (!extension.privateBrowsingAllowed)
++    if (setting && !extension.privateBrowsingAllowed)
 +      throw new ExtensionError(
 +        "proxy.settings requires private browsing permission."
 +      );
-+    if (!Services.policies.isAllowed("changeProxySettings"))
++    if (setting && !Services.policies.isAllowed("changeProxySettings"))
 +      throw new ExtensionError(
 +        "Proxy settings are being managed by the Policies manager."
 +      );
@@ -933,7 +946,9 @@ index e69606d..a6e96a5 100644
 +  },
 +  clear(extension, details, nativeClear) {
 +    const scope = details.scope ?? "regular";
-+    this.validate(extension, scope);
++    // Removing this extension's stored setting remains available after
++    // private permission revocation or a new policy lock, like native clear.
++    this.validate(extension, scope, false);
 +    return this.mutate(async () => {
 +      if (scope === "regular" || scope === "regular_only") {
 +        await nativeClear({});
@@ -1121,7 +1136,7 @@ index e69606d..a6e96a5 100644
  function registerProxyFilterEvent(
    context,
    extension,
-@@ -144,6 +1201,9 @@ function registerProxyFilterEvent(
+@@ -144,6 +1216,9 @@ function registerProxyFilterEvent(
  
  this.proxy = class extends ExtensionAPIPersistent {
    PERSISTENT_EVENTS = {
@@ -1131,7 +1146,7 @@ index e69606d..a6e96a5 100644
      onRequest({ fire, context }, params) {
        return registerProxyFilterEvent(context, this.extension, fire, ...params);
      },
-@@ -152,8 +1212,9 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -152,8 +1227,9 @@ this.proxy = class extends ExtensionAPIPersistent {
    getAPI(context) {
      let { extension } = context;
      let self = this;
@@ -1142,7 +1157,7 @@ index e69606d..a6e96a5 100644
        proxy: {
          onRequest: new EventManager({
            context,
-@@ -183,54 +1244,8 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -183,54 +1259,8 @@ this.proxy = class extends ExtensionAPIPersistent {
              context,
              name: "proxy.settings",
              callback() {
@@ -1199,7 +1214,7 @@ index e69606d..a6e96a5 100644
              },
              // proxy.settings is unsupported on android.
              validate() {
-@@ -262,6 +1277,11 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -262,6 +1292,11 @@ this.proxy = class extends ExtensionAPIPersistent {
                }
  
                let value = details.value;
@@ -1211,7 +1226,7 @@ index e69606d..a6e96a5 100644
  
                // proxyType is optional and it should default to "system" when missing.
                if (value.proxyType == null) {
-@@ -348,5 +1368,24 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -348,5 +1383,24 @@ this.proxy = class extends ExtensionAPIPersistent {
          ),
        },
      };

@@ -37,7 +37,7 @@ index cabecff..1826b1a 100644
    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
    if (obs) {
 diff --git a/gfx/thebes/gfxTextRun.cpp b/gfx/thebes/gfxTextRun.cpp
-index f2c42a4..46bfb9c 100644
+index 39153aa..379de54 100644
 --- a/gfx/thebes/gfxTextRun.cpp
 +++ b/gfx/thebes/gfxTextRun.cpp
 @@ -14,9 +14,12 @@
@@ -224,7 +224,7 @@ index f2c42a4..46bfb9c 100644
  
    uint32_t prevCh = 0;
 diff --git a/gfx/thebes/gfxTextRun.h b/gfx/thebes/gfxTextRun.h
-index f04c835..a63197f 100644
+index 75f380c..d772df9 100644
 --- a/gfx/thebes/gfxTextRun.h
 +++ b/gfx/thebes/gfxTextRun.h
 @@ -922,6 +922,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
@@ -236,17 +236,18 @@ index f04c835..a63197f 100644
    static void
    Shutdown();  // platform must call this to release the languageAtomService
  
-@@ -930,7 +932,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
+@@ -930,7 +932,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
                 const gfxFontStyle* aStyle, nsAtom* aLanguage,
                 bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
                 gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize,
--               StyleFontVariantEmoji aVariantEmoji);
-+               StyleFontVariantEmoji aVariantEmoji, bool aIsInitialFont = false,
+-               mozilla::StyleFontVariantEmoji aVariantEmoji);
++               mozilla::StyleFontVariantEmoji aVariantEmoji,
++               bool aIsInitialFont = false,
 +               bool aChromeOverridesApplied = false);
  
    virtual ~gfxFontGroup();
  
-@@ -1386,6 +1389,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
+@@ -1386,6 +1390,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
    // List of font families, either named or generic.
    // Generic names map to system pref fonts based on language.
    mozilla::StyleFontFamilyList mFamilyList;
@@ -256,10 +257,10 @@ index f04c835..a63197f 100644
    // Fontlist containing a font entry for each family found. gfxFont objects
    // are created as needed and userfont loads are initiated when needed.
 diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
-index d740a89..faff20e 100644
+index c31bb3d..07e0308 100644
 --- a/modules/libpref/init/all.js
 +++ b/modules/libpref/init/all.js
-@@ -4221,3 +4221,5 @@ pref("general.smoothScroll", true, sticky);
+@@ -4244,3 +4244,5 @@ pref("general.smoothScroll", true, sticky);
  #ifdef MOZ_ARTIFACT_BUILDS
    pref("telemetry.fog.artifact_build", true);
  #endif

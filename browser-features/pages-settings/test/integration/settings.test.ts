@@ -97,10 +97,150 @@ export async function runPageTests() {
   );
   const tests: TestCase[] = [];
   tests.push({
+    name: "Panel hover enables overlay and both settings survive reload",
+    fn: async () => {
+      await route("features/sidebar", "#panel-hover");
+      assertEquals(
+        element<HTMLInputElement>("#panel-overlay").checked,
+        false,
+        "Legacy panel configurations default to docked display",
+      );
+      assertEquals(
+        element<HTMLInputElement>("#panel-hover").checked,
+        false,
+        "Legacy panel configurations default to click operation",
+      );
+      await click("#panel-hover");
+      await until(
+        () =>
+          valueAt(PANEL, "overlay") === true &&
+          valueAt(PANEL, "openOnHover") === true,
+        "Panel hover settings did not save",
+      );
+      await route("features/sidebar", "#panel-hover");
+      assert(
+        element<HTMLInputElement>("#panel-overlay").checked &&
+          element<HTMLInputElement>("#panel-hover").checked,
+        "Panel overlay and hover survive reload",
+      );
+      await click("#panel-overlay");
+      await until(
+        () =>
+          valueAt(PANEL, "overlay") === false &&
+          valueAt(PANEL, "openOnHover") === false,
+        "Docking did not disable hover",
+      );
+      assertEquals(
+        valueAt(PANEL, "futureKey"),
+        "keep",
+        "Panel settings preserve unexposed configuration",
+      );
+    },
+  });
+  tests.push({
+    name: "Firefox hover settings preserve other UI settings and reload",
+    fn: async () => {
+      const config = JSON.parse(String(prefs.get(DESIGN)));
+      config.uiCustomization.chromeExtras = {
+        ...config.uiCustomization.chromeExtras,
+        autohideTab: true,
+        sidebarOverlap: false,
+        autohideSidebar: false,
+        futureToggle: true,
+      };
+      prefs.set(DESIGN, JSON.stringify(config));
+      await route("features/sidebar", "#firefox-sidebar-hover");
+      await click("#firefox-sidebar-hover");
+      await until(
+        () =>
+          valueAt(DESIGN, "uiCustomization.chromeExtras.sidebarOverlap") ===
+            true &&
+          valueAt(DESIGN, "uiCustomization.chromeExtras.autohideSidebar") ===
+            true,
+        "Firefox hover and overlay did not save together",
+      );
+      await route("features/sidebar", "#firefox-sidebar-hover");
+      assert(
+        element<HTMLInputElement>("#firefox-sidebar-overlay").checked &&
+          element<HTMLInputElement>("#firefox-sidebar-hover").checked,
+        "Firefox sidebar settings survive reload",
+      );
+      element<HTMLInputElement>("#firefox-sidebar-overlay").click();
+      await pause(0);
+      element<HTMLInputElement>("#firefox-sidebar-hover").click();
+      await until(
+        () =>
+          valueAt(DESIGN, "uiCustomization.chromeExtras.sidebarOverlap") ===
+            true &&
+          valueAt(DESIGN, "uiCustomization.chromeExtras.autohideSidebar") ===
+            true,
+        "Rapid Firefox changes did not both save",
+      );
+      await route("features/sidebar", "#firefox-sidebar-hover");
+      assert(
+        element<HTMLInputElement>("#firefox-sidebar-overlay").checked &&
+          element<HTMLInputElement>("#firefox-sidebar-hover").checked,
+        "Rapid Firefox sidebar changes survive reload",
+      );
+      await click("#firefox-sidebar-overlay");
+      await until(
+        () =>
+          valueAt(DESIGN, "uiCustomization.chromeExtras.sidebarOverlap") ===
+            false &&
+          valueAt(DESIGN, "uiCustomization.chromeExtras.autohideSidebar") ===
+            false,
+        "Disabling overlay did not disable Firefox hover",
+      );
+      assertEquals(
+        valueAt(DESIGN, "uiCustomization.chromeExtras.autohideTab"),
+        true,
+        "Editing sidebar settings preserves other UI toggles",
+      );
+      assertEquals(
+        valueAt(DESIGN, "uiCustomization.chromeExtras.futureToggle"),
+        true,
+        "Editing sidebar settings preserves future UI toggles",
+      );
+      assertEquals(
+        valueAt(DESIGN, "futureKey"),
+        "keep",
+        "Other design settings survive",
+      );
+    },
+  });
+  tests.push({
+    name: "Firefox sidebar load errors disable editing without changing config",
+    fn: async () => {
+      await click('a[href="/overview/home"]');
+      const before = prefs.get(DESIGN);
+      faults.read = DESIGN;
+      try {
+        await click('a[href="/features/sidebar"]');
+        await until(
+          () => document.querySelector('[role="alert"]'),
+          "Firefox sidebar load error missing",
+        );
+        assert(
+          element("#firefox-sidebar-overlay").matches(":disabled"),
+          "Firefox sidebar settings remain disabled after a failed read",
+        );
+        assertEquals(
+          prefs.get(DESIGN),
+          before,
+          "Failed read overwrote design config",
+        );
+      } finally {
+        faults.read = "";
+      }
+      await route("features/sidebar", "#firefox-sidebar-hover");
+    },
+  });
+  tests.push({
     name:
       "Legacy double-click preference loads and saves under the corrected key",
     fn: async () => {
       const original = prefs.get(DESIGN);
+      assert(original !== undefined, "Design fixture should be initialized");
       try {
         for (const enabled of [true, false]) {
           const saved = JSON.parse(String(original));

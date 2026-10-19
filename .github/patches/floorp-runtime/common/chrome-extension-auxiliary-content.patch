@@ -686,10 +686,10 @@ index 0000000000000000000000000000000000000000..2485d00373ebd906088bbdf5a7499e29
 +}
 diff --git a/toolkit/components/extensions/ChromeDeclarativeContentChild.sys.mjs b/toolkit/components/extensions/ChromeDeclarativeContentChild.sys.mjs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0ff126d0df91f4b0cdbe8f4ae0af38ec60b664a3
+index 0000000000000000000000000000000000000000..3b4bb4980d2cb9673edf70fa68ee1ac8eee39022
 --- /dev/null
 +++ b/toolkit/components/extensions/ChromeDeclarativeContentChild.sys.mjs
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,71 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -699,6 +699,19 @@ index 0000000000000000000000000000000000000000..0ff126d0df91f4b0cdbe8f4ae0af38ec
 +    if (!this.observer && this.document.documentElement) {
 +      this.observer = new this.contentWindow.MutationObserver(() =>
 +        this.changed()
++      );
++      this.progress = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
++        .getInterface(Ci.nsIWebProgress);
++      this.progressListener = {
++        QueryInterface: ChromeUtils.generateQI([
++          "nsIWebProgressListener",
++          "nsISupportsWeakReference",
++        ]),
++        onLocationChange: () => this.changed(),
++      };
++      this.progress.addProgressListener(
++        this.progressListener,
++        Ci.nsIWebProgress.NOTIFY_LOCATION,
 +      );
 +      this.observer.observe(this.document.documentElement, {
 +        childList: true,
@@ -739,6 +752,9 @@ index 0000000000000000000000000000000000000000..0ff126d0df91f4b0cdbe8f4ae0af38ec
 +    return undefined;
 +  }
 +  didDestroy() {
++    this.progress?.removeProgressListener(this.progressListener);
++    this.progressListener = null;
++    this.progress = null;
 +    this.observer?.disconnect();
 +    for (const name of ["input", "change", "click", "focusin", "focusout"]) {
 +      this.document.removeEventListener(name, this, { capture: true });
@@ -1295,7 +1311,7 @@ index 2d8f4344d0df8a06b40117fa26a2f48c7a66c3e3..2af2784e75edc913e8db9794e3a18dc4
      url: "chrome://extensions/content/child/ext-declarativeNetRequest.js",
      scopes: ["addon_child"],
 diff --git a/toolkit/components/extensions/ext-toolkit.json b/toolkit/components/extensions/ext-toolkit.json
-index 38a435e567f6599e9be923b98334677535b06a2f..7d8238a585caba8d7e8143b6e5ffeacc11f689db 100644
+index 38a435e567f6599e9be923b98334677535b06a2f..85698ff5eff6e1c494c3ad586456b0bc066a88a3 100644
 --- a/toolkit/components/extensions/ext-toolkit.json
 +++ b/toolkit/components/extensions/ext-toolkit.json
 @@ -39,6 +39,13 @@
@@ -1306,7 +1322,7 @@ index 38a435e567f6599e9be923b98334677535b06a2f..7d8238a585caba8d7e8143b6e5ffeacc
 +    "url": "chrome://extensions/content/parent/ext-declarative-content.js",
 +    "schema": "chrome://extensions/content/schemas/declarative_content.json",
 +    "scopes": ["addon_parent"],
-+    "events": ["startup"],
++    "events": ["startup", "uninstall"],
 +    "paths": [["declarativeContent"]]
 +  },
    "declarativeNetRequest": {

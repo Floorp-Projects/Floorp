@@ -672,6 +672,10 @@ jobs:
           set -euo pipefail
           for patch in noraneko/.github/patches/floorp-runtime/common/*.patch; do
             [ -e "$patch" ] || continue
+            if git apply --reverse --check "$patch" >/dev/null 2>&1; then
+              echo "Already applied by the Runtime source build: $(basename "$patch")"
+              continue
+            fi
             echo "Applying Floorp Runtime patch: $(basename "$patch")"
             git apply --check "$patch"
             git apply --verbose "$patch"
@@ -713,6 +717,7 @@ jobs:
         env:
           PLATFORM_KEY: ${{ steps.provenance.outputs.platform_key }}
           RUNTIME_ARTIFACT_NAME: ${{ steps.provenance.outputs.runtime_artifact_name }}
+          RUNTIME_HEAD_SHA: ${{ steps.provenance.outputs.runtime_ref }}
           EXPECTED_BUILD_ID: ${{ steps.provenance.outputs.expected_build_id }}
           RUNTIME_DOWNLOAD_DIR: ${{ runner.temp }}/floorp-runtime-v2
           RUNTIME_SUPPORT_DIR: ${{ runner.temp }}/floorp-runtime-v2-support
@@ -744,6 +749,14 @@ jobs:
           esac
 
           expected_entries=("${primary_files[@]}" "dist-host" "floorp-application.ini")
+          verify_source=false
+          if [[ "$PLATFORM_KEY" != mac && -f .github/runtime-upstream.json ]]; then
+            verify_source=true
+            expected_entries+=("runtime-source-provenance.json")
+          fi
+          if [[ "$PLATFORM_KEY" == mac ]]; then
+            expected_entries+=("runtime-packaging-provenance.json")
+          fi
           entry_count=0
           while IFS= read -r -d '' entry; do
             entry_count=$((entry_count + 1))
@@ -792,14 +805,58 @@ jobs:
             exit 1
           fi
 
+          if [[ "$verify_source" == true ]]; then
+            python3 noraneko/tools/validate_runtime_source_provenance.py \
+              --record "$root/runtime-source-provenance.json" \
+              --pin .github/runtime-upstream.json \
+              --runtime-head-sha "$RUNTIME_HEAD_SHA" \
+              --floorp-patch noraneko/.github/patches/floorp-runtime/common/macos-app-shim-pwa-input-and-compositor.patch
+          fi
+          if [[ "$PLATFORM_KEY" == mac ]]; then
+            python3 noraneko/tools/validate_runtime_packaging_provenance.py \
+              --record "$root/runtime-packaging-provenance.json" \
+              --pin .github/runtime-upstream.json \
+              --runtime-head-sha "$RUNTIME_HEAD_SHA" \
+              --expected-build-id "$EXPECTED_BUILD_ID" \
+              --application-ini "$root/floorp-application.ini"
+          fi
+
           rm -rf -- "$support"
           mkdir -p "$support" "$HOME/artifacts"
           cp -a -- "$root/dist-host" "$support/dist-host"
           cp -- "$root/floorp-application.ini" "$support/floorp-application.ini"
+          if [[ "$verify_source" == true ]]; then
+            cp -- "$root/runtime-source-provenance.json" "$support/runtime-source-provenance.json"
+          fi
+          if [[ "$PLATFORM_KEY" == mac ]]; then
+            cp -- "$root/runtime-packaging-provenance.json" "$support/runtime-packaging-provenance.json"
+          fi
           for file in "${primary_files[@]}"; do
             cp -- "$root/$file" "$HOME/artifacts/$file"
           done
           echo "Staged immutable Runtime artifact $RUNTIME_ARTIFACT_NAME"
+
+      - name: Preserve verified macOS Runtime packing provenance
+        if: ${{ steps.provenance.outputs.is_v2 == 'true' && steps.provenance.outputs.platform_key == 'mac' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-packaging-provenance-mac-${{ github.run_id }}
+          path: ${{ runner.temp }}/floorp-runtime-v2-support/runtime-packaging-provenance.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
+      - name: Preserve verified compiled Runtime source provenance
+        if: >-
+          ${{ steps.provenance.outputs.is_v2 == 'true' &&
+              steps.provenance.outputs.platform_key != 'mac' &&
+              hashFiles('.github/runtime-upstream.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: noraneko-${{ inputs.platform }}-runtime-source-provenance
+          path: ${{ runner.temp }}/floorp-runtime-v2-support/runtime-source-provenance.json
+          if-no-files-found: error
+          retention-days: 90
 
       - uses: actions/setup-node@v4
         with:

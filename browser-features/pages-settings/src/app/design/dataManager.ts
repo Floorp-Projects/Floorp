@@ -82,7 +82,7 @@ export async function getChromeExtras(): Promise<ChromeExtrasSettings> {
  * and therefore preserves `chromeExtras` untouched.
  */
 export function saveChromeExtras(
-  settings: ChromeExtrasSettings,
+  settings: Partial<ChromeExtrasSettings>,
 ): Promise<void> {
   return queueDesignConfigWrite(async () => {
     const config = await readDesignConfigs();
@@ -93,7 +93,11 @@ export function saveChromeExtras(
       ...config,
       uiCustomization: {
         ...config.uiCustomization,
-        chromeExtras: { ...CHROME_EXTRAS_DEFAULTS, ...settings },
+        chromeExtras: {
+          ...CHROME_EXTRAS_DEFAULTS,
+          ...config.uiCustomization?.chromeExtras,
+          ...settings,
+        },
       },
     };
     await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));

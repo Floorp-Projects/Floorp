@@ -17,6 +17,7 @@ PATCH_NAMES = (
     "chrome-extension-proxy.patch",
     "chrome-extension-diagnostics.patch",
     "chrome-extension-identity.patch",
+    "chrome-extension-management.patch",
     "chrome-extension-url-alias.patch",
     "chrome-extension-webpage-messaging.patch",
     "chrome-extension-capture.patch",
@@ -26,6 +27,7 @@ PATCH_NAMES = (
     "chrome-extension-network.patch",
     "chrome-extension-tab-groups.patch",
     "chrome-extension-webrequest.patch",
+    "chrome-extension-windows.patch",
     "chrome-extension-auxiliary.patch",
     "chrome-extension-auxiliary-content.patch",
 )

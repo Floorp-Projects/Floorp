@@ -39,15 +39,17 @@
  *     python3 ../../../../tools/gen-chrome-extras.py
  *
  * The generator only takes blocks that gate on a single Lepton toggle; blocks
- * that AND several toggles together are layout combinations. The sidebar
- * overlap/auto-hide combination has its own sheet; the other combinations are
- * left to the native implementations. Omissions are listed in generated file
- * headers so the divergence from upstream stays auditable.
+ * that AND several toggles together are layout combinations. Sidebar sheets are
+ * maintained by Floorp's native Firefox sidebar controller rather than generated
+ * from Lepton: it preserves upstream panel widths and overlays both the panel
+ * and hover launcher without changing the web content viewport.
  *
  * Three keys are Floorp-native rather than ported — `autohideNavbar`,
  * `tabbarAsTitlebar` and `tabbarOneLiner`. Lepton implements them inside ~2,500
  * lines of nested gates over its own `--uc-*` layout variables; see the comments
  * in those files for what was kept, what was inlined, and what was dropped.
+ *
+ * The `hiddenTab*` toggles other than `hiddenTabIcon` are Floorp-only.
  */
 
 import autohideBackButtonCSS from "./chrome-extras-css/autohide-back-button.css?inline";
@@ -65,7 +67,12 @@ import hiddenBookmarkbarLabelCSS from "./chrome-extras-css/hidden-bookmarkbar-la
 import hiddenDisabledMenuCSS from "./chrome-extras-css/hidden-disabled-menu.css?inline";
 import hiddenNavbarCSS from "./chrome-extras-css/hidden-navbar.css?inline";
 import hiddenSidebarHeaderCSS from "./chrome-extras-css/hidden-sidebar-header.css?inline";
+import hiddenTabAttentionIndicatorCSS from "./chrome-extras-css/hidden-tab-attention-indicator.css?inline";
+import hiddenTabAudioIndicatorCSS from "./chrome-extras-css/hidden-tab-audio-indicator.css?inline";
+import hiddenTabCloseButtonCSS from "./chrome-extras-css/hidden-tab-close-button.css?inline";
 import hiddenTabIconCSS from "./chrome-extras-css/hidden-tab-icon.css?inline";
+import hiddenTabNoteIconCSS from "./chrome-extras-css/hidden-tab-note-icon.css?inline";
+import hiddenTabSharingIndicatorCSS from "./chrome-extras-css/hidden-tab-sharing-indicator.css?inline";
 import hiddenTabbarCSS from "./chrome-extras-css/hidden-tabbar.css?inline";
 import hiddenUrlbarIconboxCSS from "./chrome-extras-css/hidden-urlbar-iconbox.css?inline";
 import iconDisabledCSS from "./chrome-extras-css/icon-disabled.css?inline";
@@ -95,6 +102,11 @@ export const CHROME_EXTRAS_KEYS = [
   "autohideSidebar",
   "autohideNavbar",
   "hiddenTabIcon",
+  "hiddenTabCloseButton",
+  "hiddenTabAudioIndicator",
+  "hiddenTabSharingIndicator",
+  "hiddenTabNoteIcon",
+  "hiddenTabAttentionIndicator",
   "hiddenTabbar",
   "hiddenNavbar",
   "hiddenSidebarHeader",
@@ -132,6 +144,11 @@ export const CHROME_EXTRAS_DEFAULTS: ChromeExtrasSettings = {
   autohideSidebar: false,
   autohideNavbar: false,
   hiddenTabIcon: false,
+  hiddenTabCloseButton: false,
+  hiddenTabAudioIndicator: false,
+  hiddenTabSharingIndicator: false,
+  hiddenTabNoteIcon: false,
+  hiddenTabAttentionIndicator: false,
   hiddenTabbar: false,
   hiddenNavbar: false,
   hiddenSidebarHeader: false,
@@ -177,6 +194,12 @@ export const CHROME_EXTRAS_SCAFFOLD_CSS = scaffoldCSS;
  */
 export const CHROME_EXTRAS_STYLE_ID = "floorp-chrome-extras";
 
+/** Derived toggle for Firefox's sidebar headers in child documents/shadow DOM.
+ * The design config remains authoritative; the Runtime's component CSS reads
+ * this mirror because the browser.xhtml stylesheet cannot reach those nodes. */
+export const CHROME_EXTRAS_SIDEBAR_HEADER_PREF =
+  "floorp.chrome-extras.hidden-sidebar-header";
+
 /** Per-toggle sheets, with the Lepton icon paths already resolved. */
 export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   autohideTab: autohideTabCSS,
@@ -186,6 +209,11 @@ export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   autohideSidebar: autohideSidebarCSS,
   autohideNavbar: autohideNavbarCSS,
   hiddenTabIcon: hiddenTabIconCSS,
+  hiddenTabCloseButton: hiddenTabCloseButtonCSS,
+  hiddenTabAudioIndicator: hiddenTabAudioIndicatorCSS,
+  hiddenTabSharingIndicator: hiddenTabSharingIndicatorCSS,
+  hiddenTabNoteIcon: hiddenTabNoteIconCSS,
+  hiddenTabAttentionIndicator: hiddenTabAttentionIndicatorCSS,
   hiddenTabbar: hiddenTabbarCSS,
   hiddenNavbar: hiddenNavbarCSS,
   hiddenSidebarHeader: hiddenSidebarHeaderCSS,

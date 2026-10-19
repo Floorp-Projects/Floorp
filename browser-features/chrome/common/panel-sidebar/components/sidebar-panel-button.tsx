@@ -8,6 +8,7 @@ import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
   activeChromeSidePanelId,
+  isPanelSidebarVisible,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
@@ -107,6 +108,20 @@ export function PanelSidebarButton(props: {
           (props.panel.type === "extension" &&
             activeChromeSidePanelId() === props.panel.extensionId)}
         data-panel-id={props.panel.id}
+        role="button"
+        tabindex={0}
+        aria-label={props.panel.url || props.panel.extensionId ||
+          props.panel.id}
+        aria-expanded={(selectedPanelId() === props.panel.id &&
+          isPanelSidebarVisible()) ||
+          (props.panel.type === "extension" &&
+            activeChromeSidePanelId() === props.panel.extensionId)}
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            gPanelSidebar.changePanel(props.panel.id);
+          }
+        }}
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);
         }}

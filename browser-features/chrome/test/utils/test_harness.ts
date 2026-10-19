@@ -106,6 +106,32 @@ export function assertApprox(
   }
 }
 
+/**
+ * Compares two `string[]` values by length then element-by-element.
+ *
+ * The harness `assertEquals` uses `!==` strict equality, so it cannot deep-
+ * compare arrays. This helper throws with an index-specific message on
+ * mismatch, which surfaces failures more clearly than `JSON.stringify`.
+ */
+export function assertStringArrayEqual(
+  actual: string[],
+  expected: string[],
+  message: string,
+): void {
+  if (actual.length !== expected.length) {
+    throw new Error(
+      `${message}: length mismatch (expected ${expected.length}, got ${actual.length})`,
+    );
+  }
+  for (let i = 0; i < expected.length; i++) {
+    if (actual[i] !== expected[i]) {
+      throw new Error(
+        `${message}: index ${i} mismatch (expected ${expected[i]}, got ${actual[i]})`,
+      );
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Test Runner (Pattern A: collect all failures, throw at end)
 // ---------------------------------------------------------------------------

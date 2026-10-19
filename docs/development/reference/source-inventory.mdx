@@ -1,12 +1,12 @@
 ---
 title: "Source Inventory"
 sidebar_label: "Source Inventory"
-floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
+floorp_commit: "unknown"
 generated: true
 ---
 # Source Inventory
 
-Inventory generated from Floorp commit `78943ae3ded11ca5305a5f0160013c5da6339350`.
+Inventory generated from Floorp commit `unknown`.
 
 ## Source Precedence
 
@@ -52,9 +52,9 @@ Inventory generated from Floorp commit `78943ae3ded11ca5305a5f0160013c5da6339350
 
 ## Feature Catalog Sources
 
-- Common chrome features: `browser-features/chrome/common` (35 entries)
+- Common chrome features: `browser-features/chrome/common` (36 entries)
 - Static chrome features: `browser-features/chrome/static` (3 entries)
-- Settings routes: `browser-features/pages-settings/src/App.tsx` (17 routes)
+- Settings routes: `browser-features/pages-settings/src/App.tsx` (18 routes)
 - Window Actors: `browser-features/modules/modules/BrowserGlue.sys.mts` (24 actors)
 - Floorp OS API routes: `browser-features/modules/modules/os-server` (120 routes)
 
@@ -67,14 +67,17 @@ Inventory generated from Floorp commit `78943ae3ded11ca5305a5f0160013c5da6339350
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
-- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
-- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/openbot-events.yml` - triggers: `issue_comment`, `issues`, `pull_request_review`, `pull_request_target`, `workflow_run`
+- `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
 - `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

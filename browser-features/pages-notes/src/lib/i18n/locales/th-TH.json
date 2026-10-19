@@ -7,6 +7,7 @@
         "welcomeContent": "Welcome to {{productName}} Notes! Here's how to use it.\n\n{{productName}} Notes is a note-taking feature that can be synchronized across devices. To enable synchronization, you need to sign in to {{productName}} with a Mozilla account.\n{{productName}} Notes are stored in {{productName}} and synchronized across devices using Firefox Sync. Firefox Sync encrypts the content of the synchronization with your Mozilla account password, so no one can know its contents.",
         "new": "New Note",
         "reorder": "Reorder",
+        "export": "Export as Markdown",
         "done": "Done",
         "emptyTitle": "Untitled",
         "emptyContent": "No content",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Failed to load note data",
         "saveFailed": "Failed to save note data",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Index {{index}} is out of range"
     }
 }

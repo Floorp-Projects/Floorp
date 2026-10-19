@@ -738,6 +738,41 @@ Deno.test("exact Runtime artifact download uses the flat consolidated layout", a
   assertStringIncludes(downloadStep, "merge-multiple: true");
 });
 
+Deno.test("Runtime staging references outputs defined by its provenance producer", async () => {
+  const workflow = await Deno.readTextFile(
+    new URL("../../.github/workflows/package.yml", import.meta.url),
+  );
+  const producerStart = workflow.indexOf("id: provenance");
+  const producerEnd = workflow.indexOf("\n      - ", producerStart);
+  const stageStart = workflow.indexOf("- name: Stage exact Runtime v2 bundle");
+  const stageEnd = workflow.indexOf("\n      - ", stageStart);
+  assertEquals(
+    producerStart >= 0 && producerEnd > producerStart &&
+      stageStart >= 0 && stageEnd > stageStart,
+    true,
+  );
+  const outputs = new Set(Array.from(
+    workflow.slice(producerStart, producerEnd).matchAll(
+      /core\.setOutput\(["']([^"']+)["']/g,
+    ),
+    (match) => match[1],
+  ));
+  const references = new Set(Array.from(
+    workflow.slice(stageStart, stageEnd).matchAll(
+      /steps\.provenance\.outputs\.([a-z_][a-z0-9_]*)/g,
+    ),
+    (match) => match[1],
+  ));
+  assertEquals(outputs.size > 0 && references.size > 0, true);
+  for (const reference of references) {
+    assertEquals(
+      outputs.has(reference),
+      true,
+      `Undefined provenance output: ${reference}`,
+    );
+  }
+});
+
 Deno.test("mac validation verifier only allows arm64 linker-signed ad-hoc metadata", async () => {
   const verifierWorkflow = await Deno.readTextFile(
     new URL(

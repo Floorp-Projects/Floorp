@@ -5,6 +5,7 @@
 
 import { createEffect } from "solid-js";
 import { config } from "#features-chrome/common/designs/configs.ts";
+import Workspaces from "#features-chrome/common/workspaces/index.ts";
 
 const DOM_LAYOUT_MANAGER_DEBUG_PREFIX = "[DOMLayoutManager]";
 
@@ -686,13 +687,47 @@ function preserveEventState(original: Event, clone: Event): void {
 }
 
 /**
+ * Select a live public workspace identity before constructing a bookmark tab.
+ */
+function getBookmarkWorkspaceUserContextId(win: Window): number {
+  try {
+    const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+    );
+    if (
+      PrivateBrowsingUtils.permanentPrivateBrowsing ||
+      PrivateBrowsingUtils.isWindowPrivate(win) ||
+      !Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+    ) {
+      return 0;
+    }
+    const userContextId = Workspaces.getCtx(win)
+      ?.getCurrentWorkspaceUserContextId() ?? 0;
+    const { ContextualIdentityService } = ChromeUtils.importESModule(
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+    );
+    return Number.isInteger(userContextId) && userContextId > 0 &&
+        userContextId <= 0xffffffff &&
+        ContextualIdentityService.getPublicIdentityFromId(userContextId)
+      ? userContextId
+      : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Loads a bookmark URI using gBrowser.loadURI or gBrowser.addTab
  * @param uri The bookmark URI to load
  * @param mouseEvent The mouse event to determine modifier keys
  * @returns true if the URI was loaded successfully, false otherwise
  */
-function loadBookmarkURI(uri: string, mouseEvent: MouseEvent): boolean {
-  const win = window as typeof window & {
+export function loadBookmarkURI(
+  uri: string,
+  mouseEvent: MouseEvent,
+  targetWindow: Window = window,
+): boolean {
+  const win = targetWindow as typeof window & {
     gBrowser?: {
       loadURI: (uri: unknown, options?: unknown) => void;
       addTab: (
@@ -700,6 +735,7 @@ function loadBookmarkURI(uri: string, mouseEvent: MouseEvent): boolean {
         options?: {
           triggeringPrincipal?: unknown;
           inBackground?: boolean;
+          userContextId?: number;
         },
       ) => unknown;
     };
@@ -734,6 +770,7 @@ function loadBookmarkURI(uri: string, mouseEvent: MouseEvent): boolean {
       win.gBrowser.addTab(uri, {
         triggeringPrincipal: principal,
         inBackground: false,
+        userContextId: getBookmarkWorkspaceUserContextId(win),
       });
     } else if (win.gBrowser.loadURI && uriObject) {
       // Open in current tab - need to convert string URI to URI object

@@ -132,6 +132,7 @@ def main():
                "--output", output, "--timeout", "300"]
     if args.group == "core":
         command += ["--test", "tools/chrome-extension-runtime/ci/ProductionOverlay.test.mts"]
+        command += ["--test", "tools/chrome-extension-runtime/WorkerCanvasNative.test.mts"]
     for suite in suites:
         command += ["--test", TESTS + suite]
     commands = [command]

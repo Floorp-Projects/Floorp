@@ -10,7 +10,10 @@ import { migratePanelSidebarData } from "./data/migration";
 import { WebsitePanelWindowChild } from "./website-panel-window-child";
 import { PanelSidebarAddModal } from "./components/panel-sidebar-modal";
 import { PanelSidebarFloating } from "./components/floating";
+import { PanelSidebarHover } from "./components/overlay-hover";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
+import { onCleanup } from "solid-js";
+import { observeWebPanelRequests } from "./utils/webRequest.ts";
 
 //TODO: refactor needed
 
@@ -22,6 +25,7 @@ export default class PanelSidebar extends NoraComponentBase {
       return;
     }
 
+    onCleanup(observeWebPanelRequests(window));
     migratePanelSidebarData();
 
     const ctx = new CPanelSidebar();
@@ -29,5 +33,6 @@ export default class PanelSidebar extends NoraComponentBase {
     new SidebarContextMenuElem(ctx);
     PanelSidebarAddModal.getInstance();
     PanelSidebarFloating.getInstance();
+    new PanelSidebarHover(ctx);
   }
 }

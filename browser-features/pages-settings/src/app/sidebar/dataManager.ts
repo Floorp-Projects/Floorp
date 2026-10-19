@@ -5,7 +5,7 @@ import type {
   Panels,
 } from "../../../../chrome/common/panel-sidebar/utils/type.ts";
 
-import type { Container, StaticPanel, ExtensionPanel } from "./types.ts";
+import type { Container, ExtensionPanel, StaticPanel } from "./types.ts";
 
 export function getStaticPanelDisplayName(
   value: string | null,
@@ -18,22 +18,29 @@ export function getStaticPanelDisplayName(
   return t(`panelSidebar.staticPanels.${staticPanelKey}`) || value;
 }
 
-export async function savePanelSidebarSettings(
+let panelConfigWriteQueue: Promise<unknown> = Promise.resolve();
+
+export function savePanelSidebarSettings(
   data: PanelSidebarFormData,
 ): Promise<void> {
   const { enabled, ...configData } = data;
-  const previous = await rpc.getStringPref("floorp.panelSidebar.config");
-  const config = { ...(previous ? JSON.parse(previous) : {}), ...configData };
-
-  await Promise.all([
-    rpc.setBoolPref("floorp.panelSidebar.enabled", enabled),
-    rpc.setStringPref("floorp.panelSidebar.config", JSON.stringify(config)),
-  ]);
+  const write = async () => {
+    const previous = await rpc.getStringPref("floorp.panelSidebar.config");
+    const config = { ...(previous ? JSON.parse(previous) : {}), ...configData };
+    await Promise.all([
+      rpc.setBoolPref("floorp.panelSidebar.enabled", enabled),
+      rpc.setStringPref("floorp.panelSidebar.config", JSON.stringify(config)),
+    ]);
+  };
+  const pending = panelConfigWriteQueue.then(write, write);
+  panelConfigWriteQueue = pending.catch(() => undefined);
+  return pending;
 }
 
 export async function getPanelSidebarSettings(): Promise<
   PanelSidebarFormData | null
 > {
+  await panelConfigWriteQueue;
   const [enabled, configResult] = await Promise.all([
     rpc.getBoolPref("floorp.panelSidebar.enabled"),
     rpc.getStringPref("floorp.panelSidebar.config"),
@@ -46,6 +53,8 @@ export async function getPanelSidebarSettings(): Promise<
   const config = JSON.parse(configResult);
   return {
     enabled: enabled ?? true,
+    overlay: config.overlay ?? false,
+    openOnHover: config.openOnHover ?? false,
     autoUnload: config.autoUnload,
     position_start: config.position_start,
     globalWidth: config.globalWidth,

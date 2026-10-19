@@ -1,0 +1,103 @@
+diff --git a/browser/components/extensions/parent/ext-windows.js b/browser/components/extensions/parent/ext-windows.js
+index 3bebfb2..5322ae2 100644
+--- a/browser/components/extensions/parent/ext-windows.js
++++ b/browser/components/extensions/parent/ext-windows.js
+@@ -100,6 +100,61 @@ this.windows = class extends ExtensionAPIPersistent {
+   }
+ 
+   PERSISTENT_EVENTS = {
++    onBoundsChanged({ fire }) {
++      const { extension } = this;
++      const { setInterval, clearInterval } = ChromeUtils.importESModule(
++        "resource://gre/modules/Timer.sys.mjs"
++      );
++      const states = new Map();
++      const bounds = window => [
++        window.screenX,
++        window.screenY,
++        window.outerWidth,
++        window.outerHeight,
++        window.windowState,
++        window.fullScreen,
++      ].join(":");
++      const track = window => {
++        if (!extension.canAccessWindow(window)) {
++          return;
++        }
++        states.set(window, { observed: bounds(window), delivered: bounds(window), changedAt: 0 });
++      };
++      const remove = window => states.delete(window);
++      for (const window of windowTracker.browserWindows()) {
++        track(window);
++      }
++      windowTracker.addOpenListener(track);
++      windowTracker.addCloseListener(remove);
++      const timer = setInterval(() => {
++        const now = Date.now();
++        for (const [window, state] of states) {
++          if (window.closed || !extension.canAccessWindow(window)) {
++            states.delete(window);
++            continue;
++          }
++          const current = bounds(window);
++          if (current !== state.observed) {
++            state.observed = current;
++            state.changedAt = now;
++          } else if (current !== state.delivered && now - state.changedAt >= 200) {
++            state.delivered = current;
++            fire.async(extension.windowManager.convert(window));
++          }
++        }
++      }, 100);
++      return {
++        unregister() {
++          clearInterval(timer);
++          states.clear();
++          windowTracker.removeOpenListener(track);
++          windowTracker.removeCloseListener(remove);
++        },
++        convert(newFire) {
++          fire = newFire;
++        },
++      };
++    },
+     onCreated: this.windowEventRegistrar("domwindowopened", (fire, window) => {
+       fire.async(this.extension.windowManager.convert(window));
+     }),
+@@ -147,6 +202,13 @@ this.windows = class extends ExtensionAPIPersistent {
+ 
+     return {
+       windows: {
++        onBoundsChanged: new EventManager({
++          context,
++          module: "windows",
++          event: "onBoundsChanged",
++          extensionApi: this,
++        }).api(),
++
+         onCreated: new EventManager({
+           context,
+           module: "windows",
+diff --git a/browser/components/extensions/schemas/windows.json b/browser/components/extensions/schemas/windows.json
+index 7cc1b20..3a82338 100644
+--- a/browser/components/extensions/schemas/windows.json
++++ b/browser/components/extensions/schemas/windows.json
+@@ -438,6 +438,18 @@
+       }
+     ],
+     "events": [
++      {
++        "name": "onBoundsChanged",
++        "type": "function",
++        "description": "Fired when a window's bounds change after the new bounds have settled.",
++        "parameters": [
++          {
++            "$ref": "Window",
++            "name": "window",
++            "description": "Details of the window with its new bounds."
++          }
++        ]
++      },
+       {
+         "name": "onCreated",
+         "type": "function",

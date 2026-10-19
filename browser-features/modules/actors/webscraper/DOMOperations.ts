@@ -9,6 +9,7 @@
 
 import type {
   ClickElementOptions,
+  ClickElementResult,
   GetTextOptions,
   InputElementOptions,
   SelectOptionOptions,
@@ -206,6 +207,13 @@ export class DOMOperations {
 
   hoverElement(selector: string): Promise<boolean> {
     return this.actionOps.hoverElement(selector);
+  }
+
+  clickElementWithResult(
+    selector: string,
+    options?: ClickElementOptions,
+  ): Promise<ClickElementResult> {
+    return this.actionOps.clickElementWithResult(selector, options);
   }
 
   scrollToElement(selector: string): Promise<boolean> {

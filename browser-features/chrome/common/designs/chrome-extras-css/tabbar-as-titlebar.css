@@ -16,71 +16,82 @@
  *    so upstream that declaration is already dead — dropping it is a no-op.
  */
 
-:root:not([tabsintitlebar="true"]):not([customtitlebar="true"]) #tabbrowser-tabs,
-#scrollbutton-up,
-#scrollbutton-down,
-.titlebar-spacer[type="pre-tabs"],
-spacer:is([part="overflow-start-indicator"], [part="overflow-end-indicator"]),
-.tabbrowser-tab:not([selected="true"]),
-.tabbrowser-tab[selected="true"] .tab-background,
-.tabbrowser-tab[selected="true"] .tab-stack:is(::before, ::after),
-.tabbrowser-tab[selected="true"] .tab-close-button,
-#tabs-newtab-button {
-  display: none !important;
-}
+@media not -moz-pref("sidebar.verticalTabs") {
+  :root:not([tabsintitlebar]):not([customtitlebar]) #tabbrowser-tabs,
+  #scrollbutton-up,
+  #scrollbutton-down,
+  .titlebar-spacer[type="pre-tabs"],
+  spacer:is([part="overflow-start-indicator"], [part="overflow-end-indicator"]),
+  .tabbrowser-tab:not([selected]),
+  .tabbrowser-tab[selected] .tab-background,
+  .tabbrowser-tab[selected] .tab-stack:is(::before, ::after),
+  .tabbrowser-tab[selected] .tab-close-button,
+  #tabs-newtab-button {
+    display: none !important;
+  }
 
-.tabbrowser-tab[selected="true"] {
-  -moz-window-dragging: drag;
-  --tab-max-width: 100vw;
-  min-width: calc(var(--uc-tabbar-width, 100vw) - var(--uc-window-control-space)) !important;
-  max-width: var(--tab-max-width) !important;
-}
+  /* Override the vendor sheet's old value selectors without disabling its
+   * horizontal layout preferences. */
+  :root:is([tabsintitlebar], [customtitlebar]) #tabbrowser-tabs[orient="horizontal"],
+  #tabbrowser-tabs[orient="horizontal"] .tabbrowser-tab[selected] {
+    display: flex !important;
+  }
 
-.tabbrowser-tab[selected="true"][pinned="true"] {
-  flex: 100;
-  -moz-box-flex: 100;
-  max-width: var(--tab-max-width) !important;
-}
+  .tabbrowser-tab[selected] {
+    -moz-window-dragging: drag;
+    --tab-max-width: 100vw;
+    min-width: calc(var(--uc-tabbar-width, 100vw) -
+      var(--uc-window-control-space)) !important;
+    max-width: var(--tab-max-width) !important;
+  }
 
-.tabbrowser-tab[selected="true"] .tab-label-container {
-  margin-inline: 0 !important;
-}
+  .tabbrowser-tab[selected][pinned] {
+    flex: 100;
+    -moz-box-flex: 100;
+    max-width: var(--tab-max-width) !important;
+  }
 
-.tab-content {
-  margin-inline: auto;
-  width: 100%;
-}
+  .tabbrowser-tab[selected] .tab-label-container {
+    margin-inline: 0 !important;
+  }
 
-/* Pinned */
-#tabbrowser-tabs[positionpinnedtabs] > #pinned-tabs-container > .tabbrowser-tab[pinned][selected="true"],
-#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned][selected="true"] {
-  position: relative !important;
-}
+  .tab-content {
+    margin-inline: auto;
+    width: 100%;
+  }
 
-#tabbrowser-tabs {
-  --tab-overflow-pinned-tabs-width: 0 !important;
-  padding-inline: 0 !important; /* Original: var(--tab-overflow-pinned-tabs-width) 0; */
-}
+  /* Pinned */
+  #tabbrowser-tabs[positionpinnedtabs] > #pinned-tabs-container > .tabbrowser-tab[pinned][selected],
+  #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned][selected] {
+    position: relative !important;
+  }
 
-.tab-throbber[pinned],
-.tab-icon-pending[pinned],
-.tab-icon-image[pinned],
-.tab-sharing-icon-overlay[pinned],
-.tab-icon-overlay[pinned] {
-  margin-inline-end: 5.5px;
-}
+  #tabbrowser-tabs {
+    --tab-overflow-pinned-tabs-width: 0 !important;
+    padding-inline: 0
+      !important; /* Original: var(--tab-overflow-pinned-tabs-width) 0; */
+  }
 
-.tab-label-container[pinned] {
-  width: unset !important;
-}
+  .tab-throbber[pinned],
+  .tab-icon-pending[pinned],
+  .tab-icon-image[pinned],
+  .tab-sharing-icon-overlay[pinned],
+  .tab-icon-overlay[pinned] {
+    margin-inline-end: 5.5px;
+  }
 
-/* Padding — the non-`centered.tab.label` branch, applied unconditionally. */
-#pinned-tabs-container,
-#tabbrowser-arrowscrollbox {
-  margin-inline: 2px !important;
-}
+  .tab-label-container[pinned] {
+    width: unset !important;
+  }
 
-:root[sizemode="normal"] #pinned-tabs-container,
-:root[sizemode="normal"] #tabbrowser-arrowscrollbox {
-  margin-inline: 6px !important;
+  /* Padding — the non-`centered.tab.label` branch, applied unconditionally. */
+  #pinned-tabs-container,
+  #tabbrowser-arrowscrollbox {
+    margin-inline: 2px !important;
+  }
+
+  :root[sizemode="normal"] #pinned-tabs-container,
+  :root[sizemode="normal"] #tabbrowser-arrowscrollbox {
+    margin-inline: 6px !important;
+  }
 }

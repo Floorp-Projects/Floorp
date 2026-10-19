@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Neuer Arbeitsbereich ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "Diesen Arbeitsbereich nach oben verschieben",
       "move-down": "Diesen Arbeitsbereich nach unten verschieben",
       "delete": "Arbeitsbereich löschen",
       "manage": "Arbeitsbereich verwalten",
-      "archive": "Arbeitsbereich archivieren"
+      "archive": "Arbeitsbereich archivieren",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "Neuen Arbeitsbereich erstellen …",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "QR-Code für diese Seite generieren",
   "qrcode-generate-page-action-title": "QR-Code-Generator",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "Panel-Typ",
       "typeOptions": {
@@ -433,7 +447,7 @@
   "splitView": {
     "contextMenu": {
       "openInSplitView": "In geteilter Ansicht öffnen",
-      "paneLimit": "Open in Split View (up to {{max}} tabs)",
+      "paneLimit": "In Split-Ansicht öffnen (bis zu {{max}} Tabs)",
       "addPane": "Bereich zur geteilten Ansicht hinzufügen",
       "moveToPane": "In Bereich verschieben",
       "moveToPaneN": "Bereich {{n}} ({{title}})"
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "Ort zum Öffnen",
     "bookmarkSwitcherWhereNewTab": "Neuer Tab",
     "bookmarkSwitcherWhereNewTabDesc": "In einem neuen Vordergrund-Tab öffnen",
-    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen..."
+    "bookmarkSwitcherWherePlaceholder": "Anzeigeort auswählen...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "Verlauf durchsuchen"
+    }
   },
   "commandPaletteReadings": {}
 }

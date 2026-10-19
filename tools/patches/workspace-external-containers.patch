@@ -1,0 +1,205 @@
+diff --git a/browser/modules/BrowserContentHandler.sys.mjs b/browser/modules/BrowserContentHandler.sys.mjs
+index f4a0e1e..e81c6d9 100644
+--- a/browser/modules/BrowserContentHandler.sys.mjs
++++ b/browser/modules/BrowserContentHandler.sys.mjs
+@@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
+   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
++  ContextualIdentityService:
++    "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+   HeadlessShell: "moz-src:///browser/components/shell/HeadlessShell.sys.mjs",
+   HomePage: "resource:///modules/HomePage.sys.mjs",
+@@ -80,6 +82,75 @@ const ONCE_PREF = "browser.startup.homepage_override.once";
+ // Must line up with the one in nsNativeAppSupportWin.h.
+ const PRIVATE_BROWSING_ICON_INDEX = 5;
+
++/**
++ * Floorp's fallback for an external open with no Firefox container guess.
++ * Resolve it before creating the browser: changing a tab's attribute at
++ * TabOpen is too late to change its browsing context or cookie/storage jar.
++ * A new or not-yet-initialized window uses the persisted default workspace.
++ *
++ * @param {ChromeWindow|null} [win=null] The final target window, if available.
++ * @param {boolean} [forcePrivate=false]
++ * @returns {number}
++ */
++export function getWorkspaceUserContextIdForExternalOpen(
++  win = null,
++  forcePrivate = false
++) {
++  try {
++    if (
++      forcePrivate ||
++      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
++      (win && lazy.PrivateBrowsingUtils.isWindowPrivate(win)) ||
++      !Services.prefs.getBoolPref("floorp.workspaces.enabled", true) ||
++      !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||
++      Services.prefs.getBoolPref(
++        "browser.link.force_default_user_context_id_for_external_opens",
++        false
++      )
++    ) {
++      return 0;
++    }
++
++    let userContextId;
++    if (
++      typeof win?.workspacesFuncs?.getCurrentWorkspaceUserContextId ==
++      "function"
++    ) {
++      userContextId = win.workspacesFuncs.getCurrentWorkspaceUserContextId();
++    } else {
++      const store = JSON.parse(
++        Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
++      );
++      // data.ts persists its Map as [workspace UUID, workspace] pairs.
++      if (
++        typeof store?.defaultID != "string" ||
++        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
++          store.defaultID
++        ) ||
++        !Array.isArray(store.data) ||
++        !store.data.every(entry => Array.isArray(entry) && entry.length == 2)
++      ) {
++        return 0;
++      }
++      userContextId = new Map(store.data).get(store.defaultID)?.userContextId;
++    }
++
++    // A deleted, malformed, or internal identity must never choose a jar.
++    if (
++      !Number.isInteger(userContextId) ||
++      userContextId <= 0 ||
++      userContextId > 0xffffffff ||
++      !lazy.ContextualIdentityService.getPublicIdentityFromId(userContextId)
++    ) {
++      return 0;
++    }
++    return userContextId;
++  } catch {
++    // Preference migration and window startup must not prevent external opens.
++    return 0;
++  }
++}
++
+ function shouldLoadURI(aURI) {
+   if (aURI && !aURI.schemeIs("chrome")) {
+     return true;
+@@ -302,6 +373,9 @@ function openBrowserWindow(
+   const isStartup =
+     cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
+   const openAsSmart = canOpenAsSmartWindow(forcePrivate);
++  const userContextId = urlOrUrlList
++    ? getWorkspaceUserContextIdForExternalOpen(null, forcePrivate)
++    : 0;
+
+   let args;
+   if (!urlOrUrlList) {
+@@ -333,7 +407,9 @@ function openBrowserWindow(
+       sstring.data = uri;
+       uriArray.appendElement(sstring);
+     });
+-    args = [uriArray];
++    args = userContextId
++      ? [uriArray, null, null, null, null, userContextId]
++      : [uriArray];
+   } else {
+     let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+       Ci.nsIWritablePropertyBag2
+@@ -353,7 +429,7 @@ function openBrowserWindow(
+       postData,
+       undefined, // allowThirdPartyFixup; this would be `false` but that
+       // needs a conversion. Hopefully bug 1485961 will fix.
+-      undefined, // user context id
++      userContextId || undefined, // user context id
+       null, // origin principal
+       null, // origin storage principal
+       triggeringPrincipal,
+@@ -387,13 +463,20 @@ function openBrowserWindow(
+     }
+   } else {
+     // Otherwise, pass an nsIArray.
+-    if (args.length > 1) {
++    if (typeof args[0] == "string") {
+       let string = Cc["@mozilla.org/supports-string;1"].createInstance(
+         Ci.nsISupportsString
+       );
+       string.data = args[0];
+       args[0] = string;
+     }
++    if (userContextId) {
++      let context = Cc["@mozilla.org/supports-PRUint32;1"].createInstance(
++        Ci.nsISupportsPRUint32
++      );
++      context.data = userContextId;
++      args[5] = context;
++    }
+     let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+     args.forEach(a => {
+       array.appendElement(a);
+diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserDOMWindow.sys.mjs
+index 21bd771..b742f84 100644
+--- a/browser/modules/BrowserDOMWindow.sys.mjs
++++ b/browser/modules/BrowserDOMWindow.sys.mjs
+@@ -10,6 +10,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ let lazy = {};
+
+ ChromeUtils.defineESModuleGetters(lazy, {
++  getWorkspaceUserContextIdForExternalOpen:
++    "resource:///modules/BrowserContentHandler.sys.mjs",
+   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
+@@ -73,7 +75,7 @@ export class BrowserDOMWindow {
+    * @param {boolean} aIsPrivate
+    * @param {boolean} aIsExternal
+    * @param {boolean} [aForceNotRemote=false]
+-   * @param {number} [aUserContextId=0]
++   * @param {number|null} [aUserContextId=0] null means no external container guess.
+    * @param {nsIOpenWindowInfo} [aOpenWindowInfo=null]
+    * @param {Element} [aOpenerBrowser=null]
+    * @param {nsIPrincipal} [aTriggeringPrincipal=null]
+@@ -125,6 +127,13 @@ export class BrowserDOMWindow {
+       return win.gBrowser.selectedBrowser;
+     }
+
++    if (aIsExternal && aUserContextId === null) {
++      aUserContextId = lazy.getWorkspaceUserContextIdForExternalOpen(
++        win,
++        aIsPrivate
++      );
++    }
++
+     // OPEN_NEWTAB_BACKGROUND and OPEN_NEWTAB_FOREGROUND are used by
+     // `window.open` with modifiers.
+     // The last case is OPEN_NEWTAB, which is used by:
+@@ -253,10 +262,11 @@ export class BrowserDOMWindow {
+         "browser.link.force_default_user_context_id_for_external_opens",
+         false
+       );
+-    var openingUserContextId =
+-      (guessUserContextIdEnabled &&
+-        lazy.URILoadingHelper.guessUserContextId(aURI)) ||
+-      Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
++    // Keep a real guess of 0 distinct from no guess (null). Only the latter
++    // falls back to Floorp's workspace container in the final target window.
++    var openingUserContextId = guessUserContextIdEnabled
++      ? lazy.URILoadingHelper.guessUserContextId(aURI)
++      : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+
+     if (aOpenWindowInfo && isExternal) {
+       console.error(
+@@ -347,7 +357,10 @@ export class BrowserDOMWindow {
+             null,
+             null,
+             null,
+-            null,
++            isExternal && !isPrivate
++              ? openingUserContextId ??
++                lazy.getWorkspaceUserContextIdForExternalOpen(null)
++              : null,
+             null,
+             null,
+             aTriggeringPrincipal,

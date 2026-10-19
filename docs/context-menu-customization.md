@@ -8,7 +8,7 @@ Floorp Flasco with the `enabled` variant. When available, open
 a browser surface and context profile, then hide commands with their visibility
 switches or change their order.
 
-## Flasco visibility
+## Flasco availability
 
 The sidebar entry, settings search results, and direct settings route use the
 same participation check. Non-participants, disabled or inactive experiments,
@@ -16,10 +16,29 @@ control variants, and the **Never participate** policy hide the settings. A
 direct visit then returns to the Hub home page. Failed participation checks also
 keep the settings hidden.
 
-Changing participation updates the settings visibility. This is a display gate:
-saved menu customizations and their enabled preference are retained, and the
-browser continues applying an already enabled layout even when the settings are
-hidden.
+The same ready Flasco snapshot controls the editor and runtime in browser
+windows and secondary chrome documents. Outside the enabled participant group,
+the customizer does not initialize, register popup listeners, or build a
+catalog. Native menus remain available. Saved menu customizations and their
+enabled preference are retained; re-enrollment resumes an enabled saved layout.
+
+The **Always participate** policy and per-experiment force enrollment use the
+client's assigned variant; **Default** follows its rollout assignment; **Never
+participate** stops the customizer immediately. A policy change waits for the
+client to recalculate assignments. Pending or failed manifest retrieval keeps
+the customizer stopped even if an enabled assignment was cached. A successful
+refresh, disable/re-enable, removal, or expiry updates running windows. If the
+manifest was fetched before the experiment's start, reaching that boundary fills
+only its missing assignment using the existing participation and rollout rules;
+it does not refetch the manifest or reinitialize other experiments. Disabling
+`floorp.contextMenu.enabled` also releases the runtime without deleting the
+layout.
+
+Clearing the Flasco cache stops customization until a successful
+reinitialization. Re-enabling an experiment reevaluates its assignment under the
+current policy. The preexisting native screenshot/separator helper remains
+active outside Flasco; customization controllers, popup capture listeners, and
+catalogs stay gated.
 
 A reference manifest entry is provided in
 [`experiments.sample.json`](../browser-features/chrome/common/context-menu/experiments.sample.json).

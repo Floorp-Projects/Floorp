@@ -44,8 +44,8 @@ node tools/chrome-extension-runtime/compare-debugger.mjs --floorp /path/to/floor
 ```
 
 Both runs use the same frozen Chrome package and binary hashes. The second run
-checks focus/visibility emulation, real CSP-blocked and permitted inline scripts,
-and CSP restoration after debugger detach.
+checks focus/visibility emulation, real CSP-blocked and permitted inline
+scripts, and CSP restoration after debugger detach.
 
 `node tools/chrome-extension-runtime/probe-desktop-reference.mjs` freezes the
 Worker DesktopCapture initiation contract. Chrome 155 returns a synchronous
@@ -54,3 +54,25 @@ request without an immediate gesture and a request from an actual click can open
 the chooser. Programmatic cancellation suppresses the callback. The headless
 probe includes the tab source because screen/window sources are unavailable in
 this environment; it does not select a source or claim an acquired stream.
+
+The authored auxiliary API comparison is reproducible with:
+
+```sh
+node tools/chrome-extension-runtime/compare-auxiliary.mjs --floorp <binary>
+python3 tools/chrome-extension-runtime/run-browser-tests.py --browser <binary> \
+  --test browser-features/modules/modules/chrome-web-store/test/ChromeDeclarativeContentNative.test.mts
+python3 tools/chrome-extension-runtime/run-browser-tests.py --browser <compiled-binary> \
+  --test browser-features/modules/modules/chrome-web-store/test/ChromeAuxiliaryNative.test.mts
+```
+
+The comparison exercises storage authorization grant/revoke, notification
+create/update/readback/clear, native action settings/badges/popup, real
+declarative constructors and ImageData, rule storage, and actual content-script
+injection. The lifecycle suite additionally checks background suspension,
+extension reload, permission revocation/restoration, native action effects, and
+uninstall cleanup. The alert suite requires the compiled native notification
+patch and checks actual browser alert controls and event wake-up. An older
+artifact reports its missing native argument instead of silently accepting
+button support. Frozen auxiliary package references can be regenerated with
+`inventory-auxiliary.py` after the signed corpus has been downloaded; they are
+source evidence, not execution passes.

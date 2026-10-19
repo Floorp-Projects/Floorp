@@ -50,7 +50,7 @@ export function resolveWorkspaceOpenLinkUserContext(
       ? (potentialTargetBrowser as { userContextId: number }).userContextId
       : undefined;
 
-  const hasUserContextId = "userContextId" in baseInput;
+  const hasUserContextId = baseInput.userContextId !== undefined;
   const shouldApplyWorkspaceContainer = workspaceUserContextId > 0 &&
     !hasUserContextId &&
     targetBrowserUserContextId === undefined;

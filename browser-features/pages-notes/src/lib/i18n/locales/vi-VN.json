@@ -7,6 +7,7 @@
         "welcomeContent": "Chào mừng bạn đến với Ghi chú {{productName}}! Cùng lướt qua cách sử dụng nào.\n\nGhi chú {{productName}} là một tính năng ghi chú có thể được đồng bộ hóa trên nhiều thiết bị. Để bật tính năng đồng bộ hóa, bạn cần đăng nhập vào {{productName}} bằng tài khoản Mozilla.\nGhi chú {{productName}} được lưu trữ trong {{productName}} và được đồng bộ hóa trên nhiều thiết bị bằng Firefox Sync. Firefox Sync mã hóa nội dung đồng bộ bằng mật khẩu tài khoản Mozilla của bạn, do đó không ai có xem được nội dung.",
         "new": "Ghi chú mới",
         "reorder": "Sắp xếp",
+        "export": "Export as Markdown",
         "done": "Xong",
         "emptyTitle": "Chưa có tên",
         "emptyContent": "Chưa có nội dung",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Tải dữ liệu ghi chú thất bại",
         "saveFailed": "Lưu dữ liệu ghi chú thấy bị",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Vị trí {{index}} không hợp lệ"
     }
 }

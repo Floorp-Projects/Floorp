@@ -1,44 +1,50 @@
-/* Floorp chrome-extras: autohideSidebar
- * Ported from vendored Lepton (leptonChrome.css 26958-26967, 1 block(s)).
- *
- * The `@media (-moz-bool-pref: ...)` gate has been removed — whether this
- * sheet is injected is decided in JS (ui-custom/styles/style-manager.ts).
- * That also drops Floorp's dependency on the vendored file, which
- * update_lepton.yml re-syncs from upstream every day.
- *
- * Needs the `--uc-sidebar-*` tokens from scaffold.css. The isolated and
- *
- * combined layout rules are injected separately by chrome-extras.ts.
- */
-
-/* leptonChrome.css:26958-26967 */
-#sidebar-box {
+/* Keep the pre-existing standalone auto-hide setting for profiles that do not
+ * enable overlay. The native overlay controller owns the combined mode. */
+:root:not([floorp-firefox-sidebar-overlay]) #sidebar-box {
   min-width: var(--uc-sidebar-width) !important;
   max-width: var(--uc-sidebar-width) !important;
+  position: relative !important;
+  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
 }
-:root[inFullscreen="true"] #sidebar-box {
+:root:not([floorp-firefox-sidebar-overlay])[inFullscreen="true"] #sidebar-box {
   min-width: var(--uc-sidebar-activate-width) !important;
   max-width: var(--uc-sidebar-activate-width) !important;
 }
-
-/* leptonChrome.css:25178-25194 (shared by both sidebar toggles) */
-#sidebar-box {
-  --uc-sidebar-shadow-color: #28282f;
-  z-index: var(--browser-area-z-index-sidebar-splitter, 3) !important;
-  position: relative !important;
-  box-shadow: var(--uc-sidebar-shadow-position) 0px 15px -10px var(--uc-sidebar-shadow-color);
+:root:not([floorp-firefox-sidebar-overlay]) #sidebar-splitter {
+  display: none !important;
 }
-#sidebar-box:is([positionend], [sidebar-positionend]) {
-  --uc-sidebar-shadow-position: calc(-1 * var(--uc-sidebar-shadow-position-default));
-}
-#sidebar {
-  display: block;
-}
-#main-window > body > box {
-  z-index: 2 !important;
+/* Hover keeps the selected panel loaded and reveals it through a separate
+ * accessible edge control. Focus, menus, and resizing retain the open panel. */
+:root[floorp-firefox-sidebar-hover] #sidebar-box:not([data-floorp-sidebar-expanded]) {
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-/* leptonChrome.css:25174-25176 (shared with sidebar-overlap.css) */
-#sidebar-splitter {
+#floorp-firefox-sidebar-edge-toggle {
+  position: absolute;
+  left: var(--floorp-firefox-sidebar-trigger-left, 0px);
+  top: calc(var(--floorp-firefox-sidebar-top, 0px) + 30%);
+  width: 8px;
+  height: 72px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--toolbar-color, currentColor) 35%,
+    transparent);
+  color: var(--toolbar-color);
+  cursor: pointer;
+  z-index: 8;
+}
+#floorp-firefox-sidebar-edge-toggle:is(:hover, :focus-visible, [aria-pressed="true"]) {
+  background: var(--focus-outline-color);
+}
+#floorp-firefox-sidebar-edge-toggle:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: 2px;
+}
+#floorp-firefox-sidebar-edge-toggle[hidden],
+:root[inDOMFullscreen] #floorp-firefox-sidebar-edge-toggle,
+:root[inDOMFullscreen] #floorp-firefox-sidebar-overlay-resizer {
   display: none !important;
 }

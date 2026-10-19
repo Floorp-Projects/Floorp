@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
+import type {
+  FixtureTab,
+  FixtureWindow,
+} from "./helpers/debugger-auxiliary-types.ts";
 import { zipSync } from "fflate/browser";
 import {
   assert,
@@ -23,24 +27,6 @@ async function waitFor<T>(
   throw new Error(`Timed out waiting for ${description}`);
 }
 
-type FixtureTab = {
-  linkedBrowser: {
-    contentTitle: string;
-    currentURI: { spec: string };
-    browsingContext: Record<string, unknown>;
-  };
-};
-type FixtureWindow = {
-  wrappedJSObject: { __floorpRuntimeFixtureURL: string };
-  gBrowser: {
-    addTab(
-      url: string,
-      options: { triggeringPrincipal: nsIPrincipal },
-    ): FixtureTab;
-    selectedTab: FixtureTab;
-    removeTab(tab: FixtureTab): void;
-  };
-};
 async function testNativeDebugger(): Promise<void> {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",

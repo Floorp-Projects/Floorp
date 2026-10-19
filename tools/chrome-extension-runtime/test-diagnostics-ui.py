@@ -8,13 +8,25 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import plistlib
 import socket
 import subprocess
 import tempfile
-from urllib.parse import unquote, urlparse
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def browser_binary(path):
+    if path.is_file():
+        return path
+    if (path / "Contents/Info.plist").is_file():
+        with (path / "Contents/Info.plist").open("rb") as stream:
+            return path / "Contents/MacOS" / plistlib.load(stream)["CFBundleExecutable"]
+    for name in ("floorp", "floorp.exe", "firefox", "firefox.exe"):
+        if (path / name).is_file():
+            return path / name
+    raise ValueError(f"No browser executable found in {path}")
 
 
 def main():
@@ -74,9 +86,7 @@ def main():
              "extensions.htmlaboutaddons.recommendations.enabled": False,
              "extensions.getAddons.showPane": False}
     (profile / "user.js").write_text("\n".join(f"user_pref({json.dumps(k)}, {json.dumps(v)});" for k, v in prefs.items()) + "\n")
-    browser = args.browser.resolve()
-    if browser.is_dir():
-        browser = browser / "floorp"
+    browser = browser_binary(args.browser.resolve(strict=True))
     report = {"passed": False, "checks": []}
     client = host = None
 
@@ -99,27 +109,9 @@ def main():
 
             client = runtime.wait_for("Marionette", connect, 45)
             client.context("chrome")
-            resource_base = client.script("""
-                return Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
-                    .resolveURI(Services.io.newURI('resource://noraneko/'));
-            """)
-            if not resource_base.startswith("file:"):
-                raise RuntimeError("This UI fixture requires the unpacked Floorp resource tree")
-            original_resources = Path(unquote(urlparse(resource_base).path))
-            overlay = output / "noraneko-resources"
-
-            def mirror(source, target, parts):
-                target.mkdir(parents=True)
-                for child in source.iterdir():
-                    destination = target / child.name
-                    if child.name == parts[0]:
-                        if len(parts) > 1:
-                            mirror(child, destination, parts[1:])
-                    else:
-                        destination.symlink_to(child.resolve(), target_is_directory=child.is_dir())
-
-            mirror(original_resources, overlay, ["modules", "chrome-web-store", "ChromeExtensionUpdater.sys.mjs"])
-            (overlay / "modules/chrome-web-store/ChromeExtensionUpdater.sys.mjs").write_text(r"""
+            stubs = output / "diagnostics-fixture-modules"
+            stubs.mkdir()
+            (stubs / "Updater.sys.mjs").write_text(r"""
 export const ChromeExtensionUpdater = {
     fixture: true, scenario: 'available', calls: [],
     async checkForUpdate(addonId, options={}) {
@@ -136,8 +128,7 @@ export const ChromeExtensionUpdater = {
     }
 };
 """)
-            scheduler_path=overlay / "modules/chrome-web-store/ChromeExtensionUpdateScheduler.sys.mjs"
-            scheduler_path.unlink(missing_ok=True)
+            scheduler_path=stubs / "Scheduler.sys.mjs"
             scheduler_path.write_text(r"""
 export const ChromeExtensionUpdateScheduler={
     fixture:true,enabled:false,policyAllowed:true,state:'idle',eligibility:'verified',calls:[],refuse:false,
@@ -156,10 +147,10 @@ export const ChromeExtensionUpdateScheduler={
             client.script("""
                 const file=Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);file.initWithPath(arguments[0]);
                 Services.io.getProtocolHandler('resource').QueryInterface(Ci.nsIResProtocolHandler)
-                    .setSubstitution('noraneko',Services.io.newFileURI(file));
-                const {ChromeExtensionUpdater}=ChromeUtils.importESModule('resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdater.sys.mjs');
+                    .setSubstitution('floorp-diagnostics-fixture',Services.io.newFileURI(file));
+                const {ChromeExtensionUpdater}=ChromeUtils.importESModule('resource://floorp-diagnostics-fixture/Updater.sys.mjs');
                 if (!ChromeExtensionUpdater.fixture) throw new Error('Updater fixture was not loaded');
-            """, str(overlay))
+            """, str(stubs))
             client.script("""
                 window.__diagnosticInstalls={done:false};
                 const {AddonManager}=ChromeUtils.importESModule('resource://gre/modules/AddonManager.sys.mjs');
@@ -184,6 +175,16 @@ export const ChromeExtensionUpdateScheduler={
             initial_instance = runtime.wait_for("background", background_instance, 15)
             client.navigate("about:addons")
             runtime.wait_for("about:addons initialized", lambda: client.script("return !!window.wrappedJSObject.gViewController;"), 20)
+            runtime.wait_for("packaged diagnostics component", lambda: client.script("return !!window.wrappedJSObject.customElements.get('floorp-chrome-extension-diagnostics');"), 20)
+            client.script("""
+                const prototype=window.wrappedJSObject.customElements.get('floorp-chrome-extension-diagnostics').prototype;
+                prototype.getUpdateService=function(){
+                    return ChromeUtils.importESModule('resource://floorp-diagnostics-fixture/Updater.sys.mjs').ChromeExtensionUpdater;
+                };
+                prototype.getUpdateScheduler=function(){
+                    return ChromeUtils.importESModule('resource://floorp-diagnostics-fixture/Scheduler.sys.mjs').ChromeExtensionUpdateScheduler;
+                };
+            """)
 
             def details(extension_id):
                 client.script("""
@@ -202,7 +203,7 @@ export const ChromeExtensionUpdateScheduler={
                 return {url:location.href,title:document.title,hidden:element.hidden,text:element.textContent,diagnostics:element.diagnostics};
             """)
             check(state["url"].startswith("about:addons") and bool(state["title"]), "Page identity is about:addons with a title")
-            check(not state["hidden"] and chrome_id in state["text"] and "2.4.1" in state["text"], "Chrome provenance and source version render in the existing details card")
+            check(not state["hidden"] and chrome_id in state["text"] and "2.4.1" in state["text"], "Recorded Chrome ID and source version render in the existing details card")
             check(warning in state["text"] and "tabCapture" in state["text"], "Recorded conversion warnings and removed permissions render")
             check(any(context["contextType"] == "BACKGROUND" for context in state["diagnostics"]["contexts"]), "Running contexts come from the actual extension runtime")
             client.script("document.querySelector('.floorp-chrome-diagnostics-contexts').open=true;")
@@ -216,7 +217,7 @@ export const ChromeExtensionUpdateScheduler={
             def scheduler_state(**changes):
                 client.context("chrome")
                 result=client.script("""
-                    const {ChromeExtensionUpdateScheduler:scheduler}=ChromeUtils.importESModule('resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdateScheduler.sys.mjs');
+                    const {ChromeExtensionUpdateScheduler:scheduler}=ChromeUtils.importESModule('resource://floorp-diagnostics-fixture/Scheduler.sys.mjs');
                     Object.assign(scheduler,arguments[0]);
                     Services.obs.notifyObservers(null,'floorp-chrome-extension-update-status-changed',arguments[1]);
                     return scheduler.calls;
@@ -253,11 +254,11 @@ export const ChromeExtensionUpdateScheduler={
             click("export")
             check(export_path.is_file(), "Save diagnostics button writes a JSON file after choosing the destination")
             exported = json.loads(export_path.read_text())
-            check(exported["extension"]["chromeId"] == chrome_id and exported["conversion"]["warnings"] == [warning], "Saved diagnostics contain real provenance and conversion results")
+            check(exported["extension"]["chromeId"] == chrome_id and exported["conversion"]["warnings"] == [warning], "Saved diagnostics contain recorded identity and conversion results")
             def update_service(scenario=None):
                 client.context("chrome")
                 value = client.script("""
-                    const {ChromeExtensionUpdater}=ChromeUtils.importESModule('resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdater.sys.mjs');
+                    const {ChromeExtensionUpdater}=ChromeUtils.importESModule('resource://floorp-diagnostics-fixture/Updater.sys.mjs');
                     if (arguments[0]) ChromeExtensionUpdater.scenario=arguments[0];
                     return ChromeExtensionUpdater.calls;
                 """, scenario)

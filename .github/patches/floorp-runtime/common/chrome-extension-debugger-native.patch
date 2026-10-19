@@ -1,5 +1,5 @@
 diff --git a/docshell/base/BrowsingContext.cpp b/docshell/base/BrowsingContext.cpp
-index fc3768fa48b374f856c0a75166bf3ec728b25bb4..df7b11105078ddda51dffd74d352e35076204fed 100644
+index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d044516f7b9 100644
 --- a/docshell/base/BrowsingContext.cpp
 +++ b/docshell/base/BrowsingContext.cpp
 @@ -28,6 +28,8 @@
@@ -11,12 +11,18 @@ index fc3768fa48b374f856c0a75166bf3ec728b25bb4..df7b11105078ddda51dffd74d352e350
  #include "mozilla/dom/DocumentPictureInPicture.h"
  #include "mozilla/dom/Element.h"
  #include "mozilla/dom/HTMLEmbedElement.h"
-@@ -4345,6 +4347,50 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
+@@ -4345,6 +4347,56 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
    return true;
  }
  
-+bool BrowsingContext::ChromeDebuggerOverridesAllowed(nsIURI* aURI) const {
-+  if (!aURI || !NS_IsMainThread()) return false;
++bool BrowsingContext::ChromeDebuggerOverridesAllowed(
++    nsIURI* aURI, nsIPrincipal* aPrincipal) const {
++  if (!aURI || !aPrincipal || !NS_IsMainThread()) return false;
++  if (aPrincipal->GetIsAddonOrExpandedAddonPrincipal() ||
++      (!aPrincipal->GetIsContentPrincipal() &&
++       !aPrincipal->GetIsNullPrincipal())) {
++    return false;
++  }
 +  const auto* top = Top();
 +  if (top->GetChromeDebuggerOwner().IsEmpty()) return false;
 +  const auto* policy = ExtensionPolicyService::GetSingleton().GetByID(
@@ -63,7 +69,7 @@ index fc3768fa48b374f856c0a75166bf3ec728b25bb4..df7b11105078ddda51dffd74d352e350
                               ContentParent* aSource) {
    return XRE_IsParentProcess() && !aSource;
 diff --git a/docshell/base/BrowsingContext.h b/docshell/base/BrowsingContext.h
-index e910da61612ded9b45d85baa00dfe34e4fec9332..687b4a0d0c74b34debb877cfc6872bb87fde895c 100644
+index e910da61612ded9b45d85baa00dfe34e4fec9332..bf12c5a2a05401f1f352368340563c36700140b4 100644
 --- a/docshell/base/BrowsingContext.h
 +++ b/docshell/base/BrowsingContext.h
 @@ -111,6 +111,9 @@ struct EmbedderColorSchemes {
@@ -76,7 +82,7 @@ index e910da61612ded9b45d85baa00dfe34e4fec9332..687b4a0d0c74b34debb877cfc6872bb8
    FIELD(Name, nsString)                                                       \
    FIELD(Closed, bool)                                                         \
    FIELD(ExplicitActive, ExplicitActiveStatus)                                 \
-@@ -683,6 +686,17 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+@@ -683,6 +686,18 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
    bool IsActive() const;
    bool ForceOffline() const { return GetForceOffline(); }
  
@@ -89,12 +95,13 @@ index e910da61612ded9b45d85baa00dfe34e4fec9332..687b4a0d0c74b34debb877cfc6872bb8
 +    return GetChromeDebuggerFocusEmulation();
 +  }
 +  bool ChromeDebuggerBypassCSP() const { return GetChromeDebuggerBypassCSP(); }
-+  bool ChromeDebuggerOverridesAllowed(nsIURI* aURI) const;
++  bool ChromeDebuggerOverridesAllowed(nsIURI* aURI,
++                                      nsIPrincipal* aPrincipal) const;
 +
    nsILoadInfo::IPAddressSpace GetCurrentIPAddressSpace() const {
      return GetIPAddressSpace();
    }
-@@ -1579,6 +1593,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+@@ -1579,6 +1594,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
    bool CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
                ContentParent* aSource);
  
@@ -110,7 +117,7 @@ index e910da61612ded9b45d85baa00dfe34e4fec9332..687b4a0d0c74b34debb877cfc6872bb8
                ContentParent*) {
      return IsTop();
 diff --git a/dom/base/Document.cpp b/dom/base/Document.cpp
-index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..1055153bd86c5ea6b0565483c829cfc506842e4e 100644
+index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..d40d1f988260279df5aeabbac7b6c12898c183cf 100644
 --- a/dom/base/Document.cpp
 +++ b/dom/base/Document.cpp
 @@ -4930,6 +4930,11 @@ bool Document::HasFocus(ErrorResult& rv) const {
@@ -118,7 +125,7 @@ index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..1055153bd86c5ea6b0565483c829cfc5
    }
  
 +  if (bc->Top()->GetChromeDebuggerFocusEmulation() &&
-+      bc->ChromeDebuggerOverridesAllowed(GetDocumentURI())) {
++      bc->ChromeDebuggerOverridesAllowed(GetDocumentURI(), NodePrincipal())) {
 +    return true;
 +  }
 +
@@ -136,7 +143,7 @@ index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..1055153bd86c5ea6b0565483c829cfc5
 +  }
 +  if (auto* context = GetBrowsingContext();
 +      context && context->Top()->GetChromeDebuggerFocusEmulation() &&
-+      context->ChromeDebuggerOverridesAllowed(GetDocumentURI())) {
++      context->ChromeDebuggerOverridesAllowed(GetDocumentURI(), NodePrincipal())) {
 +    return dom::VisibilityState::Visible;
 +  }
 +  if (mWindow->GetOuterWindow()->IsBackground()) {
@@ -160,7 +167,7 @@ index 7b3dca8a55d75a51bc1bf5c2d4d82e226a863236..0ea61368165760947357d217644aff87
     * Sets whether this is an app tab. Non-same-origin link navigations from app
     * tabs may be forced to open in new contexts, rather than in the same context.
 diff --git a/dom/security/nsCSPContext.cpp b/dom/security/nsCSPContext.cpp
-index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad60d91132d 100644
+index c04aabf72a2d0a475393babbd80b97c49933b947..c7c66c56e7a9190b2db1afdcb4c7edb370850e63 100644
 --- a/dom/security/nsCSPContext.cpp
 +++ b/dom/security/nsCSPContext.cpp
 @@ -16,6 +16,7 @@
@@ -171,7 +178,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
  #include "mozilla/dom/Element.h"
  #include "mozilla/dom/LinkStyle.h"
  #include "mozilla/dom/ReportingUtils.h"
-@@ -136,6 +137,16 @@ static void BlockedContentSourceToString(
+@@ -136,6 +137,18 @@ static void BlockedContentSourceToString(
    }
  }
  
@@ -182,13 +189,15 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
 +      document ? document->GetBrowsingContext() : nullptr;
 +  if (!context && aLoadInfo) context = aLoadInfo->GetBrowsingContext();
 +  return context && context->Top()->GetChromeDebuggerBypassCSP() &&
-+         context->ChromeDebuggerOverridesAllowed(mSelfURI);
++         context->ChromeDebuggerOverridesAllowed(
++             mSelfURI,
++             document ? document->NodePrincipal() : mLoadingPrincipal.get());
 +}
 +
  /* =====  nsIContentSecurityPolicy impl ====== */
  
  NS_IMETHODIMP
-@@ -195,6 +206,7 @@ bool nsCSPContext::permitsInternal(
+@@ -195,6 +208,7 @@ bool nsCSPContext::permitsInternal(
      nsICSPEventListener* aCSPEventListener, nsILoadInfo* aLoadInfo,
      nsIURI* aContentLocation, nsIURI* aOriginalURIIfRedirect, bool aSpecific,
      bool aSendViolationReports, bool aSendContentLocationInViolationReports) {
@@ -196,7 +205,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
    EnsureIPCPoliciesRead();
    bool permits = true;
  
-@@ -384,6 +396,7 @@ NS_IMETHODIMP
+@@ -384,6 +398,7 @@ NS_IMETHODIMP
  nsCSPContext::GetUpgradeInsecureRequests(bool* outUpgradeRequest) {
    EnsureIPCPoliciesRead();
    *outUpgradeRequest = false;
@@ -204,7 +213,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
    for (uint32_t i = 0; i < mPolicies.Length(); i++) {
      if (mPolicies[i]->hasDirective(
              nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE) &&
-@@ -399,6 +412,7 @@ NS_IMETHODIMP
+@@ -399,6 +414,7 @@ NS_IMETHODIMP
  nsCSPContext::GetBlockAllMixedContent(bool* outBlockAllMixedContent) {
    EnsureIPCPoliciesRead();
    *outBlockAllMixedContent = false;
@@ -212,7 +221,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
    for (uint32_t i = 0; i < mPolicies.Length(); i++) {
      if (!mPolicies[i]->getReportOnlyFlag() &&
          mPolicies[i]->hasDirective(
-@@ -492,8 +506,9 @@ NS_IMETHODIMP
+@@ -492,8 +508,9 @@ NS_IMETHODIMP
  nsCSPContext::GetRequireTrustedTypesForDirectiveState(
      RequireTrustedTypesForDirectiveState*
          aRequireTrustedTypesForDirectiveState) {
@@ -224,7 +233,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
    return NS_OK;
  }
  
-@@ -503,6 +518,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
+@@ -503,6 +520,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
    EnsureIPCPoliciesRead();
    *outShouldReportViolation = false;
    *outAllowsEval = true;
@@ -232,7 +241,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
  
    if (CSP_IsBrowserXHTML(mSelfURI)) {
      // Allow eval in browser.xhtml, just like
-@@ -539,6 +555,7 @@ nsCSPContext::GetAllowsWasmEval(bool* outShouldReportViolation,
+@@ -539,6 +557,7 @@ nsCSPContext::GetAllowsWasmEval(bool* outShouldReportViolation,
    EnsureIPCPoliciesRead();
    *outShouldReportViolation = false;
    *outAllowsWasmEval = true;
@@ -240,7 +249,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
  
    for (uint32_t i = 0; i < mPolicies.Length(); i++) {
      // Either 'unsafe-eval' or 'wasm-unsafe-eval' can allow this
-@@ -639,6 +656,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
+@@ -639,6 +658,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
                                uint32_t aLineNumber, uint32_t aColumnNumber,
                                bool* outAllowsInline) {
    *outAllowsInline = true;
@@ -248,7 +257,7 @@ index c04aabf72a2d0a475393babbd80b97c49933b947..f1325b233cc8f676e766d90bf1793ad6
  
    if (aDirective != SCRIPT_SRC_ELEM_DIRECTIVE &&
        aDirective != SCRIPT_SRC_ATTR_DIRECTIVE &&
-@@ -2045,6 +2063,7 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
+@@ -2045,6 +2065,7 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
      return NS_ERROR_FAILURE;
    }
    *aOutSandboxFlags = SANDBOXED_NONE;

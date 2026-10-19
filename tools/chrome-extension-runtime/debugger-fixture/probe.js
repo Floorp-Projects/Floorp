@@ -156,6 +156,21 @@
       (await command("Page.getLayoutMetrics")).cssLayoutViewport.clientWidth >
         0,
     );
+    await chrome.tabs.setZoom(tab.id, 1.25);
+    await delay(100);
+    report.zoomMetrics = await command("Page.getLayoutMetrics");
+    check(
+      "nativePageZoomMetrics",
+      report.zoomMetrics.cssVisualViewport.zoom === 1.25,
+    );
+    check(
+      "nativeLegacyZoomMetrics",
+      Math.abs(
+        report.zoomMetrics.layoutViewport.clientWidth -
+          report.zoomMetrics.cssLayoutViewport.clientWidth * 1.25,
+      ) < 1,
+    );
+    await chrome.tabs.setZoom(tab.id, 1);
     await command("Runtime.releaseObject", { objectId: object.objectId });
     let released = false;
     try {

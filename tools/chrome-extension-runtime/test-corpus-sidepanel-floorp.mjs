@@ -79,7 +79,7 @@ export async function runAllTests() {
         "resource://floorp-sidepanel-corpus/CorpusSidePanelChild.sys.mjs",
     },
     allFrames: false,
-    remoteTypes:["web","extension","webIsolated=http://floorp.test"],
+    safeForUntrustedWebProcess: true,
   });
   const window = Services.wm.getMostRecentWindow("navigator:browser");
   const converter = new CRXConverterClass();

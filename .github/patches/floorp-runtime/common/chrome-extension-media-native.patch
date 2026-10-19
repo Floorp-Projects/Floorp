@@ -1,7 +1,7 @@
 diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
 --- a/dom/media/MediaManager.cpp
 +++ b/dom/media/MediaManager.cpp
-@@ -1758,10 +1758,8 @@
+@@ -1794,10 +1794,8 @@
        // really using the audio source and the SourceMediaTrack, which acts
        // as placeholders. We re-route a number of tracks internally in the
        // MTG and mix them down instead.
@@ -14,7 +14,7 @@ diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
        auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
            principal, window, u"Window audio capture"_ns,
            mtg->CreateAudioCaptureTrack(), peerIdentity);
-@@ -2965,8 +2963,17 @@
+@@ -3001,8 +2999,17 @@
    }
  
    // Disallow access to null principal pages and http pages (unless pref)
@@ -34,7 +34,7 @@ diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
      return StreamPromise::CreateAndReject(
          MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
          __func__);
-@@ -3113,7 +3120,8 @@
+@@ -3149,7 +3156,8 @@
        case MediaSourceEnum::AudioCapture:
          // Only enable AudioCapture if the pref is enabled. If it's not, we can
          // deny right away.
@@ -44,19 +44,17 @@ diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
            return StreamPromise::CreateAndReject(
                MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
                __func__);
-@@ -3151,8 +3159,9 @@
-             !FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)) {
+@@ -3187,7 +3195,8 @@
+             !PermissionsPolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)) {
            disabled = true;
          }
--      } else if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
--                                                       u"display-capture"_ns)) {
+-      } else if (!PermissionsPolicyUtils::IsFeatureAllowed(
 +      } else if (!isSystemAudioCapture &&
-+                 !FeaturePolicyUtils::IsFeatureAllowed(doc,
-+                                                        u"display-capture"_ns)) {
++                 !PermissionsPolicyUtils::IsFeatureAllowed(
+                      doc, u"display-capture"_ns)) {
          disabled = true;
        }
-     }
-@@ -3197,6 +3206,7 @@
+@@ -3233,6 +3242,7 @@
        (!hasAudio || audioType == MediaSourceEnum::Microphone);
    bool askPermission =
        (!privileged ||
@@ -64,7 +62,7 @@ diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
         Preferences::GetBool("media.navigator.permission.force")) &&
        (!hasOnlyForcedFakes ||
         Preferences::GetBool("media.navigator.permission.fake"));
-@@ -4245,7 +4255,9 @@
+@@ -4281,7 +4291,9 @@
        microphone = listener->CapturingSource(MediaSourceEnum::Microphone);
        screen = listener->CapturingSource(MediaSourceEnum::Screen);
        window = listener->CapturingSource(MediaSourceEnum::Window);

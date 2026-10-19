@@ -539,10 +539,10 @@ index 615cb0b6feec500ec741b65adc125a81f2b1fa50..d3b6a5cb1b8708c7dfdfa6c1f2185123
        },
 diff --git a/toolkit/components/extensions/ChromeDebugger.sys.mjs b/toolkit/components/extensions/ChromeDebugger.sys.mjs
 new file mode 100644
-index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1adbb65c7
+index 0000000000000000000000000000000000000000..8d56910c741b67caab81e71bdee4e4d3c4d39961
 --- /dev/null
 +++ b/toolkit/components/extensions/ChromeDebugger.sys.mjs
-@@ -0,0 +1,1482 @@
+@@ -0,0 +1,1532 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -689,7 +689,24 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +  get browser() {
 +    return this.tab.linkedBrowser;
 +  }
-+  permitted(url) {
++  permitted(url, target = null) {
++    let principal;
++    try {
++      const context = target
++        ? BrowsingContext.get(target.browsingContextID)
++        : this.browser.browsingContext;
++      principal = context?.currentWindowGlobal?.documentPrincipal;
++    } catch {
++      return false;
++    }
++    // about:blank inherits its opener's security principal. URL checks alone
++    // must not grant access to another add-on or to a privileged document.
++    if (
++      !principal || principal.isAddonOrExpandedAddonPrincipal ||
++      !(principal.isContentPrincipal || principal.isNullPrincipal)
++    ) {
++      return false;
++    }
 +    let uri;
 +    try {
 +      uri = Services.io.newURI(url);
@@ -821,7 +838,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +    return id;
 +  }
 +  async onTargetAvailable({ targetFront }) {
-+    if (this.closed || !this.permitted(targetFront.url)) return;
++    if (this.closed || !this.permitted(targetFront.url, targetFront)) return;
 +    this.applyOverrides();
 +    const id = this.context(targetFront);
 +    if (this.enabled.has("Runtime")) this.emitContext(targetFront, id);
@@ -886,6 +903,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +        if (
 +          !this.permitted(
 +            resource.url || resource.newURI || resource.targetFront.url,
++            resource.targetFront,
 +          )
 +        ) {
 +          if (resource.targetFront.isTopLevel) {
@@ -926,7 +944,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +      } else if (
 +        resource.resourceType === R.NETWORK_EVENT &&
 +        this.enabled.has("Network") &&
-+        this.permitted(resource.url)
++        this.permitted(resource.url, resource.targetFront)
 +      ) {
 +        this.requests.set(String(resource.resourceId), resource);
 +        this.emit("Network.requestWillBeSent", {
@@ -1080,7 +1098,9 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +        throw new ExtensionError("Unknown or destroyed execution context");
 +      }
 +    } else target = this.commands.targetCommand.targetFront;
-+    if (!target || target.isDestroyed() || !this.permitted(target.url)) {
++    if (
++      !target || target.isDestroyed() || !this.permitted(target.url, target)
++    ) {
 +      throw new ExtensionError("Target is no longer available");
 +    }
 +    return target;
@@ -1219,7 +1239,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +    if (!object || object.front.isDestroyed()) {
 +      throw new ExtensionError("Unknown or released remote object");
 +    }
-+    if (!this.permitted(object.targetFront.url)) {
++    if (!this.permitted(object.targetFront.url, object.targetFront)) {
 +      throw new ExtensionError("Remote object belongs to a restricted target");
 +    }
 +    return object;
@@ -1231,14 +1251,17 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +  }
 +  node(id) {
 +    const node = this.nodes.get(id);
-+    if (!node || node.isDestroyed() || !this.permitted(node.targetFront.url)) {
++    if (
++      !node || node.isDestroyed() ||
++      !this.permitted(node.targetFront.url, node.targetFront)
++    ) {
 +      throw new ExtensionError("Unknown or stale DOM node");
 +    }
 +    return node;
 +  }
 +  nodeId(front) {
 +    if (!front) return 0;
-+    if (!this.permitted(front.targetFront.url)) {
++    if (!this.permitted(front.targetFront.url, front.targetFront)) {
 +      throw new ExtensionError("Restricted frame DOM is unavailable");
 +    }
 +    if (!this.nodeIds.has(front)) this.nodeIds.set(front, this.nextNode++);
@@ -1768,7 +1791,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +      options(params, []);
 +      const frames = this.commands.targetCommand
 +        .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
-+        .filter((frame) => this.permitted(frame.url));
++        .filter((frame) => this.permitted(frame.url, frame));
 +      return {
 +        frameTree: {
 +          frame: await this.frame(target),
@@ -1789,13 +1812,40 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +    if (command === "getLayoutMetrics") {
 +      options(params, []);
 +      const result = await this.evaluate(
-+        `({layoutViewport:{pageX:scrollX,pageY:scrollY,clientWidth:innerWidth,clientHeight:innerHeight},visualViewport:{offsetX:visualViewport.offsetLeft,offsetY:visualViewport.offsetTop,pageX:visualViewport.pageLeft,pageY:visualViewport.pageTop,clientWidth:visualViewport.width,clientHeight:visualViewport.height,scale:visualViewport.scale,zoom:1},contentSize:{x:0,y:0,width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}})`,
++        `({layoutViewport:{pageX:scrollX,pageY:scrollY,clientWidth:innerWidth,clientHeight:innerHeight},visualViewport:{offsetX:visualViewport.offsetLeft,offsetY:visualViewport.offsetTop,pageX:visualViewport.pageLeft,pageY:visualViewport.pageTop,clientWidth:visualViewport.width,clientHeight:visualViewport.height,scale:visualViewport.scale},contentSize:{x:0,y:0,width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}})`,
 +        target,
 +        { returnByValue: true },
 +      );
++      this.check();
++      const zoom = this.browser.fullZoom;
++      if (!Number.isFinite(zoom) || zoom <= 0) {
++        throw new ExtensionError("Native page zoom is unavailable");
++      }
 +      const value = result.result.value;
++      value.visualViewport.zoom = zoom;
++      const legacy = (rect, dimensions) =>
++        Object.fromEntries(
++          Object.entries(rect).map((
++            [key, number],
++          ) => [
++            key,
++            key === "scale" || key === "zoom"
++              ? number
++              : dimensions.includes(key)
++              ? Math.round(number * zoom)
++              : number * zoom,
++          ]),
++        );
 +      return {
-+        ...value,
++        layoutViewport: legacy(value.layoutViewport, [
++          "clientWidth",
++          "clientHeight",
++        ]),
++        visualViewport: legacy(value.visualViewport, [
++          "clientWidth",
++          "clientHeight",
++        ]),
++        contentSize: legacy(value.contentSize, ["width", "height"]),
 +        cssLayoutViewport: value.layoutViewport,
 +        cssVisualViewport: value.visualViewport,
 +        cssContentSize: value.contentSize,
@@ -1924,7 +1974,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +      return {
 +        targetInfos: this.commands.targetCommand
 +          .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
-+          .filter((frame) => this.permitted(frame.url))
++          .filter((frame) => this.permitted(frame.url, frame))
 +          .map((frame) => this.targetInfo(frame)),
 +      };
 +    }
@@ -1935,7 +1985,7 @@ index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1
 +          .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
 +          .find((item) => this.frameId(item) === params.targetId)
 +        : target;
-+      if (!frame || !this.permitted(frame.url)) {
++      if (!frame || !this.permitted(frame.url, frame)) {
 +        throw new ExtensionError("Unknown target");
 +      }
 +      return { targetInfo: this.targetInfo(frame) };

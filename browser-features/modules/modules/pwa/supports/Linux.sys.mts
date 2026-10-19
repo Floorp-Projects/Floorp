@@ -1,6 +1,11 @@
 import type { Manifest } from "../type.ts";
 import { getSsbDisplayName } from "../containerDisplay.sys.mts";
-import { sanitizeDesktopEntryValue } from "#libs/pwa/desktopEntry.ts";
+import {
+  buildDesktopExecCommand,
+  isOwnedLinuxDesktopEntry,
+  resolveLinuxDataHome,
+  sanitizeDesktopEntryValue,
+} from "#libs/pwa/desktopEntry.ts";
 
 const { ImageTools } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/ImageTools.sys.mjs",
@@ -8,7 +13,6 @@ const { ImageTools } = ChromeUtils.importESModule(
 const { TaskbarExperiment } = ChromeUtils.importESModule(
   "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
 );
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -41,6 +45,7 @@ type LinuxPathInfo = {
   desktopPath: string;
   iconDir: string;
   iconPath: string;
+  svgIconPath: string;
   startupWMClass: string;
 };
 
@@ -65,6 +70,15 @@ export class LinuxSupport {
 
   private static linuxTaskbarInstance?: nsIFloorpLinuxTaskbar | null;
   private static cachedHomeDir: string | null = null;
+  private static mutationQueue: Promise<void> = Promise.resolve();
+
+  /** Serialize launcher and store changes across actors and browser windows. */
+  static withMutation<T>(operation: () => Promise<T>): Promise<T> {
+    const result = this.mutationQueue.then(operation);
+    // A failed operation must not prevent subsequent mutations from running.
+    this.mutationQueue = result.then(() => {}, () => {});
+    return result;
+  }
 
   private static get linuxTaskbar(): nsIFloorpLinuxTaskbar | null {
     if (this.linuxTaskbarInstance !== undefined) {
@@ -138,25 +152,27 @@ export class LinuxSupport {
     return fallbackId;
   }
 
-  private static getPathInfo(ssb: Manifest): LinuxPathInfo {
+  private static getPathInfo(
+    ssb: Manifest,
+    dataHome = resolveLinuxDataHome(
+      this.homeDir,
+      Services.env.get("XDG_DATA_HOME"),
+    ),
+  ): LinuxPathInfo {
     const slug = this.getNormalizedId(ssb);
     const desktopBasename = `floorp-${slug}`;
-
     const iconDir = PathUtils.join(
-      this.homeDir,
-      ".local",
-      "share",
+      dataHome,
       "icons",
       "hicolor",
       "512x512",
       "apps",
     );
     const iconPath = PathUtils.join(iconDir, `${desktopBasename}.png`);
+    const svgIconPath = PathUtils.join(iconDir, `${desktopBasename}.svg`);
 
     const desktopDir = PathUtils.join(
-      this.homeDir,
-      ".local",
-      "share",
+      dataHome,
       "applications",
     );
     const desktopPath = PathUtils.join(
@@ -170,6 +186,7 @@ export class LinuxSupport {
       desktopPath,
       iconDir,
       iconPath,
+      svgIconPath,
       startupWMClass: desktopBasename,
     };
     console.debug(`[LinuxSupport] Path info for ${ssb.name}:`, pathInfo);
@@ -191,15 +208,7 @@ export class LinuxSupport {
     console.debug("[LinuxSupport] Directories ensured");
   }
 
-  private static escapeExecToken(token: string): string {
-    if (/^[\w@%+=:,./-]+$/.test(token)) {
-      return token;
-    }
-
-    return `"${token.replace(/(["\\$`])/g, "\\$1")}"`;
-  }
-
-  private static buildExecCommand(ssb: Manifest): string {
+  private static buildExecCommand(ssb: Manifest, legacy = false): string {
     const tokens: string[] = [];
 
     const isFlatpak = FileUtils.File("/.flatpak-info").exists();
@@ -223,13 +232,58 @@ export class LinuxSupport {
       "--profile",
       PathUtils.profileDir,
       "--start-ssb",
-      sanitizeDesktopEntryValue(ssb.id),
+      legacy ? sanitizeDesktopEntryValue(ssb.id) : ssb.id,
     );
-    const execCommand = tokens
-      .map((token) => this.escapeExecToken(token))
-      .join(" ");
+    // Reproduce the old encoder only to identify files we may migrate. Never
+    // write its result to a new launcher.
+    const encodeLegacyToken = (token: string) =>
+      /^[\w@%+=:,./-]+$/.test(token)
+        ? token
+        : `"${token.replace(/(["\\$`])/g, "\\$1")}"`;
+    const execCommand = legacy
+      ? tokens.map(encodeLegacyToken).join(" ")
+      : buildDesktopExecCommand(tokens);
     console.debug(`[LinuxSupport] Built exec command: ${execCommand}`);
     return execCommand;
+  }
+
+  private static async removeLegacyLauncher(ssb: Manifest): Promise<void> {
+    const paths = this.getPathInfo(ssb);
+    const legacy = this.getPathInfo(
+      ssb,
+      resolveLinuxDataHome(this.homeDir, ""),
+    );
+    if (legacy.desktopPath === paths.desktopPath) return;
+    if (!await IOUtils.exists(legacy.desktopPath)) return;
+    const contents = await IOUtils.readUTF8(legacy.desktopPath);
+    if (
+      !isOwnedLinuxDesktopEntry(contents, ssb.id, [
+        this.buildExecCommand(ssb),
+        this.buildExecCommand(ssb, true),
+      ])
+    ) {
+      // A matching filename alone is not enough: another profile may own it.
+      return;
+    }
+    await IOUtils.remove(legacy.desktopPath, { ignoreAbsent: true });
+    await IOUtils.remove(legacy.iconPath, { ignoreAbsent: true });
+    await IOUtils.remove(legacy.svgIconPath, { ignoreAbsent: true });
+  }
+
+  private static async requireOwnedLauncher(
+    ssb: Manifest,
+    paths: LinuxPathInfo,
+  ): Promise<void> {
+    if (!await IOUtils.exists(paths.desktopPath)) return;
+    if (
+      !isOwnedLinuxDesktopEntry(
+        await IOUtils.readUTF8(paths.desktopPath),
+        ssb.id,
+        [this.buildExecCommand(ssb), this.buildExecCommand(ssb, true)],
+      )
+    ) {
+      throw new Error("Cannot verify ownership of existing PWA launcher");
+    }
   }
 
   private static buildDesktopEntry(
@@ -246,7 +300,7 @@ export class LinuxSupport {
       `Name=${sanitizeDesktopEntryValue(displayName)}`,
       `Comment=${sanitizeDesktopEntryValue(ssb.short_name ?? displayName)}`,
       `Exec=${execCommand}`,
-      `Icon=${iconPath ?? "floorp"}`,
+      `Icon=${sanitizeDesktopEntryValue(iconPath ?? "floorp")}`,
       "Terminal=false",
       "Categories=Network;WebBrowser;",
       "StartupNotify=true",
@@ -273,48 +327,78 @@ export class LinuxSupport {
     }
   }
 
-  async install(ssb: Manifest) {
+  async install(ssb: Manifest, strictIcon = false) {
     console.debug(`[LinuxSupport] Installing SSB: ${ssb.name} (id: ${ssb.id})`);
     const paths = LinuxSupport.getPathInfo(ssb);
+    // Validate Exec arguments before touching an existing launcher or icon.
+    const execCommand = LinuxSupport.buildExecCommand(ssb);
+    await LinuxSupport.requireOwnedLauncher(ssb, paths);
     await LinuxSupport.ensureDirectories(paths);
 
-    let iconFile: nsIFile | null = null;
+    let iconPath: string | null = null;
     if (ssb.icon) {
       console.debug(`[LinuxSupport] Loading icon from: ${ssb.icon}`);
+      const temporaryIconPath =
+        `${paths.iconPath}.${Services.uuid.generateUUID()}.tmp`;
       try {
         const iconURI = Services.io.newURI(ssb.icon);
-        const targetFile = new LinuxSupport.nsIFile(paths.iconPath);
-        const { container } = await ImageTools.loadImage(iconURI);
+        const targetFile = new LinuxSupport.nsIFile(temporaryIconPath);
+        const { container, type } = await ImageTools.loadImage(iconURI);
         const badgedContainer = await ImageTools.applyContainerBadgeToIcon(
           container,
           ssb.userContextId ?? 0,
           128,
+          strictIcon,
         );
-        await ImageTools.saveIcon(badgedContainer, 128, 128, targetFile);
-        iconFile = targetFile;
+        if (
+          type?.includes("svg") &&
+          badgedContainer.type === Ci.imgIContainer.TYPE_VECTOR
+        ) {
+          await ImageTools.saveDataURI(iconURI, targetFile);
+          iconPath = paths.svgIconPath;
+        } else {
+          await ImageTools.saveIcon(badgedContainer, 128, 128, targetFile);
+          iconPath = paths.iconPath;
+        }
+        await IOUtils.move(temporaryIconPath, iconPath);
         console.debug("[LinuxSupport] Icon saved successfully");
       } catch (error) {
-        console.error("Failed to save SSB icon for Linux", error);
-        iconFile = null;
+        console.error("[LinuxSupport] Failed to save SSB icon", error);
+        // Keep initial installs usable with a default icon, but do not commit
+        // a refreshed store entry when its icon/container badge failed.
+        if (strictIcon) throw error;
+        iconPath = null;
+      } finally {
+        await IOUtils.remove(temporaryIconPath, { ignoreAbsent: true });
       }
     } else {
       console.debug("[LinuxSupport] No icon specified for SSB");
-      iconFile = null;
+      iconPath = null;
     }
 
-    const execCommand = LinuxSupport.buildExecCommand(ssb);
     const desktopEntry = LinuxSupport.buildDesktopEntry(
       ssb,
       execCommand,
-      iconFile?.path ?? null,
+      iconPath,
       paths.startupWMClass,
     );
 
     console.debug(
       `[LinuxSupport] Writing desktop entry to: ${paths.desktopPath}`,
     );
-    await IOUtils.write(paths.desktopPath, textEncoder.encode(desktopEntry));
+    await IOUtils.write(paths.desktopPath, textEncoder.encode(desktopEntry), {
+      tmpPath: `${paths.desktopPath}.tmp`,
+    });
     await LinuxSupport.ensureDesktopPermissions(paths.desktopPath);
+
+    // Remove obsolete variants only once the launcher points at the new icon.
+    for (const previousIcon of [paths.iconPath, paths.svgIconPath]) {
+      if (previousIcon !== iconPath) {
+        await IOUtils.remove(previousIcon, { ignoreAbsent: true });
+      }
+    }
+
+    await LinuxSupport.removeLegacyLauncher(ssb);
 
     try {
       const desktopDB = Cc["@mozilla.org/file/local;1"].createInstance(
@@ -328,7 +412,7 @@ export class LinuxSupport {
         );
         process.init(desktopDB);
         const args = [paths.desktopDir];
-        process.run(true, args, args.length);
+        process.runw(true, args, args.length);
       }
     } catch (e) {
       console.error("Failed to update desktop database", e);
@@ -342,39 +426,58 @@ export class LinuxSupport {
       `[LinuxSupport] Uninstalling SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     const paths = LinuxSupport.getPathInfo(ssb);
+    try {
+      await LinuxSupport.requireOwnedLauncher(ssb, paths);
+    } catch (error) {
+      // An executable move or another profile may make ownership unverifiable.
+      // Allow the caller to remove its store entry without touching any files.
+      console.warn(
+        "[LinuxSupport] Preserving launcher files whose ownership cannot be verified",
+        error,
+      );
+      return;
+    }
 
     console.debug(
       `[LinuxSupport] Removing desktop entry: ${paths.desktopPath}`,
     );
+    let removeError: unknown;
     try {
       await IOUtils.remove(paths.desktopPath, { ignoreAbsent: true });
       console.debug("[LinuxSupport] Desktop entry removed successfully");
     } catch (e) {
       console.error("[LinuxSupport] Failed to remove desktop entry", e);
+      // Preserve icons while the corresponding launcher still exists.
+      throw e;
     }
 
     console.debug(`[LinuxSupport] Removing icon: ${paths.iconPath}`);
     try {
       await IOUtils.remove(paths.iconPath, {
-        recursive: true,
         ignoreAbsent: true,
       });
       console.debug("[LinuxSupport] Icon removed successfully");
     } catch (e) {
       console.error("[LinuxSupport] Failed to remove icon", e);
+      removeError ??= e;
     }
+    try {
+      await IOUtils.remove(paths.svgIconPath, { ignoreAbsent: true });
+    } catch (e) {
+      console.error("[LinuxSupport] Failed to remove SVG icon", e);
+      removeError ??= e;
+    }
+    if (removeError) {
+      throw removeError;
+    }
+    await LinuxSupport.removeLegacyLauncher(ssb);
     console.debug(`[LinuxSupport] Successfully uninstalled SSB: ${ssb.name}`);
   }
 
   async applyOSIntegration(ssb: Manifest, aWindow: Window) {
-    // Check A/B test before applying taskbar integration
-    // Note: install() method is excluded from A/B test as it handles .desktop file generation
-    if (!TaskbarExperiment.isEnabledForLinux()) {
-      console.debug(
-        "[LinuxSupport] PWA taskbar integration disabled by A/B test, skipping OS integration",
-      );
-      return;
-    }
+    // Launcher files are always installed; native window integration remains
+    // controlled by the existing Linux rollout.
+    if (!TaskbarExperiment.isEnabledForLinux()) return;
 
     if (Services.appinfo.processType !== PROCESS_TYPE_DEFAULT) {
       console.debug(
@@ -467,12 +570,16 @@ export class LinuxSupport {
         baseWin.visibility = true;
       }
 
-      const iconExists = await IOUtils.exists(paths.iconPath);
-      if (iconExists) {
-        await LinuxSupport.trySetWindowIcon(taskbar, aWindow, paths);
+      const iconPath = await IOUtils.exists(paths.iconPath)
+        ? paths.iconPath
+        : await IOUtils.exists(paths.svgIconPath)
+        ? paths.svgIconPath
+        : null;
+      if (iconPath) {
+        await LinuxSupport.trySetWindowIcon(taskbar, aWindow, iconPath);
       } else {
         console.warn(
-          `[LinuxSupport] Icon file does not exist: ${paths.iconPath}`,
+          `[LinuxSupport] Icon file does not exist: ${paths.iconPath} or ${paths.svgIconPath}`,
         );
       }
     } catch (error) {
@@ -520,14 +627,7 @@ export class LinuxSupport {
       return;
     }
 
-    // Check A/B test before applying taskbar integration in parent process
-    // This ensures consistency even if message was sent before A/B test check
-    if (!TaskbarExperiment.isEnabledForLinux()) {
-      console.debug(
-        "[LinuxSupport] PWA taskbar integration disabled by A/B test in parent process, skipping OS integration",
-      );
-      return;
-    }
+    if (!TaskbarExperiment.isEnabledForLinux()) return;
 
     const targetWindow = await LinuxSupport.waitForWindowByName(
       data.windowName ?? null,
@@ -625,14 +725,14 @@ export class LinuxSupport {
   private static async trySetWindowIcon(
     taskbar: nsIFloorpLinuxTaskbar,
     aWindow: Window,
-    paths: LinuxPathInfo,
+    iconPath: string,
   ) {
     let iconRetries = 0;
     while (iconRetries < ICON_RETRY_LIMIT) {
       try {
         taskbar.setWindowIconFromPath(
           aWindow as unknown as mozIDOMWindowProxy,
-          paths.iconPath,
+          iconPath,
         );
         return;
       } catch (error) {

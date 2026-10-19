@@ -11,6 +11,7 @@ on:
       - "floorp-runtime.lock.json"
       - "deno.lock"
       - "tools/chrome-extension-runtime/**"
+      - "tools/src/*runtime_patch.test.ts"
       - "browser-features/modules/modules/chrome-web-store/**"
       - "browser-features/modules/actors/NRChromeWebStore*"
       - "browser-features/chrome/common/panel-sidebar/**"
@@ -110,6 +111,11 @@ jobs:
           --runtime-source _dist/runtime-base --production --check-only
       - name: Check incremental source safety and timestamp preservation
         run: python3 tools/chrome-extension-runtime/test-prepare-native-source.py
+      - name: Check proxy ownership and private scope selection
+        run: >-
+          deno test --allow-read
+          tools/src/proxy_runtime_patch.test.ts
+          tools/src/proxy_scopes_runtime_patch.test.ts
       - name: Compile and package maintained native source
         env:
           CARGO_INCREMENTAL: "0"

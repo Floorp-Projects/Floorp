@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "78943ae3ded11ca5305a5f0160013c5da6339350"
+floorp_commit: "unknown"
 generated: true
 ---
 # Architecture Overview
@@ -59,7 +59,7 @@ Window Actors are registered from `browser-features/modules/modules/BrowserGlue.
 
 ## Chrome UI Features
 
-Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 35 common features:
+Common chrome features are discovered from `browser-features/chrome/common/mod.ts:4` with the glob pattern `./*/index.ts`. The current inventory lists 36 common features:
 
 - `addons`
 - `browser-share-mode`
@@ -69,6 +69,7 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `context-menu`
 - `designs`
 - `external-browser`
+- `firefox-sidebar`
 - `flex-order`
 - `hub-panel-menu`
 - `idle-memory-reclaim`
@@ -105,7 +106,7 @@ Static chrome features are discovered from `browser-features/chrome/static/mod.t
 
 ## Settings Pages
 
-The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 17 collected routes. Use the generated settings catalog for route-to-component ownership.
+The settings app is represented by `browser-features/pages-settings/src/App.tsx` and currently exposes 18 collected routes. Use the generated settings catalog for route-to-component ownership.
 
 ## Floorp OS API
 
@@ -136,14 +137,17 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
-- `.github/workflows/organize_issue.yml` - triggers: `issues`, `schedule`, `workflow_dispatch`
-- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/openbot-events.yml` - triggers: `issue_comment`, `issues`, `pull_request_review`, `pull_request_target`, `workflow_run`
+- `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
 - `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
+- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

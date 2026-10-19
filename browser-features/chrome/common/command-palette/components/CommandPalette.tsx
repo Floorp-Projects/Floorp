@@ -8,16 +8,32 @@ import { SearchInput } from "./SearchInput.tsx";
 import { CommandList } from "./CommandList.tsx";
 import { StepIndicator } from "./StepIndicator.tsx";
 import { StepChoices } from "./StepChoices.tsx";
-import type { CommandStepChoice, PaletteCommand } from "../types.ts";
+import type {
+  CommandPaletteContentProps,
+  CommandStepChoice,
+  PaletteCommand,
+} from "../types.ts";
+import {
+  getFontSize,
+  getHorizontalAlign,
+  getMaxHeight,
+  getOffsetTop,
+  getWidth,
+} from "../config.ts";
 
 function getController() {
   return commandPaletteService.getController(window);
 }
 
 export function CommandPaletteUI() {
-  const controller = getController();
-  if (!controller) return;
+  return (
+    <Show when={getController()} keyed>
+      {(controller) => <CommandPaletteContent controller={controller} />}
+    </Show>
+  );
+}
 
+function CommandPaletteContent({ controller }: CommandPaletteContentProps) {
   const state = controller.state;
 
   const handleBackdropClick = (e: MouseEvent) => {
@@ -99,6 +115,13 @@ export function CommandPaletteUI() {
           })}
           data-visible={state.isVisible() ? "true" : undefined}
           data-mode={state.mode()}
+          data-halign={getHorizontalAlign()}
+          style={{
+            "--cp-width": `${getWidth()}px`,
+            "--cp-max-height": `${getMaxHeight()}px`,
+            "--cp-offset-top": `${getOffsetTop()}vh`,
+            "--cp-font-size": `${getFontSize()}px`,
+          }}
           onClick={handleBackdropClick}
           onTransitionEnd={handleTransitionEnd}
         >
@@ -125,7 +148,7 @@ export function CommandPaletteUI() {
               <CommandList
                 commands={state.filteredCommands()}
                 selectedIndex={state.selectedIndex()}
-                query={state.query()}
+                query={state.highlightQuery()}
                 onCommandSelect={handleCommandSelect}
                 onCommandExecute={handleCommandExecute}
               />

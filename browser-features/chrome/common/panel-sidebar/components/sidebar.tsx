@@ -19,9 +19,13 @@ import {
 import {
   isFloating,
   isPanelSidebarEnabled,
+  isPanelSidebarOverlay,
+  isPanelSidebarVisible,
+  panelSidebarConfig,
   selectedPanelId,
 } from "../data/data";
 import { FloatingSplitter } from "./floating-splitter";
+import { OverlaySplitter } from "./overlay-splitter";
 import { BrowserBox } from "./browser-box";
 import type { CPanelSidebar } from "./panel-sidebar";
 
@@ -57,7 +61,7 @@ export class PanelSidebarElem {
 
     const execEffect = () =>
       createEffect(() => {
-        if (selectedPanelId() === null) {
+        if (!isPanelSidebarVisible()) {
           this.documentElement?.style.setProperty(
             "--panel-sidebar-display",
             "none",
@@ -134,6 +138,10 @@ export class PanelSidebarElem {
           id="panel-sidebar-box"
           class="chromeclass-extrachrome chromeclass-directories instant customization-target"
           data-floating={isFloating().toString()}
+          data-overlay={isPanelSidebarOverlay().toString()}
+          data-overlay-position={panelSidebarConfig().position_start
+            ? "right"
+            : "left"}
           popover="manual"
         >
           <SidebarHeader ctx={this.ctx} />
@@ -141,8 +149,13 @@ export class PanelSidebarElem {
           <Show when={isFloating()}>
             <FloatingSplitter />
           </Show>
+          <Show when={isPanelSidebarOverlay()}>
+            <OverlaySplitter
+              onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
+            />
+          </Show>
         </xul:vbox>
-        <Show when={!isFloating()}>
+        <Show when={!isFloating() && !isPanelSidebarOverlay()}>
           <SidebarSplitter
             onResizeEnd={() => this.ctx.saveCurrentSidebarWidth()}
           />

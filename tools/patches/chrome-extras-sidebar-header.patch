@@ -1,0 +1,19 @@
+diff --git a/browser/chrome/browser/content/browser/sidebar/sidebar-panel-header.css b/browser/chrome/browser/content/browser/sidebar/sidebar-panel-header.css
+--- a/browser/chrome/browser/content/browser/sidebar/sidebar-panel-header.css
++++ b/browser/chrome/browser/content/browser/sidebar/sidebar-panel-header.css
+@@ -33,3 +33,15 @@
+     display: none;
+   }
+ }
++
++/* Floorp mirrors Chrome Extras here because browser.xhtml CSS cannot reach
++   a panel's document or this component's shadow root. Keep slotted controls. */
++@media -moz-pref("floorp.chrome-extras.hidden-sidebar-header") {
++  .sidebar-panel-heading {
++    display: none;
++  }
++
++  :host(:empty) {
++    display: none;
++  }
++}

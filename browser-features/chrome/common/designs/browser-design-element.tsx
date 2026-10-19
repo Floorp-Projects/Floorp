@@ -3,7 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createMemo, For, onCleanup, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from "solid-js";
 import { applyUserJS } from "./utils/userjs-parser.ts";
 import styleBrowser from "./browser.css?inline";
 import { config, getChromeExtrasSettings } from "./configs.ts";
@@ -31,8 +38,89 @@ export function replaceIconPaths(
   return css.replaceAll(/\.\.\/icons/g, iconBasePath);
 }
 
+/** Balance one native sheet registration per owner, including shared URIs. */
+export function registerContentStyleSheets({
+  styles,
+  stylesRaw,
+  iconBasePath,
+  useTabColorAsToolbarColor,
+}: ReturnType<typeof getCSSFromConfig>): void {
+  const registeredURIs: nsIURI[] = [];
+  // Gecko retains duplicate registrations and removes one entry per unregister.
+  // Every owner must acquire its own entry so another window cannot remove it.
+  const register = (uri: nsIURI) => {
+    sss.loadAndRegisterSheet(uri, AGENT_SHEET);
+    registeredURIs.push(uri);
+  };
+  onCleanup(() => {
+    for (const uri of registeredURIs) {
+      try {
+        sss.unregisterSheet(uri, AGENT_SHEET);
+      } catch (error) {
+        console.error(
+          "[BrowserDesignElement] Failed to unregister CSS:",
+          error,
+        );
+      }
+    }
+  });
+
+  if (useTabColorAsToolbarColor === true) {
+    try {
+      register(Services.io.newURI(
+        `data:text/css;charset=utf-8,${
+          encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
+        }`,
+      ));
+    } catch (error) {
+      console.error(
+        "[BrowserDesignElement] Failed to register tab color CSS:",
+        error,
+      );
+    }
+  }
+
+  // Development content styles use raw CSS; production uses chrome:// URLs.
+  if (stylesRaw?.length) {
+    for (let i = 0; i < stylesRaw.length; i++) {
+      try {
+        const cssContent = replaceIconPaths(stylesRaw[i], iconBasePath);
+        register(Services.io.newURI(
+          `data:text/css;charset=utf-8,${encodeURIComponent(cssContent)}`,
+        ));
+      } catch (error) {
+        console.error(
+          `[BrowserDesignElement] Failed to register raw CSS ${i + 1}:`,
+          error,
+        );
+      }
+    }
+  } else if (styles?.length) {
+    for (const styleUrl of styles) {
+      try {
+        register(Services.io.newURI(styleUrl));
+      } catch (error) {
+        console.error(
+          `[BrowserDesignElement] Failed to register CSS: ${styleUrl}`,
+          error,
+        );
+      }
+    }
+  }
+}
+
 export function BrowserDesignElement() {
   const getCSS = () => getCSSFromConfig(config());
+  const verticalPref = "sidebar.verticalTabs";
+  const [verticalTabs, setVerticalTabs] = createSignal(
+    Services.prefs.getBoolPref(verticalPref, false),
+  );
+  const updateVerticalTabs = () =>
+    setVerticalTabs(Services.prefs.getBoolPref(verticalPref, false));
+  Services.prefs.addObserver(verticalPref, updateVerticalTabs);
+  onCleanup(() =>
+    Services.prefs.removeObserver(verticalPref, updateVerticalTabs)
+  );
 
   // Apply UserJS preferences
   createEffect(() => {
@@ -49,103 +137,13 @@ export function BrowserDesignElement() {
     const design = config().globalConfigs.userInterface;
     const settings = getChromeExtrasSettings();
     if (design === "lepton" || design === "photon" || design === "protonfix") {
-      syncLegacyChromeExtrasPrefs(settings);
+      syncLegacyChromeExtrasPrefs(settings, verticalTabs());
     }
   });
-
-  let tabColorSheetURI: nsIURI | null = null;
 
   // Register content CSS using StyleSheetService (AGENT_SHEET)
   // These styles apply to all documents including web content
-  createEffect(() => {
-    const { styles, stylesRaw, iconBasePath, useTabColorAsToolbarColor } =
-      getCSS();
-    const registeredURIs: nsIURI[] = [];
-
-    if (useTabColorAsToolbarColor === true) {
-      if (!tabColorSheetURI) {
-        try {
-          const dataUri = `data:text/css;charset=utf-8,${
-            encodeURIComponent(TAB_COLOR_LIKE_TOOLBAR_CSS)
-          }`;
-          const uri = Services.io.newURI(dataUri);
-          sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-          tabColorSheetURI = uri;
-        } catch (error) {
-          console.error(
-            `[BrowserDesignElement] Failed to register tab color CSS:`,
-            error,
-          );
-        }
-      }
-    } else if (tabColorSheetURI) {
-      if (sss.sheetRegistered(tabColorSheetURI, AGENT_SHEET)) {
-        sss.unregisterSheet(tabColorSheetURI, AGENT_SHEET);
-      }
-      tabColorSheetURI = null;
-    }
-
-    // Development mode: Use raw CSS with icon path replacement (content styles only)
-    if (stylesRaw?.length) {
-      for (let i = 0; i < stylesRaw.length; i++) {
-        let cssContent = stylesRaw[i];
-
-        try {
-          // Replace relative icon paths with absolute URLs
-          cssContent = replaceIconPaths(cssContent, iconBasePath);
-
-          // Create data URI and register
-          const dataUri = `data:text/css;charset=utf-8,${
-            encodeURIComponent(cssContent)
-          }`;
-          const uri = Services.io.newURI(dataUri);
-
-          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
-            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-            registeredURIs.push(uri);
-          }
-        } catch (error) {
-          console.error(
-            `[BrowserDesignElement] Failed to register raw CSS ${i + 1}:`,
-            error,
-          );
-        }
-      }
-    } // Production mode: Use chrome:// URLs (content styles only)
-    else if (styles?.length) {
-      for (const styleUrl of styles) {
-        try {
-          const uri = Services.io.newURI(styleUrl);
-
-          if (!sss.sheetRegistered(uri, AGENT_SHEET)) {
-            sss.loadAndRegisterSheet(uri, AGENT_SHEET);
-            registeredURIs.push(uri);
-          }
-        } catch (error) {
-          console.error(
-            `[BrowserDesignElement] Failed to register CSS: ${styleUrl}`,
-            error,
-          );
-        }
-      }
-    }
-
-    // Cleanup: Unregister sheets when component unmounts or styles change
-    onCleanup(() => {
-      for (const uri of registeredURIs) {
-        try {
-          if (sss.sheetRegistered(uri, AGENT_SHEET)) {
-            sss.unregisterSheet(uri, AGENT_SHEET);
-          }
-        } catch (error) {
-          console.error(
-            "[BrowserDesignElement] Failed to unregister CSS:",
-            error,
-          );
-        }
-      }
-    });
-  });
+  createEffect(() => registerContentStyleSheets(getCSS()));
 
   const chromeStyleUrls = createMemo(() => getCSS().chromeStyles ?? []);
 

@@ -7,12 +7,25 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import plistlib
 import socket
 import subprocess
 import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def browser_binary(path):
+    if path.is_file():
+        return path
+    if (path / "Contents/Info.plist").is_file():
+        with (path / "Contents/Info.plist").open("rb") as stream:
+            return path / "Contents/MacOS" / plistlib.load(stream)["CFBundleExecutable"]
+    for name in ("floorp", "floorp.exe", "firefox", "firefox.exe"):
+        if (path / name).is_file():
+            return path / name
+    raise ValueError(f"No browser executable found in {path}")
 
 
 def main():
@@ -135,9 +148,7 @@ browser.action.onClicked.addListener(async () => {
              "floorp.releaseNotes.choiceConfirmed": True}
     (profile / "user.js").write_text("\n".join(
         f"user_pref({json.dumps(k)}, {json.dumps(v)});" for k, v in prefs.items())+"\n")
-    browser = args.browser.resolve()
-    if browser.is_dir():
-        browser = browser / "floorp"
+    browser = browser_binary(args.browser.resolve(strict=True))
     client = host = None
     report = {"passed": False, "checks": [], "events": []}
 

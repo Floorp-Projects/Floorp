@@ -25,7 +25,7 @@ export function Accounts({ accountAndProfileData }: AccountsProps) {
           {t("accounts.mozillaAccountSyncSettings")}
         </CardTitle>
       </CardHeader>
-      <CardContent className={`${styles.details} space-y-6`}>
+      <CardContent className={`${styles.details} space-y-3`}>
         <div className={styles.identity}>
           <Avatar>
             <AvatarImage

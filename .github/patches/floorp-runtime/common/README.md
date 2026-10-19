@@ -5,6 +5,19 @@ Floorp and before the artifact build. Keep Runtime changes here rather than
 editing a sibling Floorp-Runtime checkout. Validate patches against the source
 commit in `floorp-runtime.lock.json`, using an isolated checkout or source fixture.
 
+Packaging skips an exact reverse-applicable common patch that was already applied
+by the Runtime's upstream patch step. A missing patch is applied normally, while
+partially applied patches still fail validation. Native changes still require
+freshly compiled Runtime artifacts.
+
+`workspace-external-containers.patch` chooses the workspace container before
+creating a browser for external URL opens, including cold launch and new windows.
+It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
+modules; native rebuilding is not required. The matching `tools/patches` patch
+maps BrowserContentHandler to the unpacked artifact's `browser/modules` path.
+Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
+in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
+
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
 session state and N-way split layouts on Firefox 157. The tabbrowser and
 sessionstore implementations now live in `moz-src` modules; SessionStore is a
@@ -12,6 +25,14 @@ class with private methods. Matching `tools/patches` files cover local builds.
 Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
+
+`contextual-search-initialization.patch` lazily loads the selector configuration
+for contextual engine lookups. Floorp's fixed default engine list can initialize
+SearchService without loading that configuration. If it is unavailable, the
+optional lookup returns no match so OpenSearch and other address-bar actions
+can continue. The matching `tools/patches` patch covers extracted local builds;
+the host parity test and browser `contextualSearch.test.ts` cover both paths.
+This changes JavaScript only and does not require native recompilation.
 
 `macos-artifact-app-shim.patch` carries the Runtime's native App Shim executable
 from the macOS Runtime DMG into the artifact build. The package manifest already
@@ -25,12 +46,22 @@ and selection ranges, and routes phased trackpad input through Gecko's APZ,
 overscroll, and history-swipe handling. PWA widgets bypass host-process AppKit
 popup menus, which require a local NSView, and use Gecko popups presented by the
 Shim instead. Ordinary browser menus keep their existing behavior and native
-menu preferences remain enabled. The canonical Shim files in
+menu preferences remain enabled. PWA context-menu input uses Gecko's pointer
+event class so that remote content processes accept the event without an IPC
+deserialization failure. The canonical Shim files in
 `native/macos-app-shim/` must stay in sync with this patch. Native View regressions
 are covered by `deno task app-shim:build --test`; Runtime phase conversion is
 covered by `./mach gtest MacWebAppPanGesture.*`. The isolated
 `tools/app-shim/test-popups-and-overscroll.py` runner checks popup positioning,
 zoom, option commands, and APZ overscroll against a source-built Runtime.
+`tools/app-shim/test-context-menu.py` checks repeated trusted right-click menu
+delivery and content-process survival through the PWA input adapter.
+The Shim retains the IME's selected conversion clause while Gecko acknowledges
+a collapsed caret; repeated Space presses continue Japanese conversion. The
+selection override ends on commit, unmark, cancellation, empty marked text,
+leaving an editable element, or disconnection. Candidate geometry uses that same
+selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
+textarea and contenteditable fixtures, using an isolated browser profile.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts
@@ -266,8 +297,9 @@ inspector, console, resource, configuration, and screenshot actors. It never
 starts a remote debugging listener. Native target lifetimes invalidate remote
 object and DOM handles across process switches; explicit detach, tab close,
 permission removal, developer-tool takeover, and extension shutdown release
-actors and restore owned configuration. Persistent events wake a stopped
-background. Native target-process input and file input actors produce actual
+actors and restore owned configuration. Native document principals supplement
+URL checks, preserving other add-ons' ownership of inherited `about:blank`
+documents. Persistent events wake a stopped background. Native target-process input and file input actors produce actual
 widget, editor, and file selection effects.
 
 `chrome-extension-debugger-native.patch` is compiled-only. Parent-only
@@ -293,4 +325,47 @@ background wake. Run `node tools/chrome-extension-runtime/compare-debugger.mjs`
 for the same public API contract against the hash-verified official Chrome 155
 reference. Add `--native-overrides` with a compiled candidate to compare focus,
 visibility, CSP enforcement/bypass, and restoration after detach. These fixtures
-are self-authored and make no real-extension pass-rate claim.
+are self-authored and make no real-extension pass-rate claim. The separate
+`ChromeDebuggerPrincipalNative.test.mts` uses two actual authored add-ons and
+trusted native input to verify public Page/Runtime attachment preserves an
+inherited document's extension principal.
+
+### Storage, action, notifications, and declarative content
+
+`chrome-extension-auxiliary-content.patch` scopes Chrome additions to the exact
+validated compatibility marker. `storage.*.setAccessLevel` changes real parent
+storage authorization, child IndexedDB access, and change-event delivery. Session
+storage starts trusted-only; grant and revoke affect existing content-script
+handles. Firefox extensions retain their native API surface. Compatible
+`action.openPopup` uses the existing browser action UI without a global gesture
+preference change.
+
+Compatible notifications expose actual permission/readback/update operations and
+forward action buttons, silent delivery, and interaction requirements to native
+Gecko alerts. Notification identities include the owning extension ID; replacing
+an alert preserves its public ID without generating a stale close event.
+`chrome-extension-notifications-native.patch` additionally forwards existing
+native `nsIAlertAction` objects into the browser alert fallback window. That part
+requires a compiled binary. The browser window renders native controls and routes
+button index events through the existing persistent event system. Existing OS
+alert implementations use their native action support.
+
+`declarativeContent` provides constructible condition/action records and real
+per-extension persisted rule storage. Native document actors evaluate URL, CSS,
+and bookmark conditions. Matching rules affect the existing native action UI;
+separate overlays preserve imperative state when rules stop matching. Authorized
+`RequestContentScript` actions execute extension files through Gecko's normal
+content-script injection checks. Rules continue after background suspension,
+reload from disk on extension startup, and are removed on uninstall. Permission
+changes invalidate pending matching work before effects or injection. URL regex
+conditions share the converted-extension regex normalizer and native bounded
+engine used by DNR; that implementation's documented RE2 limits also apply here.
+
+`tools/chrome-extension-runtime/auxiliary-api-inventory.json` records exact signed
+package versions, package/source hashes, and relevant member references. Source
+references include feature detection and do not establish a primary-operation
+pass. `compare-auxiliary.mjs` runs an authored public API contract against the
+frozen official Chrome reference and the supplied Floorp binary. The native
+lifecycle test is `ChromeDeclarativeContentNative.test.mts`; the strict compiled
+alert-window test is `ChromeAuxiliaryNative.test.mts`. These checks do not claim
+complete notification rich-template or declarative-content selector parity.

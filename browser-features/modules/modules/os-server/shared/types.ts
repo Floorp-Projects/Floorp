@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import type {
+  ClickElementOptions,
+  ClickElementResult,
+} from "../../../actors/webscraper/types.ts";
+
 /**
  * Valid states for element waiting operations
  */
@@ -135,7 +140,16 @@ export interface BrowserAutomationService {
   isEnabled(instanceId: string, selector: string): Promise<boolean>;
 
   // Element interactions
-  clickElement(instanceId: string, selector: string): Promise<boolean | null>;
+  clickElement(
+    instanceId: string,
+    selector: string,
+    options?: ClickElementOptions,
+  ): Promise<boolean | null>;
+  clickElementWithResult?(
+    instanceId: string,
+    selector: string,
+    options?: ClickElementOptions,
+  ): Promise<ClickElementResult | null>;
   doubleClick?(instanceId: string, selector: string): Promise<boolean | null>;
   rightClick?(instanceId: string, selector: string): Promise<boolean | null>;
   hoverElement(instanceId: string, selector: string): Promise<boolean | null>;

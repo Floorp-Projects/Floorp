@@ -2,9 +2,7 @@ diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
 index a20f67f..385953e 100644
 --- a/modules/ExtensionParent.sys.mjs
 +++ b/modules/ExtensionParent.sys.mjs
-@@ -231,6 +231,7 @@ const ProxyMessenger = {
-   portSources: new Map(),
-   /** @type {Map<number, Set<object>>} portId -> known receiver actors. */
+@@ -233,4 +233,5 @@ const ProxyMessenger = {
    portReceivers: new Map(),
 +  webPagePortTargets: new Map(),
  

@@ -28,8 +28,14 @@ export class CorpusSidePanelChild extends JSWindowActorChild {
     if (name === "Click") {
       const rect = element.getBoundingClientRect();
       const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
-      window.windowUtils.sendMouseEvent("mousedown", x, y, 0, 1, 0);
-      window.windowUtils.sendMouseEvent("mouseup", x, y, 0, 1, 0);
+      window.synthesizeMouseEvent("mousedown", x, y, {
+        button: 0,
+        clickCount: 1,
+      });
+      window.synthesizeMouseEvent("mouseup", x, y, {
+        button: 0,
+        clickCount: 1,
+      });
       return { clicked: true };
     }
     if (name === "TypeDraft") {
