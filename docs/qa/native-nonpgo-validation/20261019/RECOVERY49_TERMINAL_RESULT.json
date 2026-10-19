@@ -1,0 +1,204 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY49_SDKLESS_MAC_COMPLETION_SERIALIZER_TERMINAL",
+  "status": "passed",
+  "run": {
+    "id": 39256138254,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39256138254",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "caller": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+    "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5"
+  },
+  "job": {
+    "id": 118071788169,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T12:57:42Z",
+    "completedAt": "2026-10-19T12:59:42Z",
+    "conclusion": "success"
+  },
+  "decodedProviderLog": {
+    "bytes": 68729,
+    "sha256": "e92e9377e20a7d6e3be02816edda19bc87fa7982cc7d371774033c81a6c3cac1",
+    "rawPublished": false
+  },
+  "preflight": {
+    "status": "passed",
+    "selfStatus": "measured",
+    "QA": {
+      "status": "passed",
+      "complete": true,
+      "total": 491,
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "seconds": 82.466,
+      "bytes": 94186,
+      "sha256": "5b45a226486c13e41d7decbe982b5cb38aed41aa626b2349755ff54add1b8208"
+    },
+    "recording": {
+      "status": "passed",
+      "complete": true,
+      "total": 14,
+      "skipped": 0,
+      "errors": 0,
+      "failures": 0,
+      "seconds": 1.679,
+      "bytes": 2757,
+      "sha256": "b36198350b165a256441daf15c638a9225a13b88fefcfad7aeac7af318ebb851"
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 52,
+        "minimumFreeGiB": 107.77
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.77
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 93,
+        "minimumFreeGiB": 107.77
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 29,
+        "minimumFreeGiB": 107.77
+      },
+      {
+        "stage": "monitor-preflight",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 10,
+        "minimumFreeGiB": 107.77
+      }
+    ]
+  },
+  "officialFixedSource": {
+    "schema": 1,
+    "status": "passed",
+    "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "bytes": 126050,
+    "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "officialContentsAPI": true,
+    "tokenPublished": false
+  },
+  "serializerDriver": {
+    "status": "passed",
+    "contractVerified": true,
+    "firstFailure": null,
+    "driverFailure": null,
+    "monitorFailure": null,
+    "monitorFailureObserved": false,
+    "outstandingGroups": false,
+    "evidenceWriteFailure": false,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "build-completion-contract",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 19,
+        "minimumFreeGiB": 107.77
+      }
+    ]
+  },
+  "finalImmutableRuntimeGate": {
+    "status": "passed",
+    "monitorPreflightVerified": true,
+    "officialPinnedSerializerSourceVerified": true,
+    "bothSerializerFormatsAndNegativesVerified": true,
+    "ownedStageReapedAndGroupGone": true,
+    "qualification": "synthetic-serializer-contract-actual-source",
+    "realBuildPerformed": false,
+    "mozillaQualification": false,
+    "resourceQualification": false,
+    "sdkAcquired": false,
+    "checkpointDownloaded": false,
+    "newArtifacts": 0
+  },
+  "contractEvidence": {
+    "kind": "immutable-runtime-assertion",
+    "bothFormatsAndSixControlsVerifiedByExecutedGate": true,
+    "formats": [
+      "jsonl",
+      "whole"
+    ],
+    "controlsPerFormat": [
+      "positive",
+      "no-end",
+      "truncated"
+    ],
+    "perCaseValuesRecoveredFromRunner": false,
+    "perCaseValuesInventedOrCopiedFromLocalFixture": false,
+    "caseReceiptsWereValidatedInsideOwnedMacStageBeforeJobEnd": true,
+    "actualSourceSerializer": true,
+    "syntheticMarkersAndClock": true,
+    "serializerResourceBackend": "upstream-PsutilStub",
+    "resourceWorkerStarted": false
+  },
+  "assessment": {
+    "allSixRecordedStagesNaturalZeroExactReapedAndGroupsGone": true,
+    "cleanupFailures": 0,
+    "shortQualification": "synthetic-serializer-contract-actual-source",
+    "fullHostXUL": "NOT_TESTED",
+    "actualMozillaCases": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "actualBuildProfileAtFullStop": "NOT_TESTED",
+    "originalNativeCause": "UNKNOWN",
+    "SDKAcquired": false,
+    "checkpointDownloaded": false,
+    "artifacts": 0,
+    "productSigningOrPublicationOrPermissionsChanged": false,
+    "forecastAccuracyRequiredToProceed": false,
+    "next": "review and pin combined Mozilla-first/native consumer, fresh SDK/checkpoint and zero overlap, then execute once within shared345/platform360"
+  }
+}

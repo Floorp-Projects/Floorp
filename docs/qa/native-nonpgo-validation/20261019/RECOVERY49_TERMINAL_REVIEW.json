@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "review": "Recovery49 short Mac serializer contract terminal",
+  "decision": "CLEAR",
+  "openFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY49_TERMINAL_RESULT.json",
+    "bytes": 5851,
+    "sha256": "c8e4fd3ce8b030cdbd6c02bbb902df9e9e0198bc814ce6f37d7100ad64deb1f3"
+  },
+  "route": {
+    "run": 39256138254,
+    "job": 118071788169,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "caller": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+    "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+    "event": "push",
+    "attempt": 1,
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "jobStartedAt": "2026-10-19T12:57:42Z",
+    "jobCompletedAt": "2026-10-19T12:59:42Z"
+  },
+  "independentProviderVerification": {
+    "runJobArtifactAPI": true,
+    "terminalJobLogFetchedOnlyAfterCompletion": true,
+    "providerLog": {
+      "bytes": 68729,
+      "sha256": "e92e9377e20a7d6e3be02816edda19bc87fa7982cc7d371774033c81a6c3cac1"
+    },
+    "providerLogExactMatchesSavedRaw": true,
+    "curatedReceiptFieldsMatchRawObjects": true,
+    "fourSelectedMarkerObjectsMatchExistingExtraction": true,
+    "APIResponseDigests": {
+      "run": {
+        "bytes": 13410,
+        "sha256": "5db970ecb37767e1dd51cc8c1f3fe52f370df575ca4d06a6fc43c89d7d8ea497"
+      },
+      "jobs": {
+        "bytes": 2876,
+        "sha256": "c95db1e9e58ec8cb01bf1bf052f7deae60b9a681f2fd4d1a7cb6d9f559f34fac"
+      },
+      "artifacts": {
+        "bytes": 32,
+        "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+      }
+    },
+    "artifacts": 0
+  },
+  "bindingReview": {
+    "path": "Recovery49 immutable prelaunch review",
+    "bytes": 9278,
+    "sha256": "f94dcf0b85b9d7470c87dd2fc75fd94d0204dead80a64f6f8234b4fce47452d3"
+  },
+  "executedEvidence": {
+    "QA": {
+      "total": 491,
+      "passed": 491,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 82.466
+    },
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 1.679
+    },
+    "preflightStages": 5,
+    "allPreflightStagesNaturalZeroExactReapedVerifiedGoneClean": true,
+    "preflightFirstFailure": null,
+    "preflightMonitorFailure": null,
+    "preflightRetainedDiagnostics": 0,
+    "officialSource": {
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "ordinaryContentsAPI": true
+    },
+    "contractDriver": {
+      "contractVerified": true,
+      "stages": 1,
+      "exitCode": 0,
+      "exactLeaderReaped": true,
+      "groupCleanup": "verified-gone",
+      "cleanupFailurePresent": false,
+      "firstFailure": null,
+      "driverFailure": null,
+      "monitorFailure": null,
+      "retainedMonitorDiagnostics": 0,
+      "outstandingGroups": false,
+      "evidenceWriteFailure": false,
+      "peakRSSMiB": 19,
+      "minimumFreeGiB": 107.77,
+      "lastActivityComplete": true
+    },
+    "allFourFinalRuntimeChecks": true,
+    "finalStatus": "passed"
+  },
+  "contractEvidencePrecision": {
+    "kind": "successful-strict-immutable-runtime-assertion",
+    "sixCasesVerifiedByExecutedSourceAndPredicate": true,
+    "formats": [
+      "jsonl",
+      "whole-profile"
+    ],
+    "controlsPerFormat": [
+      "positive",
+      "no-end",
+      "truncated"
+    ],
+    "individualCaseJSONRecovered": false,
+    "individualCaseValuesCopiedFromLocalFixtures": false,
+    "perCaseTimestampOrCountValuesClaimedHere": false,
+    "basis": "The reviewed immutable driver read the private contract receipt, applied its exact six-case schema, format, positive/negative marker and handle-cleanup predicate, returned contractVerified=true, and passed the final immutable gate.",
+    "qualification": "synthetic-serializer-contract-actual-source",
+    "syntheticMarkersAndClock": true,
+    "backend": "upstream-PsutilStub",
+    "resourceWorkerStartedByContract": false
+  },
+  "privacyAssessment": {
+    "curatedReceiptPublicSafe": true,
+    "rawLogPublished": false,
+    "privatePathsOrArgumentsOrTokensCopied": false,
+    "knownPrivateSentinelsDetectedInSavedRaw": false,
+    "internalConversationMetadataIncluded": false
+  },
+  "limits": [
+    "This proves the actual Mac execution of the fixed-source serializer contract and selected zero-skip tests through trusted immutable assertions. Individual six-case receipt values were not recovered from the runner and are not reconstructed from local fixtures.",
+    "No SDK or checkpoint was downloaded, no real Floorp build or Mozilla case or native authentication ran, and no artifact was uploaded.",
+    "The actual production build profile format/size and stop-time diagnostic coverage remain untested. Whole profiles over 16 MiB, truncated/stale/ambiguous inputs and other bounds remain unconfirmed with null counts.",
+    "No performance, cache-hit, checkpoint-acceleration, remaining-work or completion-duration forecast is established. Original native and prior monitor causes remain unknown."
+  ],
+  "combinedConsumerReadiness": {
+    "shortMacPrerequisite": "SATISFIED",
+    "candidateReview": {
+      "path": "combined Mozilla-first/native candidate review",
+      "bytes": 8792,
+      "sha256": "82be7f7b11012535c5e674b03689f8a81a10ee629e95bdfda008a2ab674d12e8"
+    },
+    "decision": "GO_AFTER_FINAL_IMMUTABLE_RENDER_READBACK_AND_FRESH_AVAILABILITY_CHECKS",
+    "remaining": [
+      "Exact final caller/fixture render and one-workflow ancestry readback.",
+      "Fresh ordinary unexpired SDK and sole checkpoint source/size/digest/expiry checks followed by unchanged actual acquisition and replay/context validation.",
+      "Unused dedicated branch and no overlapping owned active or queued run."
+    ],
+    "unknownForecastAloneRequiresHold": false
+  },
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "largePayloadAcquisitions": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}
