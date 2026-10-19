@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_SHARED_DEADLINE_ROUTE_GATE",
+  "sourceDecision": "CLEAR",
+  "longRunReadiness": "HOLD",
+  "holdReason": "Remaining full-build subphase, measured checkpoint acceleration and completion within45 additional minutes are UNKNOWN. Minimal target/bundle closure and bounded completion-marker diagnostics remain unverified.",
+  "source": {
+    "repository": "Floorp-Projects/Floorp",
+    "fixture": "563b9e1fe1a2ae0bece173e8173b4a6a62b6c485",
+    "tree": "0839d3ec660b492a5bcfce9f45f19ee202d0d435",
+    "changedPaths": 8,
+    "exactProviderReadback": true,
+    "planExactByteReadback": true,
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "0770939680d9413f4aa852bac72b4f25454552c0",
+    "tree": "dcde59ca35572c5ac02c00a09394450a145c7fbf",
+    "parent": "337a209baae219771c562adc80b832e491418a23",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 22462,
+    "sha256": "2c751dbc90e5d4eed35fa7e2d88c67201623c0c1cfb7c924677b97209ab0c578",
+    "exactProviderReadback": true,
+    "branchCreated": false,
+    "runLaunched": false
+  },
+  "terminal47Evidence": {
+    "commit": "e12109dd30b0e6b7670ca53e3f00b8e2ef8e2559",
+    "receiptSHA256": "c75d15e1a29845d0d16ecd345e7013c50b034022dee881f0d6ba93e6ae1c37e7",
+    "reviewSHA256": "e2b1336ae0fa3b91276858446b5ce2c53d5b000e59510a412543a64ce459c627",
+    "exactProviderReadback": true
+  },
+  "renderedCallerControls": {
+    "checks": {
+      "yamlBashInlinePythonSyntax": "passed",
+      "positiveFinalGate": true,
+      "previousFaultsRejected": 248,
+      "timeFaultsRejected": 94,
+      "allFaultsRejected": 342,
+      "priorSDKAndMozillaGateASTPreserved": true,
+      "countOnlyPreflightGateDelta": true,
+      "baseRenderedCallerUnchanged": true,
+      "consumerOnlyExplicitOptIn": true,
+      "SDKAndCheckpointStepsUnchanged": true,
+      "consumerJobs": 1,
+      "jobMinutes": 360,
+      "preflightMinutes": 10,
+      "runnerPhaseMinutes": 15,
+      "SDKMinutes": 12,
+      "artifactUploads": 0,
+      "selectedQACountResolved": true,
+      "selectedQATests": 430,
+      "recordingTests": 14
+    },
+    "executionTimeBudget": {
+      "schema": 1,
+      "profile": "consumer-shared-final-deadline-v1",
+      "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "platformMinutes": 360,
+      "sharedWorkDeadlineMinutes": 345,
+      "cleanupReserveMinutes": 15,
+      "clock": "fresh-job-monotonic-origin",
+      "deadlineReference": "absolute-from-existing-job-origin",
+      "deadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 345,
+        "consumerPackageDeadlineMinutes": 345,
+        "consumerNativeDeadlineMinutes": 345,
+        "finalDeadlineMinutes": 345
+      },
+      "legacyDeadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 300,
+        "consumerPackageDeadlineMinutes": 315,
+        "consumerNativeDeadlineMinutes": 335,
+        "finalDeadlineMinutes": 345
+      },
+      "onlyExecutionTimingChanged": true,
+      "resourceAndCompilationInputsChanged": false,
+      "clockResetAllowed": false,
+      "stageBudgetsAreAdditive": false
+    },
+    "cleanupReserveMeaning": "nominal difference to platform cap; no real-time completion guarantee",
+    "candidate": {
+      "bytes": 22462,
+      "sha256": "2c751dbc90e5d4eed35fa7e2d88c67201623c0c1cfb7c924677b97209ab0c578"
+    },
+    "remainingPlaceholders": [],
+    "operations": {
+      "ciLaunched": false,
+      "SDKAcquired": false,
+      "remoteRefsChanged": false,
+      "sourceEdited": false
+    }
+  },
+  "currentMetadata": {
+    "observedAtUTC": "2026-10-19 12:29:21 UTC",
+    "sdk": {
+      "id": 12149860607,
+      "name": "macos-sdk",
+      "size": 105082683,
+      "digest": "sha256:2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+      "expired": false,
+      "expiresAt": "2026-10-19T20:18:26Z",
+      "createdAt": "2026-10-18T20:18:29Z"
+    },
+    "checkpoint": {
+      "id": 12164479528,
+      "name": "checkpoint.tar.gz",
+      "size": 2213942620,
+      "digest": "sha256:f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "expired": false,
+      "expiresAt": "2026-10-20T05:19:56Z",
+      "createdAt": "2026-10-19T05:20:31Z"
+    },
+    "ownedActiveOrQueued": [],
+    "preparedCallerRunCount": 0,
+    "downloaded": false
+  },
+  "currentMetadataIsNotAFutureLaunchGuarantee": true,
+  "actualMacQualificationForThisRevision": "NOT_TESTED",
+  "newArtifactUploads": 0,
+  "authorizationOrRetentionChanged": false,
+  "productSigningOrRelease": false,
+  "originalNativeCause": "UNKNOWN",
+  "nextEvidenceNeeded": [
+    "bounded existing-Mach completed-tier/target receipt with freshness, truncation and failure preservation checks",
+    "or prove same-runner current-source xpcshell/XUL and required bundle/module target closure before prioritizing actual Mozilla3case smoke"
+  ],
+  "noRepeatedHoursRunStarted": true,
+  "immutableReview": {
+    "path": "RECOVERY48_SHARED_DEADLINE_IMMUTABLE_REVIEW.json",
+    "bytes": 11034,
+    "sha256": "2e8ea06225e5938a5a2806fa8a63f5a3703c128450a53da35b87fc710f5b48cb",
+    "sourceAndStaticRoute": "CLEAR",
+    "openP1": 0,
+    "openP2": 0,
+    "hoursRunReadiness": "HOLD"
+  }
+}

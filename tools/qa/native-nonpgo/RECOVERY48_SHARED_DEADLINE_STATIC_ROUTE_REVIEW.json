@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "review": "Recovery48 shared-deadline caller static candidate",
+  "reviewedAtUtc": "2026-10-19T12:25:38.980225+00:00",
+  "decision": {
+    "sourceAndStaticRoute": "CLEAR",
+    "activation": "HOLD",
+    "openBlockingCodeFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "basis": "Immutable fixture/caller binding is not supplied for this placeholder candidate. Independently, current full-build subphase/remaining work/reuse speedup and45-minute outlook remain unknown; shared345 alone is not a completion forecast."
+  },
+  "candidate": {
+    "workflowPath": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 22433,
+    "sha256": "5cdbea000e3ce4b75bfd0b8be519956dfef6ce76c83a63e287bd9e4b0e122d4e",
+    "fixturePlaceholder": "PLACEHOLDER",
+    "renderedImmutableCallerReviewed": false,
+    "sourceFreeze": {
+      "bytes": 810,
+      "sha256": "c0457e8ae9452d3f9d9750a51bd8ddb04bc419bed14d0401ebf104f0dea89b1a"
+    },
+    "baseCaller": "337a209baae219771c562adc80b832e491418a23",
+    "baseWorkflow": {
+      "bytes": 19894,
+      "sha256": "5d7890613dc9ddceda844f018e08ed477dd62fa5c193725754edc762054a65b5"
+    }
+  },
+  "linkedEvidence": {
+    "run47TerminalReview": {
+      "bytes": 12681,
+      "sha256": "e2b1336ae0fa3b91276858446b5ce2c53d5b000e59510a412543a64ce459c627"
+    },
+    "run47Receipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_TERMINAL_RESULT.json",
+      "bytes": 44671,
+      "sha256": "c75d15e1a29845d0d16ecd345e7013c50b034022dee881f0d6ba93e6ae1c37e7"
+    },
+    "consumerTimeImplementationReview": {
+      "bytes": 6310,
+      "sha256": "8a3047dc6aba043702436961269bd739775fb425782f6f28e16a842974502091"
+    },
+    "currentSdkRouteReview": {
+      "bytes": 12493,
+      "sha256": "51412081777554843913a62f49487f5599642619c956604a6e2dbc90854723d4"
+    },
+    "retryFeasibility": {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_RETRY_FEASIBILITY.json",
+      "bytes": 5586,
+      "sha256": "559185b514d597a21b0b8e6b6fd3e844887f7b40755e2e1754fb00e15eb62cae"
+    }
+  },
+  "staticChecks": {
+    "yamlBashAndInlinePythonSyntax": "PASS",
+    "consumerJobs": 1,
+    "jobName": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "jobMinutes": 360,
+    "readOnlyPermissionsUnchanged": true,
+    "initialCreatedPushBeforeZeroAttemptOneGuardsUnchanged": true,
+    "explicitFlag": "--consumer-shared-deadline",
+    "flagOccurrences": 1,
+    "consumerAndMozillaOnlySelection": true,
+    "sourceChangeScope": "Only the new shared policy module/flow changes, added test selection, explicit flag and strict time-budget conjunction; prior SDK and Mozilla gate AST remains intact.",
+    "sdkAndCheckpointStepsUnchanged": true,
+    "sdkSourceStillExplicitAtFetchAndPipeline": true,
+    "preflightStepMinutes": 10,
+    "preflightRunnerPhaseMinutes": 15,
+    "sdkStepMinutes": 12,
+    "payloadDownloadSeconds": 600,
+    "producerJobs": 0,
+    "newArtifactUploads": 0,
+    "packageAndNativeAuthentication": "NOT_TESTED",
+    "productQualification": false,
+    "sdkSourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+    "originalPlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "sameCheckpointArtifact": 12164479528,
+    "sameCheckpointOriginRun": 39197008470,
+    "testDiscovery": {
+      "qaModules": 21,
+      "qaTests": 430,
+      "recordingTests": 14,
+      "actualSelectedCountChecked": true,
+      "testsExecutedByDiscovery": false
+    },
+    "finalGate": "Adds time_budget_ok as an AND to the unchanged prior SDK/Mozilla qualification gate; preflight count only changes403 to430.",
+    "budgetGate": "Exact14-key set, strict schema/int/string/bool values, exact five-key current and legacy deadline maps, fixed plan/profile/origin semantics; unknown/extra/missing/relative/additive/reset/boolean numeric values reject.",
+    "budget": {
+      "schema": 1,
+      "profile": "consumer-shared-final-deadline-v1",
+      "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "platformMinutes": 360,
+      "sharedWorkDeadlineMinutes": 345,
+      "cleanupReserveMinutes": 15,
+      "clock": "fresh-job-monotonic-origin",
+      "deadlineReference": "absolute-from-existing-job-origin",
+      "deadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 345,
+        "consumerPackageDeadlineMinutes": 345,
+        "consumerNativeDeadlineMinutes": 345,
+        "finalDeadlineMinutes": 345
+      },
+      "legacyDeadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 300,
+        "consumerPackageDeadlineMinutes": 315,
+        "consumerNativeDeadlineMinutes": 335,
+        "finalDeadlineMinutes": 345
+      },
+      "onlyExecutionTimingChanged": true,
+      "resourceAndCompilationInputsChanged": false,
+      "clockResetAllowed": false,
+      "stageBudgetsAreAdditive": false
+    },
+    "cleanupReserveMeaning": "Nominal difference between task-clock345 work deadline and360 platform bound; not an exactly15-minute wallclock guarantee.",
+    "negativeMozillaCaseRemainsFailed": true
+  },
+  "independentExecution": {
+    "normalFinalGateControlsPassed": 1,
+    "faultControlsRejected": 342,
+    "previousSdkAndMozillaFaultsRejected": 248,
+    "newTimeBudgetFaultsRejected": 94,
+    "controlsScope": "Read-only re-execution of script prefix before result writes; renderer/result mutation lines excluded. Fake evidence only; no CI, SDK or Mozilla execution.",
+    "sameFrozenSourceFullRegression": {
+      "total": 645,
+      "passed": 628,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 31.891,
+      "log": {
+        "bytes": 10924,
+        "sha256": "84ae95bb32536df45a66e93c887af33b47342235b8fb76ccfc3c7f3c799c9863"
+      }
+    }
+  },
+  "supportingBindings": {
+    "inputFreeze": {
+      "bytes": 4209,
+      "sha256": "2ed9f0e37910ee9521e1447ecbd6fab9ee74e5a1bcdf29da4157ea6d21c50c36"
+    },
+    "candidateDiff": {
+      "bytes": 6851,
+      "sha256": "b0546c989c7b074776fd11251bbd6711ba58cae45534dddb5c47f15c6d283c11"
+    },
+    "controlsScript": {
+      "bytes": 18939,
+      "sha256": "4d23160a25315187b4b5c5642840dab0684e8c830e506907f61e3c5091863681"
+    },
+    "recordedControlResult": {
+      "bytes": 2174,
+      "sha256": "8165606740f0d056fec0e57941c1fd99943bb74c0dff8222d693c8775f562997"
+    },
+    "countControls": {
+      "bytes": 543,
+      "sha256": "a64f33be2b5ef211bda21ad1881dc9da42fb8a0231fb6458118c78d567337be5"
+    }
+  },
+  "feasibilityAssessment": {
+    "currentEvidence": "Run47 stopped at absolute300 while log/resource activity continued; restored source/configuration and owned cleanup passed. Current fine-grained build phase and remaining work are unknown.",
+    "checkpointAcceleration": "Origin exports/Rust/pack and restore exactness are proved; actual current Cargo/make cache hits or time saved are not measured.",
+    "additional45MinuteOutlook": "UNKNOWN",
+    "feasibilityDocument": "Conservative: records unknowns and unimplemented same-runner tier/target/profile options without claiming speedup, cache hits or an available run47 object tree.",
+    "recommendedNextMilestone": "Review a bounded source-bound existing Mach completion-marker diagnostic or verified minimal target closure before another hours-long consumer so a further stop narrows remaining work.",
+    "newProfileOrSplitImplementedOrExecuted": false,
+    "longExecutionGoGranted": false
+  },
+  "remainingConditions": [
+    "Bind final source and caller commit/tree/provider bytes, rendering only the immutable fixture placeholder and retaining the reviewed fixed test counts and gates.",
+    "Resolve the latest remaining-work/reuse/feasibility milestone; source correctness alone does not release this hours-long run.",
+    "If a later execution is released, recheck fresh official unexpired SDK12149860607 and existing checkpoint provenance/size/digests, actual current/origin identity, no owned active/queued overlap and unused branch.",
+    "Require actual Mac430 QA plus14 recording tests without skips; actual alternate acquisition/restore/full-host/Mozilla results remain pending."
+  ],
+  "operations": {
+    "sourceEdits": false,
+    "ciLaunchOrCancellation": false,
+    "refOrBranchMutation": false,
+    "payloadAcquisition": false,
+    "artifactUpload": false,
+    "signingAuthenticationOrPermissionChange": false
+  }
+}

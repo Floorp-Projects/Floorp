@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "review": "Recovery48 shared-deadline final immutable binding",
+  "reviewedAtUtc": "2026-10-19T12:29:03.607880+00:00",
+  "decision": {
+    "sourceAndStaticRoute": "CLEAR",
+    "activation": "HOLD",
+    "openBlockingCodeFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "hoursReadiness": "Not established: remaining build subphase/work, reuse speedup and45-minute completion outlook are unknown. No long execution GO is granted."
+  },
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "563b9e1fe1a2ae0bece173e8173b4a6a62b6c485",
+    "tree": "0839d3ec660b492a5bcfce9f45f19ee202d0d435",
+    "parent": "7e7c0788bc2d1a7ce02ddd470f7594cb943ffdb9",
+    "providerParentTreeAndCompareVerified": true,
+    "changedPathsFromParent": 8,
+    "all8ProviderReadbacksExact": true,
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_RETRY_FEASIBILITY.json",
+        "bytes": 5586,
+        "sha256": "559185b514d597a21b0b8e6b6fd3e844887f7b40755e2e1754fb00e15eb62cae"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SHARED_DEADLINE_DESIGN_REVIEW.json",
+        "bytes": 4002,
+        "sha256": "e46780b2e1ebc0ff70b1d4d99b9e127a97097dd7adf226d87acb7e4bdfe90ead"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SHARED_DEADLINE_IMPLEMENTATION_REVIEW.json",
+        "bytes": 6310,
+        "sha256": "8a3047dc6aba043702436961269bd739775fb425782f6f28e16a842974502091"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SHARED_DEADLINE_PREPARATION.json",
+        "bytes": 6160,
+        "sha256": "6007ed3bde2ba35e419c7c8f6b57269aeb43d8dda32d46e58036df471a797b79"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/consumer_time.py",
+        "bytes": 2767,
+        "sha256": "43e6e1373e57e52ca47bf14570117508d403264954e823e1d91660c917c4d839"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 45136,
+        "sha256": "f1c26bc31a8b77df6c8ca5fe52ce323b986e12d5e155932760a1e8581009bbfd"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_consumer_time.py",
+        "bytes": 9180,
+        "sha256": "bd55c496ba98423b9b3d8236cea9a4613a0d94fc277157309cf7179a2c857866"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 20842,
+        "sha256": "8291566482a3caf9e9801ca9f5798a782a49ad7eac05bd7ef840a59d0515c4f4"
+      }
+    ]
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "0770939680d9413f4aa852bac72b4f25454552c0",
+    "tree": "dcde59ca35572c5ac02c00a09394450a145c7fbf",
+    "parent": "337a209baae219771c562adc80b832e491418a23",
+    "providerParentTreeAndCompareVerified": true,
+    "commitsAhead": 1,
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "workflow": {
+      "bytes": 22462,
+      "sha256": "2c751dbc90e5d4eed35fa7e2d88c67201623c0c1cfb7c924677b97209ab0c578"
+    },
+    "providerWorkflowReadbackExact": true,
+    "renderedDifference": "Only PLACEHOLDER replaced with immutable fixture563b9e1f; the reviewed22433-byte candidate otherwise remains exact.",
+    "branchActivationReviewedOrPerformed": false
+  },
+  "terminalPublication": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "e12109dd30b0e6b7670ca53e3f00b8e2ef8e2559",
+    "parent": "563b9e1fe1a2ae0bece173e8173b4a6a62b6c485",
+    "onlyTwoEvidenceDocsChanged": true,
+    "providerReadbacksExact": true,
+    "files": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_TERMINAL_RESULT.json",
+        "bytes": 44671,
+        "sha256": "c75d15e1a29845d0d16ecd345e7013c50b034022dee881f0d6ba93e6ae1c37e7"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_TERMINAL_REVIEW.json",
+        "bytes": 12681,
+        "sha256": "e2b1336ae0fa3b91276858446b5ce2c53d5b000e59510a412543a64ce459c627"
+      }
+    ]
+  },
+  "carriedReviews": {
+    "staticCandidate": {
+      "bytes": 8440,
+      "sha256": "9c76ff77a977c01e7fe2d53d2ab883dcae4e815b7158698122a16c6da30dddb3"
+    },
+    "timeImplementation": {
+      "bytes": 6310,
+      "sha256": "8a3047dc6aba043702436961269bd739775fb425782f6f28e16a842974502091"
+    },
+    "sdkImplementation": {
+      "bytes": 12227,
+      "sha256": "6f8dba3b0fce0b092eaa0e480ea378b90cfde4a1c41f73a2d5d515b95b4fa9ac"
+    }
+  },
+  "verifiedRoute": {
+    "consumerJobs": 1,
+    "jobName": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "platformJobMinutes": 360,
+    "permissions": "Unchanged contents:read/actions:read. Dedicated created-push, before-zero and attempt1 guards retained.",
+    "explicitMode": "--checkpoint-role consumer --replay-origin --mozilla-only --consumer-shared-deadline",
+    "sharedProfile": "consumer-shared-final-deadline-v1",
+    "absoluteJobOriginDeadlinesMinutes": {
+      "restore": 60,
+      "fullBuild": 345,
+      "package": 345,
+      "nativeAndMozilla": 345,
+      "final": 345,
+      "platform": 360
+    },
+    "defaultLegacyCapsUnchanged": true,
+    "stageBudgetsAdditive": false,
+    "jobClockReset": false,
+    "cleanupReserve": "Nominal345-to360 difference on the existing clock, not an exactly15-minute wallclock guarantee.",
+    "sdkSourceExplicitAtFetchAndPipeline": true,
+    "sdkAfterPreflightBeforeSourceAndHarnessCheckout": true,
+    "sdkStepMinutes": 12,
+    "downloadDeadlineSeconds": 600,
+    "preflightStepMinutes": 10,
+    "preflightRunnerPhaseMinutes": 15,
+    "sdkArtifact": 12149860607,
+    "sdkSourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "providerPlanExact": true,
+    "checkpointArtifact": 12164479528,
+    "checkpointOriginRun": 39197008470,
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "sdkCheckpointCompilationAndResourceGuardsUnchanged": true,
+    "producerJobs": 0,
+    "artifactUploads": 0,
+    "packageAndNative": "NOT_TESTED",
+    "productQualification": false,
+    "freshObjdir": false,
+    "sameJob": false
+  },
+  "independentChecks": {
+    "sourceCompareToSdkFixture21f": "Only4 timing implementation/test files plus evidence documents changed; original plan, checkpoint/context/replay, SDK source and compilation/resource inputs remain unchanged.",
+    "selectedSuiteDiscovery": {
+      "qaModules": 21,
+      "qaTests": 430,
+      "recordingTests": 14,
+      "testExecutionDuringDiscovery": false
+    },
+    "renderedSyntax": "YAML plus all Bash and inline Python passed.",
+    "renderedFinalGateControls": {
+      "normalPassed": 1,
+      "faultsRejected": 342,
+      "previousSdkAndMozillaFaults": 248,
+      "additionalTimePolicyFaults": 94
+    },
+    "gateSemantics": "Preserves prior SDK and typed three-case Mozilla gate AST, ANDs exact14-key time-budget validation, updates only QA count403 to430, keeps deliberate failure control failed and requires clean exact reaping/groups/monitor evidence.",
+    "controlsWereReadOnly": "Only comparison/syntax/deterministic fake result prefix was run; renderer/result-write statements excluded.",
+    "sourceRegression": {
+      "total": 645,
+      "passed": 628,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 31.891,
+      "log": {
+        "bytes": 10924,
+        "sha256": "84ae95bb32536df45a66e93c887af33b47342235b8fb76ccfc3c7f3c799c9863"
+      }
+    },
+    "recordedPreflightExpected": "Actual future Mac430QA+14 recording must all pass with0skip; this review does not establish that execution."
+  },
+  "evidenceBindings": {
+    "candidate": {
+      "bytes": 22433,
+      "sha256": "5cdbea000e3ce4b75bfd0b8be519956dfef6ce76c83a63e287bd9e4b0e122d4e"
+    },
+    "renderedControls": {
+      "bytes": 18963,
+      "sha256": "8d66e584ae9ae869fc7ad4339b8ca1a190873fc28e60ff12270afc047c68ef2c"
+    },
+    "renderedControlResult": {
+      "bytes": 2143,
+      "sha256": "0599b8974e97bd0a68e7f434497257b8f5abadba7a1aed1ca49f333db03c2102"
+    },
+    "originalControlResultRestoredExact": {
+      "bytes": 2174,
+      "sha256": "8165606740f0d056fec0e57941c1fd99943bb74c0dff8222d693c8775f562997"
+    }
+  },
+  "feasibilityAndTargetReview": {
+    "retryAssessment": {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_RETRY_FEASIBILITY.json",
+      "bytes": 5586,
+      "sha256": "559185b514d597a21b0b8e6b6fd3e844887f7b40755e2e1754fb00e15eb62cae"
+    },
+    "minimalMozillaTargetAssessment": {
+      "bytes": 23255,
+      "sha256": "6edbefbc7b8a507283aaa458ad2077d0eec65dffd0f9cd76b31c1682d95d1436"
+    },
+    "sourceVerification": {
+      "runtimeFilesHashMatchedAtPinned7dd": 29,
+      "qaFilesMatched": 6,
+      "buildOrMakeExecuted": false
+    },
+    "selectedDependencyEdgesIndependentlyRead": [
+      "xpcshell GeckoProgram dependent -> xul-real",
+      "xul-real -> static:xul and gkrust",
+      "binaries -> recurse_compile and macOS recurse_tools"
+    ],
+    "conclusion": {
+      "fortyFiveMinuteCompletionOutlook": "UNKNOWN",
+      "minimalExistingTargetRouteProven": false,
+      "sameRunnerIncrementalReuseSupportedBySource": true,
+      "xpcshellCanAvoidLinkedXUL": false,
+      "targetPrioritizationCandidateExists": true,
+      "shorterRuntimeProven": false,
+      "fullHostQualificationRequiresSeparateCompletedEvidence": true,
+      "nativeAuthentication": "NOT_TESTED"
+    },
+    "assessment": "The target report correctly distinguishes source-supported candidates from an actual configured Mac dependency/resource closure or measured speedup. xpcshell alone does not bypass XUL; binaries still traverses all native compile roots; bundle/resources and final full-host proof remain separate.",
+    "remainingWork": "Run47 last completed fine-grained compile/link phase and actual remaining work cannot be recovered from source or aggregate byte counts. Restore correctness is not a current Cargo/make cache-hit or acceleration measurement.",
+    "requiredNextMilestone": "Review bounded completion-marker evidence or the actual configured minimal smoke target/bundle closure before another hours-long consumer. Keep unavailable/truncated/unknown evidence explicit and preserve primary failure.",
+    "newObservabilityOrSplitImplementedOrExecuted": false
+  },
+  "remainingConditions": [
+    "Hours-run feasibility milestone remains unresolved; immutable source/caller correctness does not release activation.",
+    "Any later execution still requires fresh official unexpired SDK/checkpoint metadata and actual provenance/size/digest checks, no owned overlap, unused branch/caller history and real current/origin context validation.",
+    "Actual full host/XUL, current Mozilla cases and native authentication remain unverified. Original native cause remains unknown."
+  ],
+  "operations": {
+    "sourceEdits": false,
+    "ciLaunchOrCancellation": false,
+    "branchRefMutation": false,
+    "payloadAcquisition": false,
+    "artifactUpload": false,
+    "signingAuthenticationOrPermissionChange": false
+  }
+}

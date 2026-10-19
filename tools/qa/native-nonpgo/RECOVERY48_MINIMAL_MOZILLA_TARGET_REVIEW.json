@@ -1,0 +1,687 @@
+{
+  "schema": 1,
+  "status": "read-only-source-review",
+  "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "checkoutHEAD": "67ddd03975f02936ceff311a5d5639dee585792d",
+  "checkoutDifferenceFromRef": [
+    ".github/workflows/mac-native-nonpgo.yml"
+  ],
+  "inspectedRuntimeFilesByteEqualToRef": true,
+  "search": {
+    "recommendedCLI": "searchfox-cli",
+    "attempted": true,
+    "outcome": "TLS-UnknownIssuer",
+    "fallback": "bounded fixed-ref git source after the installed CLI failed certificate validation",
+    "toolsInstalled": false
+  },
+  "conclusion": {
+    "fortyFiveMinuteCompletionOutlook": "UNKNOWN",
+    "minimalExistingTargetRouteProven": false,
+    "sameRunnerIncrementalReuseSupportedBySource": true,
+    "xpcshellCanAvoidLinkedXUL": false,
+    "targetPrioritizationCandidateExists": true,
+    "shorterRuntimeProven": false,
+    "fullHostQualificationRequiresSeparateCompletedEvidence": true,
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "facts": [
+    {
+      "id": "F1",
+      "classification": "confirmed-source",
+      "statement": "Producer boundary runs pre-export/export and toolkit/library/rust/target-objects, requires a real gkrust archive, and rejects an already-built host object or XUL. It preserves configured root.mk/root-deps.mk. It is not a finished C++/XUL boundary.",
+      "refs": [
+        "QA:pipeline.py:444-469",
+        "QA:checkpoint.py:168-197"
+      ]
+    },
+    {
+      "id": "F2",
+      "classification": "confirmed-source",
+      "statement": "xpcshell is GeckoProgram(dependent), whose template links nspr, xul-real and mozglue; xul-real links static:xul and gkrust. Cocoa MacWebAppService.mm belongs to xul. XUL native dependencies remain even for a single version-comparator test.",
+      "refs": [
+        "js/xpconnect/shell/moz.build:5",
+        "build/gecko_templates.mozbuild:24-40",
+        "toolkit/library/build/moz.build:5-13",
+        "widget/cocoa/moz.build:108,189-202"
+      ]
+    },
+    {
+      "id": "F3",
+      "classification": "confirmed-source",
+      "statement": "RecursiveMake emits root target dependencies for recursively linked libraries and target-objects, includes root-deps.mk from root.mk, and exposes compile targets at the root. mach -C . with an explicit graph node retains root dependency traversal; a subdirectory build and RECURSE_BASE_DIR filtering are not equivalent to that closure.",
+      "refs": [
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1586-1610,989-999",
+        "config/recurse.mk:69-79",
+        "python/mozbuild/mozbuild/controller/building.py:1453-1465"
+      ]
+    },
+    {
+      "id": "F4",
+      "classification": "confirmed-source",
+      "statement": "binaries runs install-manifests-binaries plus recurse_compile and, on macOS, recurse_tools. It compiles all native default roots; it is not an xpcshell-only dependency target. Both binaries/faster together are documented as incomplete relative to a vanilla build.",
+      "refs": [
+        "Makefile.in:57-61",
+        "config/recurse.mk:37-46",
+        "python/mozbuild/mozbuild/build_commands.py:184-194",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:788-833"
+      ]
+    },
+    {
+      "id": "F5",
+      "classification": "confirmed-source",
+      "statement": "Current QA smoke requires executable current-job Mach-O xpcshell and XUL inside the configured app bundle, imports preprocessed AppConstants.sys.mjs, and uses stock mach xpcshell-test. It runs compiled-debug, intentional failure, and the original upstream version-comparator with the original head. It already disclaims native authentication/browser chrome/product qualification.",
+      "refs": [
+        "QA:mozilla_harness_smoke.py:248-300",
+        "QA:mozilla-smoke/positive/test_current_debug.js",
+        "testing/xpcshell/mach_commands.py:221-234",
+        "toolkit/modules/moz.build:255-261"
+      ]
+    },
+    {
+      "id": "F6",
+      "classification": "confirmed-source",
+      "statement": "The app bundle is assembled in tools from staged dist/bin assets, with xpcshell/XUL routed to Contents/MacOS and other resources to Contents/Resources. Its declared binary inputs include the browser executable and optional updater. Shell target alone therefore does not establish that the existing bundle-based smoke has all resources or auxiliary runtime programs. The stock harness also installs tests and can start its existing HTTP3 server.",
+      "refs": [
+        "browser/app/moz.build:74-105",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1995-2071",
+        "python/mozbuild/mozbuild/action/assemble_macos_bundle.py:55-83",
+        "browser/app/macbuild/Contents/MacOS-files.in:24-25",
+        "QA:mozilla_harness_smoke.py:250-255"
+      ]
+    },
+    {
+      "id": "F7",
+      "classification": "confirmed-source",
+      "statement": "FasterMake builds noncompiled install manifests and selected generated files; its mac default also calls app repackage when not in hybrid recursion. A normal non-artifact configure defaults to RecursiveMake plus FasterMake, rather than the artifact hybrid. The producer export boundary alone does not prove later misc-generated modules/bundle are complete.",
+      "refs": [
+        "moz.configure:645-672",
+        "config/faster/rules.mk:8-19,37-56",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1798-1834",
+        "toolkit/modules/moz.build:255-261",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1853-1886"
+      ]
+    },
+    {
+      "id": "F8",
+      "classification": "confirmed-source",
+      "statement": "The plan applies extra fixed patches. Among inspected target/bundle files, brandingFileIcon.patch appends icon definitions to browser/app/moz.build and moz.build.patch adds a pre-build XPCOM manifest directory; neither removes the quoted xpcshell/XUL dependency edge. Any route must use the actual restored generated graph, not assume the unconfigured graph is complete.",
+      "refs": [
+        ".github/patches/upstream/brandingFileIcon.patch",
+        ".github/patches/upstream/moz.build.patch",
+        ".github/assets/pre-build/moz.build:8-15"
+      ]
+    },
+    {
+      "id": "F9",
+      "classification": "confirmed-source",
+      "statement": "xul-gtest and its Rust library are default or nondefault depending on LINK_GTEST_DURING_COMPILE. Without the restored effective setting and graph it is invalid to claim a second gtest link/Rust build was present in run47 or that omitting it would save a particular time.",
+      "refs": [
+        "toolkit/library/gtest/moz.build:29-32",
+        "toolkit/library/gtest/rust/moz.build:10-15",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:838-861"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "id": "O1",
+      "name": "unchanged full build with explicit phase evidence",
+      "classification": "diagnostic-proposal-not-executed",
+      "description": "Keep the existing stock full-build target and unchanged config/checkpoint. Preserve completed tier boundaries and bounded last progress in the existing receipt before and after cleanup. If splitting invocations, derive the actual configured normal and automation tiers and preserve their order; do not assume a shortened handwritten list equals full build.",
+      "sameRunner": true,
+      "newArtifacts": false,
+      "newProducer": false,
+      "configChanges": false,
+      "speedup": "UNPROVEN",
+      "qualification": "full host only after the existing complete-build evidence and unchanged final proof; native auth remains separate",
+      "risks": [
+        "Better observability alone does not shorten native compile or link.",
+        "Separate mach invocations can repeat buildid/preprocessing/backend/post-build work; exact equivalence and cost need validation."
+      ]
+    },
+    {
+      "id": "O2",
+      "name": "prioritize the stock root xpcshell dependency closure",
+      "classification": "source-supported-candidate-not-qualified-or-executed",
+      "stockBuildTarget": {
+        "jobs": 3,
+        "scope": "top-level-objdir",
+        "node": "js/xpconnect/shell/target"
+      },
+      "description": "On the same restored objdir, first verify actual root.mk/root-deps.mk has this node and edges through toolkit/library/build/target to the restored gkrust node. Use the top-level graph with no RECURSE_BASE_DIR or config changes. This can prioritize XUL/xpcshell relative to other roots. Then finish the stock resources, real browser bundle inputs and tools prerequisites required by the current smoke; an exact minimal sufficient suffix is still UNKNOWN.",
+      "sameRunner": true,
+      "newArtifacts": false,
+      "newProducer": false,
+      "configChanges": false,
+      "speedup": "UNPROVEN",
+      "fortyFiveMinuteOutlook": "UNKNOWN",
+      "qualification": "Only the explicitly completed current-source three-case Mozilla smoke, if all existing asset/input/monitor/reap gates pass. Do not mark fullHostXUL/full-host-complete based merely on this partial target. Later stock full-build proof is separate.",
+      "risks": [
+        "Broad XUL C++/Obj-C dependencies and link remain.",
+        "Incomplete resource/bundle/native utility prerequisites can fail before a selected test.",
+        "Current pipeline expects full build before smoke and sets fullHostXUL after that; a target route requires separate reviewed QA orchestration and evidence labels.",
+        "No measured critical-path or omitted-root time is available."
+      ]
+    },
+    {
+      "id": "O3",
+      "name": "stock binaries target",
+      "classification": "existing-target-not-proven-shortcut",
+      "stockBuildTarget": {
+        "jobs": 3,
+        "scope": "top-level-objdir",
+        "node": "binaries"
+      },
+      "description": "Can reuse the same checkpoint and builds all native roots followed by the Mac tools tier. It may skip misc/libs work which the current real-test assets need; completing stock resources may remove any hoped-for saving.",
+      "sameRunner": true,
+      "newArtifacts": false,
+      "newProducer": false,
+      "configChanges": false,
+      "speedup": "UNPROVEN",
+      "fortyFiveMinuteOutlook": "UNKNOWN",
+      "qualification": "No full-host equivalence claim from binaries alone; retain existing proof boundaries and test requirements.",
+      "risks": [
+        "Full native compile remains.",
+        "binaries/faster are documented as not covering every vanilla build action."
+      ]
+    }
+  ],
+  "unknowns": [
+    "run47 last completed native compile/link target and remaining critical path cannot be established from source. No retained raw compiler log or live-runner state was inspected in this source-only assessment.",
+    "Exact restored configured root-deps graph closure, generated tier list, optional gtest setting and bundle prerequisites have not been inspected on a live runner.",
+    "Which omitted default roots are expensive enough to matter, whether XUL link began, and whether 45 additional minutes would suffice are UNKNOWN.",
+    "No native Mac build/test or measured timing was executed for any proposed target route."
+  ],
+  "nextReadOnlyChecksWhenRunnerAvailable": [
+    "Use existing verified checkpoint restore/config/context; parse the actual generated root.mk/root-deps.mk for target membership and transitive dependencies, and record fixed target counts/hashes. Do not call make dry-run harmless: recursive recipes may execute.",
+    "Record monotonic natural stage exit/reap/group-gone and completed tier receipts under the same Runner origin/resources. Preserve first failure separately from cleanup.",
+    "Evaluate remaining work from actual completed compile/link boundaries before another long attempt; if the outlook stays UNKNOWN, keep it UNKNOWN and choose a separately reviewed minimal smoke-first split rather than claiming a timeout increase is a proven fix."
+  ],
+  "sources": {
+    "Makefile.in": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 6284,
+      "sha256": "0a887dbea2b82b1a8517db1a764fe9ef85de3d6da0c11c68b5118ab453f453ad",
+      "lineRanges": [
+        [
+          33,
+          61
+        ],
+        [
+          102,
+          105
+        ]
+      ]
+    },
+    "config/recurse.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 8560,
+      "sha256": "3eb934988225cb3724676f437b3635813a223d7213f164d9a7e6be15755721ce",
+      "lineRanges": [
+        [
+          27,
+          46
+        ],
+        [
+          69,
+          103
+        ]
+      ]
+    },
+    "config/baseconfig.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 2424,
+      "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4",
+      "lineRanges": [
+        [
+          41,
+          65
+        ]
+      ]
+    },
+    "config/rules.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 39531,
+      "sha256": "a9e20f025e83b8adb213724f204f88c32e238b9b5f309e47108b8c9fa38e6046",
+      "lineRanges": [
+        [
+          340,
+          345
+        ],
+        [
+          369,
+          379
+        ]
+      ]
+    },
+    "build/gecko_templates.mozbuild": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 3997,
+      "sha256": "65730546837dd62d7984f01669ba6f7ceaf42238fcc831d18724c2589925757e",
+      "lineRanges": [
+        [
+          7,
+          40
+        ],
+        [
+          55,
+          67
+        ]
+      ]
+    },
+    "js/xpconnect/shell/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 1994,
+      "sha256": "bdfe6aca1eb5dfcde216c2e53d2c89f64259e8b4c7da1c2fdfefd92cd67d804b",
+      "lineRanges": [
+        [
+          5,
+          20
+        ]
+      ]
+    },
+    "toolkit/library/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 11472,
+      "sha256": "8ace4cd739f040f3394d679205fa1fc8d9cc3981310087078e2bc653a1ad1ed2",
+      "lineRanges": [
+        [
+          16,
+          23
+        ],
+        [
+          113,
+          154
+        ]
+      ]
+    },
+    "toolkit/library/build/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 1448,
+      "sha256": "f3ffb0e009148bd09849d6132913cd23a5d6421204dc199d228fbcfe733d22a3",
+      "lineRanges": [
+        [
+          5,
+          31
+        ]
+      ]
+    },
+    "toolkit/library/rust/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 4654,
+      "sha256": "529014ff64fc5e7caef4843bd135669a38df8fc14db35a25411acd9b7e6c3721",
+      "lineRanges": [
+        [
+          5,
+          7
+        ]
+      ]
+    },
+    "widget/cocoa/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 5496,
+      "sha256": "209d892533eeb7eb7e72d3a3c3109bc248ebec84764cea177456459b83132613",
+      "lineRanges": [
+        [
+          102,
+          108
+        ],
+        [
+          189,
+          202
+        ]
+      ]
+    },
+    "python/mozbuild/mozbuild/backend/recursivemake.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 97110,
+      "sha256": "b5f799f5b4a0c43611afbe6ba73a8c124958d6e67193f7b36a7dbad8259267de",
+      "lineRanges": [
+        [
+          788,
+          833
+        ],
+        [
+          838,
+          884
+        ],
+        [
+          902,
+          937
+        ],
+        [
+          989,
+          999
+        ],
+        [
+          1586,
+          1610
+        ],
+        [
+          1798,
+          1834
+        ],
+        [
+          1853,
+          1886
+        ],
+        [
+          1995,
+          2071
+        ]
+      ]
+    },
+    "python/mozbuild/mozbuild/controller/building.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 78700,
+      "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640",
+      "lineRanges": [
+        [
+          1453,
+          1533
+        ],
+        [
+          1535,
+          1556
+        ],
+        [
+          1894,
+          1915
+        ]
+      ]
+    },
+    "python/mozbuild/mozbuild/build_commands.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 17665,
+      "sha256": "8481454888445f7e32322121c7a379f70685198947e2badec1d89793cf646499",
+      "lineRanges": [
+        [
+          178,
+          194
+        ]
+      ]
+    },
+    "config/faster/rules.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 3957,
+      "sha256": "bac98527a7308d2120053e6cf6d31c0581c2eb0774f56064cf333188bcffb597",
+      "lineRanges": [
+        [
+          8,
+          19
+        ],
+        [
+          37,
+          56
+        ],
+        [
+          72,
+          88
+        ]
+      ]
+    },
+    "browser/app/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 8690,
+      "sha256": "a4c71c07a9ffe5e362432c11fff9f9ab5dbbff0cb5930f8263d469e4c5eab57c",
+      "lineRanges": [
+        [
+          74,
+          108
+        ]
+      ]
+    },
+    "browser/app/macbuild/Contents/MacOS-files.in": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 457,
+      "sha256": "cb393404f457ebf6e0d50d3d1678da95479277d41ad002e3a3c25514791a8bbb",
+      "lineRanges": [
+        [
+          1,
+          25
+        ]
+      ]
+    },
+    "browser/app/macbuild/Contents/MacOS-files-copy.in": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 643,
+      "sha256": "d49b861401154c18f3830e9c7a0c088c1b3e73a1707bedce14d4c44f1d03b0cc",
+      "lineRanges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    "python/mozbuild/mozbuild/action/assemble_macos_bundle.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 3390,
+      "sha256": "77dc8e1cb0f8d7bb81f177e694356c701118d69a564d61e805b74640a69cef0a",
+      "lineRanges": [
+        [
+          23,
+          35
+        ],
+        [
+          55,
+          83
+        ]
+      ]
+    },
+    "toolkit/modules/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 10733,
+      "sha256": "231d95d6aba65dc370b1015e0c381b431bc08fe48bcf652b5ac1e27dd18de9ad",
+      "lineRanges": [
+        [
+          255,
+          261
+        ]
+      ]
+    },
+    "testing/xpcshell/mach_commands.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 12047,
+      "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489",
+      "lineRanges": [
+        [
+          70,
+          99
+        ],
+        [
+          221,
+          234
+        ]
+      ]
+    },
+    "testing/xpcshell/runxpcshelltests.py": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 114438,
+      "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad",
+      "lineRanges": [
+        [
+          1541,
+          1551
+        ],
+        [
+          1677,
+          1680
+        ]
+      ]
+    },
+    "moz.configure": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 31297,
+      "sha256": "57c1672d82e8be7ae337389ffa3672be375cfbc7c85675f32027dea9e8e93e8d",
+      "lineRanges": [
+        [
+          645,
+          672
+        ]
+      ]
+    },
+    "toolkit/library/gtest/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 607,
+      "sha256": "b5c08887421d7568352274de36fed719fc2e4b128dc421a78e77722f4d7cf37f",
+      "lineRanges": [
+        [
+          5,
+          32
+        ]
+      ]
+    },
+    "toolkit/library/gtest/rust/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 555,
+      "sha256": "44ea0a678fcebf0f2e3bd9581783894d8ed9344853ce9ed553df9820fee3afe6",
+      "lineRanges": [
+        [
+          10,
+          15
+        ]
+      ]
+    },
+    "client.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 2457,
+      "sha256": "699b6253aab2f88da2a6a9ecd3d46410b7a763531fa54ead4f10af1dc3b0da7a",
+      "lineRanges": [
+        [
+          46,
+          61
+        ]
+      ]
+    },
+    "build/moz-automation.mk": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 3686,
+      "sha256": "c3d67ccf44566773f67148f7d2fd01d79dc6865178f9431dcadce3703f5755e8",
+      "lineRanges": [
+        [
+          42,
+          84
+        ]
+      ]
+    },
+    ".github/assets/pre-build/moz.build": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 424,
+      "sha256": "5e114bfe157b7dc37a2ed87002ddfde8949d505f0a44fcbd115ee31ad5d17ab6",
+      "lineRanges": [
+        [
+          8,
+          15
+        ]
+      ]
+    },
+    ".github/patches/upstream/moz.build.patch": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 176,
+      "sha256": "d7cab6efd6445cd9b9c2e32ab1751e92e80015ac7e279d9b9b9a2a9397ee7e6e",
+      "lineRanges": [
+        [
+          1,
+          11
+        ]
+      ]
+    },
+    ".github/patches/upstream/brandingFileIcon.patch": {
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 708,
+      "sha256": "55d5bc554135564b6324b8206de28c21e87712c6d4a10093936cc0c228409fa0",
+      "lineRanges": [
+        [
+          1,
+          24
+        ]
+      ]
+    }
+  },
+  "qaSources": {
+    "tools/qa/native-nonpgo/pipeline.py": {
+      "bytes": 45136,
+      "sha256": "f1c26bc31a8b77df6c8ca5fe52ce323b986e12d5e155932760a1e8581009bbfd",
+      "lineRanges": [
+        [
+          171,
+          199
+        ],
+        [
+          444,
+          469
+        ],
+        [
+          491,
+          511
+        ]
+      ]
+    },
+    "tools/qa/native-nonpgo/checkpoint.py": {
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b",
+      "lineRanges": [
+        [
+          154,
+          197
+        ]
+      ]
+    },
+    "tools/qa/native-nonpgo/mozilla_harness_smoke.py": {
+      "bytes": 16546,
+      "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9",
+      "lineRanges": [
+        [
+          55,
+          69
+        ],
+        [
+          248,
+          300
+        ]
+      ]
+    },
+    "tools/qa/native-nonpgo/mozilla-smoke/positive/test_current_debug.js": {
+      "bytes": 645,
+      "sha256": "aecefb33e7768c489c5bf5a851c70d3df87dcb4f6986550108b49241fef0dff9",
+      "lineRanges": [
+        [
+          1,
+          20
+        ]
+      ]
+    },
+    "tools/qa/native-nonpgo/mozilla-smoke/negative/test_expected_failure.js": {
+      "bytes": 168,
+      "sha256": "4e860e91eb2ff3950ffbc6574829b95147802052fabdf3f154029e289b6466de",
+      "lineRanges": [
+        [
+          1,
+          6
+        ]
+      ]
+    },
+    "tools/qa/native-nonpgo/plan.json": {
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "lineRanges": []
+    }
+  },
+  "sanitization": {
+    "sourceRelativePathsOnly": true,
+    "machineAbsolutePaths": false,
+    "privateConversationContent": false,
+    "rawProcessData": false,
+    "rawArgv": false,
+    "freeformExceptionText": false
+  },
+  "operations": {
+    "sourceEdited": false,
+    "callerEditedForSpeculativeTargets": false,
+    "CIStarted": false,
+    "SDKAcquired": false,
+    "remoteRefChanged": false,
+    "newArtifactCreated": false,
+    "buildExecuted": false
+  }
+}
