@@ -1,0 +1,184 @@
+{
+  "schema": 1,
+  "review": "build-completion-collector-and-mozilla-first",
+  "status": "CLEAR",
+  "decision": {
+    "sourceAndLocalTests": "CLEAR",
+    "shortMacContractDiagnostic": "GO_AFTER_IMMUTABLE_FIXTURE_CALLER_BINDING",
+    "longConsumerValidation": "CONDITIONAL_ON_SHORT_MAC_TERMINAL_REVIEW_AND_FINAL_CALLER_CHECKS",
+    "fullBuildMozillaNativeQualification": "NOT_ESTABLISHED"
+  },
+  "openFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "bindings": {
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 14088,
+        "sha256": "e574108d5651a07fa5499122584b029c648dc67d8ba87d73b1535c6f5bd5d5cb"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 16696,
+        "sha256": "fe3ade1c1d2db7cc8c3546296aeaab8095a56016dc21cd85bedcf9602669431a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+        "bytes": 13768,
+        "sha256": "0702018e1330d5bb77f8cd6502f4fb8106611c66328f792e398ba3ed8f7ce2fd"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+        "bytes": 12435,
+        "sha256": "61ee6b78dfc15c2e509ee9728227c815f06881dd4e18a75ebb86510bf321c219"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 47069,
+        "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 31741,
+        "sha256": "83e03c2d412561670807440d26d5d4269693c2887095506d91b05c744f660727"
+      }
+    ],
+    "sourceFreeze": {
+      "path": "source-freeze-manifest",
+      "bytes": 1298,
+      "sha256": "512cf329d996ba714d49a18f6dd3f957bda500d5789449660144af5d6da715d6"
+    },
+    "baselinePlan": {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "shortWorkflowCandidate": {
+      "path": ".github/workflows/mac-native-checkpoint.yml (unrendered short49 candidate)",
+      "bytes": 29422,
+      "sha256": "6967eb671f9e0501f5e41c3e926a430d0f09f2cb9d36a4477e2016f99bb30d65"
+    },
+    "upstreamSerializer": {
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf"
+    }
+  },
+  "executedValidation": {
+    "finalFullQA": {
+      "platform": "Linux",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "total": 706,
+      "passed": 689,
+      "skipped": 17,
+      "skips": "Darwin-only tests",
+      "failures": 0,
+      "errors": 0,
+      "seconds": 32.967,
+      "exitCode": 0,
+      "privateLog": {
+        "path": "private validation log (digest only)",
+        "bytes": 10924,
+        "sha256": "a4b2e0606669a841fbdd13b81eed21b61832a18717296f64cac25f0e903493ff"
+      }
+    },
+    "actualPinnedSerializerControl": {
+      "executionPlatform": "Linux",
+      "cases": 6,
+      "formats": [
+        "jsonl",
+        "whole-profile"
+      ],
+      "controlsPerFormat": [
+        "positive",
+        "no-end",
+        "truncated"
+      ],
+      "allPassed": true,
+      "allStreamsAndBothPipeEndsClosed": true,
+      "allUnstartedProcessHandlesClosed": true,
+      "workerStarted": false,
+      "resourceSamplesCollected": false,
+      "realBuildPerformed": false,
+      "actualMacExecuted": false,
+      "safeResult": {
+        "path": "independent serializer control result",
+        "bytes": 1190,
+        "sha256": "2dfb84602b193326ec41208e1988b9fd4e235f70234452dc2c5575b9d5518323"
+      }
+    },
+    "callerControls": {
+      "yamlShellInlinePythonSyntax": "passed",
+      "actualLocalContractAccepted": true,
+      "negativeMutationsRejected": 508,
+      "reexecutedByReviewer": true,
+      "result": {
+        "path": "independent short caller controls",
+        "bytes": 848,
+        "sha256": "d1bea88a83c096993f27d5bcaa639cfdbf00ed6a7363520b70dce95cbb7ae758"
+      }
+    },
+    "sourceAPIMockedControls": {
+      "cases": 5,
+      "allPassed": true,
+      "actualNetworkRequested": false,
+      "reexecutedByReviewer": true,
+      "result": {
+        "path": "independent mocked source acquisition controls",
+        "bytes": 666,
+        "sha256": "d9c1f6af3378c3fff95e49aab7b3cd226bf082b9b79baca56702c41d9e82eb44"
+      }
+    },
+    "independentlyResolvedShortSuites": {
+      "qaModules": 23,
+      "qaCases": 491,
+      "recordingCases": 14,
+      "actualMacZeroSkipRequired": true
+    }
+  },
+  "sourceAssessment": {
+    "collector": [
+      "A private pre-command directory/file snapshot binds selection of exactly one fresh owned regular profile with link count one; descriptor, directory, length and timestamp changes invalidate the observation.",
+      "JSONL is read line by line; whole-profile column arrays are validated with exact lengths and valid string indexes. Duplicate JSON keys, malformed/truncated input, nonfinite or boolean numeric markers and invalid completion times do not yield partial counts.",
+      "Only ended allowlisted Phase/Object/Program/SharedLib/StaticLib/Rust markers are counted. Latest completion uses maximum end time, not serialization order. Teardown and unfinished markers do not prove tier completion.",
+      "Only exact allowlisted target text XUL/xpcshell/MacWebAppService.o can be emitted; arbitrary paths, marker text, identities and resource rows are not published.",
+      "Full build command outcome is independent of this optional observation. Snapshot or collection errors cannot replace an existing build failure or invalidate an otherwise successful build. Collection runs after Runner.run cleanup and before Mozilla/package."
+    ],
+    "mozillaFirst": [
+      "The opt-in is consumer-only and mutually exclusive with restore-only and mozilla-only.",
+      "After full build, the existing three Mozilla cases run against the same object tree before packaging. Complete smoke proof is required before package/native; existing default and mozilla-only behavior remain available.",
+      "A later package/native failure retains the separate Mozilla result; full success rechecks Mozilla proof. The deliberate failing xpcshell case remains a failed test whose expected detection is separately evaluated.",
+      "The same Runner and existing job monotonic origin are retained. Shared 345-minute absolute work deadline and 360-minute platform limit are unchanged; no additive stage window or clock reset is introduced."
+    ]
+  },
+  "coverageLimits": [
+    "Profile coverage is coverage of validated emitted marker records in one selected file, not a proof that every build operation emitted a marker or that compilation completed.",
+    "JSONL cap is 2 GiB, each line 1 MiB, total marker rows 4000000, recognized ended markers 250000, directory entries 4096. Whole-profile parsing is capped at 16 MiB. Processing time checks use a 30-second budget, not an independently enforced hard wall-clock deadline.",
+    "Mach can rewrite the stream to a whole profile even after an interrupted command; an oversized whole profile will remain unconfirmed with null counts. Diagnostics are not guaranteed at every stop.",
+    "Positive completion markers do not establish the current active phase, remaining targets, cache hits, checkpoint acceleration, completion within 45 minutes, or duration to completion.",
+    "Serializer controls use the exact upstream code with PsutilStub, synthetic markers and clock, and no resource worker. They do not reproduce a production build, stress load, real build timing or native GUI authentication."
+  ],
+  "shortMacRequirements": [
+    "Render the reviewed candidate with an immutable source fixture; verify exact provider bytes and caller ancestry/single workflow scope before creating the unused activation branch.",
+    "Run 491 selected QA and 14 recording cases with zero skips, the fixed-source official Contents API acquisition, all six actual serializer controls, and exact stage leader reap/verified group cleanup. Preserve firstFailure, stopping monitorFailure and retained diagnostics separately.",
+    "The short job acquires no SDK/checkpoint, performs no full Runtime checkout/build/Mozilla test, and uploads no artifact."
+  ],
+  "subsequentLongReadiness": [
+    "After the short Mac terminal evidence is clear, verify the final combined Mozilla-first/native caller and immutable source; recheck normal unexpired SDK/checkpoint API identity, size/digests, unused branch and absence of overlapping owned runs.",
+    "The authorized next consumer may discriminate full completion within the shared 345-minute work budget from a guarded stop with bounded profile format/coverage/reason and positive completion evidence.",
+    "Unknown completion forecasts alone are not an indefinite hold after the tested diagnostic and short Mac proof. Missing profile evidence stays unknown and never relaxes cleanup, resource or checkpoint guards."
+  ],
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "payloadDownloads": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}

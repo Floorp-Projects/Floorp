@@ -80,7 +80,7 @@ class RestoreOnlyFlow(unittest.TestCase):
         return path
 
     def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None,
-               shared_deadline=False, checkpoint_role='consumer'):
+               shared_deadline=False, checkpoint_role='consumer', mozilla_first=False):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
                 '--checkpoint-role', checkpoint_role]
@@ -90,6 +90,8 @@ class RestoreOnlyFlow(unittest.TestCase):
             argv += ['--restore-only']
         if mozilla_only:
             argv += ['--mozilla-only']
+        if mozilla_first:
+            argv += ['--mozilla-first']
         if sdk_source is not None:
             argv += ['--sdk-source', str(sdk_source)]
         if shared_deadline:
@@ -299,30 +301,39 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(self.stage_call('stage-package').kwargs['phase_deadline_minutes'],345)
         self.assertEqual(self.runner.phase_deadline_minutes,345)
 
-    def test_shared_native_keeps_same_deadline_after_build_and_package(self):
+    def prepare_native_boundary(self, *, succeed=False, before_stage=None):
         import hashlib
         self.stop_at_full_build = False
         (self.task/'effective-config.json').write_text(json.dumps({'nativeHelpers':{}}))
         def stop_native(stage, *args, **kwargs):
+            if before_stage:
+                before_stage(stage)
             result = self.run_stage(stage, *args, **kwargs)
             if stage == 'stage-package':
                 binary = self.task/'obj/dist/floorp/fixture.app/Contents/MacOS/XUL'
                 binary.parent.mkdir(parents=True)
                 binary.write_bytes(b'XUL')
             if stage == 'native-suite':
-                raise Failure('test-stop-at-native')
+                if not succeed:
+                    raise Failure('test-stop-at-native')
+                (self.task/'native-summary.json').write_text(json.dumps({'status':'passed'}))
+                self.runner.native_cleanup={'allOwnedGone':True,'censusComplete':True,'outlivedHarness':0}
             return result
         self.runner.run.side_effect = stop_native
         metadata={'sha256':hashlib.sha256(b'XUL').hexdigest(), 'uuid':'fixture-uuid',
                   'sectionsSHA256':'fixture-sections'}
         # Original and disposable copy receive the same binary receipt in this flow test.
         self.macho_receipt = metadata
+
+    def test_shared_native_keeps_same_deadline_after_build_and_package(self):
+        self.prepare_native_boundary()
         with mock.patch.object(pipeline, 'OwnedNative'):
             _, report, _ = self.invoke(restore_only=False, shared_deadline=True)
         self.assertEqual(report['firstFailure']['stage'], 'native-suite')
         self.assertEqual(self.stage_call('native-suite').kwargs['phase_deadline_minutes'],345)
         self.assertEqual(self.stage_call('stage-package').kwargs['phase_deadline_minutes'],345)
         self.assertEqual(self.runner.phase_deadline_minutes,345)
+        self.mozilla.assert_not_called()
 
     def test_shared_restore_only_is_rejected_before_work(self):
         with mock.patch.object(pipeline,'Runner') as constructor:
@@ -374,6 +385,176 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(runner.monotonic_started,origin)
         self.assertEqual(runner.records[-1]['leaderReap'],{'status':'reaped','exitCode':0})
         self.assertEqual(runner.records[-1]['groupCleanup'],'verified-gone')
+
+    def test_restore_only_never_captures_build_profile_or_collects_completion(self):
+        with mock.patch.object(pipeline,'start_snapshot') as capture, \
+                mock.patch.object(pipeline,'collect_build_completion') as collect:
+            code, report, _ = self.invoke()
+        self.assertEqual(code,0)
+        self.assertNotIn('buildCompletion',report)
+        capture.assert_not_called()
+        collect.assert_not_called()
+
+    def test_build_profile_is_collected_after_reap_and_before_mozilla(self):
+        self.stop_at_full_build = False
+        private_snapshot={'private':'PRIVATE-SNAPSHOT-SENTINEL'}
+        def full_stage(stage,*args,**kwargs):
+            if stage=='full-build':
+                capture.assert_called_once_with(self.task)
+            result=self.run_stage(stage,*args,**kwargs)
+            if stage=='full-build':
+                self.runner.records[-1].update(leaderReap={'status':'reaped','exitCode':0},
+                                                groupCleanup='verified-gone',cleanupFailure=None)
+            return result
+        def after_reap(task,snapshot):
+            self.assertIs(snapshot,private_snapshot)
+            self.assertEqual(task,self.task)
+            self.assertEqual(self.runner.records[-1]['stage'],'full-build')
+            self.assertEqual(self.runner.records[-1]['leaderReap'],{'status':'reaped','exitCode':0})
+            self.assertEqual(self.runner.records[-1]['groupCleanup'],'verified-gone')
+            self.mozilla.assert_not_called()
+            return {'schema':1,'status':'observed','completeCoverage':True}
+        self.runner.run.side_effect=full_stage
+        with mock.patch.object(pipeline,'start_snapshot',return_value=private_snapshot) as capture, \
+                mock.patch.object(pipeline,'collect_build_completion',side_effect=after_reap) as collect:
+            code,report,_=self.invoke(restore_only=False,mozilla_only=True,shared_deadline=True)
+        self.assertEqual(code,0)
+        collect.assert_called_once()
+        self.assertIs(report['buildCompletion']['fullBuildCommandReturnedZero'],True)
+        self.assertNotIn('PRIVATE-SNAPSHOT-SENTINEL',json.dumps(report))
+        self.mozilla.assert_called_once()
+
+    def test_collector_exception_cannot_replace_original_full_build_failure(self):
+        with mock.patch.object(pipeline,'collect_build_completion',side_effect=RuntimeError('PRIVATE-SENTINEL')):
+            code,report,_=self.invoke(restore_only=False,shared_deadline=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{'stage':'full-build','code':'test-stop-at-full-build'})
+        self.assertEqual(report['buildCompletion']['reason'],'collector-exception')
+        self.assertIs(report['buildCompletion']['completeCoverage'],False)
+        self.assertIs(report['buildCompletion']['fullBuildCommandReturnedZero'],False)
+        self.assertNotIn('PRIVATE-SENTINEL',json.dumps(report))
+
+    def test_collector_exception_does_not_invalidate_successful_mozilla_execution(self):
+        self.stop_at_full_build=False
+        with mock.patch.object(pipeline,'collect_build_completion',side_effect=OSError('PRIVATE-SENTINEL')):
+            code,report,_=self.invoke(restore_only=False,mozilla_only=True,shared_deadline=True)
+        self.assertEqual(code,0)
+        self.assertEqual(report['status'],'mozilla-ready')
+        self.assertIsNone(report['firstFailure'])
+        self.assertIs(report['buildCompletion']['fullBuildCommandReturnedZero'],True)
+        self.assertEqual(report['buildCompletion']['status'],'unconfirmed')
+        self.assertNotIn('PRIVATE-SENTINEL',json.dumps(report))
+
+    def test_snapshot_exception_remains_optional_and_is_not_published(self):
+        self.stop_at_full_build=False
+        evidence={'schema':1,'status':'unconfirmed','reason':'snapshot-unavailable','completeCoverage':False}
+        with mock.patch.object(pipeline,'start_snapshot',side_effect=OSError('PRIVATE-SNAPSHOT')), \
+                mock.patch.object(pipeline,'collect_build_completion',return_value=evidence) as collect:
+            code,report,_=self.invoke(restore_only=False,mozilla_only=True,shared_deadline=True)
+        self.assertEqual(code,0)
+        collect.assert_called_once_with(self.task,None)
+        self.assertEqual(report['buildCompletion']['reason'],'snapshot-unavailable')
+        self.assertNotIn('PRIVATE-SNAPSHOT',json.dumps(report))
+
+    def test_missing_profile_keeps_completion_unknown_without_altering_deadlines(self):
+        _,report,_=self.invoke(restore_only=False,shared_deadline=True)
+        evidence=report['buildCompletion']
+        self.assertEqual(evidence['status'],'unconfirmed')
+        self.assertIs(evidence['completeCoverage'],False)
+        self.assertEqual(evidence['durationToCompletion'],'UNKNOWN')
+        self.assertEqual(report['executionTimeBudget']['sharedWorkDeadlineMinutes'],345)
+        self.assertEqual(self.stage_call('full-build').kwargs['phase_deadline_minutes'],345)
+
+    def test_mozilla_first_rejects_restore_only_and_mozilla_only(self):
+        for options in ({'restore_only':True}, {'restore_only':False,'mozilla_only':True}):
+            with self.subTest(options=options), self.assertRaisesRegex(Failure,'mozilla-first-consumer-role'):
+                self.invoke(mozilla_first=True,**options)
+        self.assertEqual(self.runner.records,[])
+
+    def test_mozilla_first_rejects_producer_before_work(self):
+        with self.assertRaisesRegex(Failure,'mozilla-first-consumer-role'):
+            self.invoke(restore_only=False,mozilla_first=True,checkpoint_role='producer')
+        self.assertEqual(self.runner.records,[])
+
+    def test_mozilla_first_never_runs_smoke_or_package_after_build_failure(self):
+        _,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(report['firstFailure']['code'],'test-stop-at-full-build')
+        self.mozilla.assert_not_called()
+        self.assertNotIn('stage-package',[row['stage'] for row in self.runner.records])
+
+    def test_mozilla_first_requires_complete_smoke_proof_before_package(self):
+        self.stop_at_full_build=False
+        def incomplete(*args):
+            self.mozilla_success(*args)
+            args[-1]['intentionalFailureDetected']=False
+        self.mozilla.side_effect=incomplete
+        code,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{'stage':'mozilla-harness','code':'mozilla-smoke-proof-incomplete'})
+        self.assertNotIn('stage-package',[row['stage'] for row in self.runner.records])
+        self.assertNotIn('mozillaVerifiedBeforePackage',report)
+
+    def test_mozilla_first_retains_success_when_later_package_fails(self):
+        self.stop_at_full_build=False
+        def fail_package(stage,*args,**kwargs):
+            if stage=='stage-package':
+                self.mozilla.assert_called_once()
+                raise Failure('test-package-failed-after-mozilla')
+            return self.run_stage(stage,*args,**kwargs)
+        self.runner.run.side_effect=fail_package
+        code,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure']['stage'],'stage-package')
+        self.assertIs(report['mozillaVerifiedBeforePackage'],True)
+        self.assertEqual(report['mozilla']['status'],'passed')
+        self.assertEqual(report['mozillaQualification'],'verified-origin-current-mozilla-xpcshell-smoke')
+
+    def test_mozilla_first_reuses_same_object_tree_and_clock_before_native_failure(self):
+        def before_stage(stage):
+            if stage in ('stage-package','native-suite'):
+                self.mozilla.assert_called_once()
+        self.prepare_native_boundary(before_stage=before_stage)
+        origin=(self.task/'started-monotonic').read_bytes()
+        with mock.patch.object(pipeline,'OwnedNative'):
+            code,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure']['stage'],'native-suite')
+        self.assertEqual(report['mozilla']['status'],'passed')
+        self.assertIs(report['mozillaVerifiedBeforePackage'],True)
+        self.assertEqual(self.mozilla.call_args.args[2],self.task)
+        self.assertEqual(self.mozilla.call_args.args[5],345)
+        self.assertEqual(self.stage_call('native-suite').kwargs['phase_deadline_minutes'],345)
+        self.runner_constructor.assert_called_once()
+        self.assertEqual((self.task/'started-monotonic').read_bytes(),origin)
+        self.assertEqual(sum(row['stage']=='checkpoint-restore' for row in self.runner.records),1)
+        self.assertEqual(sum(row['stage']=='full-build' for row in self.runner.records),1)
+
+    def test_mozilla_first_can_finish_both_smoke_and_native_in_same_job(self):
+        self.prepare_native_boundary(succeed=True)
+        with mock.patch.object(pipeline,'OwnedNative'):
+            code,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(code,0)
+        self.assertEqual(report['status'],'passed')
+        self.assertIs(report['mozillaFirst'],True)
+        self.assertIs(report['mozillaVerifiedBeforePackage'],True)
+        self.assertEqual(report['native']['status'],'passed')
+        self.assertEqual(report['mozilla']['status'],'passed')
+        self.assertIn('verify-copy-after',[row['stage'] for row in self.runner.records])
+
+    def test_mozilla_first_final_gate_rechecks_smoke_after_native(self):
+        smoke_receipt={}
+        def capture_smoke(*args):
+            self.mozilla_success(*args)
+            smoke_receipt['value']=args[-1]
+        self.mozilla.side_effect=capture_smoke
+        def corrupt_after_package(stage):
+            if stage=='native-suite':
+                smoke_receipt['value']['actualCompiledDebug']=False
+        self.prepare_native_boundary(succeed=True,before_stage=corrupt_after_package)
+        with mock.patch.object(pipeline,'OwnedNative'):
+            code,report,_=self.invoke(restore_only=False,mozilla_first=True,shared_deadline=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{'stage':'final-proof','code':'proof-incomplete'})
 
 
 if __name__ == '__main__':

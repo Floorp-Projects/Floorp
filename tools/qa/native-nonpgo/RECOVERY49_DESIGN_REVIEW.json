@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "review": "Minimal existing Mach completion-marker diagnostic design",
+  "reviewedAtUtc": "2026-10-19T12:36:23.450131+00:00",
+  "decision": "CONDITIONALLY_ACCEPTABLE_FOR_MINIMAL_IMPLEMENTATION_AND_SHORT_MAC_CONTRACT_PROOF",
+  "implementationReviewed": false,
+  "actualMacProofPerformed": false,
+  "sourceBindings": [
+    {
+      "path": "python/mozbuild/mozbuild/controller/building.py",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 78700,
+      "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640"
+    },
+    {
+      "path": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf"
+    },
+    {
+      "path": "config/baseconfig.mk",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 2424,
+      "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4"
+    },
+    {
+      "path": "config/rules.mk",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 39531,
+      "sha256": "a9e20f025e83b8adb213724f204f88c32e238b9b5f309e47108b8c9fa38e6046"
+    },
+    {
+      "path": "python/mozbuild/mozbuild/base.py",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 45302,
+      "sha256": "23d86c23ee7068e6be588f6275003a821a7d774e986280a2fc6c8593b610317d"
+    },
+    {
+      "path": "python/mozbuild/mozbuild/util.py",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 47559,
+      "sha256": "ffbf394498699f7fb49e0194d209328225b3b4aaef236dddb77abaf872a2d4c5"
+    }
+  ],
+  "sourceFindings": [
+    "BuildMonitor starts streaming profile output under obj/.mozbuild/logs/build/profile_log_*.json when no UPLOAD_PATH override applies; statedir and filename construction are fixed in base.py/util.py.",
+    "Streaming output begins with meta and thread JSONL records, followed by marker records. Resource measurements also use type=marker, so marker type alone does not identify build completion.",
+    "Normal build return can replace the stream with one whole profiler object. Exceptional termination may leave a JSONL stream; neither format may be assumed solely from process status.",
+    "Phase duration markers are emitted by finish_phase; Object/StaticLib/SharedLib/Program end markers describe reported command-span closure, not standalone binary qualification.",
+    "Whole as_profile serializes resource measurements, then phase records and other marker groups. File/array order does not give the latest end time.",
+    "Normal tiers are derived from RUNNABLE_TIERS and exclude pre-compile/check; rust is conditional on MOZ_RUST_TIER and compile environment. Absent records do not establish the active tier."
+  ],
+  "minimalScope": {
+    "when": "Read only after the existing full-build Runner returns or raises and its cleanup completes; no live polling or wrapper/runtime patch.",
+    "fileCapBytes": 2147483648,
+    "lineCapBytes": 1048576,
+    "readBudgetSecondsApproximately": 30,
+    "wholeProfileParseCapBytes": 16777216,
+    "memory": "Constant-memory JSONL line processing; whole-object allocation only within the explicit16MiB cap.",
+    "candidateBinding": "Snapshot existing candidate identities immediately before full build and record full start time. Require one fresh owned regular NOFOLLOW stable file in the fixed root, with dev/ino/mode/uid/size/mtime/ctime checked across reading; preexisting, ambiguous, changed, missing or out-of-root input stays unknown.",
+    "output": "Only fixed completed-tier names, latest observed completion marker selected by maximum valid endTime, completion-event counts and fixed target enums XUL/xpcshell/MacWebAppService.o. No raw data text, paths, PID, argv or identities.",
+    "counts": "Exact only for complete recognized completion-marker coverage; otherwise null or explicitly bounded lower-bound evidence. Counts describe emitted events, not unique compiled objects or total actual work.",
+    "resourceRows": "Skip only known source-bound resource marker prefixes. Fully validate relevant completion records; distinguish marker coverage from whole-profile validity.",
+    "wholeTables": "Validate fixed profiler schema, parallel array lengths, strict nonboolean indices, string table bounds and finite ordered timestamps. Instant endTime=null records are not completion.",
+    "failureSemantics": "Stale, malformed, truncated, oversized, time-exhausted, ambiguous or unknown schema yields diagnostic unknown. Collector exceptions must not replace existing firstFailure or fabricate zero completion.",
+    "successSemantics": "Natural complete full-build success remains full-build success regardless of optional profile availability; final host/assets/harness proof remains unchanged.",
+    "timeSemantics": "Diagnostic processing consumes existing job/evidence allowance and cannot reset the shared345 work deadline or platform360 clock."
+  },
+  "minimumControls": [
+    "Actual upstream streaming and whole-profile formats produce the same fixed completion projection on Mac.",
+    "Out-of-order marker arrays select the greatest endTime; None/NaN/infinite/reversed/boolean/invalid-index markers never count as completed.",
+    "Known resource rows cannot masquerade as build completions; unknown tier/target names and private sentinel text never escape.",
+    "Existing/stale/multiple/fresh-replaced/symlink/nonregular/foreign-owned inputs stay unknown.",
+    "Line/file/whole-profile/time caps and partial final lines remain bounded, preserve partial-coverage meaning and never publish exact zero.",
+    "Primary stage failure plus collector failure retains the primary; full success plus missing profile retains success with diagnostic unknown."
+  ],
+  "executionReadinessAfterProof": {
+    "hypothesis": "The reviewed shared345 policy removes the observed earlier300 cutoff, while post-stage completion evidence identifies reported completed tiers/targets if the next run still stops. Natural completion and actual Mozilla results remain the main acceptance gates.",
+    "priorUnknownForecast": "Completion within45 additional minutes and checkpoint speedup remain unknown. That uncertainty alone is not an indefinite execution blocker after the minimal diagnostic, tests, review and short Mac proof meet this contract.",
+    "subsequentRouteConditions": "Use existing authorized single-consumer path and checkpoint, exact immutable source/caller, fresh normal unexpired SDK/checkpoint API checks, no overlap and unused branch, unchanged resources/unknown/cleanup/context/signing/auth boundaries.",
+    "noNewStorageInfrastructure": true,
+    "historicalRun47SubphaseRecovered": false,
+    "newLongExecutionStarted": false
+  },
+  "operations": {
+    "sourceEdits": false,
+    "CIOrRefMutation": false,
+    "payloadAcquisition": false,
+    "artifactUpload": false
+  }
+}

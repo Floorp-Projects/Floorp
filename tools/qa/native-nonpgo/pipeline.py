@@ -20,6 +20,7 @@ from owned_native import OwnedNative
 from checkpoint_public import public_restore
 from sdk_source import load_sdk_source, validate_acquisition_receipt
 from consumer_time import select_consumer_time
+from build_completion import start_snapshot, collect as collect_build_completion
 
 
 HERE = Path(__file__).resolve().parent
@@ -324,6 +325,26 @@ def validation_outcome(report):
             'monitorFailureEstablishesProductFailure': False}
 
 
+def build_completion_evidence(task, snapshot, returned_zero):
+    """Optional post-reap diagnostics cannot replace the build command's outcome."""
+    try:
+        evidence = collect_build_completion(task, snapshot)
+    except Exception:
+        evidence = {'schema': 1, 'status': 'unconfirmed', 'reason': 'collector-exception',
+                    'completeCoverage': False, 'currentBuildPhase': 'UNKNOWN',
+                    'durationToCompletion': 'UNKNOWN'}
+    evidence['fullBuildCommandReturnedZero'] = returned_zero
+    return evidence
+
+
+def mozilla_proof_complete(value):
+    return (value.get('status') == 'passed' and value.get('monitorFailure') is None and
+            all(value.get(key) is True for key in
+                ('actualCompiledDebug', 'actualCurrentSourceUpstreamTest', 'intentionalFailureDetected',
+                 'allCasesExactReaped', 'allCasesGroupsGone')) and
+            type(value.get('cases')) is list and len(value['cases']) == 3)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, required=True)
@@ -333,6 +354,7 @@ def main():
     parser.add_argument('--checkpoint-role', choices=('producer', 'consumer'))
     parser.add_argument('--restore-only', action='store_true')
     parser.add_argument('--mozilla-only', action='store_true')
+    parser.add_argument('--mozilla-first', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
@@ -341,6 +363,9 @@ def main():
     require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
     require(not args.mozilla_only or (args.checkpoint_role == 'consumer' and not args.restore_only),
             'mozilla-smoke-consumer-role')
+    require(not args.mozilla_first or (args.checkpoint_role == 'consumer' and
+                                      not args.restore_only and not args.mozilla_only),
+            'mozilla-first-consumer-role')
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
@@ -356,6 +381,8 @@ def main():
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
     if consumer_time['evidence'] is not None:
         report['executionTimeBudget'] = consumer_time['evidence']
+    if args.mozilla_first:
+        report['mozillaFirst'] = True
     stage = 'preflight'
     sdk_source = None
     checkpoint_role = args.checkpoint_role
@@ -491,24 +518,39 @@ def main():
             raise CheckpointComplete
         runner.phase_deadline_minutes = None
         stage = 'full-build'
-        runner.run('full-build', [sys.executable, 'mach', 'build', '-j', '3'], args.source, env,
-                   plan['limits']['buildDeadlineMinutes'],
-                   phase_deadline_minutes=consumer_deadlines['consumerBuildDeadlineMinutes'] if checkpoint_role else None)
+        try:
+            completion_snapshot = start_snapshot(task)
+        except Exception:
+            completion_snapshot = None
+        full_build_returned_zero = False
+        try:
+            runner.run('full-build', [sys.executable, 'mach', 'build', '-j', '3'], args.source, env,
+                       plan['limits']['buildDeadlineMinutes'],
+                       phase_deadline_minutes=consumer_deadlines['consumerBuildDeadlineMinutes'] if checkpoint_role else None)
+            full_build_returned_zero = True
+        finally:
+            report['buildCompletion'] = build_completion_evidence(
+                task, completion_snapshot, full_build_returned_zero)
         if checkpoint_role:
             runner.phase_deadline_minutes = consumer_deadlines['consumerNativeDeadlineMinutes']
         object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
         report['hostObject'] = macho(object_path, 1)
         require(object_path.stat().st_mtime >= started, 'object-not-fresh')
-        if args.mozilla_only:
+        if args.mozilla_only or args.mozilla_first:
             from mozilla_harness_smoke import run_smoke
             stage = 'mozilla-harness'
             report['mozilla'] = {}
             run_smoke(args.source, HERE, task, runner, env,
                       consumer_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
-            report.update(status='mozilla-ready', mozillaOnly=True, fullHostXUL='passed',
-                          stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED',
-                          qualification='verified-origin-current-mozilla-xpcshell-smoke')
-            raise CheckpointComplete
+            require(mozilla_proof_complete(report['mozilla']) and runner.failure is None,
+                    'mozilla-smoke-proof-incomplete')
+            report.update(mozillaVerifiedBeforePackage=True, fullHostXUL='passed',
+                          mozillaQualification='verified-origin-current-mozilla-xpcshell-smoke')
+            if args.mozilla_only:
+                report.update(status='mozilla-ready', mozillaOnly=True,
+                              stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED',
+                              qualification='verified-origin-current-mozilla-xpcshell-smoke')
+                raise CheckpointComplete
         stage = 'stage-package'
         runner.run('stage-package', [sys.executable, 'mach', 'build', '--allow-subdirectory-build',
                    'browser/installer/stage-package'], args.source, env, plan['limits']['buildDeadlineMinutes'],
@@ -649,7 +691,10 @@ def main():
                         report.get('monitorPreflight', {}).get('status') == 'passed' and
                         len(report.get('toolchains', [])) == 11 and runner.native_cleanup is not None and
                         runner.native_cleanup['allOwnedGone'] and runner.native_cleanup['censusComplete'] and
-                        runner.native_cleanup['outlivedHarness'] == 0)
+                        runner.native_cleanup['outlivedHarness'] == 0 and
+                        (not args.mozilla_first or
+                         (report.get('mozillaVerifiedBeforePackage') is True and
+                          mozilla_proof_complete(report.get('mozilla', {})))))
             if not complete:
                 runner.fail('final-proof', 'proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
@@ -661,13 +706,7 @@ def main():
                         report.get('monitorPreflight', {}).get('status') == 'passed' and
                         len(report.get('toolchains', [])) == 11 and
                         report.get('resumedEffectiveConfigVerified') is True and
-                        mozilla.get('status') == 'passed' and
-                        mozilla.get('actualCompiledDebug') is True and
-                        mozilla.get('actualCurrentSourceUpstreamTest') is True and
-                        mozilla.get('intentionalFailureDetected') is True and
-                        mozilla.get('allCasesExactReaped') is True and
-                        mozilla.get('allCasesGroupsGone') is True and
-                        len(mozilla.get('cases', [])) == 3 and report.get('native') is None and
+                        mozilla_proof_complete(mozilla) and report.get('native') is None and
                         runner.failure is None and
                         not any(row['stage'] in ('stage-package', 'native-suite') for row in runner.records))
             if not complete:

@@ -1,0 +1,147 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY49_MINIMAL_BUILD_COMPLETION_AND_SAME_JOB_MOZILLA_FIRST",
+  "status": "implementation-reviewed-before-short-mac-validation",
+  "previousEvidenceCommit": "467a0e9347ae6e75a5030e3bc30e1bf3b8f207a0",
+  "sourceFreeze": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 14088,
+        "sha256": "e574108d5651a07fa5499122584b029c648dc67d8ba87d73b1535c6f5bd5d5cb"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 16696,
+        "sha256": "fe3ade1c1d2db7cc8c3546296aeaab8095a56016dc21cd85bedcf9602669431a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+        "bytes": 13768,
+        "sha256": "0702018e1330d5bb77f8cd6502f4fb8106611c66328f792e398ba3ed8f7ce2fd"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+        "bytes": 12435,
+        "sha256": "61ee6b78dfc15c2e509ee9728227c815f06881dd4e18a75ebb86510bf321c219"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 47069,
+        "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 31741,
+        "sha256": "83e03c2d412561670807440d26d5d4269693c2887095506d91b05c744f660727"
+      }
+    ],
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "selectedMacQA": 491,
+    "recording": 14,
+    "fullQA": 706,
+    "newMozillaFirstFlowTests": 8
+  },
+  "localQA": {
+    "returnCode": 0,
+    "elapsedSeconds": 33.431,
+    "tests": {
+      "status": "passed",
+      "complete": true,
+      "total": 706,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    "logBytes": 135648,
+    "logSHA256": "b68a1f23120bf4005095ab065ebc9cd4c83499fd7477ba45e70b498cdf128094"
+  },
+  "expectedMacQA": 491,
+  "expectedRecording": 14,
+  "completionDiagnostic": {
+    "source": "existing private Mach resource profile",
+    "readAfterExactStageReapAndCleanup": true,
+    "rawProfilePublished": false,
+    "rawPathsPIDsOrFreeTextPublished": false,
+    "countsMean": "finished marker events with complete validated marker coverage; not unique compiled objects or cache hits",
+    "lastFinishedSelection": "maximum finite endTime among validated positive completion markers",
+    "currentActivePhaseInferred": false,
+    "missingTruncatedStaleAmbiguousOrOversized": "unconfirmed with null counts",
+    "limits": {
+      "streamBytes": 2147483648,
+      "wholeBytes": 16777216,
+      "lineBytes": 1048576,
+      "allMarkerRows": 4000000,
+      "completedRelevantMarkers": 250000,
+      "cooperativeProcessingSeconds": 30
+    },
+    "buildOutcomeOrFirstFailureReplaced": false,
+    "inputCoverageGuaranteedForEveryStop": false
+  },
+  "sameJobReuse": {
+    "flag": "--mozilla-first",
+    "consumerOnly": true,
+    "sequence": [
+      "existing checkpoint restore and exact config validation",
+      "full build",
+      "current compiled DEBUG positive case",
+      "deliberate failure detection control",
+      "original current-source upstream version-comparator test",
+      "stage package",
+      "disposable ad-hoc test copy",
+      "native authentication suite",
+      "post-test copy verification"
+    ],
+    "mozillaProofRequiredBeforePackageOrNative": true,
+    "mozillaProofRetainedIfLaterStageFails": true,
+    "singleRestoredObjectTree": true,
+    "singleExistingJobMonotonicOrigin": true,
+    "sharedDeadlineMinutes": 345,
+    "platformLimitMinutes": 360,
+    "newCheckpointOrProducer": false,
+    "artifactUploads": 0,
+    "compilationInputsChanged": false
+  },
+  "shortValidation": {
+    "branch": "codex/mac-native-build-completion-recovery49-20261019",
+    "runner": "macos-15-intel",
+    "singleJob": "checkpoint-consumer",
+    "expectedQA": 491,
+    "recording": 14,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "sourceRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceFile": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+    "proof": "actual fixed upstream serializer; synthetic markers and upstream stub backend; no worker/resource or real build qualification",
+    "cases": 6,
+    "SDKDownloaded": false,
+    "checkpointDownloaded": false,
+    "fullRuntimeCheckout": false,
+    "artifactUploads": 0,
+    "sourceAndGateControls": "508 invalid final receipts rejected plus 5 source-API controls",
+    "started": false
+  },
+  "longValidationConditions": [
+    "short Mac job terminal with positive format proof, negative input detection and exact stage cleanup",
+    "immutable combined Mozilla/native caller review and readback",
+    "fresh legitimate SDK and sole checkpoint metadata and acquisition availability",
+    "zero owned active or queued overlap"
+  ],
+  "longValidationHypotheses": [
+    "new345 deadline distinguishes completion beyond previous300 cutoff from a still-incomplete full build",
+    "positive profile markers or fixed unconfirmed reason identify the available completion-evidence boundary after a stop",
+    "real current-source compiled DEBUG and failure-control cases distinguish Python-only preparation from actual Mozilla success",
+    "same job reuses completed host/XUL for package and native after Mozilla proof without another full build"
+  ],
+  "durationForecast": "UNKNOWN; not an indefinite stop condition",
+  "currentFullHostXULMozillaAndNativeQualification": "NOT_TESTED",
+  "originalNativeCause": "UNKNOWN",
+  "preserved": {
+    "baselinePlanAndContext": true,
+    "resourceAndOwnershipGuards": true,
+    "unknownNotZero": true,
+    "safeCleanup": true,
+    "retentionAndPermissions": true,
+    "noProductSigningReleaseOrMerge": true
+  }
+}
