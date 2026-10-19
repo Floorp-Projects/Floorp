@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "record": "recovery48-mozilla-first-consumer-activation",
+  "sourceFixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+  "caller": "aa2cf04c0e5331a33181413f50b4b9530d7ba525",
+  "callerTree": "d4a2dea591ebeefcb5ccc9b511a9e2e1d7ba4b12",
+  "workflow": {
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 26737,
+    "sha256": "8aaa15ce104b4495b6d31ecc6fb8c86809bac8cfd6a8a2987afa5d4d372d900e"
+  },
+  "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+  "decision": "GO",
+  "openP1": 0,
+  "openP2": 0,
+  "shortMacPrerequisite": {
+    "run": 39256138254,
+    "conclusion": "success",
+    "QA": 491,
+    "recording": 14,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "evidenceCommit": "a8095250eddaac4da87476e4637793a7faf153ee",
+    "individualSerializerCasesRecovered": false
+  },
+  "faultControls": 553,
+  "sequence": [
+    "verified-existing-checkpoint-restore",
+    "full-host-XUL-build",
+    "current-Mozilla-positive-and-deliberate-failure-and-original-test",
+    "package",
+    "disposable-ad-hoc-test-copy",
+    "native-authentication",
+    "post-copy-verification"
+  ],
+  "singleJob": true,
+  "sameConsumerObjectDirectory": true,
+  "sameOriginProducerJob": false,
+  "originQualification": "verified-origin-cross-run-checkpoint-replay-v1",
+  "productQualification": false,
+  "executionBudget": {
+    "clock": "fresh-job-monotonic-origin",
+    "reference": "absolute-from-existing-job-origin",
+    "sharedWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "nominalCleanupReserveMinutes": 15,
+    "stageClockReset": false,
+    "stageBudgetsAdditive": false
+  },
+  "discriminatingHypotheses": [
+    "Full build may complete after the previous absolute 300-minute cutoff within the shared 345-minute work budget.",
+    "If it completes, current Mozilla positive cases and deliberate failure detection can run before package/native, retaining that proof if later stages fail.",
+    "The existing Mach profile may provide bounded finished tier/target marker evidence at completion or a guarded stop; unsupported, absent or incomplete evidence remains unconfirmed."
+  ],
+  "preserved": [
+    "fixed source and toolchain",
+    "SDK unexpired official acquisition with HTTP fail-stop and 600-second deadline",
+    "fixed SDK ZIP/TAR/tree/version verification",
+    "complete checkpoint manifest/file/link/mode/time and provenance checks",
+    "existing ownership/resource limits and safe cleanup"
+  ],
+  "limits": {
+    "completionForecast": "unknown",
+    "checkpointAccelerationMeasured": false,
+    "originalNativeExitCause": "unknown",
+    "fullHostXULCurrentRun": "NOT_TESTED",
+    "currentMozillaCurrentRun": "NOT_TESTED",
+    "nativeCurrentRun": "NOT_TESTED",
+    "finishedMarkerCountsAreUniqueOutputs": false,
+    "diagnosticCoverageGuaranteed": false
+  },
+  "storage": {
+    "existingCheckpointArtifact": 12164479528,
+    "newCheckpointProducer": false,
+    "newArtifactUploads": 0,
+    "retentionChanged": false,
+    "largeArtifactDownloadedToLinux": false
+  },
+  "publicEvidenceScope": "Technical source references, typed results and bounded review evidence only."
+}

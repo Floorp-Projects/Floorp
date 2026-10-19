@@ -1,0 +1,264 @@
+{
+  "schema": 1,
+  "review": "Recovery48 final immutable Mozilla-first/native consumer prelaunch",
+  "decision": "GO",
+  "openFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "caller": {
+    "sha": "aa2cf04c0e5331a33181413f50b4b9530d7ba525",
+    "tree": "d4a2dea591ebeefcb5ccc9b511a9e2e1d7ba4b12",
+    "parent": "0770939680d9413f4aa852bac72b4f25454552c0",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 26737,
+    "sha256": "8aaa15ce104b4495b6d31ecc6fb8c86809bac8cfd6a8a2987afa5d4d372d900e",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "providerReadbackExact": true
+  },
+  "fixture": {
+    "sha": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+    "tree": "8375dbde3f2350df88e0180f4c1845334fe667f4",
+    "parent": "467a0e9347ae6e75a5030e3bc30e1bf3b8f207a0",
+    "independentReadback": "ten changed source/evidence files and unchanged plan exact"
+  },
+  "implementationReview": {
+    "path": "tools/qa/native-nonpgo/RECOVERY49_IMPLEMENTATION_REVIEW.json",
+    "bytes": 9450,
+    "sha256": "e5693a83bbc15601073103fb0e690d84c4bb871e8111b3fcdc7fe71ea7b1fb3e"
+  },
+  "combinedCandidateReview": {
+    "path": "combined candidate route review",
+    "bytes": 8792,
+    "sha256": "82be7f7b11012535c5e674b03689f8a81a10ee629e95bdfda008a2ab674d12e8"
+  },
+  "shortMacTerminalReview": {
+    "path": "Recovery49 short Mac terminal review",
+    "bytes": 6194,
+    "sha256": "01542fa446d6032348350bb0da621e45356eb7cb6b83b5e8adc69b82845caab3"
+  },
+  "shortMacPrerequisite": {
+    "run": 39256138254,
+    "job": 118071788169,
+    "status": "completed",
+    "conclusion": "success",
+    "QA": 491,
+    "recording": 14,
+    "skips": 0,
+    "allSixRecordedStagesNaturalZeroReapedGoneClean": true,
+    "strictFixedSerializerAssertionPassed": true,
+    "individualCaseReceiptValuesRecovered": false,
+    "artifacts": 0
+  },
+  "finalRenderVerification": {
+    "candidate": {
+      "bytes": 26708,
+      "sha256": "0167dc62d76c6981bc83b7b194b0b0f5e60838d32bf83f8ad6a1ae9509716848"
+    },
+    "onlyChangeFromReviewedCandidate": "single fixture placeholder replaced with immutable source SHA",
+    "independentRenderedControls": {
+      "passed": true,
+      "normalOverallAccepted": true,
+      "negativeCasesRejected": 553,
+      "yamlBashInlinePythonSyntax": "passed",
+      "result": {
+        "path": "independent rendered combined caller controls",
+        "bytes": 1206,
+        "sha256": "85c67fae74871c9ad0638b4292a4833ffbf7c4f089987fbe40fe5e3fa0f1e640"
+      }
+    },
+    "workflowFilesAssessed": 26,
+    "onlyBranchMatchingWorkflow": ".github/workflows/mac-native-checkpoint.yml",
+    "otherWorkflowBytesUnchangedByCallerAncestry": true
+  },
+  "freshOrdinaryAPI": {
+    "observedAt": "2026-10-19T13:07:28Z",
+    "SDK": {
+      "run": {
+        "id": 39162639256,
+        "status": "completed",
+        "conclusion": "failure",
+        "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "attempt": 1
+      },
+      "producer": {
+        "id": 117779018335,
+        "name": "Mac build / download-macos-sdk",
+        "run": 39162639256,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifact": {
+        "id": 12149860607,
+        "name": "macos-sdk",
+        "bytes": 105082683,
+        "digest": "sha256:2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+        "expired": false,
+        "expiresAt": "2026-10-19T20:18:26Z"
+      },
+      "artifactCollectionCount": 26
+    },
+    "checkpoint": {
+      "run": {
+        "id": 39197008470,
+        "status": "completed",
+        "conclusion": "failure",
+        "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+        "attempt": 1
+      },
+      "producer": {
+        "id": 117881829274,
+        "name": "checkpoint-producer",
+        "run": 39197008470,
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "artifact": {
+        "id": 12164479528,
+        "name": "checkpoint.tar.gz",
+        "bytes": 2213942620,
+        "digest": "sha256:f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+        "expired": false,
+        "expiresAt": "2026-10-20T05:19:56Z"
+      },
+      "artifactCollectionCount": 1
+    },
+    "wholeRunFailuresDoNotNegateSuccessfulFixedProducerJobs": true,
+    "availability": {
+      "matchingRefs": 0,
+      "callerRuns": 0,
+      "active": {
+        "collectionTotal": 1,
+        "exhaustive": true,
+        "owned": 0
+      },
+      "queued": {
+        "collectionTotal": 1,
+        "exhaustive": true,
+        "owned": 0
+      }
+    },
+    "metadataOnlyNoPayloadAcquisitionByReviewer": true,
+    "responseDigests": {
+      "caller": {
+        "bytes": 1224,
+        "sha256": "439fd86df2b10ca42e7a0d7b16e613112369ff813668f27141deea7755c56db0"
+      },
+      "compare": {
+        "bytes": 24578,
+        "sha256": "ea38ffe59d79653a48777ac9c2c9f06cbf97e64d437db526febf3d4401a352d4"
+      },
+      "workflow": {
+        "bytes": 26737,
+        "sha256": "8aaa15ce104b4495b6d31ecc6fb8c86809bac8cfd6a8a2987afa5d4d372d900e"
+      },
+      "sdkRun": {
+        "bytes": 15389,
+        "sha256": "46b842b9748d7375a68a4631ffef5665c28b4c58cfd994ab4afd02989b59ca2f"
+      },
+      "sdkJobs": {
+        "bytes": 85658,
+        "sha256": "5cc3c404b697f3656b8c37c7dcec07044bf08bd752d176698b365478abb40f69"
+      },
+      "sdkArtifacts": {
+        "bytes": 18845,
+        "sha256": "22e300e36b25c740edb33ec8ac29a77b4bcbbce9a2e77f5fc57d71c102b8569c"
+      },
+      "cpRun": {
+        "bytes": 13357,
+        "sha256": "1601479024261932e25c96ae5de631f7f4f4de12225bba0caf552ab1ca2fa3af"
+      },
+      "cpJobs": {
+        "bytes": 7834,
+        "sha256": "dd71b6a9c97fddbfbed87c474b9f8bfe07af86f72a375506392e37f23e25f847"
+      },
+      "cpArtifacts": {
+        "bytes": 782,
+        "sha256": "383946a670d4539fbc07a7be254223fdd27043c7f611ac2b105752b59fe181f9"
+      },
+      "branch": {
+        "bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "runs": {
+        "bytes": 36,
+        "sha256": "a2790a384d7d281e7395679000c35d27768d89dbd7052f725b8f4688beb59915"
+      },
+      "active": {
+        "bytes": 15418,
+        "sha256": "d2808b3d10187cbe79036c50373860065e20837ae9d22368ada75ea2c98a7b98"
+      },
+      "queued": {
+        "bytes": 15400,
+        "sha256": "76c609f214390fd2baeb1dada44cc9585e37bfbb8f89fdc847a9e2f6da757c18"
+      }
+    }
+  },
+  "runtimeRequirements": [
+    "Normal API acquisition must revalidate the fixed unexpired SDK source and successful named producer, exact ZIP/gzip-TAR pins, identical full uncompressed-TAR anchor, canonical tree and version. No expiry bypass or alternate source fallback is introduced.",
+    "Download only the existing sole checkpoint through the explicit verified-origin replay route; revalidate original producer/run/artifact metadata and payload/manifest digests and all actual-current nonhistoric context guards.",
+    "Keep the fixed baseline plan, Runtime/harness/compilation inputs, resource and unknown/null guards, cleanup and original job monotonic origin."
+  ],
+  "executionContract": {
+    "jobs": 1,
+    "name": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "initialCreatedPushOnly": true,
+    "attempt": 1,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "globalPlatformMinutes": 360,
+    "absoluteSharedWorkDeadlineMinutes": 345,
+    "restoreDeadlineMinutes": 60,
+    "clockReset": false,
+    "additiveStageBudgets": false,
+    "nominalCleanupReserveMinutes": 15,
+    "actualReserveGuaranteed": false,
+    "preflightQA": 491,
+    "recording": 14,
+    "zeroSkipsRequired": true,
+    "sequence": [
+      "verified existing checkpoint restore/config",
+      "full build",
+      "three actual current-source Mozilla cases",
+      "stage package",
+      "disposable ad-hoc test copy and verification",
+      "native authentication suite",
+      "post-test copy verification"
+    ],
+    "sameRestoredObjdirAndJobForCompletedBuildMozillaPackageNative": true,
+    "newProducer": false,
+    "artifactUploads": 0,
+    "retentionChanged": false,
+    "productSigningReleaseMergeOrAuthSettingsChanged": false
+  },
+  "successAndFailureSemantics": [
+    "Mozilla success requires the exact compiled DEBUG positive, intentional assertion-failure negative and fixed upstream positive test with source-bound strict log evidence and exact process cleanup.",
+    "Mozilla proof must pass before packaging. If a later package/native stage fails, retain that Mozilla result while overall status remains failed.",
+    "Overall pass requires the source-matched native first-cause/runtime protection/build identity evidence, 20 trusted context menus, real GUI input, all owned cleanup, and every main stage naturally returning exact integer zero with exact reaped/gone/clean proof.",
+    "Optional completion-profile diagnostics cannot replace the full-build result or first failure. Missing, malformed, stale, ambiguous or oversized profiles remain unconfirmed with null counts."
+  ],
+  "discriminatingHypotheses": [
+    "The shared345 absolute work budget can distinguish a full completion beyond the previous300 cutoff from a further safely guarded stop with bounded completion marker/format/coverage evidence.",
+    "A completed full host/XUL can qualify the real Mozilla cases first and continue package/native using the same job and object tree, preserving earlier successes without a new full rebuild."
+  ],
+  "limits": [
+    "A completion-duration forecast, measured checkpoint acceleration and original native cause remain unknown; unknown forecasts alone are not an indefinite hold.",
+    "Short49 supplied fixed-source serializer/schema evidence via executed strict assertions, not an actual long build, natural stop-profile coverage or GUI/native success.",
+    "The reviewed checkpoint is explicitly resumed cross-run evidence, not fresh same-job build qualification. Product qualification remains false."
+  ],
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "largePayloadAcquisitions": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "schema": 1,
+  "review": "Recovery48 combined Mozilla-first and native consumer candidate",
+  "sourceAndStaticRouteDecision": "CLEAR",
+  "executionDecision": "CONDITIONAL_GO",
+  "openFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "candidate": {
+    "path": ".github/workflows/mac-native-checkpoint.yml (unrendered combined candidate)",
+    "bytes": 26708,
+    "sha256": "0167dc62d76c6981bc83b7b194b0b0f5e60838d32bf83f8ad6a1ae9509716848"
+  },
+  "candidateFreeze": {
+    "path": "combined candidate freeze manifest",
+    "bytes": 5521,
+    "sha256": "f60717384309c7069057cf4da2e4bafbd642c9e5f7093da27b5e4827e193c011"
+  },
+  "expectedFixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+  "fixtureProviderReadback": "Ten new source/evidence paths and unchanged plan were independently checked in the short49 immutable review.",
+  "sourceAndIntegrationReview": {
+    "path": "tools/qa/native-nonpgo/RECOVERY49_IMPLEMENTATION_REVIEW.json",
+    "bytes": 9450,
+    "sha256": "e5693a83bbc15601073103fb0e690d84c4bb871e8111b3fcdc7fe71ea7b1fb3e"
+  },
+  "shortPrelaunchReview": {
+    "path": "Recovery49 immutable short prelaunch review",
+    "bytes": 9278,
+    "sha256": "f94dcf0b85b9d7470c87dd2fc75fd94d0204dead80a64f6f8234b4fce47452d3"
+  },
+  "fixedSourceReferences": {
+    "pipeline.py": {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 47069,
+      "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+    },
+    "native_suite.py": {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "bytes": 11562,
+      "sha256": "c4270e18440e9c4079347cc9a67f58e399cca9913bc11b7eed8fe034db6f5499"
+    },
+    "native_cause.py": {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "bytes": 15294,
+      "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300"
+    },
+    "checkpoint-replay.json": {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "bytes": 635,
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    },
+    "plan.json": {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  },
+  "independentValidation": {
+    "callerSyntax": "YAML, Bash and inline Python passed",
+    "callerControlsReexecuted": true,
+    "positiveOverallAccepted": true,
+    "negativeCasesRejected": 553,
+    "priorGateControls": 342,
+    "retainedUnmodifiedPriorControls": 337,
+    "priorControlsAdaptedForChangedRoute": 5,
+    "newNativeFirstFlowControls": 211,
+    "optionalDiagnosticPositiveForms": 4,
+    "result": {
+      "path": "independent combined caller controls",
+      "bytes": 1177,
+      "sha256": "fc1e48ba2d767f0a8f695ac46945c1ce683dcd18cb3e0ded3804aac02cb4a47d"
+    },
+    "fullSourceRegression": {
+      "total": 706,
+      "passed": 689,
+      "DarwinOnlySkippedOnLinux": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 32.967,
+      "warnings": "ResourceWarning=error",
+      "workingDirectory": "tools/qa/native-nonpgo"
+    },
+    "actualMacCombinedExecution": "NOT_EXECUTED"
+  },
+  "verifiedDelta": [
+    "The existing case_ok, sdk_ok and time_budget_ok function ASTs are unchanged. The previous strict three-case Mozilla suffix and provenance conditions are retained.",
+    "SDK acquisition and checkpoint download steps, permissions, Runtime/harness pins, branch/attempt guards and limits are unchanged. The selected suite count is updated to 491 plus 14 recording cases.",
+    "The pipeline command uses --mozilla-first exactly once in place of --mozilla-only, preserving --consumer-shared-deadline and explicit alternate --sdk-source.",
+    "Mozilla evidence is evaluated independently of the later top-level status, firstFailure and native result. Controls show a later native failure retains mozillaVerified=true while overall remains false.",
+    "Overall success requires both the strict Mozilla proof and the source-matched native first-cause, 20 trusted context-menu iterations and real GUI input proof, plus complete owned cleanup.",
+    "Native source reports browser version 158.0.1 and the fixed restored build ID 20261019035607. Runtime protection booleans, sandbox level integer 3 and GUI/context/cleanup keys match the actual fixed native_suite/native_cause output contract.",
+    "All main Runner stages must be unique, naturally exit with exact integer zero, have reason/failurePhase/cleanupFailure explicitly null, exact integer-zero leader reap and group verified gone. Required stages include full build, package, disposable-copy signing and verification, native suite and post-test verification.",
+    "Existing native summary errorCode or cleanupIncomplete keys invalidate native success. Boolean or floating-point stand-ins for numeric proof are rejected.",
+    "Optional buildCompletion absence or unconfirmed coverage does not invalidate an otherwise successful build. If present it must identify a zero-returning full-build command; it cannot establish build success on its own.",
+    "The final public projection emits fixed identifiers, safe booleans and qualification labels. Sentinels, raw PID, arbitrary error messages, paths and extra native fields are not copied."
+  ],
+  "preservedExecution": {
+    "jobs": 1,
+    "job": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "sharedWorkDeadlineMinutes": 345,
+    "restoreDeadlineMinutes": 60,
+    "clockReset": false,
+    "stageBudgetsAdditive": false,
+    "nominalCleanupReserveMinutes": 15,
+    "realTimeReserveGuaranteed": false,
+    "sameRestoredObjectTreeForBuildMozillaPackageNative": true,
+    "freshObjdir": false,
+    "checkpointSameJob": false,
+    "qualification": "verified-origin-cross-run-checkpoint-replay-v1",
+    "productQualification": false,
+    "existingCheckpointArtifact": 12164479528,
+    "newProducer": false,
+    "artifactUploads": 0,
+    "SDKArtifact": 12149860607,
+    "SDKSourceRun": 39162639256,
+    "SDKProducerJob": 117779018335,
+    "SDKAcquisitionSourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "activationConditions": [
+    "Short49 must terminate with independently reviewed 491 QA plus 14 recording PASS/zero skips, six fixed serializer controls satisfied and exact monitored cleanup. An active short run does not satisfy this condition.",
+    "Render the final candidate with the reviewed immutable fixture. Read back the final caller commit/tree, exact bytes and one-workflow ancestry; verify that the guarded dedicated branch is unused and no owned run is active or queued.",
+    "Immediately before acquisition, recheck the normal official unexpired SDK and sole checkpoint identities, producer/run/attempt, size, digests and expiry. The runner must perform its existing ordinary API/payload/hash/tree/version and replay/context checks.",
+    "Keep all resource, ownership, unknown/null and safe cleanup guards and the existing platform limit. No extra producer, upload, retention or authorization configuration changes are part of this candidate."
+  ],
+  "discriminatingHypotheses": [
+    "The existing consumer checkpoint can reach full completion after the former 300-minute cutoff and within the absolute shared 345-minute work budget, or stop safely with the actual bounded profile format/coverage/reason and positive completed marker evidence.",
+    "If compilation completes, the same job can qualify the real current-source compiled DEBUG/failure-control/upstream cases before packaging, then continue native authentication using the same completed build without a new full rebuild.",
+    "A Mozilla success followed by package/native failure remains separately visible and does not become an overall pass."
+  ],
+  "limits": [
+    "Short serializer success is schema/API evidence with synthetic markers, not long-run timing, performance, SDK or real Mozilla/native qualification.",
+    "A profile may be absent, truncated, ambiguous or larger than the current whole-profile cap. It remains unknown without fabricated zero counts or inferred active phase/cache hit.",
+    "Completion duration and checkpoint acceleration remain unknown. Unknown forecasts alone are not an indefinite hold after the tested diagnostic, short real Mac proof and the activation checks.",
+    "The original native cause and prior monitor failure causes remain unresolved unless later execution supplies direct evidence."
+  ],
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "payloadAcquisitions": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}
