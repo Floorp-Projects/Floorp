@@ -1,0 +1,95 @@
+{
+  "scope": "exact17 source graph from authenticated f7ef with only reviewed portable tamper test/types changes",
+  "candidateHead": "f7ef0b832d79ed793b16421914d579307f76271c",
+  "files": [
+    {
+      "relative": "browser-features/chrome/test/utils/test_harness.ts",
+      "preimageSha256": "91a279ad59ccbc50d7df97eca08035314d1fb768f5fa92a12ae48f8f86ed3a2c",
+      "preimageBytes": 5366
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts",
+      "preimageSha256": "1ef895db34d764f6bbf792af481602eb31822d1c33bc19b2056cd99d2c0caa78",
+      "preimageBytes": 15004
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/CRXParser.sys.mts",
+      "preimageSha256": "9e19e0acd6979fae900669fc296f6fd787894de3d0a26a50470fa0c22f5910a6",
+      "preimageBytes": 3962
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/CRXVerifier.sys.mts",
+      "preimageSha256": "12e1b3d4954691ccdaa113ccd1d71ce2712d8082d71fd2c152ce0c98f04435b9",
+      "preimageBytes": 10528
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/ChromeExtensionUpdateRegistry.sys.mts",
+      "preimageSha256": "018ed8603dca35ead5a542f993746be22cfb5054d9b44b850d5ce7a68f093544",
+      "preimageBytes": 12200
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/ChromeExtensionUpdateScheduler.sys.mts",
+      "preimageSha256": "58991cf419d34119bb0b0f8097a50143edae2099aae639816b2d27864fc60970",
+      "preimageBytes": 9711
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/ChromeExtensionUpdater.sys.mts",
+      "preimageSha256": "1aba616117fda75f432c8bd8bb6a6db2fb978d7edba57b7fea845be2a1f3980a",
+      "preimageBytes": 18371
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/CodeValidator.sys.mts",
+      "preimageSha256": "57f22d3b023d1c4cbbb15eab83deaaaf33c2a42426a43a4db74e5c5845ddea4a",
+      "preimageBytes": 5503
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/Constants.sys.mts",
+      "preimageSha256": "aeafa9d345f1d2e591ac088ddd6539a29c6e96c6203e99bfb3c35d3e7a7f99de",
+      "preimageBytes": 12421
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/DNRTransformer.sys.mts",
+      "preimageSha256": "61f353cdff54a749c1184a7a664723cbce671d0ebedcfee02977c43116fa9e47",
+      "preimageBytes": 8190
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/ManifestTransformer.sys.mts",
+      "preimageSha256": "e33cfd13d5d8a5458b5497a0832e4f89e68483239fbfb862ca9e10cb03ac1aa8",
+      "preimageBytes": 13509
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/test/ChromeExtensionUpdateScheduler.test.mts",
+      "preimageSha256": "d6270b371ea8ac845a883f12248382c407765bd02dae61622af002c5069615ea",
+      "preimageBytes": 19322,
+      "postimageSha256": "041c0b543dfdabba16c2cd9454d757b535a1f9b9a0cbc989ebd07d3ce1f14832",
+      "postimageBytes": 21841
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/test/ChromeExtensionUpdater.test.mts",
+      "preimageSha256": "cd0f0006bad084f1daf7961d608f18f5ddc056ed693e5f2b2d5e68db3d153c0c",
+      "preimageBytes": 30763
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/test/helpers/CRXFixtures.mts",
+      "preimageSha256": "ef36e2041594c0b4abe273da1fb9c02e57ac51f1bdd9266a04b1c081fffb6a1d",
+      "preimageBytes": 7602
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/test/helpers/update-test-types.ts",
+      "preimageSha256": "3aab41b47c26327ae9937a0817b68a90217e8bc575bff1d0755961b3be8fbb36",
+      "preimageBytes": 1752,
+      "postimageSha256": "93e7d89afb116fbb61a582d68e78235008f614e3b2ed21278d1e36e12ccd5721",
+      "postimageBytes": 1926
+    },
+    {
+      "relative": "browser-features/modules/modules/chrome-web-store/types.ts",
+      "preimageSha256": "e3072ffedf0b0466d42895a97f16c606998945fd413fa518c342d204db666741",
+      "preimageBytes": 13575
+    },
+    {
+      "relative": "tools/chrome-extension-runtime/native-test-types.ts",
+      "preimageSha256": "d530a617b272a2e5039b5229216460ef403a8a9f723634af5a1b137e5f032317",
+      "preimageBytes": 3974
+    }
+  ]
+}

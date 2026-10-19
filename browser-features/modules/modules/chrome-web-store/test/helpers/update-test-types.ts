@@ -5,6 +5,9 @@ export interface NativeAddon {
   type: string;
   getResourceURI(path: string): { spec: string };
   temporarilyInstalled: boolean;
+  isActive: boolean;
+  disable(): Promise<void>;
+  enable(): Promise<void>;
   userPermissions: { permissions: string[]; origins: string[] };
   uninstall(): Promise<void>;
 }
@@ -43,6 +46,10 @@ export interface Background {
 
 export interface NativeExtension {
   baseURI: nsIURI;
+  broadcast(
+    name: "Extension:FlushJarCache",
+    data: { path: string },
+  ): Promise<void>;
   backgroundContext?: Background;
   views: Set<Background>;
 }
