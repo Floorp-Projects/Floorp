@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "review": "Recovery53 immutable short Mac validated-reread diagnostic route",
+  "decision": "GO_ONE_SDK_FREE_SHORT_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "fixture": {
+    "sha": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "tree": "de348633b4a2cf827fe31ef5ab54d145eb60fcf2",
+    "parents": [
+      "54e8559a5c9f2a2591e08f3c09441b2df894d82b"
+    ],
+    "changedPaths": [
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY53_IMPLEMENTATION_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY53_PREPARATION.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY53_SOURCE_FREEZE.json",
+      "tools/qa/native-nonpgo/build_completion.py",
+      "tools/qa/native-nonpgo/test_build_completion.py"
+    ],
+    "allFiveChangedFilesIndependentlyReadBack": true,
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 25024,
+        "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 32864,
+        "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+      }
+    ],
+    "documentBindings": {
+      "RECOVERY53_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 8592,
+        "sha256": "3bc5c83e520296d95aded83e167009eb55f9f9f7511fd8bb2975f294c998f845"
+      },
+      "RECOVERY53_PREPARATION.json": {
+        "bytes": 4568,
+        "sha256": "ec39f78ceeccaa9802283fe8a8bb7c9d3ea4c90a320d056f5db67d5d672f5981"
+      },
+      "RECOVERY53_SOURCE_FREEZE.json": {
+        "bytes": 775,
+        "sha256": "83698255ddfa7cf191302b301dc2cd2788a1a6f335e0d41295490171419afe85"
+      }
+    }
+  },
+  "caller": {
+    "sha": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+    "tree": "b962f695132f6b45c8b298243baad97118f4ed2d",
+    "parents": [
+      "4a744679264b59c24219693581f2b129e4dd9865"
+    ],
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 36489,
+    "sha256": "0b62c94e6e54bbc458b97ac1d52d8d21bb9655bc6b6d4b3a8724b460b767fe19",
+    "providerReadbackMatchesReviewedRendering": true,
+    "reviewedTemplate": {
+      "bytes": 36460,
+      "sha256": "cb4a7cfa86b1d2147190fbdfcea9d1dd5c8a7cd066dff33962bb27b10d65224d"
+    },
+    "onlyRenderChange": "single fixture placeholder replacement"
+  },
+  "scope": {
+    "activationBranch": "codex/mac-native-streaming-recovery53-20261019",
+    "trigger": "initial created push, zero before SHA, attempt 1, exact repository and branch",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "roleName": "checkpoint-consumer",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "credentialsPersistedByCheckout": false,
+    "jobPlatformMinutes": 360,
+    "ownedStagePhaseMinutes": 15,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeOrHarnessCheckout": false,
+    "build": false,
+    "artifactUpload": false
+  },
+  "reviewAssessment": [
+    "The immutable parser and test hashes match the reviewed two-file validated-reread change exactly. The fixture compare changes only those two source files and three technical documents.",
+    "The immutable caller is a direct child of the reviewed Recovery52 caller and changes only the dedicated workflow. Replacing its single fixture SHA with the placeholder reproduces the reviewed candidate exactly.",
+    "The candidate differs semantically from Recovery52 only in workflow name, dedicated branch and fixture. Diagnostic continuation and final gate bodies are unchanged, so existing 1032 negative, five source-API and seven inline-flow controls remain bound through unchanged code.",
+    "The same one-million-resource-row input, 195000385 bytes and SHA256 0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7, assertion frame 450 and 30-second cooperative processing budget remain fixed.",
+    "Only array rereading after complete strict whole-document validation uses the ordinary bounded decoder. The initial strict pass, JSONL route, marker/schema checks, caps, final file identity checks, unknown semantics, clocks and resource limits remain enforced.",
+    "The isolated recognized density failure may continue to independent diagnostics only after exact reaping and safe cleanup. It keeps the original first failure and failed overall outcome; successful serializer cases cannot substitute for actual dense-input qualification.",
+    "The new implementation must complete actual dense observation and every independent gate for short qualification. Linux measurements and prior Mac case values do not qualify this candidate."
+  ],
+  "validationBindings": {
+    "implementationReview": {
+      "name": "floorp-recovery53-implementation-review.json",
+      "bytes": 8592,
+      "sha256": "3bc5c83e520296d95aded83e167009eb55f9f9f7511fd8bb2975f294c998f845"
+    },
+    "independentGrammarChecks": 15480,
+    "independentBoundChecks": 777,
+    "wholeProfileExactResultComparisons": 93,
+    "postValidationMutationControls": 2,
+    "focusedTests": 6,
+    "reportedFullLinux": {
+      "total": 737,
+      "passed": 720,
+      "DarwinSkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 60.699,
+      "log": {
+        "name": "floorp-recovery53-linux-full-retry.private.log",
+        "bytes": 141883,
+        "sha256": "dd8626fb3474e0130a1152d771ffad41b3d1b9ec5d984afbc3d068542efb46e7"
+      }
+    },
+    "actualMacForThisCandidate": "NOT_YET_RUN"
+  },
+  "freshReadOnlyAdmission": {
+    "observedAt": "2026-10-19T20:30:13Z",
+    "branchMatches": 0,
+    "priorRunsForCaller": 0,
+    "activeGlobal": 0,
+    "queuedGlobal": 1,
+    "ownedActive": 0,
+    "ownedQueued": 0,
+    "unrelatedQueuedRunLeftUntouched": true,
+    "matchingPushWorkflows": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "triggerBasis": "The previously read 26 workflow trigger configurations remain inherited unchanged through the immutable one-workflow-only caller chain; all other push branch filters reject the new dedicated branch.",
+    "repeatImmediatelyBeforeActivation": true,
+    "proof": {
+      "name": "floorp-recovery53-independent-route-proof.json",
+      "bytes": 1908,
+      "sha256": "73a456930407d60c7193abdda4d24419707e5424964cbc26e3d164cc047aa043"
+    }
+  },
+  "remainingConditions": [
+    "The launching owner repeats branch, caller-run and owned-overlap checks immediately before creating the dedicated branch once.",
+    "Evaluate the actual terminal API and raw evidence: actual dense result and unchanged input/budget, QA522/recording14, all nine serializer cases, first failure preservation, exact reaping/group cleanup, monitor state and artifact0.",
+    "This review permits only the short diagnostic. It does not grant dense Mac qualification or a new long build, Mozilla or native outcome."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutated": false,
+    "newSDKOrCheckpointDownloaded": false,
+    "additionalHeavyFullQAOrDensityExecuted": false
+  }
+}

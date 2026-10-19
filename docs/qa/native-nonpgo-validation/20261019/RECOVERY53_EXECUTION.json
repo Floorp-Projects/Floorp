@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY53_SDK_FREE_SHORT_DIAGNOSTIC_EXECUTION",
+  "status": "execution-started",
+  "prelaunchReview": "RECOVERY53_PRELAUNCH_REVIEW.json",
+  "activation": {
+    "at": "2026-10-19 20:31:01 UTC",
+    "branch": "codex/mac-native-streaming-recovery53-20261019",
+    "caller": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "freshGate": {
+      "at": "2026-10-19 20:30:51 UTC",
+      "caller": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+      "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+      "unusedBranchMatches": 0,
+      "priorCallerRuns": 0,
+      "activeTotal": 0,
+      "queuedTotal": 1,
+      "activeOwned": 0,
+      "queuedOwned": 0,
+      "callerReadback": true,
+      "independentGO": "2026-10-19T20:30:13Z"
+    },
+    "activationCalls": 1
+  },
+  "run": {
+    "id": 39319963643,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39319963643",
+    "head": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+    "event": "push",
+    "attempt": 1,
+    "status": "in_progress"
+  },
+  "limits": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "SDK": false,
+    "checkpoint": false,
+    "newArtifacts": 0,
+    "longBuild": false,
+    "parserProcessingSeconds": 30
+  },
+  "qualification": "Execution-started evidence only; actual Mac density qualification requires terminal evidence."
+}
