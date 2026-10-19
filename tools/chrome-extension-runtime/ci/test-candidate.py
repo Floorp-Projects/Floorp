@@ -18,6 +18,10 @@ _selection_spec = importlib.util.spec_from_file_location(
     "candidate_package_selection", ROOT / "tools/chrome-extension-runtime/candidate-package-selection.py")
 _selection = importlib.util.module_from_spec(_selection_spec)
 _selection_spec.loader.exec_module(_selection)
+_identity_spec = importlib.util.spec_from_file_location(
+    "candidate_identity", ROOT / "tools/chrome-extension-runtime/candidate-identity.py")
+_identity = importlib.util.module_from_spec(_identity_spec)
+_identity_spec.loader.exec_module(_identity)
 TESTS = "browser-features/modules/modules/chrome-web-store/test/"
 CORE = [
     "CRXParser.test.mts", "CRXVerifier.test.mts", "CRXConverter.test.mts",
@@ -134,11 +138,8 @@ def main():
             manifest.get("floorpCommit") != commit or manifest.get("productionOverlay") is not True or
             manifest.get("nativeWebExtensionBindings") is not True):
         raise RuntimeError("Candidate identity does not match this exact source and production build")
-    # Validate every maintained Chrome patch against this checkout, including
-    # compiled bindings, instead of accepting a marker from an older package.
-    for patch in (ROOT / ".github/patches/floorp-runtime/common").glob("chrome*.patch"):
-        if manifest.get("patches", {}).get(patch.name) != sha256(patch):
-            raise RuntimeError(f"Candidate omitted or changed maintained source: {patch.name}")
+    # Share the full common/OS inventory check with installed-app authentication.
+    _identity.validate_maintained_patches(manifest, ROOT)
     expected = _selection.select_native_package(manifest["packages"], args.platform)
     if Path(expected["name"]).name != expected["name"]:
         raise ValueError("Candidate package name must be a single filename")
@@ -176,6 +177,7 @@ def main():
         command += ["--test", "tools/chrome-extension-runtime/NativePortErrorsCandidate.test.mts"]
     if args.group == "permissions":
         command += ["--actor-module", TESTS + "helpers/UserScriptsConsentUIChild.sys.mjs"]
+        command += ["--test", "tools/chrome-extension-runtime/ci/ProductionWorkspaces.test.mts"]
     for suite in suites:
         command += ["--test", TESTS + suite]
     commands = [command]
@@ -206,6 +208,15 @@ def main():
             [sys.executable, "tools/chrome-extension-runtime/test-native-messaging-candidate.py",
              "--browser", binary, "--candidate-manifest", manifests[0],
              "--output", output / "native-messaging"],
+            [sys.executable, "tools/chrome-extension-runtime/test-native-port-state-candidate.py",
+             "--browser", binary, "--candidate-manifest", manifests[0],
+             "--output", output / "native-port-state"],
+            [sys.executable, "tools/chrome-extension-runtime/test-native-message-json-candidate.py",
+             "--browser", binary, "--candidate-manifest", manifests[0],
+             "--output", output / "native-message-json"],
+            [sys.executable, "tools/chrome-extension-runtime/test-quiet-native-port-lifetime.py",
+             "--browser", binary, "--expected-build-id", manifest["buildId"],
+             "--candidate-manifest", manifests[0], "--output", output / "quiet-native-lifetime"],
             [sys.executable, "tools/chrome-extension-runtime/test-side-panel.py", "--browser", binary, "--floorp-ui"],
             [sys.executable, "tools/chrome-extension-runtime/test-diagnostics-ui.py", "--browser", binary],
         ])

@@ -358,6 +358,16 @@ async function exercise(): Promise<void> {
             "Normal remote disconnect controls ran with and without an intentional throw",
           );
           for (const normal of result.normalPorts) {
+            assertEquals(
+              normal.isWorker,
+              context === "worker",
+              "Normal Port control ran in the requested actual context",
+            );
+            assertEquals(
+              normal.runtimeId,
+              original,
+              "Normal Port control uses the original Chrome ID",
+            );
             assertNativePortErrors(normal, false);
           }
           evidence.successes.push(result);
@@ -369,6 +379,16 @@ async function exercise(): Promise<void> {
             "Denied native ports ran with and without an intentional first-listener throw",
           );
           for (const disconnect of result.disconnects) {
+            assertEquals(
+              disconnect.isWorker,
+              context === "worker",
+              "Denied native Port probe ran in the requested actual context",
+            );
+            assertEquals(
+              disconnect.runtimeId,
+              converted ? original : id,
+              "Denied native Port probe uses the expected public identity",
+            );
             assertNativePortErrors(disconnect, caller === "ordinary");
           }
           assert(

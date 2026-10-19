@@ -10,6 +10,7 @@ export interface NativePortErrorSnapshot {
   phase: "callback" | "microtask" | "next-turn";
   samePort: boolean;
   lastError: NativePortLastError | null;
+  portErrorPresent: boolean;
   portError: { message: string; name: string } | null;
 }
 export interface NativePortErrorResult {

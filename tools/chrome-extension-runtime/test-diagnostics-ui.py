@@ -224,7 +224,9 @@ export const ChromeExtensionUpdateScheduler={
                 original = client.command("WebDriver:GetWindowHandle")["value"]
                 before = set(client.handles())
                 client.context("chrome")
-                owner = client.script("return window.windowUtils.outerWindowID;")
+                owner = client.script("return window.browsingContext.id;")
+                check(type(owner) is int and owner > 0,
+                      action + " has a positive native chrome browsing-context identity")
                 client.context("content")
                 client.script("document.querySelector('[data-chrome-action='+arguments[0]+']').click();", action)
                 created = set()
@@ -233,7 +235,7 @@ export const ChromeExtensionUpdateScheduler={
                     check(len(created) == 1, action + " opens exactly one owned settings tab")
                     client.switch(next(iter(created)))
                     client.context("chrome")
-                    check(client.script("return window.windowUtils.outerWindowID;") == owner,
+                    check(client.script("return window.browsingContext.id;") == owner,
                           action + " uses the browser window that owns the Add-ons Manager")
                     client.context("content")
                     state = runtime.wait_for("real Floorp settings route", lambda: client.script("""
@@ -243,7 +245,7 @@ export const ChromeExtensionUpdateScheduler={
                             : null;
                     """, url), 30)
                     check(not state["documentURI"].startswith("about:neterror"), action + " loads the actual Floorp settings application")
-                    report["managementNavigation"].append({"action": action, "ownerWindowId": owner, **state})
+                    report["managementNavigation"].append({"action": action, "ownerWindowId": owner, "ownerIdentity": "chrome browsingContext.id", **state})
                 finally:
                     for handle in created:
                         if handle in client.handles():

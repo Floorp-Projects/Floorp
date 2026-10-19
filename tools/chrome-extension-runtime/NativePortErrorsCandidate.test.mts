@@ -3,6 +3,7 @@
 import { zipSync } from "fflate/browser";
 import {
   assert,
+  assertEquals,
   runTests,
 } from "../../browser-features/chrome/test/utils/test_harness.ts";
 import { nativePortErrorsProbeSource } from "./native-port-errors-probe.mjs";
@@ -185,6 +186,16 @@ async function exercise(): Promise<void> {
             assert(
               response.result,
               "Actual public Port probe returned observations",
+            );
+            assertEquals(
+              response.result.isWorker,
+              mode === "worker",
+              "Public Port probe ran in the requested actual context",
+            );
+            assertEquals(
+              response.result.runtimeId,
+              converted ? original : id,
+              "Public Port probe uses its expected Chrome or Firefox identity",
             );
             report.cases.push({ caller, mode, result: response.result });
             assertNativePortErrors(response.result, !converted);

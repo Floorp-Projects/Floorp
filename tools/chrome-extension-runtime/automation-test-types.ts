@@ -3,6 +3,7 @@ import type { CDPResult } from "./cdp-types.ts";
 import type {
   FrozenCorpusScriptEvidence,
   NativeCorpusBackgroundEvidence,
+  NativeCorpusBrowser,
 } from "./native-test-types.ts";
 export interface VisionMacro {
   Name: string;
@@ -73,6 +74,62 @@ export interface UIVisionWelcomeObservation {
   title: string | null;
   events: { type: string; trusted: boolean }[];
 }
+export type UIVisionWebsiteControl =
+  | "websiteRuns"
+  | "editWhitelist"
+  | "whitelistURL"
+  | "saveWhitelist";
+export interface UIVisionWebsiteConfiguration {
+  allowRunFromHttpSchema?: unknown;
+  websiteInvokePolicyVersion?: unknown;
+  websiteWhiteList?: unknown;
+}
+export interface UIVisionWebsiteControlObservation {
+  url: string;
+  ready: string;
+  control?: UIVisionWebsiteControl;
+  present: boolean;
+  visible: boolean;
+  enabled: boolean;
+  unobstructed: boolean;
+  checked?: boolean;
+  value?: string;
+  dialogTitle: string | null;
+  dialogVisible: boolean;
+  events?: { type: string; trusted: boolean }[];
+}
+export interface UIVisionNavigationBrowser extends NativeCorpusBrowser {
+  webProgress: Pick<nsIWebProgress, "isLoadingDocument">;
+}
+export interface UIVisionDocumentChange {
+  error: string;
+  beforeInnerWindowId: number;
+  currentInnerWindowId: number | null;
+  isLoadingDocument: boolean;
+  url: string;
+}
+export type UIVisionLogControl = "data" | "logs";
+export interface UIVisionLogControlObservation {
+  url: string;
+  ready: string;
+  control: UIVisionLogControl;
+  present: boolean;
+  visible: boolean;
+  enabled: boolean;
+  unobstructed: boolean;
+  selected: boolean;
+  viewVisible: boolean;
+  rect: { x: number; y: number; width: number; height: number };
+  events?: { type: string; trusted: boolean }[];
+}
+export interface UIVisionInvocationObservation {
+  dispatchedDocumentedBridge: boolean;
+  witnessMs: number;
+  events: { type: string; message?: string }[];
+  observerToken?: string;
+  transport?: "bounded-owned-document-console" | "Runtime.consoleAPICalled";
+  documentChanges?: UIVisionDocumentChange[];
+}
 export interface AutomationItem {
   id: string;
   name: string;
@@ -86,10 +143,17 @@ export interface AutomationItem {
   warnings?: string[];
   configuration?: unknown;
   onboarding?: UIVisionWelcomeObservation;
+  websiteOperator?: {
+    before: UIVisionWebsiteConfiguration;
+    after?: UIVisionWebsiteConfiguration;
+    steps: UIVisionWebsiteControlObservation[];
+  };
+  invocation?: UIVisionInvocationObservation;
   macro?: VisionMacro;
   workflow?: AutomaWorkflow;
   observed?: AutomationObserved | null;
   engineLog?: string;
+  engineView?: unknown;
   engineState?: AutomaStorage;
   initialUI?: string;
   workerTarget?: CDPResult<"Target.getTargets">["targetInfos"][number];
@@ -146,6 +210,9 @@ export interface AutomationActorData {
   macro?: VisionMacro;
   workflow?: AutomaWorkflow;
   name?: string;
+  uiVisionControl?: UIVisionWebsiteControl;
+  uiVisionLogControl?: UIVisionLogControl;
+  witnessToken?: string;
 }
 export interface AutomationActor {
   sendQuery(name: "Snapshot"): Promise<AutomationSnapshot>;
@@ -156,15 +223,20 @@ export interface AutomationActor {
     name: "ReadAutomaConfiguration" | "ReadAutomaEngineState",
   ): Promise<AutomaStorage>;
   sendQuery(
-    name: "ConfigureUIVision",
-    data: { url: string },
-  ): Promise<
-    { websiteInvokePolicyVersion: number; websiteWhiteList: string[] }
-  >;
+    name: "ReadUIVisionWebsiteConfiguration",
+  ): Promise<UIVisionWebsiteConfiguration>;
+  sendQuery(
+    name: "UIVisionWebsiteControlState" | "UIVisionWebsiteControl",
+    data: { uiVisionControl: UIVisionWebsiteControl; url?: string },
+  ): Promise<UIVisionWebsiteControlObservation>;
+  sendQuery(
+    name: "UIVisionLogControlState" | "UIVisionLogControl",
+    data: { uiVisionLogControl: UIVisionLogControl },
+  ): Promise<UIVisionLogControlObservation>;
   sendQuery(
     name: "RunUIVision",
-    data: { url: string; macro: VisionMacro },
-  ): Promise<{ dispatchedDocumentedBridge: boolean }>;
+    data: { url: string; macro: VisionMacro; witnessToken: string },
+  ): Promise<UIVisionInvocationObservation>;
   sendQuery(
     name: "WriteAutomaWorkflow",
     data: { workflow: AutomaWorkflow },

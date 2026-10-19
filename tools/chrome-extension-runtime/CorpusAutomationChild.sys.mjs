@@ -199,44 +199,326 @@ export class CorpusAutomationChild extends JSWindowActorChild {
         }
       }
     }
-    if (name === "ConfigureUIVision") {
-      if (!/^moz-extension:\/\/.+\/options\.html$/.test(document.documentURI)) {
-        throw Error("Expected real extension options document");
+    if (
+      name === "ReadUIVisionWebsiteConfiguration" ||
+      name === "UIVisionWebsiteControlState" ||
+      name === "UIVisionWebsiteControl"
+    ) {
+      if (
+        !/^moz-extension:\/\/[^/]+\/options\.html#api$/.test(
+          document.documentURI,
+        ) ||
+        document.nodePrincipal.addonId !==
+          "gcbalfbdmfieckjlnblleoemohcganoc@chromium-extension"
+      ) {
+        throw Error("Expected original UI.Vision API settings document");
       }
-      if (!data.url) throw Error("Authored website URL is required");
-      const { config = {} } = await window.chrome.storage.local.get("config");
-      await window.chrome.storage.local.set(
-        Cu.cloneInto(
-          {
-            config: {
-              ...config,
-              allowRunFromHttpSchema: true,
-              websiteInvokePolicyVersion: 1,
-              websiteWhiteList: [data.url],
-              showClassicMacros: true,
-              showTestCaseTab: true,
-              openAiChatTabOnce: false,
-              macroFreshInstall: false,
-            },
-          },
-          window,
-        ),
+      if (name === "ReadUIVisionWebsiteConfiguration") {
+        const { config = {} } = await window.chrome.storage.local.get("config");
+        return {
+          allowRunFromHttpSchema: config.allowRunFromHttpSchema,
+          websiteInvokePolicyVersion: config.websiteInvokePolicyVersion,
+          websiteWhiteList: config.websiteWhiteList,
+        };
+      }
+      const label = [...document.querySelectorAll("label")].find((element) =>
+        element.textContent?.includes(
+          "Run embedded macros from public websites",
+        )
       );
-      return { websiteInvokePolicyVersion: 1, websiteWhiteList: [data.url] };
+      const dialog = document.querySelector(".whitelist-modal");
+      const dialogTitle = dialog?.querySelector(".ant-modal-title")?.textContent
+        ?.trim() || null;
+      const control = data.uiVisionControl;
+      const element = /** @type {HTMLElement|null|undefined} */ (
+        control === "websiteRuns"
+          ? label?.querySelector('input[type="checkbox"]')
+          : control === "editWhitelist"
+          ? [...(label?.querySelectorAll("a") || [])].find((link) =>
+            link.textContent?.trim() === "Edit Whitelist"
+          )
+          : control === "whitelistURL"
+          ? dialog?.querySelector(
+            'textarea[placeholder="One URL prefix per line, e. g. https://ui.vision/rpa or ui.vision (covers http and https)"]',
+          )
+          : control === "saveWhitelist"
+          ? [...(dialog?.querySelectorAll("button.ant-btn-primary") || [])]
+            .find(
+              (button) => button.textContent?.trim() === "Save",
+            )
+          : null
+      );
+      element?.scrollIntoView({ block: "center", inline: "center" });
+      const rect = element?.getBoundingClientRect();
+      const visible = !!element && !!rect?.width && !!rect.height &&
+        nativeWindow.getComputedStyle(element)?.getPropertyValue(
+            "visibility",
+          ) ===
+          "visible";
+      const enabled = !!element && !element.hasAttribute("disabled") &&
+        element.getAttribute("aria-disabled") !== "true";
+      const x = rect ? rect.x + rect.width / 2 : 0;
+      const y = rect ? rect.y + rect.height / 2 : 0;
+      const hit = visible ? document.elementFromPoint(x, y) : null;
+      const unobstructed = !!element &&
+        (hit === element || element.contains(hit));
+      const state = {
+        url: document.documentURI,
+        ready: document.readyState,
+        control,
+        present: !!element,
+        visible,
+        enabled,
+        unobstructed,
+        checked: control === "websiteRuns"
+          ? /** @type {HTMLInputElement|null|undefined} */ (element)?.checked
+          : undefined,
+        value: control === "whitelistURL"
+          ? /** @type {HTMLTextAreaElement|null|undefined} */ (element)?.value
+          : undefined,
+        dialogTitle,
+        dialogVisible: !!dialog?.getBoundingClientRect().width,
+      };
+      if (name === "UIVisionWebsiteControlState") return state;
+      if (
+        !element || !visible || !enabled || !unobstructed ||
+        ((control === "whitelistURL" || control === "saveWhitelist") &&
+          dialogTitle !== "Embedded Macros Website Whitelist")
+      ) {
+        throw Error(
+          "Genuine UI.Vision website control is unavailable: " + control,
+        );
+      }
+      /** @type {{type:string,trusted:boolean}[]} */
+      const events = [];
+      /** @param {Event} event */
+      const observe = (event) =>
+        events.push({ type: event.type, trusted: event.isTrusted });
+      const types = control === "whitelistURL"
+        ? ["beforeinput", "input"]
+        : ["mousedown", "mouseup", "click"];
+      for (const type of types) element.addEventListener(type, observe);
+      try {
+        if (control === "whitelistURL") {
+          if (!data.url) {
+            throw Error("Authored loopback website URL is required");
+          }
+          const url = new URL(data.url);
+          if (
+            url.protocol !== "http:" || url.hostname !== "127.0.0.1" ||
+            !url.port || url.pathname !== "/automation" || url.search ||
+            url.hash || url.username || url.password
+          ) {
+            throw Error(
+              "Website whitelist must contain only the authored loopback operation",
+            );
+          }
+          const textarea = /** @type {HTMLTextAreaElement} */ (element);
+          textarea.focus();
+          textarea.select();
+          const input = Cc["@mozilla.org/text-input-processor;1"]
+            .createInstance(
+              Ci.nsITextInputProcessor,
+            );
+          if (
+            !input.beginInputTransactionForTests(
+              /** @type {mozIDOMWindow} */ (/** @type {unknown} */ (nativeWindow)),
+            )
+          ) {
+            throw Error("Native UI.Vision whitelist text input unavailable");
+          }
+          input.commitCompositionWith(data.url);
+        } else {
+          nativeWindow.synthesizeMouseEvent("mousemove", x, y, {});
+          nativeWindow.synthesizeMouseEvent("mousedown", x, y, {
+            button: 0,
+            buttons: 1,
+            clickCount: 1,
+          });
+          nativeWindow.synthesizeMouseEvent("mouseup", x, y, {
+            button: 0,
+            buttons: 0,
+            clickCount: 1,
+          });
+        }
+        await new Promise((resolve) => nativeWindow.setTimeout(resolve, 50));
+        const expectedEvent = control === "whitelistURL" ? "input" : "click";
+        if (
+          !events.some((event) => event.type === expectedEvent && event.trusted)
+        ) {
+          throw Error(
+            "UI.Vision setting did not receive trusted native " + expectedEvent,
+          );
+        }
+        return { ...state, events };
+      } finally {
+        for (const type of types) element.removeEventListener(type, observe);
+      }
+    }
+    if (name === "UIVisionLogControlState" || name === "UIVisionLogControl") {
+      if (
+        !/^moz-extension:\/\/[^/]+\/sidepanel\.html(?:[?#]|$)/.test(
+          document.documentURI,
+        ) ||
+        document.nodePrincipal.addonId !==
+          "gcbalfbdmfieckjlnblleoemohcganoc@chromium-extension"
+      ) {
+        throw Error(
+          "Expected original UI.Vision panel for genuine log navigation",
+        );
+      }
+      const control = data.uiVisionLogControl;
+      const selector = control === "data"
+        ? '.sidebar-inner > .ant-tabs > .ant-tabs-nav .ant-tabs-tab[data-node-key="Logs"] [role="tab"]'
+        : control === "logs"
+        ? '.data-tab > .ant-tabs > .ant-tabs-nav .ant-tabs-tab[data-node-key="Logs"] [role="tab"]'
+        : null;
+      if (!selector) throw Error("Unknown genuine UI.Vision log control");
+      const element =
+        /** @type {HTMLElement|null} */ (document.querySelector(selector));
+      if (
+        element &&
+        element.textContent?.trim() !== (control === "data" ? "Data" : "Logs")
+      ) {
+        throw Error("Unknown UI.Vision log control label");
+      }
+      element?.scrollIntoView({ block: "center", inline: "center" });
+      const rect = element?.getBoundingClientRect();
+      const x = rect ? rect.x + rect.width / 2 : 0;
+      const y = rect ? rect.y + rect.height / 2 : 0;
+      const visible = !!element && !!rect?.width && !!rect.height &&
+        nativeWindow.getComputedStyle(element)?.getPropertyValue(
+            "visibility",
+          ) === "visible";
+      const enabled = !!element &&
+        element.getAttribute("aria-disabled") !== "true" &&
+        !element.closest(".ant-tabs-tab-disabled");
+      const hit = visible ? document.elementFromPoint(x, y) : null;
+      const view = document.querySelector(
+        control === "data"
+          ? ".data-tab"
+          : '.data-tab [role="tabpanel"][id$="-panel-Logs"]',
+      );
+      const viewRect = view?.getBoundingClientRect();
+      const state = {
+        url: document.documentURI,
+        ready: document.readyState,
+        control,
+        present: !!element,
+        visible,
+        enabled,
+        unobstructed: !!element && (hit === element || element.contains(hit)),
+        selected: element?.getAttribute("aria-selected") === "true",
+        viewVisible: !!viewRect?.width && !!viewRect.height,
+        rect: { x, y, width: rect?.width || 0, height: rect?.height || 0 },
+      };
+      if (name === "UIVisionLogControlState") return state;
+      if (!element || !visible || !enabled || !state.unobstructed) {
+        throw Error("Actual UI.Vision log control is unavailable: " + control);
+      }
+      /** @type {{type:string,trusted:boolean}[]} */
+      const events = [];
+      /** @param {Event} event */
+      const observe = (event) =>
+        events.push({ type: event.type, trusted: event.isTrusted });
+      const types = ["mousedown", "mouseup", "click"];
+      for (const type of types) element.addEventListener(type, observe);
+      try {
+        nativeWindow.synthesizeMouseEvent("mousemove", x, y, {});
+        nativeWindow.synthesizeMouseEvent("mousedown", x, y, {
+          button: 0,
+          buttons: 1,
+          clickCount: 1,
+        });
+        nativeWindow.synthesizeMouseEvent("mouseup", x, y, {
+          button: 0,
+          buttons: 0,
+          clickCount: 1,
+        });
+        await new Promise((resolve) => nativeWindow.setTimeout(resolve, 50));
+        if (!events.some((event) => event.type === "click" && event.trusted)) {
+          throw Error(
+            "Actual UI.Vision log tab did not receive trusted native click",
+          );
+        }
+        return { ...state, events };
+      } finally {
+        for (const type of types) element.removeEventListener(type, observe);
+      }
     }
     if (name === "RunUIVision") {
-      if (!data.url || !document.documentURI.startsWith(data.url)) {
-        throw Error("Expected authored automation target");
+      if (!data.url || document.documentURI !== data.url) {
+        throw Error("Expected exact authored automation target");
       }
-      window.dispatchEvent(
-        new window.CustomEvent("kantuSaveAndRunMacro", {
-          detail: Cu.cloneInto(
-            { json: data.macro, direct: true, storageMode: "browser" },
-            window,
+      if (!data.witnessToken || !/^[a-f0-9-]{36}$/.test(data.witnessToken)) {
+        throw Error("Owned UI.Vision public witness token is required");
+      }
+      const observerToken = data.witnessToken;
+      /** @type {import("./automation-test-types.ts").UIVisionInvocationObservation["events"]} */
+      const events = [];
+      /** @param {Event} event */
+      const observe = (event) => {
+        if (events.length >= 20) return;
+        const observed = {
+          type: event.type,
+          message: event.type === "error"
+            ? String(/** @type {ErrorEvent} */ (event).message || "").slice(
+              0,
+              1000,
+            )
+            : event.type === "unhandledrejection"
+            ? String(/** @type {PromiseRejectionEvent} */ (event).reason).slice(
+              0,
+              1000,
+            )
+            : undefined,
+        };
+        events.push(observed);
+        // Browser.log retains this diagnostic even when the real macro's open
+        // command navigates and destroys this document/actor. It is not a pass.
+        console.log(
+          "[Actual UI.Vision public witness] " + JSON.stringify({
+            observerToken,
+            url: document.documentURI,
+            event: observed,
+          }),
+        );
+      };
+      const types = ["kantuInvokeSuccess", "error", "unhandledrejection"];
+      const finish = () => {
+        for (const type of types) {
+          nativeWindow.removeEventListener(type, observe);
+        }
+      };
+      for (const type of types) nativeWindow.addEventListener(type, observe);
+      const timer = nativeWindow.setTimeout(finish, 3000);
+      try {
+        window.dispatchEvent(
+          new window.CustomEvent(
+            "kantuSaveAndRunMacro",
+            Cu.cloneInto({
+              detail: {
+                json: data.macro,
+                direct: true,
+                storageMode: "browser",
+              },
+            }, window),
           ),
-        }),
-      );
-      return { dispatchedDocumentedBridge: true };
+        );
+        // A query response must not await a Promise owned by the document that
+        // this unchanged macro deliberately navigates. Later events use the log.
+        return {
+          dispatchedDocumentedBridge: true,
+          witnessMs: 3000,
+          events: [...events],
+          observerToken,
+          transport: "bounded-owned-document-console",
+        };
+      } catch (error) {
+        nativeWindow.clearTimeout(timer);
+        finish();
+        throw error;
+      }
     }
     if (
       name === "ReadAutomaConfiguration" ||

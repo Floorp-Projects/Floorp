@@ -39,7 +39,7 @@ class AutomationCorpusCommandTest(unittest.TestCase):
         command = WRAPPER.browser_command("/native/floorp", "/proof", 360, platform="linux")
         self.assertEqual(command[:3], ["xvfb-run", "--auto-servernum", "--server-args=-screen 0 1600x1200x24"])
         separator = command.index("--")
-        self.assertEqual(command[3:separator], [sys.executable, str(WRAPPER.TOOLS / "ci/run-with-linux-window-manager.py"), "--output", "/proof/window-manager"])
+        self.assertEqual(command[3:separator], [sys.executable, str(WRAPPER.TOOLS / "ci/run-with-linux-window-manager.py"), "--output", str(Path("/proof") / "window-manager")])
         self.assertIn("--headed", command[separator + 1:])
         self.assertNotIn("--headless", command)
         self.assertNotIn("--replace", command)
@@ -71,7 +71,7 @@ class AutomationCorpusCommandTest(unittest.TestCase):
             self.assertNotIn("MOZ_HEADLESS", environment)
             self.assertNotIn("MOZ_DISABLE_CONTENT_SANDBOX", environment)
             output = Path(environment["FLOORP_CORPUS_OUTPUT"])
-            self.assertEqual(output.parent, parent)
+            self.assertEqual(output.parent, parent.resolve())
             self.assertTrue(output.is_dir())
             command = run.call_args.args[0]
             self.assertIn(str(output / "browser"), command)

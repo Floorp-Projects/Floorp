@@ -125,5 +125,31 @@ class IncrementalSourceTests(unittest.TestCase):
                          ["runtime-upstream/inherited.patch", "inherited.patch"])
 
 
+    def test_actual_windows_baseline_patches_only_extend_windows_production(self):
+        common = PREPARE.ROOT / ".github/patches/floorp-runtime/common"
+        baseline = PREPARE.select_patches(self.original, common, True)
+        windows = PREPARE.select_patches(self.original, common, True, "windows")
+        expected = {
+            "custom-app-icons-browser-icon.windows.patch": "browser/components/preferences/config/browser-icon.mjs",
+            "custom-app-icons-l10n.windows.patch": "browser/locales/en-US/browser/preferences/browserIcon.ftl",
+            "custom-app-icons-manager.windows.patch": "browser/components/shell/CustomIconManager.sys.mjs",
+        }
+        self.assertEqual(windows[:-3], baseline)
+        self.assertEqual([name for name, _ in windows[-3:]],
+                         ["windows/" + name for name in sorted(expected)])
+        for platform in (None, "linux", "mac"):
+            self.assertEqual(PREPARE.select_patches(self.original, common, True, platform), baseline)
+        diagnostic = PREPARE.select_patches(self.original, common, False)
+        for platform in (None, "linux", "windows", "mac"):
+            self.assertEqual(PREPARE.select_patches(self.original, common, False, platform), diagnostic)
+        for label, patch in windows[-3:]:
+            artifact = PREPARE.ROOT / "tools/patches" / patch.name
+            self.assertEqual(PREPARE.affected_paths([patch]), {expected[patch.name]})
+            # Canonical source paths are the only change to the genuine
+            # production packaging patches; every original hunk stays exact.
+            source_body = patch.read_text().split("@@", 1)[1]
+            self.assertEqual(source_body, artifact.read_text().split("@@", 1)[1], label)
+
+
 if __name__ == "__main__":
     unittest.main()

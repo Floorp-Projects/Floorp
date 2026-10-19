@@ -45,6 +45,11 @@ export function assertNativePortErrors(
       value.samePort,
       "The public callback receives its exact original Port object",
     );
+    assertEquals(
+      value.portErrorPresent,
+      ordinary,
+      "Only ordinary Firefox exposes a defined public Port.error value",
+    );
     const expectedError = !ordinary && !result.normal &&
       (value.phase === "callback" ||
         (value.phase === "microtask" && !result.isWorker));

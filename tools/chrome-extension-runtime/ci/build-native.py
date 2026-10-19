@@ -60,7 +60,8 @@ def main():
         env[name.upper()] = subprocess.check_output(
             ["rustup", "which", "--toolchain", "1.95.0", name], text=True).strip()
     run([sys.executable, ROOT / "tools/chrome-extension-runtime/prepare-native-source.py",
-         "--runtime-source", args.runtime_source.resolve(), "--production"], ROOT, env)
+         "--runtime-source", args.runtime_source.resolve(), "--production",
+         "--platform", args.platform], ROOT, env)
     state = ROOT / "_dist/native-runtime"
     source = state / "source"
     obj = state / "obj"

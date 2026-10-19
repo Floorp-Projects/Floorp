@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 import { assertFrozenChromeBinary, ChromePipe } from "./chrome-cdp-pipe.mjs";
 import { verifyCorpusScripts } from "./corpus-script-integrity.mjs";
 import {
+  configureUIVisionThroughSettings,
+  invokeUIVisionWithWitness,
+  showUIVisionLogs,
+} from "./uivision-chrome-settings.mjs";
+import {
   automaId,
   automaWorkflow,
   browserflowId,
@@ -59,6 +64,8 @@ const fixtureURL = `http://127.0.0.1:${address.port}/automation`;
 const browser = new ChromePipe(
   join(root, "_dist/chrome-reference/extracted/opt/google/chrome/chrome"),
   output,
+  [],
+  { headed: process.argv.includes("--headed") },
 );
 browser.events = [];
 /** @param {number} ms */
@@ -122,49 +129,26 @@ try {
         flatten: true,
       });
       await delay(1400);
-      const options = await browser.call("Target.createTarget", {
-        url: `chrome-extension://${id}/options.html`,
-      });
-      const { sessionId: optionsSession } = await browser.call(
-        "Target.attachToTarget",
-        { targetId: options.targetId, flatten: true },
+      // Fresh paired recipe: operate the actual product settings using native
+      // input. Historical reference reports retain their original setup recipe.
+      const configured = await configureUIVisionThroughSettings(
+        browser,
+        fixtureURL,
       );
-      await delay(1400);
-      // Configure the real documented website-run feature in this private profile.
-      // The origin allowlist is limited to our authored local fixture; no vendor code is changed.
-      item.configuration = await evaluate(
-        optionsSession,
-        `(async()=>{const {config={}}=await chrome.storage.local.get('config');await chrome.storage.local.set({config:{...config,allowRunFromHttpSchema:true,websiteInvokePolicyVersion:1,websiteWhiteList:[${
-          JSON.stringify(fixtureURL)
-        }],showClassicMacros:true,showTestCaseTab:true,openAiChatTabOnce:false,macroFreshInstall:false}});return {websiteInvokePolicyVersion:1,websiteWhiteList:[${
-          JSON.stringify(fixtureURL)
-        }]}})()`,
-      );
-      await browser.call("Target.closeTarget", { targetId: options.targetId });
-      await browser.call("Target.activateTarget", {
-        targetId: target.targetId,
-      });
-      const tab = (
-        await browser.call("Target.getTargets", { filter: [{ type: "tab" }] })
-      ).targetInfos.find((tab) => tab.url === fixtureURL);
-      if (!tab) throw Error("Actual authored browser tab missing");
-      await browser.call("Extensions.triggerAction", {
-        id,
-        targetId: tab.targetId,
-      });
-      await delay(2200);
+      item.configuration = configured.configuration;
+      item.onboarding = configured.onboarding;
       item.macro = uiVisionMacro(fixtureURL);
-      await evaluate(
+      item.invocation = await invokeUIVisionWithWitness(
+        browser,
         sessionId,
-        `window.dispatchEvent(new CustomEvent('kantuSaveAndRunMacro',{detail:${
-          JSON.stringify({
-            json: item.macro,
-            direct: true,
-            storageMode: "browser",
-          })
-        }}))`,
+        fixtureURL,
+        item.macro,
       );
-      let panelSession;
+      item.configuration = {
+        ...configured.configuration,
+        logNavigation: await showUIVisionLogs(browser, configured.panelSession),
+      };
+      let panelSession = configured.panelSession;
       for (let attempt = 0; attempt < 90; attempt++) {
         await delay(400);
         item.observed = await evaluate(
@@ -235,6 +219,15 @@ try {
       );
       console.log(`PASS ${record.name}: real macro open/type/click/assertText`);
     } catch (error) {
+      if (error instanceof Error && "settingsDiagnostics" in error) {
+        item.configuration = error.settingsDiagnostics;
+      }
+      if (error instanceof Error && "panelDiagnostics" in error) {
+        item.configuration = {
+          configuration: item.configuration,
+          panelDiagnostics: error.panelDiagnostics,
+        };
+      }
       item.error = String(error);
       failed = true;
       console.error(item.error);

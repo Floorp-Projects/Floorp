@@ -27,6 +27,13 @@ including directories. Loaded quota metadata must be a nonnegative safe integer.
 Operations use portable file names, reject root escapes and symbolic links,
 validate buffers before allocation, and stream reads through bounded pipes.
 
+Each document runs at most four `FileWriter` operations at once. Further
+operations wait in a queue capped at 128 entries and 1 GiB of immutable Blob
+snapshots. Chunks are materialized after an operation starts; the IPC bridge
+keeps its separate limit of four buffers of at most 16 MiB each. Queue overflow
+reports `QuotaExceededError`. Aborting a waiting writer releases its
+reservation; closing the owner document cancels its queued work.
+
 Native browser verification lives in `FileSystemNative.test.mts` and
 `FileSystemPrivateNative.test.mts`: real writes/seek/truncate, native `File`,
 PNG decode and pixels, more than 16 MiB fetch with exact SHA-256, cancellation,

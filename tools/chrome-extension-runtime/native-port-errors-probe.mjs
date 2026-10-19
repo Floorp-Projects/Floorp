@@ -7,7 +7,7 @@ chrome.runtime.onConnect.addListener(port=>{
 function nativePortErrorSnapshot(port,actual,listener,phase){
  const error=chrome.runtime.lastError;
  const portError=port.error;
- return {listener,phase,samePort:actual===port,lastError:error?{message:error.message,keys:Object.keys(error).sort(),isError:error instanceof Error,nameType:typeof error.name}:null,portError:portError?{message:portError.message,name:portError.name}:null};
+ return {listener,phase,samePort:actual===port,lastError:error?{message:error.message,keys:Object.keys(error).sort(),isError:error instanceof Error,nameType:typeof error.name}:null,portErrorPresent:portError!==undefined,portError:portError?{message:portError.message,name:portError.name}:null};
 }
 async function probeNativePortErrors(request){
  const before=chrome.runtime.lastError?.message??null,records=[],microtasks=[],turns=[];

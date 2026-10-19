@@ -251,10 +251,10 @@ index 45ce82b..72d82b4 100644
    }
 diff --git a/browser/components/extensions/parent/ext-sidePanel.js b/browser/components/extensions/parent/ext-sidePanel.js
 new file mode 100644
-index 0000000..3798607
+index 0000000..a8a46b2
 --- /dev/null
 +++ b/browser/components/extensions/parent/ext-sidePanel.js
-@@ -0,0 +1,431 @@
+@@ -0,0 +1,435 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -562,7 +562,11 @@ index 0000000..3798607
 +    if (this.action.isOpen(window)) {
 +      if (state.scope?.target) {
 +        this.closeInWindow(window, state.scope.target).catch(Cu.reportError);
-+      } else this.closeInWindow(window).catch(Cu.reportError);
++      } else {
++        // A tab opening may use the global fallback scope.
++        state.tabs.delete(tab);
++        this.closeInWindow(window).catch(Cu.reportError);
++      }
 +    } else this.openInWindow(window, tab).catch(Cu.reportError);
 +  }
 +

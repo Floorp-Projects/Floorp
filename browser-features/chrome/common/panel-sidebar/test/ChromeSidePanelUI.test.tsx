@@ -1,16 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { createRoot } from "solid-js";
-import { render } from "@nora/solid-xul";
-import { CPanelSidebar } from "../components/panel-sidebar.tsx";
-import { PanelSidebarButton } from "../components/sidebar-panel-button.tsx";
-import {
-  panelSidebarData,
-  selectedPanelId,
-  setPanelSidebarData,
-} from "../data/data.ts";
-import { KeyboardShortcutController } from "../../keyboard-shortcut/controller.ts";
+import { panelSidebarData, setPanelSidebarData } from "../data/data.ts";
 import {
   getConfig,
   isEnabled,
@@ -24,13 +15,13 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-async function until(condition: () => boolean, label="state"): Promise<void> {
+async function until(condition: () => boolean, label = "state"): Promise<void> {
   const end = Date.now() + 10000;
   while (Date.now() < end) {
     if (condition()) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error("Side panel UI did not reach "+label);
+  throw new Error("Side panel UI did not reach " + label);
 }
 
 export async function runAllTests(): Promise<string[]> {
@@ -39,11 +30,6 @@ export async function runAllTests(): Promise<string[]> {
   const previous = panelSidebarData();
   const enabled = isEnabled();
   const config = getConfig();
-  const host = document.createXULElement("vbox");
-  host.id = "floorp-side-panel-integration-test";
-  document.getElementById("browser")!.appendChild(host);
-  let dispose: () => void = () => {};
-  let controller: KeyboardShortcutController | undefined;
   try {
     const panel = {
       id: "floorp-chrome-side-panel-test",
@@ -57,29 +43,35 @@ export async function runAllTests(): Promise<string[]> {
       extensionId,
     };
     setPanelSidebarData([...previous, panel]);
-    createRoot((disposer) => {
-      dispose = disposer;
-      const manager = new CPanelSidebar();
-      render(() => <PanelSidebarButton panel={panel} ctx={manager} />, host);
-    });
-    const button = host.querySelector("[data-panel-id]") as HTMLElement;
+    // The packaged feature reacts to the real stored panel configuration.
+    // Use that production button rather than rendering a duplicate ID whose
+    // selection marker competes with the production sidebar manager.
+    const selector = `.panel-sidebar-panel[data-panel-id="${panel.id}"]`;
+    await until(
+      () => document.querySelectorAll(selector).length === 1,
+      "one production pin",
+    );
+    const button = document.querySelector(selector) as HTMLElement;
     assert(button, "The existing pinned-extension button renders");
     checks.push(
       "Existing Floorp extension pin renders the Chrome side-panel entry",
     );
     if (window.SidebarController.isOpen) window.SidebarController.hide();
     button.click();
-    await until(() => window.SidebarController.isOpen,"open");
+    await until(() => window.SidebarController.isOpen, "open");
     assert(
-      selectedPanelId() === null,
+      !document.getElementById(`sidebar-panel-${panel.id}`),
       "Native Chrome panels do not create a duplicate Floorp content browser",
     );
-    await until(() => button.getAttribute("data-checked") === "true","active pin marker");
+    await until(
+      () => button.getAttribute("data-checked") === "true",
+      "active pin marker",
+    );
     checks.push(
       "Clicking a Floorp pin opens the native Chrome scope and marks the existing button active",
     );
     button.click();
-    await until(() => !window.SidebarController.isOpen,"closed");
+    await until(() => !window.SidebarController.isOpen, "closed");
     checks.push("Clicking the active Floorp pin closes its native panel");
     const actions = getKeyboardShortcutActionOptions((_key, fallback) =>
       fallback
@@ -103,7 +95,11 @@ export async function runAllTests(): Promise<string[]> {
         },
       },
     });
-    controller = new KeyboardShortcutController(window, null, "linux");
+    await until(
+      () =>
+        Reflect.get(window, "__keyboardShortcutControllerAttached") === true,
+      "production keyboard controller",
+    );
     const chromeWindow = window;
     const shortcut = () => {
       chromeWindow.dispatchEvent(
@@ -127,19 +123,16 @@ export async function runAllTests(): Promise<string[]> {
       );
     };
     shortcut();
-    await until(() => window.SidebarController.isOpen,"open");
+    await until(() => window.SidebarController.isOpen, "open");
     shortcut();
-    await until(() => !window.SidebarController.isOpen,"closed");
+    await until(() => !window.SidebarController.isOpen, "closed");
     checks.push(
       "Configured keyboard events toggle the last pinned Chrome side panel through the real controller",
     );
     return checks;
   } finally {
-    controller?.destroy();
     setEnabled(enabled);
     setConfig(config);
     setPanelSidebarData(previous);
-    dispose();
-    host.remove();
   }
 }

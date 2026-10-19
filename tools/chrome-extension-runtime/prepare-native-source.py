@@ -31,7 +31,7 @@ def affected_paths(patches):
     return paths
 
 
-def select_patches(original, common, production):
+def select_patches(original, common, production, platform=None):
     selected = []
     upstream = {}
     if production:
@@ -48,6 +48,9 @@ def select_patches(original, common, production):
     if production:
         selected.extend(("runtime-packaging/" + patch.name, patch)
                         for patch in sorted((original / ".github/patches/packaging").glob("*.patch")))
+    if production and platform == "windows":
+        selected.extend(("windows/" + patch.name, patch)
+                        for patch in sorted((common.parent / "windows").glob("*.patch")))
     return selected
 
 
@@ -159,6 +162,8 @@ def main():
                         default=ROOT.parent / "Floorp-Runtime")
     parser.add_argument("--production", action="store_true",
                         help="Include locked Runtime upstream and Floorp packaging integration")
+    parser.add_argument("--platform", choices=["linux", "windows", "mac"],
+                        help="Select platform-specific source patches for production integration")
     parser.add_argument("--check-only", action="store_true",
                         help="Validate composition in a small temporary source fixture")
     parser.add_argument("--incremental", action="store_true",
@@ -168,7 +173,8 @@ def main():
     state = ROOT / "_dist/native-runtime"
     source = state / "source"
     revision = json.loads((ROOT / "floorp-runtime.lock.json").read_text())["source"]["commit"]
-    selected = select_patches(original, ROOT / ".github/patches/floorp-runtime/common", args.production)
+    selected = select_patches(original, ROOT / ".github/patches/floorp-runtime/common",
+                              args.production, args.platform)
     if args.check_only:
         with tempfile.TemporaryDirectory(prefix="floorp-native-source-check-") as temporary:
             fixture = Path(temporary)

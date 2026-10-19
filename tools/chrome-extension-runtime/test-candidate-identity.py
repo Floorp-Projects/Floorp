@@ -17,6 +17,10 @@ spec = importlib.util.spec_from_file_location("candidate_identity", Path(__file_
 identity = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(identity)
 selection = identity._selection
+ci_spec = importlib.util.spec_from_file_location("candidate_ci", Path(__file__).parent / "ci/test-candidate.py")
+ci = importlib.util.module_from_spec(ci_spec)
+ci_spec.loader.exec_module(ci)
+
 
 
 class CandidatePackageSelectionTests(unittest.TestCase):
@@ -55,6 +59,11 @@ class CandidateIdentityTests(unittest.TestCase):
         self.patch = self.root / ".github/patches/floorp-runtime/common/chrome-fixture.patch"
         self.patch.parent.mkdir(parents=True)
         self.patch.write_text("authored fixture patch\n")
+        self.baseline_patch = self.patch.with_name("browser-modules-BrowserGlue.sys.patch")
+        self.baseline_patch.write_text("authored production startup baseline\n")
+        self.windows_patch = self.root / ".github/patches/floorp-runtime/windows/custom-app-icons-branding.windows.patch"
+        self.windows_patch.parent.mkdir()
+        self.windows_patch.write_text("authored Windows branding baseline\n")
         (self.root / "floorp-runtime.lock.json").write_text(json.dumps({
             "source": {"commit": "a" * 40}, "artifacts": [{"platform": "linux", "version": "158.0.1"}]}))
         self.app = self.root / "installed/floorp"
@@ -67,7 +76,8 @@ class CandidateIdentityTests(unittest.TestCase):
         self.write_tar()
         self.manifest = {"schemaVersion": 1, "platform": "linux", "sourceCommit": "a" * 40,
                          "floorpCommit": commit, "productionOverlay": True, "nativeWebExtensionBindings": True,
-                         "buildId": "20261019000000", "patches": {self.patch.name: identity._sha(self.patch)}}
+                         "buildId": "20261019000000", "patches": {self.patch.name: identity._sha(self.patch),
+                         self.baseline_patch.name: identity._sha(self.baseline_patch)}}
         self.manifest_path = self.root / "candidate-manifest.json"
         self.write_manifest()
         host = patch.object(identity.sys, "platform", "linux")
@@ -118,6 +128,47 @@ class CandidateIdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "maintained source"):
             self.authenticate()
 
+    def test_non_chrome_baseline_omission_and_change_rejected_by_both_consumers(self):
+        label = self.baseline_patch.name
+        correct = self.manifest["patches"][label]
+        for value in (None, "0" * 64):
+            with self.subTest(recorded=value):
+                if value is None:
+                    self.manifest["patches"].pop(label, None)
+                else:
+                    self.manifest["patches"][label] = value
+                self.write_manifest()
+                with self.assertRaisesRegex(RuntimeError, label):
+                    self.authenticate()
+                with patch.object(ci, "ROOT", self.root), patch.object(ci.sys, "argv", [
+                        "test-candidate.py", "--platform", "linux", "--artifact", str(self.root)]), \
+                        patch.object(ci, "unpack") as unpack:
+                    with self.assertRaisesRegex(RuntimeError, label):
+                        ci.main()
+                    unpack.assert_not_called()
+                self.manifest["patches"][label] = correct
+
+    def test_windows_patch_omission_and_change_rejected_by_both_consumers(self):
+        self.manifest["platform"] = "windows"
+        label = "windows/" + self.windows_patch.name
+        # A bare filename cannot impersonate the production selector's OS label.
+        self.manifest["patches"][self.windows_patch.name] = identity._sha(self.windows_patch)
+        for value in (None, "0" * 64):
+            with self.subTest(recorded=value), patch.object(identity.sys, "platform", "win32"):
+                if value is None:
+                    self.manifest["patches"].pop(label, None)
+                else:
+                    self.manifest["patches"][label] = value
+                self.write_manifest()
+                with self.assertRaisesRegex(RuntimeError, label):
+                    self.authenticate()
+                with patch.object(ci, "ROOT", self.root), patch.object(ci.sys, "argv", [
+                        "test-candidate.py", "--platform", "windows", "--artifact", str(self.root)]), \
+                        patch.object(ci, "unpack") as unpack:
+                    with self.assertRaisesRegex(RuntimeError, label):
+                        ci.main()
+                    unpack.assert_not_called()
+
     def test_wrong_source_commit_and_false_native_marker_rejected(self):
         for key, value in (("sourceCommit", "b" * 40), ("floorpCommit", "c" * 40),
                            ("productionOverlay", False), ("nativeWebExtensionBindings", False)):
@@ -166,6 +217,7 @@ class CandidateIdentityTests(unittest.TestCase):
         lock["artifacts"][0]["platform"] = "windows"
         lock_path.write_text(json.dumps(lock))
         self.manifest["platform"] = "windows"
+        self.manifest["patches"]["windows/" + self.windows_patch.name] = identity._sha(self.windows_patch)
         self.write_manifest()
         self.manifest["packages"].append({"name": "floorp-fixture.xpt_artifacts.zip"})
         self.manifest_path.write_text(json.dumps(self.manifest))
@@ -184,6 +236,69 @@ class CandidateIdentityTests(unittest.TestCase):
         (self.app / "link").symlink_to(outside)
         with self.assertRaisesRegex(ValueError, "symlink escapes"):
             self.authenticate()
+
+
+class CandidatePatchInventoryTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="floorp-patch-inventory-")
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.folder = self.root / ".github/patches/floorp-runtime"
+        (self.folder / "common").mkdir(parents=True)
+        (self.folder / "windows").mkdir()
+        self.common = self.folder / "common/browser-init.patch"
+        self.common.write_text("authored startup patch\n")
+        self.windows = self.folder / "windows/custom-app-icons.windows.patch"
+        self.windows.write_text("authored OS patch\n")
+        self.manifest = {"platform": "linux", "patches": {
+            self.common.name: identity._sha(self.common),
+            "runtime-upstream/extra.patch": "upstream descriptor remains allowed",
+            "runtime-packaging/extra.patch": "packaging descriptor remains allowed"}}
+
+    def test_common_inventory_accepts_extra_authenticated_namespaces_without_runtime_clone(self):
+        identity.validate_maintained_patches(self.manifest, self.root)
+        self.common.write_text("altered checkout startup patch\n")
+        with self.assertRaisesRegex(RuntimeError, self.common.name):
+            identity.validate_maintained_patches(self.manifest, self.root)
+
+    def test_linux_and_mac_do_not_require_windows_records_or_folder(self):
+        for platform in ("linux", "mac"):
+            self.manifest["platform"] = platform
+            identity.validate_maintained_patches(self.manifest, self.root)
+        self.windows.unlink()
+        self.windows.parent.rmdir()
+        for platform in ("linux", "mac"):
+            self.manifest["platform"] = platform
+            identity.validate_maintained_patches(self.manifest, self.root)
+
+    def test_windows_requires_namespaced_bytes_and_nonempty_os_inventory(self):
+        self.manifest["platform"] = "windows"
+        self.manifest["patches"]["windows/" + self.windows.name] = identity._sha(self.windows)
+        identity.validate_maintained_patches(self.manifest, self.root)
+        self.windows.write_text("changed OS source\n")
+        with self.assertRaisesRegex(RuntimeError, "windows/" + self.windows.name):
+            identity.validate_maintained_patches(self.manifest, self.root)
+        self.windows.unlink()
+        with self.assertRaisesRegex(RuntimeError, "inventory is empty: windows"):
+            identity.validate_maintained_patches(self.manifest, self.root)
+        self.windows.parent.rmdir()
+        with self.assertRaisesRegex(RuntimeError, "inventory is empty: windows"):
+            identity.validate_maintained_patches(self.manifest, self.root)
+
+    def test_missing_or_empty_common_inventory_and_malformed_map_fail_closed(self):
+        for recorded in (None, [], "not a patch map"):
+            with self.subTest(patches=recorded), self.assertRaisesRegex(RuntimeError, "inventory must be an object"):
+                identity.validate_maintained_patches({"platform": "linux", "patches": recorded}, self.root)
+        self.common.unlink()
+        with self.assertRaisesRegex(RuntimeError, "inventory is empty: common"):
+            identity.validate_maintained_patches(self.manifest, self.root)
+        self.common.parent.rmdir()
+        with self.assertRaisesRegex(RuntimeError, "inventory is empty: common"):
+            identity.validate_maintained_patches(self.manifest, self.root)
+
+    def test_unknown_platform_is_not_an_implicit_non_windows_selection(self):
+        with self.assertRaisesRegex(RuntimeError, "supported platform"):
+            identity.validate_maintained_patches({**self.manifest, "platform": "win32"}, self.root)
 
 
 if __name__ == "__main__":

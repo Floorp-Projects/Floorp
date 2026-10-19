@@ -1,0 +1,1521 @@
+{
+  "output": "/dev/shm/chrome-message-reentrancy187-adNW72",
+  "stage": "authored-genuine-Chrome155-reentrant-response-prototype-options-reference",
+  "nativeQualified": false,
+  "completed": true,
+  "probeSha256": "f53e7922839cb170a57718e68ca4f0af88810a13a9ddc2a49555ea31135d4825",
+  "responses": [
+    {
+      "kind": "reentrant-tojson-valid",
+      "sender": {
+        "id": "owned-response-hook-0",
+        "kind": "reentrant-tojson-valid",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "outer"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-0",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-valid",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-throw",
+      "sender": {
+        "id": "owned-response-hook-1",
+        "kind": "reentrant-tojson-throw",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-1",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-throw",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-undefined",
+      "sender": {
+        "id": "owned-response-hook-2",
+        "kind": "reentrant-tojson-undefined",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-2",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-undefined",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-bigint",
+      "sender": {
+        "id": "owned-response-hook-3",
+        "kind": "reentrant-tojson-bigint",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-3",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-bigint",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-cycle",
+      "sender": {
+        "id": "owned-response-hook-4",
+        "kind": "reentrant-tojson-cycle",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-4",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-cycle",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-valid",
+      "sender": {
+        "id": "owned-response-hook-5",
+        "kind": "reentrant-getter-valid",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "selected": "outer"
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-5",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-valid",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-throw",
+      "sender": {
+        "id": "owned-response-hook-6",
+        "kind": "reentrant-getter-throw",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-6",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-throw",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-undefined",
+      "sender": {
+        "id": "owned-response-hook-7",
+        "kind": "reentrant-getter-undefined",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {}
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-7",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-undefined",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-bigint",
+      "sender": {
+        "id": "owned-response-hook-8",
+        "kind": "reentrant-getter-bigint",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-8",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-bigint",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-cycle",
+      "sender": {
+        "id": "owned-response-hook-9",
+        "kind": "reentrant-getter-cycle",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-9",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-cycle",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-tojson-sendResponse",
+      "sender": {
+        "id": "owned-response-hook-10",
+        "kind": "prototype-tojson-sendResponse",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "transformed": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-10",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-tojson-sendResponse",
+        "restored": true,
+        "calls": [
+          {
+            "original": true,
+            "key": ""
+          }
+        ],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "outer": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-tojson-promise",
+      "sender": {
+        "id": "owned-response-hook-11",
+        "kind": "prototype-tojson-promise",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "transformed": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-11",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-tojson-promise",
+        "restored": true,
+        "calls": [
+          {
+            "original": true,
+            "key": ""
+          }
+        ],
+        "hookCalls": 1,
+        "thenReads": 0
+      }
+    },
+    {
+      "kind": "prototype-then-sendResponse",
+      "sender": {
+        "id": "owned-response-hook-12",
+        "kind": "prototype-then-sendResponse",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "ownedPayload": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-12",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-then-sendResponse",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 0,
+        "thenReads": 0,
+        "outer": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-then-promise",
+      "sender": {
+        "id": "owned-response-hook-13",
+        "kind": "prototype-then-promise",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "ownedPayload": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-13",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-then-promise",
+        "restored": true,
+        "calls": [
+          {
+            "original": true
+          }
+        ],
+        "hookCalls": 0,
+        "thenReads": 1
+      }
+    },
+    {
+      "kind": "reentrant-tojson-valid",
+      "sender": {
+        "id": "owned-response-hook-18",
+        "kind": "reentrant-tojson-valid",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": "outer"
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-18",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-valid",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-throw",
+      "sender": {
+        "id": "owned-response-hook-19",
+        "kind": "reentrant-tojson-throw",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-19",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-throw",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-undefined",
+      "sender": {
+        "id": "owned-response-hook-20",
+        "kind": "reentrant-tojson-undefined",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-20",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-undefined",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-bigint",
+      "sender": {
+        "id": "owned-response-hook-21",
+        "kind": "reentrant-tojson-bigint",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-21",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-bigint",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-tojson-cycle",
+      "sender": {
+        "id": "owned-response-hook-22",
+        "kind": "reentrant-tojson-cycle",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-22",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-tojson-cycle",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-valid",
+      "sender": {
+        "id": "owned-response-hook-23",
+        "kind": "reentrant-getter-valid",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "selected": "outer"
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-23",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-valid",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-throw",
+      "sender": {
+        "id": "owned-response-hook-24",
+        "kind": "reentrant-getter-throw",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-24",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-throw",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-undefined",
+      "sender": {
+        "id": "owned-response-hook-25",
+        "kind": "reentrant-getter-undefined",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {}
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-25",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-undefined",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "returned": "undefined"
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-bigint",
+      "sender": {
+        "id": "owned-response-hook-26",
+        "kind": "reentrant-getter-bigint",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-26",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-bigint",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "reentrant-getter-cycle",
+      "sender": {
+        "id": "owned-response-hook-27",
+        "kind": "reentrant-getter-cycle",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "rejected",
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-27",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "reentrant-getter-cycle",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "inner": {
+          "returned": "undefined"
+        },
+        "outer": {
+          "error": {
+            "name": "TypeError",
+            "message": "Could not serialize message."
+          }
+        },
+        "late": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-tojson-sendResponse",
+      "sender": {
+        "id": "owned-response-hook-28",
+        "kind": "prototype-tojson-sendResponse",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "transformed": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-28",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-tojson-sendResponse",
+        "restored": true,
+        "calls": [
+          {
+            "original": true,
+            "key": ""
+          }
+        ],
+        "hookCalls": 1,
+        "thenReads": 0,
+        "outer": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-tojson-promise",
+      "sender": {
+        "id": "owned-response-hook-29",
+        "kind": "prototype-tojson-promise",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "transformed": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-29",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-tojson-promise",
+        "restored": true,
+        "calls": [
+          {
+            "original": true,
+            "key": ""
+          }
+        ],
+        "hookCalls": 1,
+        "thenReads": 0
+      }
+    },
+    {
+      "kind": "prototype-then-sendResponse",
+      "sender": {
+        "id": "owned-response-hook-30",
+        "kind": "prototype-then-sendResponse",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "ownedPayload": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-30",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-then-sendResponse",
+        "restored": true,
+        "calls": [],
+        "hookCalls": 0,
+        "thenReads": 0,
+        "outer": {
+          "returned": "undefined"
+        }
+      }
+    },
+    {
+      "kind": "prototype-then-promise",
+      "sender": {
+        "id": "owned-response-hook-31",
+        "kind": "prototype-then-promise",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "syncThrow": null,
+        "settled": {
+          "status": "fulfilled",
+          "value": {
+            "ownedPayload": true
+          }
+        }
+      },
+      "receiver": {
+        "id": "owned-response-hook-31",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "senderId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "kind": "prototype-then-promise",
+        "restored": true,
+        "calls": [
+          {
+            "original": true
+          }
+        ],
+        "hookCalls": 0,
+        "thenReads": 1
+      }
+    }
+  ],
+  "options": [
+    {
+      "name": "inherited-unknown-enumerable",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "inherited-tls-enumerable",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-unknown-nonenumerable",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-tls-nonenumerable",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-tls-getter-enumerable",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 1,
+      "order": [
+        "options-getter",
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-null",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-undefined",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-getter-before-unknown",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 0,
+      "optionsReads": 1,
+      "order": [
+        "options-getter"
+      ],
+      "syncThrow": {
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Error at parameter 'options': Unexpected property: 'unknownOwnedOption'."
+      },
+      "settled": null
+    },
+    {
+      "name": "unknown-before-tls-getter",
+      "realm": "document",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 0,
+      "optionsReads": 0,
+      "order": [],
+      "syncThrow": {
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Error at parameter 'options': Unexpected property: 'unknownOwnedOption'."
+      },
+      "settled": null
+    },
+    {
+      "name": "inherited-unknown-enumerable",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "inherited-tls-enumerable",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-unknown-nonenumerable",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-tls-nonenumerable",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "own-tls-getter-enumerable",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 1,
+      "order": [
+        "options-getter",
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-null",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-undefined",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 1,
+      "optionsReads": 0,
+      "order": [
+        "payload-toJSON"
+      ],
+      "syncThrow": null,
+      "settled": {
+        "status": "fulfilled",
+        "value": "options-ack"
+      }
+    },
+    {
+      "name": "tls-getter-before-unknown",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 0,
+      "optionsReads": 1,
+      "order": [
+        "options-getter"
+      ],
+      "syncThrow": {
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Error at parameter 'options': Unexpected property: 'unknownOwnedOption'."
+      },
+      "settled": null
+    },
+    {
+      "name": "unknown-before-tls-getter",
+      "realm": "worker",
+      "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+      "payloadCalls": 0,
+      "optionsReads": 0,
+      "order": [],
+      "syncThrow": {
+        "name": "TypeError",
+        "message": "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): Error at parameter 'options': Unexpected property: 'unknownOwnedOption'."
+      },
+      "settled": null
+    }
+  ],
+  "ports": [
+    {
+      "kind": "disconnect-valid",
+      "sender": {
+        "name": "owned-port-hook-14",
+        "kind": "disconnect-valid",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [],
+        "post": {
+          "returned": "undefined"
+        }
+      },
+      "receiver": {
+        "realm": "worker",
+        "name": "owned-port-hook-14",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": []
+      }
+    },
+    {
+      "kind": "disconnect-throw",
+      "sender": {
+        "name": "owned-port-hook-15",
+        "kind": "disconnect-throw",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [],
+        "post": {
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "realm": "worker",
+        "name": "owned-port-hook-15",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": []
+      }
+    },
+    {
+      "kind": "nested-valid",
+      "sender": {
+        "name": "owned-port-hook-16",
+        "kind": "nested-valid",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [
+          "owned-ack",
+          "owned-ack"
+        ],
+        "nested": {
+          "returned": "undefined"
+        },
+        "post": {
+          "returned": "undefined"
+        }
+      },
+      "receiver": {
+        "realm": "worker",
+        "name": "owned-port-hook-16",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": [
+          "inner",
+          {
+            "outer": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "nested-throw",
+      "sender": {
+        "name": "owned-port-hook-17",
+        "kind": "nested-throw",
+        "realm": "document",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [
+          "owned-ack"
+        ],
+        "nested": {
+          "returned": "undefined"
+        },
+        "post": {
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "realm": "worker",
+        "name": "owned-port-hook-17",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": [
+          "inner"
+        ]
+      }
+    },
+    {
+      "kind": "disconnect-valid",
+      "sender": {
+        "name": "owned-port-hook-32",
+        "kind": "disconnect-valid",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [],
+        "post": {
+          "returned": "undefined"
+        }
+      },
+      "receiver": {
+        "realm": "document",
+        "name": "owned-port-hook-32",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": []
+      }
+    },
+    {
+      "kind": "disconnect-throw",
+      "sender": {
+        "name": "owned-port-hook-33",
+        "kind": "disconnect-throw",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [],
+        "post": {
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "realm": "document",
+        "name": "owned-port-hook-33",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": []
+      }
+    },
+    {
+      "kind": "nested-valid",
+      "sender": {
+        "name": "owned-port-hook-34",
+        "kind": "nested-valid",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [
+          "owned-ack",
+          "owned-ack"
+        ],
+        "nested": {
+          "returned": "undefined"
+        },
+        "post": {
+          "returned": "undefined"
+        }
+      },
+      "receiver": {
+        "realm": "document",
+        "name": "owned-port-hook-34",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": [
+          "inner",
+          {
+            "outer": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "nested-throw",
+      "sender": {
+        "name": "owned-port-hook-35",
+        "kind": "nested-throw",
+        "realm": "worker",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "hookCalls": 1,
+        "received": [
+          "owned-ack"
+        ],
+        "nested": {
+          "returned": "undefined"
+        },
+        "post": {
+          "error": {
+            "name": "Error",
+            "message": "Could not serialize message."
+          }
+        }
+      },
+      "receiver": {
+        "realm": "document",
+        "name": "owned-port-hook-35",
+        "runtimeId": "eejpifaaofcpkicjbiofflgdpipaokff",
+        "messages": [
+          "inner"
+        ]
+      }
+    }
+  ],
+  "version": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/155.0.8059.84",
+    "revision": "@5869fe313571d75152b77813cf0a4ee26a4e6df0",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "jsVersion": "15.5.35.25"
+  },
+  "extensionId": "eejpifaaofcpkicjbiofflgdpipaokff"
+}

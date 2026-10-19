@@ -169,6 +169,33 @@ def _dmg_inventory(package, binary):
     return result, actual / "Contents/Resources/application.ini"
 
 
+def validate_maintained_patches(manifest, root):
+    """Require all maintained common and candidate-OS source patch hashes.
+
+    Native API jobs have the Floorp checkout and authenticated manifest, but no
+    Runtime source clone. Match the same common and windows/<name> labels used
+    by native production preparation directly against this checkout's bytes.
+    """
+    platform = manifest.get("platform")
+    if platform not in _OS:
+        raise RuntimeError("Candidate patch provenance requires a supported platform")
+    recorded = manifest.get("patches")
+    if not isinstance(recorded, dict):
+        raise RuntimeError("Candidate patch inventory must be an object")
+    directory = Path(root) / ".github/patches/floorp-runtime"
+    groups = [("", directory / "common")]
+    if platform == "windows":
+        groups.append(("windows/", directory / "windows"))
+    for prefix, folder in groups:
+        patches = sorted(folder.glob("*.patch"))
+        if not patches:
+            raise RuntimeError("Maintained source patch inventory is empty: " + folder.name)
+        for patch in patches:
+            label = prefix + patch.name
+            if recorded.get(label) != _sha(patch):
+                raise RuntimeError("Candidate omitted or changed maintained source: " + label)
+
+
 def authenticate_candidate(manifest_path, binary, root):
     """Authenticate exact source/package identity and all installed app files."""
     manifest_path, binary, root = Path(manifest_path), Path(binary), Path(root).resolve(strict=True)
@@ -185,9 +212,7 @@ def authenticate_candidate(manifest_path, binary, root):
             manifest.get("floorpCommit") != commit or manifest.get("productionOverlay") is not True or
             manifest.get("nativeWebExtensionBindings") is not True):
         raise RuntimeError("Candidate identity does not match the current native production source")
-    for patch in (root / ".github/patches/floorp-runtime/common").glob("chrome*.patch"):
-        if manifest.get("patches", {}).get(patch.name) != _sha(patch):
-            raise RuntimeError("Candidate omitted or changed maintained source: " + patch.name)
+    validate_maintained_patches(manifest, root)
     build_id = manifest.get("buildId")
     if not isinstance(build_id, str) or len(build_id) != 14 or not build_id.isdecimal():
         raise RuntimeError("Candidate build ID must be a 14-digit UTC value")

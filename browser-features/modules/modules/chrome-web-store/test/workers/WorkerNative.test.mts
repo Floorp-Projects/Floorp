@@ -204,6 +204,10 @@ const workerBody = `
           const rules=await api.onPageChanged.getRules(["worker-native-declarative"]);
           return {requiresNew,matcherInstance:matcher instanceof api.PageStateMatcher,showInstance:show instanceof api.ShowAction,iconPlain:!(icon instanceof api.SetIcon),legacyType:legacyShow.instanceType,rules};
         }
+        case "injection-state": {
+          const [state]=await browser.scripting.executeScript({target:{tabId:message.tabId},func:()=>({ready:document.readyState,userScript:document.documentElement.getAttribute("data-worker-user-script"),declarative:document.documentElement.getAttribute("data-worker-declarative")})});
+          return state.result;
+        }
         case "scripting": {
           const target={tabId:message.tabId};
           const result=await browser.scripting.executeScript({target,func:(left,right)=>({sum:left+right,title:document.title,userScript:document.documentElement.getAttribute("data-worker-user-script"),declarative:document.documentElement.getAttribute("data-worker-declarative")}),args:[2,3]});
@@ -682,9 +686,33 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       "worker-native-declarative",
       "Worker declarative rules reach actual native store",
     );
-    target.linkedBrowser.reload();
-    await new Promise((resolve) => setTimeout(resolve, 300));
     const tabId = extension.tabManager.getWrapper(target).id;
+    const previousDocument = target.linkedBrowser.browsingContext
+      .currentWindowGlobal?.innerWindowId;
+    assert(typeof previousDocument === "number", "target has a real document");
+    target.linkedBrowser.reload();
+    await waitFor(() => {
+      const current = target.linkedBrowser.browsingContext.currentWindowGlobal;
+      return current && current.innerWindowId !== previousDocument &&
+        target.linkedBrowser.contentTitle === "Worker injection target";
+    }, "fresh target document after reload");
+    const injectionDeadline = Date.now() + 25000;
+    let injectionReady = false;
+    while (Date.now() < injectionDeadline) {
+      const state = (await command("injection-state", { tabId })).result;
+      if (
+        state.ready === "complete" && state.userScript === "native" &&
+        state.declarative === "native"
+      ) {
+        injectionReady = true;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    }
+    assert(
+      injectionReady,
+      "registered userScript and declarative action finish in the fresh document",
+    );
     const scripting = (await command("scripting", { tabId })).result;
     assertEquals(
       scripting.result[0].result.sum,

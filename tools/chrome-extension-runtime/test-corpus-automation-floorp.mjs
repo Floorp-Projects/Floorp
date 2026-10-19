@@ -152,27 +152,6 @@ async function runUIVision() {
         .catch(() => null);
       return state?.text?.includes("Automation target") && state;
     }, "authored input/click target");
-    const options = window.gBrowser.addTab(
-      extension.baseURI.resolve("options.html"),
-      { triggeringPrincipal: extension.principal },
-    );
-    await until(async () => {
-      const state = await boundedAutomationQuery(
-        actor(options)
-          ?.sendQuery("Snapshot"),
-        "Snapshot",
-      )
-        .catch(() => null);
-      return state?.ready === "complete" && state?.text?.includes("Settings");
-    }, "real extension options");
-    item.configuration = await boundedAutomationQuery(
-      actor(options).sendQuery("ConfigureUIVision", {
-        url,
-      }),
-      "ConfigureUIVision",
-    );
-    window.gBrowser.removeTab(options);
-    window.gBrowser.selectedTab = target;
     item.nativeAction = await invokeNativeCorpusAction(
       extension,
       window,
@@ -219,11 +198,201 @@ async function runUIVision() {
       );
       return !state.text.includes("Your macros are all still here");
     }, "actual UI.Vision welcome dialog to close");
-    item.macro = uiVisionMacro(url);
-    await boundedAutomationQuery(
-      actor(target).sendQuery("RunUIVision", { url, macro: item.macro }),
-      "RunUIVision",
+    const options = window.gBrowser.addTab(
+      extension.baseURI.resolve("options.html#api"),
+      { triggeringPrincipal: extension.principal },
     );
+    window.gBrowser.selectedTab = options;
+    await until(async () => {
+      const state = await boundedAutomationQuery(
+        actor(options).sendQuery("Snapshot"),
+        "Snapshot",
+      ).catch(() => null);
+      return state?.ready === "complete" &&
+        state.text.includes("Run embedded macros from public websites");
+    }, "real UI.Vision API settings");
+    item.websiteOperator = {
+      before: await boundedAutomationQuery(
+        actor(options).sendQuery("ReadUIVisionWebsiteConfiguration"),
+        "ReadUIVisionWebsiteConfiguration",
+      ),
+      steps: [],
+    };
+    /** @param {import("./automation-test-types.ts").UIVisionWebsiteControl} control */
+    const readyControl = (control) =>
+      until(async () => {
+        const state = await boundedAutomationQuery(
+          actor(options).sendQuery("UIVisionWebsiteControlState", {
+            uiVisionControl: control,
+          }),
+          "UIVisionWebsiteControlState",
+        );
+        return state.ready === "complete" && state.present && state.visible &&
+          state.enabled && state.unobstructed &&
+          ((control !== "whitelistURL" && control !== "saveWhitelist") ||
+            state.dialogTitle === "Embedded Macros Website Whitelist") &&
+          state;
+      }, "visible unobstructed UI.Vision website control " + control);
+    /** @param {import("./automation-test-types.ts").UIVisionWebsiteControl} control */
+    const useControl = async (control) => {
+      await readyControl(control);
+      const step = await boundedAutomationQuery(
+        actor(options).sendQuery("UIVisionWebsiteControl", {
+          uiVisionControl: control,
+          url,
+        }),
+        "UIVisionWebsiteControl",
+      );
+      item.websiteOperator?.steps.push(step);
+      return step;
+    };
+    if (!(await readyControl("websiteRuns")).checked) {
+      await useControl("websiteRuns");
+    }
+    await until(
+      async () => (await readyControl("websiteRuns")).checked,
+      "actual website-run checkbox enabled",
+    );
+    await useControl("editWhitelist");
+    await useControl("whitelistURL");
+    await until(
+      async () => (await readyControl("whitelistURL")).value === url,
+      "actual whitelist textarea contains only authored loopback operation",
+    );
+    await useControl("saveWhitelist");
+    await until(async () => {
+      const state = await boundedAutomationQuery(
+        actor(options).sendQuery("UIVisionWebsiteControlState", {
+          uiVisionControl: "websiteRuns",
+        }),
+        "UIVisionWebsiteControlState",
+      );
+      const config = await boundedAutomationQuery(
+        actor(options).sendQuery("ReadUIVisionWebsiteConfiguration"),
+        "ReadUIVisionWebsiteConfiguration",
+      );
+      if (item.websiteOperator) item.websiteOperator.after = config;
+      return !state.dialogVisible && state.checked &&
+        config.allowRunFromHttpSchema === true &&
+        config.websiteInvokePolicyVersion === 1 &&
+        Array.isArray(config.websiteWhiteList) &&
+        config.websiteWhiteList.length === 1 &&
+        config.websiteWhiteList[0] === url;
+    }, "vendor settings persisted after trusted website-run controls");
+    window.gBrowser.removeTab(options);
+    window.gBrowser.selectedTab = target;
+    item.macro = uiVisionMacro(url);
+    const observerToken = Services.uuid.generateUUID().toString().slice(1, -1);
+    const beforeInnerWindowId = target.linkedBrowser.browsingContext
+      .currentWindowGlobal?.innerWindowId;
+    if (!beforeInnerWindowId) {
+      throw Error("Owned macro target has no current document");
+    }
+    item.invocation = {
+      dispatchedDocumentedBridge: false,
+      witnessMs: 3000,
+      events: [],
+      observerToken,
+      transport: "bounded-owned-document-console",
+      documentChanges: [],
+    };
+    try {
+      item.invocation = {
+        ...await boundedAutomationQuery(
+          actor(target).sendQuery("RunUIVision", {
+            url,
+            macro: item.macro,
+            witnessToken: observerToken,
+          }),
+          "RunUIVision",
+        ),
+        documentChanges: [],
+      };
+    } catch (error) {
+      const currentInnerWindowId =
+        target.linkedBrowser.browsingContext.currentWindowGlobal
+          ?.innerWindowId ?? null;
+      const isLoadingDocument =
+        /** @type {import("./automation-test-types.ts").UIVisionNavigationBrowser} */ (
+          target.linkedBrowser
+        ).webProgress.isLoadingDocument;
+      if (
+        target.linkedBrowser.currentURI.spec !== url ||
+        !/(?:Actor|actor|WindowGlobal|document).*(?:destroyed|unavailable|navigated|unloaded)|IPC channel.*closed/
+          .test(String(error)) ||
+        (!(currentInnerWindowId &&
+          currentInnerWindowId !== beforeInnerWindowId) &&
+          !isLoadingDocument)
+      ) throw error;
+      item.invocation.documentChanges?.push({
+        error: String(error).slice(0, 1000),
+        beforeInnerWindowId,
+        currentInnerWindowId,
+        isLoadingDocument,
+        url: target.linkedBrowser.currentURI.spec,
+      });
+    }
+    // Keep the diagnostic interval in the browser host. An expected document
+    // navigation may end the old observer; only the unchanged primary decides.
+    await pause(3000);
+    const engineView = {
+      method: "actual-native-UI-Vision-Data-Logs-tabs",
+      steps:
+        /** @type {import("./automation-test-types.ts").UIVisionLogControlObservation[]} */ ([]),
+      last:
+        /** @type {import("./automation-test-types.ts").UIVisionLogControlObservation|null} */ (null),
+    };
+    item.engineView = engineView;
+    /** @param {import("./automation-test-types.ts").UIVisionLogControl} control */
+    const readyLogControl = async (control) => {
+      /** @type {import("./automation-test-types.ts").UIVisionLogControlObservation|undefined} */
+      let previous;
+      return await until(async () => {
+        const state = await boundedAutomationQuery(
+          panelActor().sendQuery("UIVisionLogControlState", {
+            uiVisionLogControl: control,
+          }),
+          "UIVisionLogControlState",
+        );
+        engineView.last = state;
+        const usable = state.ready === "complete" && state.visible &&
+          state.enabled && state.unobstructed;
+        const stable = usable && previous && previous.visible &&
+          previous.enabled && previous.unobstructed &&
+          Math.abs(state.rect.x - previous.rect.x) <= 0.1 &&
+          Math.abs(state.rect.y - previous.rect.y) <= 0.1 &&
+          Math.abs(state.rect.width - previous.rect.width) <= 0.1 &&
+          Math.abs(state.rect.height - previous.rect.height) <= 0.1;
+        previous = usable ? state : undefined;
+        return stable && state;
+      }, "stable genuine UI.Vision " + control + " tab");
+    };
+    try {
+      for (const control of /** @type {const} */ (["data", "logs"])) {
+        const state = await readyLogControl(control);
+        if (!state.selected) {
+          engineView.steps.push(
+            await boundedAutomationQuery(
+              panelActor().sendQuery("UIVisionLogControl", {
+                uiVisionLogControl: control,
+              }),
+              "UIVisionLogControl",
+            ),
+          );
+        }
+        await until(async () => {
+          const active = await readyLogControl(control);
+          return active.selected && active.viewVisible;
+        }, "actual selected UI.Vision " + control + " view");
+      }
+    } catch (error) {
+      item.engineLog = (await boundedAutomationQuery(
+        panelActor().sendQuery("Snapshot"),
+        "Snapshot",
+      ).catch(() => null))?.text;
+      throw error;
+    }
+
     await until(
       async () => {
         item.observed = await boundedAutomationQuery(

@@ -4,6 +4,7 @@ import { zipSync } from "fflate/browser";
 import {
   assert,
   assertEquals,
+  assertStringArrayEqual,
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
 import type { CaptureNativeWindow } from "../../helpers/capture-native-test-types.ts";
@@ -482,7 +483,7 @@ async function testCapture(): Promise<void> {
       Services.console.unregisterListener(cleanupListener);
     }
   }
-  assertEquals(
+  assertStringArrayEqual(
     cleanupErrors,
     [],
     "Offscreen destruction, target closure and uninstall finish capture cleanup without script errors",

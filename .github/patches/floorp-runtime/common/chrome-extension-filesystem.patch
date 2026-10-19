@@ -1060,7 +1060,7 @@ diff --git a/toolkit/components/extensions/ChromeExtensionFileSystemChild.sys.mj
 new file mode 100644
 --- /dev/null
 +++ b/toolkit/components/extensions/ChromeExtensionFileSystemChild.sys.mjs
-@@ -0,0 +1,209 @@
+@@ -0,0 +1,228 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1079,6 +1079,16 @@ new file mode 100644
 +  const error=value=>value instanceof FileError?value:new FileError({code:value?.code||6,message:value?.message||String(value)});
 +  const call=request=>bridge(request).catch(value=>{throw error(value);});
 +  const callback=(promise,success,failed)=>{promise.then(value=>success?.(value),reason=>failed?.(error(reason)));};
++  // Queue immutable Blob snapshots before materializing chunks. The bridge's
++  // four16MiB in-flight payload guard remains independent and unchanged.
++  const WRITE_CONCURRENCY=4,MAX_PENDING_WRITES=128,MAX_QUEUED_BLOB_BYTES=1024*1024*1024;
++  const pendingWriters=[],activeWriters=new Set();let queuedBlobBytes=0,writersClosed=false;
++  function forgetWriter(job){job.writer=null;job.operation=null;job.resolve=null;job.reject=null;}
++  function drainWriters(){while(!writersClosed&&activeWriters.size<WRITE_CONCURRENCY&&pendingWriters.length){const job=pendingWriters.shift();queuedBlobBytes-=job.size;startWriter(job);}}
++  function startWriter(job){activeWriters.add(job);Promise.resolve().then(()=>{if(writersClosed)throw new FileError({code:2,message:"File system document was closed"});if(job.writer?._generation!==job.generation)throw new FileError({code:3,message:"File write was aborted"});return job.operation();}).then(value=>job.resolve?.(value),reason=>job.reject?.(reason)).finally(()=>{activeWriters.delete(job);forgetWriter(job);drainWriters();});}
++  function scheduleWriter(writer,generation,operation,size){return new Promise((resolve,reject)=>{if(!Number.isSafeInteger(size)||size<0)return reject(new FileError({code:8,message:"Invalid queued file write size"}));if(writersClosed)return reject(new FileError({code:2,message:"File system document was closed"}));if(writer._generation!==generation)return reject(new FileError({code:3,message:"File write was aborted"}));if(activeWriters.size>=WRITE_CONCURRENCY&&(pendingWriters.length>=MAX_PENDING_WRITES||size>MAX_QUEUED_BLOB_BYTES-queuedBlobBytes))return reject(new FileError({code:10,message:"File write queue quota exceeded"}));const job={writer,generation,operation,size,resolve,reject};if(activeWriters.size<WRITE_CONCURRENCY)startWriter(job);else{queuedBlobBytes+=size;pendingWriters.push(job);}});}
++  function cancelPendingWriter(writer,generation){const index=pendingWriters.findIndex(job=>job.writer===writer&&job.generation===generation);if(index<0)return;const[job]=pendingWriters.splice(index,1);queuedBlobBytes-=job.size;job.reject(new FileError({code:3,message:"File write was aborted"}));forgetWriter(job);}
++  function closeWriters(){if(writersClosed)return;writersClosed=true;const jobs=[...pendingWriters.splice(0),...activeWriters];queuedBlobBytes=0;activeWriters.clear();for(const job of jobs){if(job.writer){job.writer._generation++;job.writer._readyState=2;job.writer._error=new FileError({code:2,message:"File system document was closed"});}job.reject?.(new FileError({code:2,message:"File system document was closed"}));forgetWriter(job);}}
 +  const fixed=(object,properties)=>Object.defineProperties(object,Object.fromEntries(Object.entries(properties).map(([key,value])=>[key,{value,enumerable:true}])));
 +  const path=(base,value)=>{if(typeof value!=="string")throw new TypeError("Path must be a string");return value.startsWith("/")?value:base.replace(/\/$/,"")+"/"+value;};
 +  class FileSystem{constructor(kind){fixed(this,{name:new URL(origin).host+(kind?":Persistent":":Temporary"),kind});this.root=new DirectoryEntry(this,{name:"",path:"/",directory:true});}}
@@ -1109,17 +1119,17 @@ new file mode 100644
 +    get position(){return this._position;}get length(){return this._length;}get readyState(){return this._readyState;}get error(){return this._error;}
 +    _event(name,loaded=0,total=0){const event=name==="progress"?new ProgressEvent(name,{lengthComputable:true,loaded,total}):new Event(name);this.dispatchEvent(event);const handler=this["on"+name];if(typeof handler==="function")handler.call(this,event);}
 +    seek(offset){if(this._readyState===1)throw new DOMException("A write is in progress","InvalidStateError");if(!Number.isFinite(offset))throw new TypeError("Invalid seek offset");this._position=Math.max(0,Math.min(this._length,offset<0?this._length+Math.trunc(offset):Math.trunc(offset)));}
-+    write(blob){if(!(blob instanceof Blob))throw new TypeError("FileWriter.write requires a Blob");this._run(async generation=>{let loaded=0;for(let offset=0;offset<blob.size;offset+=CHUNK){const bytes=await blob.slice(offset,offset+CHUNK).arrayBuffer();if(generation!==this._generation)return;const result=await this._entry._request("write",{bytes,position:this._position,job:this._job});if(generation!==this._generation)return;this._length=result.length;this._position=result.position;loaded+=bytes.byteLength;this._event("progress",loaded,blob.size);}if(blob.size===0){await this._entry._request("write",{bytes:new ArrayBuffer(0),position:this._position,job:this._job});}},blob.size);}
++    write(blob){if(!(blob instanceof Blob))throw new TypeError("FileWriter.write requires a Blob");const snapshot=new Blob([blob],{type:blob.type});this._run(async generation=>{let loaded=0;for(let offset=0;offset<snapshot.size;offset+=CHUNK){const bytes=await snapshot.slice(offset,offset+CHUNK).arrayBuffer();if(generation!==this._generation)return;const result=await this._entry._request("write",{bytes,position:this._position,job:this._job});if(generation!==this._generation)return;this._length=result.length;this._position=result.position;loaded+=bytes.byteLength;this._event("progress",loaded,snapshot.size);}if(snapshot.size===0){await this._entry._request("write",{bytes:new ArrayBuffer(0),position:this._position,job:this._job});}},snapshot.size);}
 +    truncate(size){if(!Number.isSafeInteger(size)||size<0)throw new TypeError("Invalid truncate length");this._run(async generation=>{await this._entry._request("truncate",{position:size,job:this._job});if(generation!==this._generation)return;this._length=size;this._position=Math.min(this._position,size);});}
-+    _run(operation){if(this._readyState===1)throw new DOMException("A write is in progress","InvalidStateError");this._readyState=1;this._error=null;this._job=crypto.randomUUID();const generation=++this._generation;queueMicrotask(()=>{if(generation!==this._generation)return;this._event("writestart");Promise.resolve().then(()=>operation(generation)).then(()=>{if(generation!==this._generation)return;this._readyState=2;this._event("write");this._event("writeend");},reason=>{if(generation!==this._generation)return;this._readyState=2;this._error=error(reason);this._event("error");this._event("writeend");});});}
-+    abort(){if(this._readyState!==1)throw new DOMException("No write is in progress","InvalidStateError");this._generation++;bridge({op:"cancel",job:this._job}).catch(()=>{});this._readyState=2;this._error=new FileError({code:3,message:"File write was aborted"});queueMicrotask(()=>{this._event("abort");this._event("writeend");});}
++    _run(operation,size=0){if(this._readyState===1)throw new DOMException("A write is in progress","InvalidStateError");this._readyState=1;this._error=null;this._job=crypto.randomUUID();const generation=++this._generation;queueMicrotask(()=>{if(generation!==this._generation)return;this._event("writestart");scheduleWriter(this,generation,()=>operation(generation),size).then(()=>{if(generation!==this._generation)return;this._readyState=2;this._event("write");this._event("writeend");},reason=>{if(generation!==this._generation)return;this._readyState=2;this._error=error(reason);this._event("error");this._event("writeend");});});}
++    abort(){if(this._readyState!==1)throw new DOMException("No write is in progress","InvalidStateError");cancelPendingWriter(this,this._generation);this._generation++;bridge({op:"cancel",job:this._job}).catch(()=>{});this._readyState=2;this._error=new FileError({code:3,message:"File write was aborted"});queueMicrotask(()=>{this._event("abort");this._event("writeend");});}
 +  }
 +  for(const[name,value]of Object.entries({INIT:0,WRITING:1,DONE:2})){fixed(FileWriter,{[name]:value});fixed(FileWriter.prototype,{[name]:value});}
 +  const entry=(filesystem,info)=>info.directory?new DirectoryEntry(filesystem,info):new FileEntry(filesystem,info);
 +  function requestFileSystem(kind,size,success,failed){if(kind!==0&&kind!==1)return callback(Promise.reject(new FileError({code:8,message:"Invalid file system type"})),success,failed);if(!Number.isSafeInteger(size)||size<0)throw new TypeError("Invalid requested size");callback(call({op:"init",kind,path:"/"}).then(result=>{if(size>result.quota)throw new FileError({code:10,message:"Requested size exceeds storage quota"});return new FileSystem(kind);}),success,failed);}
 +  function resolveLocalFileSystemURL(url,success,failed){callback(Promise.resolve().then(()=>{const prefix="filesystem:"+origin+"/";if(typeof url!=="string"||!url.startsWith(prefix))throw new FileError({code:2,message:"File system URL belongs to another origin"});const parts=url.slice(prefix.length).split("/");const type=parts.shift();if(type!=="persistent"&&type!=="temporary")throw new FileError({code:5,message:"Invalid file system URL"});const path=parts.map(part=>{const value=decodeURIComponent(part);if(/[\\/\0]/.test(value))throw new FileError({code:5,message:"Invalid encoded file name"});return value;}).join("/");const fs=new FileSystem(type==="persistent"?1:0);return call({op:"stat",kind:fs.kind,path}).then(info=>entry(fs,info));}),success,failed);}
 +  const storage=kind=>({requestQuota(size,success,failed){callback(call({op:"quota",kind,path:"/",size}).then(result=>result.quota),success,failed);},queryUsageAndQuota(success,failed){call({op:"quota",kind,path:"/"}).then(result=>success?.(result.usage,result.quota),reason=>failed?.(error(reason)));}});
-+  return {requestFileSystem,resolveLocalFileSystemURL,persistent:storage(1),temporary:storage(0),FileError,FileWriter};
++  return {requestFileSystem,resolveLocalFileSystemURL,persistent:storage(1),temporary:storage(0),FileError,FileWriter,close:closeWriters};
 +})`;
 +export const ChromeExtensionFileSystemChild = {
 +  install(context) {
@@ -1222,13 +1232,15 @@ new file mode 100644
 +                    resolve(Cu.cloneInto(result.value, context.cloneScope));
 +                  else reject(Cu.cloneInto(result.error, context.cloneScope));
 +                },
-+                () =>
++                () => {
++                  if (context.unloaded) return;
 +                  reject(
 +                    Cu.cloneInto(
 +                      { code: 2, message: "File system owner was closed" },
 +                      context.cloneScope
 +                    )
-+                  )
++                  );
++                }
 +              );
 +          }, context.cloneScope)
 +        ),
@@ -1264,8 +1276,15 @@ new file mode 100644
 +    });
 +    context.callOnClose({
 +      close() {
-+        unregisterReader();
-+        Cu.nukeSandbox(sandbox);
++        try {
++          api.close();
++        } finally {
++          try {
++            unregisterReader();
++          } finally {
++            Cu.nukeSandbox(sandbox);
++          }
++        }
 +      },
 +    });
 +  },

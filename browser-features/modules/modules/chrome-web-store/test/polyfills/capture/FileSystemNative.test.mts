@@ -16,6 +16,10 @@ import type {
   FileSystemProbe,
   FileSystemResult,
 } from "../../helpers/capture-component-test-types.ts";
+import type {
+  ConcurrentFileSystemResult,
+  PendingFileSystemWrites,
+} from "./filesystem-concurrency-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -27,8 +31,9 @@ async function until<T>(
     | null
     | Promise<T | false | undefined | null>,
   label: string,
+  timeoutMs = 20000,
 ): Promise<T> {
-  const end = Date.now() + 20000;
+  const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
     const value = await read();
     if (value) return value;
@@ -88,14 +93,66 @@ async function fileSystem() {
  const bytes=new Uint8Array(16*1024*1024+8193);for(let index=0;index<bytes.length;index++)bytes[index]=(index*17)%251;
  await new Promise((resolve,reject)=>{largeWriter.onwriteend=()=>largeWriter.error?reject(largeWriter.error):resolve();largeWriter.write(new Blob([bytes]));});
  const largeBytes=await(await fetch(large.toURL())).arrayBuffer();const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',value))).map(v=>v.toString(16).padStart(2,'0')).join('');const largeIntegrity=largeBytes.byteLength===bytes.length&&await hash(largeBytes)===await hash(bytes);
+ // Prepare every writer before starting any write: normal UI.Vision-style seeding
+ // must accept more than four concurrent Blob writes without a transient quota error.
+ const concurrent=await Promise.all(Array.from({length:13},async(_,index)=>{
+   const entry=await promise((ok,no)=>dir.getFile('concurrent-'+index+'.bin',{create:true},ok,no));
+   const writer=await promise((ok,no)=>entry.createWriter(ok,no));
+   const size=index===11?16*1024*1024+8193:index===12?16*1024*1024+4097:256*1024+index*31;
+   const source=new Uint8Array(size);for(let offset=0;offset<size;offset++)source[offset]=(offset*29+index*43+7)%251;
+   const blob=new Blob([source]);const expectedSize=index===12?16*1024*1024:size;
+   const expectedSHA256=await hash(source.subarray(0,expectedSize));source.fill(0);
+   return {entry,writer,blob,expectedSize,expectedSHA256,events:[],progress:[]};
+ }));
+ const cancelledEntry=await promise((ok,no)=>dir.getFile('cancelled-seed.txt',{create:true},ok,no));
+ const cancelledWriter=await promise((ok,no)=>cancelledEntry.createWriter(ok,no));
+ await new Promise((resolve,reject)=>{cancelledWriter.onwriteend=()=>cancelledWriter.error?reject(cancelledWriter.error):resolve();cancelledWriter.write(new Blob(['queued-seed']));});cancelledWriter.seek(0);
+ const concurrentWrites=concurrent.map((item,index)=>new Promise((resolve,reject)=>{
+   for(const name of ['writestart','write','abort','error'])item.writer['on'+name]=()=>item.events.push(name);
+   item.writer.onprogress=event=>{item.events.push('progress');item.progress.push({loaded:event.loaded,total:event.total});if(index===12&&event.loaded===16*1024*1024)item.writer.abort();};
+   item.writer.onwriteend=()=>{item.events.push('writeend');if(index!==12&&item.writer.error)reject(item.writer.error);else resolve();};
+   item.writer.write(item.blob);
+ }));
+ const cancelledEvents=[];
+ const cancelledWrite=new Promise(resolve=>{
+   for(const name of ['writestart','progress','write','abort','error'])cancelledWriter['on'+name]=()=>cancelledEvents.push(name);
+   cancelledWriter.onwriteend=()=>{cancelledEvents.push('writeend');resolve();};
+   cancelledWriter.write(new Blob(['unwanted queued replacement']));
+ });
+ const pendingAtStart=concurrent.filter(item=>item.writer.readyState===FileWriter.WRITING).length;
+ await Promise.resolve();const stateBeforeAbort=cancelledWriter.readyState;cancelledWriter.abort();
+ await Promise.all([...concurrentWrites,cancelledWrite]);
+ const cancelledNative=await promise((ok,no)=>cancelledEntry.file(ok,no));
+ const cancelledResult={stateBeforeAbort,state:cancelledWriter.readyState,errorCode:cancelledWriter.error?.code??null,
+   events:[...cancelledEvents],position:cancelledWriter.position,length:cancelledWriter.length,
+   text:await cancelledNative.text(),fetched:await(await fetch(cancelledEntry.toURL())).text()};
+ for(const name of ['writestart','progress','write','abort','error'])cancelledWriter['on'+name]=null;
+ cancelledWriter.seek(0);
+ await new Promise((resolve,reject)=>{cancelledWriter.onwriteend=()=>cancelledWriter.error?reject(cancelledWriter.error):resolve();cancelledWriter.write(new Blob(['reused queued writer']));});
+ const reusedNative=await promise((ok,no)=>cancelledEntry.file(ok,no));
+ const cancelledReuse={text:await reusedNative.text(),fetched:await(await fetch(cancelledEntry.toURL())).text(),state:cancelledWriter.readyState,errorCode:cancelledWriter.error?.code??null};
+ const records=await Promise.all(concurrent.map(async(item,index)=>{
+   const native=await promise((ok,no)=>item.entry.file(ok,no));const stored=await native.arrayBuffer();
+   const fetched=await(await fetch(item.entry.toURL())).arrayBuffer();
+   return {name:item.entry.name,expectedSize:item.expectedSize,expectedSHA256:item.expectedSHA256,
+     fileSize:native.size,fileSHA256:await hash(stored),fetchSize:fetched.byteLength,fetchSHA256:await hash(fetched),
+     nativeFile:native instanceof File,events:[...item.events],progress:item.progress.map(value=>({...value})),state:item.writer.readyState,
+     position:item.writer.position,length:item.writer.length,errorCode:item.writer.error?.code??null};
+ }));
+ // Subsequent public overwrite/truncate must be visible to a newly obtained File.
+ const replacement='replacement after queued writes';const rewriteWriter=concurrent[0].writer;rewriteWriter.seek(0);
+ await new Promise((resolve,reject)=>{rewriteWriter.onprogress=null;rewriteWriter.onwriteend=()=>rewriteWriter.error?reject(rewriteWriter.error):resolve();rewriteWriter.write(new Blob([replacement]));});
+ await new Promise((resolve,reject)=>{rewriteWriter.onwriteend=()=>rewriteWriter.error?reject(rewriteWriter.error):resolve();rewriteWriter.truncate(replacement.length);});
+ const current=await promise((ok,no)=>concurrent[0].entry.file(ok,no));
+ const concurrency={pendingAtStart,records,cancelled:cancelledResult,reused:cancelledReuse,rewritten:{size:current.size,nativeFile:current instanceof File,text:await current.text(),fetched:await(await fetch(concurrent[0].entry.toURL())).text()}};
  const cancelled=await fetch(large.toURL());const reader=cancelled.body.getReader();await reader.read();await reader.cancel();
  let malformedBuffer=false;try{await file._request('write',{bytes:2**31,position:0,job:'numeric-buffer'});}catch(error){malformedBuffer=error.code===8;}
  let oversizedBuffer=false;try{await file._request('write',{bytes:bytes.buffer,position:0,job:'oversized-buffer'});}catch(error){oversizedBuffer=error.code===8;}
  const tempQuota=await promise((ok,no)=>navigator.webkitTemporaryStorage.requestQuota(4,ok,no));const tempFS=await promise((ok,no)=>webkitRequestFileSystem(TEMPORARY,0,ok,no));const limited=await promise((ok,no)=>tempFS.root.getFile('limited.txt',{create:true},ok,no));const limitedWriter=await promise((ok,no)=>limited.createWriter(ok,no));let byteQuota=false;await new Promise(resolve=>{limitedWriter.onwriteend=()=>{byteQuota=limitedWriter.error?.code===FileError.QUOTA_EXCEEDED_ERR;resolve();};limitedWriter.write(new Blob(['12345']));});
  const usage=await new Promise((resolve,reject)=>navigator.webkitPersistentStorage.queryUsageAndQuota((used,quota)=>resolve({used,quota}),reject));
- document.title=JSON.stringify({quota,text,fetched,responseURL,largeIntegrity,malformedBuffer,oversizedBuffer,byteQuota,nativeFile:nativeFile instanceof File,resolved:resolved.fullPath,entries:entries.map(e=>e.name),traversal,pixel,url:imageFile.toURL(),usage});
+ document.title=JSON.stringify({quota,text,fetched,responseURL,largeIntegrity,concurrency,malformedBuffer,oversizedBuffer,byteQuota,nativeFile:nativeFile instanceof File,resolved:resolved.fullPath,entries:entries.map(e=>e.name),traversal,pixel,url:imageFile.toURL(),usage});
  }catch(error){await new Promise(resolve=>setTimeout(resolve,300));document.title='FAIL:'+error.name+':'+error.message+':'+JSON.stringify(violations)+':'+error.stack;}}
- window.addEventListener('message',async event=>{try{const fs=await promise((ok,no)=>webkitRequestFileSystem(PERSISTENT,0,ok,no));if(event.data==='quota-probe'){let entryQuota=false,copyQuota=false;for(let i=0;i<12;i++){try{await promise((ok,no)=>fs.root.getFile('empty-'+i,{create:true},ok,no));}catch(error){entryQuota=error.code===FileError.QUOTA_EXCEEDED_ERR;break;}}const file=await promise((ok,no)=>fs.root.getFile('captures/sample.txt',{},ok,no));try{await promise((ok,no)=>file.copyTo(fs.root,'copied',ok,no));}catch(error){copyQuota=error.code===10;}document.title='FSSEC:'+JSON.stringify({entryQuota,copyQuota});}if(event.data==='pending-uninstall'){for(let i=0;i<100;i++)fs.root.getDirectory('pending-'+i,{create:true},()=>{},()=>{});fetch('filesystem:'+location.origin+'/persistent/captures/large.bin').then(response=>response.body.getReader().read()).catch(()=>{});document.title='FSSEC:'+JSON.stringify({pending:true});}}catch(error){document.title='FAIL:'+error;}});
+ window.addEventListener('message',async event=>{try{const fs=await promise((ok,no)=>webkitRequestFileSystem(PERSISTENT,0,ok,no));if(event.data==='quota-probe'){let entryQuota=false,copyQuota=false;for(let i=0;i<12;i++){try{await promise((ok,no)=>fs.root.getFile('empty-'+i,{create:true},ok,no));}catch(error){entryQuota=error.code===FileError.QUOTA_EXCEEDED_ERR;break;}}const file=await promise((ok,no)=>fs.root.getFile('captures/sample.txt',{},ok,no));try{await promise((ok,no)=>file.copyTo(fs.root,'copied',ok,no));}catch(error){copyQuota=error.code===10;}document.title='FSSEC:'+JSON.stringify({entryQuota,copyQuota});}if(event.data==='pending-uninstall'){const writers=await Promise.all(Array.from({length:12},async(_,index)=>{const entry=await promise((ok,no)=>fs.root.getFile('captures/concurrent-'+index+'.bin',{},ok,no));return promise((ok,no)=>entry.createWriter(ok,no));}));const blob=new Blob([new Uint8Array(256*1024)]);for(const writer of writers){writer.onwriteend=()=>{};writer.write(blob);}const pendingWrites=writers.filter(writer=>writer.readyState===FileWriter.WRITING).length;for(let i=0;i<100;i++)fs.root.getDirectory('pending-'+i,{create:true},()=>{},()=>{});fetch('filesystem:'+location.origin+'/persistent/captures/large.bin').then(response=>response.body.getReader().read()).catch(()=>{});document.title='FSSEC:'+JSON.stringify({pending:true,pendingWrites});}}catch(error){document.title='FAIL:'+error;}});
  run();`;
   try {
     await IOUtils.write(
@@ -130,17 +187,23 @@ async function fileSystem() {
       "file system addon",
     );
     const background = await until(
-      () => extension.backgroundContext,
-      "background",
+      () =>
+        extension.backgroundContext?.xulBrowser && extension.backgroundContext,
+      "actual file system background document browser",
     );
-    await until(() => {
-      const title = background.xulBrowser.contentTitle;
-      if (title.startsWith("FAIL:")) throw Error(title);
-      return title.startsWith("{");
-    }, "real persistent filesystem write, fetch and image decode");
+    await until(
+      () => {
+        const title = background.xulBrowser?.contentTitle;
+        if (!title) return false;
+        if (title.startsWith("FAIL:")) throw Error(title);
+        return title.startsWith("{");
+      },
+      "real persistent filesystem write, concurrent native IO, fetch and image decode",
+      60000,
+    );
     const result = JSON.parse(
       background.xulBrowser.contentTitle,
-    ) as FileSystemResult;
+    ) as FileSystemResult & ConcurrentFileSystemResult;
     await IOUtils.writeUTF8(
       "/tmp/floorp-native-filesystem-result.json",
       JSON.stringify(result),
@@ -174,6 +237,171 @@ async function fileSystem() {
     assert(
       result.malformedBuffer,
       "numeric pseudo-buffer rejected before parent allocation",
+    );
+    assertEquals(
+      result.concurrency.pendingAtStart,
+      13,
+      "all thirteen public writers start before waiting for completion",
+    );
+    assertEquals(
+      result.concurrency.records.length,
+      13,
+      "each concurrent writer has persisted-content evidence",
+    );
+    for (const [index, record] of result.concurrency.records.entries()) {
+      assertEquals(
+        record.name,
+        `concurrent-${index}.bin`,
+        "each writer retains its own entry",
+      );
+      assertEquals(
+        record.expectedSize,
+        index === 11
+          ? 16 * 1024 * 1024 + 8193
+          : index === 12
+          ? 16 * 1024 * 1024
+          : 256 * 1024 + index * 31,
+        `${record.name}: authored payload size`,
+      );
+      assert(
+        record.nativeFile,
+        "concurrent FileEntry.file returns a native File",
+      );
+      assertEquals(
+        record.fileSize,
+        record.expectedSize,
+        `${record.name}: native persisted byte count`,
+      );
+      assertEquals(
+        record.fetchSize,
+        record.expectedSize,
+        `${record.name}: filesystem protocol byte count`,
+      );
+      assertEquals(
+        record.fileSHA256,
+        record.expectedSHA256,
+        `${record.name}: exact Blob snapshot persists through native IO`,
+      );
+      assertEquals(
+        record.fetchSHA256,
+        record.expectedSHA256,
+        `${record.name}: filesystem protocol preserves every persisted byte`,
+      );
+      assertEquals(record.state, 2, `${record.name}: writer reaches DONE`);
+      assertEquals(
+        record.position,
+        record.expectedSize,
+        `${record.name}: writer position reflects persisted bytes`,
+      );
+      assertEquals(
+        record.length,
+        record.expectedSize,
+        `${record.name}: writer length reflects persisted bytes`,
+      );
+      assertEquals(
+        record.errorCode,
+        index === 12 ? 3 : null,
+        `${record.name}: only deliberate abort reports ABORT_ERR`,
+      );
+      const events = index === 12
+        ? ["writestart", "progress", "abort", "writeend"]
+        : index === 11
+        ? ["writestart", "progress", "progress", "write", "writeend"]
+        : ["writestart", "progress", "write", "writeend"];
+      assertEquals(
+        JSON.stringify(record.events),
+        JSON.stringify(events),
+        `${record.name}: actual completion and abort event order`,
+      );
+      const total = index === 12
+        ? 16 * 1024 * 1024 + 4097
+        : record.expectedSize;
+      const loaded = index === 11
+        ? [16 * 1024 * 1024, total]
+        : [record.expectedSize];
+      assertEquals(
+        JSON.stringify(record.progress),
+        JSON.stringify(loaded.map((value) => ({ loaded: value, total }))),
+        `${record.name}: chunk progress counts actual persisted bytes`,
+      );
+    }
+    const cancelled = result.concurrency.cancelled;
+    assertEquals(
+      cancelled.stateBeforeAbort,
+      1,
+      "cancelled writer is publicly WRITING after all fourteen writes start",
+    );
+    assertEquals(cancelled.state, 2, "cancelled waiter reaches DONE");
+    assertEquals(cancelled.errorCode, 3, "cancelled waiter reports ABORT_ERR");
+    assertEquals(
+      JSON.stringify(
+        cancelled.events.filter((event) => event !== "writestart"),
+      ),
+      JSON.stringify(["abort", "writeend"]),
+      "cancelled waiter has one abort and writeend without progress, success or error events",
+    );
+    assert(
+      cancelled.events.filter((event) => event === "writestart").length <= 1,
+      "cancelled waiter cannot start twice",
+    );
+    assertEquals(
+      cancelled.position,
+      0,
+      "cancelled waiter cannot advance file position",
+    );
+    assertEquals(
+      cancelled.length,
+      "queued-seed".length,
+      "cancelled waiter preserves file length",
+    );
+    assertEquals(
+      cancelled.text,
+      "queued-seed",
+      "cancelled waiter preserves exact native seed bytes",
+    );
+    assertEquals(
+      cancelled.fetched,
+      "queued-seed",
+      "cancelled waiter preserves exact filesystem fetch bytes",
+    );
+    assertEquals(
+      result.concurrency.reused.text,
+      "reused queued writer",
+      "cancelled writer can subsequently persist exact native bytes",
+    );
+    assertEquals(
+      result.concurrency.reused.fetched,
+      "reused queued writer",
+      "cancelled writer can subsequently serve exact filesystem bytes",
+    );
+    assertEquals(
+      result.concurrency.reused.state,
+      2,
+      "reused writer reaches DONE",
+    );
+    assertEquals(
+      result.concurrency.reused.errorCode,
+      null,
+      "subsequent successful write clears abort error",
+    );
+    assert(
+      result.concurrency.rewritten.nativeFile,
+      "new FileEntry.file returns a native File after overwrite and truncate",
+    );
+    assertEquals(
+      result.concurrency.rewritten.size,
+      "replacement after queued writes".length,
+      "new FileEntry.file observes exact truncated replacement size",
+    );
+    assertEquals(
+      result.concurrency.rewritten.text,
+      "replacement after queued writes",
+      "subsequent native File observes the replacement",
+    );
+    assertEquals(
+      result.concurrency.rewritten.fetched,
+      "replacement after queued writes",
+      "subsequent filesystem fetch observes the replacement",
     );
     const window = Services.wm.getMostRecentWindow(
       "navigator:browser",
@@ -232,8 +460,10 @@ async function fileSystem() {
         "foreign addon",
       );
       const otherBackground = await until(
-        () => otherExtension.backgroundContext,
-        "foreign background",
+        () =>
+          otherExtension.backgroundContext?.xulBrowser &&
+          otherExtension.backgroundContext,
+        "actual foreign addon background document browser",
       );
       const probe = await readProbe(otherBackground.xulBrowser);
       assert(
@@ -324,7 +554,17 @@ async function fileSystem() {
       "extensions.floorpChromeFileSystem.maxEntries",
     );
     post("pending-uninstall");
-    await readProbe(background.xulBrowser);
+    const pending = await until(async () => {
+      const observed = await readProbe(background.xulBrowser);
+      return observed.pending === true && observed;
+    }, "actual pending-uninstall public marker") as
+      & FileSystemProbe
+      & PendingFileSystemWrites;
+    assertEquals(
+      pending.pendingWrites,
+      12,
+      "actual public writes are pending when uninstall begins",
+    );
     await addon.uninstall();
     addon = null;
     const ownerRoot = PathUtils.join(

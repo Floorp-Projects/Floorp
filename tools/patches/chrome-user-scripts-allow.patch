@@ -170,10 +170,7 @@ diff --git a/modules/Schemas.sys.mjs b/modules/Schemas.sys.mjs
 index 057034f8c24512561dac34298af64c971b94abc6..9847d1e444c2ebfebfbb3ff4b8e83cc2713d97c6 100644
 --- a/modules/Schemas.sys.mjs
 +++ b/modules/Schemas.sys.mjs
-@@ -822,6 +822,14 @@
-     !!ExtensionUtils.getChromeExtensionId(extension);
- }
- 
+@@ -825,3 +825,11 @@
 +function isChromeUserScriptsEntry(entry) {
 +  const namespace = entry.path[0] || entry.name;
 +  const extension = entry.context.params.context?.extension;
@@ -193,7 +190,7 @@ index 057034f8c24512561dac34298af64c971b94abc6..9847d1e444c2ebfebfbb3ff4b8e83cc2
      return (
        this.entry.permissions &&
        this.entry.permissions.some(perm =>
-@@ -868,6 +877,16 @@
+@@ -868,5 +877,15 @@
     *        appropriate permissions to access this entry.
     */
    get hasPermission() {
@@ -209,7 +206,6 @@ index 057034f8c24512561dac34298af64c971b94abc6..9847d1e444c2ebfebfbb3ff4b8e83cc2
 +    }
      return (
        !this.entry.permissions ||
-       hasChromeMemberPermissionOverride(
 @@ -948,6 +967,13 @@
      }
  
@@ -362,19 +358,16 @@ diff --git a/localization/en-US/toolkit/global/extensionPermissions.ftl b/locali
 index 9bf02d4aa4485ef26ed8ce28a7ba5ef476aef9a3..0ba37075da0b4fb12c051e0b24117cd5b4c94bf4 100644
 --- a/localization/en-US/toolkit/global/extensionPermissions.ftl
 +++ b/localization/en-US/toolkit/global/extensionPermissions.ftl
-@@ -40,6 +40,12 @@
- # A shorter warning is displayed in UI surfaces with little room, such as a permission prompt.
- webext-perms-extra-warning-userScripts-short = Unverified scripts can pose security and privacy risks. Only run scripts from extensions or sources you trust.
- 
+@@ -82,3 +82,9 @@
 +# Chrome's independent, per-extension user script execution setting.
 +floorp-user-scripts-allow = Allow user scripts
 +floorp-user-scripts-allow-ja = ユーザースクリプトの実行を許可
 +floorp-user-scripts-error = The user script setting could not be changed.
 +floorp-user-scripts-error-ja = ユーザースクリプトの設定を変更できませんでした。
 +
- ## Short form to be used in lists or in a string (`webext-perms-description-data-some`)
- ## that formats some of the data collection permissions below using `Intl.ListFormat`.
- ##
+ ## Floorp Chrome-extension compatibility. This warning is used only for the
+ ## exact opt-in Chrome extension identity. Keep both base-resource translations
+ ## available when upstream locale packs do not yet contain this permission.
 diff --git a/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs b/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs
 index 0758789f60b4e6a8ada70e9c37b00e89a711f4ed..3bcda3324ca15002765d28840ad2d0dd8a23a19a 100644
 --- a/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs

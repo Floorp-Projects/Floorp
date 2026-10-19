@@ -1,8 +1,152 @@
 diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
-index f0c8b87..0245bf2 100644
 --- a/modules/ExtensionChild.sys.mjs
 +++ b/modules/ExtensionChild.sys.mjs
-@@ -381,8 +381,16 @@ export class Messenger {
+@@ -154,6 +154,30 @@
+   }
+ }
+ 
++// Chrome extension messaging uses JSON rather than the Firefox structured clone.
++// Run hooks in the sending extension realm before any transport clone. A raw
++// undefined becomes null, while toJSON returning undefined is a serialization
++// failure, just like functions, symbols, cycles, BigInts and throwing hooks.
++function normalizeChromeMessage(context, value, apiName) {
++  let serialized;
++  try {
++    serialized = context.jsonStringify(value === undefined ? null : value);
++    if (typeof serialized !== "string") {
++      throw new Error("Could not serialize message.");
++    }
++    return JSON.parse(serialized);
++  } catch {
++    const message = "Could not serialize message.";
++    if (apiName === "Port.postMessage") {
++      throw new context.Error(message);
++    }
++    const prefix = apiName === "runtime.sendMessage"
++      ? "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): "
++      : "";
++    throw new context.cloneScope.TypeError(prefix + message);
++  }
++}
++
+ // runtime.OnMessage event helper, handles custom async/sendResponse logic.
+ export class MessageEvent extends SimpleEventAPI {
+   emit(holder, sender) {
+@@ -186,9 +210,26 @@
+   }
+ 
+   wrapResponse(fire, message, sender) {
++    const chromeMessage = !!ExtensionUtils.getChromeExtensionId(
++      this.context.extension
++    );
+     let response, sendResponse;
+-    let promise = new Promise(resolve => {
++    let promise = new Promise((resolve, reject) => {
+       sendResponse = Cu.exportFunction(value => {
++        if (chromeMessage) {
++          if (response) {
++            return;
++          }
++          // A serialization failure also settles the sender's response, even
++          // when the listener catches the synchronous sendResponse TypeError.
++          response = promise;
++          try {
++            value = normalizeChromeMessage(this.context, value, "sendResponse");
++          } catch (error) {
++            reject(error);
++            throw error;
++          }
++        }
+         resolve(value);
+         response = promise;
+       }, this.context.cloneScope);
+@@ -198,7 +239,10 @@
+     try {
+       result = fire.raw(message, sender, sendResponse);
+     } catch (e) {
+-      return Promise.reject(e);
++      return chromeMessage && response ? response : Promise.reject(e);
++    }
++    if (chromeMessage && response) {
++      return response;
+     }
+     if (
+       result &&
+@@ -206,6 +250,20 @@
+       Cu.getClassName(result, true) === "Promise" &&
+       this.context.principal.subsumes(Cu.getObjectPrincipal(result))
+     ) {
++      if (chromeMessage) {
++        const listenerPromise = result;
++        result = new Promise((resolve, reject) => {
++          listenerPromise.then(value => {
++            try {
++              // Normalize before resolving a transport Promise: resolving it
++              // with the original addon object would read its inherited then.
++              resolve(normalizeChromeMessage(this.context, value, "sendResponse"));
++            } catch (error) {
++              reject(error);
++            }
++          }, reject);
++        });
++      }
+       return StrongPromise.wrap(result, fire.location);
+     } else if (result === true) {
+       return StrongPromise.wrap(promise, fire.location);
+@@ -234,10 +292,15 @@
+     this.context = context;
+     this.name = name;
+     this.sender = sender;
+-    this.holdMessage = native
+-      ? (name, anonymizedName, data) =>
+-          holdMessage(name, anonymizedName, data, this)
+-      : holdMessage;
++    const chromeMessage = !!ExtensionUtils.getChromeExtensionId(
++      context.extension
++    );
++    this.holdMessage = (name, anonymizedName, data) => {
++      if (chromeMessage && !native) {
++        data = normalizeChromeMessage(context, data, "Port.postMessage");
++      }
++      return holdMessage(name, anonymizedName, data, native ? this : null);
++    };
+     this.conduit = context.openConduit(this, {
+       portId,
+       native,
+@@ -280,6 +343,22 @@
+   }
+ 
+   sendPortMessage(json) {
++    if (ExtensionUtils.getChromeExtensionId(this.context.extension)) {
++      if (!this.conduit.actor) {
++        throw new this.context.Error("Attempt to postMessage on disconnected port");
++      }
++      const holder = this.holdMessage(
++        `Port/${this.context.extension.id}/sendPortMessage/${this.name}`,
++        `Port/${this.context.extension.id}/sendPortMessage/<anonymized>`,
++        json
++      );
++      // Serialization may run addon hooks that disconnect this port. The call
++      // began connected, so a successful serialization is silently dropped.
++      if (this.conduit.actor) {
++        return this.conduit.sendPortMessage({ holder });
++      }
++      return undefined;
++    }
+     if (this.conduit.actor) {
+       return this.conduit.sendPortMessage({
+         holder: this.holdMessage(
+@@ -354,6 +433,9 @@
+     // custom context to ensure that the return value is cloned into the right
+     // USER_SCRIPT world.
+     context ??= this.context;
++    if (ExtensionUtils.getChromeExtensionId(context.extension)) {
++      message = normalizeChromeMessage(context, message, "runtime.sendMessage");
++    }
+     let response = this.conduit.queryRuntimeMessage({
+       extensionId: extensionId || this.context.extension.id,
+       holder: holdMessage(
+@@ -381,8 +463,16 @@
      return port.api;
    }
  
@@ -21,7 +165,7 @@ index f0c8b87..0245bf2 100644
      if (typeof userScriptWorldId == "string") {
        sender = { ...sender, userScriptWorldId };
        event = this.onUserScriptConnect;
-@@ -393,8 +401,15 @@ export class Messenger {
+@@ -393,8 +483,15 @@
      }
    }
  
@@ -39,6 +183,88 @@ index f0c8b87..0245bf2 100644
      if (typeof userScriptWorldId == "string") {
        sender = { ...sender, userScriptWorldId };
        return this.onUserScriptMessage.emit(holder, sender);
+@@ -745,6 +842,59 @@
+     let map = this.childApiManager.listeners.get(this.path);
+     return map.listeners.has(listener);
+   }
++}
++
++// Chrome message callbacks expose a plain lastError through the document's
++// full microtask checkpoint. Keep this scoped to the genuine Chrome API;
++// BaseContext.withLastError and ordinary Firefox callbacks retain their rules.
++function wrapChromeMessageCallback(context, promise, callback) {
++  const caller = context.getCaller();
++  const applySafe = Cu.getGlobalForObject(promise) === context.cloneScope
++    ? context.applySafeWithoutClone.bind(context)
++    : context.applySafe.bind(context);
++  promise.then(
++    value => {
++      applySafe(callback, [value], caller);
++    },
++    error => {
++      const lastError = Cu.cloneInto(
++        { message: context.normalizeError(error, caller).message },
++        context.cloneScope
++      );
++      Services.tm.dispatchToMainThreadWithMicroTask(() => {
++        if (!context.active || context.unloaded) {
++          return;
++        }
++        const previousError = context._lastError;
++        const previousChecked = context.checkedLastError;
++        context.lastError = lastError;
++        try {
++          context.applySafeWithoutClone(callback, [], caller);
++        } finally {
++          const cleanup = () => {
++            if (context._lastError !== lastError) {
++              return;
++            }
++            try {
++              if (!context.checkedLastError) {
++                Cu.reportError(`Unchecked lastError value: ${lastError.message}`);
++              }
++            } finally {
++              context._lastError = previousError;
++              context.checkedLastError = previousChecked;
++            }
++          };
++          try {
++            Services.tm.dispatchDirectTaskToCurrentThread(cleanup);
++          } catch (dispatchError) {
++            cleanup();
++            throw dispatchError;
++          }
++        }
++      });
++    }
++  ).catch(error => Cu.reportError(error));
++  return undefined;
+ }
+ 
+ export class ChildLocalAPIImplementation extends LocalAPIImplementation {
+@@ -785,6 +935,21 @@
+   }
+ 
+   callAsyncFunction(args, callback, requireUserInput) {
++    if (
++      this.fullname === "runtime.sendMessage" &&
++      ExtensionUtils.getChromeExtensionId(this.context.extension)
++    ) {
++      return this.callAndLog(() => {
++        // Chrome argument and JSON errors are synchronous. The schema already
++        // extracted the callback; restore it only for signature validation.
++        // Invoke the public callback once after transport settles.
++        const actuals = callback ? [...args, callback] : args;
++        const promise = this.pathObj[this.name](...actuals);
++        return callback
++          ? wrapChromeMessageCallback(this.context, promise, callback)
++          : this.context.wrapPromise(promise);
++      }, args);
++    }
+     return this.callAndLog(
+       () => super.callAsyncFunction(args, callback, requireUserInput),
+       args
 diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
 index ddc2bc5..a20f67f 100644
 --- a/modules/ExtensionParent.sys.mjs
@@ -143,10 +369,104 @@ index c1e5670..5ee7d93 100644
    isExtensionUrl,
    parseMatchPatterns,
 diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/toolkit/content/extensions/child/ext-runtime.js
-index 4efb039..621b2cc 100644
 --- a/chrome/toolkit/content/extensions/child/ext-runtime.js
 +++ b/chrome/toolkit/content/extensions/child/ext-runtime.js
-@@ -130,7 +130,7 @@ this.runtime = class extends ExtensionAPI {
+@@ -77,6 +77,66 @@
+   return { extensionId, message, callback };
+ }
+ 
++// Chrome gives an explicit/self extension ID priority when a string or
++// nullish first argument is followed by a non-callback argument. Firefox's
++// parseBonkersArgs intentionally keeps its existing message/options preference.
++function parseChromeMessageArgs(context, ...args) {
++  const prefix = "Error in invocation of runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback): ";
++  const fail = message => {
++    throw new context.cloneScope.TypeError(prefix + message);
++  };
++  if (!args.length || args.length > 4) {
++    fail("No matching signature.");
++  }
++  let callback = null;
++  if (args.length > 1 && typeof args[args.length - 1] === "function") {
++    callback = args.pop();
++  } else if (args.length === 4) {
++    if (args[3] != null) {
++      fail("No matching signature.");
++    }
++    args.pop();
++  }
++  let extensionId = null;
++  let message;
++  let options;
++  if (args.length === 1) {
++    [message] = args;
++  } else if (
++    args.length === 2 && args[0] != null && typeof args[0] !== "string"
++  ) {
++    [message, options] = args;
++  } else {
++    [extensionId, message, options] = args;
++    if (extensionId != null && typeof extensionId !== "string") {
++      fail("No matching signature.");
++    }
++  }
++  if (extensionId && !/^[a-p]{32}$/.test(extensionId)) {
++    fail(`Invalid extension id: '${extensionId}'`);
++  }
++  if (options != null) {
++    if (typeof options !== "object" || Array.isArray(options)) {
++      fail("No matching signature.");
++    }
++    // Read dictionary accessors in their actual addon realm, not through an
++    // Xray view which hides them. Validation still limits own enumerable keys.
++    const dictionary = Cu.waiveXrays(options);
++    for (const key of Object.keys(dictionary)) {
++      if (key !== "includeTlsChannelId") {
++        fail(`Error at parameter 'options': Unexpected property: '${key}'.`);
++      }
++      // Chrome reads only own enumerable dictionary entries, in key order.
++      // Inherited/non-enumerable getters must not run as a side effect.
++      const tls = dictionary[key];
++      if (tls != null && typeof tls !== "boolean") {
++        fail("Error at parameter 'options': Error at property 'includeTlsChannelId': Invalid type: expected boolean, found " + typeof tls + ".");
++      }
++    }
++  }
++  return { extensionId, message, callback };
++}
++
+ this.runtime = class extends ExtensionAPI {
+   getAPI(context) {
+     let { extension } = context;
+@@ -110,7 +170,15 @@
+         },
+ 
+         sendMessage(...args) {
+-          let arg = parseBonkersArgs(...args);
++          const chromeMessage = !!ExtensionUtils.getChromeExtensionId(extension);
++          const arg = chromeMessage
++            ? parseChromeMessageArgs(context, ...args)
++            : parseBonkersArgs(...args);
++          if (chromeMessage) {
++            // ChildLocalAPIImplementation retains the public callback and invokes
++            // it once. Native Worker requests carry their callback separately.
++            arg.callback = null;
++          }
+           return context.messenger.sendRuntimeMessage(arg);
+         },
+ 
+@@ -123,7 +191,9 @@
+         },
+ 
+         get lastError() {
+-          return context.lastError;
++          const error = context.lastError;
++          return error === null && ExtensionUtils.getChromeExtensionId(context.extension)
++            ? undefined : error;
+         },
+ 
+         getVersion() {
+@@ -134,7 +204,7 @@
            return Cu.cloneInto(extension.manifest, context.cloneScope);
          },
  
@@ -193,3 +513,17 @@ index 000e5fc..f0a18a4 100644
            "minimum_opera_version": {
              "type": "string",
              "optional": true
+diff --git a/chrome/toolkit/content/extensions/child/ext-extension.js b/chrome/toolkit/content/extensions/child/ext-extension.js
+--- a/chrome/toolkit/content/extensions/child/ext-extension.js
++++ b/chrome/toolkit/content/extensions/child/ext-extension.js
+@@ -12,7 +12,9 @@
+       },
+ 
+       get lastError() {
+-        return context.lastError;
++        const error = context.lastError;
++        return error === null && ExtensionUtils.getChromeExtensionId(context.extension)
++          ? undefined : error;
+       },
+ 
+       get inIncognitoContext() {
