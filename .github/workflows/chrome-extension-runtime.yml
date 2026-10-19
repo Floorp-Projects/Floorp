@@ -278,6 +278,12 @@ jobs:
         if: ${{ always() && runner.os == 'Windows' && steps.candidate.outcome == 'success' && steps.dependencies.outcome == 'success' }}
         shell: pwsh
         run: ./tools/chrome-extension-runtime/ci/setup-windows-audio.ps1
+      - name: Observe actual Windows notification and desktop state before core tests
+        if: ${{ always() && runner.os == 'Windows' && steps.candidate.outcome == 'success' && steps.dependencies.outcome == 'success' }}
+        shell: bash
+        run: >-
+          python tools/chrome-extension-runtime/ci/observe-windows-alert-state.py
+          --output _dist/chrome-runtime-tests/windows-alert-state-before-core.json
       - name: Execute packaged production core and native APIs on the actual OS
         if: ${{ always() && steps.candidate.outcome == 'success' && steps.dependencies.outcome == 'success' }}
         shell: bash
@@ -285,6 +291,12 @@ jobs:
           python tools/chrome-extension-runtime/ci/test-candidate.py
           --platform '${{ matrix.platform }}'
           --artifact _dist/downloaded-native-candidate --group core
+      - name: Retain actual Windows notification and desktop state after core tests
+        if: ${{ always() && runner.os == 'Windows' && steps.candidate.outcome == 'success' && steps.dependencies.outcome == 'success' }}
+        shell: bash
+        run: >-
+          python tools/chrome-extension-runtime/ci/observe-windows-alert-state.py
+          --output _dist/chrome-runtime-tests/windows-alert-state-after-core.json
       - name: Measure actual native tab and desktop capture audio/video
         env:
           FLOORP_REQUIRE_NATIVE_CHROME_AUXILIARY: "1"
