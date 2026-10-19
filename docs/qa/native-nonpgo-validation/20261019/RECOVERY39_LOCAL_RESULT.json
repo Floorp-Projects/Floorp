@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "scope": "Recovery39 frozen Linux validation before actual Mac diagnostic",
+  "sourceBase": "b516da54864672fdac0611786b29beb47a398de2",
+  "productionCensusGateChanged": false,
+  "resourceContractChanged": false,
+  "sdkAcquisitionContractChanged": false,
+  "checkpointCaptureChange": {
+    "sameDescriptorStreamHash": true,
+    "prePostDescriptorBinding": true,
+    "postPackReferenceAndStateReenumeration": true,
+    "knownLateObjectCounterexample": "rejected with no ready marker",
+    "atomicFilesystemSnapshot": false,
+    "gateRelaxationAuthorized": false
+  },
+  "linux": {
+    "total": 373,
+    "passed": 357,
+    "skipped": 16,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 18.567,
+    "resourceWarnings": "error",
+    "log": {
+      "bytes": 72619,
+      "sha256": "8c899b41e06a8412408495b27ee6daba9f37d2e644051f4f1d9272f01c915213",
+      "rawPublished": false
+    }
+  },
+  "actualMac": {
+    "status": "NOT_RUN",
+    "plannedDiagnosticTests": 77,
+    "expectedSkips": 0,
+    "expectedTestsScope": "RO probe25, task API probe18, checkpoint28, diagnostic driver6",
+    "floorpBuildPlanned": false,
+    "sdkAcquisitionPlanned": false,
+    "newArtifactsPlanned": 0,
+    "productionEligibility": false,
+    "longExecution": "ON_HOLD"
+  },
+  "unchangedSourceBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "bytes": 13139,
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34591,
+      "sha256": "6dc4a5241578b54c5ff954a88cd78191250c629cec5fbb4d43b157d71fa343bc",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_convergence.py",
+      "bytes": 18238,
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 9313,
+      "sha256": "10993e23dafa4be660b09772d7d764e7c93139d6afe16ac3a6f8c14457512179",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "bytes": 11237,
+      "sha256": "e288841181a9240a9a45cb7fe65885e6eb04a696ea770162d4b94271a68c429f",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 25898,
+      "sha256": "0e6bd64cffb9265b8b887a6b7ff31a8a9ffbe3a64388d6e0057202a3021a14a1",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 38277,
+      "sha256": "c7156d928801465a00c622af4a69e37859582ada01c4cfbf30b224444ed85c1a",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 7491,
+      "sha256": "a35803793f7cbcfa1f0601fcffc14f1e2f277d709d074fb1797631914bd71395",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_processes.py",
+      "bytes": 6111,
+      "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b",
+      "immutableBaseExact": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4204,
+      "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff",
+      "immutableBaseExact": true
+    }
+  ],
+  "notes": [
+    "Short procedure success does not establish writer safety against all same-UID backing/remount operations.",
+    "Resource ownership/accounting remains separate from the filesystem writer boundary.",
+    "Natural Recovery35 live task ESRCH reproduction and delayed retry effectiveness remain unproven.",
+    "Daily native host/child records are an independent recording proposal; no native product code or authentication setting changed."
+  ]
+}

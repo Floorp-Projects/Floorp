@@ -182,6 +182,61 @@ class CheckpointGuards(unittest.TestCase):
         self.assertFalse((self.task / 'effective-config.private.log').exists())
         self.assertTrue((self.task / 'checkpoint-expected-config.json').exists())
 
+    def test_late_object_after_manifest_enumeration_prevents_ready(self):
+        original = cp.tree
+        changed = False
+        def enumerate_then_add(*args, **kwargs):
+            nonlocal changed
+            rows = original(*args, **kwargs)
+            if kwargs.get('state_name') == 'mozbuild' and not changed:
+                changed = True
+                (self.task / 'obj/late-object.o').write_bytes(b'late writer fixture')
+            return rows
+        with mock.patch.object(cp, 'tree', side_effect=enumerate_then_add), \
+                self.assertRaisesRegex(Failure, 'checkpoint-state-changed-after-pack'):
+            self.pack()
+        self.assertTrue(changed)
+        self.assertFalse((self.task / 'checkpoint-ready.json').exists())
+
+    def test_reference_or_new_state_created_during_readback_prevents_ready(self):
+        original = cp.inspect
+        for kind in ('reference', 'new-state'):
+            with self.subTest(kind=kind):
+                def inspect_then_change(*args, **kwargs):
+                    result = original(*args, **kwargs)
+                    if kind == 'reference':
+                        (self.source / 'late-header.h').write_bytes(b'late reference fixture')
+                    else:
+                        (self.task / 'cargo').mkdir()
+                    return result
+                code = ('checkpoint-reference-changed-after-pack' if kind == 'reference'
+                        else 'checkpoint-state-root-changed-after-pack')
+                with mock.patch.object(cp, 'inspect', side_effect=inspect_then_change), \
+                        self.assertRaisesRegex(Failure, code):
+                    self.pack()
+                self.assertFalse((self.task / 'checkpoint-ready.json').exists())
+                (self.task / 'checkpoint.tar.gz').unlink()
+                if kind == 'reference':
+                    (self.source / 'late-header.h').unlink()
+                else:
+                    (self.task / 'cargo').rmdir()
+
+    def test_mutation_during_exact_tar_stream_read_prevents_ready(self):
+        original = cp.PackedStream.read
+        changed = False
+        def read_then_mutate(stream, size=-1):
+            nonlocal changed
+            data = original(stream, size)
+            if not changed and data == b'completed object fixture':
+                changed = True
+                (self.task / 'obj/object.o').write_bytes(b'changed while streaming')
+            return data
+        with mock.patch.object(cp.PackedStream, 'read', read_then_mutate), \
+                self.assertRaisesRegex(Failure, 'checkpoint-file-changed'):
+            self.pack()
+        self.assertTrue(changed)
+        self.assertFalse((self.task / 'checkpoint-ready.json').exists())
+
     def test_mach_logs_are_omitted_but_required_cargo_metadata_is_preserved(self):
         logs = self.task / 'mozbuild/logs/build'
         logs.mkdir(parents=True)

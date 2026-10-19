@@ -324,6 +324,57 @@ class Capped:
         self.stream.flush()
 
 
+class PackedStream:
+    """Hash the exact descriptor bytes given to tar, within the existing budget."""
+    def __init__(self, stream, maximum, deadline):
+        self.stream, self.maximum, self.deadline = stream, maximum, deadline
+        self.checksum, self.count = hashlib.sha256(), 0
+
+    def read(self, size=-1):
+        require(time.monotonic() < self.deadline, 'checkpoint-deadline')
+        data = self.stream.read(size)
+        self.count += len(data)
+        require(self.count <= self.maximum, 'checkpoint-file-changed')
+        self.checksum.update(data)
+        return data
+
+
+def add_payload(archive, file, name, row, deadline):
+    info = file.lstat()
+    require(stat.S_ISREG(info.st_mode) and info.st_uid == os.geteuid() and
+            (info.st_size, stat.S_IMODE(info.st_mode), info.st_mtime_ns) ==
+            (row['bytes'], row['mode'], row['mtimeNS']), 'checkpoint-file-changed')
+    descriptor = os.open(file, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, 'rb') as stream:
+        before = os.fstat(stream.fileno())
+        keys = ('st_dev', 'st_ino', 'st_size', 'st_mode', 'st_uid', 'st_mtime_ns', 'st_ctime_ns')
+        require(all(getattr(before, key) == getattr(info, key) for key in keys),
+                'checkpoint-file-changed')
+        packed = PackedStream(stream, row['bytes'], deadline)
+        header = tarfile.TarInfo(name)
+        header.size, header.mode = row['bytes'], 0o600
+        archive.addfile(header, packed)
+        require(stream.read(1) == b'', 'checkpoint-file-changed')
+        after = os.fstat(stream.fileno())
+        require(all(getattr(before, key) == getattr(after, key) for key in keys) and
+                packed.count == row['bytes'] and packed.checksum.hexdigest() == row['sha256'],
+                'checkpoint-file-changed')
+
+
+def verify_live_capture(manifest, mapping, spec, deadline):
+    """Detect changed/added rows, not a claim of an atomic global snapshot."""
+    require({name for name in STATES if mapping[name].exists() or mapping[name].is_symlink()} ==
+            set(manifest['states']), 'checkpoint-state-root-changed-after-pack')
+    for name, expected in manifest['references'].items():
+        require(tree(mapping[name], mapping, deadline, spec['maxReferenceEntries'],
+                     8 * 1024**3, typed_links=False) == expected,
+                'checkpoint-reference-changed-after-pack')
+    for name, expected in manifest['states'].items():
+        require(tree(mapping[name], mapping, deadline, spec['maxEntries'],
+                     spec['maxLogicalBytes'], state_name=name) == expected,
+                'checkpoint-state-changed-after-pack')
+
+
 def pack(plan_path, source, task, sdk, deadline):
     plan = json.loads(plan_path.read_text())
     spec = plan['checkpoint']
@@ -364,19 +415,18 @@ def pack(plan_path, source, task, sdk, deadline):
                     if row['kind'] != 'file':
                         continue
                     file = mapping[name] / row['path']
-                    require(stable_hash(file, file.lstat(), deadline) == row['sha256'], 'checkpoint-file-changed')
-                    header = tarfile.TarInfo('payload/' + name + '/' + row['path'])
-                    header.size, header.mode = row['bytes'], 0o600
-                    with file.open('rb') as stream:
-                        archive.addfile(header, stream)
+                    add_payload(archive, file, 'payload/' + name + '/' + row['path'], row, deadline)
         output.flush()
         os.fsync(output.fileno())
     require(path.stat().st_size <= spec['maxStoredBytes'], 'checkpoint-stored-cap')
     inspect(path, spec, deadline, expected_manifest=hashlib.sha256(body).hexdigest())
+    verify_live_capture(manifest, mapping, spec, deadline)
     receipt = {'bytes': path.stat().st_size, 'sha256': digest(path),
                'manifestSHA256': hashlib.sha256(body).hexdigest(), 'entries': count,
                'logicalBytes': logical, 'buildDate': manifest['buildDate'], 'rawSingleFile': True,
                'qualification': spec['qualification'], 'freshObjdir': False, 'sameJob': False}
+    receipt.update(packedStreamHashesVerified=True, liveTreeRecheckComplete=True,
+                   atomicFilesystemSnapshot=False)
     write_json(task / 'checkpoint-ready.json', receipt)
     return receipt
 

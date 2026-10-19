@@ -1,0 +1,325 @@
+{
+  "schema": 1,
+  "scope": "Read-only checkpoint writer-boundary design review; no production gate change or new execution",
+  "decision": {
+    "currentGate": "KEEP_UNCHANGED",
+    "longBuildOrCheckpointRetry": "NO_GO_PENDING_EXPLAINABLE_WRITER_AND_RESOURCE_CONTRACT",
+    "designConclusion": "The new-UID/RUID delta-zero predicate is neither logically necessary nor sufficient for writer safety. It is a conservative census observation combined with stronger build and transfer checks, not a complete no-writer certificate.",
+    "privateImageFixtureProbe": "CONDITIONALLY_USEFUL_FOR_SEPARATE_SMALL_MAC_VALIDATION; implementation and execution not reviewed here",
+    "productionReplacement": "NOT_TECHNICALLY_QUALIFIED"
+  },
+  "files": {
+    "tools/qa/native-nonpgo/checkpoint.py": {
+      "bytes": 28077,
+      "sha256": "6a7af45bb7eac28ee837f2eaa9bd6d183fd52731fb60dc5b845dea3be3802ec0"
+    },
+    "tools/qa/native-nonpgo/census_convergence.py": {
+      "bytes": 18238,
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594"
+    },
+    "tools/qa/native-nonpgo/process_census.py": {
+      "bytes": 9313,
+      "sha256": "10993e23dafa4be660b09772d7d764e7c93139d6afe16ac3a6f8c14457512179"
+    },
+    "tools/qa/native-nonpgo/checkpoint_transfer.py": {
+      "bytes": 7491,
+      "sha256": "a35803793f7cbcfa1f0601fcffc14f1e2f277d709d074fb1797631914bd71395"
+    },
+    "tools/qa/native-nonpgo/pipeline.py": {
+      "bytes": 38277,
+      "sha256": "c7156d928801465a00c622af4a69e37859582ada01c4cfbf30b224444ed85c1a"
+    },
+    "tools/qa/native-nonpgo/plan.json": {
+      "bytes": 25898,
+      "sha256": "0e6bd64cffb9265b8b887a6b7ff31a8a9ffbe3a64388d6e0057202a3021a14a1"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/CHECKPOINT_EXECUTION_CONTRACT.ja.md": {
+      "bytes": 5705,
+      "sha256": "c902ac9f989a8adea843e310cb1b4e054990657234dd41b7315d26a81165c418"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY26_CONVERGENCE_WAIT.ja.md": {
+      "bytes": 3952,
+      "sha256": "ff2030e37d7c1df720cbeaf268243958598e27316655c9b8ce1145a2000910ee"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY35_TERMINAL_RESULT.json": {
+      "bytes": 266863,
+      "sha256": "dbc466baf3ce72e5b30d7ea0c88213f32410cb44594d40e8fb6504d5d2586e01"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_TERMINAL_RESULT.json": {
+      "bytes": 268623,
+      "sha256": "b4f6b71320431af9936bfcd07426df59c9fa488f14751aa974bf29844fe29865"
+    },
+    "docs/qa/native-nonpgo-validation/20261018/RECOVERY38_CANDIDATE_ASSESSMENT.md": {
+      "bytes": 6405,
+      "sha256": "ded7dfd8afa122564d677d0ee39e0bd9a5db40a253b673e4cd3bcae2bbe6cda0"
+    }
+  },
+  "reviewActions": {
+    "sourceEdited": false,
+    "ciStarted": false,
+    "sdkOrLargeArtifactDownloaded": false,
+    "artifactUploaded": false,
+    "permissionsChanged": false,
+    "mountedOrDetachedAnyDevice": false,
+    "localFixtureOnly": true
+  },
+  "safetyProperty": {
+    "applicationBoundary": "A naturally successful, fully reaped build boundary with all required generated state complete; interrupted compiler/Cargo state remains ineligible.",
+    "captureBoundary": "Every saved file, namespace entry, link, mode and timestamp must describe an eligible coherent state, captured from stable inputs. No writer may modify the captured view while it is enumerated and read.",
+    "transferBoundary": "A closed verified archive and manifest must remain bound to the exact bytes finalized by the artifact service and restored by the consumer.",
+    "separation": "Application completion, writer/capture isolation, resource accounting, transfer integrity and resumed-build qualification are distinct predicates."
+  },
+  "currentImplementation": [
+    {
+      "evidence": [
+        "pipeline.py:333",
+        "process_census.py:111",
+        "checkpoint.py:235",
+        "census_convergence.py:299"
+      ],
+      "fact": "Baseline is before preparation; primary census retains live identities whose effective UID or real UID matches the worker, and final completion requires no identities absent from that fixed baseline. Baseline survivors are not rejected; zombies are counted separately."
+    },
+    {
+      "evidence": [
+        "pipeline.py:390",
+        "pipeline.py:398",
+        "pipeline.py:429"
+      ],
+      "fact": "Natural export/Rust/archive success, exact stage leader reap, verified group disappearance, complete logs, fixed graph/archive/depinfo and absence of host/XUL are independent required checks."
+    },
+    {
+      "evidence": [
+        "checkpoint.py:69",
+        "checkpoint.py:101",
+        "checkpoint.py:339",
+        "checkpoint.py:367",
+        "checkpoint.py:375"
+      ],
+      "fact": "Reference/state trees are enumerated sequentially; individual files have descriptor identity/change checks and hashes. Files are rehashed before a separate archive read. The resulting archive is read back against the manifest. These are valuable integrity checks, not a filesystem point-in-time snapshot."
+    },
+    {
+      "evidence": [
+        "checkpoint_transfer.py:67",
+        "checkpoint_transfer.py:85",
+        "checkpoint_transfer.py:113"
+      ],
+      "fact": "Same-run producer success, service digest/size/expiry, one bounded artifact and consumer raw-byte integrity are checked. These prove transfer provenance/integrity but cannot repair an incoherent producer capture."
+    }
+  ],
+  "whyDeltaZeroIsNotNecessary": [
+    "A new candidate may have no write access to any captured state or may be unrelated to the application state. Rejecting all such candidates is conservative, not a logical requirement for a coherent archive.",
+    "Recovery38 proves candidate creation/persistence without a Floorp build and short fixed-baseline zero observations. It does not itself prove that any particular candidate lacks write capability, so it does not justify excluding one."
+  ],
+  "whyDeltaZeroIsNotSufficient": [
+    "An identity present in the original baseline may later write payload files without changing the set difference.",
+    "The worker-UID/RUID filter does not cover every principal with filesystem access, inherited descriptor, shared mapping, delegated service or raw-device capability. Neither credential matching nor credential mismatch determines writer capability.",
+    "A new writer can appear after the census, or an existing process can acquire a path/descriptor after an open-FD observation. Sampling is not a barrier spanning enumeration, archive reads and finalization.",
+    "Process-group disappearance certifies the recorded group; sampled ancestry/history does not prove that no descendant changed session/group, delegated work to an existing service, or obtained a writer capability elsewhere.",
+    "Per-file hashes can validate the archived bytes while omitting a later-created entry or capturing files from different moments. Archive readback does not prove complete namespace capture or cross-file application coherence."
+  ],
+  "designFindings": [
+    {
+      "id": "R39-WRITER-CERTIFICATE",
+      "priority": "P1",
+      "scope": "Design sufficiency blocker, not an attributed historical failure",
+      "detail": "Do not equate a successful delta-zero sample with absence of payload writers. Positive ownership observations help identify writers; negative group/role/PID1/FD observations do not eliminate write capability.",
+      "requiredResolution": "Specify a supported positive write-denial/frozen-view mechanism or an explicit, justified trusted-writer/application-quiescence model before changing the gate."
+    },
+    {
+      "id": "R39-CAPTURE-COHERENCE",
+      "priority": "P1",
+      "scope": "Design sufficiency blocker supported by a local tiny fixture",
+      "detail": "The live-tree packer can accept an archive that omits a file added after manifest enumeration. This is not evidence of corruption in an actual run; all historical checkpoint attempts discussed here stored no artifact.",
+      "requiredResolution": "Create and bind a coherent stable capture view before enumeration, or retain a valid independently justified quiescence condition throughout capture. Additional full scans are useful rejection checks but not a general atomicity proof."
+    },
+    {
+      "id": "R39-RESOURCE-SCOPE",
+      "priority": "P2",
+      "scope": "Required contract separation for any future replacement",
+      "detail": "Current convergence couples writer eligibility with RSS/CPU measurement of self and every new candidate. Read-only filesystem protection does not prove an unknown candidate consumes zero memory or is outside owned-resource scope.",
+      "requiredResolution": "Keep unknown counters null/failing where the existing resource contract requires them. Any new ownership/accounting scope requires explicit positive evidence and separate review, not silent removal of unknown processes."
+    }
+  ],
+  "localCounterexample": {
+    "environment": "Linux x86_64, existing test_checkpoint.CheckpointGuards tiny fixture only",
+    "method": "Used the existing successful-boundary unit fixture and real checkpoint.pack/inspect; injected creation of obj/late-object.o immediately after manifest encoding, without editing source files.",
+    "result": {
+      "packAndReadbackSucceeded": true,
+      "newFileExistsInLiveTree": true,
+      "newFileInManifest": false,
+      "storedBytes": 1763
+    },
+    "counterexampleReceipt": {
+      "bytes": 387,
+      "sha256": "6cc682fe4891457085e1cdff795b723dbbe8180bdc4aa03375c88161ed5bc956"
+    },
+    "limit": "This demonstrates a capture-contract limitation, not an actual Mac writer identity or a cause of Recovery35."
+  },
+  "alternatives": [
+    {
+      "option": "Complete positive application ownership/quiescence proof",
+      "status": "NOT_CURRENTLY_ESTABLISHED",
+      "requirements": [
+        "Control all write-capable build descendants and delegated workers from before launch through capture; validate exact identities and successful natural completion.",
+        "Account for baseline processes, reparenting/session changes, inherited descriptors/mappings and XPC/delegated work.",
+        "Preserve existing signal ownership rules; census candidates never become cleanup targets merely by UID or role."
+      ],
+      "pitfalls": [
+        "Sampled parent/group history is incomplete; no matching FD is an instantaneous negative only.",
+        "A general complete lineage monitor or privileged event framework would expand scope and is not a minimal proven fix."
+      ]
+    },
+    {
+      "option": "Ordinary file permissions, ACLs, file flags or advisory locks",
+      "status": "INSUFFICIENT_ALONE",
+      "requirements": [
+        "Any capability-denial proof must cover object writes, directory create/delete/rename, every alias/link and previously acquired write capabilities for every relevant principal throughout capture."
+      ],
+      "pitfalls": [
+        "The same UID that owns a file can normally change its mode again. Owner-controlled modes are not a kernel-enforced boundary against arbitrary same-UID behavior.",
+        "Removing path write permission does not establish revocation of an already-writable descriptor or shared mapping; closing a descriptor does not unmap MAP_SHARED pages.",
+        "flock is advisory and does not constrain non-cooperating writers.",
+        "No name, PID1 ancestry, absent open FD or current permission check is a safe exclusion certificate."
+      ]
+    },
+    {
+      "option": "APFS point-in-time filesystem snapshot",
+      "status": "OUT_OF_CURRENT_PRIVILEGE_SCOPE",
+      "requirements": [
+        "A supported immutable read-only point-in-time source view, application-success boundary and complete reference/path coverage."
+      ],
+      "pitfalls": [
+        "Apple XNU snapshot documentation requires superuser privileges and an additional entitlement. No snapshot creation/mount attempt or escalation was performed.",
+        "Even a crash-consistent filesystem snapshot does not make an arbitrary interrupted compiler state semantically complete."
+      ]
+    },
+    {
+      "option": "COW per-file/directory clone or private copied staging tree",
+      "status": "USEFUL_ISOLATION_AND_REJECTION_CHECKS; NOT_AN_ATOMIC_APPLICATION_SNAPSHOT_BY_ITSELF",
+      "requirements": [
+        "No shared writable inode/hardlink with live state; descriptor-bound no-follow reads and validated typed symlinks.",
+        "Full namespace/content/mode/time comparison and archive readback with all caps/deadlines preserved.",
+        "A separate proven quiescent or coherent source boundary; exclude mutable references only with an explicit valid model."
+      ],
+      "pitfalls": [
+        "Clone COW isolates subsequent writes to cloned files, but source items may be selected at different times; directory clone creation atomicity does not by itself promise a source-tree application transaction.",
+        "Two equal scans/hashes can miss intervening mutation or an ABA cycle and cannot prove that a writer will not act later.",
+        "Cross-volume clone may be unsupported; a private image cannot assume host-to-image references are free COW copies.",
+        "Transfer digest locks down resulting bytes, not the semantic correctness of the state used to make them."
+      ]
+    },
+    {
+      "option": "Private image built in place, normal detach, read-only reattach, then pack only the frozen view",
+      "status": "MOST_RELEVANT_SMALL_PROBE_CANDIDATE; PRODUCTION_NOT_YET_QUALIFIED",
+      "requirements": [
+        "Build payload and all mutable source/tools/SDK references in a deliberately chosen root layout; retain naturally successful application boundary and exact stage cleanup.",
+        "Never force detach. Busy, permission, unknown mount/device state or incomplete cleanup means no eligible snapshot.",
+        "Reattach the exact same private backing image read-only; verify actual APFS mount/source identity, MNT_RDONLY and API-specific write rejection before and after enumeration/pack.",
+        "Revalidate graph, completed Rust archive/depinfo, effective inputs and required absences on the frozen view.",
+        "Bind absolute roots, filesystem case semantics, ownership/mount options, typed links, modes and nanosecond times across producer/consumer.",
+        "Preserve resource caps/accounting, free-space reserve, deadlines and one artifact at most10GiB for one day; no image upload is implied."
+      ],
+      "pitfalls": [
+        "A read-only filesystem mount protects access through that mounted filesystem, not the backing file/raw device or a later separate read-write attach. Same-UID ownership of the backing file is a remaining write capability.",
+        "A successful detach is a useful kernel boundary but not proof that all historical application writes were correct or that there are no external raw writers.",
+        "A threat model trusting the host kernel/services and excluding arbitrary hostile same-UID/raw-backing mutation must be explicit. Strong exclusion of all same-UID attackers is not established at current privileges.",
+        "External writable symlink roots or references outside the frozen view defeat a whole-state claim. System/Python/toolchain roots need explicit immutable-reference provenance rather than silent exemption.",
+        "Disk-image service memory, copy cost, maximum sparse allocation and long-run timing are unmeasured; a small probe cannot qualify real checkpoint size/runtime."
+      ]
+    }
+  ],
+  "proposedSmallMacProbe": {
+    "scope": "One bounded fixture-only diagnostic if separately implemented/reviewed; no SDK, Floorp build, remote artifact, permission escalation, production policy change or unrelated signal.",
+    "preconditions": [
+      "Use a fresh task-private directory, unpredictable image/mount identity and explicit small virtual/allocated-byte caps; measure host free space before and during.",
+      "Bind image realpath, regular-file ownership/dev/inode, device hierarchy, filesystem/volume UUID and mount path using plist/stat/statfs information. Refuse an existing or ambiguous mount/device.",
+      "Use ordinary installed hdiutil behavior only after reading its target-image version/help contract. Any authentication prompt, permission denial or unsupported operation fails without sudo, force, settings changes or fallback to another volume."
+    ],
+    "cases": [
+      {
+        "case": "No writer control",
+        "check": "Create a tiny coherent multi-file fixture, fsync it, normally detach, reattach read-only, compare expected content/mode/time/link manifest and pack/readback."
+      },
+      {
+        "case": "Exact child holds writable FD",
+        "check": "Use a ready/pipe ACK; attempt normal detach while the exact owned child retains the FD. Record fixed operation/error classification and verify image/device remains bound. Release naturally and reap before a bounded new detach attempt."
+      },
+      {
+        "case": "Shared writable mapping with original FD closed",
+        "check": "Test separately from held FD because close does not unmap. A detach success here is not automatic safety; preserve the exact mapping/child outcome and classify any contradiction or unknown. Never force invalidation."
+      },
+      {
+        "case": "Baseline writer",
+        "check": "Start the controlled writer before baseline. Show that delta0 does not identify its write capability, while the target-isolation mechanism still rejects or freezes its writes."
+      },
+      {
+        "case": "Path reopened after freeze",
+        "check": "After successful normal detach/read-only attach, keep fixture DAC modes writable to isolate mount behavior and try O_RDWR, create and rename from an owned ready child. Require documented API-specific refusal and unchanged target manifest."
+      },
+      {
+        "case": "Writable shared mmap attempt on read-only descriptor",
+        "check": "Do not require every API to return EROFS. mmap(PROT_WRITE|MAP_SHARED) on a read-only FD may return EACCES; MAP_PRIVATE memory changes are not file writes. Avoid unchecked invalid stores in the parent process."
+      },
+      {
+        "case": "Backing capability observation",
+        "check": "If safe and permitted, test opening the task-owned backing file O_RDWR and immediately close without writing. Record capability as a limitation. Do not corrupt a mounted image or write any raw device, and do not perform a duplicate read-write attachment as a proof shortcut."
+      },
+      {
+        "case": "Failure recovery",
+        "check": "Inject partial create/attach, malformed plist, timeout, interrupted probe and cleanup denial. Preserve first failure, exact-child reap and per-device non-force cleanup records. Do not delete backing or recurse into a mount until its exact device is confirmed detached."
+      }
+    ],
+    "receipt": [
+      "Fixed operation/result/error kind, unknowns/nulls, mount/read-only and backing identity-binding booleans, writer-ready/exit/reap evidence, normal-detach state and target hashes.",
+      "Publish no raw PID/UID/device path/backing path, argv, environment, free-form stderr, internal discussion or signed URL.",
+      "Keep successful isolation observations separate from production qualification and resource accounting."
+    ],
+    "canDemonstrate": [
+      "Actual ordinary API availability and ownership behavior on the selected hosted image.",
+      "Whether normal detach rejects controlled FD/mmap holders and whether a read-only reattached view rejects later filesystem writes.",
+      "Stable small-fixture content/metadata through the proposed boundary and safe exact cleanup."
+    ],
+    "cannotDemonstrate": [
+      "Absence of arbitrary raw backing mutation, trusted-host compromise or every privileged/XPC writer.",
+      "Complete historical build ancestry or provenance of vanished Recovery33/35 candidates.",
+      "Successful semantic Cargo/Gecko resume, real checkpoint size/time, long-build convergence or native authentication.",
+      "That unknown task counters can be treated as zero or removed from required resource monitoring."
+    ]
+  },
+  "primarySources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/man/man2/fs_snapshot_create.2",
+      "supports": "Filesystem snapshots are read-only point-in-time copies; snapshot operations require superuser and an additional entitlement. This excludes a privilege-free adoption of this API."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/man/man2/clonefile.2",
+      "supports": "Clones separate subsequent data writes by COW. Directory cloning is discouraged and described itemwise; the stated atomicity concerns creating all destination objects or none, not an application-wide coherent transaction."
+    },
+    {
+      "url": "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/chmod.2.html",
+      "supports": "The owner can change file modes; mode changes are not a general ownership separation."
+    },
+    {
+      "url": "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/mmap.2.html",
+      "supports": "Shared mappings propagate writes and survive close. A writable shared mapping requires a writable descriptor; EACCES is documented for a read-only descriptor."
+    },
+    {
+      "url": "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/flock.2.html",
+      "supports": "Locks are advisory and non-cooperating processes can still access files."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/man/man2/mount.2",
+      "supports": "Read-only mount semantics and force-unmount distinction. Ordinary unmount may fail for active references; exact current APFS/hdiutil behavior must be measured, not assumed."
+    },
+    {
+      "url": "https://support.apple.com/guide/disk-utility/create-a-disk-image-dskutl11888/mac",
+      "supports": "Apple documents separate read-write sparse and read-only disk-image formats. This is background documentation, not proof of target-runner CLI flags, detach behavior or adversarial backing immutability."
+    }
+  ],
+  "historicalEvidenceLimits": [
+    "Recovery35 observed four task queries returning zero bytes/ESRCH with matching full live BSD identity; this is not a writer, exit or memory-zero proof.",
+    "Recovery38 measured short fixed-baseline zero and14 candidate identities without a Floorp build. Names/PID1 consistency do not prove non-writer status or old-run causality.",
+    "Older checkpoint contract notes contain historical SDK/phase details; current plan/code hashes above are operative. No historical source or receipt was rewritten."
+  ],
+  "nextDecision": "Keep the current gate and every unknown-failclosed/ownership/resource rule unchanged. A small reviewed image probe can test a candidate mechanism, but no long trial or production eligibility relaxation follows from this design review."
+}

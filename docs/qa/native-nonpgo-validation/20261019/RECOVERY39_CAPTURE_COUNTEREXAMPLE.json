@@ -1,0 +1,9 @@
+{
+  "environment": "Linux fixture only",
+  "realPackAndReadbackPassed": true,
+  "newFileCreatedAfterManifestEnumeration": true,
+  "newFileIncludedInManifest": false,
+  "storedBytes": 1763,
+  "productionFilesModified": false,
+  "interpretation": "Archive/readback integrity does not itself prove that the live tree was complete or writer-free; no actual long-run writer is identified."
+}

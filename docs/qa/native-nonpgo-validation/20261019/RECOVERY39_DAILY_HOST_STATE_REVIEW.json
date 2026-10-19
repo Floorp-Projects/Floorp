@@ -1,0 +1,520 @@
+{
+  "schema": 1,
+  "scope": "READ_ONLY_DAILY_INTEL_PRECONNECTION_HOST_CHILD_STATE_AND_MINIMAL_DIAGNOSTICS_PROPOSAL",
+  "createdAtUTC": "2026-10-18T23:59:35.466498+00:00",
+  "decision": {
+    "dailyFirstFunctionalFailure": "NO_CONNECTED_OBSERVER_EVENT_WITHIN_HARNESS_WAIT",
+    "hostExitAsDailyFirstCause": "NOT_SUPPORTED_BY_RETAINED_EVIDENCE",
+    "actualShimFailureCause": "UNKNOWN",
+    "sameCauseAsOldCauseHostExited": "NOT_ESTABLISHED",
+    "newCIRequiredForThisReview": false,
+    "sourceEditsPerformed": false,
+    "longExecution": "ON_HOLD"
+  },
+  "providerCohort": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39162639256,
+    "job": 117820798341,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "runner": "macos-15-intel",
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39162639256/job/117820798341",
+    "packagedBuildId": "20261018201738",
+    "qualification": "Separate daily final universal artifact; cannot qualify dedicated full-host/XUL non-PGO patched QA build"
+  },
+  "existingEvidence": {
+    "comparison": {
+      "bytes": 12937,
+      "sha256": "06264c12e5071cff6b9699a00f40ddd72ed48084278fcf5acfa8ae71c63f5784",
+      "path": "docs/qa/native-nonpgo-validation/20261018/DAILY39162639256_NATIVE_COMPARISON.json"
+    },
+    "comparisonReview": {
+      "bytes": 8102,
+      "sha256": "140702dd7662007637306141a6fa82410ac52f9a583887c2f2840239024099d6",
+      "path": "docs/qa/native-nonpgo-validation/20261018/DAILY39162639256_NATIVE_COMPARISON_REVIEW.json"
+    },
+    "decodedJobLog": {
+      "bytes": 52011,
+      "sha256": "90eb46958f3ca845cde6a09249b13b802e7e489539232ad5e7c8a69a4b17cf7c",
+      "rawPublished": false,
+      "relevantLines": {
+        "first": 548,
+        "last": 560
+      }
+    },
+    "compactArtifact": {
+      "bytes": 6836,
+      "sha256": "8859297d0f8608de3d6625c7a97548b3fde55ced0fc7ce5aedcf0220a4dca301",
+      "id": 12154687607,
+      "providerDigestPreviouslyVerified": true,
+      "newDownloadByThisReview": false
+    },
+    "contextResult": {
+      "bytes": 1098,
+      "sha256": "41a2ae8d4de81c2d346f548ac5745f1e3000ddab20d61d9b582064ed71453325",
+      "retainedKeys": [
+        "browser",
+        "cleanupError",
+        "error",
+        "nativeState",
+        "output",
+        "requestedIterations",
+        "status"
+      ],
+      "privatePathsNotRepublished": true
+    },
+    "contextBrowserLog": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "empty": true
+    }
+  },
+  "immutableSources": {
+    "context": {
+      "bytes": 10299,
+      "sha256": "918c1db8904604d9b8f123aac232b66c9ada9bdde0abf1485eab2ac9eb5c8924",
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "path": "tools/app-shim/test-context-menu.py"
+    },
+    "helper": {
+      "bytes": 47527,
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b",
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e1da5a98af5fa72065994514dc9618f2a38ba338",
+      "path": "tools/app-shim/test-runtime.py"
+    },
+    "workflow": {
+      "bytes": 29147,
+      "sha256": "fdae19ed34976682dc6777eec13244f8f7564ff1af26a96388eac3a6badb7da7",
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": ".github/workflows/verify-runtime-artifact.yml"
+    },
+    "hostService": {
+      "bytes": 37730,
+      "sha256": "e6897fdd9a235fbdff6ce181ac9d7f61afee91ed9349d8238eda6a423c3f9059",
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "widget/cocoa/appshim/MacWebAppService.mm",
+      "access": "immutable local git object; hostService and shimApplication also exactly matched authorized provider fetch"
+    },
+    "shimApplication": {
+      "bytes": 20412,
+      "sha256": "2068c2ae647449a24b8665ac636b78f869d85db28ad0b1f831c6c2b2b5ee6dbf",
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "widget/cocoa/appshim/shim/ShimApplication.mm",
+      "access": "immutable local git object; hostService and shimApplication also exactly matched authorized provider fetch"
+    },
+    "shimMain": {
+      "bytes": 2167,
+      "sha256": "cf91c2225f6a34264f285cd6e6156414854c00ba99b9b4f74b8fe33014b4e0f4",
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "widget/cocoa/appshim/shim/main.mm",
+      "access": "immutable local git object; hostService and shimApplication also exactly matched authorized provider fetch"
+    }
+  },
+  "established": [
+    {
+      "id": "host-adopted-before-launch",
+      "claim": "The test established Marionette, matched isolated-profile capabilities and exact executable/argv/start-time identity, then registered a host kqueue NOTE_EXIT plus NOTE_EXITSTATUS watch before configure/registerApp/launchApp. The recorded later authentication timeout establishes execution past verify_session without its failure.",
+      "evidence": [
+        {
+          "source": "context",
+          "lines": {
+            "first": 70,
+            "last": 87
+          }
+        },
+        {
+          "source": "helper",
+          "lines": {
+            "first": 140,
+            "last": 174
+          }
+        }
+      ]
+    },
+    {
+      "id": "host-responded-after-wait-failure",
+      "claim": "The caught timeout was followed by a successful nativeState read through the same Marionette client. Cleanup then received a JavaScript NS_ERROR_NOT_AVAILABLE reply from sendControl. These are host responsiveness points after the wait; there is no retained continuous kernel liveness timeline.",
+      "evidence": [
+        {
+          "source": "context",
+          "lines": {
+            "first": 137,
+            "last": 154
+          }
+        }
+      ],
+      "resultFields": {
+        "error": "Timed out waiting for Shim authentication",
+        "nativeState": {
+          "crashes": [],
+          "failures": []
+        },
+        "cleanupOperation": "nsIMacWebAppService.sendControl",
+        "cleanupNsresult": "0x80040111"
+      }
+    },
+    {
+      "id": "event-loss",
+      "claim": "The observer retained Shim events except compositor frames in browser memory, including possible disconnected events, but the exception report exported only crashes/failures. The auth callback searched only connected and did not act on disconnected. The compact result has neither events nor host/shim identity or exit fields.",
+      "evidence": [
+        {
+          "source": "context",
+          "lines": {
+            "first": 81,
+            "last": 87
+          }
+        },
+        {
+          "source": "context",
+          "lines": {
+            "first": 137,
+            "last": 158
+          }
+        }
+      ]
+    },
+    {
+      "id": "exit-status-not-exported",
+      "claim": "HostProcess can decode a verified browser kernel exit status and keep the separate open launcher result. Context finally calls client.close then host.close and writes no host returncode, launcher returncode, requested signal, exit event, or pre-cleanup snapshot. host.close returning is inferable because result.json was written afterward; it does not reconstruct pre-cleanup liveness or prove exact cleanup semantics.",
+      "evidence": [
+        {
+          "source": "helper",
+          "lines": {
+            "first": 167,
+            "last": 204
+          }
+        },
+        {
+          "source": "helper",
+          "lines": {
+            "first": 244,
+            "last": 267
+          }
+        },
+        {
+          "source": "context",
+          "lines": {
+            "first": 144,
+            "last": 158
+          }
+        }
+      ]
+    },
+    {
+      "id": "cleanup-can-alter-host-state",
+      "claim": "Marionette.close sends WebDriver:DeleteSession before closing the socket. HostProcess.close may signal the identity-checked browser with TERM then KILL and separately reaps or terminates the open helper. A snapshot after these actions alone cannot identify spontaneous pre-cleanup host death.",
+      "evidence": [
+        {
+          "source": "helper",
+          "lines": {
+            "first": 80,
+            "last": 86
+          }
+        },
+        {
+          "source": "helper",
+          "lines": {
+            "first": 206,
+            "last": 267
+          }
+        },
+        {
+          "source": "context",
+          "lines": {
+            "first": 154,
+            "last": 156
+          }
+        }
+      ]
+    },
+    {
+      "id": "empty-log-is-launcher-stream",
+      "claim": "With launch_services=True browser.log receives open stdout/stderr. The actual browser stream paths are browser.stdout.log and browser.stderr.log. The compact upload selects context browser.log only, omitting those two browser streams. Its empty browser.log cannot establish silent browser execution, silent Shim execution, or absence of startup diagnostics. Shim NSWorkspace-launched stderr inheritance is not established here.",
+      "evidence": [
+        {
+          "source": "helper",
+          "lines": {
+            "first": 107,
+            "last": 116
+          }
+        },
+        {
+          "source": "workflow",
+          "lines": {
+            "first": 669,
+            "last": 682
+          }
+        }
+      ]
+    },
+    {
+      "id": "launch-request-is-asynchronous",
+      "claim": "LaunchApp returns NS_OK after requesting NSWorkspace launch and installing its timer. NSRunningApplication and NSError arrive asynchronously. Existing code emits disconnected reasons launch-failed/process-monitor-failed/process-exited, but retains no NSError code or numeric child exit status in those events.",
+      "evidence": [
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 682,
+            "last": 760
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 285,
+            "last": 316
+          }
+        }
+      ]
+    },
+    {
+      "id": "host-auth-reject-is-silent",
+      "claim": "AcceptHello silently returns if pending state, attachment, sequence, nonce, app/profile/token/bundle binding or VerifyPeer fails. VerifyPeer combines audit PID/UID, code validity and signing-identifier/hash checks without exporting the failing check or OSStatus. connected is emitted after accepted Hello and successful enqueue of HelloAccepted, not after a separately recorded child acknowledgement.",
+      "evidence": [
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 244,
+            "last": 268
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 349,
+            "last": 396
+          }
+        }
+      ]
+    },
+    {
+      "id": "preauth-stop-paths-exist",
+      "claim": "The immutable Shim source can exit before connected: startup validation/host lookup failure; failed initial Hello send; gate still inactive after five seconds; bad receive/gate/handler; host exit. Separately the host schedules cancellation and possible forceTerminate after fifteen seconds while pending. These code paths are not evidence that any particular one executed in this run.",
+      "evidence": [
+        {
+          "source": "shimMain",
+          "lines": {
+            "first": 9,
+            "last": 42
+          }
+        },
+        {
+          "source": "shimApplication",
+          "lines": {
+            "first": 175,
+            "last": 198
+          }
+        },
+        {
+          "source": "shimApplication",
+          "lines": {
+            "first": 354,
+            "last": 362
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 750,
+            "last": 758
+          }
+        }
+      ]
+    },
+    {
+      "id": "cleanup-error-is-nonspecific",
+      "claim": "SendControlFromScript maps several false outcomes to NS_ERROR_NOT_AVAILABLE. Missing/not-connected app is one such branch; cancelling/no sender/sequence limits or enqueue failure can also fail later. This error neither proves child launch nor establishes early child exit, signature rejection, or original timeout cause.",
+      "evidence": [
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 319,
+            "last": 346
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 827,
+            "last": 868
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 901,
+            "last": 904
+          }
+        }
+      ]
+    }
+  ],
+  "sourceBoundInferences": [
+    {
+      "claim": "The context-menu iteration loop was not reached; the known error is emitted by the preceding authentication wait. Twenty iterations are not completed or qualified.",
+      "evidence": [
+        {
+          "source": "context",
+          "lines": {
+            "first": 87,
+            "last": 108
+          }
+        }
+      ]
+    },
+    {
+      "claim": "The daily failure is beyond the startup/adoption boundary of the old cause-host-exited report. The identical old helper could mistake open.poll() before browser adoption for host death; daily adopted the host and subsequently received browser replies. A shared root cause cannot be concluded.",
+      "evidence": [
+        {
+          "source": "helper",
+          "lines": {
+            "first": 193,
+            "last": 204
+          }
+        },
+        {
+          "source": "context",
+          "lines": {
+            "first": 70,
+            "last": 87
+          }
+        }
+      ]
+    },
+    {
+      "claim": "Because child and host have shorter preauthentication timers than the outer twenty-second wait, a late process-exited observation by itself would not identify the initiating failure. First reason and termination-request timing must be retained separately.",
+      "evidence": [
+        {
+          "source": "shimApplication",
+          "lines": {
+            "first": 195,
+            "last": 198
+          }
+        },
+        {
+          "source": "hostService",
+          "lines": {
+            "first": 750,
+            "last": 758
+          }
+        },
+        {
+          "source": "context",
+          "lines": {
+            "first": 87,
+            "last": 87
+          }
+        }
+      ]
+    }
+  ],
+  "notRecoverableFromExistingEvidence": [
+    "Exact launcher exit code, verified browser exit code/signal, or pending kernel exit event before cleanup.",
+    "Shim launch completion outcome, verified child generation or numeric exit status, and whether exit preceded or followed host-requested termination.",
+    "Whether launch-failed, process-monitor-failed, process-exited or any other disconnected event was retained in STATE.events during the wait.",
+    "Whether Hello was never sent, rejected, deferred awaiting launch callback, accepted but not notified, or timed out in a scheduler delay.",
+    "Which VerifyPeer API/check failed, if any, and its OSStatus; which receive/send/gate path failed, if any.",
+    "Actual browser stdout/stderr content or Shim diagnostics omitted from the compact artifact. The finished hosted runner cannot be queried retrospectively."
+  ],
+  "minimalAdditionalRecordingProposal": {
+    "implementationStatus": "PROPOSED_ONLY_NO_SOURCE_EDITS_NO_CI",
+    "stage1HarnessOnly": [
+      {
+        "change": "At adoption, after launchApp returns, and immediately on first exception, retain bounded phase/timestamp facts and an appId-filtered connected/disconnected event projection. Keep first event plus latest sixteen and a separate terminal/stop detail; record count/truncation and unavailable rather than claiming empty when fetch fails. Capture this before removing observers, sendControl, DeleteSession or host.close.",
+        "purpose": "Distinguishes observed launch-failed, process-monitor-failed and process-exited from a pure missing-connected wait; avoids losing all native event evidence on timeout.",
+        "scope": "Existing context and QA collector; diagnostic projection excludes tokens, service names, argv and raw process identities."
+      },
+      {
+        "change": "At the same pre-cleanup point, poll the already verified host once and persist its identity-established flag, liveness classification, decoded exit status availability/code/signal, launcher exit code and already requested signal. Record exception API/errno if polling fails. Export subsequent client/session deletion and each cleanup signal/reap as separate ordered facts. Do not serialize the poll liveness sentinel as exit code zero.",
+        "purpose": "Separates browser death from open launcher completion and from cleanup-induced exit.",
+        "scope": "Reuse existing HostProcess knowledge; no new process-name ownership rule or signalling target."
+      },
+      {
+        "change": "Begin exact private-bundle/host-bound child observation before launch; retain a bounded pre-cleanup snapshot even when connected never arrives. Bind discovery using UID, birth and generation, executable, private bundle/profile and launch binding; keep raw token/argv private. Record kqueue registration/error, observed exit status/detail and timestamps, or not-observed/unavailable. Short-lived processes can escape polling: do not infer launch failure or no child from not-observed.",
+        "purpose": "Separates observed early child exit from host liveness; provides partial evidence even without authentication.",
+        "scope": "Use current verified ownership machinery; no broad process-name matching, no kill based on partial identity, no new cleanup relaxation."
+      },
+      {
+        "change": "Save a small allowlisted summary of actual browser.stdout.log/browser.stderr.log: present/bytes/hash/bounded known marker and numeric OSStatus codes, without raw paths, argv, tokens or log bodies. Ensure final report write runs even when state collection, client close, host close or log close raises; preserve original error separately from diagnostic/cleanup errors.",
+        "purpose": "Avoids treating the empty launcher stream as the actual browser log and prevents cleanup from erasing the first failure.",
+        "scope": "No new artifact class or retention/permission change; use existing compact result fields."
+      }
+    ],
+    "stage2OnlyIfStage1Insufficient": [
+      {
+        "change": "In a future immutable native diagnostic patch, add bounded launch-attempt/generation-scoped facts for NSWorkspace callback success/failure and numeric NSError domain/code, child identity verified/monitor established, first pending-launch timeout before forceTerminate, and observed child exit separately from a host-requested termination.",
+        "purpose": "Captures children too short-lived for external discovery and prevents delayed process-exited from replacing the first host-triggered cause."
+      },
+      {
+        "change": "Retain the first reason before authentication teardown. Existing QA preserve-shim-disconnect-cause.patch already remembers hello-timeout before forceTerminate and carries causeReason/causeTimeMs/connectedBeforeDisconnect on later disconnected; it does not diagnose silent AcceptHello rejection or the child five-second gate timeout. If needed add fixed reason enums plus failing API and numeric OSStatus for VerifyPeer/handshake/transport and a bounded child-side startup/stop reason.",
+        "purpose": "Distinguishes launch failure, invalid Hello/signature binding, host pending-launch timeout, child gate timeout and transport failure without weakening authentication."
+      }
+    ],
+    "firstCausePatchBinding": {
+      "bytes": 4264,
+      "sha256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "path": ".github/patches/floorp-runtime/native-diagnostics/preserve-shim-disconnect-cause.patch",
+      "relevantLines": [
+        {
+          "first": 52,
+          "last": 77
+        },
+        {
+          "first": 97,
+          "last": 104
+        }
+      ],
+      "presentInDailyExecution": false
+    },
+    "cautions": [
+      "Times from browser observers and external kqueue reads are local observation times, not exact kernel-event timestamps; cross-thread/cross-process ordering needs stated uncertainty.",
+      "Host-side rejected Hello fields may be untrusted input: use fixed enums, counters, numeric status and validated attempt binding rather than raw payloads.",
+      "An exit signal after a recorded host forceTerminate is a terminal observation, not proof of the initiating authentication cause.",
+      "Unknown diagnostics cannot become successful qualification; no changes to launch authentication, signature requirements, process ownership, safe cleanup or checkpoint gate."
+    ]
+  },
+  "relatedLocalCollectorInspection": {
+    "qualification": "Working-copy observation only; not attributed to daily execution; parent must verify the final immutable source before any change.",
+    "nativeCause": {
+      "bytes": 15294,
+      "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300",
+      "path": "tools/qa/native-nonpgo/native_cause.py"
+    },
+    "finding": "The local QA collector accumulates bounded connected/disconnected events and starts ShimMonitor before launch, but authentication-exception finally exports startup_snapshot only and does not serialize the accumulated events or monitor.snapshot(). A repeated auth failure could lose useful pre-cleanup Shim evidence despite native-side cause preservation.",
+    "lines": [
+      {
+        "first": 154,
+        "last": 171
+      },
+      {
+        "first": 197,
+        "last": 259
+      }
+    ],
+    "minimalAction": "In any subsequent reviewed collector change, retain projected native events and child monitor snapshot before cleanup, then after cleanup separately; preserve first error and mark failed collection unavailable."
+  },
+  "effects": {
+    "newCIStarted": 0,
+    "newArtifactsStored": 0,
+    "newArtifactDownloads": 0,
+    "newLargeBinaryDownloads": 0,
+    "sourceEdits": 0,
+    "productSigning": false,
+    "permissionOrAuthenticationSettingsChanges": false,
+    "checkpointGateChanged": false,
+    "longExecutionActivated": false
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "rawArtifactPublished": false,
+    "signedURLPublished": false,
+    "processIdentitiesPublished": false,
+    "tokensOrArgvPublished": false,
+    "internalConversationPublished": false
+  }
+}
