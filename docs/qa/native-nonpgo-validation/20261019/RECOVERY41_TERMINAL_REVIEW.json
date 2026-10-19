@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY41_ACTUAL_INTEL_MAC_TRUSTED_COMPLETION_SHORT_TERMINAL_REVIEW",
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_TERMINAL_RESULT.json",
+    "bytes": 15331,
+    "sha256": "6b7c1c692c029afa0792f3f0bf337bf9589f424c890ea1cae356c7906b7c5b84",
+    "qaCompletionPreflightExactlyMatchesIndependentlyFetchedProviderObject": true
+  },
+  "prelaunchReview": {
+    "bytes": 18752,
+    "sha256": "8c7dc31853150e02017e18d6c84319fb89088b28f7abb9c05276b97176d3d356",
+    "immutableSourceFilesIndependentlyReadBack": 29,
+    "mismatches": 0
+  },
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39183820397,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39183820397",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-completion-recovery41-20261019",
+    "createdAt": "2026-10-19T01:06:44Z",
+    "updatedAt": "2026-10-19T01:08:07Z",
+    "jobCount": 1
+  },
+  "job": {
+    "id": 117841961354,
+    "name": "checkpoint-producer",
+    "runnerLabels": [
+      "macos-15-intel"
+    ],
+    "conclusion": "success",
+    "startedAt": "2026-10-19T01:06:49Z",
+    "completedAt": "2026-10-19T01:08:06Z",
+    "allStepsSuccessful": true
+  },
+  "immutableInputs": {
+    "fixture": "e473170251a03285727571657394ce05f2f4f2be",
+    "fixtureTree": "c3b9317a04a987b91f58b57b7508a9fec18a9eeb",
+    "caller": "1930f0e677ec55be0d747c76f981b9022b779901",
+    "callerTree": "1efbf082afe66e32947bf099b1d5ef4e1804e93e",
+    "callerWorkflowSHA256": "2318d58e4be0645240dd7da8c551b7fd731f7564c620f11e27e563f8d548295c"
+  },
+  "providerEvidence": {
+    "runAndJobAPIIndependentlyRead": true,
+    "artifactAPIIndependentlyRead": true,
+    "terminalLogFetchedOnlyAfterCompletion": true,
+    "decodedLogUTF8Bytes": 25822,
+    "decodedLogSHA256": "e83017395e6498d7a8e359741b67bc6ece3e7ec7d60da8b2041176a04b6c02b6",
+    "localPrivateLogBytesAndHashExactlyMatchProvider": true,
+    "localPrivateFileMode": "0600",
+    "localPrivateDirectoryMode": "0700",
+    "rawContentPublished": false
+  },
+  "results": {
+    "status": "passed",
+    "boundaryContract": "trusted-single-purpose-runner-v1",
+    "qa": {
+      "total": 151,
+      "passed": 151,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 45.352,
+      "privateLogBytes": 30224,
+      "privateLogSHA256": "8778e3f69d82602bb3b2eaa83f18690dc38d57df8bf304766511e4494c4a2dc0"
+    },
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.547,
+      "privateLogBytes": 2757,
+      "privateLogSHA256": "7cfca303546a70138228e8f143e81d11f524f376e17c1ccd1f3eb8ffe75d6077"
+    },
+    "monitoredStages": [
+      "census-abi-compile",
+      "census-abi",
+      "system-version",
+      "completion-tests",
+      "failure-recording-tests"
+    ],
+    "allStageExitCodesZero": true,
+    "allStopReasonsAndFailurePhasesNull": true,
+    "allExactLeadersReapedExitZero": true,
+    "allOwnedGroupsVerifiedGone": true,
+    "allCleanupFailuresNull": true,
+    "allFinalSamplesComplete": true,
+    "allFinalCounterSources": "libproc-taskallinfo",
+    "peakObservedRSSMiB": 99,
+    "minimumObservedFreeGiB": 107.13,
+    "firstFailure": null,
+    "monitorFailure": null,
+    "retainedMonitorDiagnostics": [],
+    "artifactCount": 0,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "nativeBrowserAuthenticationTested": false,
+    "fullBuildQualification": "NOT_TESTED"
+  },
+  "evidencePrecision": {
+    "actualMacKnownChildLifecycle": {
+      "source": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "case": "CheckpointGuards.test_real_mac_known_child_live_zombie_and_exact_reap",
+      "established": "Included in the immutable selected suite whose exact 151 count passed with zero skips; its assertions exercise real known-child live, unreaped zombie and exact reap identities.",
+      "individualSuccessfulKernelQueryTracePublished": false
+    },
+    "completedWriterCapture": {
+      "source": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "case": "CheckpointGuards.test_completed_mapping_writer_can_be_packed_and_restored_after_exact_reap",
+      "established": "Source-bound successful fixture archive/restore after the controlled writer exits and is exactly reaped.",
+      "productionFloorpCheckpointEstablished": false
+    },
+    "syntheticControls": "Credential-change known-birth parsing, unavailable/truncated history rejection, stopped/unreaped stage rejection, ambient admission and output-hash mismatch are source-bound unit controls, not naturally observed build events.",
+    "recordingControls": "Fixed patched entrypoints and daily helper mocks, first-versus-cleanup failure retention, public privacy projection and actual Node observer control passed. They do not establish browser/ Shim GUI or kernel lifecycle behavior.",
+    "emptyMonitorDiagnostics": "No stopping monitor failure or retained recovered diagnostic is reported in this short run; this is not a long-run reliability or historical-cause proof."
+  },
+  "contractAssessment": {
+    "checkpointAdmissionExplicitlyChanged": true,
+    "previousGlobalUIDZeroWaitRequired": false,
+    "activeOwnedGroupLimitsChanged": false,
+    "backgroundResourceUsage": "NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE",
+    "hostileSameUIDImmutabilityRequired": false,
+    "readOnlyImageRequired": false,
+    "acceptedScope": "Trusted pinned recipe on a single-purpose runner, natural owned-stage completion and verified capture/restore consistency. Sampled history is not complete ancestry and archive rescans are not an atomic snapshot."
+  },
+  "sdkMetadataCrossCheck": {
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sourceRunStatus": "completed",
+    "sourceRunConclusion": "success",
+    "sourceRunAttempt": 1,
+    "artifact": 12133086104,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "ordinaryReadOnlyMetadataIndependentlyConfirmed": true,
+    "payloadDownloaded": false,
+    "mustRecheckAtAcquisition": true,
+    "retentionOrPermissionsChanged": false
+  },
+  "decision": {
+    "shortGate": "CLEAR",
+    "openBlockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "longValidationCandidate": "TECHNICALLY_SUITABLE_AFTER_FRESH_IMMUTABLE_ROUTE_AND_SDK_CHECKS",
+    "longTemplate": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+    "longTemplateSHA256": "bd8a7fb51713dacdf9477f6e6df701a2260eab65c4fa222198e6ba8d1b76a94e",
+    "renderedCandidateSHA256": "adcaa98d9b91ecf51dcc3c30107405dbaaaf68d05291eab9baa7016e86b85f63",
+    "activeLongRuntimeRouteReviewed": false,
+    "hostileSameUIDImmutabilityIsNotABlockerUnderThisContract": true,
+    "requiresBeforeLongActivation": [
+      "Immutable caller/fixture render and provider byte readback; initial-created-push attempt1 and no overlapping owned validation.",
+      "Fresh official SDK metadata followed by ordinary unexpired acquisition, HTTP/deadline/archive/tree/version guards in each job.",
+      "Retain existing two serialized standard Intel jobs, phase/platform/owned-resource limits and one raw checkpoint at most 10 GiB with one-day retention."
+    ],
+    "fullHostXULPackageOrNativeQualificationEstablished": false
+  },
+  "remainingUnproven": [
+    "Natural Floorp export/Rust completion under the new contract and production-sized archive transfer/restore.",
+    "Consumer full host translation unit, XUL, package and native Shim authentication within unchanged limits.",
+    "Earlier native exit root cause, earlier UID candidate provenance and natural task-query failure cause or repair."
+  ],
+  "privacyReview": {
+    "receiptAndAssessmentReviewed": true,
+    "providerSafeObjectExactlyRetained": true,
+    "noRawLogsPathsArgvEnvironmentOrSignedURLsInReview": true,
+    "opaqueProcessTagsRemainOpaque": true,
+    "noInternalConversationIncluded": true
+  },
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "newCIExecutions": 0,
+    "remoteWrites": 0,
+    "artifactOperations": 0,
+    "SDKPayloadDownloads": 0,
+    "permissionChanges": 0
+  }
+}

@@ -1,0 +1,441 @@
+{
+  "schema": 1,
+  "scope": "ACTUAL_INTEL_MAC_TRUSTED_COMPLETION_AND_PRE_CLEANUP_RECORDING_SHORT_VALIDATION",
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39183820397,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39183820397",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "attempt": 1,
+    "head": "1930f0e677ec55be0d747c76f981b9022b779901",
+    "branch": "codex/mac-native-completion-recovery41-20261019"
+  },
+  "job": {
+    "id": 117841961354,
+    "name": "checkpoint-producer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T01:06:49Z",
+    "completedAt": "2026-10-19T01:08:06Z",
+    "conclusion": "success"
+  },
+  "fixture": "e473170251a03285727571657394ce05f2f4f2be",
+  "fixtureTree": "c3b9317a04a987b91f58b57b7508a9fec18a9eeb",
+  "caller": "1930f0e677ec55be0d747c76f981b9022b779901",
+  "callerTree": "1efbf082afe66e32947bf099b1d5ef4e1804e93e",
+  "prelaunchReview": {
+    "commit": "302e130811904157465d84d740acc5f6b64468a3",
+    "bytes": 18752,
+    "sha256": "8c7dc31853150e02017e18d6c84319fb89088b28f7abb9c05276b97176d3d356"
+  },
+  "decodedProviderLog": {
+    "bytes": 25822,
+    "sha256": "e83017395e6498d7a8e359741b67bc6ece3e7ec7d60da8b2041176a04b6c02b6",
+    "rawPublished": false
+  },
+  "artifactCount": 0,
+  "sdkReadOnlyRecheck": {
+    "observedAtUTC": "2026-10-19 01:09:08 UTC",
+    "id": 12133086104,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "createdAt": "2026-10-18T10:00:44Z",
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "sourceRun": 39117481043,
+    "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "retrievalPerformed": false,
+    "retentionOrPermissionsChanged": false,
+    "recheckAgainAtAcquisition": true
+  },
+  "assessment": {
+    "checkpointAdmissionChanged": true,
+    "previousGlobalUIDWaitRequired": false,
+    "activeOwnedGroupResourceLimitsChanged": false,
+    "backgroundUsage": "NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE",
+    "hostileSameUIDImmutabilityRequired": false,
+    "readOnlyImageRequired": false,
+    "established": [
+      "Reviewed trusted-single-purpose-runner-v1 replaces global UID delta-zero with natural stage completion, exact leader reaps, group disappearance, known birth checks and capture/restore integrity.",
+      "The actual Mac selected suite passed without skips, including real known-child live/unreaped-zombie/exact-reap control and a completed mapping-writer archive/restore fixture.",
+      "Credential-independent known-birth parsing, ambient-candidate admission, stopped/unknown completion rejection and changed boundary output rejection passed as synthetic controls.",
+      "Fixed QA patch entrypoint controls retained pre-cleanup evidence and existing QA fields through timeout and multiple cleanup failures; public recording projections and actual Node observer controls passed.",
+      "All five monitored preflight stages completed successfully with exact leader reaps and verified absent groups."
+    ],
+    "notEstablished": [
+      "Natural Floorp Rust build completion under the replacement contract and a real production checkpoint archive transfer/restore.",
+      "Consumer full host TU, XUL, packaging and native Shim authentication.",
+      "Actual browser or Shim GUI/kernel lifecycle behavior from the recording mocks or Node observer control.",
+      "Original native exit cause, earlier candidate provenance or the natural task-API failure cause/repair."
+    ],
+    "testEvidencePrecision": "Individual successful cases are source-bound by the pinned module selection, exact suite counts and zero skips; no per-query successful kernel trace is published.",
+    "residualRiskAcceptedByDeclaredTrust": "Sampled history is not full ancestry; unexpected detached or external writers may evade that registry. Persistent selected-tree changes fail capture, but scans are not an atomic snapshot or a hostile same-UID guarantee.",
+    "longCandidate": {
+      "status": "TECHNICALLY_SUITABLE_FOR_LONG_VALIDATION_AFTER_CLEAR_TERMINAL_REVIEW_AND_FRESH_ROUTE_CHECKS",
+      "template": "RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "renderedSHA256": "adcaa98d9b91ecf51dcc3c30107405dbaaaf68d05291eab9baa7016e86b85f63",
+      "branchCreated": false,
+      "longRunStarted": false,
+      "requiresAtActivation": [
+        "Bind and read back an immutable Runtime caller and fixture, confirm no overlapping owned validation.",
+        "Use the ordinary unexpired SDK API and all existing acquisition/integrity checks; recheck at acquisition."
+      ],
+      "notBlockedByHostileSameUIDImmutability": true
+    }
+  },
+  "summary": {
+    "actualQATests": 151,
+    "actualRecordingTests": 14,
+    "skips": 0,
+    "failures": 0,
+    "monitoredStages": 5,
+    "allNaturalZeroAndReapedGroupsGone": true,
+    "allFinalSamplesComplete": true,
+    "peakObservedRSSMiB": 99,
+    "minimumObservedFreeGiB": 107.13,
+    "firstFailure": null,
+    "monitorFailure": null
+  },
+  "qaCompletionPreflight": {
+    "status": "passed",
+    "boundaryContract": "trusted-single-purpose-runner-v1",
+    "checkpointAdmissionChanged": true,
+    "activeOwnedResourceLimitsChanged": false,
+    "postBuildGlobalUIDWaitRemoved": true,
+    "hostileSameUIDImmutabilityRequired": false,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "newArtifacts": 0,
+    "nativeBrowserAuthenticationTested": false,
+    "fullBuildQualification": "NOT_TESTED",
+    "completion-tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 151,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 45.352,
+      "bytes": 30224,
+      "sha256": "8778e3f69d82602bb3b2eaa83f18690dc38d57df8bf304766511e4494c4a2dc0",
+      "cases": [],
+      "nativeSelectionDiagnostics": [],
+      "heldChildBoundaryDiagnostics": []
+    },
+    "failure-recording-tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 0.547,
+      "bytes": 2757,
+      "sha256": "7cfca303546a70138228e8f143e81d11f524f376e17c1ccd1f3eb8ffe75d6077",
+      "cases": [],
+      "nativeSelectionDiagnostics": [],
+      "heldChildBoundaryDiagnostics": []
+    },
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 52,
+        "minimumFreeGiB": 107.16,
+        "lastActivity": {
+          "rssMiB": 30.1171875,
+          "cpuSeconds": 2.085,
+          "rssLowerBoundMiB": 30.1171875,
+          "cpuLowerBoundSeconds": 2.085,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 7.2109375,
+              "cpuSeconds": 0.834719763,
+              "state": "S",
+              "pidTag": "990ac6dc799812ce",
+              "identityTag": "9e8c7ca43d096ad0"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 2,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 2
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.16,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.16,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "completion-tests",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 30224,
+        "peakRSSMiB": 99,
+        "minimumFreeGiB": 107.13,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 2757,
+        "peakRSSMiB": 18,
+        "minimumFreeGiB": 107.13,
+        "lastActivity": {
+          "rssMiB": 18.18359375,
+          "cpuSeconds": 0.223,
+          "rssLowerBoundMiB": 18.18359375,
+          "cpuLowerBoundSeconds": 0.223,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 18.18359375,
+              "cpuSeconds": 0.22338001,
+              "state": "R",
+              "pidTag": "2ef61ed400789655",
+              "identityTag": "db98972910a405a2"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ]
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "privatePathsPublished": false,
+    "rawProcessIdentitiesPublished": false,
+    "rawEnvironmentOrArgvPublished": false,
+    "signedURLsPublished": false,
+    "internalConversationPublished": false
+  }
+}
