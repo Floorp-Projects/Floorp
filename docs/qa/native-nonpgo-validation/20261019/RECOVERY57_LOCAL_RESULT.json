@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY57_FROZEN_TARGETED_ROUTE_LINUX_VERIFICATION",
+  "sourceFreeze": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 52185,
+      "sha256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
+      "bytes": 12270,
+      "sha256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_target_build.py",
+      "bytes": 11654,
+      "sha256": "aad06d119c022f6872659ec286d2e4b7c13c1faeae4c0fa80a5aef372a30bf05"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 36200,
+      "sha256": "15f27030006a0b1e069d76e4d5c360f11e22f8d9ccb84f9d3cd533029d16bd45"
+    }
+  ],
+  "fullQA": {
+    "status": "passed",
+    "total": 757,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "complete": true,
+    "wallSeconds": 56.34,
+    "returnCode": 0,
+    "bytes": 145678,
+    "sha256": "bac25418cbf909fd33969775ec14de39a3114b6c2006592f709048eb2b31adb3"
+  },
+  "passed": 740,
+  "warningsPolicy": "error::ResourceWarning",
+  "selectedMacExpected": 542,
+  "recordingExpected": 14,
+  "actualMacExecuted": false,
+  "priorFailedEvidenceRetained": {
+    "basename": "floorp-recovery57-first-attempt-linux-full.private.log",
+    "bytes": 146359,
+    "sha256": "d4f2f2b50ddcc54ec3cb1e247d91c426ee6960bac266c29accfd42fccdc7c232",
+    "reason": "Existing failure-excerpt AST route guard required original checkpoint log-stage literals to remain inline. Original tuple was restored and retained while adding new target stage receipts.",
+    "rawPublished": false
+  },
+  "fullHostQualification": false,
+  "nativeAuthentication": "NOT_TESTED"
+}

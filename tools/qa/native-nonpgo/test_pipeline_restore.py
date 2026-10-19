@@ -56,7 +56,9 @@ class RestoreOnlyFlow(unittest.TestCase):
             self.runner.failure = {'stage': stage, 'code': code}
 
     def run_stage(self, stage, command, cwd, env, *args, **kwargs):
-        self.runner.records.append({'stage': stage})
+        self.runner.records.append({'stage': stage, 'exitCode': 0, 'reason': None,
+            'failurePhase': None, 'cleanupFailure': None, 'groupCleanup': 'verified-gone',
+            'leaderReap': {'status': 'reaped', 'exitCode': 0}})
         path = self.task / (stage + '.private.log')
         if stage == 'sdk-materialize':
             (self.task / 'sdk-materialized.json').write_text(json.dumps({'path': str(self.task / 'sdk')}))
@@ -80,7 +82,8 @@ class RestoreOnlyFlow(unittest.TestCase):
         return path
 
     def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None,
-               shared_deadline=False, checkpoint_role='consumer', mozilla_first=False):
+               shared_deadline=False, checkpoint_role='consumer', mozilla_first=False,
+               mozilla_targeted=False):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
                 '--checkpoint-role', checkpoint_role]
@@ -92,6 +95,8 @@ class RestoreOnlyFlow(unittest.TestCase):
             argv += ['--mozilla-only']
         if mozilla_first:
             argv += ['--mozilla-first']
+        if mozilla_targeted:
+            argv += ['--mozilla-targeted']
         if sdk_source is not None:
             argv += ['--sdk-source', str(sdk_source)]
         if shared_deadline:
@@ -125,6 +130,71 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertFalse(report['productQualification'])
         self.assertEqual(report['validationOutcome']['nativeAuthentication'], 'not-verified')
         self.assertNotIn('full-build', [row['stage'] for row in self.runner.records])
+
+    def test_targeted_mode_keeps_restored_obj_and_uses_separate_smoke_qualification(self):
+        import mozilla_target_build as target
+        def build(source, task, runner, env, deadline, result):
+            self.assertEqual(deadline, 345)
+            for stage in target.STAGES:
+                self.run_stage(stage, [], source, env)
+            object_path = task/'obj/widget/cocoa/MacWebAppService.o'
+            object_path.parent.mkdir(parents=True, exist_ok=True); object_path.write_bytes(b'object')
+            result.update(status='built')
+        with mock.patch.object(target, 'run_build', side_effect=build), \
+                mock.patch.object(target, 'verify_assets', return_value={}), \
+                mock.patch.object(target, 'proof_complete', return_value=True):
+            code, report, restored = self.invoke(restore_only=False, mozilla_targeted=True, shared_deadline=True)
+        self.assertEqual(code, 0)
+        restored.assert_called_once()
+        self.mozilla.assert_called_once()
+        self.assertEqual(report['status'], 'mozilla-target-ready')
+        self.assertEqual(report['qualification'], target.CONTRACT)
+        self.assertEqual(report['fullHostXUL'], 'NOT_TESTED')
+        self.assertIs(report['fullHostQualification'], False)
+        self.assertEqual(report['nativeAuthentication'], 'NOT_TESTED')
+        self.assertEqual(report['stagePackage'], 'NOT_TESTED')
+        self.assertNotIn('buildCompletion', report)
+        self.assertFalse({'full-build','stage-package','native-suite'} & {r['stage'] for r in self.runner.records})
+
+    def test_targeted_mode_rejects_deadline_reached_during_post_case_proof(self):
+        import mozilla_target_build as target
+        # Final hashing/proof work must not turn a post-deadline cleanup into ready.
+        def build(source, task, runner, env, deadline, result):
+            for stage in target.STAGES:
+                self.run_stage(stage, [], source, env)
+            object_path = task/'obj/widget/cocoa/MacWebAppService.o'
+            object_path.parent.mkdir(parents=True); object_path.write_bytes(b'object')
+            result.update(status='built')
+        def late_smoke(*args):
+            self.mozilla_success(*args)
+            self.runner.elapsed.return_value = 346 * 60
+        self.mozilla.side_effect = late_smoke
+        with mock.patch.object(target, 'run_build', side_effect=build), \
+                mock.patch.object(target, 'verify_assets', return_value={}), \
+                mock.patch.object(target, 'proof_complete', return_value=True):
+            code, report, _ = self.invoke(restore_only=False, mozilla_targeted=True, shared_deadline=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['status'], 'failed')
+        self.assertEqual(report['firstFailure']['code'], 'mozilla-target-final-deadline')
+
+    def test_targeted_mode_failure_keeps_original_failure_and_never_runs_harness(self):
+        import mozilla_target_build as target
+        with mock.patch.object(target, 'run_build', side_effect=Failure('controlled-target-failure')):
+            code, report, _ = self.invoke(restore_only=False, mozilla_targeted=True, shared_deadline=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['firstFailure'], {'stage':'mozilla-target-build','code':'controlled-target-failure'})
+        self.mozilla.assert_not_called()
+        self.assertNotIn('full-build', [r['stage'] for r in self.runner.records])
+
+    def test_targeted_mode_rejects_legacy_role_or_missing_shared_clock_before_runner(self):
+        for options in ({'restore_only':True,'shared_deadline':True},
+                        {'restore_only':False,'shared_deadline':False},
+                        {'restore_only':False,'shared_deadline':True,'mozilla_only':True},
+                        {'restore_only':False,'shared_deadline':True,'mozilla_first':True},
+                        {'restore_only':False,'shared_deadline':True,'checkpoint_role':'producer'}):
+            with self.subTest(options=options), self.assertRaises(Failure):
+                self.invoke(mozilla_targeted=True, **options)
+        self.assertEqual(self.runner.records, [])
 
     def test_full_consumer_continues_to_full_build_when_restore_only_absent(self):
         code, report, _ = self.invoke(restore_only=False)

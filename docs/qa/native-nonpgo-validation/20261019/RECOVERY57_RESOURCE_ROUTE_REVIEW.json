@@ -1,0 +1,701 @@
+{
+  "schema": 1,
+  "scope": "recovery57-fixed-source-minimum-real-Firefox-smoke-resource-route-review",
+  "status": "SOURCE_SUPPORTED_EXECUTABLE_SMOKE_ROUTE_CANDIDATE",
+  "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "actual56": {
+    "receipt": {
+      "bytes": 11226,
+      "sha256": "29beca2702ef129a0af73d85d1d68318880cf2d59cbd33b54c36151443ebd335"
+    },
+    "guardedRestoreVerified": true,
+    "graphObservationVerified": true,
+    "xpcshellToXUL": true,
+    "xpcshellToGkrust": true,
+    "xpcshellToHttp3Server": false,
+    "browserAppToolsReachesBrowserBinary": false,
+    "fasterMakefile": {
+      "bytes": 1084288,
+      "lineCount": 5799,
+      "reason": null,
+      "sha256": "c211dbd23114188cf9913820555efdfaab453e2b42681ef9e3fc712c4e9edcb8",
+      "status": "observed"
+    },
+    "missingObservedLabels": [
+      "appConstants",
+      "applicationIni",
+      "dependentLibs",
+      "bundleFileList"
+    ],
+    "meaning": "Literal generated-order facts and restored metadata; no recipe executed in56."
+  },
+  "commands": {
+    "interpreter": "the existing pinned task Python interpreter",
+    "cwd": "the verified fixed Runtime source root",
+    "orderedNative": [
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "js/xpconnect/shell/target"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "netwerk/test/http3server/target"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "browser/app/target"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "toolkit/mozapps/update/updater/target"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "toolkit/mozapps/macos-frameworks/ChannelPrefs/target"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "toolkit/mozapps/dmgInstallHelper/target"
+      ]
+    ],
+    "thenResourcesAndMainBundle": [
+      "python",
+      "mach",
+      "build",
+      "-j",
+      "3",
+      "faster"
+    ],
+    "thenTests": "The unchanged compiled-debug, deliberate-failure and upstream-version-comparator smoke cases and their existing strict receipts."
+  },
+  "importantCommandContract": [
+    "Use normal faster without -C . so the existing obj/faster directory/default is selected. The -C . faster alias supplies FASTER_RECURSIVE_MAKE=1 and suppresses main repackage.",
+    "FASTER_RECURSIVE_MAKE remains unset in the normal Faster invocation.",
+    "All native nodes retain root -C . traversal without RECURSE_BASE_DIR filtering.",
+    "Keep existing source/patch/config/SDK/toolchain/archive guards, one original job clock, Runner resource/monitor/ownership/exact-reap/group-cleanup limits, private logs and first-failure semantics."
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "finding": "The six roots explicitly provide XUL-dependent xpcshell, HTTP3, browser, required updater extra-file, ChannelPrefs binary and dmg helper. Updater USE_LIBS includes UpdateSettings when MAR signature verification is enabled, so normal root link dependencies carry that prerequisite.",
+      "anchors": [
+        "browser/app/moz.build:74",
+        "toolkit/mozapps/update/updater/updater-common.build:18",
+        "toolkit/mozapps/macos-frameworks/ChannelPrefs/moz.build:8",
+        "toolkit/mozapps/dmgInstallHelper/moz.build:10"
+      ]
+    },
+    {
+      "id": "F2",
+      "finding": "Faster handles dist/bin FinalTargetFiles/PPFiles and JARs, including ChannelPrefs.framework/ChannelPrefs and Resources/Info.plist. Its ObjDir native source is supplied by the explicit ChannelPrefs root.",
+      "anchors": [
+        "python/mozbuild/mozbuild/backend/fastermake.py:60",
+        "python/mozbuild/mozbuild/backend/fastermake.py:98",
+        "toolkit/mozapps/macos-frameworks/ChannelPrefs/moz.build:25"
+      ]
+    },
+    {
+      "id": "F3",
+      "finding": "Faster emits all GeneratedFile rules/default prerequisites and recursive fallback. This supplies a stock route for main Info.plist/strings/MacOS-files, application.ini, dependentlibs and other resources. It is generated work plus fallback, not pure copying.",
+      "anchors": [
+        "python/mozbuild/mozbuild/backend/fastermake.py:140",
+        "python/mozbuild/mozbuild/backend/fastermake.py:262",
+        "python/mozbuild/mozbuild/backend/make.py:88",
+        "browser/app/macbuild/Contents/moz.build:18",
+        "build/moz.build:99",
+        "toolkit/library/build/moz.build:24"
+      ]
+    },
+    {
+      "id": "F4",
+      "finding": "Faster default installs manifests and xpidl, then invokes browser/app repackage on cocoa when FASTER_RECURSIVE_MAKE is unset. This assembles the selected main bundle without traversing every stock libs/tools bundle.",
+      "anchors": [
+        "config/faster/rules.mk:37",
+        "config/faster/rules.mk:49",
+        "python/mozbuild/mozbuild/util.py:409"
+      ]
+    },
+    {
+      "id": "F5",
+      "finding": "Main repackage requires the browser binary plus three branding inputs and updater. Stage rules copy xpcshell/XUL/HTTP3 and dylibs. ChannelPrefs and dmg moves silently skip absent sources, so final destination checks remain required.",
+      "anchors": [
+        "browser/app/moz.build:74",
+        "browser/app/macbuild/Contents/MacOS-files.in:5",
+        "python/mozbuild/mozbuild/action/assemble_macos_bundle.py:55",
+        "python/mozbuild/mozbuild/action/assemble_macos_bundle.py:75"
+      ]
+    },
+    {
+      "id": "F6",
+      "finding": "ChannelPrefs-localbuild and UpdateSettings-localbuild use dist/update_framework_artifacts OBJDIR_FILES outside Faster dist/bin handling; this route does not require those localbuild outputs or unrelated IPC/crashreporter/update-test app bundles.",
+      "anchors": [
+        "toolkit/mozapps/macos-frameworks/ChannelPrefs-localbuild/moz.build:8",
+        "toolkit/mozapps/update/updater/macos-frameworks/UpdateSettings-localbuild/moz.build:5",
+        "python/mozbuild/mozbuild/backend/fastermake.py:64"
+      ]
+    },
+    {
+      "id": "F7",
+      "finding": "Stock xpcshell starts HTTP3 before test selection. A missing server emits ERROR; the unchanged strict receipt needs its explicit current binary and fixed source database.",
+      "anchors": [
+        "testing/xpcshell/runxpcshelltests.py:1841",
+        "testing/xpcshell/runxpcshelltests.py:1847",
+        "testing/xpcshell/runxpcshelltests.py:2320"
+      ]
+    },
+    {
+      "id": "F8",
+      "finding": "mach installs manifests globally, but ObjDir TEST_HARNESS_FILES are optional-existing entries. ExistingFile(required=False) does not fail on missing native helpers. The version-comparator test/head do not execute the five xpcom helper programs; neither xpcom/tests/target nor WriteArgument is justified for these three cases.",
+      "anchors": [
+        "testing/xpcshell/mach_commands.py:234",
+        "python/mozbuild/mozbuild/testing.py:203",
+        "python/mozbuild/mozbuild/frontend/data.py:1378",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1793",
+        "python/mozbuild/mozpack/files.py:512",
+        "xpcom/tests/unit/test_versioncomparator.js:30"
+      ]
+    }
+  ],
+  "postconditions": [
+    "Every named stage returns natural integer0 with the original monitor and exact cleanup checks. Preserve primary/independent cleanup failures.",
+    "Retain existing fresh executable x86_64 Mach-O/UUID/hash checks for configured bundle xpcshell/XUL. Do not touch timestamps to manufacture freshness.",
+    "Confirm current browser/updater native inputs and final ChannelPrefs.framework plus dmg-helper destinations under owned bindings. Repackage exit0 alone cannot prove optional moves happened.",
+    "Confirm actual configured main plist/branding and generated resources including application metadata/AppConstants/dependent-library metadata/bundle file list. Retain existing source and post-case hash checks.",
+    "Retain stock HTTP3 startup and cleanup with networkCoverage=false.",
+    "Actual unchanged three-case receipts establish smoke success; deliberate-failure expected exit1 remains independently validated."
+  ],
+  "stockTierAlternative": {
+    "selected": false,
+    "order": [
+      "misc",
+      "libs",
+      "tools"
+    ],
+    "commands": [
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "misc"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "libs"
+      ],
+      [
+        "python",
+        "mach",
+        "build",
+        "-j",
+        "3",
+        "-C",
+        ".",
+        "tools"
+      ]
+    ],
+    "reason": "Global libs also creates IPC/crashreporter/updater/test-helper bundles and global misc installs localbuild frameworks, demanding unrelated native inputs. Use the selected Faster route; do not auto-expand without a concrete required-input failure.",
+    "multipleRecurseTiersOnOneMakeCommandForbidden": true
+  },
+  "patchScope": {
+    "relevantPatch": {
+      "file": ".github/patches/upstream/brandingFileIcon.patch",
+      "bytes": 708,
+      "sha256": "55d5bc554135564b6324b8206de28c21e87712c6d4a10093936cc0c228409fa0"
+    },
+    "finding": "This adds icon definitions without altering reviewed main MacOSBundle/Faster semantics. Other pinned patch headers do not intersect reviewed resource route files; the root moz.build patch registers fixed pre-build assets already represented by configured manifests."
+  },
+  "uncertainty": [
+    "Actual56 projected only generated hashes/counts, not complete recipe text; source review does not claim exhaustive knowledge of every current fallback prerequisite.",
+    "Faster can run generated/fallback recipes. Preserve any actual first failure and fix the smallest demonstrated missing input.",
+    "Duration, Cargo/make cache hits and time saved remain UNKNOWN; duration uncertainty alone does not withhold the authorized real route.",
+    "Updater service behavior, browser GUI/content processes, packaging, native Shim authentication and full-host completion are outside these three smoke cases."
+  ],
+  "qualification": {
+    "smokeOnly": true,
+    "actualRouteExecuted": false,
+    "minimumMathematicallyProven": false,
+    "fullBuildEquivalent": false,
+    "fullHostQualification": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "configurationChanged": false,
+    "additionalStandaloneDiagnosticNeeded": false
+  },
+  "sourceAnchors": [
+    {
+      "file": "python/mozbuild/mozbuild/build_commands.py",
+      "bytes": 17665,
+      "sha256": "8481454888445f7e32322121c7a379f70685198947e2badec1d89793cf646499",
+      "lines": [
+        [
+          180,
+          194
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/util.py",
+      "bytes": 47559,
+      "sha256": "ffbf394498699f7fb49e0194d209328225b3b4aaef236dddb77abaf872a2d4c5",
+      "lines": [
+        [
+          383,
+          425
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/controller/building.py",
+      "bytes": 78700,
+      "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640",
+      "lines": [
+        [
+          1433,
+          1465
+        ],
+        [
+          1508,
+          1533
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/backend/fastermake.py",
+      "bytes": 11746,
+      "sha256": "6eb338923cfff17e434ab95e7d365495d931cfd1e8eaae3f631fd36c7ee34c16",
+      "lines": [
+        [
+          60,
+          66
+        ],
+        [
+          98,
+          129
+        ],
+        [
+          140,
+          161
+        ],
+        [
+          201,
+          210
+        ],
+        [
+          262,
+          269
+        ]
+      ]
+    },
+    {
+      "file": "config/faster/rules.mk",
+      "bytes": 3957,
+      "sha256": "bac98527a7308d2120053e6cf6d31c0581c2eb0774f56064cf333188bcffb597",
+      "lines": [
+        [
+          17,
+          19
+        ],
+        [
+          37,
+          89
+        ]
+      ]
+    },
+    {
+      "file": "config/recurse.mk",
+      "bytes": 8560,
+      "sha256": "3eb934988225cb3724676f437b3635813a223d7213f164d9a7e6be15755721ce",
+      "lines": [
+        [
+          29,
+          51
+        ],
+        [
+          74,
+          79
+        ]
+      ]
+    },
+    {
+      "file": "config/baseconfig.mk",
+      "bytes": 2424,
+      "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4",
+      "lines": [
+        [
+          45,
+          68
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/backend/recursivemake.py",
+      "bytes": 97110,
+      "sha256": "b5f799f5b4a0c43611afbe6ba73a8c124958d6e67193f7b36a7dbad8259267de",
+      "lines": [
+        [
+          863,
+          867
+        ],
+        [
+          1793,
+          1829
+        ],
+        [
+          1958,
+          1968
+        ],
+        [
+          1995,
+          2028
+        ],
+        [
+          2044,
+          2071
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/backend/make.py",
+      "bytes": 6062,
+      "sha256": "30c08cf72d3fcc98be0e434aab7782884a4bf147dd0490e1dd7ad286f6166a1a",
+      "lines": [
+        [
+          88,
+          110
+        ]
+      ]
+    },
+    {
+      "file": "browser/app/moz.build",
+      "bytes": 8690,
+      "sha256": "a4c71c07a9ffe5e362432c11fff9f9ab5dbbff0cb5930f8263d469e4c5eab57c",
+      "lines": [
+        [
+          45,
+          105
+        ],
+        [
+          114,
+          127
+        ]
+      ]
+    },
+    {
+      "file": "browser/app/macbuild/Contents/moz.build",
+      "bytes": 615,
+      "sha256": "2a6110157f2987281b64e74d0b3692e2517b7ab76af1a776fc6e1ca3d5cdfb72",
+      "lines": [
+        [
+          18,
+          24
+        ]
+      ]
+    },
+    {
+      "file": "browser/app/macbuild/Contents/MacOS-files.in",
+      "bytes": 457,
+      "sha256": "cb393404f457ebf6e0d50d3d1678da95479277d41ad002e3a3c25514791a8bbb",
+      "lines": [
+        [
+          5,
+          25
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/action/assemble_macos_bundle.py",
+      "bytes": 3390,
+      "sha256": "77dc8e1cb0f8d7bb81f177e694356c701118d69a564d61e805b74640a69cef0a",
+      "lines": [
+        [
+          48,
+          92
+        ]
+      ]
+    },
+    {
+      "file": "netwerk/test/http3server/moz.build",
+      "bytes": 666,
+      "sha256": "ebbe904c61c777aef65f830e5c4bf0af1c52f7fb325cd2ab4ad439c7a446ac1e",
+      "lines": [
+        [
+          5,
+          19
+        ]
+      ]
+    },
+    {
+      "file": "js/xpconnect/shell/moz.build",
+      "bytes": 1994,
+      "sha256": "bdfe6aca1eb5dfcde216c2e53d2c89f64259e8b4c7da1c2fdfefd92cd67d804b",
+      "lines": [
+        [
+          5,
+          20
+        ]
+      ]
+    },
+    {
+      "file": "build/moz.build",
+      "bytes": 5102,
+      "sha256": "530229de929f687d0e1a7cdb52026337a6631e11fc04aedd090a5af82910804e",
+      "lines": [
+        [
+          99,
+          115
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/mozapps/update/updater/updater-common.build",
+      "bytes": 3504,
+      "sha256": "90a95300615aba95237001c15f5fc005a9ad59e27082ee557f9fbd08809db009",
+      "lines": [
+        [
+          18,
+          32
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/mozapps/macos-frameworks/ChannelPrefs/moz.build",
+      "bytes": 1106,
+      "sha256": "dd058354501765f178c11ec1cf9323d7756bfe8d5c6809fb0f56f8136ab66a15",
+      "lines": [
+        [
+          8,
+          34
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/mozapps/dmgInstallHelper/moz.build",
+      "bytes": 1244,
+      "sha256": "0ab8dd3966c79ad9cbfcb11e7f68f35dcb3b2d69cb9ac23e2bb02a84404e8a6f",
+      "lines": [
+        [
+          10,
+          43
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/mozapps/macos-frameworks/ChannelPrefs-localbuild/moz.build",
+      "bytes": 1066,
+      "sha256": "8f22a8a220cd7a62023e63542e4b840a24820d70e2a8ccd163c569fb6ce247d8",
+      "lines": [
+        [
+          8,
+          30
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/mozapps/update/updater/macos-frameworks/UpdateSettings-localbuild/moz.build",
+      "bytes": 1003,
+      "sha256": "d82bbdbb3e3ebfd47cc9949821a4895da0ea0be18e6ae8422b912ac434eb3908",
+      "lines": [
+        [
+          5,
+          27
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/library/build/moz.build",
+      "bytes": 1448,
+      "sha256": "f3ffb0e009148bd09849d6132913cd23a5d6421204dc199d228fbcfe733d22a3",
+      "lines": [
+        [
+          24,
+          31
+        ]
+      ]
+    },
+    {
+      "file": "toolkit/modules/moz.build",
+      "bytes": 10733,
+      "sha256": "231d95d6aba65dc370b1015e0c381b431bc08fe48bcf652b5ac1e27dd18de9ad",
+      "lines": [
+        [
+          255,
+          261
+        ]
+      ]
+    },
+    {
+      "file": "testing/xpcshell/runxpcshelltests.py",
+      "bytes": 114438,
+      "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad",
+      "lines": [
+        [
+          1815,
+          1864
+        ],
+        [
+          2316,
+          2325
+        ]
+      ]
+    },
+    {
+      "file": "testing/xpcshell/mach_commands.py",
+      "bytes": 12047,
+      "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489",
+      "lines": [
+        [
+          221,
+          234
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/testing.py",
+      "bytes": 13071,
+      "sha256": "81a90ee25a97640215805648c03bbd2d08e66ab45abe47e5fcef29508ae81863",
+      "lines": [
+        [
+          203,
+          238
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozpack/manifests.py",
+      "bytes": 16764,
+      "sha256": "b316e457059cb58b3b865cc9a49d7d67b44d4d2fac3aa6e1072eb8afcb7eef0e",
+      "lines": [
+        [
+          283,
+          290
+        ],
+        [
+          424,
+          425
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozpack/files.py",
+      "bytes": 46347,
+      "sha256": "6e58a7e8e00d9912d374a9330fd3ea2f92bac9728ba9ee341bf8591671f04629",
+      "lines": [
+        [
+          484,
+          516
+        ]
+      ]
+    },
+    {
+      "file": "python/mozbuild/mozbuild/frontend/data.py",
+      "bytes": 49976,
+      "sha256": "c2a8e6a0494bcd22f6f56271dc1300ea65f3cd817701740cd30ef62bd0b0932d",
+      "lines": [
+        [
+          1378,
+          1385
+        ]
+      ]
+    },
+    {
+      "file": "xpcom/tests/unit/head_xpcom.js",
+      "bytes": 678,
+      "sha256": "7fbb66d1c184def357c4d7114aedc5d946f0440398891ce796510c25a65f6e95",
+      "lines": [
+        [
+          1,
+          21
+        ]
+      ]
+    },
+    {
+      "file": "xpcom/tests/unit/test_versioncomparator.js",
+      "bytes": 1350,
+      "sha256": "6b54315225792c6428d908b02fa73d1b73d8bef8a61310d51862f30b74d582dd",
+      "lines": [
+        [
+          30,
+          55
+        ]
+      ]
+    }
+  ],
+  "harnessBinding": {
+    "file": "tools/qa/native-nonpgo/mozilla_harness_smoke.py",
+    "bytes": 16546,
+    "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9",
+    "lines": [
+      [
+        248,
+        282
+      ],
+      [
+        290,
+        298
+      ]
+    ]
+  },
+  "operations": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "refChanged": false,
+    "payloadDownloaded": false,
+    "buildOrMakeExecuted": false,
+    "testsExecuted": false,
+    "onlyNewReviewFileWritten": true
+  },
+  "sourceAccess": "Fixed local git files were checked unchanged against7dd. searchfox-cli is absent; no bootstrap/tool install was performed in this read-only scope.",
+  "privacy": {
+    "absolutePrivatePaths": false,
+    "rawLogs": false,
+    "environmentOrNonce": false,
+    "processIdentities": false,
+    "internalConversation": false
+  }
+}

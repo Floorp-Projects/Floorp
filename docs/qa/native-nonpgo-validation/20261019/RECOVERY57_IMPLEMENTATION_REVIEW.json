@@ -1,0 +1,175 @@
+{
+  "closedFindings": [
+    {
+      "affectedOriginalHelperSHA256": "f45713443ebf6bedf4f2c497bf9f4a24e0f0472348d7385045617d36e88c203a",
+      "counterexample": "The final proof accepted a missing graph, unstable binding, unfinished currentStage or contradictory minimum-suffix/native qualification although the normal execution precondition ran earlier.",
+      "fixedHelperSHA256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005",
+      "id": "R57-P2-FINAL-GRAPH-AND-SCOPE",
+      "resolution": "Strict final graph schema, exact three pins and binding/closure/status/scope checks plus explicit currentStage null and limited qualification fields.",
+      "severity": "P2",
+      "verification": "Actual final helper now rejects all22 independent graph/scope/stage/case/asset mutations."
+    },
+    {
+      "affectedOriginalPipelineSHA256": "b637b939a929d945009d18fb0cbf72f80322a5919dc13b69680e494c0d893f37",
+      "counterexample": "After the last natural case cleanup, pure proof/hash work could advance elapsed time to346 minutes while the pipeline still returned targeted-ready/zero.",
+      "fixedPipelineSHA256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665",
+      "id": "R57-P2-FINAL-ORIGINAL-DEADLINE",
+      "resolution": "Original elapsed clock checks before and after target evidence, in the targeted final gate, after summary writing and at return. No timer reset or budget change.",
+      "severity": "P2",
+      "verification": "Actual main rejects post-case elapsed345 and346 minutes, retains the existing origin bytes and reports failed with a primary failure."
+    }
+  ],
+  "decision": "CODE_CLEAR",
+  "findings": [],
+  "immutableBaseline": {
+    "acquisition": "Normal read-only GitHub immutable raw source API.",
+    "bytes": 47069,
+    "legacyTopLevelFunctionAndClassASTsUnchanged": true,
+    "path": "tools/qa/native-nonpgo/pipeline.py",
+    "ref": "5be48e693474744f8f87ba31aff3c591bb182bec",
+    "repository": "Floorp-Projects/Floorp",
+    "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+  },
+  "openP1": 0,
+  "openP2": 0,
+  "qualificationLimits": {
+    "actualCurrentSourceMozillaCasesExecutedByReviewer": false,
+    "actualMacTargetRouteVerified": false,
+    "automaticReconfigureOrBackendRegeneration": "UNKNOWN",
+    "cacheBehavior": "UNKNOWN",
+    "durationToCompletion": "UNKNOWN",
+    "fullBuildEquivalent": false,
+    "fullHostQualified": false,
+    "minimalSufficientSuffixEstablished": false,
+    "nativeAuthenticationVerified": false
+  },
+  "remainingExecutionPrerequisites": [
+    "Final complete QA suite on the frozen source.",
+    "Independent frozen caller/gate and immutable source/readback review.",
+    "Short Mac route/gate validation and actual target/resources/three-case receipts before claiming current-source Mozilla smoke success."
+  ],
+  "review": "RECOVERY57_ROOT_TARGET_CURRENT_SOURCE_MOZILLA_IMPLEMENTATION",
+  "reviewedBehavior": [
+    "The new mozilla-targeted flag requires consumer, explicit replay-origin and explicit consumer-shared-deadline, and rejects restore-only/mozilla-only/mozilla-first combinations before Runner construction.",
+    "All earlier restore, public archive projection, replay/current-context, SDK/toolchain/source and effective-configuration validation remains before the new branch.",
+    "The helper reads the actual56 root.mk, root-deps.mk and faster/Makefile through the existing bounded owned no-follow FD reader, verifies all three fixed SHA256 pins, requires the complete xpcshell/XUL/gkrust/Cocoa literal closure, verifies all six declared targets and checks stable bindings.",
+    "Exactly six fixed native roots run through mach build -j3 -C . with full dependency traversal. The seventh resources stage uses mach build -j3 faster without -C . so the normal nested default includes main-app repackage. RECURSE_BASE_DIR and FASTER_RECURSIVE_MAKE environment leakage is rejected.",
+    "The same parent Runner, object tree, clean build environment and existing original monotonic origin are reused. Each stage uses platform360 and the existing explicitly selected absolute345 work limit; restore remains60 and the15-minute cleanup reserve/profile are unchanged.",
+    "Every target stage is individually recorded and journaled. Exact int exit0, explicit null reason/failurePhase/cleanupFailure, exact leader reap0, verified-gone group and absent main monitor/primary failure are required before the next stage.",
+    "Actual seven current native assets and four nonempty resources are checked. The seven assets are xpcshell, XUL, HTTP3 server, browser, updater, ChannelPrefs and dmg helper; checks retain in-objdir resolution, current owner, execute permission, job-start freshness and Mach-O kind/UUID requirements. ChannelPrefs and dmg moved outputs are affirmative asset requirements.",
+    "The unchanged run_smoke validates actual current source and fixture inputs, three exact cases, lifecycle-bound compiled-debug proof and current upstream source/head. XUL/xpcshell content hashes are rechecked after each case.",
+    "The new strict final proof revalidates the fixed graph pins/schema/bindings, limited qualification flags, completed stage order, assets and exact three-case receipts. Expected exits remain0,1,0 and actual statuses remain passed,failed,passed with complete logs and exact owned cleanup. The intentional failure is retained as an actual failed child.",
+    "The dedicated mozilla-target-ready status preserves fullHostXUL NOT_TESTED, fullHostQualification false, stagePackage NOT_TESTED, nativeAuthentication NOT_TESTED, productQualification false and no fresh-objdir/same-job qualification. No full-build, package, native-suite, signature or upload stage is reached.",
+    "The existing full build, mozilla-only, mozilla-first, producer and restore-only paths retain their prior semantics. The old stage-log tuple stays literal for the existing compatibility guard; target logs are added only for the new flag.",
+    "Evidence writing cannot make a failed stage successful. Journal failures use a fixed failure code and retain an earlier primary; final target receipt errors stop qualification. The pipeline deadline is rechecked around final target evidence, final qualification, summary writing and return using the original elapsed clock."
+  ],
+  "reviewerOperations": {
+    "CIOrRemoteRefMutation": false,
+    "SDKOrCheckpointPayloadAcquisition": false,
+    "heavyBenchmarkOrFullRepositoryRerun": false,
+    "makeOrMachBuildExecution": false,
+    "normalImmutableSourceRead": true,
+    "repositorySourceEdits": false
+  },
+  "schema": 1,
+  "scope": "Frozen pipeline targeted branch, new target helper and focused tests. The workflow caller, immutable publication and actual Mac target/smoke execution are separate validation steps.",
+  "sourceFiles": [
+    {
+      "bytes": 52185,
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "sha256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665"
+    },
+    {
+      "bytes": 12270,
+      "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
+      "sha256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005"
+    },
+    {
+      "bytes": 11654,
+      "path": "tools/qa/native-nonpgo/test_mozilla_target_build.py",
+      "sha256": "aad06d119c022f6872659ec286d2e4b7c13c1faeae4c0fa80a5aef372a30bf05"
+    },
+    {
+      "bytes": 36200,
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "sha256": "15f27030006a0b1e069d76e4d5c360f11e22f8d9ccb84f9d3cd533029d16bd45"
+    }
+  ],
+  "sourceFreeze": {
+    "basename": "floorp-recovery57-source-freeze.json",
+    "bytes": 685,
+    "sha256": "5f4cf7ed0f5d376efc7f4b6bcfb490efffb6e940537dada7842cb56c664703ba"
+  },
+  "sourceResourceAssessment": "The parallel fixed-source resource review resolves the optional five test-program manifest entries: they do not require compilation for the unchanged version-comparator/head. Ordinary stock generated/fallback/test installation remains active and must fail normally on any actual required missing input.",
+  "supportingEvidence": [
+    {
+      "basename": "floorp-recovery57-implementation-controls.py",
+      "bytes": 11736,
+      "sha256": "a1fcf622026e5a14acd9a52844da47cb25bd5bb4d16ae57b3a05a91b75829663"
+    },
+    {
+      "basename": "floorp-recovery57-implementation-controls-result.json",
+      "bytes": 1991,
+      "sha256": "8201d87c752b7b60aa3e2c982a18dd2fe246eaa001da23879f6c04f972bc1777"
+    },
+    {
+      "basename": "floorp-recovery57-target-gate-review.json",
+      "bytes": 15502,
+      "sha256": "948c265f48a9b45c7c27057e2a73bbce447b28c4ea3a4e32f80d7e6bed5a5525"
+    },
+    {
+      "basename": "floorp-recovery57-faster-route-gate-review.json",
+      "bytes": 14715,
+      "sha256": "250c141958b179c3e8c89a3078f37033a6df041f54b3f5cf74dc043e88a2679f"
+    },
+    {
+      "basename": "floorp-recovery57-faster-resolution-controls-result.json",
+      "bytes": 522,
+      "sha256": "e156c582d719a16e36168011cfc931a13533c1a58b2fa10d164c8ac84e2e2007"
+    },
+    {
+      "basename": "floorp-recovery57-resource-route-review.json",
+      "bytes": 20096,
+      "sha256": "963d9b77bc45fb42447038bfb9d28e712abbf28d48bfa27bc70710787157a4cb"
+    }
+  ],
+  "validation": {
+    "controlledTestsScope": "Owned small temporary fixtures and existing mocks; no native target build, SDK/checkpoint payload or live Mac process was exercised.",
+    "fullRepositorySuite": "Not repeated by this reviewer. The owner is running the final complete suite against this freeze.",
+    "independentControls": {
+      "actualAssetFixtureControls": 14,
+      "actualMacOrMachOQualified": false,
+      "errors": 0,
+      "failures": 0,
+      "otherCoverage": [
+        "immutable56 legacy function/class AST equality",
+        "journal failure preserves existing primary",
+        "exact shared-deadline345 and post-deadline346 are rejected",
+        "final target receipt-write failure rejects qualification"
+      ],
+      "passed": 6,
+      "proofMutationControlsRejected": 22,
+      "resourceWarningPolicy": "error",
+      "routingAndMachOMocked": true,
+      "tests": 6
+    },
+    "independentRelatedUnitSuite": {
+      "errors": 0,
+      "failures": 0,
+      "modules": [
+        "test_mozilla_target_build",
+        "test_pipeline_restore",
+        "test_mozilla_harness_smoke",
+        "test_mozilla_harness_receipt",
+        "test_consumer_time",
+        "test_failure_excerpt"
+      ],
+      "passed": 132,
+      "resourceWarningPolicy": "error",
+      "seconds": 2.47,
+      "skipped": 0,
+      "total": 132
+    },
+    "sourceFreezeMatchedBeforeAndAfterControls": true
+  }
+}

@@ -355,6 +355,7 @@ def main():
     parser.add_argument('--restore-only', action='store_true')
     parser.add_argument('--mozilla-only', action='store_true')
     parser.add_argument('--mozilla-first', action='store_true')
+    parser.add_argument('--mozilla-targeted', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
@@ -366,6 +367,9 @@ def main():
     require(not args.mozilla_first or (args.checkpoint_role == 'consumer' and
                                       not args.restore_only and not args.mozilla_only),
             'mozilla-first-consumer-role')
+    require(not args.mozilla_targeted or (args.checkpoint_role == 'consumer' and args.replay_origin and
+            args.consumer_shared_deadline and not any((args.restore_only, args.mozilla_only, args.mozilla_first))),
+            'mozilla-targeted-consumer-role')
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
@@ -517,6 +521,38 @@ def main():
                     output.write(key + '=' + str(ready[key]) + '\n')
             raise CheckpointComplete
         runner.phase_deadline_minutes = None
+        if args.mozilla_targeted:
+            from mozilla_target_build import run_build, verify_assets, proof_complete
+            from mozilla_harness_smoke import run_smoke
+            stage = 'mozilla-target-build'
+            report['mozillaTargets'] = {}
+            report.update(mozillaTargeted=True, fullHostXUL='NOT_TESTED', fullHostQualification=False,
+                          stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED')
+            run_build(args.source, task, runner, env,
+                      consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
+            stage = 'mozilla-target-assets'
+            report['mozillaTargets']['assets'] = verify_assets(task, runner, macho)
+            object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
+            report['hostObject'] = macho(object_path, 1)
+            require(object_path.stat().st_mtime >= started, 'object-not-fresh')
+            runner.phase_deadline_minutes = consumer_deadlines['consumerNativeDeadlineMinutes']
+            stage = 'mozilla-harness'
+            report['mozilla'] = {}
+            run_smoke(args.source, HERE, task, runner, env,
+                      consumer_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
+            stage = 'mozilla-target-final-evidence'
+            require(runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60,
+                    'mozilla-target-final-deadline')
+            report['mozillaTargets']['status'] = 'passed'
+            require(mozilla_proof_complete(report['mozilla']) and
+                    proof_complete(report['mozillaTargets'], report['mozilla'], runner.records) and
+                    runner.failure is None and runner.monitor_failure is None, 'mozilla-target-proof-incomplete')
+            write_json(task / 'mozilla-target-build.json', report['mozillaTargets'])
+            require(runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60,
+                    'mozilla-target-final-deadline')
+            report.update(status='mozilla-target-ready',
+                          qualification='verified-origin-root-target-mozilla-smoke-v1')
+            raise CheckpointComplete
         stage = 'full-build'
         try:
             completion_snapshot = start_snapshot(task)
@@ -659,11 +695,15 @@ def main():
         report['stages'] = runner.records
         if checkpoint_role:
             from checkpoint import full_log_receipt
+            target_log_stages = ()
+            if args.mozilla_targeted:
+                from mozilla_target_build import STAGES
+                target_log_stages = STAGES
             report['checkpointStageLogs'] = {
                 row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
                 for row in runner.records if row['stage'] in
                 ('checkpoint-exports', 'checkpoint-rust', 'checkpoint-pack', 'checkpoint-restore',
-                 'full-build', 'stage-package', 'native-suite')}
+                 'full-build', 'stage-package', 'native-suite') + target_log_stages}
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)
         if report['status'] == 'checkpoint-ready':
             complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
@@ -712,16 +752,43 @@ def main():
             if not complete:
                 runner.fail('final-proof', 'mozilla-smoke-proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
+        if report['status'] == 'mozilla-target-ready':
+            from mozilla_target_build import proof_complete, stage_complete
+            complete = (args.mozilla_targeted and checkpoint_role == 'consumer' and
+                        all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
+                            'source', 'effectiveConfig', 'checkpointRestore', 'hostObject')) and
+                        report.get('monitorPreflight', {}).get('status') == 'passed' and
+                        len(report.get('toolchains', [])) == 11 and
+                        report.get('resumedEffectiveConfigVerified') is True and
+                        report.get('fullHostXUL') == 'NOT_TESTED' and report.get('fullHostQualification') is False and
+                        report.get('stagePackage') == 'NOT_TESTED' and report.get('nativeAuthentication') == 'NOT_TESTED' and
+                        runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60 and
+                        mozilla_proof_complete(report.get('mozilla', {})) and
+                        proof_complete(report.get('mozillaTargets', {}), report.get('mozilla', {}), runner.records) and
+                        report.get('native') is None and runner.failure is None and runner.monitor_failure is None and
+                        all(stage_complete(row) for row in runner.records) and
+                        not any(row['stage'] in ('full-build', 'stage-package', 'native-suite') for row in runner.records))
+            if not complete:
+                runner.fail('final-proof', 'mozilla-target-proof-incomplete')
+                report['status'], report['firstFailure'] = 'failed', runner.failure
         report['validationOutcome'] = validation_outcome(report)
         try:
             write_json(task / 'summary.json', report)
+            if args.mozilla_targeted and report['status'] == 'mozilla-target-ready' and not (
+                    runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60):
+                runner.fail('final-proof', 'mozilla-target-final-deadline')
+                report.update(status='failed', firstFailure=runner.failure)
+                report['validationOutcome'] = validation_outcome(report)
+                write_json(task / 'summary.json', report)
         except OSError as error:
             report['status'] = 'failed'
             report['evidenceWriteError'] = error.errno
             report['validationOutcome'] = validation_outcome(report)
         finally:
             print(json.dumps(report), flush=True)
-    return 0 if report['status'] in ('passed', 'checkpoint-ready', 'restore-ready', 'mozilla-ready') and runner.failure is None else 1
+    within_target_deadline = (not args.mozilla_targeted or
+                             runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60)
+    return 0 if report['status'] in ('passed', 'checkpoint-ready', 'restore-ready', 'mozilla-ready', 'mozilla-target-ready') and runner.failure is None and within_target_deadline else 1
 
 
 if __name__ == '__main__':

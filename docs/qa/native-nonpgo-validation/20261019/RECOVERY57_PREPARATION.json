@@ -1,0 +1,214 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY57_FIXED_SOURCE_PRIORITIZED_ROOT_TARGET_REAL_MOZILLA_SMOKE",
+  "source": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "sourceFreeze": [
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 52185,
+        "sha256": "702ee13680de911b11482a1510343637dac2616776d9fa14549411f2b7e3b665"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
+        "bytes": 12270,
+        "sha256": "c3a9b1e56740e117f496fd55dc8649c29f9c99af22a2ce212c05260cc17cc005"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_mozilla_target_build.py",
+        "bytes": 11654,
+        "sha256": "aad06d119c022f6872659ec286d2e4b7c13c1faeae4c0fa80a5aef372a30bf05"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 36200,
+        "sha256": "15f27030006a0b1e069d76e4d5c360f11e22f8d9ccb84f9d3cd533029d16bd45"
+      }
+    ]
+  },
+  "baselineGraphObservation": {
+    "run": 39330430341,
+    "evidenceCommit": "d6b20ea0b22faa4d5d654b3c045000247565e495",
+    "literalClosureNodes": 983,
+    "literalClosureEdges": 1001,
+    "xpcshellIncludesXULGkrustCocoa": true,
+    "xpcshellIncludesHttp3": false
+  },
+  "explicitOptIn": "--mozilla-targeted --consumer-shared-deadline --replay-origin",
+  "commands": [
+    {
+      "stage": "mozilla-shell-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "js/xpconnect/shell/target"
+      ]
+    },
+    {
+      "stage": "mozilla-http3-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "netwerk/test/http3server/target"
+      ]
+    },
+    {
+      "stage": "mozilla-browser-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "browser/app/target"
+      ]
+    },
+    {
+      "stage": "mozilla-updater-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "toolkit/mozapps/update/updater/target"
+      ]
+    },
+    {
+      "stage": "mozilla-channel-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "toolkit/mozapps/macos-frameworks/ChannelPrefs/target"
+      ]
+    },
+    {
+      "stage": "mozilla-dmg-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "-C",
+        ".",
+        "toolkit/mozapps/dmgInstallHelper/target"
+      ]
+    },
+    {
+      "stage": "mozilla-resources-build",
+      "argv": [
+        "mach",
+        "build",
+        "-j3",
+        "faster"
+      ]
+    }
+  ],
+  "resourcesContract": "Normal faster directory default includes generated files, XPIDL and fallback recipes, install manifests and main app repackage. It is not equivalent to the stock full build; -C . faster is not used.",
+  "assetGate": {
+    "native": [
+      "xpcshell",
+      "XUL",
+      "http3server",
+      "browser",
+      "updater",
+      "channelPrefs",
+      "dmgHelper"
+    ],
+    "resources": [
+      "appConstants",
+      "applicationIni",
+      "dependentLibs",
+      "channelInfo"
+    ],
+    "requirements": "Actual owned current-job executable x86_64 Mach-O/UUID and fixed current resources; silent missing bundle moves do not qualify."
+  },
+  "smokeCases": [
+    "compiled-debug",
+    "failure-control",
+    "upstream-version-comparator"
+  ],
+  "smokeSourceAndConfigurationUnchanged": true,
+  "qualification": "verified-origin-root-target-mozilla-smoke-v1",
+  "fullHostQualification": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "limits": {
+    "platformMinutes": 360,
+    "restoreMinutes": 60,
+    "sharedWorkAndFinalMinutes": 345,
+    "cleanupReserveMinutes": 15,
+    "originalMonotonicOrigin": true,
+    "clockReset": false,
+    "resourceOrOwnershipGuardsChanged": false,
+    "stageBudgetsAdditive": false
+  },
+  "progressPreservation": {
+    "sameTaskAndObjectTreeAcrossTargetResourceTestStages": true,
+    "crossJobCppProgressPersisted": false,
+    "newCheckpointProducer": false,
+    "newArtifactUploads": 0,
+    "reason": "The sole existing immutable artifact contains the earlier export/Rust boundary. Later object state requires a distinct durable payload and origin; interrupted failure state is not eligible under the existing pack contract."
+  },
+  "sdk": {
+    "artifact": 12182302735,
+    "sourceRun": 39244172146,
+    "producerJob": 118032017226,
+    "sourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+    "normalUnexpiredAcquisition": true,
+    "acquisitionSecondsLimit": 600,
+    "rawTarAndTreeAndVersionPinsUnchanged": true,
+    "buildDurationCoupling": false
+  },
+  "checkpoint": {
+    "artifact": 12164479528,
+    "sourceRun": 39197008470,
+    "bytes": 2213942620,
+    "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "newPayload": false
+  },
+  "reviews": [
+    {
+      "path": "RECOVERY57_RESOURCE_ROUTE_REVIEW.json",
+      "bytes": 20096,
+      "sha256": "963d9b77bc45fb42447038bfb9d28e712abbf28d48bfa27bc70710787157a4cb"
+    },
+    {
+      "path": "RECOVERY57_PERSISTENCE_REVIEW.json",
+      "bytes": 15392,
+      "sha256": "9e0ecd4d6fb0155046ad58ee1476d1db34517f3a74eb8283c7a458543914c2a2"
+    },
+    {
+      "path": "RECOVERY57_IMPLEMENTATION_REVIEW.json",
+      "bytes": 10644,
+      "sha256": "a90ccf13c08c0a86d3141858fe389f7191677cc2ce4fcde2ae4e21cf420036b3"
+    }
+  ],
+  "localFullQA": {
+    "status": "passed",
+    "total": 757,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "complete": true,
+    "wallSeconds": 56.34,
+    "returnCode": 0,
+    "bytes": 145678,
+    "sha256": "bac25418cbf909fd33969775ec14de39a3114b6c2006592f709048eb2b31adb3"
+  },
+  "actualExecution": "NOT_STARTED",
+  "timeRemaining": "UNKNOWN",
+  "cacheReuse": "UNKNOWN",
+  "minimalSufficientSuffixEstablished": false,
+  "originalNativeExitCause": "UNKNOWN"
+}

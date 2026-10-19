@@ -1,0 +1,329 @@
+{
+  "schema": 1,
+  "scope": "Recovery57-existing-checkpoint-persistence-and-prioritized-real-test-route-design-review",
+  "status": "SAME_JOB_ROUTE_DESIGN_SUPPORTED_NEW_CROSS_JOB_PERSISTENCE_NOT_AVAILABLE_WITHIN_CURRENT_SCOPE",
+  "findings": {
+    "designBlockingP1": 0,
+    "designBlockingP2": 0,
+    "implementationAndCallerReviewStillRequired": true
+  },
+  "fixedEvidence": {
+    "checkpointRun": 39197008470,
+    "checkpointArtifact": 12164479528,
+    "archiveBytes": 2213942620,
+    "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "buildDate": "20261019035607",
+    "checkpointEndsAt": "natural export and exact gkrust node, before completed browser C++/XUL",
+    "actualGraphRun": 39330430341,
+    "declaredCompileNodes": 1215,
+    "xpcshellLiteralClosure": {
+      "complete": true,
+      "observedEdgeCount": 1001,
+      "observedNodeCount": 983,
+      "sha256": "b5a0ad4030163ded02d70be6e81a17c66c2ccd7442d7d9436f04a6628d41100b"
+    },
+    "fixedReachability": {
+      "XULToGkrust": true,
+      "xpcshellToCocoaObjects": true,
+      "xpcshellToGkrust": true,
+      "xpcshellToHttp3Server": false,
+      "xpcshellToXUL": true
+    },
+    "existingStoredCheckpointContainsLater47Or48Outputs": false,
+    "whichLater47Or48CppObjectsActuallyCompleted": "UNKNOWN",
+    "laterOutputStatement": "If later jobs produced C++ outputs, they were not retained in the earlier sole checkpoint. No particular completed object is asserted."
+  },
+  "persistenceAssessment": {
+    "sameJobObjectTreeReuse": "AVAILABLE_BY_RETAINING_THE_SAME_TASK_AND_OBJDIR",
+    "newCrossJobCppCarryForwardUsingUnchangedSoleArtifact": "NOT_AVAILABLE",
+    "why": [
+      "The existing downloaded archive is the earlier fixed producer payload. Building new C++ changes the live object tree, not that stored archive.",
+      "checkpoint.py pack creates a new local archive with exclusive creation, a new manifest/content digest, exact stream hashes and post-capture tree verification. A local pack alone does not make bytes available to a later fresh runner.",
+      "checkpoint-replay.json and transfer bind the original artifact/run/producer/size/archive digest/manifest digest/build date. Replacing local bytes or relabeling a later payload as that origin fails the existing integrity and provenance checks.",
+      "Packing a completed additional subset could in principle reuse the existing archive-validation machinery, but cross-job use would still require an explicitly bound new durable payload and corresponding origin/storage operation. That is outside the current no-new-producer/no-upload/no-storage-change implementation scope.",
+      "An interrupted or failed active stage is ineligible for checkpoint admission under the current completion contract. Completed earlier targets remaining on disk do not make the later failed stage natural or authorize a failure-state snapshot.",
+      "No implemented restore/replay/transfer path resumes the ephemeral object tree of a terminal prior job. The retained prior47/48 reports are evidence, not accessible build state."
+    ],
+    "notProposed": [
+      "artifact overwrite or digest substitution",
+      "new cache service or artifact upload",
+      "retention extension",
+      "new producer job",
+      "permission or authentication change",
+      "saving interrupted state as eligible",
+      "a local archive presented as durable cross-job progress"
+    ],
+    "existingStoredArtifactMayStillBeReplayed": "Only unchanged, unexpired and through the existing normal guarded origin/download/restore route."
+  },
+  "proposedRootTargetsAssessment": {
+    "classification": "ACTUAL_GRAPH_SUPPORTED_PRIORITIZATION_NOT_A_PROVEN_MINIMUM_OR_SPEEDUP",
+    "orderedCompileMilestones": [
+      {
+        "name": "shell-and-XUL",
+        "commandShape": [
+          "mach",
+          "build",
+          "-j3",
+          "-C",
+          ".",
+          "js/xpconnect/shell/target"
+        ],
+        "basis": "Observed literal closure reaches XUL, gkrust and Cocoa."
+      },
+      {
+        "name": "HTTP3-harness-program",
+        "commandShape": [
+          "mach",
+          "build",
+          "-j3",
+          "-C",
+          ".",
+          "netwerk/test/http3server/target"
+        ],
+        "basis": "Declared root lies outside shell closure; stock harness attempts HTTP3 startup even for the selected network-free cases."
+      },
+      {
+        "name": "browser-bundle-binary",
+        "commandShape": [
+          "mach",
+          "build",
+          "-j3",
+          "-C",
+          ".",
+          "browser/app/target"
+        ],
+        "basis": "Declared browser compile root must be accounted for because the configured bundle has a binary input; tools root alone does not prove it."
+      }
+    ],
+    "stockResourceTierOrderCandidate": [
+      "misc",
+      "libs",
+      "tools"
+    ],
+    "whyThisOrderIsSourceSupported": "The fixed normal tier ordering puts misc/libs/tools after compile, and tools refreshes the macOS app bundle. The checkpoint already completed export under the preserved source/configuration boundary. Separate named successful root milestones provide useful completion evidence without filtering their dependency closures.",
+    "notYetEstablished": [
+      "that these targets and tiers are the smallest runnable suffix",
+      "that every auxiliary generated/input prerequisite is present",
+      "that later mach automatic backend/configuration checks are skipped",
+      "that all necessary work completes before the platform deadline",
+      "that any saved Rust/C++ compilation is skipped"
+    ],
+    "mustNotSubstitute": [
+      "RECURSE_BASE_DIR filtering",
+      "subdirectory-only compile that bypasses root edges",
+      "binaries as an alleged xpcshell-only shortcut",
+      "manual resources copied to fake a completed stock tier",
+      "target success labeled as stock full-build completion"
+    ],
+    "partialTargetMarkerCaveat": "mach marks explicit make-directory targets, including -C ., with NO_BUILDSTATUS_MESSAGES=1. Use natural-zero named Runner-stage and actual output proofs; optional missing ended markers remain unknown."
+  },
+  "minimalSameJobStrategy": [
+    {
+      "step": 1,
+      "action": "Perform the existing normal SDK acquisition and fixed checkpoint replay/restore/context/effective-configuration checks. Preserve source, tools, producer build date, roots and object tree."
+    },
+    {
+      "step": 2,
+      "action": "Execute the root shell/XUL, HTTP3 and browser milestones with unchanged jobs/configuration in the same task. Record each natural exit, original-clock progress/resources, exact reap/group disappearance and first failure separately."
+    },
+    {
+      "step": 3,
+      "action": "On the same object tree, run the stock misc/libs/tools resource tiers in their fixed order. Require natural completion and verify the actual needed bundle files, generated modules, metadata and harness inputs; spec counts or declared graph edges alone do not satisfy this."
+    },
+    {
+      "step": 4,
+      "action": "Immediately run the unchanged3case current-source Mozilla controls once the actual current-job xpcshell/XUL/assets/input/monitor gates pass. Preserve the deliberate failure in its separate case Runner and retain positive Mozilla success independently of later scope."
+    },
+    {
+      "step": 5,
+      "action": "If original full-host/package/native validation is still required and time remains, continue the stock full build and downstream existing steps in this same job and objdir. This reuses available local outputs but cannot promise a make/Cargo cache hit or completion time."
+    },
+    {
+      "step": 6,
+      "action": "At a real error, monitor/unknown/resource limit or original absolute deadline, keep the first failure, perform exact owned cleanup and publish the bounded evidence. Do not reset the clock, start another build stage to erase failure, or claim a durable partial checkpoint."
+    }
+  ],
+  "minimumActualPrerequisiteChecks": [
+    "The required root nodes and current restored source/configuration remain consistent with the reviewed inputs; additional optional observer configuration absence remains unconfirmed, not mismatch.",
+    "The shell and XUL are actual executable current-job x86_64 Mach-O assets with expected file/UUID/hash bindings.",
+    "HTTP3 is present with required current runtime/database inputs before stock harness startup. The stock missing-program ERROR is unacceptable to the unchanged errorLogs==0 receipt even if upstream comments call it nonfatal.",
+    "The browser bundle binary,4extra entries and2moves are actually satisfied and staged; root tools reachability and a bound bundle spec alone are insufficient.",
+    "AppConstants, application metadata, dependent library staging and bundle file list are generated by the stock rules and available at the real test paths. Their absence at the fixed restore observation paths is not itself a cache corruption diagnosis.",
+    "Stock mach test installation, explicit test manifests/files, compiled-debug marker, intended negative control and upstream test receipt all retain their current strict predicates."
+  ],
+  "timeAndSafetyContract": {
+    "platformMinutes": 360,
+    "sharedAbsoluteWorkDeadlineMinutes": 345,
+    "deadlineOrigin": "original job started-monotonic; acquisition, restore, build, resources and tests all consume that same elapsed budget",
+    "notCompilerOnlyMinutes": true,
+    "nominalPlatformCleanupReserveMinutes": 15,
+    "restoreDeadlineMinutes": 60,
+    "clockResetAllowed": false,
+    "perTargetBudgetsAreAdditive": false,
+    "newHumanCumulativeOrWalltimeCutIntroduced": false,
+    "sourceCompilationConfigurationChanged": false,
+    "RSSDiskLogStallUnknownAndOwnedCleanupLimitsChanged": false,
+    "sameParentRunnerOrExactlyInheritedOriginalClockRequired": true,
+    "forecastUnknownAloneRequiresIndefiniteHold": false,
+    "noCrossJobPersistenceClaimIfDeadlineReached": true
+  },
+  "qualificationBoundaries": {
+    "successfulTargetMilestone": "The named target command and checked outputs only.",
+    "successfulMozillaControls": "The existing three current-source cases only, distinct from broad Firefox, product or native authentication qualification.",
+    "fullHostQualification": "Requires the separately retained complete stock full-build and existing asset proofs, not merely the selected compile targets and resource suffix.",
+    "nativeAuthentication": "Requires the existing actual native suite and all of its current source/runtime/build/signature/cleanup predicates.",
+    "laterFailureMustErasePriorMozillaSuccess": false,
+    "laterFailureMayBeClearedToClaimOverallPass": false
+  },
+  "remainingUnknowns": [
+    "actual minimum complete test suffix",
+    "actual auto-reconfigure/backend decisions",
+    "actual make/Cargo cache hit or miss",
+    "specific redundant recompilation",
+    "which prior47/48 objects completed",
+    "remaining work and duration",
+    "original native exit cause"
+  ],
+  "bindings": {
+    "actualGraphAssessment": {
+      "path": "floorp-recovery56-postgraph-route-review.json",
+      "bytes": 19754,
+      "sha256": "7ab1274081feb7dceffe8806b141b2994df752ad076fdde89474f567dc240775"
+    },
+    "rebuildCauseReview": {
+      "path": "floorp-recovery56-rebuild-cause-review.json",
+      "bytes": 26489,
+      "sha256": "35f69bc1d50e9731a8c56a4294ba689b31647f0e3700907d1caab56e6f7da1ef"
+    },
+    "checkpointReplayConfig": {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "bytes": 635,
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    },
+    "checkpointImplementation": {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    "checkpointTransfer": {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 9635,
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    },
+    "executionTimeSelector": {
+      "path": "tools/qa/native-nonpgo/consumer_time.py",
+      "bytes": 2767,
+      "sha256": "43e6e1373e57e52ca47bf14570117508d403264954e823e1d91660c917c4d839"
+    },
+    "baselinePlan": {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "fixedRuntimeSource": [
+      {
+        "path": "config/baseconfig.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 2424,
+        "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4",
+        "reviewedLines": [
+          [
+            41,
+            68
+          ]
+        ]
+      },
+      {
+        "path": "config/recurse.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8560,
+        "sha256": "3eb934988225cb3724676f437b3635813a223d7213f164d9a7e6be15755721ce",
+        "reviewedLines": [
+          [
+            25,
+            45
+          ],
+          [
+            69,
+            105
+          ]
+        ]
+      },
+      {
+        "path": "python/mozbuild/mozbuild/controller/building.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 78700,
+        "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640",
+        "reviewedLines": [
+          [
+            1433,
+            1465
+          ],
+          [
+            1508,
+            1533
+          ]
+        ]
+      },
+      {
+        "path": "config/makefiles/target_binaries.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 1119,
+        "sha256": "4643e4a7d671fcd33449a853bc09e9ec82a628bde2fb9d7f35414c9248625363",
+        "reviewedLines": [
+          [
+            6,
+            19
+          ]
+        ]
+      },
+      {
+        "path": "testing/xpcshell/runxpcshelltests.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 114438,
+        "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad",
+        "reviewedLines": [
+          [
+            1815,
+            1864
+          ],
+          [
+            2316,
+            2324
+          ]
+        ]
+      },
+      {
+        "path": "browser/app/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8690,
+        "sha256": "a4c71c07a9ffe5e362432c11fff9f9ab5dbbff0cb5930f8263d469e4c5eab57c",
+        "reviewedLines": [
+          [
+            74,
+            108
+          ]
+        ]
+      }
+    ]
+  },
+  "reviewLimits": "This is a retained-evidence and fixed-source design review. It does not review or qualify a new implementation, caller, build execution or storage mechanism.",
+  "operations": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "refChanged": false,
+    "SDKOrCheckpointAcquired": false,
+    "newProducerOrUpload": false,
+    "retentionOrAuthenticationChanged": false,
+    "testsOrBuildExecuted": false,
+    "activeRunPolled": false
+  },
+  "privacy": {
+    "rawMachinePathsPublished": false,
+    "rawProcessIdentitiesPublished": false,
+    "rawEnvironmentOrLogsPublished": false,
+    "signedURLsPublished": false,
+    "internalConversationPublished": false
+  }
+}
