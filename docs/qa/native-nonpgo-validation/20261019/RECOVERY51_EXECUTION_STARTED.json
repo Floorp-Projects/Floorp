@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY51_SAME_INPUT_REASON_DIAGNOSTIC",
+  "status": "queued",
+  "run": {
+    "id": 39315456303,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39315456303",
+    "event": "push",
+    "attempt": 1,
+    "caller": "d208fe93278d6c557f41df1946a5bd57be300541",
+    "branch": "codex/mac-native-streaming-recovery51-20261019",
+    "createdAt": "2026-10-19T19:58:53Z"
+  },
+  "fixture": "6996647e3fe717522a6288d6554209f0a387121e",
+  "workflow": {
+    "bytes": 36511,
+    "sha256": "b0f5e7382e1443f99a160f41e3cba5153446c9d71a363e4777ad7fc0937e2306"
+  },
+  "activation": {
+    "time": "2026-10-19 19:58:46 UTC",
+    "branchMatches": 0,
+    "priorCallerRuns": 0,
+    "ownedActive": 0,
+    "ownedQueued": 0,
+    "independentImmutableReview": "GO received before activation"
+  },
+  "SDKAcquisition": false,
+  "checkpointDownload": false,
+  "newArtifacts": 0,
+  "longBuild": false,
+  "densityFailureMayContinueIndependentControls": true,
+  "overallFailureMustRemain": true,
+  "actualMacResult": "PENDING"
+}

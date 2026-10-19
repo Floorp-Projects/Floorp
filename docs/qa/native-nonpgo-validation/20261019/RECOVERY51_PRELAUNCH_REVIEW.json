@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "review": "Recovery51 immutable reason-capture short Mac route",
+  "decision": "GO_ONE_SDK_FREE_REASON_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "fixture": {
+    "sha": "6996647e3fe717522a6288d6554209f0a387121e",
+    "tree": "e1c14fbcd5dad211702bd8a079528ec9789e26f5",
+    "parent": "ea9b14acd6b12753a37c5b9764902eee1f50e52e",
+    "changedPaths": [
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY51_IMPLEMENTATION_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY51_PREPARATION.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY51_SOURCE_FREEZE.json",
+      "tools/qa/native-nonpgo/test_build_completion.py",
+      "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "tools/qa/native-nonpgo/unittest_receipt.py"
+    ],
+    "sourceAndTechnicalDocumentsIndependentlyReadBack": true,
+    "publishedDocumentBindings": {
+      "RECOVERY51_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 9252,
+        "sha256": "d04aefd5c46599b8bfe0ceb2b0180392420ce1db4404fe2e4a7e879014438054"
+      },
+      "RECOVERY51_PREPARATION.json": {
+        "bytes": 6800,
+        "sha256": "4d50e1ff481fcf799b31983594ce3bac00719521f53ff2a365da78413cac374e"
+      },
+      "RECOVERY51_SOURCE_FREEZE.json": {
+        "bytes": 961,
+        "sha256": "a20b9820697fe18e278d864a5627203308c75b450f33b2db1d03a5cfac0217fa"
+      }
+    }
+  },
+  "caller": {
+    "sha": "d208fe93278d6c557f41df1946a5bd57be300541",
+    "tree": "1c613841bf533b77b53b05883d9590a205d09719",
+    "parent": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 36511,
+    "sha256": "b0f5e7382e1443f99a160f41e3cba5153446c9d71a363e4777ad7fc0937e2306",
+    "providerReadbackMatchesRenderedCandidate": true,
+    "onlyRenderChange": "one PLACEHOLDER replaced by the source fixture SHA",
+    "reviewedTemplate": {
+      "bytes": 36482,
+      "sha256": "85dc613da8ce5e686b61f5497e89e2758383c080835ce0914fed6f8cdaf8bd99"
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 30711,
+      "sha256": "348aa2161cc38b2e391f9da1919e9370386355d76ddd8aea808785efa239b9f7"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 23266,
+      "sha256": "d08ca28513553b985188c41e1a4df864e004abbbfd4d08783c7a9135283e064d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 25679,
+      "sha256": "e4bd5249891926780eaee46c9f2dcfb28269d75945d81841defbb00eef317d59"
+    }
+  ],
+  "unchangedParser": {
+    "bytes": 24354,
+    "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+  },
+  "unchangedPlan": {
+    "bytes": 27325,
+    "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "unchangedInput": {
+    "bytes": 195000385,
+    "sha256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30
+  },
+  "routeScope": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "roleName": "checkpoint-consumer",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "dedicatedBranch": "codex/mac-native-streaming-recovery51-20261019",
+    "trigger": "initial created push, zero before SHA, attempt 1, exact repository and branch",
+    "jobPlatformMinutes": 360,
+    "ownedStagePhaseMinutes": 15,
+    "expectedQA": 522,
+    "recording": 14,
+    "officialSerializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeOrHarnessCheckout": false,
+    "build": false,
+    "artifactUpload": false,
+    "permissionOrSigningChanges": false
+  },
+  "assessment": [
+    "The final immutable source is byte-identical to the three files covered by the implementation review. The parser, 30-second processing budget, input, stage/resource limits and plan remain fixed.",
+    "Exactly one fixed case-bound diagnostic records actual status, allowlisted reason, monotonic elapsed and input identity before the assertion. Missing, duplicate, malformed or inconsistent evidence cannot qualify continuation.",
+    "The sole density FAIL may continue only with unconfirmed coverage and null counts, exact frozen input, frame 450, complete typed counters, the original checkpoint-tests/nonzero-exit failure, three exact reaps and verified clean groups, and no monitor failure or outstanding groups.",
+    "Recording and the owned monitor control must then succeed. The official source and nine serializer cases remain independent diagnostics. The continued preflight is failed and the final job remains failed, even if these later diagnostics pass.",
+    "The final gate retains the actual density projection and compares the original first-failure file. Any other failure or incomplete evidence stops the additional stages or prevents overall success.",
+    "A fully passing density observation still requires the complete QA, recording, serializer, monitor and cleanup gates for a successful short result. No Linux values substitute for actual Mac observations."
+  ],
+  "validationReusedWithoutHeavyRepetition": {
+    "implementationReview": {
+      "name": "floorp-recovery51-implementation-review.json",
+      "bytes": 9252,
+      "sha256": "d04aefd5c46599b8bfe0ceb2b0180392420ce1db4404fe2e4a7e879014438054"
+    },
+    "independentFinalDensityReceiptTests": {
+      "passed": 8,
+      "skipped": 0
+    },
+    "independentlyReexecutedTemplateNegativeControls": 1032,
+    "independentlyReexecutedSourceAPIMocks": 5,
+    "independentlyReexecutedActualInlineFlowControls": 7,
+    "templateControlsQualification": "The immutable rendering changes only the fixture placeholder; all reviewed predicates and flow code are unchanged.",
+    "renderTriggerAndSuiteCount": {
+      "name": "floorp-recovery51-independent-render-trigger-count.json",
+      "bytes": 332,
+      "sha256": "bbbfecb08eab8280f53a4486c7f4febfbea9adb2c807ee3a4f64bf206e25df38"
+    },
+    "actualMacAlreadyRun": false,
+    "additionalHeavyFullQAOrDensityTestRunForRouteReview": false
+  },
+  "triggerAssessment": {
+    "workflowYAMLFilesInheritedFromPreviouslyReadParent": 26,
+    "otherWorkflowBodiesUnchangedByImmutableCompare": true,
+    "newBranchFiltersReevaluated": true,
+    "matchingWorkflows": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ]
+  },
+  "freshOrdinaryReadOnlyAPI": {
+    "observedAt": "2026-10-19T19:57:16Z",
+    "branchMatches": 0,
+    "priorCallerRuns": 0,
+    "activeOwned": 0,
+    "queuedOwned": 0,
+    "activeTotal": 0,
+    "queuedTotal": 1
+  },
+  "preActivationConditions": [
+    "Recheck the exact source/caller, unused dedicated branch, zero prior caller runs and no active or queued owned validation immediately before the single activation.",
+    "Use the reviewed immutable source and workflow bytes without changing the parser, input or processing budget."
+  ],
+  "terminalReviewRequirements": [
+    "Bind actual run/job metadata to this initial push, attempt, source and caller. Download logs only after terminal.",
+    "Retain actual density status, reason and elapsed even if the density assertion fails; keep null unknown counters distinct from zero.",
+    "Separate overall all-pass qualification from diagnostic completion after the isolated density failure. A continued failed QA suite must remain failed.",
+    "Record whether recording and all nine serializer cases actually ran, their actual bounded results, exact child/group cleanup, any stopping monitor failure, preserved first failure and artifact count zero."
+  ],
+  "remainingLimits": [
+    "Recovery50 did not retain its actual collector reason. A new observation must not retroactively establish the old cause.",
+    "The actual Mac dense-profile qualification and nine-case outcomes remain pending. No full build, current Mozilla case, packaging or native authentication result is qualified here.",
+    "This decision covers the short reason diagnostic only; it does not start or qualify another long build."
+  ],
+  "publicEvidencePrivacy": "The three published technical documents and newly projected fields were checked for private paths, secret URLs, raw process identifiers, arbitrary exception text and conversation details. None were found.",
+  "reviewerActions": {
+    "sourceEdits": false,
+    "CIOrRefMutations": false,
+    "additionalPayloadDownloads": false
+  }
+}
