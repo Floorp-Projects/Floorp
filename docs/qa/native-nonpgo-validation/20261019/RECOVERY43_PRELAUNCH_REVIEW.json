@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY43_IMPORT_ISOLATION_SHORT_PREFLIGHT_AND_RECOVERY44_INACTIVE_VALIDATION_CANDIDATE",
+  "reviewedAtUTC": "2026-10-19T03:23:40Z",
+  "decision": {
+    "short43": "GO_FOR_BOUND_IMMUTABLE_SHORT_DIAGNOSTIC",
+    "long44": "CONDITIONAL_VALIDATION_CANDIDATE_AFTER_SHORT_TERMINAL_REVIEW",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "actualMacExecution": "NOT_EXECUTED by this review; development environment is Linux",
+    "fullBuildQualification": "NOT_TESTED",
+    "nativeAuthenticationQualification": "NOT_TESTED"
+  },
+  "bindings": {
+    "baselineFixture": "e473170251a03285727571657394ce05f2f4f2be",
+    "fixture": {
+      "commit": "8135abdafa050694c32cf87dce680bd61816fb22",
+      "tree": "427051eb3212238338b44b1eb93315b8a5640f74",
+      "parent": "a04d43e5fe7dd5560fdd4d65034f04389cbf221b",
+      "providerCompareChangedFiles": 15,
+      "providerBytesComparedToLocal": 15,
+      "fullBytesExact": true
+    },
+    "caller": {
+      "commit": "5873b369b8193202a370876835fad41d6a353c2b",
+      "tree": "02549206e7d7dc92f36c7ed9819f2e272dabbbcb",
+      "parent": "d546c37feedfdfcb718b20fa7a89eb0d338df839",
+      "onlyChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+      "bytes": 3619,
+      "sha256": "50670dcc0b82bb4def1f422c1ee9843ca38d8d43801284ef0bf280d955f12cb1",
+      "providerBytesExact": true,
+      "templateDifference": "FIXTURE_PENDING_REVIEW replaced with the bound fixture commit only"
+    },
+    "long44RenderedCandidate": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_TRUSTED_CHECKPOINT_WORKFLOW.rendered.yml.disabled",
+      "bytes": 21777,
+      "sha256": "9c7f5c28594754a557147819301d7166766a334fe12fa1314ae3e9ecf4ec09eb",
+      "templateDifference": "Fixture placeholder replacement only",
+      "callerCommitCreated": false,
+      "executionDecisionPendingShortReview": true
+    },
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "precedingTerminal": {
+      "run": 39185132260,
+      "receiptPath": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TERMINAL_RESULT.json",
+      "bytes": 32461,
+      "sha256": "e65470250b07ff3956922c9ce32f6d7c79a24092d9fa117f4b09f828e9e05708",
+      "independentlyReviewedPreviously": true,
+      "firstFailure": "checkpoint-pack / monitor-unavailable",
+      "cause": "UNKNOWN"
+    }
+  },
+  "files": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_HELPER_IMPORT_FIX.md",
+      "bytes": 4177,
+      "sha256": "c0dfda4c129d402a7436a80c3853cacc29be897624aa10814f2623af2baa462a"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_HELPER_IMPORT_WORKFLOW.yml.disabled",
+      "bytes": 3601,
+      "sha256": "ffbeeb96bceaa04d3a362010b26bccf68e904d73464c305c5cb21fce1e44e53e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_LOCAL_RESULT.json",
+      "bytes": 4849,
+      "sha256": "2af72924fe2d93e454c27dc3c07bebf52d90485dec1c49e4afc5ebc9b5c28a4e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 21759,
+      "sha256": "560888c7940fe6ba436d11d23b27a136bde9f69f5c9b299e625a1238a9a7e6d5"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/completion_preflight.py",
+      "bytes": 5732,
+      "sha256": "c80319301aae1626ef5492a99319666b47c420baeff03ac4601d9e4165c63068"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "bytes": 11285,
+      "sha256": "aac48b4168114a31b141cd81c75eef1a6043a9d8c145cb54a25634b4ad899f8a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/helper_import_preflight.py",
+      "bytes": 33582,
+      "sha256": "969974dcbd45120425f6ad793e97c090035c6dbd14fa12c7c97e46c2d3ebf635"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 10804,
+      "sha256": "43d434019393662aa1cfc4e80aa50df08d5829a98a5e25115f6e1f3477198fed"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/qa_core.py",
+      "bytes": 581,
+      "sha256": "13441551e1bfc96aed10fba97f16844b5a8cddbbf5685c72f4c07a7fc578e49a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_darwin_inventory.py",
+      "bytes": 18588,
+      "sha256": "07f418702eb1191303fb5495233d85befae5bc244563eb088378d6c380765011"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_helper_import_preflight.py",
+      "bytes": 28551,
+      "sha256": "43223756099e0138c627693aa94571ac769d51688597f80416b6bf7bdbc399b8"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_qa_core.py",
+      "bytes": 1605,
+      "sha256": "86c5af063a40f465765f7b14531ca1d536d6ef54ede4639a6f3bd499c7e80c82"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 15879,
+      "sha256": "42da7d335e9ebf1a594d85aee0e28131dd10d435a4c2841714cbcc5c2ca51c55"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 17494,
+      "sha256": "2c6c2b46d565ac1164ea26c58a4358a21afb4a572b9d42961689992f053af1d5"
+    }
+  ],
+  "verification": {
+    "independentExecuted": [
+      {
+        "suite": "test_qa_core test_unittest_receipt test_darwin_inventory test_process_census test_inventory_timeout test_failure_recovery test_completion_preflight",
+        "total": 81,
+        "passed": 79,
+        "skipped": 2,
+        "failures": 0,
+        "errors": 0,
+        "seconds": 12.292,
+        "exitCode": 0,
+        "logBytes": 15982,
+        "logSHA256": "b7257858c607356692956b08796f95855f8a354cdd5f26f3456ab51f637bac78",
+        "provenance": "Independent earlier core review; final full suite below includes the final source"
+      },
+      {
+        "suite": "test_helper_import_preflight",
+        "total": 25,
+        "passed": 25,
+        "skipped": 0,
+        "failures": 0,
+        "errors": 0,
+        "seconds": 1.205,
+        "exitCode": 0,
+        "logBytes": 5163,
+        "logSHA256": "862f4bfc99d8ec94ff278f725a5987185ac0bb7908f1c1230890c7f6504fcd60"
+      },
+      {
+        "suite": "python -m unittest discover -v -s .",
+        "cwd": "tools/qa/native-nonpgo",
+        "total": 430,
+        "passed": 413,
+        "skipped": 17,
+        "failures": 0,
+        "errors": 0,
+        "seconds": 22.139,
+        "exitCode": 0,
+        "logBytes": 83661,
+        "logSHA256": "dcb011b1ba50ccea23447ca32f8b332061852ffb31c20b6d28c903839480e84f"
+      }
+    ],
+    "bytecodeWriting": false,
+    "resourceWarningsAsErrors": true,
+    "rawLogsPublished": false,
+    "sourceDefinitionChecks": {
+      "primitiveFourDefinitionASTsExactlyMatchBaseline": true,
+      "entireRunnerASTExactlyMatchesBaseline": true,
+      "allProcessCensusFunctionAndClassASTsExactlyMatchBaseline": true,
+      "inventoryChange": "Direct qa_core primitive import and reader-binding progress marker after load_abi; resource/identity logic unchanged",
+      "sharedFailureObjectReexportVerified": true,
+      "fixedHistoricalAndNewFailureTypeProjectionVerified": true,
+      "selectedQASuiteCount": 210
+    },
+    "syntax": {
+      "sourcePythonASTValid": true,
+      "workflowYAMLValid": true,
+      "allBashRunBlocksValid": true,
+      "inlinePythonASTValid": true
+    },
+    "provider": {
+      "fixtureAndCallerCommitTreeAndParentVerified": true,
+      "fixtureFullReadbackFiles": 15,
+      "callerFullReadbackVerified": true,
+      "existingWorkflowTriggerReview": "Reused pinned route review; commit comparison confirms all other Runtime files and workflows unchanged"
+    },
+    "preactivationRead": {
+      "observedAtUTC": "2026-10-19T03:23:13Z",
+      "branch": "codex/mac-native-helper-import-recovery43-20261019",
+      "branchRefHTTPStatus": 404,
+      "recentRunsInspected": 100,
+      "newBranchRuns": 0,
+      "activeOrQueuedOwnedNativeRuns": 0,
+      "pointInTimeOnly": true
+    }
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "subject": "Recovered outer Runner helper diagnostics lost after later complete samples",
+      "resolution": "Initialize monitorDiagnostics and export the existing latest sixteen records through monitor_projection in finalization; stopping monitorFailure remains separate",
+      "evidence": "Actual run_experiment fault control retains sixteen early recovered timeout records, helper progress and null lower bounds after later good lastActivity; persisted JSON/stdout agree; private identities, paths and arbitrary keys are removed",
+      "productionPolicyChanged": false
+    }
+  ],
+  "contractChecks": {
+    "model": "trusted-single-purpose-runner-v1",
+    "production": {
+      "helperCommunicateTimeoutSeconds": 3,
+      "attempts": 3,
+      "retryGapSeconds": 0.25,
+      "processCreationAndCleanupMayAddElapsedTime": true,
+      "abiChecksCachedOrSkipped": false,
+      "resourceLimitsChanged": false,
+      "unknownResourceConvertedToZero": false,
+      "ownershipOrSelectionChanged": false,
+      "cleanupChanged": false,
+      "checkpointAdmissionChanged": false,
+      "planChanged": false,
+      "SDKPinsChanged": false
+    },
+    "short": {
+      "jobs": 1,
+      "runner": "macos-15-intel",
+      "jobTimeoutMinutes": 20,
+      "initialCreatedPushOnly": true,
+      "beforeZeroOnly": true,
+      "attempt": 1,
+      "permissions": {
+        "contents": "read",
+        "actions": "read"
+      },
+      "python": "3.12.10",
+      "expectedActualQATests": 210,
+      "expectedActualRecordingTests": 14,
+      "zeroSkipsRequired": true,
+      "sdkAcquisition": false,
+      "floorpBuild": false,
+      "GUIOrAuthentication": false,
+      "artifactUpload": false
+    },
+    "workload": {
+      "seconds": 60,
+      "workers": 2,
+      "memoryMiBPerWorker": 128,
+      "diskMiB": 64,
+      "helperPairsPerPhase": 6,
+      "variants": [
+        "lean",
+        "support-preimport"
+      ],
+      "phases": [
+        "idle",
+        "contended"
+      ],
+      "lastPairTargetSeconds": 52,
+      "actualByteAndIterationCountersRequired": true,
+      "workerLivenessCheckedBeforeAndAfterEachContendedCall": true,
+      "exactChildrenReapedAndStreamsClosed": true,
+      "partialLaunchAndCleanupFailuresTested": true,
+      "diskRemovalRequiresBoundIdentityAndSuccessfulChildCleanup": true
+    },
+    "preservation": {
+      "runnerFirstFailureHasPriority": true,
+      "stoppingMonitorFailureSeparate": true,
+      "recoveredDiagnosticLatest16Retained": true,
+      "workloadReceiptRecoveredAfterRunnerFailure": true,
+      "persistenceFailureNonzeroAndSafeStdout": true,
+      "rawHelperOutputAndArbitraryExceptionTextNotProjected": true
+    },
+    "long44": {
+      "status": "INACTIVE_CANDIDATE",
+      "jobs": 2,
+      "serialDependency": "consumer needs producer",
+      "timeoutMinutesPerJob": 360,
+      "rawArtifactsMaximum": 1,
+      "artifactBytesMaximum": 10737418240,
+      "retentionDays": 1,
+      "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+      "archive": false,
+      "comparisonToExecuted42": "Branch guards and fixture binding plus expanded producer preflight module list/count; active resource policy, capture/restore, SDK acquisition, raw upload/service verification and native stages unchanged",
+      "qualification": "resumed build across two standard Intel jobs; freshObjdir=false and sameJob=false"
+    }
+  },
+  "remainingGates": [
+    "Actual macos-15-intel short43 must complete 210 QA and 14 recording tests with zero skips, safe receipt persistence, complete owned-group cleanup and no fatal monitor failure.",
+    "Review actual lean helper replies/import graph, all bounded workload counters, before/after worker liveness, sample status and cleanup. A cleanly reaped heavy synthetic-control timeout is retained separately and must not be represented as a lean production-helper success.",
+    "Only after the short terminal review is clear may the long44 candidate receive immutable caller/render readback, unused initial-push branch/no-overlap verification and fresh official unexpired SDK metadata plus ordinary acquisition and full fixed-content verification.",
+    "A long validation must separately establish capture/readback/ready, raw service size/digest/retention, consumer restore and effective configuration, completed full host/XUL/package and actual native authentication."
+  ],
+  "limits": [
+    "Recovery42 last progress markers do not identify a blocked kernel or user-space operation; its original timeout cause remains UNKNOWN.",
+    "Removing the support import graph is an evidence-backed startup-cost reduction; successful local tests do not establish actual Mac timeout repair or future pack stability.",
+    "The support-preimport wrapper is a synthetic control, not an exact replay of the old helper. First/repeated fresh interpreters do not establish cold/warm OS caches.",
+    "Small CPU/memory/disk controls do not reproduce the prior production memory, filesystem, scheduling or binding state.",
+    "No hostile same-UID immutability or atomic filesystem snapshot guarantee is required or claimed by this trusted runner contract; sampled owned births are not complete ancestry.",
+    "No CI, SDK acquisition, artifact upload, source edit, product signing or publication was performed by this review."
+  ]
+}
