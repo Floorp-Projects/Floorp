@@ -70,8 +70,27 @@ jobs:
           repository: ${{ needs.identity.outputs.runtime-repository }}
           ref: ${{ needs.identity.outputs.runtime-commit }}
           path: _dist/runtime-base
-          sparse-checkout: .github
           persist-credentials: false
+      - name: Verify complete Runtime objects before reducing the base working tree
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,subprocess
+          base='_dist/runtime-base'
+          promisor=subprocess.run(['git','-C',base,'config','--get','--bool','remote.origin.promisor'],text=True,capture_output=True)
+          if promisor.returncode not in (0,1) or promisor.stdout.strip()=='true':
+              raise RuntimeError('Runtime base must be a complete checkout, not a promisor/partial clone')
+          process=subprocess.Popen(['git','-C',base,'rev-list','--objects','--missing=print','HEAD'],stdout=subprocess.PIPE)
+          missing=[]
+          count=0
+          for line in process.stdout:
+              count+=1
+              if line.startswith(b'?'):missing.append(line.strip().decode('ascii'))
+          if process.wait()!=0 or missing:
+              raise RuntimeError('Runtime base is missing required Git objects: '+str(missing[:5]))
+          print(json.dumps({'runtimeBaseObjects':count,'missingObjects':len(missing),'promisor':False}))
+          subprocess.run(['git','-C',base,'sparse-checkout','set','--cone','.github'],check=True)
+          PY
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
@@ -243,6 +262,7 @@ jobs:
         shell: pwsh
         run: ./tools/chrome-extension-runtime/ci/setup-windows-audio.ps1
       - name: Execute packaged production core and native APIs on the actual OS
+        if: ${{ always() && steps.candidate.outcome == 'success' && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: >-
           python tools/chrome-extension-runtime/ci/test-candidate.py
