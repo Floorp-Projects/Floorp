@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "review": "Recovery50 short Mac streaming parser validation route",
+  "decision": "GO_ONE_SDK_FREE_SHORT_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "fixture": {
+    "sha": "de18c22f3a7e79eb2890f5e63ee6f466f574af98",
+    "tree": "80956d060245590d257a9599ea4b4e423d52b073",
+    "parent": "db21ee374bca77e63c82bf2a16a41c6e4b359c23",
+    "changedPaths": [
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY50_IMPLEMENTATION_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY50_LINUX_SERIALIZER_RESULT.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY50_PREPARATION.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY50_STREAMING_FREEZE.json",
+      "tools/qa/native-nonpgo/build_completion.py",
+      "tools/qa/native-nonpgo/build_completion_contract.py",
+      "tools/qa/native-nonpgo/test_build_completion.py",
+      "tools/qa/native-nonpgo/test_build_completion_contract.py"
+    ],
+    "fourReviewedSourceFilesExactProviderReadback": true,
+    "fourPublishedTechnicalDocumentsExactProviderReadback": true,
+    "plan": {
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  },
+  "caller": {
+    "sha": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "tree": "86f50290862f7ed5518a942a6a30c2a38dd80a1f",
+    "parent": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "workflowPath": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 30916,
+    "sha256": "24121225c329f6f0b94054a4e998f0af3ffcf4e882135a724115ebc8ef0076d9",
+    "providerReadbackMatchesReviewedCandidateExactly": true,
+    "activationBranch": "codex/mac-native-streaming-recovery50-20261019"
+  },
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 24354,
+      "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 29902,
+      "sha256": "dc062f4f04d6ef63ebf887738cf49c40f5e4e8b954274f01860a2a0cd90dc773"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+      "bytes": 14964,
+      "sha256": "9c373c4101d466965ce68662140a1a2f84271c54ae3c069a69c357d37f5c899f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+      "bytes": 14500,
+      "sha256": "5fd3f6eaad306737cf6dea1383865ba8f6e38df5594c99a49e56e9ae167870a5"
+    }
+  ],
+  "publishedDocumentBindings": {
+    "RECOVERY50_IMPLEMENTATION_REVIEW.json": {
+      "bytes": 12616,
+      "sha256": "15ca10eecba73d44221371efc60da46ea31aa5113ad1faf5fbe0aaee25299a8d"
+    },
+    "RECOVERY50_LINUX_SERIALIZER_RESULT.json": {
+      "bytes": 9991,
+      "sha256": "31ac8de92b1f3c2584be298eb742c064b668a371b09875844de7c9c506fdf2f8"
+    },
+    "RECOVERY50_PREPARATION.json": {
+      "bytes": 4160,
+      "sha256": "cd99b13d1a69388bac99ec2c9e34ff74f779b0697e4dd0fb259bd840aad19cf2"
+    },
+    "RECOVERY50_STREAMING_FREEZE.json": {
+      "bytes": 1171,
+      "sha256": "618c8ee41831c71d9aa6741a313af5b79682c86e1b6426f0f41722819003ab1c"
+    }
+  },
+  "routeAssessment": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobRoleName": "checkpoint-consumer",
+    "steps": 7,
+    "platformMinutes": 360,
+    "ownedStagePhaseDeadlineMinutes": 15,
+    "python": "3.12.10 x64",
+    "trigger": "one initial created push, run attempt 1, zero before SHA, fixed repository and branch",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "checkoutCredentialsPersisted": false,
+    "concurrencyCancellation": false,
+    "fixtureCheckoutOnly": true,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeOrHarnessCheckout": false,
+    "fullBuild": false,
+    "artifactUpload": false,
+    "normalSourceAcquisition": {
+      "files": 1,
+      "sourcePath": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "method": "ordinary authenticated GitHub Contents API",
+      "redirectsRejected": true,
+      "responseCapBytes": 1048576,
+      "responseTimeoutSeconds": 30,
+      "elapsedAcquisitionCheckSeconds": 90,
+      "tokenRestrictedToAcquisitionStepAndNotPrinted": true
+    },
+    "monitorAndCleanup": "Existing Runner, ABI bindings, owned groups, resource limits, first failure, stopping monitor failure, retained diagnostics, exact leader reap and verified group cleanup are retained.",
+    "preflight": "Actual 514 QA plus 14 recording tests must pass with strictly typed zero failures, errors and skips; missing failure or cleanup evidence rejects the final predicate.",
+    "serializerContract": "Nine ordered cases are required: the six existing cases and three large whole-profile positive, no-end and truncated controls. Every large input must exceed 16 MiB. Exact count, type, unknown, source and cleanup predicates apply.",
+    "denseInput": "The selected source-bound portable test includes 1,000,000 resource rows and requires observed aggregation within the unchanged 30-second budget on the actual Mac.",
+    "individualEvidence": "The final public result includes all nine bounded case projections when the complete contract validates. Linux case values must not be substituted for actual Mac observations.",
+    "negativeSemantics": "No-end is observed complete coverage with zero ended targets. Truncation stays unconfirmed with null counts. Neither is build completion or cache reuse proof.",
+    "duplicateContractPredicatesASTIdentical": true,
+    "alwaysFinalVerification": true
+  },
+  "independentValidation": {
+    "implementation": {
+      "binding": {
+        "bytes": 12616,
+        "sha256": "15ca10eecba73d44221371efc60da46ea31aa5113ad1faf5fbe0aaee25299a8d"
+      },
+      "fullQA": {
+        "total": 729,
+        "passed": 712,
+        "skipped": 17,
+        "failures": 0,
+        "errors": 0
+      },
+      "focused": {
+        "total": 70,
+        "passed": 70,
+        "skipped": 0
+      },
+      "actualMacAlreadyQualified": false
+    },
+    "candidateControls": {
+      "negativeRejected": 877,
+      "positiveContractAccepted": true,
+      "YAMLAndAllBashInlinePythonSyntax": "passed",
+      "result": {
+        "name": "floorp-recovery50-independent-guarded-controls-result.json",
+        "bytes": 877,
+        "sha256": "bae1d2b5d4aebcfd0f2577ea30a99cf61b09a0296fbb200c14918e3764222eb2"
+      },
+      "script": {
+        "name": "floorp-recovery50-guarded-controls.py",
+        "bytes": 10176,
+        "sha256": "790814f2a777c153dd3a7427418e4b0f24fb40f237d969be7612334f83aa31b1"
+      }
+    },
+    "sourceAcquisitionControls": {
+      "cases": 5,
+      "allPassed": true,
+      "actualNetworkRequestedByControls": false,
+      "casesCovered": [
+        "success",
+        "wrong hash",
+        "oversized response",
+        "HTTP error",
+        "receipt persistence error"
+      ],
+      "result": {
+        "name": "floorp-recovery50-independent-source-api-controls-result.json",
+        "bytes": 666,
+        "sha256": "d9c1f6af3378c3fff95e49aab7b3cd226bf082b9b79baca56702c41d9e82eb44"
+      }
+    },
+    "selectedSuiteDiscovery": {
+      "QA": 514,
+      "recording": 14,
+      "actualMacTestsExecutedByCountControl": false,
+      "result": {
+        "name": "floorp-recovery50-independent-suite-count.json",
+        "bytes": 821,
+        "sha256": "2751365973ea3d7217391b10280fe51a5f5091f7ab7d0a90d555cee0275f674c"
+      }
+    },
+    "triggerAssessment": {
+      "branch": "codex/mac-native-streaming-recovery50-20261019",
+      "currentDirectoryEntries": 29,
+      "workflowYAMLFiles": 26,
+      "matchingWorkflows": [
+        ".github/workflows/mac-native-checkpoint.yml"
+      ],
+      "otherWorkflowBodiesInheritedFromPreviouslyReadImmutableParent": true,
+      "currentDirectoryYAMLSetMatchesPreviouslyReadSet": true,
+      "immutableCallerCompareChangesOnlyDedicatedWorkflow": true,
+      "existingOtherBranchFiltersReevaluated": true
+    }
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "The inherited driver predicate accepted absent firstFailure, driverFailure, or monitorFailure as None.",
+      "resolution": "All three fields must now be present and explicitly None; missing-field negative controls reject."
+    },
+    {
+      "severity": "P2",
+      "issue": "The inherited preflight predicate accepted an absent stage cleanupFailure as None.",
+      "resolution": "Every stage must now explicitly contain cleanupFailure=None; missing evidence rejects."
+    }
+  ],
+  "freshReadOnlyChecks": {
+    "observedAt": "2026-10-19T19:32:16Z",
+    "branchMatches": 0,
+    "callerRunCount": 0,
+    "activeTotal": 0,
+    "activeOwned": 0,
+    "queuedTotal": 1,
+    "queuedOwned": 0,
+    "workflowTriggerMatchCount": 1,
+    "reviewerCIOrRefMutation": false,
+    "reviewerPayloadAcquisition": false,
+    "unrelatedQueuedWorkflowLeftUntouched": true
+  },
+  "preActivationConditions": [
+    "Recheck the reviewed caller/source identities, unused dedicated branch, no prior caller runs, and no active or queued owned validation immediately before the single activation.",
+    "Use the reviewed fixture and caller exactly; this decision covers only the SDK-free short diagnostic."
+  ],
+  "terminalAcceptance": [
+    "Provider metadata must bind the actual run and sole Mac job to this caller, source fixture, initial push and attempt 1.",
+    "All 514 QA and 14 recording tests must actually pass with zero skips, failures and errors; all owned stages must finish with exact leader reaping and verified cleanup.",
+    "The actual nine-case serializer result and final strict predicates must pass. Retain individual large-case values and keep all qualification scopes synthetic.",
+    "Verify artifact count zero and preserve any monitor uncertainty or first failure independently."
+  ],
+  "limits": [
+    "No actual Mac result is claimed by this prelaunch review.",
+    "No lost Recovery48 profile, compiler subphase, remaining duration, cache hit, full build, Mozilla harness or native authentication result is reconstructed or qualified.",
+    "The unchanged 2 GiB input cap and cooperative 30-second parser budget are bounds, not a guarantee for every possible profile.",
+    "Later authorized continuation should use actual short terminal evidence and fresh legitimate SDK/checkpoint origin checks; an unknown forecast alone is not an indefinite hold."
+  ],
+  "publicEvidencePrivacy": "Reviewed technical documents and new bounded case projections contain no private paths, raw process identifiers, command text, environment values, secret URLs or conversation details."
+}

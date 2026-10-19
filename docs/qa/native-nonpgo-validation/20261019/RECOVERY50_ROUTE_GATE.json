@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "status": "clear",
+  "observedAt": "2026-10-19 19:33:23 UTC",
+  "branch": "codex/mac-native-streaming-recovery50-20261019",
+  "branchMatches": 0,
+  "priorCallerRuns": 0,
+  "ownedInProgress": 0,
+  "ownedQueued": 0,
+  "otherRunsUntouched": true,
+  "caller": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+  "callerTree": "86f50290862f7ed5518a942a6a30c2a38dd80a1f",
+  "fixture": "de18c22f3a7e79eb2890f5e63ee6f466f574af98",
+  "fixtureTree": "80956d060245590d257a9599ea4b4e423d52b073",
+  "workflow": {
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 30916,
+    "sha256": "24121225c329f6f0b94054a4e998f0af3ffcf4e882135a724115ebc8ef0076d9"
+  },
+  "exactProviderReadback": true,
+  "onlyOneChangedWorkflow": true,
+  "SDKAcquisition": false,
+  "checkpointDownload": false,
+  "newArtifacts": 0,
+  "longBuild": false,
+  "negativeFaultsRejected": 877,
+  "sourceAPIControls": 5,
+  "prelaunchDecision": "GO_ONE_SDK_FREE_SHORT_DIAGNOSTIC"
+}
