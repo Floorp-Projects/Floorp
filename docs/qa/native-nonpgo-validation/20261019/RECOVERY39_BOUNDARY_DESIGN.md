@@ -16,8 +16,9 @@ of a residual build writer.
 The gate is not a complete proof of filesystem quiescence: a process already in
 the baseline can write; a new writer can appear after the census; the census is
 not an atomic snapshot of all processes and filesystem state. The independent
-local counterexample adds a new object after manifest enumeration: the current
-pack/inspect succeeds while omitting that object. This demonstrates a capture
+local counterexample adds a new object after manifest enumeration: the
+pre-hardening implementation captured in the design review succeeds at
+pack/inspect while omitting that object. This demonstrates a capture
 limitation, without attributing any actual Recovery35 candidate or mutation.
 
 Natural successful build stages, exact leader reap, group cleanup, fixed inputs,
