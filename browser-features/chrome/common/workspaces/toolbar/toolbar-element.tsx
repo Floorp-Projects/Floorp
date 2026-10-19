@@ -19,6 +19,10 @@ import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import { getContainerColorName } from "../utils/container-color.ts";
+import {
+  applyWorkspaceSyncIndicator,
+  createWorkspaceSyncIndicator,
+} from "./workspace-sync-indicator.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
@@ -39,9 +43,21 @@ export class WorkspacesToolbarButton {
       "workspacesToolbarButtonPanel",
       <PopupElement ctx={ctx} />,
       null,
-      () => {
+      (node) => {
         const exec = () => {
           setTimeout(() => this.updateButtonIfNeeded(true), 500);
+
+          const syncIndicator = createWorkspaceSyncIndicator(
+            ctx,
+            () => selectedWorkspaceID() ?? undefined,
+            () => {
+              const id = selectedWorkspaceID();
+              return id ? ctx.getRawWorkspace(id)?.name ?? "" : "";
+            },
+          );
+          createEffect(() =>
+            applyWorkspaceSyncIndicator(node, syncIndicator())
+          );
 
           createEffect(() => {
             const _ = configStore.showWorkspaceNameOnToolbar;

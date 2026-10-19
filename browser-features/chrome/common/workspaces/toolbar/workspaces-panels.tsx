@@ -18,6 +18,7 @@ import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import type { TWorkspaceID } from "../utils/type.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
+import { createWorkspaceSyncIndicator } from "./workspace-sync-indicator.ts";
 
 const translationKeys = {
   createNew: "workspaces.popup.create-new" as const,
@@ -39,7 +40,7 @@ type WorkspacePanelButtonProps = {
   ctx: WorkspacesService;
 };
 
-const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
+export const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
   const workspace = createMemo(() => {
     const data = workspacesDataStore.data;
     if (data instanceof Map) {
@@ -56,6 +57,11 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
     (workspace() as { name?: string } | undefined)?.name ?? ""
   );
   const isSelected = () => selectedWorkspaceID() === props.workspaceId;
+  const syncIndicator = createWorkspaceSyncIndicator(
+    props.ctx,
+    () => props.workspaceId,
+    workspaceName,
+  );
 
   const handleActivate = () => {
     if (!isSelected()) {
@@ -148,10 +154,11 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
         class="workspace-panel panel-sidebar-panel"
         data-checked={isSelected() ? "true" : undefined}
         data-workspace-id={props.workspaceId}
+        data-workspace-sync={syncIndicator().state}
         role="button"
         tabIndex={0}
-        title={workspaceName()}
-        aria-label={workspaceName()}
+        title={syncIndicator().tooltip}
+        aria-label={syncIndicator().tooltip}
         draggable="true"
         onClick={handleActivate}
         onKeyDown={handleKeyDown}

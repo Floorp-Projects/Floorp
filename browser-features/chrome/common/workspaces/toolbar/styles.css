@@ -7,6 +7,8 @@
 #workspaces-toolbar-button {
   border-radius: 0px !important;
   position: relative;
+  max-inline-size: 18em;
+  min-inline-size: 0;
 
   &:hover {
     background-color: var(--toolbarbutton-hover-background) !important;
@@ -75,6 +77,52 @@
 
   & > label {
     display: inherit !important;
+  }
+
+  & > .toolbarbutton-text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Workspace sync indicators */
+[data-workspace-sync] {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 3px;
+    inset-block-end: 3px;
+    width: 11px;
+    height: 11px;
+    background-color: currentColor;
+    mask: url("chrome://browser/skin/sync.svg") center / contain no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    pointer-events: none;
+  }
+
+  &[data-workspace-sync="attention"]::after {
+    mask-image: url("chrome://global/skin/icons/warning.svg");
+    color: var(--text-color-warning, currentColor);
+  }
+}
+
+#workspaces-toolbar-button[data-workspace-sync][label] {
+  padding-inline-end: 18px;
+}
+
+.workspaceButton[data-workspace-sync] {
+  padding-inline-end: 30px;
+
+  &::after {
+    width: 14px;
+    height: 14px;
+    inset-inline-end: 10px;
+    inset-block-end: calc(50% - 7px);
   }
 }
 

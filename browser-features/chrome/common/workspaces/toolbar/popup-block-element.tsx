@@ -8,6 +8,7 @@ import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
 import { workspacesDataStore } from "../data/data.ts";
+import { createWorkspaceSyncIndicator } from "./workspace-sync-indicator.ts";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -17,6 +18,11 @@ export function PopupToolbarElement(props: {
 }) {
   const workspace = createMemo(() =>
     props.ctx.getRawWorkspace(props.workspaceId)
+  );
+  const syncIndicator = createWorkspaceSyncIndicator(
+    props.ctx,
+    () => props.workspaceId,
+    () => workspace()?.name ?? "",
   );
 
   const handleDragStart = (event: DragEvent) => {
@@ -95,6 +101,9 @@ export function PopupToolbarElement(props: {
             closemenu="none"
             data-selected={props.isSelected}
             data-workspaceId={props.workspaceId}
+            data-workspace-sync={syncIndicator().state}
+            tooltiptext={syncIndicator().tooltip}
+            aria-label={syncIndicator().tooltip}
             data-has-container={hasContainer() ? "true" : "false"}
             data-container-color={containerColorName() ?? ""}
             draggable="true"
