@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "review": "Recovery48 immutable route using explicit current official SDK source",
+  "reviewedAtUtc": "2026-10-19T09:47:02.358109+00:00",
+  "decision": {
+    "staticRoute": "CLEAR",
+    "execution": "CONDITIONAL_GO",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "findings": []
+  },
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "21f920f6790f78d923947886e0ddd8c6151da59a",
+    "tree": "de189b863e37fc25c8396bcc84a0d8a2b0979f3f",
+    "parent": "4a3cb37a3bef5187e15b404104d798328206fdc0",
+    "priorReviewedSource": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+    "providerParentAndTreeVerified": true,
+    "parentCompareCommits": 1,
+    "parentCompareChangedFiles": 12,
+    "all12ProviderContentsExact": true,
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.py",
+        "bytes": 8194,
+        "sha256": "c7b84cfed8b85d96315fadd785d664e55e33be4edc1f7137e71d42de33bb06c2"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "bytes": 1030,
+        "sha256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+        "bytes": 16070,
+        "sha256": "12f2a907f69ba43e32e1b0ad92a40d8a9047b5cde54f19b42eb94e564a499e02"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "bytes": 4974,
+        "sha256": "89fa1eb5217cc7f2508955e42c4e110aafc2068c120a96a638940aef3297b832"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/materialize.py",
+        "bytes": 2866,
+        "sha256": "8f927ee0f8428e2a7b3de8d32e07bf1a9a51018776588d90afebd0494c875491"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 44683,
+        "sha256": "6007e9a8440aaa4b237a8f011f6abc4ba602b252ac1a1abe89c8c9180d62696a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/census_experiment.py",
+        "bytes": 14466,
+        "sha256": "8f33e00fb2295926060b2714a3400382491de9b0f4c8f34cca10f608686e45cc"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 13466,
+        "sha256": "3f6ff2437ead9c32493f4bc01a3b3b41cf1eba08eeb52737c85b48c90f899aac"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+        "bytes": 13763,
+        "sha256": "e0e844d220c54a69952d952ef1a2ea11018a30def1cfe01479a649769b970f79"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SDK_SOURCE_MATCH.json",
+        "bytes": 8130,
+        "sha256": "ef5db03fffc74969a7628c5a277b7035e04b50bb99cceadd79cb78c5fdad02d3"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SDK_SOURCE_PREPARATION.json",
+        "bytes": 4392,
+        "sha256": "ec625d65471612946ee24c1c42ae16c4b7977cc71d534c7d86070479e5837b67"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/RECOVERY48_SDK_SOURCE_IMPLEMENTATION_REVIEW.json",
+        "bytes": 12227,
+        "sha256": "6f8dba3b0fce0b092eaa0e480ea378b90cfde4a1c41f73a2d5d515b95b4fa9ac"
+      }
+    ]
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "337a209baae219771c562adc80b832e491418a23",
+    "tree": "bbc9160fed16baed7f80202440d9820510a358c8",
+    "parent": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "providerReadback": {
+      "bytes": 19894,
+      "sha256": "5d7890613dc9ddceda844f018e08ed477dd62fa5c193725754edc762054a65b5"
+    },
+    "providerTreeParentAndCompareVerified": true,
+    "commitsAheadOfParent": 1,
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "priorUnusedCandidatesReplaced": [
+      "9767bbee676de3e1b7144b8048f93d1a9aa72cde",
+      "8e40cf41f58ee343209b218b23fa969c4b094f16"
+    ]
+  },
+  "carriedForwardReviews": {
+    "sdkImplementation": {
+      "bytes": 12227,
+      "sha256": "6f8dba3b0fce0b092eaa0e480ea378b90cfde4a1c41f73a2d5d515b95b4fa9ac"
+    },
+    "previousRoute": {
+      "bytes": 11046,
+      "sha256": "5961083b189460e3555791bcfae85c80115a9d170150fe3bce8357d86585f8b3"
+    },
+    "earlySdkStepOrder": {
+      "bytes": 8513,
+      "sha256": "eb19ce7bc60e19f8dd39d10ac00c25291d36e06c4d6f6826bcc12476f8cb5d4b"
+    },
+    "scope": "Existing reviewed Mozilla source, lifecycle/marker controls, cleanup/resource/replay guards remain applicable. Only the explicit SDK acquisition source, its strict public result gate and added source tests replace prior acquisition assumptions."
+  },
+  "sourceGuardBindings": {
+    "sdkSourceJsonSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "providerPlanReadback": {
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "sdkImplementationFreeze": {
+      "bytes": 2158,
+      "sha256": "10410bdea65d3643caa39f346967a30c33b677cd1315107eb0e1aa4c6b5289e7"
+    },
+    "all9CodeFilesMatchReviewedFreeze": true,
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "checkpointArtifact": 12164479528,
+    "checkpointOriginRun": 39197008470,
+    "checkpointFetchStepUnchanged": true,
+    "planCheckpointContextAndReferenceGuardsUnchanged": true
+  },
+  "routeChecks": {
+    "jobs": 1,
+    "jobName": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "jobMinutes": 360,
+    "permissions": "contents:read, actions:read; unchanged",
+    "initialExecutionGuards": "Dedicated branch push, created=true, all-zero before SHA and attempt=1; unchanged.",
+    "nativePreflightStepMinutes": 10,
+    "nativePreflightRunnerPhaseMinutes": 15,
+    "sdkStepMinutes": 12,
+    "sdkPayloadDownloadSeconds": 600,
+    "checkpointDownloadStepMinutes": 25,
+    "sdkOrder": "Immediately after successful native preflight; before Runtime and native harness checkout.",
+    "explicitSdkSourceAtFetchAndPipeline": true,
+    "sourceSelectionPath": "fixture/tools/qa/native-nonpgo/sdk_source.json",
+    "producerJobs": 0,
+    "artifactUploads": 0,
+    "consumerMode": "--checkpoint-role consumer --replay-origin --mozilla-only",
+    "fullHostBeforeMozillaCases": true,
+    "stagePackage": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "noProductSigningMergeOrPermissionExpansion": true
+  },
+  "strictFinalResultGate": {
+    "originalFinalQualificationASTUnchanged": true,
+    "newConjunctions": [
+      "sdk_ok(value)",
+      "preflight_ok(value)"
+    ],
+    "sdkPins": {
+      "artifact": 12149860607,
+      "run": 39162639256,
+      "attempt": 1,
+      "producerJob": 117779018335,
+      "zipSHA256": "2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+      "compressedTarSHA256": "f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328",
+      "baselineCompressedTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "uncompressedTar": {
+        "bytes": 760518144,
+        "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+      }
+    },
+    "sdkGate": "Requires exact original plan and new immutable acquisition-source digest, typed actual source IDs, both new wire hashes, original content baseline, full raw TAR anchor, canonical tree and no SDK evidence error. Nested acquisition keys are exact.",
+    "preflightGate": "Passed complete 403 QA and 14 separate recording tests, no failures/errors/skips, firstFailure and monitorFailure explicitly null.",
+    "mozillaCases": [
+      {
+        "case": "compiled-debug",
+        "mode": "positive",
+        "harnessStatus": "passed",
+        "exactExitCode": 0,
+        "compiledDebugMarkerRequired": true
+      },
+      {
+        "case": "failure-control",
+        "mode": "negative-control",
+        "harnessStatus": "failed",
+        "exactExitCode": 1,
+        "intentionalFailureMarkerRequired": true,
+        "failureRemainsFailed": true
+      },
+      {
+        "case": "upstream-version-comparator",
+        "mode": "positive",
+        "harnessStatus": "passed",
+        "exactExitCode": 0
+      }
+    ],
+    "common": "Exact case order/identity, complete single test lifecycle, no skip/crash/timeout, exact child reap, group gone, clean cleanup, no monitor/evidence failure and fixed source verification remain required.",
+    "qualification": "verified-origin-current-mozilla-xpcshell-smoke",
+    "freshObjdir": false,
+    "sameJob": false,
+    "productQualification": false
+  },
+  "independentChecks": {
+    "providerCommitTreeAncestryAndComparisons": "PASS",
+    "providerSourceReadbacks": {
+      "matched": 12,
+      "mismatched": 0
+    },
+    "providerWorkflowExact": "PASS",
+    "yamlBashAndInlinePythonSyntax": "PASS",
+    "deterministicFinalGate": {
+      "normalPassed": 1,
+      "faultsRejected": 248,
+      "originalFaultsRejected": 130,
+      "additionalSdkAndPreflightFaultsRejected": 118
+    },
+    "readOnlyControlsScope": "Re-executed the assertion/syntax/control prefix without renderer or result-file write operations; fake result objects only, no actual SDK or harness execution.",
+    "selectedSuiteDiscovery": {
+      "qaModules": 20,
+      "qaTests": 403,
+      "recordingTests": 14,
+      "testExecution": false
+    },
+    "previousIndependentFullRegression": {
+      "same9SourceFiles": true,
+      "total": 618,
+      "passed": 601,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 31.319,
+      "log": {
+        "bytes": 10733,
+        "sha256": "2c4eefb7ac43d7b3c2ca78dd371bd5907adc0c60c64a7041b88537b6274ea6ba"
+      }
+    },
+    "immutablePreparationRecordedRegression": {
+      "total": 618,
+      "passed": 601,
+      "DarwinOnlySkipped": 17,
+      "seconds": 31.684,
+      "logBytes": 120826,
+      "logSHA256": "6f74eb4a4075c8adf0f3808306f1d66a603001d172ffab08e16f70a3e9ad3fd8"
+    },
+    "newDocuments": "New match/preparation/implementation-review documents were read for provenance, same-content versus wire distinctions, privacy and qualification limits."
+  },
+  "controlEvidence": {
+    "sourcePayload": {
+      "bytes": 149737,
+      "sha256": "0e713ad100673b474b3e1e872cd6e0e3c036697b05332d398558957201e50a4b"
+    },
+    "script": {
+      "bytes": 16885,
+      "sha256": "4c43b10fe0fba3637ca0e9d6dde214ee36417457abe761ff96ef1dbf1d4b0516"
+    },
+    "recordedResult": {
+      "bytes": 2280,
+      "sha256": "31c8fb5d3991404f20497e29e04050c0fe699cc6963a11a4ef8f021cb5855aa3"
+    }
+  },
+  "activationConditions": [
+    "Run39212933648 must first reach terminal and receive independent terminal review; address any new blocker before this route runs.",
+    "Immediately before activation and actual fetch, verify current official unexpired SDK12149860607 provenance/size/digest, successful fixed producer and expiry; the observed expiry2026-10-19T20:18:26Z is not a future availability guarantee.",
+    "Verify the existing checkpoint12164479528 remains unexpired with exact locked origin/producer/bytes/digests and preserve real current execution metadata plus explicit cross-run replay checks.",
+    "Recheck no owned active/queued overlap, unused activation branch and prior caller/branch runs. No branch or active-run status is certified anew by this static review.",
+    "Use exact fixture21f920f6 and caller337a209b bytes, retain all resource/cleanup/phase limits, and require actual Mac preflight403+14 without skips followed by actual acquisition, restore, full-host and three-case Mozilla evidence."
+  ],
+  "scopeLimits": [
+    "Actual alternate SDK acquisition on Mac, resumed full build and current Mozilla harness results are still pending; existing local byte equivalence is not their result.",
+    "No producer, upload, retention/authentication change, expired-source bypass, plan rewrite or new product qualification is introduced.",
+    "Historical native and monitor causes remain unresolved; run47 was not polled, modified or cancelled by this review."
+  ],
+  "operations": {
+    "sourceEdits": false,
+    "ciLaunchOrCancellation": false,
+    "refBranchMutation": false,
+    "activeJobLogRead": false,
+    "run47Polling": false,
+    "payloadAcquisition": false,
+    "artifactUpload": false,
+    "signingAuthenticationOrPermissionChange": false
+  }
+}

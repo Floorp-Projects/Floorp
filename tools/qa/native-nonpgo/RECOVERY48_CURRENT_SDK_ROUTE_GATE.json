@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_CURRENT_SOURCE_MOZILLA_WITH_CONTENT_IDENTICAL_OFFICIAL_SDK_ROUTE",
+  "status": "prepared-not-activated",
+  "supersedesPreparedRouteCommit": "a0c7c2e4ce1f3d6b7ec217bf573e0fee524399bb",
+  "supersedesUnexecutedCallers": [
+    "9767bbee676de3e1b7144b8048f93d1a9aa72cde",
+    "8e40cf41f58ee343209b218b23fa969c4b094f16"
+  ],
+  "fixture": {
+    "commit": "21f920f6790f78d923947886e0ddd8c6151da59a",
+    "tree": "de189b863e37fc25c8396bcc84a0d8a2b0979f3f",
+    "providerExactFiles": 12
+  },
+  "caller": {
+    "commit": "337a209baae219771c562adc80b832e491418a23",
+    "tree": "bbc9160fed16baed7f80202440d9820510a358c8",
+    "parent": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "changedPath": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 19894,
+    "sha256": "5d7890613dc9ddceda844f018e08ed477dd62fa5c193725754edc762054a65b5",
+    "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "branchCreated": false
+  },
+  "reviewSHA256": "51412081777554843913a62f49487f5599642619c956604a6e2dbc90854723d4",
+  "scopeOfNextExecution": {
+    "consumerJobs": 1,
+    "runner": "macos-15-intel",
+    "qaTests": 403,
+    "recordingTests": 14,
+    "newProducer": false,
+    "newUploads": 0,
+    "soleExistingCheckpoint": 12164479528,
+    "jobMinutes": 360,
+    "sdkDownloadSeconds": 600,
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "SDKArtifact": 12149860607,
+    "SDKSourceRun": 39162639256,
+    "SDKProducerJob": 117779018335,
+    "SDKObservedExpiry": "2026-10-19T20:18:26Z",
+    "SDKSourceConfigSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25"
+  },
+  "hypotheses": [
+    "The explicitly pinned normal scheduled SDK source supplies identical complete uncompressed TAR bytes while each different ZIP/gzip archive is independently hashed; baseline checkpoint context stays exact.",
+    "The restored current fixed-source full host build provides fresh x86_64 xpcshell and XUL compiled with DEBUG, AppConstants.DEBUG and version 158.0.1.",
+    "The real current Mozilla harness completes the positive DEBUG case and original version-comparator test with its original head.",
+    "A separate deliberate assertion failure produces exactly one failed harness case and exit1 with exact reap/group cleanup, retained as a failure plus a satisfied negative-control expectation."
+  ],
+  "activationConditions": [
+    "Run39212933648 terminal evidence independently reviewed and relevant blockers resolved.",
+    "Fresh normal official API verifies the new SDK run/artifact/producer and its unexpired acquisition window; no expired old artifact retrieval.",
+    "Fresh normal official API verifies sole checkpoint12164479528 identity, size, hashes and unexpired availability.",
+    "Zero owned active or queued workload overlap.",
+    "Unused intended branch and no prior run for immutable caller."
+  ],
+  "actualMozillaExecution": "NOT_TESTED",
+  "nativeAndPackageScope": "Run48 mozilla-only does not qualify package or native authentication; run47 is evaluated separately.",
+  "originalNativeExitCause": "UNKNOWN",
+  "productSigningOrPublishing": false,
+  "authenticationOrPermissionsChanged": false,
+  "run47Touched": false
+}
