@@ -457,7 +457,22 @@ diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/too
  this.runtime = class extends ExtensionAPI {
    getAPI(context) {
      let { extension } = context;
-@@ -110,7 +170,15 @@
+@@ -105,12 +165,30 @@
+         },
+ 
+         connect(extensionId, options) {
++          if (
++            ExtensionUtils.getChromeExtensionId(extension) &&
++            extensionId &&
++            !/^[a-p]{32}$/.test(extensionId)
++          ) {
++            throw new context.cloneScope.TypeError(
++              "Error in invocation of runtime.connect(optional string extensionId, optional object connectInfo): " +
++                `Invalid extension id: '${extensionId}'`
++            );
++          }
+           let name = options?.name ?? "";
+           return context.messenger.connect({ name, extensionId });
          },
  
          sendMessage(...args) {
@@ -474,7 +489,7 @@ diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/too
            return context.messenger.sendRuntimeMessage(arg);
          },
  
-@@ -123,7 +191,9 @@
+@@ -123,7 +201,9 @@
          },
  
          get lastError() {
@@ -485,7 +500,7 @@ diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/too
          },
  
          getVersion() {
-@@ -134,7 +204,7 @@
+@@ -134,7 +214,7 @@
            return Cu.cloneInto(extension.manifest, context.cloneScope);
          },
  

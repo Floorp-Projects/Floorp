@@ -457,20 +457,21 @@ diff --git a/dom/serviceworkers/ServiceWorkerPrivate.cpp b/dom/serviceworkers/Se
  
  void ServiceWorkerPrivate::RenewKeepAliveToken(
 diff --git a/dom/serviceworkers/ServiceWorkerScriptCache.cpp b/dom/serviceworkers/ServiceWorkerScriptCache.cpp
-index 475fe3f..9fe89d0 100644
+index 475fe3f..f4a2177 100644
 --- a/dom/serviceworkers/ServiceWorkerScriptCache.cpp
 +++ b/dom/serviceworkers/ServiceWorkerScriptCache.cpp
-@@ -9,6 +9,9 @@
+@@ -9,6 +9,10 @@
  #include "js/PropertyAndElement.h"  // JS_GetElement
  #include "js/Utility.h"             // JS::FreePolicy
  #include "mozilla/ScopeExit.h"
++#include "mozilla/BasePrincipal.h"
 +#include "mozilla/Logging.h"
 +#include "mozilla/ExtensionPolicyService.h"
 +#include "mozilla/extensions/WebExtensionPolicy.h"
  #include "mozilla/StaticPrefs_extensions.h"
  #include "mozilla/TaskQueue.h"
  #include "mozilla/UniquePtr.h"
-@@ -40,6 +43,8 @@ using mozilla::dom::cache::Cache;
+@@ -40,6 +44,8 @@
  using mozilla::dom::cache::CacheStorage;
  using mozilla::ipc::PrincipalInfo;
  
@@ -479,7 +480,7 @@ index 475fe3f..9fe89d0 100644
  namespace mozilla::dom::serviceWorkerScriptCache {
  
  namespace {
-@@ -465,6 +470,8 @@ class CompareManager final : public PromiseNativeHandler {
+@@ -465,6 +471,8 @@
  
    void ManageNewCache(JSContext* aCx, JS::Handle<JS::Value> aValue) {
      MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForOpen);
@@ -488,7 +489,7 @@ index 475fe3f..9fe89d0 100644
  
      // RAII Cleanup when fails.
      nsresult rv = NS_ERROR_FAILURE;
-@@ -510,6 +517,9 @@ class CompareManager final : public PromiseNativeHandler {
+@@ -510,6 +518,9 @@
      ErrorResult result;
      result = serviceWorkerScriptCache::GenerateCacheName(mNewCacheName);
      if (NS_WARN_IF(result.Failed())) {
@@ -498,7 +499,7 @@ index 475fe3f..9fe89d0 100644
        MOZ_ASSERT(!result.IsErrorWithMessage());
        Fail(result.StealNSResult());
        return;
-@@ -518,11 +528,16 @@ class CompareManager final : public PromiseNativeHandler {
+@@ -518,11 +529,16 @@
      RefPtr<Promise> cacheOpenPromise =
          mCacheStorage->Open(mNewCacheName, result);
      if (NS_WARN_IF(result.Failed())) {
@@ -515,7 +516,7 @@ index 475fe3f..9fe89d0 100644
      mState = WaitingForOpen;
      cacheOpenPromise->AppendNativeHandler(this);
    }
-@@ -581,15 +596,22 @@ class CompareManager final : public PromiseNativeHandler {
+@@ -581,15 +597,22 @@
      // continue since Cache does not yet support starting a read that is being
      // written to.
      ErrorResult result;
@@ -538,7 +539,7 @@ index 475fe3f..9fe89d0 100644
      mPendingCount += 1;
      cachePromise->AppendNativeHandler(this);
      return NS_OK;
-@@ -784,6 +806,9 @@ void CompareNetwork::NetworkFinish(nsresult aRv) {
+@@ -784,6 +807,9 @@
    MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForBothFinished ||
                          mState == WaitingForNetworkFinished);
  
@@ -548,7 +549,7 @@ index 475fe3f..9fe89d0 100644
    mNetworkResult = aRv;
  
    if (mState == WaitingForBothFinished) {
-@@ -929,8 +954,12 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
+@@ -929,8 +955,12 @@
    channel->GetOriginalURI(getter_AddRefs(uri));
    bool isExtension = uri->SchemeIs("moz-extension");
  
@@ -562,7 +563,40 @@ index 475fe3f..9fe89d0 100644
      // Return earlier with error is the worker script is a moz-extension url
      // but the feature isn't enabled by prefs.
      return NS_ERROR_FAILURE;
-@@ -1340,6 +1369,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+@@ -968,6 +998,32 @@
+     }
+ 
+     mBuffer.Adopt(buffer.release(), len);
++
++    // A Chrome extension declares one background Worker with extension-wide
++    // scope, including when its script is stored in a package subdirectory.
++    // Extend only that exact main script's maximum scope; keep normal web and
++    // Firefox extension registrations subject to the directory/header rule.
++    if (mIsMainScript && addonPolicy->ChromeCompatibilityEnabled() &&
++        !addonPolicy->BackgroundWorkerScript().IsEmpty() &&
++        BasePrincipal::Cast(mRegistration->Principal())->AddonPolicy() ==
++            addonPolicy) {
++      auto declaredURL =
++          addonPolicy->GetURL(addonPolicy->BackgroundWorkerScript());
++      auto rootURL = addonPolicy->GetURL(u""_ns);
++      if (declaredURL.isOk() && rootURL.isOk() &&
++          mRegistration->Scope().Equals(
++              NS_ConvertUTF16toUTF8(rootURL.unwrap()))) {
++        nsCOMPtr<nsIURI> declaredURI;
++        bool isDeclaredBackground = false;
++        if (NS_SUCCEEDED(NS_NewURI(
++                getter_AddRefs(declaredURI),
++                NS_ConvertUTF16toUTF8(declaredURL.unwrap()))) &&
++            NS_SUCCEEDED(declaredURI->Equals(uri, &isDeclaredBackground)) &&
++            isDeclaredBackground) {
++          mMaxScope.AssignLiteral("/");
++        }
++      }
++    }
+ 
+     rv = NS_OK;
+     return NS_OK;
+@@ -1340,6 +1396,9 @@
    mURL = aURL;
    mPrincipal = aPrincipal;
  
@@ -572,7 +606,7 @@ index 475fe3f..9fe89d0 100644
    // Always create a CacheStorage since we want to write the network entry to
    // the cache even if there isn't an existing one.
    AutoJSAPI jsapi;
-@@ -1348,6 +1380,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+@@ -1348,6 +1407,9 @@
    mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result);
    if (NS_WARN_IF(result.Failed())) {
      MOZ_ASSERT(!result.IsErrorWithMessage());
@@ -582,7 +616,7 @@ index 475fe3f..9fe89d0 100644
      return result.StealNSResult();
    }
  
-@@ -1356,6 +1391,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+@@ -1356,6 +1418,9 @@
      mState = WaitingForScriptOrComparisonResult;
      nsresult rv = FetchScript(aURL, true /* aIsMainScript */);
      if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -592,7 +626,7 @@ index 475fe3f..9fe89d0 100644
        return rv;
      }
  
-@@ -1418,6 +1456,9 @@ void CompareManager::RejectedCallback(JSContext* aCx,
+@@ -1418,6 +1483,9 @@
                                        JS::Handle<JS::Value> aValue,
                                        ErrorResult& aRv) {
    MOZ_ASSERT(NS_IsMainThread());

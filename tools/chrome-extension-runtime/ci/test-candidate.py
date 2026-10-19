@@ -37,6 +37,7 @@ CORE = [
     "ChromeWebPageMessagingNative.test.mts", "ChromeExtensionURLNative.test.mts",
     "polyfills/documentId/DocumentIdPolyfill.test.mts", "polyfills/offscreen/OffscreenNative.test.mts",
     "workers/WorkerScriptCacheNative.test.mts",
+    "workers/WorkerBackgroundScopeNative.test.mts",
     "workers/WorkerRootGCLifetimeNative.test.mts",
     "workers/WorkerMessagingNative.test.mts",
     "ChromeDebuggerNative.test.mts",

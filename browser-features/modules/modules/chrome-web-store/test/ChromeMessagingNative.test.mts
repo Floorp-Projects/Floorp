@@ -12,30 +12,11 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
-type FixtureContext = {
-  xulBrowser: {
-    contentTitle: string;
-    messageManager: { loadFrameScript(script: string, delayed: boolean): void };
-  };
-};
-type FixtureExtension = { backgroundContext?: FixtureContext };
-type Fixture = {
-  id: string;
-  extension: FixtureExtension;
-  addon: { uninstall(): Promise<void> };
-  path: string;
-};
-type Response = {
-  event: string;
-  senderId: string;
-  ownId: string;
-  value: string;
-};
-type CommandResult = {
-  requestId: number;
-  result?: Response & { id: string; url: string; resource: string };
-  error?: string;
-};
+import type {
+  CommandResult,
+  Fixture,
+  FixtureExtension,
+} from "./helpers/messaging-identity-test-types.ts";
 
 async function waitFor<T>(
   read: () => T | undefined | false,
@@ -69,6 +50,7 @@ const background = `
   window.addEventListener('message', async event => {
     const command = event.data;
     if (!command || command.floorpMessagingTest !== true) return;
+    let invocationReturned = false;
     try {
       let result;
       const payload = { value: 'roundtrip' };
@@ -76,13 +58,16 @@ const background = `
         const url = browser.runtime.getURL('resource.txt');
         result = { id: browser.runtime.id, url, resource: await (await fetch(url)).text() };
       } else if (command.operation === 'message') {
-        result = command.target === null
-          ? await browser.runtime.sendMessage(payload)
-          : await browser.runtime.sendMessage(command.target, payload);
+        const returned = command.target === null
+          ? browser.runtime.sendMessage(payload)
+          : browser.runtime.sendMessage(command.target, payload);
+        invocationReturned = true;
+        result = await returned;
       } else if (command.operation === 'port') {
         const port = command.target === null
           ? browser.runtime.connect({ name: 'identity-fixture' })
           : browser.runtime.connect(command.target, { name: 'identity-fixture' });
+        invocationReturned = true;
         result = await new Promise((resolve, reject) => {
           port.onMessage.addListener(value => { resolve(value); port.disconnect(); });
           port.onDisconnect.addListener(() => reject(
@@ -92,7 +77,7 @@ const background = `
       }
       document.title = JSON.stringify({ requestId: command.requestId, result });
     } catch (error) {
-      document.title = JSON.stringify({ requestId: command.requestId, error: String(error) });
+      document.title = JSON.stringify({ requestId: command.requestId, error: String(error), errorName: error.name, synchronousThrow: !invocationReturned });
     }
   });
   const frame = document.createElement('iframe');
@@ -230,6 +215,34 @@ async function testInstalledMessaging(): Promise<void> {
       `Expected connection denial, got ${JSON.stringify(reply)}`,
     );
   }
+  function invalidChromeTarget(
+    reply: CommandResult,
+    target: string,
+    operation: "message" | "port",
+  ): void {
+    assertEquals(
+      reply.errorName,
+      "TypeError",
+      "invalid Chrome target throws TypeError",
+    );
+    assertEquals(
+      reply.synchronousThrow,
+      true,
+      "target validation rejects before returning",
+    );
+    const signature = operation === "message"
+      ? "runtime.sendMessage(optional string extensionId, any message, optional object options, optional function callback)"
+      : "runtime.connect(optional string extensionId, optional object connectInfo)";
+    assertEquals(
+      reply.error,
+      `TypeError: Error in invocation of ${signature}: Invalid extension id: '${target}'`,
+      "invalid Chrome target matches the genuine invocation error",
+    );
+    assert(
+      !reply.result,
+      "invalid target never delivers a message or Port reply",
+    );
+  }
   try {
     const source = await install(a, true);
     const allowed = await install(b, true, { ids: [a, gecko(e)] });
@@ -259,11 +272,15 @@ async function testInstalledMessaging(): Promise<void> {
       firefox.id,
       "Firefox runtime.id unchanged",
     );
-    for (const operation of ["message", "port"]) {
+    for (const operation of ["message", "port"] as const) {
       success(await command(source, operation), "internal", a, a);
       success(await command(source, operation, a), "internal", a, a);
       success(await command(source, operation, b), "external", a, b);
-      success(await command(source, operation, allowed.id), "external", a, b);
+      invalidChromeTarget(
+        await command(source, operation, allowed.id),
+        allowed.id,
+        operation,
+      );
       success(await command(allowed, operation, a), "external", b, a);
       success(
         await command(firefox, operation, source.id),
@@ -271,11 +288,10 @@ async function testInstalledMessaging(): Promise<void> {
         firefox.id,
         a,
       );
-      success(
+      invalidChromeTarget(
         await command(source, operation, firefox.id),
-        "external",
-        source.id,
         firefox.id,
+        operation,
       );
       success(
         await command(firefox, operation),
@@ -284,14 +300,28 @@ async function testInstalledMessaging(): Promise<void> {
         firefox.id,
       );
       denied(await command(source, operation, c));
-      denied(await command(source, operation, deniedTarget.id));
+      invalidChromeTarget(
+        await command(source, operation, deniedTarget.id),
+        deniedTarget.id,
+        operation,
+      );
       denied(await command(source, operation, d));
       denied(await command(fakeSource, operation, allowed.id));
       denied(await command(firefox, operation, b));
-      success(
-        await command(source, operation, fakeTarget.id),
-        "external",
+      invalidChromeTarget(
+        await command(source, operation, source.id),
         source.id,
+        operation,
+      );
+      invalidChromeTarget(
+        await command(source, operation, fakeTarget.id),
+        fakeTarget.id,
+        operation,
+      );
+      success(
+        await command(firefox, operation, fakeTarget.id),
+        "external",
+        firefox.id,
         fakeTarget.id,
       );
     }
