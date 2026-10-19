@@ -1,28 +1,44 @@
 // SPDX-License-Identifier: MPL-2.0
 // The same authored vectors run against real Chrome155 and Gecko APIs/HTTP.
+/** @param {{declarativeNetRequest: import("./network-test-types.ts").DnrAPI}} api @param {string} origin */
 export async function runResponseHeaderVectors(api, origin) {
   const dnr = api.declarativeNetRequest;
+  const document = globalThis.document;
+  if (!document?.body) throw Error("Extension document unavailable");
+  const body = document.body;
+  const candidateOwner = body.ownerDocument;
+  if (!candidateOwner) throw Error("Extension document owner unavailable");
+  const owner = candidateOwner;
+  /** @type {string[]} */
   const checks = [];
+  /** @type {import("./network-test-types.ts").HeaderObservation[]} */
   const observations = [];
   let sequence = 0;
+  /** @param {unknown} condition @param {string} label */
   const assert = (condition, label) => {
     if (!condition) {
-      const error = Error(label);
+      const error =
+        /** @type {import("./network-test-types.ts").HeaderVectorError} */ (
+          Error(label)
+        );
       error.checks = checks;
       error.observations = observations;
       throw error;
     }
     checks.push(label);
   };
-  const set = async rules => {
+  /** @param {import("./network-test-types.ts").DnrRule[]} rules */
+  const set = async (rules) => {
     const old = await dnr.getDynamicRules();
     await dnr.updateDynamicRules({
-      removeRuleIds: old.map(rule => rule.id),
+      removeRuleIds: old.map((rule) => rule.id),
       addRules: rules,
     });
   };
-  const url = headers =>
+  /** @param {Record<string, string[]>} headers */
+  const url = (headers) =>
     `${origin}headers?sequence=${++sequence}&h=${encodeURIComponent(JSON.stringify(headers))}`;
+  /** @param {import("./network-test-types.ts").RuleCondition} condition @param {import("./network-test-types.ts").RuleAction} [action] @param {number} [id] @param {number} [priority] @returns {import("./network-test-types.ts").DnrRule} */
   const rule = (
     condition,
     action = {
@@ -32,7 +48,7 @@ export async function runResponseHeaderVectors(api, origin) {
       ],
     },
     id = 1,
-    priority = 1
+    priority = 1,
   ) => ({
     id,
     priority,
@@ -43,6 +59,7 @@ export async function runResponseHeaderVectors(api, origin) {
     },
     action,
   });
+  /** @param {string} label @param {import("./network-test-types.ts").RuleCondition} condition @param {Record<string, string[]>} headers @param {boolean} expected */
   async function match(label, condition, headers, expected) {
     await set([rule(condition)]);
     const response = await fetch(url(headers));
@@ -54,55 +71,55 @@ export async function runResponseHeaderVectors(api, origin) {
     "Header names are insensitive to ASCII case",
     { responseHeaders: [{ header: "X-PrObE" }] },
     { "x-probe": ["alpha"] },
-    true
+    true,
   );
   await match(
     "Absent included header does not match",
     { responseHeaders: [{ header: "x-absent" }] },
     {},
-    false
+    false,
   );
   await match(
     "HeaderInfo alternatives are OR conditions",
     { responseHeaders: [{ header: "x-absent" }, { header: "x-probe" }] },
     { "x-probe": ["alpha"] },
-    true
+    true,
   );
   await match(
     "Included header values use ASCII-insensitive glob",
     { responseHeaders: [{ header: "x-probe", values: ["aL*HA"] }] },
     { "x-probe": ["Alpha"] },
-    true
+    true,
   );
   await match(
     "Question wildcard matches zero characters",
     { responseHeaders: [{ header: "x-probe", values: ["a?b"] }] },
     { "x-probe": ["ab"] },
-    true
+    true,
   );
   await match(
     "Question wildcard matches one character",
     { responseHeaders: [{ header: "x-probe", values: ["a?b"] }] },
     { "x-probe": ["acb"] },
-    true
+    true,
   );
   await match(
     "Question wildcard excludes two characters",
     { responseHeaders: [{ header: "x-probe", values: ["a?b"] }] },
     { "x-probe": ["accb"] },
-    false
+    false,
   );
   await match(
     "Escaped wildcard is literal",
     { responseHeaders: [{ header: "x-probe", values: ["a\\*b\\?"] }] },
     { "x-probe": ["a*b?"] },
-    true
+    true,
   );
   await match(
     "Mixed wildcard follows Chrome's left-to-right segment matching",
     { responseHeaders: [{ header: "x-probe", values: ["*a?b"] }] },
     { "x-probe": ["aacb"] },
-    false
+    false,
   );
   await match(
     "Excluded values take precedence over included values",
@@ -112,43 +129,43 @@ export async function runResponseHeaderVectors(api, origin) {
       ],
     },
     { "x-probe": ["alpha"] },
-    false
+    false,
   );
   await match(
     "Excluded values alone require the header to exist",
     { responseHeaders: [{ header: "x-probe", excludedValues: ["beta"] }] },
     {},
-    false
+    false,
   );
   await match(
     "Excluded values alone match another header value",
     { responseHeaders: [{ header: "x-probe", excludedValues: ["beta"] }] },
     { "x-probe": ["alpha"] },
-    true
+    true,
   );
   await match(
     "Empty values list matches header existence",
     { responseHeaders: [{ header: "x-probe", values: [] }] },
     { "x-probe": ["alpha"] },
-    true
+    true,
   );
   await match(
     "Repeated response header values are individually matched",
     { responseHeaders: [{ header: "x-probe", values: ["beta"] }] },
     { "x-probe": ["alpha", "beta"] },
-    true
+    true,
   );
   await match(
     "Comma-separated response header values are individually matched",
     { responseHeaders: [{ header: "x-probe", values: ["beta"] }] },
     { "x-probe": ["alpha, beta"] },
-    true
+    true,
   );
   await match(
     "Quoted commas remain within one header value",
     { responseHeaders: [{ header: "x-probe", values: ['"alpha,beta"'] }] },
     { "x-probe": ['"alpha,beta", gamma'] },
-    true
+    true,
   );
   await match(
     "Non-coalescing header keeps its comma",
@@ -156,7 +173,7 @@ export async function runResponseHeaderVectors(api, origin) {
       responseHeaders: [{ header: "set-cookie", values: ["test=alpha, beta"] }],
     },
     { "set-cookie": ["test=alpha, beta"] },
-    true
+    true,
   );
   await match(
     "Excluded response header blocks an included alternative",
@@ -165,13 +182,13 @@ export async function runResponseHeaderVectors(api, origin) {
       excludedResponseHeaders: [{ header: "x-probe", values: ["alpha"] }],
     },
     { "x-probe": ["alpha"] },
-    false
+    false,
   );
   await match(
     "Excluded header absence matches at response stage",
     { excludedResponseHeaders: [{ header: "x-absent" }] },
     { "x-probe": ["alpha"] },
-    true
+    true,
   );
   await match(
     "Actual Stylus content-type XML exclusion",
@@ -179,7 +196,7 @@ export async function runResponseHeaderVectors(api, origin) {
       excludedResponseHeaders: [{ header: "content-type", values: ["*/xml*"] }],
     },
     { "content-type": ["application/xml"] },
-    false
+    false,
   );
   await match(
     "Actual Stylus content-type text exclusion",
@@ -193,7 +210,7 @@ export async function runResponseHeaderVectors(api, origin) {
       ],
     },
     { "content-type": ["text/css"] },
-    true
+    true,
   );
   await set([
     rule({ responseHeaders: [{ header: "x-probe" }] }, { type: "block" }),
@@ -210,12 +227,12 @@ export async function runResponseHeaderVectors(api, origin) {
   }
   assert(
     blocked,
-    "Response-stage block rejects actual HTTP response after it reached server"
+    "Response-stage block rejects actual HTTP response after it reached server",
   );
   await set([
     rule(
       { responseHeaders: [{ header: "x-probe" }] },
-      { type: "redirect", redirect: { url: origin + "redirected" } }
+      { type: "redirect", redirect: { url: origin + "redirected" } },
     ),
   ]);
   const redirectSource = url({ "x-probe": ["alpha"] });
@@ -226,7 +243,7 @@ export async function runResponseHeaderVectors(api, origin) {
   const redirected = await fetch(redirectSource);
   assert(
     redirected.url === origin + "redirected",
-    "Response-stage redirect reaches actual destination"
+    "Response-stage redirect reaches actual destination",
   );
   await set([
     rule({}, { type: "allow" }, 1, 10),
@@ -234,7 +251,7 @@ export async function runResponseHeaderVectors(api, origin) {
   ]);
   assert(
     (await fetch(url({ "x-probe": ["alpha"] }))).ok,
-    "Earlier higher-priority allow suppresses response-stage block"
+    "Earlier higher-priority allow suppresses response-stage block",
   );
   await set([
     rule({}, undefined, 1, 1),
@@ -242,12 +259,12 @@ export async function runResponseHeaderVectors(api, origin) {
       { responseHeaders: [{ header: "x-probe" }] },
       { type: "allow" },
       2,
-      10
+      10,
     ),
   ]);
   assert(
     !(await fetch(url({ "x-probe": ["alpha"] }))).headers.has("x-matched"),
-    "Response-stage allow suppresses lower-priority earlier response modifications"
+    "Response-stage allow suppresses lower-priority earlier response modifications",
   );
   await set([
     rule(
@@ -259,19 +276,19 @@ export async function runResponseHeaderVectors(api, origin) {
         ],
       },
       1,
-      10
+      10,
     ),
     rule(
       { responseHeaders: [{ header: "x-probe", values: ["original"] }] },
       undefined,
       2,
-      20
+      20,
     ),
   ]);
   assert(
     (await fetch(url({ "x-probe": ["original"] }))).headers.get("x-matched") ===
       "yes",
-    "Matching observes original response headers before any rule modifications"
+    "Matching observes original response headers before any rule modifications",
   );
   await set([
     {
@@ -294,25 +311,31 @@ export async function runResponseHeaderVectors(api, origin) {
       action: { type: "block" },
     },
   ]);
+  /** @param {boolean} allow */
   async function frameAllowed(allow) {
     const key = Math.random().toString(16).slice(2);
-    const frame = document.createElement("iframe");
+    const frame = owner.createElement("iframe");
+    /** @type {Promise<boolean>} */
     const promise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        window.removeEventListener("message", listener);
+        globalThis.removeEventListener("message", listener);
         reject(Error("Frame header condition timed out"));
       }, 8000);
-      function listener(event) {
+      /** @param {Event} received */
+      function listener(received) {
+        if (!(received instanceof MessageEvent)) return;
+        const event =
+          /** @type {MessageEvent<{key:string; allowed:boolean}>} */ (received);
         if (event.source !== frame.contentWindow || event.data?.key !== key)
           return;
-        window.removeEventListener("message", listener);
+        globalThis.removeEventListener("message", listener);
         clearTimeout(timeout);
         resolve(event.data.allowed);
       }
-      window.addEventListener("message", listener);
+      globalThis.addEventListener("message", listener);
     });
     frame.src = origin + "frame?allow=" + Number(allow) + "&key=" + key;
-    document.body.append(frame);
+    body.append(frame);
     try {
       return await promise;
     } finally {
@@ -321,11 +344,11 @@ export async function runResponseHeaderVectors(api, origin) {
   }
   assert(
     await frameAllowed(true),
-    "Response-conditioned ancestor allowAllRequests allows real child HTTP request"
+    "Response-conditioned ancestor allowAllRequests allows real child HTTP request",
   );
   assert(
     !(await frameAllowed(false)),
-    "Ancestor with absent header cannot allow a later child request"
+    "Ancestor with absent header cannot allow a later child request",
   );
   const invalid = [
     rule({ responseHeaders: [] }),
@@ -345,7 +368,7 @@ export async function runResponseHeaderVectors(api, origin) {
         requestHeaders: [
           { header: "x-illegal", operation: "set", value: "late" },
         ],
-      }
+      },
     ),
   ];
   await set([rule({})]);
@@ -363,7 +386,7 @@ export async function runResponseHeaderVectors(api, origin) {
     observations.push({ label: "invalid atomic " + index, rejected, stored });
     assert(
       rejected && stored[0]?.condition.responseHeaders == null,
-      `Invalid header rule ${index + 1} rejects atomically`
+      `Invalid header rule ${index + 1} rejects atomically`,
     );
   }
   await set([rule({ excludedResponseHeaders: [{ header: "x-absent" }] })]);
@@ -372,8 +395,8 @@ export async function runResponseHeaderVectors(api, origin) {
     type: "xmlhttprequest",
   });
   assert(
-    outcome.matchedRules.some(match => match.ruleId === 1),
-    "testMatchOutcome evaluates absent response headers at the response stage"
+    outcome.matchedRules.some((match) => match.ruleId === 1),
+    "testMatchOutcome evaluates absent response headers at the response stage",
   );
   await set([
     rule({ responseHeaders: [{ header: "x-probe", values: ["alpha"] }] }),
@@ -384,14 +407,14 @@ export async function runResponseHeaderVectors(api, origin) {
     responseHeaders: { "x-probe": ["alpha"] },
   });
   assert(
-    supplied.matchedRules.some(match => match.ruleId === 1),
-    "testMatchOutcome consumes genuine HeaderInfo responseHeaders dictionary"
+    supplied.matchedRules.some((match) => match.ruleId === 1),
+    "testMatchOutcome consumes genuine HeaderInfo responseHeaders dictionary",
   );
   const exported = await dnr.getDynamicRules();
   assert(
     !("regexFilter" in exported[0].condition) &&
       !("requestHeaders" in exported[0].action),
-    "Chrome rule getters omit absent optional fields rather than inserting null"
+    "Chrome rule getters omit absent optional fields rather than inserting null",
   );
   await set([]);
   return { checks, observations };

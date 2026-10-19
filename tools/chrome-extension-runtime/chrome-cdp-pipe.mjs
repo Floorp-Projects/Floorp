@@ -1,12 +1,37 @@
 // SPDX-License-Identifier: MPL-2.0
 import { spawn } from "node:child_process";
-import { writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+/** @param {string} binary */
+export function assertFrozenChromeBinary(binary) {
+  const reference = /** @type {{binary: {sha256: string}}} */ (JSON.parse(
+    readFileSync(new URL("./chrome-reference.json", import.meta.url), "utf8"),
+  ));
+  const digest = createHash("sha256").update(readFileSync(binary)).digest(
+    "hex",
+  );
+  if (digest !== reference.binary.sha256) {
+    throw Error("Frozen Chrome binary hash mismatch");
+  }
+}
+
 export class ChromePipe {
+  /**
+   * @param {string} chrome
+   * @param {string} output
+   * @param {string[]} [extraArguments]
+   * @param {{headed?: boolean}} [options]
+   */
   constructor(chrome, output, extraArguments = [], { headed = false } = {}) {
     this.output = output;
     this.next = 0;
+    /** @type {Map<number, import("./cdp-types.ts").PendingCDPCall>} */
     this.pending = new Map();
+    /** @type {import("./cdp-types.ts").CDPEvent[] | undefined} */
+    this.events = undefined;
+    this.closed = false;
     this.buffer = "";
     this.stderr = "";
     this.process = spawn(chrome, [
@@ -24,27 +49,45 @@ export class ChromePipe {
       ...extraArguments,
       "about:blank",
     ], { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] });
-    this.process.stdio[4].setEncoding("utf8");
-    this.process.stdio[3].on("error", (error) => this.fail(error));
-    this.process.stderr.on("data", (chunk) => {
+    const input = this.process.stdio[3];
+    const outputPipe = this.process.stdio[4];
+    const stderr = this.process.stderr;
+    if (
+      !input || !("write" in input) || !outputPipe ||
+      !("setEncoding" in outputPipe) || !stderr
+    ) {
+      this.process.kill();
+      throw new Error("Chrome debugging pipes were not created");
+    }
+    this.input = /** @type {import("node:stream").Writable} */ (input);
+    outputPipe.setEncoding("utf8");
+    this.input.on("error", (error) => this.fail(error));
+    stderr.on("data", (chunk) => {
       this.stderr += chunk;
     });
-    this.process.stdio[4].on("data", (chunk) => {
+    outputPipe.on("data", (chunk) => {
       this.buffer += chunk;
       let index;
       while ((index = this.buffer.indexOf("\0")) >= 0) {
         const text = this.buffer.slice(0, index);
         this.buffer = this.buffer.slice(index + 1);
         if (!text) continue;
-        const message = JSON.parse(text);
-        const pending = this.pending.get(message.id);
+        const message =
+          /** @type {import("./cdp-types.ts").CDPMessage} */ (JSON.parse(text));
+        const pending = message.id === undefined
+          ? undefined
+          : this.pending.get(message.id);
         if (pending) {
-          this.pending.delete(message.id);
+          this.pending.delete(/** @type {number} */ (message.id));
           if (message.error) {
             pending.reject(new Error(JSON.stringify(message.error)));
           } else pending.resolve(message.result);
         } else if (message.method && this.events) {
-          this.events.push(message);
+          this.events.push({
+            method: message.method,
+            params: message.params,
+            sessionId: message.sessionId,
+          });
           if (this.events.length > 2000) this.events.shift();
         }
       }
@@ -55,10 +98,18 @@ export class ChromePipe {
       (code) => this.fail(new Error(`Chrome exited: ${code}`)),
     );
   }
+  /** @param {Error} error */
   fail(error) {
     for (const pending of this.pending.values()) pending.reject(error);
     this.pending.clear();
   }
+  /**
+   * @template {import("./cdp-types.ts").CDPMethod} Method
+   * @param {Method} method
+   * @param {Record<string, unknown>} [params]
+   * @param {string} [sessionId]
+   * @returns {Promise<import("./cdp-types.ts").CDPResult<Method>>}
+   */
   call(method, params = {}, sessionId) {
     if (this.process.exitCode !== null || this.process.killed) {
       return Promise.reject(new Error("Chrome is no longer running"));
@@ -72,14 +123,16 @@ export class ChromePipe {
       this.pending.set(id, {
         resolve(value) {
           clearTimeout(timer);
-          resolve(value);
+          resolve(
+            /** @type {import("./cdp-types.ts").CDPResult<Method>} */ (value),
+          );
         },
         reject(error) {
           clearTimeout(timer);
           reject(error);
         },
       });
-      this.process.stdio[3].write(
+      this.input.write(
         JSON.stringify({
           id,
           method,

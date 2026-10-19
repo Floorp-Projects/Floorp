@@ -4,13 +4,13 @@
 
 import {
   ChromeExtensionUpdater,
-  ChromeExtensionUpdaterClass,
+  type ChromeExtensionUpdaterClass,
 } from "./ChromeExtensionUpdater.sys.mts";
 import {
-  notifyChromeUpdateStatus,
   ChromeExtensionUpdateRegistry,
-  ChromeExtensionUpdateRegistryClass,
+  type ChromeExtensionUpdateRegistryClass,
   type ChromeUpdateEligibility,
+  notifyChromeUpdateStatus,
   type UpdateRegistryAddon,
 } from "./ChromeExtensionUpdateRegistry.sys.mts";
 
@@ -123,8 +123,7 @@ export class ChromeExtensionUpdateSchedulerClass {
     const eligibility = await this.registry.getEligibility(addonId);
     const state = this.states.get(addonId);
     const addon = await this.manager.getAddonByID(addonId);
-    const policyAllowed =
-      !!addon &&
+    const policyAllowed = !!addon &&
       Services.prefs.getBoolPref("extensions.update.enabled", true) &&
       this.manager.shouldAutoUpdate(addon);
     const currentState =
@@ -141,8 +140,8 @@ export class ChromeExtensionUpdateSchedulerClass {
       state: eligibility.pendingVersion
         ? "postponed"
         : eligibility.eligibility === "verified"
-          ? (currentState ?? "idle")
-          : "migration-required",
+        ? (currentState ?? "idle")
+        : "migration-required",
       ...(eligibility.registration?.lastCheck !== undefined
         ? { lastCheck: eligibility.registration.lastCheck }
         : {}),
@@ -174,7 +173,7 @@ export class ChromeExtensionUpdateSchedulerClass {
       void this.registry
         .remove(addon.id)
         .catch((error) =>
-          console.error("[ChromeExtensionUpdateScheduler]", error),
+          console.error("[ChromeExtensionUpdateScheduler]", error)
         );
     },
     onInstalled: (addon: { id: string }) => {
@@ -184,7 +183,7 @@ export class ChromeExtensionUpdateSchedulerClass {
           notifyChromeUpdateStatus(addon.id);
         })
         .catch((error) =>
-          console.error("[ChromeExtensionUpdateScheduler]", error),
+          console.error("[ChromeExtensionUpdateScheduler]", error)
         );
     },
   };
@@ -192,7 +191,7 @@ export class ChromeExtensionUpdateSchedulerClass {
   observe(_subject: nsISupports | null, topic: string): void {
     if (topic === "browser-delayed-startup-finished") {
       void this.runDueUpdates().catch((error) =>
-        console.error("[ChromeExtensionUpdateScheduler]", error),
+        console.error("[ChromeExtensionUpdateScheduler]", error)
       );
     } else if (topic === "quit-application-granted") {
       void this.stop();
@@ -224,7 +223,7 @@ export class ChromeExtensionUpdateSchedulerClass {
       this.timer = undefined;
       void this.runDueUpdates()
         .catch((error) =>
-          console.error("[ChromeExtensionUpdateScheduler]", error),
+          console.error("[ChromeExtensionUpdateScheduler]", error)
         )
         .finally(() => {
           if (this.started) this.arm(this.timerInterval);
@@ -249,8 +248,9 @@ export class ChromeExtensionUpdateSchedulerClass {
         eligibility.pendingVersion ||
         !addon ||
         !this.manager.shouldAutoUpdate(addon)
-      )
+      ) {
         continue;
+      }
       const now = this.now();
       if (!force && (eligibility.registration?.nextCheck ?? 0) > now) continue;
       this.publish(addonId, { state: "checking" });

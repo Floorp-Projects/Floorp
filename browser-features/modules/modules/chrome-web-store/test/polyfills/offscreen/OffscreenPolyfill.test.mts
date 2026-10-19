@@ -27,15 +27,17 @@ export async function runAllTests(): Promise<void> {
         let received: OffscreenDocumentOptions | undefined;
         const bridge = new OffscreenPolyfill({
           nativeAPI: {
-            async createDocument(value) {
+            createDocument(value) {
               received = value;
               exists = true;
+              return Promise.resolve();
             },
-            async hasDocument() {
-              return exists;
+            hasDocument() {
+              return Promise.resolve(exists);
             },
-            async closeDocument() {
+            closeDocument() {
               exists = false;
+              return Promise.resolve();
             },
           },
         });

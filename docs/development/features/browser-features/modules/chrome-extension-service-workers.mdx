@@ -61,6 +61,31 @@ Schema enum properties use the actual schema enumeration and Chrome key naming.
 Worker-only API availability follows the Chrome reference: DOM-only extension
 aliases such as getViews/getBackgroundPage/getURL are not invented in Workers.
 
+The converted Worker root is a native JavaScript object. It retains normal
+property descriptors, accessors and prototype operations while its resolve hook
+installs genuine native SDK objects. Optional namespaces are initially absent;
+a real permission grant exposes them on the same root and Worker generation.
+After revocation the same namespace references remain visible, while every call
+and event registration checks current namespace and member permissions. A fresh
+Worker starts with only its current grants. Internal manifest-presence tokens
+are kept out of the extension's public permission Set and `permissions.getAll`.
+Ordinary Firefox extensions retain the original native DOM root.
+
+Member visibility is sampled when a native namespace is first accessed, matching
+the measured Chrome contract. Public namespaces such as `runtime` and
+`management` omit permission-restricted methods when initialized without their
+grants; existing namespace objects retain that shape after a later grant.
+Captured permitted functions remain present after revocation, with live call
+authorization denying further access. The generator keeps explicit measured
+visibility exceptions for APIs whose callable surface remains available.
+
+Native methods are own writable, enumerable and configurable data properties.
+Their reserved-slot forwarders call the genuine compiled IDL function with its
+original SDK receiver, so detached calls preserve the extension context. Only
+matching generated native methods are mirrored; shared-prototype script,
+callable Proxy, WebAssembly, builtin and accessor additions are ignored.
+
+
 Special contracts are implemented where generic JSON dispatch is insufficient:
 
 - Callable `scripting.executeScript` functions and JSON arguments are serialized
@@ -76,6 +101,11 @@ Special contracts are implemented where generic JSON dispatch is insufficient:
   events back to it. Terminal events, failure and shutdown release callbacks.
 - Synchronous i18n resolves the extension's actual locale catalog rather than
   depending on an unavailable synchronous parent request.
+- `extension.setUpdateUrlData` validates one string of at most 1024 characters
+  and returns synchronously. Chrome ignores this value for Web Store installs;
+  Floorp's authenticated Store updater follows that contract. Custom Chrome
+  update feeds are not enabled by this API. Ordinary Firefox API exposure is
+  unchanged.
 - WebRequest listeners forward filters/options and retain asynchronous auth
   callback results. Ordinary event listeners cannot supply privileged metadata.
 
@@ -107,6 +137,9 @@ function/file injection, callback/Promise/lastError behavior, native contexts,
 permission failures and real event wake-up after termination. Tests also cover
 tab/cookie/group/font changes, native speech callbacks, locale catalogs and
 additional namespace contracts. Missing compiled bindings fail explicitly.
+`WorkerPermissionsNative.test.mts` requires a headed native candidate and uses
+a real toolbar invocation and permission prompt. It checks optional grant,
+revocation, retained references, ordinary root descriptors and a fresh Worker.
 `NativeBackgroundSelection.test.mts` separately checks converter selection,
 classic/module preservation, cross-browser background precedence and diagnostic
 mode reporting; both suites are in the native candidate CI gate.

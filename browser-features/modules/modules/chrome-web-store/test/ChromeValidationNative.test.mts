@@ -20,15 +20,15 @@ async function validationErrors() {
   const window = Services.wm.getMostRecentWindow("navigator:browser");
   const fixtures = [],
     tabs = [];
-  const program = `const results=[];for(const call of [()=>chrome.runtime.getURL(),()=>chrome.runtime.getURL(9),()=>chrome.tabs.get('bad')]){try{call();results.push({returned:true});}catch(error){results.push({name:error.name,typeError:error instanceof TypeError,error:error instanceof Error});}}document.title=JSON.stringify(results);`;
+  const program =
+    `const results=[];for(const call of [()=>chrome.runtime.getURL(),()=>chrome.runtime.getURL(9),()=>chrome.tabs.get('bad')]){try{call();results.push({returned:true});}catch(error){results.push({name:error.name,typeError:error instanceof TypeError,error:error instanceof Error});}}document.title=JSON.stringify(results);`;
   try {
     for (const manifestVersion of [2, 3]) {
       for (const mode of ["converted", "ordinary", "mismatched"]) {
         const original = "oooooooooooooooooooooooooooooooo";
-        const id =
-          mode === "ordinary"
-            ? "ordinary-validation@example.test"
-            : original + "@chromium-extension";
+        const id = mode === "ordinary"
+          ? "ordinary-validation@example.test"
+          : original + "@chromium-extension";
         const manifest = {
           manifest_version: manifestVersion,
           name: "Native API validation fixture",
@@ -36,17 +36,14 @@ async function validationErrors() {
           browser_specific_settings: {
             gecko: {
               id,
-              ...(mode === "ordinary"
-                ? {}
-                : {
-                    floorp_chrome_extension: {
-                      schema_version: 1,
-                      original_id:
-                        mode === "mismatched"
-                          ? "pppppppppppppppppppppppppppppppp"
-                          : original,
-                    },
-                  }),
+              ...(mode === "ordinary" ? {} : {
+                floorp_chrome_extension: {
+                  schema_version: 1,
+                  original_id: mode === "mismatched"
+                    ? "pppppppppppppppppppppppppppppppp"
+                    : original,
+                },
+              }),
             },
           },
         };
@@ -77,8 +74,9 @@ async function validationErrors() {
         while (
           !tab.linkedBrowser.contentTitle.startsWith("[") &&
           Date.now() < end
-        )
+        ) {
           await new Promise((resolve) => setTimeout(resolve, 20));
+        }
         const results = JSON.parse(tab.linkedBrowser.contentTitle);
         assertEquals(
           results.length,

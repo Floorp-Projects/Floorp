@@ -44,17 +44,19 @@ async function harness() {
   };
   const EPM = {
     addSetting() {},
-    getLevelOfControl: async () =>
-      policyAllowed && !locked.size
-        ? "controllable_by_this_extension"
-        : "not_controllable",
-    async setSetting(id: string, name: string, value: unknown) {
+    getLevelOfControl: () =>
+      Promise.resolve(
+        policyAllowed && !locked.size
+          ? "controllable_by_this_extension"
+          : "not_controllable",
+      ),
+    setSetting(id: string, name: string, value: unknown) {
       settings.set(name, { id, value });
-      return true;
+      return Promise.resolve(true);
     },
-    async removeSetting(id: string, name: string) {
+    removeSetting(id: string, name: string) {
       if (settings.get(name)?.id === id) settings.delete(name);
-      return true;
+      return Promise.resolve(true);
     },
   };
   // These tests exercise selection and ownership boundaries. Browser fixtures
@@ -98,9 +100,11 @@ async function harness() {
       },
     },
     chromeProxyScopeModules: {
-      AddonManager: { getAddonByID: async (id: string) => addons.get(id) },
+      AddonManager: {
+        getAddonByID: (id: string) => Promise.resolve(addons.get(id)),
+      },
       ExtensionSettingsStore: {
-        initialize: async () => {},
+        initialize: () => Promise.resolve(),
         getSetting: (_type: string, name: string) => settings.get(name),
       },
       ExtensionData: class {
@@ -108,12 +112,13 @@ async function harness() {
         constructor(root: string) {
           this.id = root;
         }
-        async readJSON() {
-          return addons.get(this.id)?.manifest;
+        readJSON() {
+          return Promise.resolve(addons.get(this.id)?.manifest);
         }
       },
       ExtensionPermissions: {
-        get: async () => ({ permissions: ["internal:privateBrowsingAllowed"] }),
+        get: () =>
+          Promise.resolve({ permissions: ["internal:privateBrowsingAllowed"] }),
       },
       PrivateBrowsingUtils: { isWindowPrivate: () => true },
     },
@@ -156,17 +161,19 @@ async function harness() {
     return value;
   }
   const nativeSet = (ext: ProxyTestExtension) =>
-  async (
+  (
     { value }: { value: ProxyNativeConfiguration },
   ) => {
     actual = value;
     settings.set("proxy.settings", { id: ext.id, value });
+    return Promise.resolve();
   };
-  const nativeClear = (ext: ProxyTestExtension) => async () => {
+  const nativeClear = (ext: ProxyTestExtension) => () => {
     if (settings.get("proxy.settings")?.id === ext.id) {
       actual = { proxyType: "none", autoConfigUrl: "" };
       settings.delete("proxy.settings");
     }
+    return Promise.resolve();
   };
   const config = (host: string) => ({
     mode: "pac_script",

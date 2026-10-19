@@ -350,6 +350,12 @@ requires a compiled binary. The browser window renders native controls and route
 button index events through the existing persistent event system. Existing OS
 alert implementations use their native action support.
 
+`ChromeNotificationsCloseNative.test.mts` waits for an actual browser alert,
+clears it through the extension API, and verifies exactly one native
+`onClosed(id, false)` event. It also replaces an alert and verifies the old
+instance cannot remove the current notification. Compiled native action buttons
+remain covered separately by `ChromeAuxiliaryNative.test.mts`.
+
 `declarativeContent` provides constructible condition/action records and real
 per-extension persisted rule storage. Native document actors evaluate URL, CSS,
 and bookmark conditions. Matching rules affect the existing native action UI;

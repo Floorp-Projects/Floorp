@@ -156,13 +156,12 @@ async function fileSystem() {
       "numeric pseudo-buffer rejected before parent allocation",
     );
     const window = Services.wm.getMostRecentWindow("navigator:browser");
-    async function readProbe(browser) {
-      return until(() => {
+    const readProbe = (browser) =>
+      until(() => {
         const title = browser.contentTitle;
         if (title.startsWith("FAIL:")) throw Error(title);
         return title.startsWith("FSSEC:") && JSON.parse(title.slice(6));
       }, "real origin/CSP probe");
-    }
     for (const marked of [true, false]) {
       const otherOriginal = marked
         ? "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj"

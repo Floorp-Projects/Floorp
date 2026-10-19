@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
-import type {
-  TestTab,
-  TestWindow,
-} from "./helpers/debugger-auxiliary-types.ts";
+import type { TestWindow } from "./helpers/debugger-auxiliary-types.ts";
 import { zipSync } from "fflate/browser";
 import {
   assert,

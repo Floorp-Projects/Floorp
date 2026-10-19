@@ -5877,7 +5877,9 @@
       "jsr:@std/path@^1.1.4",
       "jsr:@std/streams@^1.0.14",
       "npm:@jsr/std__toml@^1.0.11",
+      "npm:devtools-protocol@0.0.1608973",
       "npm:fflate@~0.8.3",
+      "npm:redux@5.0.1",
       "npm:vite@^7.3.0"
     ],
     "packageJson": {

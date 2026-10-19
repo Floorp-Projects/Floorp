@@ -5,6 +5,11 @@ synchronous `requestKeepAwake("system" | "display")` / `releaseKeepAwake()`
 methods. Chrome 155 return values and argument validation are recorded by
 `test-power-reference.mjs`.
 
+Schema argument errors in converted extension documents use that document's
+`TypeError`, including missing or extra arguments. Native Firefox extensions
+keep their existing exception class. `ChromeValidationNative.test.mts` covers
+both manifest versions and rejects malformed conversion markers.
+
 Each extension owns one effective request across its documents and background
 worker. Repeating a level does not accumulate locks. A new level acquires its
 replacement before releasing the former locks. Closing the issuing document or

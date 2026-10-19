@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
+/// <reference types="../../../libs/@types/gecko/index.d.ts" />
 (async () => {
+  const fixtureGlobals =
+    /** @type {import("../offscreen-test-types.ts").FixtureGlobals} */ (/** @type {unknown} */ (globalThis));
+  /** @type {import("../offscreen-test-types.ts").FixtureChrome} */
+  const chrome = fixtureGlobals.chrome;
+  const document = fixtureGlobals.document;
+  /** @type {import("../offscreen-test-types.ts").ComparisonReport} */
   const report = { passed: false };
+  /** @param {unknown} value @param {string} description */
   const assert = (value, description) => {
     if (!value) throw new Error(description);
   };
@@ -15,11 +23,18 @@
       value: "self-message",
     });
     const port = chrome.runtime.connect(id, { name: "comparison-background" });
-    report.selfPort = await new Promise((resolve, reject) => {
-      port.onMessage.addListener((value) => {
-        resolve(value);
-        port.disconnect();
-      });
+    /** @type {import("../offscreen-test-types.ts").FixtureMessageReply} */
+    const selfPort = await new Promise((resolve, reject) => {
+      port.onMessage.addListener(
+        /** @param {import("../offscreen-test-types.ts").FixtureMessage} value */ (
+          value,
+        ) => {
+          resolve(
+            /** @type {import("../offscreen-test-types.ts").FixtureMessageReply} */ (value),
+          );
+          port.disconnect();
+        },
+      );
       port.onDisconnect.addListener(() =>
         reject(
           new Error(
@@ -30,6 +45,7 @@
       );
       port.postMessage({ value: "self-port" });
     });
+    report.selfPort = selfPort;
     report.background = await chrome.runtime.sendMessage({
       target: "background-info",
     });
@@ -45,6 +61,11 @@
       contextTypes: ["OFFSCREEN_DOCUMENT"],
     });
     assert(first, "An actual offscreen context must exist");
+    if (!first?.documentId) {
+      throw new Error(
+        "Actual offscreen document must have a native document ID",
+      );
+    }
     report.offscreenContext = first;
     report.contextIdFilterCount =
       (await chrome.runtime.getContexts({ contextIds: [first.contextId] }))
@@ -65,6 +86,11 @@
     const [second] = await chrome.runtime.getContexts({
       contextTypes: ["OFFSCREEN_DOCUMENT"],
     });
+    if (!second?.documentId) {
+      throw new Error(
+        "Replacement offscreen document must have a native document ID",
+      );
+    }
     report.replacementDocumentIdChanged =
       second.documentId !== first.documentId;
     await chrome.offscreen.closeDocument();
@@ -73,17 +99,17 @@
       "Native extension resource must load",
     );
     assert(
-      report.selfMessage.senderId === id &&
-        report.selfMessage.receiverId === id,
+      report.selfMessage?.senderId === id &&
+        report.selfMessage?.receiverId === id,
       "Self-message IDs agree",
     );
     assert(
-      report.selfPort.senderId === id && report.selfPort.receiverId === id,
+      report.selfPort?.senderId === id && report.selfPort?.receiverId === id,
       "Self-Port IDs agree",
     );
     assert(
-      report.offscreenMessage.senderId === id &&
-        report.offscreenMessage.receiverId === id,
+      report.offscreenMessage?.senderId === id &&
+        report.offscreenMessage?.receiverId === id,
       "Offscreen message IDs agree",
     );
     assert(
@@ -105,9 +131,9 @@
     report.passed = true;
   } catch (error) {
     report.error = String(error);
-    report.stack = error.stack;
+    report.stack = error instanceof Error ? error.stack : undefined;
   } finally {
-    globalThis.floorpReferenceReport = report;
+    fixtureGlobals.floorpReferenceReport = report;
     document.title = JSON.stringify(report);
   }
 })();

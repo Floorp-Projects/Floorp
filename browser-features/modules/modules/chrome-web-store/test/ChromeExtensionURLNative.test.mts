@@ -55,9 +55,11 @@ async function command(browser: Browser, target: string): Promise<Reply> {
     target,
   };
   browser.messageManager.loadFrameScript(
-    `data:application/javascript,${encodeURIComponent(
-      `content.postMessage(${JSON.stringify(data)}, '*');`,
-    )}`,
+    `data:application/javascript,${
+      encodeURIComponent(
+        `content.postMessage(${JSON.stringify(data)}, '*');`,
+      )
+    }`,
     false,
   );
   return await waitFor(() => {
@@ -175,15 +177,15 @@ async function testExtensionAlias(): Promise<void> {
       `chrome-extension://${ID}/private.txt?preserved=yes`,
       "Fetch preserves the requested alias without the fragment",
     );
-    async function page(hostname: string): Promise<Tab> {
+    const page = async (hostname: string): Promise<Tab> => {
       const url = new URL(
         "webpage-messaging.html",
         host.wrappedJSObject.__floorpRuntimeFixtureURL,
       );
       url.hostname = hostname;
       const tab = host.gBrowser.addTab(url.href, {
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       });
       tabs.push(tab);
       await waitFor(
@@ -191,7 +193,7 @@ async function testExtensionAlias(): Promise<void> {
         "real external HTTP page",
       );
       return tab;
-    }
+    };
     const external = await page("127.0.0.1");
     const exposed = await command(
       external.linkedBrowser,
@@ -224,20 +226,23 @@ async function testExtensionAlias(): Promise<void> {
       ).error,
       "WAR origin match remains enforced",
     );
-    for (const invalid of [
-      `chrome-extension://${"e".repeat(32)}/public.txt`,
-      `chrome-extension://user@${ID}/public.txt`,
-      `chrome-extension://${ID}:1234/public.txt`,
-    ])
+    for (
+      const invalid of [
+        `chrome-extension://${"e".repeat(32)}/public.txt`,
+        `chrome-extension://user@${ID}/public.txt`,
+        `chrome-extension://${ID}:1234/public.txt`,
+      ]
+    ) {
       assert(
         !!(await command(external.linkedBrowser, invalid)).error,
         `Uninstalled or malformed alias rejected: ${invalid}`,
       );
+    }
     const documentTab = host.gBrowser.addTab(
       `chrome-extension://${ID}/page.html`,
       {
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       },
     );
     tabs.push(documentTab);
@@ -275,13 +280,15 @@ export async function runAllTests(): Promise<void> {
   try {
     await runTests("Native Chrome extension URL aliases", [
       {
-        name: "Chrome URL input resolves one native origin while enforcing actual WAR boundaries",
+        name:
+          "Chrome URL input resolves one native origin while enforcing actual WAR boundaries",
         fn: testExtensionAlias,
       },
     ]);
   } catch (error) {
-    for (const message of Services.console.getMessageArray().slice(-40))
+    for (const message of Services.console.getMessageArray().slice(-40)) {
       console.error(message.message);
+    }
     throw error;
   }
 }

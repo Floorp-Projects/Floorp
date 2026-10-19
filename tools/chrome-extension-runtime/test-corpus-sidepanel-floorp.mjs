@@ -1,21 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
-import { unzipSync } from "fflate/browser";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+import { invokeNativeCorpusAction } from "./corpus-native-action.mjs";
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
-);
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs",
-);
-const { ExtensionCommon } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionCommon.sys.mjs",
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
+/** @param {number} ms */
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function runAllTests() {
   const root = Services.env.get("FLOORP_CORPUS_ROOT");
@@ -24,29 +16,34 @@ export async function runAllTests() {
     throw Error("FLOORP_CORPUS_ROOT and FLOORP_CORPUS_FIXTURE are required");
   }
   const ids = Services.env.get("FLOORP_CORPUS_IDS").split(",").filter(Boolean);
-  const corpus = await IOUtils.readJSON(
-    PathUtils.join(
-      root,
-      "tools",
-      "chrome-extension-runtime",
-      "corpus-lock.json",
-    ),
-  );
-  const recipes = await IOUtils.readJSON(
-    PathUtils.join(
-      root,
-      "tools",
-      "chrome-extension-runtime",
-      "corpus-sidepanel-recipes.json",
-    ),
-  );
-  const output = PathUtils.join(
+  const corpus =
+    /** @type {import("./corpus-types.ts").FrozenCorpus} */ (await IOUtils
+      .readJSON(
+        PathUtils.join(
+          root,
+          "tools",
+          "chrome-extension-runtime",
+          "corpus-lock.json",
+        ),
+      ));
+  const recipes =
+    /** @type {import("./sidepanel-test-types.ts").SidePanelRecipe[]} */ (await IOUtils
+      .readJSON(
+        PathUtils.join(
+          root,
+          "tools",
+          "chrome-extension-runtime",
+          "corpus-sidepanel-recipes.json",
+        ),
+      ));
+  const output = Services.env.get("FLOORP_CORPUS_OUTPUT") || PathUtils.join(
     root,
     "_dist",
     "chrome-runtime-tests",
     `corpus-sidepanel-floorp-${Date.now()}`,
   );
   await IOUtils.makeDirectory(output);
+  /** @type {import("./sidepanel-test-types.ts").SidePanelReport & {authoredFixture:import("./sidepanel-test-types.ts").NativeFixtureMetadata}} */
   const report = {
     stage: "actual-sidepanel-primary-operation",
     fixture,
@@ -58,18 +55,24 @@ export async function runAllTests() {
       buildId: Services.appinfo.appBuildID,
     },
     extensions: [],
+    nativeQualified: false,
+    passed: false,
+    completed: false,
     output,
   };
   const save = () =>
     IOUtils.writeJSON(PathUtils.join(output, "report.json"), report);
-  const resource = Services.io.getProtocolHandler("resource").QueryInterface(
-    Ci.nsIResProtocolHandler,
-  );
+  const handler = Services.io.getProtocolHandler("resource");
+  if (!handler?.QueryInterface) {
+    throw Error("Native resource protocol unavailable");
+  }
+  const resource = handler.QueryInterface(Ci.nsIResProtocolHandler);
   resource.setSubstitution(
     "floorp-sidepanel-corpus",
     Services.io.newFileURI(
       new FileUtils.File(
-        PathUtils.join(root, "tools", "chrome-extension-runtime"),
+        Services.env.get("FLOORP_TEST_ACTOR_DIRECTORY") ||
+          PathUtils.join(root, "tools", "chrome-extension-runtime"),
       ),
     ),
   );
@@ -81,8 +84,10 @@ export async function runAllTests() {
     allFrames: false,
     safeForUntrustedWebProcess: true,
   });
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
-  const converter = new CRXConverterClass();
+  const window =
+    /** @type {import("./native-test-types.ts").NativeCorpusWindow|null} */ (Services
+      .wm.getMostRecentWindow("navigator:browser"));
+  if (!window) throw Error("Actual native browser window unavailable");
   const sentinel =
     "Floorp authored compatibility passage 73195: Arctic foxes cross the quiet bridge.";
   const originalProxy = Services.prefs.getIntPref("network.proxy.type", 0);
@@ -95,100 +100,45 @@ export async function runAllTests() {
     "network.dns.localDomains",
     [originalDns, "corpus.floorp.test"].filter(Boolean).join(","),
   );
-  const actorFor = (tab) =>
-    tab.linkedBrowser.browsingContext.currentWindowGlobal?.getActor(
-      "CorpusSidePanel",
-    );
+  /** @param {import("./native-test-types.ts").NativeCorpusTab} tab @returns {import("./sidepanel-test-types.ts").ProbeActor} */
+  const actorFor = (tab) => {
+    const global = tab.linkedBrowser.browsingContext.currentWindowGlobal;
+    if (!global) throw Error("Private actor window closed");
+    return /** @type {import("./sidepanel-test-types.ts").ProbeActor} */ (global
+      .getActor("CorpusSidePanel"));
+  };
   try {
     for (
       const record of corpus.extensions.filter((e) =>
         e.area === "sidePanel" && (!ids.length || ids.includes(e.id))
       )
     ) {
+      /** @type {import("./sidepanel-test-types.ts").SidePanelEvidence} */
       const item = {
         id: record.id,
         name: record.name,
         version: record.version,
         packageSha256: record.packageSha256,
-        result: "failed",
+        result: "failed-runtime",
+        nativeQualified: false,
         checks: [],
       };
       report.extensions.push(item);
       let addon;
       const originalTabs = new Set(window.gBrowser.tabs);
       try {
-        const bytes = await IOUtils.read(
-          PathUtils.join(
-            root,
-            "_dist",
-            "chrome-extension-corpus",
-            "packages",
-            `${record.id}.crx`,
-          ),
-        );
-        const digest = [
-          ...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
-        ].map((b) => b.toString(16).padStart(2, "0")).join("");
-        if (digest !== record.packageSha256) {
-          throw Error("Frozen signed CRX digest mismatch");
-        }
-        const conversion = await converter.convert(bytes.buffer, record.id, {
-          id: record.id,
-          name: record.name,
-          version: record.version,
+        const installed = await installFrozenCorpus(root, record, output);
+        addon = installed.addon;
+        const extension = installed.extension;
+        Object.assign(item, {
+          warnings: installed.warnings,
+          conversion: installed.conversion,
+          sourceIntegrity: installed.sourceIntegrity,
+          unchangedScriptCount: installed.unchangedScriptCount,
+          unchangedScriptsSha256: installed.unchangedScriptsSha256,
+          nativeEvidence: installed.nativeEvidence,
         });
-        item.warnings = conversion.warnings;
-        if (!conversion.success || !conversion.xpiData) {
-          throw Error(
-            conversion.error?.message || "Production conversion failed",
-          );
-        }
-        const files = unzipSync(new Uint8Array(conversion.xpiData));
-        const unchanged = [];
-        for (
-          const [name, contents] of Object.entries(files).filter(([name]) =>
-            /\.(?:js|mjs|cjs)$/i.test(name)
-          )
-        ) {
-          const original = await IOUtils.read(
-            PathUtils.join(
-              root,
-              "_dist",
-              "chrome-extension-corpus",
-              "chrome-unpacked",
-              record.id,
-              ...name.split("/"),
-            ),
-          );
-          const digest = async (bytes) =>
-            [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
-              .map((byte) => byte.toString(16).padStart(2, "0")).join("");
-          const actual = await digest(contents);
-          if (actual !== await digest(original)) {
-            throw Error(
-              "Original signed script changed during conversion: " + name,
-            );
-          }
-          unchanged.push(name + ":" + actual);
-        }
-        item.unchangedScriptCount = unchanged.length;
-        item.unchangedScriptsSha256 = [
-          ...new Uint8Array(
-            await crypto.subtle.digest(
-              "SHA-256",
-              new TextEncoder().encode(unchanged.sort().join("\n")),
-            ),
-          ),
-        ].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-        const path = PathUtils.join(output, `${record.id}.xpi`);
-        await IOUtils.write(path, new Uint8Array(conversion.xpiData));
-        addon = await AddonManager.installTemporaryAddon(
-          new FileUtils.File(path),
-        );
-        const extension = ExtensionParent.GlobalManager.extensionMap.get(
-          `${record.id}@chromium-extension`,
-        );
-        if (!extension) throw Error("Installed native extension missing");
+        item.result = "failed-operation";
         await pause(1500);
         const firstURL = fixture + record.id + "/";
         item.authoredURL = firstURL;
@@ -232,17 +182,13 @@ export async function runAllTests() {
           throw Error("Controlled authored content did not load");
         }
         item.checks.push("controlled authored text verified in content tab");
-        const actionModule = await extension.apiManager.asyncGetAPI(
-          "browserAction",
+        item.nativeAction = await invokeNativeCorpusAction(
           extension,
-          "addon_parent",
-        );
-        const action = actionModule;
-        ExtensionCommon.withHandlingUserInput(
           window,
-          () => action.triggerAction(window),
+          first,
         );
         item.checks.push("real native toolbar action invoked on authored page");
+        /** @type {import("./native-test-types.ts").NativeCorpusBackground|undefined} */
         let view;
         for (let n = 0; n < 45; n++) {
           view = [...extension.views].find((v) =>
@@ -251,17 +197,21 @@ export async function runAllTests() {
           if (view) break;
           await pause(200);
         }
-        const getActor = () =>
-          view?.xulBrowser?.browsingContext?.currentWindowGlobal?.getActor(
-            "CorpusSidePanel",
-          ) || actorFor(first);
+        const getActor =
+          () => /** @type {import("./sidepanel-test-types.ts").ProbeActor} */ (view
+            ?.xulBrowser?.browsingContext?.currentWindowGlobal?.getActor(
+              "CorpusSidePanel",
+            ) || actorFor(first));
         item.injectedPagePanel = !view;
+        /** @type {import("./sidepanel-test-types.ts").SidePanelSnapshot|undefined} */
         let ui;
         for (let n = 0; n < 40; n++) {
           try {
             ui = await getActor()?.sendQuery("Snapshot");
             if (ui?.ready === "complete" && ui.text?.length > 10) break;
-          } catch {}
+          } catch {
+            // Retry while the real action view is still loading.
+          }
           await pause(200);
         }
         if (!ui) throw Error("Actual action produced no inspectable UI");
@@ -303,6 +253,9 @@ export async function runAllTests() {
         item.finalUI = await getActor().sendQuery("Snapshot");
         if (item.readEvidence.domContainsAuthoredText && item.draftRetained) {
           item.result = "passed";
+          item.nativeQualified =
+            installed.nativeEvidence.candidateIdentityVerified &&
+            installed.nativeEvidence.nativeBackgroundVerified;
         } else if (
           /login|log in|sign in|sign up|account|premium/i.test(
             item.readAttemptUI?.text || item.finalUI.text || "",
@@ -311,8 +264,10 @@ export async function runAllTests() {
           item.result = "blocked-account";
           item.blocker =
             "Unchanged extension UI requires an account before authored-page read can be verified";
-        } else {item.blocker =
-            "Authored-page read and retained draft were not both demonstrated through the actual extension UI";}
+        } else {
+          item.blocker =
+            "Authored-page read and retained draft were not both demonstrated through the actual extension UI";
+        }
       } catch (error) {
         item.error = String(error);
       } finally {
@@ -336,7 +291,24 @@ export async function runAllTests() {
     if (originalDns) {
       Services.prefs.setStringPref("network.dns.localDomains", originalDns);
     } else Services.prefs.clearUserPref("network.dns.localDomains");
+    report.completed = true;
+    report.passed = report.extensions.length > 0 &&
+      report.extensions.every((item) => item.result === "passed");
+    report.nativeQualifiedCount = report.extensions.filter((item) =>
+      item.nativeQualified === true
+    ).length;
+    report.observedAccountBlockedCount = report.extensions.filter((item) =>
+      item.result === "blocked-account"
+    ).length;
     await save();
     console.log(`[Sidepanel corpus] report ${output}/report.json`);
+  }
+  const failed = report.extensions.filter((item) =>
+    !["passed", "blocked-account"].includes(item.result)
+  );
+  if (!report.extensions.length || failed.length) {
+    throw Error(
+      `SidePanel primary operation failed: ${failed.length} failed rows; ${report.extensions.length} selected`,
+    );
   }
 }

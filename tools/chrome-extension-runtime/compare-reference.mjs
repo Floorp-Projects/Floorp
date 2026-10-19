@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const tools = dirname(fileURLToPath(import.meta.url));
 const root = resolve(tools, "../..");
+/** @param {string} name @param {string} fallback */
 const option = (name, fallback) => {
   const index = process.argv.indexOf(name);
   return index < 0 ? fallback : resolve(process.argv[index + 1]);
@@ -48,6 +49,7 @@ const id = [
   .flatMap((byte) => [byte >> 4, byte & 15]).map((value) =>
     String.fromCharCode(97 + value)
   ).join("");
+/** @type {import("./crx-test-types.ts").ComparisonReport} */
 const report = {
   passed: false,
   fixture: {
@@ -104,7 +106,9 @@ async function runChrome() {
         throw new Error(JSON.stringify(evaluated.exceptionDetails));
       }
       const value = evaluated.result.value;
-      if (value) return value;
+      if (value) {
+        return /** @type {import("./crx-test-types.ts").ComparisonResult} */ (value);
+      }
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
     throw new Error("Chrome fixture timed out");
@@ -118,6 +122,7 @@ async function runChrome() {
   }
 }
 
+/** @param {import("./crx-test-types.ts").ComparisonResult} value */
 function normalized(value) {
   const tab = value.contextsBefore.find((context) =>
     context.contextType === "TAB"
@@ -186,7 +191,10 @@ try {
   if (tested.status !== 0) {
     throw new Error(`Floorp runner failed: ${tested.stdout}\n${tested.stderr}`);
   }
-  report.floorp = JSON.parse(readFileSync(floorpOutput, "utf8"));
+  report.floorp =
+    /** @type {import("./crx-test-types.ts").ComparisonResult} */ (JSON.parse(
+      readFileSync(floorpOutput, "utf8"),
+    ));
   if (!report.floorp.passed) {
     throw new Error(`Floorp fixture failed: ${report.floorp.error}`);
   }
@@ -224,7 +232,7 @@ try {
   report.passed = true;
 } catch (error) {
   report.error = String(error);
-  report.stack = error.stack;
+  report.stack = error instanceof Error ? error.stack : undefined;
 } finally {
   writeFileSync(
     join(output, "report.json"),

@@ -17,7 +17,7 @@ import { validateManifest } from "./ManifestTransformer.sys.mts";
 import type { ChromeConversionReport, ChromeManifest } from "./types.ts";
 import {
   ChromeExtensionUpdateRegistry,
-  ChromeExtensionUpdateRegistryClass,
+  type ChromeExtensionUpdateRegistryClass,
   createVerifiedUpdateProof,
 } from "./ChromeExtensionUpdateRegistry.sys.mts";
 
@@ -116,10 +116,12 @@ export async function downloadChromeExtension(
   );
   const target = getChromeDownloadTarget();
   let lastError: unknown;
-  for (const url of [
-    CRX_DOWNLOAD_URLS.primary(id, target),
-    CRX_DOWNLOAD_URLS.fallback(id, target),
-  ]) {
+  for (
+    const url of [
+      CRX_DOWNLOAD_URLS.primary(id, target),
+      CRX_DOWNLOAD_URLS.fallback(id, target),
+    ]
+  ) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
     try {
@@ -183,7 +185,8 @@ export class ChromeExtensionUpdaterClass {
 
   constructor(
     private readonly download = downloadChromeExtension,
-    private readonly registry: ChromeExtensionUpdateRegistryClass = ChromeExtensionUpdateRegistry,
+    private readonly registry: ChromeExtensionUpdateRegistryClass =
+      ChromeExtensionUpdateRegistry,
   ) {}
 
   private async source(
@@ -272,7 +275,7 @@ export class ChromeExtensionUpdaterClass {
     ) {
       throw (
         converted.error ??
-        new Error("Verified Chrome extension conversion failed")
+          new Error("Verified Chrome extension conversion failed")
       );
     }
     const current = await this.source(addonId);
@@ -389,7 +392,7 @@ export class ChromeExtensionUpdaterClass {
       const deferredCleanup = {
         onInstallEnded: () => {
           void removeRetainedFile().catch((error) =>
-            console.error("[ChromeExtensionUpdater]", error),
+            console.error("[ChromeExtensionUpdater]", error)
           );
           void recordInstalled();
         },
@@ -401,7 +404,6 @@ export class ChromeExtensionUpdaterClass {
       const result = await new Promise<ChromeUpdateResult>(
         (resolve, reject) => {
           let settled = false;
-          let timer: nsITimer | undefined;
           let ownStarted = false;
           const finish = (
             error?: unknown,
@@ -453,7 +455,7 @@ export class ChromeExtensionUpdaterClass {
                   console.error(
                     "[ChromeExtensionUpdater] Failed to record staged update",
                     error,
-                  ),
+                  )
                 )
                 .finally(() => finish(undefined, "postponed"));
             },
@@ -495,7 +497,7 @@ export class ChromeExtensionUpdaterClass {
           manager.addInstallListener(otherInstalls);
           manager.addAddonListener(addonChanges);
           owner.addEventListener("unload", onClose, { once: true });
-          timer = setTimeout(() => {
+          const timer = setTimeout(() => {
             finish(new Error("Chrome extension update timed out"));
             candidate.cancel();
           }, INSTALL_TIMEOUT_MS);

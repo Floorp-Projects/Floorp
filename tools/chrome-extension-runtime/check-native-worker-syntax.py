@@ -42,6 +42,10 @@ def main():
     parser.add_argument("--include-header", type=Path, action="append", default=[],
                         help="Force an isolated regenerated header before candidate headers")
     parser.add_argument("--match", help="Only translation units whose filenames match this regular expression")
+    parser.add_argument("--kind", choices=("native", "binding"),
+                        help="Check native API bodies or generated bindings only")
+    parser.add_argument("--additional-native-source", type=Path, action="append", default=[],
+                        help="Additional C++ source under the selected source overlay")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--jobs", type=int, default=1)
     arguments = parser.parse_args()
@@ -105,10 +109,19 @@ def main():
 
     jobs = [(path, "toolkit/components/extensions/webidl-api", "native")
             for path in sorted((own / "toolkit/components/extensions/webidl-api").glob("*.cpp"))]
+    for path in arguments.additional_native_source:
+        path = path.resolve()
+        try:
+            directory = str(path.parent.relative_to(own))
+        except ValueError:
+            parser.error("Additional C++ sources must be under the selected source overlay")
+        jobs.append((path, directory, "native"))
     bindings = {path.name: path for path in (obj / "dom/bindings").glob("Extension*Binding.cpp")}
     if arguments.binding_sources:
-        bindings.update({path.name: path for path in arguments.binding_sources.resolve().glob("Extension*Binding.cpp")})
+        bindings.update({path.name: path for path in arguments.binding_sources.resolve().glob("*Binding.cpp")})
     jobs.extend((path, "dom/bindings", "binding") for path in sorted(bindings.values()))
+    if arguments.kind:
+        jobs = [job for job in jobs if job[2] == arguments.kind]
     if arguments.match:
         selected = re.compile(arguments.match)
         jobs = [job for job in jobs if selected.search(job[0].name)]

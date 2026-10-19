@@ -117,9 +117,9 @@ for (const record of lock.extensions) {
   manifest.key = await developerKey(bytes, verified.publicKeySha256);
   // Content and background scripts remain the exact signed bytes. Chrome's
   // loadUnpacked needs only the original public key added to manifest.json.
-  files["manifest.json"] = new TextEncoder().encode(
+  files["manifest.json"] = new Uint8Array(new TextEncoder().encode(
     JSON.stringify(manifest, null, 2),
-  );
+  ));
   const target = new URL(`chrome-unpacked/${record.id}/`, directory);
   for (const [name, contents] of Object.entries(files)) {
     const file = new URL(

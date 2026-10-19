@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import plistlib
 import subprocess
@@ -25,6 +26,7 @@ CORE = [
     "polyfills/documentId/DocumentIdPolyfill.test.mts", "polyfills/offscreen/OffscreenNative.test.mts",
     "workers/WorkerNative.test.mts", "ChromeDebuggerNative.test.mts",
     "ChromeDebuggerPrincipalNative.test.mts", "ChromeAuxiliaryNative.test.mts",
+    "ChromeNotificationsCloseNative.test.mts",
     "ChromeDeclarativeContentNative.test.mts", "windows/WindowsNative.test.mts",
     "ChromePowerNative.test.mts", "polyfills/capture/FileSystemNative.test.mts",
     "polyfills/capture/FileSystemPrivateNative.test.mts",
@@ -34,6 +36,8 @@ CORE = [
 MEDIA = ["polyfills/capture/" + name + ".test.mts" for name in (
     "CaptureAudioNative", "DesktopSourceNative", "DesktopCaptureNative")]
 MEDIA.append("auxiliary/AuxiliaryNative.test.mts")
+PERMISSIONS = ["workers/WorkerPermissionsNative.test.mts"]
+DESKTOP = ["polyfills/capture/DesktopScreenNative.test.mts"]
 
 
 def run(args, *, cwd=ROOT):
@@ -93,7 +97,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", choices=["linux", "windows", "mac"], required=True)
     parser.add_argument("--artifact", type=Path, required=True)
-    parser.add_argument("--group", choices=["core", "media"], default="core")
+    parser.add_argument("--group", choices=["core", "media", "permissions", "desktop"], default="core")
     args = parser.parse_args()
     expected_host = {"linux": "linux", "windows": "win32", "mac": "darwin"}[args.platform]
     if sys.platform != expected_host:
@@ -133,10 +137,15 @@ def main():
     output = ROOT / "_dist/chrome-runtime-tests" / f"ci-{args.platform}-{args.group}"
     output.mkdir(parents=True, exist_ok=True)
     result = {"passed": False, "platform": args.platform, "group": args.group,
-              "candidate": manifest, "packageSha256": expected["sha256"], "commands": []}
-    suites = CORE if args.group == "core" else MEDIA
+              "candidate": manifest, "packageSha256": expected["sha256"], "commands": [],
+              "headed": args.group in ("permissions", "desktop")}
+    suites = {"core": CORE, "media": MEDIA, "permissions": PERMISSIONS, "desktop": DESKTOP}[args.group]
     command = [sys.executable, "tools/chrome-extension-runtime/run-browser-tests.py", "--browser", binary,
                "--output", output, "--timeout", "300"]
+    if args.group in ("permissions", "desktop"):
+        command.append("--headed")
+        if sys.platform == "linux" and not os.environ.get("DISPLAY"):
+            command = ["xvfb-run", "--auto-servernum", "--server-args=-screen 0 1600x1200x24", *command]
     if args.group == "core":
         command += ["--test", "tools/chrome-extension-runtime/ci/ProductionOverlay.test.mts"]
         command += ["--test", "tools/chrome-extension-runtime/WorkerCanvasNative.test.mts"]
@@ -154,7 +163,14 @@ def main():
             [sys.executable, "tools/chrome-extension-runtime/test-diagnostics-ui.py", "--browser", binary],
         ])
     for command in commands:
-        code = subprocess.run([str(value) for value in command], cwd=ROOT).returncode
+        command_env = os.environ.copy()
+        command_env["FLOORP_TEST_CANDIDATE_MANIFEST"] = str(manifests[0])
+        if args.group in ("permissions", "desktop"):
+            # The explicit headed group must create a real window even if an
+            # enclosing test runner normally requests Gecko's headless widget.
+            command_env.pop("MOZ_HEADLESS", None)
+        code = subprocess.run([str(value) for value in command], cwd=ROOT,
+                              env=command_env).returncode
         result["commands"].append({"args": [str(value) for value in command], "exitCode": code})
     reports = list(output.glob("run-*/report.json"))
     if len(reports) != 1:

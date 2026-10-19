@@ -6,9 +6,11 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+/** @type {import("./offscreen-test-types.ts").CaptureReference} */
 const reference = JSON.parse(
   readFileSync(
     join(root, "tools/chrome-extension-runtime/chrome-reference.json"),
+    "utf8",
   ),
 );
 const browserPath = join(
@@ -23,8 +25,9 @@ if (
 const parent = join(root, "_dist/chrome-runtime-tests");
 mkdirSync(parent, { recursive: true });
 const output = mkdtempSync(join(parent, "power-reference-"));
-const browser = new ChromePipe(browserPath, output),
-  report = { reference, output, passed: false };
+const browser = new ChromePipe(browserPath, output);
+/** @type {import("./offscreen-test-types.ts").PowerReport} */
+const report = { reference, output, passed: false };
 try {
   report.version = await browser.call("Browser.getVersion");
   if (report.version.product !== `Chrome/${reference.browserVersion}`) {
@@ -64,7 +67,9 @@ try {
         "({url:location.href,ready:document.readyState,power:typeof chrome.power,runtime:chrome.runtime?.id})",
       returnByValue: true,
     }, sessionId);
-    report.initial = state.result.value;
+    report.initial =
+      /** @type {NonNullable<import("./offscreen-test-types.ts").PowerReport["initial"]>} */ (state
+        .result.value);
     if (report.initial.runtime === id && report.initial.ready === "complete") {
       break;
     }
@@ -84,7 +89,9 @@ try {
   if (result.exceptionDetails) {
     throw Error(JSON.stringify(result.exceptionDetails));
   }
-  report.contract = result.result.value;
+  report.contract =
+    /** @type {import("./offscreen-test-types.ts").PowerContract} */ (result
+      .result.value);
   if (
     report.contract.system !== "undefined" ||
     report.contract.display !== "undefined" ||
@@ -93,7 +100,78 @@ try {
     !report.contract.requestKeepAwakeinvalid ||
     !report.contract.requestKeepAwake || !report.contract.releaseKeepAwakeextra
   ) throw Error("Unexpected native Chrome power contract");
+  /** @param {string} extensionId @returns {Promise<import("./offscreen-test-types.ts").PowerVisibility>} */
+  const workerVisibility = async (extensionId) => {
+    const end = Date.now() + 15000;
+    let target;
+    while (!target && Date.now() < end) {
+      target = (await browser.call("Target.getTargets")).targetInfos.find(
+        (info) =>
+          info.type === "service_worker" &&
+          info.url.startsWith(`chrome-extension://${extensionId}/`),
+      );
+      if (!target) await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    if (!target) throw Error("Actual Chrome extension worker was not started");
+    const { sessionId: workerSession } = await browser.call(
+      "Target.attachToTarget",
+      { targetId: target.targetId, flatten: true },
+    );
+    while (Date.now() < end) {
+      const visibility = await browser.call("Runtime.evaluate", {
+        expression:
+          "typeof chrome==='undefined'?null:({power:typeof chrome.power,tabCapture:typeof chrome.tabCapture,action:typeof chrome.action,commands:typeof chrome.commands,omnibox:typeof chrome.omnibox,actionIn:'action' in chrome,commandsIn:'commands' in chrome,omniboxIn:'omnibox' in chrome})",
+        returnByValue: true,
+      }, workerSession);
+      if (visibility.exceptionDetails) {
+        throw Error(JSON.stringify(visibility.exceptionDetails));
+      }
+      if (visibility.result.value) {
+        return /** @type {import("./offscreen-test-types.ts").PowerVisibility} */ (visibility
+          .result.value);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    throw Error("Native Chrome worker bindings did not initialize");
+  };
+  report.workerWithPower = await workerVisibility(id);
+  if (
+    report.workerWithPower.power !== "object" ||
+    report.workerWithPower.tabCapture !== "undefined"
+  ) throw Error("Unexpected declared-permission Worker namespaces");
   await browser.call("Extensions.uninstall", { id });
+  report.workersWithoutPermission = [];
+  for (const optional of [false, true]) {
+    const fixture = join(
+      output,
+      optional ? "ungranted-optional" : "no-permission",
+    );
+    mkdirSync(fixture);
+    writeFileSync(
+      join(fixture, "manifest.json"),
+      JSON.stringify({
+        manifest_version: 3,
+        name: "Permission namespace reference",
+        version: "1.0",
+        permissions: [],
+        optional_permissions: optional ? ["power", "tabCapture"] : [],
+        background: { service_worker: "worker.js" },
+      }),
+    );
+    writeFileSync(
+      join(fixture, "worker.js"),
+      "chrome.runtime.onMessage.addListener(()=>{});",
+    );
+    const { id: fixtureId } = await browser.call("Extensions.loadUnpacked", {
+      path: fixture,
+    });
+    const visibility = await workerVisibility(fixtureId);
+    report.workersWithoutPermission.push({ optional, ...visibility });
+    if (
+      visibility.power !== "undefined" || visibility.tabCapture !== "undefined"
+    ) throw Error("Unpermitted native Chrome Worker namespace was exposed");
+    await browser.call("Extensions.uninstall", { id: fixtureId });
+  }
   report.passed = true;
 } finally {
   await browser.close();

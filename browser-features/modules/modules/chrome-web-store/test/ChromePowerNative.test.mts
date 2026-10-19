@@ -51,10 +51,17 @@ async function power() {
     tabs = [],
     window = Services.wm.getMostRecentWindow("navigator:browser");
   const permission = { permissions: ["power"], origins: [] };
-  const program = `const ready=()=>document.title=JSON.stringify({phase:'ready',namespace:typeof chrome.power,keys:chrome.power?Object.keys(chrome.power).sort():[],level:chrome.power?.Level});window.addEventListener('message',event=>{try{const command=event.data;if(!['system','display','release','invalid'].includes(command))return;let result,invalid=false,validation=[];if(command==='invalid'){for(const call of [()=>chrome.power.requestKeepAwake('none'),()=>chrome.power.requestKeepAwake(),()=>chrome.power.requestKeepAwake('system',1),()=>chrome.power.releaseKeepAwake(1)]){try{call();validation.push({returned:true});}catch(error){validation.push({name:error.name,typeError:error instanceof TypeError});}}invalid=validation.every(error=>error.name==='TypeError'&&error.typeError);}else if(command==='release')result=chrome.power.releaseKeepAwake();else result=chrome.power.requestKeepAwake(command);document.title=JSON.stringify({phase:command,returns:typeof result,invalid,validation});}catch(error){document.title='FAIL:'+error;}});ready();`;
+  const program =
+    `const ready=()=>document.title=JSON.stringify({phase:'ready',namespace:typeof chrome.power,keys:chrome.power?Object.keys(chrome.power).sort():[],level:chrome.power?.Level});window.addEventListener('message',event=>{try{const command=event.data;if(!['system','display','release','invalid'].includes(command))return;let result,invalid=false,validation=[];if(command==='invalid'){for(const call of [()=>chrome.power.requestKeepAwake('none'),()=>chrome.power.requestKeepAwake(),()=>chrome.power.requestKeepAwake('system',1),()=>chrome.power.releaseKeepAwake(1)]){try{call();validation.push({returned:true});}catch(error){validation.push({name:error.name,typeError:error instanceof TypeError});}}invalid=validation.every(error=>error.name==='TypeError'&&error.typeError);}else if(command==='release')result=chrome.power.releaseKeepAwake();else result=chrome.power.requestKeepAwake(command);document.title=JSON.stringify({phase:command,returns:typeof result,invalid,validation});}catch(error){document.title='FAIL:'+error;}});ready();`;
   async function install(
     original,
-    { ordinary = false, mismatch = false, optional = false } = {},
+    {
+      ordinary = false,
+      mismatch = false,
+      optional = false,
+      grant = true,
+      withoutPermission = false,
+    } = {},
   ) {
     const id = ordinary
         ? "ordinary-power@example.test"
@@ -63,27 +70,25 @@ async function power() {
         PathUtils.tempDir,
         "floorp-power-" + Services.uuid.generateUUID() + ".xpi",
       );
-    if (optional) await ExtensionPermissions.add(id, permission);
+    if (optional && grant) await ExtensionPermissions.add(id, permission);
     const manifest = {
       manifest_version: 3,
       name: "Native power fixture",
       version: "1.0",
-      permissions: optional ? [] : ["power"],
+      permissions: optional || withoutPermission ? [] : ["power"],
       optional_permissions: optional ? ["power"] : [],
       background: { scripts: ["background.js"] },
       browser_specific_settings: {
         gecko: {
           id,
-          ...(ordinary
-            ? {}
-            : {
-                floorp_chrome_extension: {
-                  schema_version: 1,
-                  original_id: mismatch
-                    ? "pppppppppppppppppppppppppppppppp"
-                    : original,
-                },
-              }),
+          ...(ordinary ? {} : {
+            floorp_chrome_extension: {
+              schema_version: 1,
+              original_id: mismatch
+                ? "pppppppppppppppppppppppppppppppp"
+                : original,
+            },
+          }),
         },
       },
     };
@@ -155,12 +160,19 @@ async function power() {
       second = await install("mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", {
         optional: true,
       });
-    for (const options of [{ ordinary: true }, { mismatch: true }]) {
-      const extra = await install("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn", options);
+    for (
+      const [original, options] of [
+        ["nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn", { ordinary: true }],
+        ["nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn", { mismatch: true }],
+        ["oooooooooooooooooooooooooooooooo", { withoutPermission: true }],
+        ["pppppppppppppppppppppppppppppppp", { optional: true, grant: false }],
+      ] as const
+    ) {
+      const extra = await install(original, options);
       assertEquals(
         (await read(extra.background.xulBrowser)).namespace,
         "undefined",
-        "ordinary/malformed addons do not receive Chrome power",
+        "ordinary, malformed, and unpermitted documents do not receive Chrome power",
       );
     }
     const a = first.background.xulBrowser,
@@ -273,7 +285,8 @@ async function power() {
 export async function runAllTests() {
   await runTests("ChromePowerNative.test.mts", [
     {
-      name: "real native CPU and display wake locks have extension ownership and lifetime",
+      name:
+        "real native CPU and display wake locks have extension ownership and lifetime",
       fn: power,
     },
   ]);

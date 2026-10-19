@@ -76,3 +76,105 @@ artifact reports its missing native argument instead of silently accepting
 button support. Frozen auxiliary package references can be regenerated with
 `inventory-auxiliary.py` after the signed corpus has been downloaded; they are
 source evidence, not execution passes.
+
+The signed content corpus can run an authored primary operation using unchanged
+package scripts:
+
+```sh
+node tools/chrome-extension-runtime/test-corpus-content.mjs --ids eimadpbcbfnmbkopoojfekhnkhdbieeh,clngdbkpkpeebahjckkjfobafhncgmne,jinjaccalgkegednnccohejagnlnfdag
+python3 tools/chrome-extension-runtime/test-corpus-content-floorp.py --browser <compiled-binary> --ids eimadpbcbfnmbkopoojfekhnkhdbieeh,clngdbkpkpeebahjckkjfobafhncgmne,jinjaccalgkegednnccohejagnlnfdag
+```
+
+Dark Reader must visibly transform the authored document. Stylus must save
+matching CSS through its real editor using native keyboard and pointer input.
+The userscript recipe must save an authored script through the real extension
+editor, execute it in the main document and an actual matching frame, and retain
+the effect across navigation. The reference enables Allow User Scripts through
+the actual private-profile extension details toggle. The authored script uses an
+exact fixture URL include pattern, including the server port. Every recipe
+requires an actual effect, navigation persistence, and restoration after
+uninstall. A saved editor or registered bootstrap alone does not pass.
+
+The Floorp run verifies the frozen CRX digest, invokes the production signed
+converter, and compares every packaged script digest before installing the
+result. Its test actors are explicitly copied into the private profile's
+`chrome/runtime-actors` directory before launch using `--actor-module`. Each
+actor query has a deadline. Missing fixture actors are reported as a harness
+failure; production origin permissions and sandbox policies remain unchanged.
+Recent packages that require native service workers must be tested with the
+compiled candidate. An older event-page artifact cannot qualify those packages.
+The reports preserve per-package results and leave the overall 50-package pass
+rate unset.
+
+For a production candidate, set `FLOORP_TEST_CANDIDATE_MANIFEST` to the absolute
+path of its `candidate-manifest.json` before invoking a Floorp corpus wrapper.
+The generic browser runner also accepts `--candidate-manifest` directly. The
+manifest and its original package must remain together. This mode verifies the
+locked source, current Floorp commit, maintained patches, package checksum and
+installed files, then checks the running build ID, operating system, ABI and
+compiled bindings before executing a suite. Corpus background checks require
+the actual native Worker when the signed manifest selected one. Reports retain
+the authenticated candidate identity; runs without this option remain historical
+or development evidence and cannot qualify a production release.
+
+The candidate CI executes separate core, media, headed permission-consent and
+headed screen/window recording groups on each target operating system. The
+desktop group must record and decode actual source pixels; merely opening its
+chooser does not pass. Local production checks must preserve the browser's
+content sandbox, including unsetting any inherited
+`MOZ_DISABLE_CONTENT_SANDBOX` development override.
+
+Use `--headed` for the reference when an extension selects a different code path
+for HeadlessChrome. It uses the actual browser user agent and requires a
+caller-owned display; it does not override browser identity.
+
+The controlled media/metadata corpus uses a native decoded WebM, ordinary TLS
+verification, private profile certificate trust, and exact private DNS aliases:
+
+```sh
+python3 tools/chrome-extension-runtime/test-corpus-media-content.py --ids gebbhagfogifgggkldgodflihgfeippi
+python3 tools/chrome-extension-runtime/test-corpus-media-content.py --browser <binary> --ids gebbhagfogifgggkldgodflihgfeippi
+```
+
+This Linux harness requires the existing local NSS/bwrap tools and temporarily
+binds only loopback port 443. The Chrome child mounts a private NSS database;
+the Floorp run trusts the authored CA only in its temporary profile. It does not
+change host trust, browser identity, origin permissions, or certificate
+validation. The fixtures identify their metadata as authored service data.
+Return YouTube Dislike must make an actual native HTTP/TLS request, render the
+known count in real document controls, retain it in a new document, and restore
+the original controls after uninstall. Both package paths compare all scripts
+with the frozen signed package before execution. Store-generated `_metadata` is
+excluded only from the reference's private loadUnpacked copy because Chrome
+reserves that directory name; extension scripts remain byte-identical.
+
+The DevTools corpus uses actual framework applications and the native registered
+extension panel:
+
+```sh
+DISPLAY=<private-display> node tools/chrome-extension-runtime/test-corpus-devtools.mjs
+python3 tools/chrome-extension-runtime/test-corpus-devtools-floorp.py --browser <binary>
+```
+
+The reference opens the genuine headed Chrome frontend and uses native keyboard
+input to dock it, then native pointer input to select the extension's panel. The
+Floorp counterpart opens Gecko's actual toolbox and selects the registered
+extension tool. React Developer Tools must expose the real component tree,
+inspect the authored component's `count` prop, and observe `0` becoming `1` after
+a native click in the actual React application. Both require actual panel
+removal after uninstall. Redux DevTools must expose the actual authored store in its native State view,
+observe `count` changing from `0` to `1`, and record the real
+`AUTHORED_INCREMENT` action after native app input. Both recipes verify panel
+removal after uninstall. The React package's thirteen scripts and Redux
+package's seven scripts are verified
+against its frozen signed CRX; opening the frontend alone cannot pass.
+
+`build-devtools-fixture.mjs` uses the project's existing React 19.2.6, ReactDOM
+19.2.6, Redux 5.0.1, and scheduler 0.27.0 packages. It records their existing
+`deno.lock` integrity entries and cached file hashes without changing dependency
+files. These cache hashes are provenance for the authored fixture; they do not
+claim an independent vendor archive signature verification. The optional
+`freeze-frameworks.py` fetches exact official registry archives and verifies
+SHA-512 integrity when normal vendor network access is available. Vue 3.5.44
+remains a prerequisite until those genuine framework bytes are available; a
+replacement hook or a fabricated Vue object is never used.

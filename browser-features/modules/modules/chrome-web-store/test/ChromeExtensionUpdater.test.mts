@@ -2,6 +2,12 @@
 // @colocated-env browser
 
 import { zipSync } from "fflate/browser";
+import type {
+  NativeExtension,
+  NativeManager,
+  PermissionPrompt,
+  Reply,
+} from "./helpers/update-test-types.ts";
 import { CRXConverterClass } from "../CRXConverter.sys.mts";
 import type { ChromeConversionReport } from "../types.ts";
 import { ChromeExtensionUpdaterClass } from "../ChromeExtensionUpdater.sys.mts";
@@ -18,70 +24,6 @@ const encoder = new TextEncoder();
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-
-interface NativeAddon {
-  id: string;
-  version: string;
-  type: string;
-  getResourceURI(path: string): { spec: string };
-  temporarilyInstalled: boolean;
-  userPermissions: { permissions: string[]; origins: string[] };
-  uninstall(): Promise<void>;
-}
-
-interface NativeInstall {
-  addon?: NativeAddon;
-  error: number;
-  state: number;
-  addListener(listener: object): void;
-  removeListener(listener: object): void;
-  cancel(): void;
-  continuePostponedInstall(): void;
-}
-
-interface NativeManager {
-  getInstallForFile(file: nsIFile): Promise<NativeInstall>;
-  getAddonByID(id: string): Promise<NativeAddon | null>;
-  getAllInstalls(): Promise<NativeInstall[]>;
-  installAddonFromAOMWithOptions(
-    browser: Element,
-    uri: null,
-    install: NativeInstall,
-    options: { preferUpdateOverInstall: boolean },
-  ): void;
-  STATE_POSTPONED: number;
-  shouldAutoUpdate(addon: NativeAddon): boolean;
-  addAddonListener(listener: object): void;
-  removeAddonListener(listener: object): void;
-}
-
-interface Background {
-  xulBrowser: {
-    contentTitle: string;
-    messageManager: { loadFrameScript(script: string, delayed: boolean): void };
-  };
-}
-
-interface NativeExtension {
-  backgroundContext?: Background;
-}
-
-interface Reply {
-  ready?: boolean;
-  request?: number;
-  value?: string;
-  id?: string;
-  version?: string;
-  pending?: string;
-  error?: string;
-}
-
-interface PermissionPrompt {
-  addon: { id: string; version: string };
-  install: NativeInstall;
-  resolve(): void;
-  reject(): void;
-}
 
 export function manager(): NativeManager {
   return (
@@ -139,7 +81,11 @@ export async function command(
   const sequence = ++request;
   const payload = { updaterFixture: true, request: sequence, operation, value };
   context.xulBrowser.messageManager.loadFrameScript(
-    `data:application/javascript,${encodeURIComponent(`content.postMessage(${JSON.stringify(payload)}, '*');`)}`,
+    `data:application/javascript,${
+      encodeURIComponent(
+        `content.postMessage(${JSON.stringify(payload)}, '*');`,
+      )
+    }`,
     false,
   );
   return await waitFor(() => {
@@ -174,7 +120,11 @@ export async function packageVersion(
       ),
       "background.js": encoder.encode(`
       let pending;
-      ${options.postpone ? "browser.runtime.onUpdateAvailable.addListener(update => { pending = update.version; });" : ""}
+      ${
+        options.postpone
+          ? "browser.runtime.onUpdateAvailable.addListener(update => { pending = update.version; });"
+          : ""
+      }
       window.addEventListener('message', async event => {
         const data = event.data;
         if (!data || data.updaterFixture !== true) return;
@@ -229,8 +179,9 @@ export async function initialInstall(
   const file = Services.dirsvc.get("TmpD", Ci.nsIFile);
   file.append(`floorp-updater-fixture-${Services.uuid.generateUUID()}.xpi`);
   file.createUnique(0, 0o600);
-  const stop = observePrompts("webextension-permission-prompt", (prompt) =>
-    prompt.resolve(),
+  const stop = observePrompts(
+    "webextension-permission-prompt",
+    (prompt) => prompt.resolve(),
   );
   try {
     await IOUtils.write(file.path, new Uint8Array(converted.xpiData));
@@ -320,14 +271,15 @@ export async function fixture(
       if (
         install.addon?.id === ID &&
         install.state === manager().STATE_POSTPONED
-      )
+      ) {
         install.cancel();
+      }
     }
     const addon = await manager().getAddonByID(ID);
     if (addon) await addon.uninstall();
-    if (hadPref)
+    if (hadPref) {
       Services.prefs.setBoolPref("xpinstall.signatures.required", signing);
-    else Services.prefs.clearUserPref("xpinstall.signatures.required");
+    } else Services.prefs.clearUserPref("xpinstall.signatures.required");
     let leaked: string[] = [];
     const deadline = Date.now() + 3000;
     do {
@@ -362,7 +314,8 @@ export async function rejected(
 
 const tests: TestCase[] = [
   {
-    name: "native update preserves original ID, local storage, and granted permissions",
+    name:
+      "native update preserves original ID, local storage, and granted permissions",
     async fn() {
       await fixture(async () => {
         const old = await manager().getAddonByID(ID);
@@ -379,9 +332,9 @@ const tests: TestCase[] = [
         const stored = await command("set", "survives-update");
         assert(!stored.error, "storage set succeeds");
         const data = await packageVersion("2.0");
-        const updater = new ChromeExtensionUpdaterClass(async (id) => {
+        const updater = new ChromeExtensionUpdaterClass((id) => {
           assertEquals(id, CRX_TEST_ID, "download uses original Chrome ID");
-          return data;
+          return Promise.resolve(data);
         });
         const check = await updater.checkForUpdate(ID);
         assertEquals(check.status, "available", "new version available");
@@ -434,11 +387,14 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "equal version requires explicit reconversion and older signed package never downgrades",
+    name:
+      "equal version requires explicit reconversion and older signed package never downgrades",
     async fn() {
       await fixture(async () => {
         let data = await packageVersion("1.0");
-        const updater = new ChromeExtensionUpdaterClass(async () => data);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
         assertEquals(
           (await updater.checkForUpdate(ID)).status,
           "up-to-date",
@@ -479,12 +435,15 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "update checks reject tampering and signer-declared identity spoofing",
+    name:
+      "update checks reject tampering and signer-declared identity spoofing",
     async fn() {
       await fixture(async () => {
         const data = await packageVersion("2.0");
         new Uint8Array(data)[data.byteLength - 1] ^= 1;
-        const updater = new ChromeExtensionUpdaterClass(async () => data);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
         await rejected(updater.checkForUpdate(ID), "signature");
         await rejected(
           updater.installUpdate(ID, browser()),
@@ -497,7 +456,7 @@ const tests: TestCase[] = [
         );
         const impersonated = await packageVersion("2.0", { impersonate: true });
         const wrongSigner = new ChromeExtensionUpdaterClass(
-          async () => impersonated,
+          () => Promise.resolve(impersonated),
         );
         await rejected(wrongSigner.checkForUpdate(ID), "developer public key");
         await rejected(
@@ -512,7 +471,8 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "overlapping checks cannot replace the newest prepared update with an older response",
+    name:
+      "overlapping checks cannot replace the newest prepared update with an older response",
     async fn() {
       await fixture(async () => {
         const v2 = await packageVersion("2.0");
@@ -523,8 +483,8 @@ const tests: TestCase[] = [
           calls++;
           return calls === 1
             ? await new Promise<ArrayBuffer>((resolve) => {
-                release = resolve;
-              })
+              release = resolve;
+            })
             : v3;
         });
         const first = updater.checkForUpdate(ID);
@@ -546,13 +506,16 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "new permissions require the native update confirmation and rejection preserves old addon",
+    name:
+      "new permissions require the native update confirmation and rejection preserves old addon",
     async fn() {
       await fixture(async () => {
         const data = await packageVersion("2.0", {
           permissions: ["storage", "bookmarks"],
         });
-        const updater = new ChromeExtensionUpdaterClass(async () => data);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
         await updater.checkForUpdate(ID);
         let prompted = false;
         const stop = observePrompts(
@@ -583,7 +546,9 @@ const tests: TestCase[] = [
         const data = await packageVersion("2.0", {
           permissions: ["storage", "bookmarks"],
         });
-        const updater = new ChromeExtensionUpdaterClass(async () => data);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
         await updater.checkForUpdate(ID);
         const stop = observePrompts(
           "webextension-update-permission-prompt",
@@ -606,13 +571,16 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "closing the confirmation browser cancels the native update and removes its temporary package",
+    name:
+      "closing the confirmation browser cancels the native update and removes its temporary package",
     async fn() {
       await fixture(async () => {
         const data = await packageVersion("2.0", {
           permissions: ["storage", "bookmarks"],
         });
-        const updater = new ChromeExtensionUpdaterClass(async () => data);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
         await updater.checkForUpdate(ID);
         const popup = Services.ww.openWindow(
           Services.wm.getMostRecentWindow("navigator:browser")!,
@@ -654,14 +622,17 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "a competing native installation cancels an older update awaiting permission confirmation",
+    name:
+      "a competing native installation cancels an older update awaiting permission confirmation",
     async fn() {
       await fixture(async () => {
         const v2 = await packageVersion("2.0", {
           permissions: ["storage", "bookmarks"],
         });
         const v3 = await packageVersion("3.0");
-        const updater = new ChromeExtensionUpdaterClass(async () => v2);
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(v2)
+        );
         await updater.checkForUpdate(ID);
         let competing: Promise<void> | undefined;
         const stop = observePrompts(
@@ -694,12 +665,15 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "runtime.onUpdateAvailable stages an update that can resume in the same session",
+    name:
+      "runtime.onUpdateAvailable stages an update that can resume in the same session",
     async fn() {
       await fixture(
         async () => {
           const data = await packageVersion("2.0");
-          const updater = new ChromeExtensionUpdaterClass(async () => data);
+          const updater = new ChromeExtensionUpdaterClass(() =>
+            Promise.resolve(data)
+          );
           await updater.checkForUpdate(ID);
           const result = await updater.installUpdate(ID, browser());
           assertEquals(

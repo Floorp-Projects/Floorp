@@ -62,9 +62,9 @@ const tests: TestCase[] = [
     async fn() {
       let requests = 0;
       await withFetch(
-        async () => {
+        () => {
           requests++;
-          return new Response(new Uint8Array([1]));
+          return Promise.resolve(new Response(new Uint8Array([1])));
         },
         async () => {
           for (
@@ -90,7 +90,7 @@ const tests: TestCase[] = [
     async fn() {
       let requests = 0;
       await withFetch(
-        async (input, options) => {
+        (input, options) => {
           requests++;
           assertEquals(
             String(input),
@@ -115,14 +115,16 @@ const tests: TestCase[] = [
             new Uint8Array([0x43, 0x72]),
             new Uint8Array([0x32, 0x34, 3, 0, 0, 0]),
           ];
-          return new Response(
-            new ReadableStream<Uint8Array>({
-              pull(controller) {
-                const part = parts.shift();
-                if (part) controller.enqueue(part);
-                else controller.close();
-              },
-            }),
+          return Promise.resolve(
+            new Response(
+              new ReadableStream<Uint8Array>({
+                pull(controller) {
+                  const part = parts.shift();
+                  if (part) controller.enqueue(part);
+                  else controller.close();
+                },
+              }),
+            ),
           );
         },
         async () => {
@@ -147,23 +149,25 @@ const tests: TestCase[] = [
       let cancelled = 0;
       let pulled = 0;
       await withFetch(
-        async () => {
+        () => {
           requests++;
-          return new Response(
-            new ReadableStream<Uint8Array>(
+          return Promise.resolve(
+            new Response(
+              new ReadableStream<Uint8Array>(
+                {
+                  pull() {
+                    pulled++;
+                  },
+                  cancel() {
+                    cancelled++;
+                  },
+                },
+                { highWaterMark: 0 },
+              ),
               {
-                pull() {
-                  pulled++;
-                },
-                cancel() {
-                  cancelled++;
-                },
+                headers: { "Content-Length": String(MAX_CRX_SIZE + 1) },
               },
-              { highWaterMark: 0 },
             ),
-            {
-              headers: { "Content-Length": String(MAX_CRX_SIZE + 1) },
-            },
           );
         },
         async () => {
@@ -189,22 +193,24 @@ const tests: TestCase[] = [
       // without allocating hundreds of megabytes of distinct payload data.
       const chunk = new Uint8Array(16 * 1024 * 1024);
       await withFetch(
-        async () => {
+        () => {
           requests++;
-          return new Response(
-            new ReadableStream<Uint8Array>(
-              {
-                pull(controller) {
-                  pulled++;
-                  controller.enqueue(chunk);
+          return Promise.resolve(
+            new Response(
+              new ReadableStream<Uint8Array>(
+                {
+                  pull(controller) {
+                    pulled++;
+                    controller.enqueue(chunk);
+                  },
+                  cancel() {
+                    cancelled++;
+                  },
                 },
-                cancel() {
-                  cancelled++;
-                },
-              },
-              { highWaterMark: 0 },
+                { highWaterMark: 0 },
+              ),
+              { headers: { "Content-Length": "1" } },
             ),
-            { headers: { "Content-Length": "1" } },
           );
         },
         async () => {
@@ -234,7 +240,7 @@ const tests: TestCase[] = [
       const urls: string[] = [];
       let cancelled = 0;
       await withFetch(
-        async (input, options) => {
+        (input, options) => {
           urls.push(String(input));
           assertEquals(
             options?.credentials,
@@ -242,19 +248,21 @@ const tests: TestCase[] = [
             "fallback also excludes credentials",
           );
           if (urls.length === 1) {
-            return new Response(
-              new ReadableStream<Uint8Array>(
-                {
-                  cancel() {
-                    cancelled++;
+            return Promise.resolve(
+              new Response(
+                new ReadableStream<Uint8Array>(
+                  {
+                    cancel() {
+                      cancelled++;
+                    },
                   },
-                },
-                { highWaterMark: 0 },
+                  { highWaterMark: 0 },
+                ),
+                { status: 503 },
               ),
-              { status: 503 },
             );
           }
-          return new Response(new Uint8Array([17, 23]));
+          return Promise.resolve(new Response(new Uint8Array([17, 23])));
         },
         async () => {
           const result = await downloadChromeExtension(CRX_TEST_ID);
@@ -282,9 +290,11 @@ const tests: TestCase[] = [
     async fn() {
       let attempts = 0;
       await withFetch(
-        async () => {
+        () => {
           attempts++;
-          throw new Error(`fixture network failure ${attempts}`);
+          return Promise.reject(
+            new Error(`fixture network failure ${attempts}`),
+          );
         },
         async () => {
           await rejected(

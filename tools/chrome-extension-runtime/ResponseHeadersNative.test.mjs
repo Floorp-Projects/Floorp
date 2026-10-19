@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
+  "resource://gre/modules/Timer.sys.mjs",
 );
 const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
+  "resource://gre/modules/AddonManager.sys.mjs",
 );
 const { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs"
+  "resource://gre/modules/ExtensionParent.sys.mjs",
 );
 const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
+  "resource://gre/modules/FileUtils.sys.mjs",
 );
 export async function runAllTests() {
   const root = Services.env.get("FLOORP_HEADERS_ROOT");
@@ -33,23 +33,28 @@ export async function runAllTests() {
   });
   await IOUtils.writeUTF8(
     PathUtils.join(fixture, "probe.html"),
-    '<!doctype html><title>waiting</title><script type="module" src="probe.mjs"></script>'
+    '<!doctype html><title>waiting</title><script type="module" src="probe.mjs"></script>',
   );
   await IOUtils.copy(
     PathUtils.join(
       root,
       "tools",
       "chrome-extension-runtime",
-      "ResponseHeadersVectors.mjs"
+      "ResponseHeadersVectors.mjs",
     ),
-    PathUtils.join(fixture, "vectors.mjs")
+    PathUtils.join(fixture, "vectors.mjs"),
   );
   await IOUtils.writeUTF8(
     PathUtils.join(fixture, "probe.mjs"),
-    `import {runResponseHeaderVectors} from './vectors.mjs';try{document.title=JSON.stringify({passed:true,...await runResponseHeaderVectors(chrome,${JSON.stringify(origin)})});}catch(error){document.title=JSON.stringify({passed:false,error:String(error),checks:error.checks,observations:error.observations});}`
+    `import {runResponseHeaderVectors} from './vectors.mjs';try{document.title=JSON.stringify({passed:true,...await runResponseHeaderVectors(chrome,${JSON.stringify(origin)})});}catch(error){document.title=JSON.stringify({passed:false,error:String(error),checks:error.checks,observations:error.observations});}`,
   );
   let addon, tab;
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
+  const window =
+    /** @type {import("./network-test-types.ts").NativeBrowserWindow | null} */ (
+      Services.wm.getMostRecentWindow("navigator:browser")
+    );
+  if (!window) throw Error("Native browser window missing");
+  /** @type {import("./network-test-types.ts").HeaderReport} */
   const report = {
     passed: false,
     origin,
@@ -60,7 +65,7 @@ export async function runAllTests() {
   };
   try {
     addon = await AddonManager.installTemporaryAddon(
-      new FileUtils.File(fixture)
+      new FileUtils.File(fixture),
     );
     const extension = ExtensionParent.GlobalManager.getExtension(addon.id);
     tab = window.gBrowser.addTab(extension.baseURI.resolve("probe.html"), {
@@ -72,8 +77,10 @@ export async function runAllTests() {
       try {
         Object.assign(report, JSON.parse(tab.linkedBrowser.contentTitle));
         break;
-      } catch {}
-      await new Promise(resolve => setTimeout(resolve, 100));
+      } catch {
+        /* The owned extension has not published its JSON title yet. */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     if (!report.passed)
       throw Error(report.error || "Native header fixture timed out");
@@ -95,34 +102,36 @@ export async function runAllTests() {
     });
     await IOUtils.writeUTF8(
       PathUtils.join(ordinary, "probe.html"),
-      '<!doctype html><title>waiting</title><script src="probe.js"></script>'
+      '<!doctype html><title>waiting</title><script src="probe.js"></script>',
     );
     await IOUtils.writeUTF8(
       PathUtils.join(ordinary, "probe.js"),
-      `(async()=>{let rejected=false;try{await browser.declarativeNetRequest.updateDynamicRules({addRules:[{id:1,condition:{responseHeaders:[{header:'x-probe'}]},action:{type:'block'}}]});}catch(error){rejected=true;}document.title=JSON.stringify({rejected,stored:(await browser.declarativeNetRequest.getDynamicRules()).length});})()`
+      `(async()=>{let rejected=false;try{await browser.declarativeNetRequest.updateDynamicRules({addRules:[{id:1,condition:{responseHeaders:[{header:'x-probe'}]},action:{type:'block'}}]});}catch(error){rejected=true;}document.title=JSON.stringify({rejected,stored:(await browser.declarativeNetRequest.getDynamicRules()).length});})()`,
     );
     addon = await AddonManager.installTemporaryAddon(
-      new FileUtils.File(ordinary)
+      new FileUtils.File(ordinary),
     );
     const ordinaryExtension = ExtensionParent.GlobalManager.getExtension(
-      addon.id
+      addon.id,
     );
     tab = window.gBrowser.addTab(
       ordinaryExtension.baseURI.resolve("probe.html"),
-      { triggeringPrincipal: ordinaryExtension.principal }
+      { triggeringPrincipal: ordinaryExtension.principal },
     );
     const ordinaryDeadline = Date.now() + 15000;
     while (Date.now() < ordinaryDeadline) {
       try {
         report.ordinary = JSON.parse(tab.linkedBrowser.contentTitle);
         break;
-      } catch {}
-      await new Promise(resolve => setTimeout(resolve, 100));
+      } catch {
+        /* The owned extension has not published its JSON title yet. */
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     if (!report.ordinary?.rejected || report.ordinary.stored !== 0)
       throw Error("Ordinary Firefox response header gate failed");
-    report.checks.push(
-      "Ordinary Firefox extension rejects Chrome response-header conditions without installing partial rules"
+    (report.checks ??= []).push(
+      "Ordinary Firefox extension rejects Chrome response-header conditions without installing partial rules",
     );
   } catch (error) {
     report.passed = false;

@@ -4,6 +4,7 @@
 
 import argparse
 from functools import partial
+import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import importlib.util
 import json
@@ -118,10 +119,33 @@ def main():
                         default=ROOT / "_dist/chrome-runtime-tests")
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--headed", action="store_true")
+    parser.add_argument("--candidate-manifest", type=Path,
+                        default=Path(os.environ["FLOORP_TEST_CANDIDATE_MANIFEST"])
+                        if os.environ.get("FLOORP_TEST_CANDIDATE_MANIFEST") else None,
+                        help="Require this exact production native package, source and build before running suites")
+    parser.add_argument("--environment-proxy", action="store_true",
+                        help="Opt in to normal environment HTTP(S)_PROXY/NO_PROXY and public CA trust in this disposable profile only")
     parser.add_argument("--actor-module", action="append", type=Path, default=[],
                         help="Private test actor module copied into the profile before launch (repeatable)")
     args = parser.parse_args()
     binary = browser_binary(args.browser.resolve(strict=True))
+    candidate = candidate_identity = None
+    if args.candidate_manifest:
+        candidate_spec = importlib.util.spec_from_file_location(
+            "candidate_identity", ROOT / "tools/chrome-extension-runtime/candidate-identity.py")
+        candidate_identity = importlib.util.module_from_spec(candidate_spec)
+        candidate_spec.loader.exec_module(candidate_identity)
+        candidate = candidate_identity.authenticate_candidate(
+            args.candidate_manifest.resolve(strict=True), binary, ROOT)
+    candidate_provenance = {}
+    if candidate is not None:
+        manifest = candidate["manifest"]
+        candidate_provenance = {
+            "manifestSha256": hashlib.sha256(args.candidate_manifest.read_bytes()).hexdigest(),
+            "packageSha256": candidate["packageSha256"],
+            **{key: manifest[key] for key in
+               ("sourceCommit", "floorpCommit", "patches", "buildId", "platform")},
+        }
     tests = args.test or [ROOT / "browser-features/modules/modules/chrome-web-store/test/polyfills/documentId/DocumentIdPolyfill.test.mts"]
     tests = [path.resolve(strict=True) for path in tests]
     args.output.mkdir(parents=True, exist_ok=True)
@@ -174,13 +198,28 @@ def main():
         "browser.startup.homepage_override.mstone": "ignore",
         "browser.startup.page": 0,
         "browser.aboutwelcome.enabled": False,
+        "floorp.releaseNotes.mode": "disabled",
+        "floorp.releaseNotes.choiceConfirmed": True,
+        "floorp.releaseNotes.promptShown": True,
+        "floorp.browser.welcome.page.shown": True,
         "datareporting.policy.dataSubmissionEnabled": False,
         "browser.warnOnQuit": False,
     }
+    certificates = []
+    network_report = {"mode": "browser-default"}
+    if args.environment_proxy:
+        network_spec = importlib.util.spec_from_file_location(
+            "private_profile_network", ROOT / "tools/chrome-extension-runtime/private-profile-network.py")
+        network = importlib.util.module_from_spec(network_spec)
+        network_spec.loader.exec_module(network)
+        network_preferences, certificates, network_report = network.environment_network(os.environ)
+        prefs.update(network_preferences)
     (profile / "user.js").write_text("\n".join(
         f"user_pref({json.dumps(key)}, {json.dumps(value)});"
         for key, value in prefs.items()) + "\n")
-    report = {"passed": False, "browser": str(binary), "modules": []}
+    report = {"passed": False, "browser": str(binary), "modules": [], "networkEnvironment": network_report}
+    if candidate is not None:
+        report["candidate"] = candidate
     client = host = None
     fixture_handler = partial(FixtureHandler, directory=str(
         ROOT / "tools/chrome-extension-runtime/fixtures"))
@@ -195,9 +234,14 @@ def main():
             if not args.headed:
                 command.append("--headless")
             command.append("about:blank")
+            browser_env = {**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
+                           "FLOORP_TEST_REQUIRE_NATIVE_CORPUS": "1" if candidate is not None else "0",
+                           "FLOORP_TEST_NATIVE_CANDIDATE_IDENTITY": json.dumps(candidate_provenance),
+                           "FLOORP_TEST_ACTOR_DIRECTORY": str(actor_directory) if args.actor_module else ""}
+            if candidate is not None:
+                browser_env.pop("MOZ_DISABLE_CONTENT_SANDBOX", None)
             host = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-                                    env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
-                                         "FLOORP_TEST_ACTOR_DIRECTORY": str(actor_directory) if args.actor_module else ""})
+                                    env=browser_env)
 
             def connect():
                 if host.poll() is not None:
@@ -209,6 +253,15 @@ def main():
 
             client = smoke.wait_for("Marionette", connect, 45)
             client.context("chrome")
+            if certificates:
+                imported = client.script("""
+                    const certdb = Cc['@mozilla.org/security/x509certdb;1'].getService(Ci.nsIX509CertDB);
+                    for (const certificate of arguments[0]) {
+                        certdb.addCertFromBase64(certificate, 'C,,');
+                    }
+                    return arguments[0].length;
+                """, certificates)
+                report["networkEnvironment"]["importedPrivateCertificates"] = imported
             client.script("""
                 window.wrappedJSObject.__floorpRuntimeFixtureURL = arguments[0];
             """, fixture_url)
@@ -224,6 +277,9 @@ def main():
                     workerWebIDLCompiled: AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED,
                 };
             """)
+            if candidate is not None:
+                candidate_identity.verify_runtime_identity(candidate, report["runtime"])
+                report["nativeCandidateIdentityMatches"] = True
             client.script("""
                 const directory = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
                 directory.initWithPath(arguments[0]);

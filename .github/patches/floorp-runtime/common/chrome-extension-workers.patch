@@ -618,10 +618,19 @@ index 0000000..5f78a05
 +  readonly attribute any BookmarkTreeNodeType;
 +};
 diff --git a/dom/webidl/ExtensionBrowser.webidl b/dom/webidl/ExtensionBrowser.webidl
-index 39ed714..493c2ba 100644
+index 39ed714..1b4d24a 100644
 --- a/dom/webidl/ExtensionBrowser.webidl
 +++ b/dom/webidl/ExtensionBrowser.webidl
-@@ -30,6 +30,150 @@ interface mixin ExtensionGlobalsMixin {
+@@ -23,13 +23,157 @@
+ // in the ServiceWorkerGlobalScope and Window).
+ [Exposed=(ServiceWorker)]
+ interface mixin ExtensionGlobalsMixin {
+-  [Replaceable, SameObject, BinaryName="AcquireExtensionBrowser",
++  [Replaceable, Throws, BinaryName="ExtensionBrowserObject",
+    BindingAlias="chrome", Func="extensions::ExtensionAPIAllowed"]
+-  readonly attribute ExtensionBrowser browser;
++  readonly attribute any browser;
+ };
  
  [Exposed=(ServiceWorker), LegacyNoInterfaceObject]
  interface ExtensionBrowser {
@@ -972,10 +981,10 @@ index 0000000..590592f
 +};
 diff --git a/dom/webidl/ExtensionDeclarativeNetRequest.webidl b/dom/webidl/ExtensionDeclarativeNetRequest.webidl
 new file mode 100644
-index 0000000..b636345
+index 0000000..5a4405a
 --- /dev/null
 +++ b/dom/webidl/ExtensionDeclarativeNetRequest.webidl
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,103 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1027,7 +1036,8 @@ index 0000000..b636345
 +
 +  // API events.
 +
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasDNRFeedbackPermission"]
 +  readonly attribute ExtensionEventManager onRuleMatchedDebug;
 +
 +  // API properties.
@@ -1478,10 +1488,10 @@ index 0000000..96c9e7a
 +};
 diff --git a/dom/webidl/ExtensionManagement.webidl b/dom/webidl/ExtensionManagement.webidl
 new file mode 100644
-index 0000000..2a8e7ee
+index 0000000..6097f22
 --- /dev/null
 +++ b/dom/webidl/ExtensionManagement.webidl
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,59 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1495,13 +1505,16 @@ index 0000000..2a8e7ee
 +interface ExtensionManagement {
 +  // API methods.
 +
-+  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  [Throws, WebExtensionStub="AsyncAmbiguous",
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  any getAll(any... args);
 +
-+  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  [Throws, WebExtensionStub="AsyncAmbiguous",
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  any get(any... args);
 +
-+  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  [Throws, WebExtensionStub="AsyncAmbiguous",
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  any install(any... args);
 +
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
@@ -1510,21 +1523,26 @@ index 0000000..2a8e7ee
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
 +  any uninstallSelf(any... args);
 +
-+  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  [Throws, WebExtensionStub="AsyncAmbiguous",
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  any setEnabled(any... args);
 +
 +  // API events.
 +
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  readonly attribute ExtensionEventManager onDisabled;
 +
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  readonly attribute ExtensionEventManager onEnabled;
 +
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  readonly attribute ExtensionEventManager onInstalled;
 +
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasManagementPermission"]
 +  readonly attribute ExtensionEventManager onUninstalled;
 +  [Replaceable]
 +  readonly attribute any ExtensionDisabledReason;
@@ -1954,7 +1972,7 @@ index 0000000..d47c4ab
 +  readonly attribute any TrackingProtectionModeOption;
 +};
 diff --git a/dom/webidl/ExtensionRuntime.webidl b/dom/webidl/ExtensionRuntime.webidl
-index c60f45c..49404a5 100644
+index c60f45c..1989cb5 100644
 --- a/dom/webidl/ExtensionRuntime.webidl
 +++ b/dom/webidl/ExtensionRuntime.webidl
 @@ -30,6 +30,9 @@
@@ -1967,7 +1985,25 @@ index c60f45c..49404a5 100644
    [Throws, WebExtensionStub="Async"]
    any openOptionsPage(optional Function callback);
  
-@@ -77,12 +80,21 @@ interface ExtensionRuntime {
+@@ -54,13 +57,15 @@ interface ExtensionRuntime {
+   [Throws, WebExtensionStub="ReturnsPort"]
+   ExtensionPort connect();
+ 
+-  [Throws, WebExtensionStub="ReturnsPort"]
++  [Throws, WebExtensionStub="ReturnsPort",
++   Func="mozilla::extensions::ExtensionAPIBase::HasNativeMessagingPermission"]
+   ExtensionPort connectNative(DOMString application);
+ 
+   [Throws, WebExtensionStub="AsyncAmbiguous"]
+   any sendMessage(any... args);
+ 
+-  [Throws, WebExtensionStub="Async"]
++  [Throws, WebExtensionStub="Async",
++   Func="mozilla::extensions::ExtensionAPIBase::HasNativeMessagingPermission"]
+   any sendNativeMessage(DOMString application, any message, optional Function responseCallback);
+ 
+   [Throws, WebExtensionStub="Async"]
+@@ -77,12 +82,22 @@ interface ExtensionRuntime {
    [Replaceable, SameObject]
    readonly attribute ExtensionEventManager onInstalled;
  
@@ -1983,17 +2019,19 @@ index c60f45c..49404a5 100644
    [Replaceable, SameObject]
    readonly attribute ExtensionEventManager onConnect;
  
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasUserScriptsPermission"]
 +  readonly attribute ExtensionEventManager onUserScriptConnect;
 +
    [Replaceable, SameObject]
    readonly attribute ExtensionEventManager onConnectExternal;
  
-@@ -92,6 +104,12 @@ interface ExtensionRuntime {
+@@ -92,6 +107,13 @@ interface ExtensionRuntime {
    [Replaceable, SameObject]
    readonly attribute ExtensionEventManager onMessageExternal;
  
-+  [Replaceable, SameObject]
++  [Replaceable, SameObject,
++   Func="mozilla::extensions::ExtensionAPIBase::HasUserScriptsPermission"]
 +  readonly attribute ExtensionEventManager onUserScriptMessage;
 +
 +  [Replaceable, SameObject]
@@ -2002,7 +2040,7 @@ index c60f45c..49404a5 100644
    // API properties.
  
    [Replaceable]
-@@ -99,4 +117,20 @@ interface ExtensionRuntime {
+@@ -99,4 +121,20 @@ interface ExtensionRuntime {
  
    [Replaceable]
    readonly attribute DOMString id;
@@ -2429,10 +2467,10 @@ index 0000000..78aa046
 +};
 diff --git a/dom/webidl/ExtensionTabs.webidl b/dom/webidl/ExtensionTabs.webidl
 new file mode 100644
-index 0000000..cc145c0
+index 0000000..8cf2baa
 --- /dev/null
 +++ b/dom/webidl/ExtensionTabs.webidl
-@@ -0,0 +1,232 @@
+@@ -0,0 +1,235 @@
 +/*
 + *  THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT
 + *
@@ -2531,7 +2569,8 @@ index 0000000..cc145c0
 +  any toggleReaderMode(optional Function callback);
 +#endif
 +
-+  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  [Throws, WebExtensionStub="AsyncAmbiguous",
++   Func="mozilla::extensions::ExtensionAPIBase::HasAllUrlsPermission"]
 +  any captureTab(any... args);
 +
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
@@ -2577,12 +2616,14 @@ index 0000000..cc145c0
 +#endif
 +
 +#if !defined(ANDROID)
-+  [Throws, WebExtensionStub="Async"]
++  [Throws, WebExtensionStub="Async",
++   Func="mozilla::extensions::ExtensionAPIBase::HasTabHidePermission"]
 +  any show(any tabIds, optional Function callback);
 +#endif
 +
 +#if !defined(ANDROID)
-+  [Throws, WebExtensionStub="Async"]
++  [Throws, WebExtensionStub="Async",
++   Func="mozilla::extensions::ExtensionAPIBase::HasTabHidePermission"]
 +  any hide(any tabIds, optional Function callback);
 +#endif
 +
@@ -3166,11 +3207,50 @@ index 95bfd6d..99c8913 100644
  
    // mIsInAutomation is true when we're running in test automation.
    // We expose some extra testing functions in that case.
+diff --git a/dom/workers/WorkerScope.cpp b/dom/workers/WorkerScope.cpp
+index 0b41958..b8def16 100644
+--- a/dom/workers/WorkerScope.cpp
++++ b/dom/workers/WorkerScope.cpp
+@@ -1401,6 +1401,12 @@ ServiceWorkerGlobalScope::AcquireExtensionBrowser() {
+   return mExtensionBrowser.clonePtr();
+ }
+ 
++void ServiceWorkerGlobalScope::GetExtensionBrowserObject(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aResult, ErrorResult& aRv) {
++  auto browser = AcquireExtensionBrowser();
++  browser->GetAPIObject(aCx, aResult, aRv);
++}
++
+ already_AddRefed<CookieStore> ServiceWorkerGlobalScope::CookieStore() {
+   if (!mCookieStore) {
+     mCookieStore = CookieStore::Create(this);
+diff --git a/dom/workers/WorkerScope.h b/dom/workers/WorkerScope.h
+index 70e2dc9..9233cdc 100644
+--- a/dom/workers/WorkerScope.h
++++ b/dom/workers/WorkerScope.h
+@@ -45,6 +45,7 @@ struct VsyncEvent;
+ namespace extensions {
+ 
+ class ExtensionBrowser;
++bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
+ 
+ }  // namespace extensions
+ 
+@@ -544,6 +545,9 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope {
+   already_AddRefed<Promise> SkipWaiting(ErrorResult& aRv);
+ 
+   SafeRefPtr<extensions::ExtensionBrowser> AcquireExtensionBrowser();
++  void GetExtensionBrowserObject(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aResult,
++                                 ErrorResult& aRv);
+ 
+   IMPL_EVENT_HANDLER(install)
+   IMPL_EVENT_HANDLER(activate)
 diff --git a/toolkit/components/extensions/Extension.sys.mjs b/toolkit/components/extensions/Extension.sys.mjs
-index 0af1935..098968f 100644
+index 0af1935..2b05052 100644
 --- a/toolkit/components/extensions/Extension.sys.mjs
 +++ b/toolkit/components/extensions/Extension.sys.mjs
-@@ -1587,16 +1587,28 @@ export class ExtensionData {
+@@ -1587,16 +1587,38 @@ export class ExtensionData {
      return this.manifest.manifest_version;
    }
  
@@ -3181,6 +3261,16 @@ index 0af1935..098968f 100644
 +      this.id === `${marker.original_id}@chromium-extension`;
 +  }
 +
++
++  get nativePolicyPermissions() {
++    const permissions = Array.from(this.permissions);
++    if (this.backgroundServiceWorkerCompatibility) {
++      for (const [name, value] of Object.entries(this.manifest)) {
++        if (value != null) permissions.push(`manifest:${name}`);
++      }
++    }
++    return permissions;
++  }
 +
    get workerBackground() {
      const background = this.manifest.background;
@@ -3200,7 +3290,7 @@ index 0af1935..098968f 100644
      const hasDocument = background.scripts || background.page;
      if (!hasDocument) {
        return true;
-@@ -1906,6 +1918,11 @@ export class ExtensionData {
+@@ -1906,6 +1928,11 @@ export class ExtensionData {
  
      if (manifest.background) {
        const background = manifest.background;
@@ -3212,7 +3302,7 @@ index 0af1935..098968f 100644
  
        if (background.page && background.scripts) {
          // both page and scripts are specified, educate the author on the deterministic behaviour
-@@ -1920,7 +1937,8 @@ export class ExtensionData {
+@@ -1920,7 +1947,8 @@ export class ExtensionData {
          !background.preferred_environment &&
          background.service_worker &&
          (background.page || background.scripts) &&
@@ -3222,7 +3312,25 @@ index 0af1935..098968f 100644
        ) {
          // both serviceWorker and document are specified, educate the author on the deterministic behaviour
          const documentType = background.page ? "page" : "scripts";
-@@ -3775,8 +3793,9 @@ export class Extension extends ExtensionData {
+@@ -3520,7 +3548,7 @@ export class Extension extends ExtensionData {
+       for (let perm of permissions.data_collection) {
+         this.dataCollectionPermissions.add(perm);
+       }
+-      this.policy.permissions = Array.from(this.permissions);
++      this.policy.permissions = this.nativePolicyPermissions;
+ 
+       updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ true);
+       this.allowedOrigins = this.policy.allowedOrigins;
+@@ -3547,7 +3575,7 @@ export class Extension extends ExtensionData {
+       for (let perm of permissions.data_collection) {
+         this.dataCollectionPermissions.delete(perm);
+       }
+-      this.policy.permissions = Array.from(this.permissions);
++      this.policy.permissions = this.nativePolicyPermissions;
+ 
+       updateAllowedOrigins(this.policy, permissions.origins, /* isAdd */ false);
+       this.allowedOrigins = this.policy.allowedOrigins;
+@@ -3775,8 +3803,9 @@ export class Extension extends ExtensionData {
      return this.manifest.background?.type === "module";
    }
  
@@ -3233,7 +3341,15 @@ index 0af1935..098968f 100644
    }
  
    get optionalPermissions() {
-@@ -3855,6 +3874,7 @@ export class Extension extends ExtensionData {
+@@ -3837,6 +3866,7 @@ export class Extension extends ExtensionData {
+       webAccessibleResources: this.webAccessibleResources,
+       allowedOrigins: this.allowedOrigins.patterns.map(pat => pat.pattern),
+       permissions: this.permissions,
++      nativePolicyPermissions: this.nativePolicyPermissions,
+       optionalPermissions: this.optionalPermissions,
+       isPrivileged: this.isPrivileged,
+       ignoreQuarantine: this.ignoreQuarantine,
+@@ -3855,6 +3885,7 @@ export class Extension extends ExtensionData {
        backgroundScripts: this.backgroundScripts,
        backgroundWorkerScript: this.backgroundWorkerScript,
        backgroundTypeModule: this.backgroundTypeModule,
@@ -3242,7 +3358,7 @@ index 0af1935..098968f 100644
        dependencies: this.dependencies,
        persistentBackground: this.persistentBackground,
 diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/components/extensions/ExtensionChild.sys.mjs
-index f0c8b87..0ea9706 100644
+index f0c8b87..b2432e3 100644
 --- a/toolkit/components/extensions/ExtensionChild.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionChild.sys.mjs
 @@ -432,2 +432,4 @@ export class ExtensionChild extends EventEmitter {
@@ -3250,12 +3366,22 @@ index f0c8b87..0ea9706 100644
 +      this.backgroundTypeModule = ed.backgroundTypeModule;
 +      this.backgroundServiceWorkerCompatibility = ed.backgroundServiceWorkerCompatibility;
        this.childModules = ed.childModules;
-@@ -658,2 +660,3 @@ export class ProxyAPIImplementation extends SchemaAPIInterface {
+@@ -473,3 +475,8 @@ export class ExtensionChild extends EventEmitter {
+   get permissions() {
+-    return new Set(this.policy.permissions);
++    const permissions = this.policy.permissions;
++    // Manifest-presence tokens are internal native Worker exposure metadata.
++    // Keep this extension's permission Set identical to its real grants.
++    return new Set(this.backgroundServiceWorkerCompatibility
++      ? permissions.filter(permission => !permission.startsWith("manifest:"))
++      : permissions);
+   }
+@@ -658,2 +665,3 @@ export class ProxyAPIImplementation extends SchemaAPIInterface {
      const isHandlingUserInput =
 +      context.isHandlingUserInput ??
        context.contentWindow?.windowUtils?.isHandlingUserInput;
 diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
-index bc64f8f..be23d40 100644
+index bc64f8f..f243c2d 100644
 --- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 @@ -141,6 +141,11 @@ ExtensionManager = {
@@ -3270,6 +3396,15 @@ index bc64f8f..be23d40 100644
        policy = new WebExtensionPolicy({
          id: extension.id,
          mozExtensionHostname: extension.uuid,
+@@ -153,7 +158,7 @@ ExtensionManager = {
+         ignoreQuarantine: extension.ignoreQuarantine,
+         hasRecommendedState: extension.hasRecommendedState,
+         temporarilyInstalled: extension.temporarilyInstalled,
+-        permissions: extension.permissions,
++        permissions: extension.nativePolicyPermissions || extension.permissions,
+         allowedOrigins: extension.allowedOrigins,
+         webAccessibleResources: extension.webAccessibleResources,
+ 
 @@ -166,6 +171,7 @@ ExtensionManager = {
          backgroundScripts,
          backgroundWorkerScript,
@@ -3303,9 +3438,17 @@ index bc64f8f..be23d40 100644
        return context.childManager.handleWebIDLAPIRequest(request);
      } catch (error) {
        // Propagate errors related to parameter validation when the error object
-@@ -517,7 +541,10 @@ export var ExtensionAPIRequestHandler = {
+@@ -516,17 +540,62 @@ export var ExtensionAPIRequestHandler = {
+   },
  
    validateAndNormalizeRequestArgs({ context, request }) {
++    if (context.extension.backgroundServiceWorkerCompatibility &&
++        request.requestType === "getProperty") {
++      const property = lazy.Schemas.getNamespace(request.apiNamespace)?.get(request.apiName);
++      if (property && (Object.hasOwn(property, "value") || Array.isArray(property.enumeration))) {
++        return [];
++      }
++    }
      if (
 -      !lazy.Schemas.checkPermissions(request.apiNamespace, context.extension)
 +      !lazy.Schemas.checkPermissions(
@@ -3314,8 +3457,11 @@ index bc64f8f..be23d40 100644
 +      )
      ) {
        throw new context.Error(
-         `Not enough privileges to access ${request.apiNamespace}`
-@@ -527,6 +554,41 @@ export var ExtensionAPIRequestHandler = {
+-        `Not enough privileges to access ${request.apiNamespace}`
++        `'${request.apiNamespace}.${request.apiName}' is not available in this context.`
+       );
+     }
+     if (request.requestType === "getProperty") {
        return [];
      }
  
@@ -3357,7 +3503,7 @@ index bc64f8f..be23d40 100644
      if (request.apiObjectType) {
        // skip parameter validation on request targeting an api object,
        // even the JS-based implementation of the API objects are not
-@@ -538,12 +600,49 @@ export var ExtensionAPIRequestHandler = {
+@@ -538,12 +607,49 @@ export var ExtensionAPIRequestHandler = {
        return request.args;
      }
  
@@ -3677,7 +3823,7 @@ index c1847ca..4883173 100644
     * Captures the most recent stack frame from the WebIDL API request being
     * processed.
 diff --git a/toolkit/components/extensions/Schemas.sys.mjs b/toolkit/components/extensions/Schemas.sys.mjs
-index 093b045..eb5baf2 100644
+index 093b045..464c89c 100644
 --- a/toolkit/components/extensions/Schemas.sys.mjs
 +++ b/toolkit/components/extensions/Schemas.sys.mjs
 @@ -306,7 +306,8 @@ const POSTPROCESSORS = {
@@ -3690,10 +3836,71 @@ index 093b045..eb5baf2 100644
          return value;
        }
  
-@@ -4232,6 +4233,12 @@ export var Schemas = {
+@@ -802,6 +803,14 @@ class Context {
+  * @param {Entry} parentEntry
+  *        The parent entry for the injected entry.
+  */
++// Chrome exposes this diagnostic method independently of feedback permission.
++// Its real parent backend enforces unpacked-only access; the namespace's DNR
++// permission remains required. Firefox keeps its existing feedback contract.
++function hasChromeMemberPermissionOverride(path, extension) {
++  return path === "declarativeNetRequest.testMatchOutcome" &&
++    !!ExtensionUtils.getChromeExtensionId(extension);
++}
++
+ class InjectionEntry {
+   constructor(context, entry, parentObj, name, path, parentEntry) {
+     this.context = context;
+@@ -850,6 +859,9 @@ class InjectionEntry {
+   get hasPermission() {
+     return (
+       !this.entry.permissions ||
++      hasChromeMemberPermissionOverride(
++        this.path.join("."), this.context.params.context?.extension
++      ) ||
+       this.entry.permissions.some(perm => this.context.hasPermission(perm))
+     );
+   }
+@@ -4164,6 +4176,15 @@ export var Schemas = {
+    * @returns {Array<any>} Normalized arguments array.
+    */
+   checkWebIDLRequestParameters(extContext, apiRequest) {
++    const checkPermissions = (schemaObj, schemaPath) => {
++      if (schemaObj?.permissions &&
++          !hasChromeMemberPermissionOverride(schemaPath, extContext.context?.extension) &&
++          !schemaObj.permissions.some(perm => extContext.hasPermission(perm))) {
++        throw new extContext.context.Error(
++          `'${schemaPath}' is not available in this context.`
++        );
++      }
++    };
+     const getSchemaForProperty = (schemaObj, propName, schemaPath) => {
+       if (schemaObj instanceof Namespace) {
+         return schemaObj?.get(propName);
+@@ -4202,6 +4223,7 @@ export var Schemas = {
+     // data and then used to include the full path to the API schema that is hitting unexpected
+     // errors due to schema data not found or an unexpected schema type.
+     let schemaPath = [ns];
++    const schemaEntries = [[apiSchema, ns]];
+ 
+     while (rest.length) {
+       // Nested property as namespace (e.g. used for proxy.settings requests).
+@@ -4218,6 +4240,7 @@ export var Schemas = {
+         schemaPath.join(".")
+       );
+       schemaPath.push(propName);
++      schemaEntries.push([apiSchema, schemaPath.join(".")]);
+     }
+ 
+     if (!apiSchema) {
+@@ -4232,6 +4255,16 @@ export var Schemas = {
        );
      }
  
++    for (const [entry, path] of schemaEntries) {
++      checkPermissions(entry, path);
++    }
++
 +    if (apiSchema.requireUserInput && !apiRequest.isHandlingUserInput) {
 +      throw new extContext.context.Error(
 +        `${schemaPath.join(".")} may only be called from a user input handler`
@@ -3739,10 +3946,18 @@ index 5860d50..8bf21a3 100644
  bool WebExtensionPolicy::UseRemoteWebExtensions(GlobalObject& aGlobal) {
    return EPS().UseRemoteExtensions();
 diff --git a/toolkit/components/extensions/WebExtensionPolicy.h b/toolkit/components/extensions/WebExtensionPolicy.h
-index 0615e3e..3c04e6b 100644
+index 0615e3e..25d3573 100644
 --- a/toolkit/components/extensions/WebExtensionPolicy.h
 +++ b/toolkit/components/extensions/WebExtensionPolicy.h
-@@ -82,6 +82,11 @@ class WebExtensionPolicyCore final {
+@@ -21,6 +21,7 @@
+ #include "nsCycleCollectionParticipant.h"
+ #include "nsISupports.h"
+ #include "nsWrapperCache.h"
++#include "nsTHashMap.h"
+ 
+ namespace mozilla {
+ namespace dom {
+@@ -82,6 +83,11 @@ class WebExtensionPolicyCore final {
  
    bool TemporarilyInstalled() { return mTemporarilyInstalled; }
  
@@ -3754,7 +3969,49 @@ index 0615e3e..3c04e6b 100644
    const nsString& Name() const { return mName; }
  
    const nsString& Version() const { return mVersion; }
-@@ -209,6 +214,7 @@ class WebExtensionPolicyCore final {
+@@ -127,9 +133,41 @@ class WebExtensionPolicyCore final {
+       MOZ_EXCLUDES(mLock) {
+     RefPtr<AtomSet> newPermissions = new AtomSet(aPermissions);
+     AutoWriteLock lock(mLock);
++    if (mBackgroundServiceWorkerCompatibility) {
++      ++mPermissionGeneration;
++      for (const auto& permission : aPermissions) {
++        RefPtr<nsAtom> atom = NS_Atomize(permission);
++        if (!mPermissions->Contains(atom)) {
++          mPermissionGrants.InsertOrUpdate(atom, mPermissionGeneration);
++        }
++      }
++    }
+     mPermissions = std::move(newPermissions);
+   }
+ 
++  // Namespace exposure is monotonic within one Worker generation in Chrome.
++  // This history affects only which SDK objects are visible; every native API
++  // request still checks current permissions in ExtensionProcessScript.
++  uint64_t GetPermissionsWithGeneration(nsTArray<nsString>& aPermissions) const
++      MOZ_EXCLUDES(mLock) {
++    AutoReadLock lock(mLock);
++    mPermissions->Get(aPermissions);
++    return mPermissionGeneration;
++  }
++
++  void GetPermissionsGrantedSince(uint64_t aGeneration,
++                                  nsTArray<nsString>& aPermissions) const
++      MOZ_EXCLUDES(mLock) {
++    AutoReadLock lock(mLock);
++    mPermissions->Get(aPermissions);
++    for (auto entry = mPermissionGrants.ConstIter(); !entry.Done();
++         entry.Next()) {
++      if (entry.Data() > aGeneration) {
++        entry.Key()->ToString(*aPermissions.AppendElement());
++      }
++    }
++  }
++
+   bool FileSchemeAllowed() const;
+ 
+   bool CanAccessURI(const URLInfo& aURI, bool aExplicit = false,
+@@ -209,6 +247,7 @@ class WebExtensionPolicyCore final {
    const bool mTemporarilyInstalled;
  
    const nsString mBackgroundWorkerScript;
@@ -3762,7 +4019,17 @@ index 0615e3e..3c04e6b 100644
  
    /* const */ nsTArray<RefPtr<WebAccessibleResource>> mWebAccessibleResources;
  
-@@ -253,6 +259,18 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
+@@ -217,6 +256,9 @@ class WebExtensionPolicyCore final {
+   bool mIgnoreQuarantine MOZ_GUARDED_BY(mLock);
+   bool mHasRecommendedState MOZ_GUARDED_BY(mLock);
+   RefPtr<AtomSet> mPermissions MOZ_GUARDED_BY(mLock);
++  uint64_t mPermissionGeneration MOZ_GUARDED_BY(mLock) = 0;
++  nsTHashMap<nsRefPtrHashKey<nsAtom>, uint64_t> mPermissionGrants
++      MOZ_GUARDED_BY(mLock);
+   RefPtr<MatchPatternSetCore> mHostPermissions MOZ_GUARDED_BY(mLock);
+   nsTArray<RefPtr<ExtensionGuardSetCore>> mGuardSets MOZ_GUARDED_BY(mLock);
+ };
+@@ -253,6 +295,18 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
  
    bool TemporarilyInstalled() { return mCore->TemporarilyInstalled(); }
  
@@ -4160,18 +4427,31 @@ index a43bc69..8792cdd 100644
 +
 +["test_ext_webidl_scripting.js"]
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.cpp b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.cpp
-index 6a29b4c..2b49177 100644
+index 6a29b4c..94f42e8 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.cpp
-@@ -3,6 +3,7 @@
+@@ -3,6 +3,12 @@
   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
  #include "ExtensionAPIBase.h"
 +#include "jsapi.h"
++#include "jsfriendapi.h"
++#include "js/PropertyDescriptor.h"
++#include "js/CallArgs.h"
++#include "js/experimental/JitInfo.h"
++#include "mozilla/dom/BindingUtils.h"
  
  #include "ExtensionAPIRequestForwarder.h"
  #include "ExtensionAPIAddRemoveListener.h"
-@@ -21,6 +22,7 @@
+@@ -16,29 +22,137 @@
+ #include "ExtensionSetting.h"
+ 
+ #include "mozilla/ConsoleReportCollector.h"
++#include "mozilla/BasePrincipal.h"
++#include "mozilla/dom/WorkerScope.h"
++#include "mozilla/extensions/WebExtensionPolicy.h"
+ #include "mozilla/dom/Promise.h"
+ #include "mozilla/dom/SerializedStackHolder.h"
  #include "mozilla/dom/FunctionBinding.h"
  
  #include "js/CallAndConstruct.h"  // JS::IsCallable
@@ -4179,7 +4459,97 @@ index 6a29b4c..2b49177 100644
  
  namespace mozilla {
  namespace extensions {
-@@ -29,16 +31,31 @@ namespace extensions {
+ 
++namespace {
++// The reserved slots are traced by SpiderMonkey. The receiver is the real DOM
++// SDK reflector, preserving native branding for ordinary and detached calls.
++// All permission checks and backend behavior remain in the compiled IDL call.
++bool CallChromeSDKMethod(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
++  const JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
++  JS::Rooted<JSObject*> callee(aCx, &args.callee());
++  JS::Rooted<JS::Value> target(aCx, js::GetFunctionNativeReserved(callee, 0));
++  JS::Rooted<JS::Value> receiver(aCx, js::GetFunctionNativeReserved(callee, 1));
++  return JS::Call(aCx, receiver, target, JS::HandleValueArray(args),
++                  args.rval());
++}
++}  // namespace
++
++JSObject* ExtensionAPIBase::OwnChromeMethods(JSContext* aCx,
++                                             JS::Handle<JSObject*> aObject) {
++  if (!aObject) return nullptr;
++  auto* worker = dom::GetWorkerPrivateFromContext(aCx);
++  if (!worker || !worker->ExtensionChromeCompatibilityEnabled()) return aObject;
++  JS::Rooted<JSObject*> prototype(aCx);
++  if (!JS_GetPrototype(aCx, aObject, &prototype)) return nullptr;
++  if (!prototype) return aObject;
++  JS::RootedIdVector names(aCx);
++  if (!js::GetPropertyKeys(aCx, prototype, JSITER_OWNONLY | JSITER_HIDDEN,
++                           &names))
++    return nullptr;
++  for (size_t i = 0; i < names.length(); ++i) {
++    JS::Rooted<jsid> id(aCx, names[i]);
++    if (!id.isString()) continue;
++    bool constructor;
++    if (!JS_StringEqualsAscii(aCx, id.toString(), "constructor", &constructor))
++      return nullptr;
++    if (constructor) continue;
++    bool own;
++    if (!JS_AlreadyHasOwnPropertyById(aCx, aObject, id, &own)) return nullptr;
++    if (own) continue;
++    JS::Rooted<Maybe<JS::PropertyDescriptor>> descriptor(aCx);
++    if (!JS_GetOwnPropertyDescriptorById(aCx, prototype, id, &descriptor))
++      return nullptr;
++    if (descriptor.isNothing() || !descriptor->isDataDescriptor() ||
++        !descriptor->value().isObject())
++      continue;
++    JS::Rooted<JSObject*> callable(aCx, &descriptor->value().toObject());
++    if (!JS_IsNativeFunction(callable,
++                             dom::binding_detail::GenericMethod<
++                                 dom::binding_detail::NormalThisPolicy,
++                                 dom::binding_detail::ThrowExceptions>))
++      continue;
++    JS::Rooted<JS::Value> originalValue(aCx, descriptor->value());
++    const JSJitInfo* info = FUNCTION_VALUE_TO_JITINFO(originalValue);
++    if (!info || info->type() != JSJitInfo::Method) continue;
++    const auto* domClass = dom::GetDOMClass(aObject);
++    if (domClass->mInterfaceChain[info->depth] != info->protoID) continue;
++    JS::Rooted<JSFunction*> original(aCx,
++                                     JS_ValueToFunction(aCx, originalValue));
++    if (!original) return nullptr;
++    JS::Rooted<JSFunction*> function(
++        aCx,
++        js::NewFunctionByIdWithReserved(aCx, CallChromeSDKMethod,
++                                        JS_GetFunctionArity(original), 0, id));
++    if (!function) return nullptr;
++    JS::Rooted<JSObject*> functionObject(aCx, JS_GetFunctionObject(function));
++    js::SetFunctionNativeReserved(functionObject, 0,
++                                  JS::ObjectValue(*callable));
++    js::SetFunctionNativeReserved(functionObject, 1, JS::ObjectValue(*aObject));
++    unsigned attrs = descriptor->enumerable() ? JSPROP_ENUMERATE : 0;
++    if (!descriptor->writable()) attrs |= JSPROP_READONLY;
++    if (!descriptor->configurable()) attrs |= JSPROP_PERMANENT;
++    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*functionObject));
++    if (!JS_DefinePropertyById(aCx, aObject, id, value, attrs)) return nullptr;
++  }
++  return aObject;
++}
++
++bool ExtensionAPIBase::HasAnyChromePermission(
++    JSContext* aCx, std::initializer_list<const char16_t*> aPermissions) {
++  auto* worker = dom::GetWorkerPrivateFromContext(aCx);
++  if (!worker) return false;
++  if (!worker->ExtensionChromeCompatibilityEnabled()) return true;
++  if (!worker->GetPrincipal()) return false;
++  auto core = BasePrincipal::Cast(worker->GetPrincipal())->AddonPolicyCore();
++  if (!core) return false;
++  for (const auto* permission : aPermissions) {
++    RefPtr<nsAtom> atom = NS_Atomize(nsDependentString(permission));
++    if (core->HasPermission(atom)) return true;
++  }
++  return false;
++}
++
+ // ChromeCompatCallbackHandler
  
  NS_IMPL_ISUPPORTS0(ChromeCompatCallbackHandler)
  
@@ -4216,7 +4586,7 @@ index 6a29b4c..2b49177 100644
  
    aPromise->AppendNativeHandler(handler);
  }
-@@ -46,14 +63,47 @@ void ChromeCompatCallbackHandler::Create(
+@@ -46,14 +160,47 @@ void ChromeCompatCallbackHandler::Create(
  void ChromeCompatCallbackHandler::ResolvedCallback(JSContext* aCx,
                                                     JS::Handle<JS::Value> aValue,
                                                     ErrorResult& aRv) {
@@ -4265,7 +4635,7 @@ index 6a29b4c..2b49177 100644
    JS::Rooted<JS::Value> retval(aCx);
    IgnoredErrorResult rv;
    // Call the chrome-compatible callback without any parameter, the errors
-@@ -248,8 +298,21 @@ void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
+@@ -248,8 +395,21 @@ void ExtensionAPIBase::CallWebExtMethodAsyncInternal(
    // The async method has been called with the chrome-compatible callback
    // convention.
    if (aCallback) {
@@ -4289,19 +4659,81 @@ index 6a29b4c..2b49177 100644
    }
  
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
-index 915d54d..89605a8 100644
+index 915d54d..02c028d 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
-@@ -5,6 +5,8 @@
+@@ -5,6 +5,9 @@
  #ifndef mozilla_extensions_ExtensionAPIBase_h
  #define mozilla_extensions_ExtensionAPIBase_h
  
 +#include <functional>
++#include <initializer_list>
 +
  #include "mozilla/dom/BindingDeclarations.h"
  #include "mozilla/dom/FunctionBinding.h"
  #include "mozilla/dom/PromiseNativeHandler.h"
-@@ -177,9 +179,18 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
+@@ -57,6 +60,50 @@ class ExtensionSetting;
+ 
+ class ExtensionAPIBase {
+  public:
++  static JSObject* OwnChromeMethods(JSContext* aCx,
++                                    JS::Handle<JSObject*> aObject);
++
++  // Chrome snapshots optional method/event availability at first namespace
++  // access. Ordinary Firefox's experimental bindings retain their exposure.
++  static bool HasAllUrlsPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"<all_urls>"});
++  }
++  static bool HasAllUrlsOrActiveTabPermission(JSContext* aCx,
++                                              JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"<all_urls>", u"activeTab"});
++  }
++  static bool HasDNRFeedbackOrActiveTabPermission(JSContext* aCx,
++                                                  JSObject* aGlobal) {
++    return HasAnyChromePermission(
++        aCx, {u"activeTab", u"declarativeNetRequestFeedback"});
++  }
++  static bool HasDNRFeedbackPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"declarativeNetRequestFeedback"});
++  }
++  static bool HasDownloadsOpenPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"downloads.open"});
++  }
++  static bool HasManagementPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"management"});
++  }
++  static bool HasLegacyUserScriptsPermission(JSContext* aCx,
++                                             JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"manifest:user_scripts.api_script"});
++  }
++  static bool HasNativeMessagingPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"nativeMessaging"});
++  }
++  static bool HasTabHidePermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"tabHide"});
++  }
++  static bool HasUserScriptsPermission(JSContext* aCx, JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"userScripts"});
++  }
++  static bool HasWebRequestBlockingPermission(JSContext* aCx,
++                                              JSObject* aGlobal) {
++    return HasAnyChromePermission(aCx, {u"webRequestBlocking"});
++  }
++
+   // WebExtensionStub methods shared between multiple API namespaces.
+ 
+   virtual void CallWebExtMethodNotImplementedNoReturn(
+@@ -153,6 +200,9 @@ class ExtensionAPIBase {
+   virtual nsString GetAPIObjectId() const = 0;
+ 
+  private:
++  static bool HasAnyChromePermission(
++      JSContext* aCx, std::initializer_list<const char16_t*> aPermissions);
++
+   void CallWebExtMethodAsyncInternal(JSContext* aCx,
+                                      const nsAString& aApiMethod,
+                                      const dom::Sequence<JS::Value>& aArgs,
+@@ -177,9 +227,18 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
   public:
    NS_DECL_THREADSAFE_ISUPPORTS
  
@@ -4321,7 +4753,7 @@ index 915d54d..89605a8 100644
  
    MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
                                             JS::Handle<JS::Value> aValue,
-@@ -190,18 +201,17 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
+@@ -190,18 +249,17 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
  
   private:
    ChromeCompatCallbackHandler(ExtensionBrowser* aExtensionBrowser,
@@ -4671,10 +5103,22 @@ index 0000000..e239440
 +
 +#endif  // mozilla_extensions_ExtensionBookmarks_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-index a4e2836..3709305 100644
+index a4e2836..39ec23e 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-@@ -8,16 +8,51 @@
+@@ -3,26 +3,292 @@
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+ #include "ExtensionBrowser.h"
++#include <initializer_list>
++#include "mozilla/BasePrincipal.h"
++#include "mozilla/dom/BindingUtils.h"
++#include "js/Class.h"
++#include "js/Object.h"
++#include "js/Conversions.h"
++#include "js/PropertyAndElement.h"
+ #include "ExtensionAPIRequestForwarder.h"
+ 
  #include "mozilla/dom/ExtensionBrowserBinding.h"
  #include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
  #include "mozilla/dom/WorkerScope.h"           // GetWorkerPrivateFromContext
@@ -4726,7 +5170,236 @@ index a4e2836..3709305 100644
  #include "mozilla/extensions/WebExtensionPolicy.h"
  
  namespace mozilla {
-@@ -34,8 +69,44 @@ NS_INTERFACE_MAP_END
+ namespace extensions {
+ 
++// Chrome's root is a native JS object with ordinary property descriptors.
++// Resolving a known namespace installs its genuine SDK object as an own data
++// property. Resolve hooks keep missing-property lookups live after permissions
++// are granted; they do not replace the root or captured SDK objects.
++#define CHROME_WORKER_NAMESPACES(X)                                         \
++  X(action, Action, u"manifest:action", u"manifest:browser_action")         \
++  X(alarms, Alarms, u"alarms")                                              \
++  X(bookmarks, Bookmarks, u"bookmarks")                                     \
++  X(commands, Commands, u"manifest:commands")                               \
++  X(contextMenus, ContextMenus, u"contextMenus")                            \
++  X(cookies, Cookies, u"cookies")                                           \
++  X(debugger, Debugger, u"debugger")                                        \
++  X(declarativeContent, DeclarativeContent, u"declarativeContent")          \
++  X(declarativeNetRequest, DeclarativeNetRequest, u"declarativeNetRequest", \
++    u"declarativeNetRequestWithHostAccess")                                 \
++  X(desktopCapture, DesktopCapture, u"desktopCapture")                      \
++  X(downloads, Downloads, u"downloads")                                     \
++  X(extension, Extension)                                                   \
++  X(fontSettings, FontSettings, u"fontSettings")                            \
++  X(history, History, u"history")                                           \
++  X(i18n, I18n)                                                             \
++  X(identity, Identity, u"identity")                                        \
++  X(idle, Idle, u"idle")                                                    \
++  X(management, Management)                                                 \
++  X(notifications, Notifications, u"notifications")                         \
++  X(offscreen, Offscreen, u"offscreen")                                     \
++  X(omnibox, Omnibox, u"manifest:omnibox")                                  \
++  X(permissions, Permissions)                                               \
++  X(power, Power, u"power")                                                 \
++  X(privacy, Privacy, u"privacy")                                           \
++  X(proxy, Proxy, u"proxy")                                                 \
++  X(runtime, Runtime)                                                       \
++  X(scripting, Scripting, u"scripting")                                     \
++  X(sessions, Sessions, u"sessions")                                        \
++  X(sidePanel, SidePanel, u"sidePanel")                                     \
++  X(storage, Storage, u"storage")                                           \
++  X(tabCapture, TabCapture, u"tabCapture")                                  \
++  X(tabGroups, TabGroups, u"tabGroups")                                     \
++  X(tabs, Tabs)                                                             \
++  X(topSites, TopSites, u"topSites")                                        \
++  X(tts, Tts, u"tts")                                                       \
++  X(userScripts, UserScripts, u"userScripts", u"manifest:user_scripts")     \
++  X(webNavigation, WebNavigation, u"webNavigation")                         \
++  X(webRequest, WebRequest, u"webRequest")                                  \
++  X(windows, Windows)
++
++namespace {
++enum class ChromeNamespaceIndex : size_t {
++#define CHROME_NAMESPACE_INDEX(name, accessor, ...) name,
++  CHROME_WORKER_NAMESPACES(CHROME_NAMESPACE_INDEX)
++#undef CHROME_NAMESPACE_INDEX
++};
++struct ChromeNamespace {
++  const char* name;
++  std::initializer_list<const char16_t*> permissions;
++};
++#define CHROME_NAMESPACE_METADATA(name, accessor, ...) {#name, {__VA_ARGS__}},
++const ChromeNamespace kChromeNamespaces[] = {
++    CHROME_WORKER_NAMESPACES(CHROME_NAMESPACE_METADATA)};
++#undef CHROME_NAMESPACE_METADATA
++constexpr size_t kChromeNamespaceCount =
++    sizeof(kChromeNamespaces) / sizeof(ChromeNamespace);
++static_assert(kChromeNamespaceCount <= 64);
++
++uint64_t ChromeNamespaceMask(const nsTArray<nsString>& aPermissions) {
++  uint64_t result = 0;
++  for (size_t i = 0; i < kChromeNamespaceCount; ++i) {
++    const auto& entry = kChromeNamespaces[i];
++    bool visible = !entry.permissions.size();
++    for (const auto* permission : entry.permissions) {
++      if (aPermissions.Contains(nsDependentString(permission))) {
++        visible = true;
++        break;
++      }
++    }
++    if (visible) result |= uint64_t(1) << i;
++  }
++  return result;
++}
++}  // namespace
++
++namespace {
++// Tracing this reserved slot retains the real DOM helper and its SDK caches.
++// The helper's cycle-collection trace retains the root in the opposite
++// direction.
++ExtensionBrowser* ChromeRootOwner(JS::Handle<JSObject*> aRoot) {
++  const JS::Value& value = JS::GetReservedSlot(aRoot, 0);
++  MOZ_ASSERT(value.isObject());
++  return dom::UnwrapPossiblyNotInitializedDOMObject<ExtensionBrowser>(
++      &value.toObject());
++}
++
++bool ChromeRootResolve(JSContext* aCx, JS::Handle<JSObject*> aRoot,
++                       JS::Handle<jsid> aId, bool* aResolved) {
++  return ChromeRootOwner(aRoot)->ResolveChromeNamespace(aCx, aRoot, aId,
++                                                        aResolved);
++}
++
++bool ChromeRootEnumerate(JSContext* aCx, JS::Handle<JSObject*> aRoot) {
++  return ChromeRootOwner(aRoot)->EnumerateChromeNamespaces(aCx, aRoot);
++}
++
++bool ChromeRootDelete(JSContext* aCx, JS::Handle<JSObject*> aRoot,
++                      JS::Handle<jsid> aId, JS::ObjectOpResult& aResult) {
++  bool exists;
++  if (!JS_AlreadyHasOwnPropertyById(aCx, aRoot, aId, &exists)) return false;
++  if (exists) ChromeRootOwner(aRoot)->DeleteChromeNamespace(aId);
++  return aResult.succeed();
++}
++
++const JSClassOps kChromeRootOps = {
++    nullptr, ChromeRootDelete,  ChromeRootEnumerate,
++    nullptr, ChromeRootResolve, nullptr,
++    nullptr, nullptr,           nullptr,
++    nullptr};
++const JSClass kChromeRootClass = {"Object", JSCLASS_HAS_RESERVED_SLOTS(1),
++                                  &kChromeRootOps};
++}  // namespace
++
++uint64_t ExtensionBrowser::ChromeNamespaceExposure() {
++  auto* worker = dom::GetCurrentThreadWorkerPrivate();
++  if (!worker || !worker->ExtensionChromeCompatibilityEnabled() ||
++      !worker->GetPrincipal()) {
++    return 0;
++  }
++  if (auto core =
++          BasePrincipal::Cast(worker->GetPrincipal())->AddonPolicyCore()) {
++    nsTArray<nsString> permissions;
++    core->GetPermissionsGrantedSince(mChromeExposureGeneration, permissions);
++    mChromeExposedNamespaces |= ChromeNamespaceMask(permissions);
++  }
++  return mChromeExposedNamespaces & ~mChromeDeletedNamespaces;
++}
++
++bool ExtensionBrowser::ResolveChromeNamespace(JSContext* aCx,
++                                              JS::Handle<JSObject*> aRoot,
++                                              JS::Handle<jsid> aId,
++                                              bool* aResolved) {
++  *aResolved = false;
++  if (!aId.isString()) return true;
++  const auto visible = ChromeNamespaceExposure();
++#define CHROME_NAMESPACE_RESOLVE(name, accessor, ...)                        \
++  {                                                                          \
++    bool matches;                                                            \
++    if (!JS_StringEqualsAscii(aCx, aId.toString(), #name, &matches))         \
++      return false;                                                          \
++    if (matches) {                                                           \
++      constexpr size_t index = size_t(ChromeNamespaceIndex::name);           \
++      if (!(visible & (uint64_t(1) << index))) return true;                  \
++      RefPtr api = GetExtension##accessor();                                 \
++      JS::Rooted<JS::Value> value(aCx);                                      \
++      if (!dom::GetOrCreateDOMReflector(aCx, api.get(), &value) ||           \
++          !JS_DefinePropertyById(aCx, aRoot, aId, value, JSPROP_ENUMERATE))  \
++        return false;                                                        \
++      JS::Rooted<JSObject*> reflector(aCx, &value.toObject());               \
++      if (!ExtensionAPIBase::OwnChromeMethods(aCx, reflector)) return false; \
++      *aResolved = true;                                                     \
++      return true;                                                           \
++    }                                                                        \
++  }
++  CHROME_WORKER_NAMESPACES(CHROME_NAMESPACE_RESOLVE)
++#undef CHROME_NAMESPACE_RESOLVE
++  return true;
++}
++
++bool ExtensionBrowser::EnumerateChromeNamespaces(JSContext* aCx,
++                                                 JS::Handle<JSObject*> aRoot) {
++  const auto visible = ChromeNamespaceExposure();
++  for (size_t i = 0; i < kChromeNamespaceCount; ++i) {
++    if (!(visible & (uint64_t(1) << i))) continue;
++    JS::Rooted<JSString*> name(
++        aCx, JS_NewStringCopyZ(aCx, kChromeNamespaces[i].name));
++    if (!name) return false;
++    JS::Rooted<jsid> id(aCx);
++    if (!JS_StringToId(aCx, name, &id)) return false;
++    bool exists;
++    if (!JS_AlreadyHasOwnPropertyById(aCx, aRoot, id, &exists)) return false;
++    if (!exists) {
++      bool resolved;
++      if (!ResolveChromeNamespace(aCx, aRoot, id, &resolved)) return false;
++    }
++  }
++  return true;
++}
++
++void ExtensionBrowser::DeleteChromeNamespace(JS::Handle<jsid> aId) {
++  if (!aId.isString()) return;
++  JSLinearString* name = JS_ASSERT_STRING_IS_LINEAR(aId.toString());
++  for (size_t i = 0; i < kChromeNamespaceCount; ++i) {
++    if (JS_LinearStringEqualsAscii(name, kChromeNamespaces[i].name)) {
++      mChromeDeletedNamespaces |= uint64_t(1) << i;
++      return;
++    }
++  }
++}
++
++void ExtensionBrowser::GetAPIObject(JSContext* aCx,
++                                    JS::MutableHandle<JS::Value> aResult,
++                                    ErrorResult& aRv) {
++  auto* worker = dom::GetWorkerPrivateFromContext(aCx);
++  if (!worker->ExtensionChromeCompatibilityEnabled()) {
++    if (!dom::GetOrCreateDOMReflector(aCx, this, aResult)) {
++      aRv.StealExceptionFromJSContext(aCx);
++    }
++    return;
++  }
++  if (!mChromeAPIObject) {
++    JS::Rooted<JS::Value> helper(aCx);
++    if (!dom::GetOrCreateDOMReflector(aCx, this, &helper)) {
++      aRv.StealExceptionFromJSContext(aCx);
++      return;
++    }
++    JS::Rooted<JSObject*> object(aCx, JS_NewObject(aCx, &kChromeRootClass));
++    if (!object) {
++      aRv.StealExceptionFromJSContext(aCx);
++      return;
++    }
++    JS::SetReservedSlot(object, 0, helper);
++    mChromeAPIObject = object;
++  }
++  aResult.setObject(*mChromeAPIObject);
++}
++#undef CHROME_WORKER_NAMESPACES
++
+ NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionBrowser)
+ NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser)
+ NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
+@@ -34,8 +300,44 @@ NS_INTERFACE_MAP_END
  
  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
@@ -4771,7 +5444,15 @@ index a4e2836..3709305 100644
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionProxy)
-@@ -50,8 +121,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+@@ -43,6 +345,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
+   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
+   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionScripting)
+   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
++  tmp->mChromeAPIObject = nullptr;
+   tmp->mLastError.setUndefined();
+   tmp->mPortsLookup.Clear();
+   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+@@ -50,8 +353,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
@@ -4816,7 +5497,33 @@ index a4e2836..3709305 100644
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
-@@ -94,11 +201,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
+@@ -62,6 +401,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+ 
+ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionBrowser)
++  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mChromeAPIObject)
+   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLastError)
+   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+ NS_IMPL_CYCLE_COLLECTION_TRACE_END
+@@ -69,6 +409,17 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
+ ExtensionBrowser::ExtensionBrowser(nsIGlobalObject* aGlobal)
+     : mGlobal(aGlobal) {
+   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  auto* worker = dom::GetCurrentThreadWorkerPrivate();
++  if (worker && worker->ExtensionChromeCompatibilityEnabled() &&
++      worker->GetPrincipal()) {
++    if (auto core =
++            BasePrincipal::Cast(worker->GetPrincipal())->AddonPolicyCore()) {
++      nsTArray<nsString> permissions;
++      mChromeExposureGeneration =
++          core->GetPermissionsWithGeneration(permissions);
++      mChromeExposedNamespaces = ChromeNamespaceMask(permissions);
++    }
++  }
+ }
+ 
+ JSObject* ExtensionBrowser::WrapObject(JSContext* aCx,
+@@ -94,11 +445,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
        !NS_IsMainThread(),
        "ExtensionAPI webidl bindings does not yet support main thread globals");
  
@@ -4828,7 +5535,21 @@ index a4e2836..3709305 100644
    auto* workerPrivate = mozilla::dom::GetWorkerPrivateFromContext(aCx);
    MOZ_ASSERT(workerPrivate);
    MOZ_ASSERT(workerPrivate->IsServiceWorker());
-@@ -201,6 +303,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
+@@ -126,6 +472,13 @@ void CreateAndDispatchInitWorkerContextRunnable() {
+     return;
+   }
+ 
++  // Snapshot initial visibility before extension script execution, including
++  // Workers whose first chrome lookup happens after an external grant/revoke.
++  if (workerPrivate->ExtensionChromeCompatibilityEnabled()) {
++    auto browser = static_cast<dom::ServiceWorkerGlobalScope*>(workerScope)
++                       ->AcquireExtensionBrowser();
++  }
++
+   Maybe<dom::ClientInfo> clientInfo = workerScope->GetClientInfo();
+   if (NS_WARN_IF(clientInfo.isNothing())) {
+     return;
+@@ -201,6 +554,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
    mPortsLookup.Remove(aPortId);
  }
  
@@ -4985,7 +5706,7 @@ index a4e2836..3709305 100644
  ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
    if (!mExtensionAlarms) {
      mExtensionAlarms = new ExtensionAlarms(mGlobal, this);
-@@ -217,6 +469,113 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
+@@ -217,6 +720,113 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
    return mExtensionBrowserSettings;
  }
  
@@ -5100,7 +5821,7 @@ index a4e2836..3709305 100644
    if (!mExtensionDns) {
      mExtensionDns = new ExtensionDns(mGlobal, this);
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
-index 840a550..b429dfc 100644
+index 840a550..aaa6f42 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
 @@ -21,8 +21,43 @@ class ErrorResult;
@@ -5147,7 +5868,22 @@ index 840a550..b429dfc 100644
  class ExtensionDns;
  class ExtensionMockAPI;
  class ExtensionPort;
-@@ -107,8 +142,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -65,6 +100,14 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+  public:
+   explicit ExtensionBrowser(nsIGlobalObject* aGlobal);
+ 
++  void GetAPIObject(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
++                    ErrorResult& aRv);
++  uint64_t ChromeNamespaceExposure();
++  bool ResolveChromeNamespace(JSContext* aCx, JS::Handle<JSObject*> aRoot,
++                              JS::Handle<jsid> aId, bool* aResolved);
++  bool EnumerateChromeNamespaces(JSContext* aCx, JS::Handle<JSObject*> aRoot);
++  void DeleteChromeNamespace(JS::Handle<jsid> aId);
++
+   // Helpers used for the expected behavior of the browser.runtime.lastError
+   // and browser.extension.lastError.
+   void SetLastError(JS::Handle<JS::Value> aLastError);
+@@ -107,8 +150,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
  
    nsIGlobalObject* GetParentObject() const;
  
@@ -5192,7 +5928,18 @@ index 840a550..b429dfc 100644
    ExtensionDns* GetExtensionDns();
    ExtensionMockAPI* GetExtensionMockAPI();
    ExtensionProxy* GetExtensionProxy();
-@@ -138,8 +209,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -124,6 +203,10 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+   ~ExtensionBrowser() = default;
+ 
+   nsCOMPtr<nsIGlobalObject> mGlobal;
++  JS::Heap<JSObject*> mChromeAPIObject{nullptr};
++  uint64_t mChromeExposureGeneration = 0;
++  uint64_t mChromeExposedNamespaces = 0;
++  uint64_t mChromeDeletedNamespaces = 0;
+   JS::Heap<JS::Value> mLastError;
+   bool mCheckedLastError = false;
+   nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
+@@ -138,8 +221,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
    // assertion `MOZ_ASSERT(!globalScopeAlive)`, after that
    // `nsCycleCollector_shutdown()` has been called and we don't expect anything
    // to be keeping the service worker global scope alive).
@@ -5822,10 +6569,10 @@ index 0000000..6d86100
 +#endif
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDeclarativeContentRuleEvent.cpp b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeContentRuleEvent.cpp
 new file mode 100644
-index 0000000..5ab33ed
+index 0000000..81bbdbc
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeContentRuleEvent.cpp
-@@ -0,0 +1,36 @@
+@@ -0,0 +1,38 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5855,8 +6602,10 @@ index 0000000..5ab33ed
 +}
 +JSObject* ExtensionDeclarativeContentRuleEvent::WrapObject(
 +    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
-+  return dom::ExtensionDeclarativeContentRuleEvent_Binding::Wrap(aCx, this,
-+                                                                 aGivenProto);
++  JS::Rooted<JSObject*> object(
++      aCx, dom::ExtensionDeclarativeContentRuleEvent_Binding::Wrap(
++               aCx, this, aGivenProto));
++  return ExtensionAPIBase::OwnChromeMethods(aCx, object);
 +}
 +nsIGlobalObject* ExtensionDeclarativeContentRuleEvent::GetParentObject() const {
 +  return mGlobal;
@@ -6669,10 +7418,21 @@ index 3feae36..25b2bd2 100644
  
  // A class attached to the promise that should be resolved once the extension
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventManager.cpp b/toolkit/components/extensions/webidl-api/ExtensionEventManager.cpp
-index 0d24939..f210d87 100644
+index 0d24939..d36cc34 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionEventManager.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionEventManager.cpp
-@@ -85,13 +85,17 @@ nsIGlobalObject* ExtensionEventManager::GetParentObject() const {
+@@ -76,7 +76,9 @@ void ExtensionEventManager::ReleaseListeners() {
+ 
+ JSObject* ExtensionEventManager::WrapObject(JSContext* aCx,
+                                             JS::Handle<JSObject*> aGivenProto) {
+-  return dom::ExtensionEventManager_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JSObject*> object(
++      aCx, dom::ExtensionEventManager_Binding::Wrap(aCx, this, aGivenProto));
++  return ExtensionAPIBase::OwnChromeMethods(aCx, object);
+ }
+ 
+ nsIGlobalObject* ExtensionEventManager::GetParentObject() const {
+@@ -85,13 +87,17 @@ nsIGlobalObject* ExtensionEventManager::GetParentObject() const {
  
  void ExtensionEventManager::AddListener(
      JSContext* aCx, dom::Function& aCallback,
@@ -6691,7 +7451,7 @@ index 0d24939..f210d87 100644
    RefPtr<ExtensionEventManager> self = this;
  
    IgnoredErrorResult rv;
-@@ -111,7 +115,12 @@ void ExtensionEventManager::AddListener(
+@@ -111,7 +117,12 @@ void ExtensionEventManager::AddListener(
    }
  
    auto request = SendAddListener(mEventName);
@@ -8326,6 +9086,21 @@ index 0000000..e980f08
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionPermissions_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionPort.cpp b/toolkit/components/extensions/webidl-api/ExtensionPort.cpp
+index 14836e8..5187a92 100644
+--- a/toolkit/components/extensions/webidl-api/ExtensionPort.cpp
++++ b/toolkit/components/extensions/webidl-api/ExtensionPort.cpp
+@@ -95,7 +95,9 @@ nsString ExtensionPort::GetAPIObjectId() const {
+ 
+ JSObject* ExtensionPort::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
+-  return dom::ExtensionPort_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JSObject*> object(
++      aCx, dom::ExtensionPort_Binding::Wrap(aCx, this, aGivenProto));
++  return ExtensionAPIBase::OwnChromeMethods(aCx, object);
+ }
+ 
+ nsIGlobalObject* ExtensionPort::GetParentObject() const { return mGlobal; }
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPower.cpp b/toolkit/components/extensions/webidl-api/ExtensionPower.cpp
 new file mode 100644
 index 0000000..f02763f
@@ -9003,7 +9778,7 @@ index 0000000..aa77ed2
 +
 +#endif  // mozilla_extensions_ExtensionPrivacyWebsites_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp b/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
-index a4c0cda..a93f808 100644
+index a4c0cda..0236c16 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
 @@ -14,15 +14,27 @@ namespace extensions {
@@ -9037,10 +9812,10 @@ index a4c0cda..a93f808 100644
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onStartup"_ns, OnStartup)
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onInstalled"_ns, OnInstalled)
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onUpdateAvailable"_ns,
-@@ -63,4 +75,44 @@ void ExtensionRuntime::GetId(dom::DOMString& aRetval) {
+@@ -62,5 +74,45 @@ void ExtensionRuntime::GetId(dom::DOMString& aRetval) {
+   GetWebExtPropertyAsString(u"id"_ns, aRetval);
  }
  
- }  // namespace extensions
 +void ExtensionRuntime::GetContextType(JSContext* aCx,
 +                                      JS::MutableHandle<JS::Value> aRetval) {
 +  GetWebExtPropertyAsJSValue(aCx, u"ContextType"_ns, aRetval);
@@ -9081,6 +9856,7 @@ index a4c0cda..a93f808 100644
 +  GetWebExtPropertyAsJSValue(aCx, u"OnPerformanceWarningSeverity"_ns, aRetval);
 +}
 +
+ }  // namespace extensions
  }  // namespace mozilla
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionRuntime.h b/toolkit/components/extensions/webidl-api/ExtensionRuntime.h
 index 1d1d1f8..aedebd9 100644
@@ -9438,6 +10214,21 @@ index 0000000..9a7988b
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionSessions_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionSetting.cpp b/toolkit/components/extensions/webidl-api/ExtensionSetting.cpp
+index 6111efe..4a20b5b 100644
+--- a/toolkit/components/extensions/webidl-api/ExtensionSetting.cpp
++++ b/toolkit/components/extensions/webidl-api/ExtensionSetting.cpp
+@@ -39,7 +39,9 @@ bool ExtensionSetting::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
+ 
+ JSObject* ExtensionSetting::WrapObject(JSContext* aCx,
+                                        JS::Handle<JSObject*> aGivenProto) {
+-  return dom::ExtensionSetting_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JSObject*> object(
++      aCx, dom::ExtensionSetting_Binding::Wrap(aCx, this, aGivenProto));
++  return ExtensionAPIBase::OwnChromeMethods(aCx, object);
+ }
+ 
+ nsIGlobalObject* ExtensionSetting::GetParentObject() const { return mGlobal; }
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionSidePanel.cpp b/toolkit/components/extensions/webidl-api/ExtensionSidePanel.cpp
 new file mode 100644
 index 0000000..b91b262
@@ -9709,10 +10500,10 @@ index 0000000..e68c969
 +#endif  // mozilla_extensions_ExtensionStorage_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionStorageArea.cpp b/toolkit/components/extensions/webidl-api/ExtensionStorageArea.cpp
 new file mode 100644
-index 0000000..8b5aa80
+index 0000000..3a30b32
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionStorageArea.cpp
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,82 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9751,7 +10542,9 @@ index 0000000..8b5aa80
 +
 +JSObject* ExtensionStorageArea::WrapObject(JSContext* aCx,
 +                                           JS::Handle<JSObject*> aGivenProto) {
-+  return dom::ExtensionStorageArea_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JSObject*> object(
++      aCx, dom::ExtensionStorageArea_Binding::Wrap(aCx, this, aGivenProto));
++  return ExtensionAPIBase::OwnChromeMethods(aCx, object);
 +}
 +
 +nsIGlobalObject* ExtensionStorageArea::GetParentObject() const {
@@ -10819,7 +11612,7 @@ index 0000000..c302ff0
 +
 +#endif  // mozilla_extensions_ExtensionUserScripts_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
-index 5a817b1..e6cb21f 100644
+index 5a817b1..3375d72 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 @@ -18,21 +18,21 @@
@@ -11077,7 +11870,7 @@ index 5a817b1..e6cb21f 100644
      "runtime.getDocumentId",
      "runtime.getFrameId",
      "runtime.getBackgroundPage",
-@@ -104,11 +266,29 @@ WEBEXT_ANDROID_EXCLUDED = [
+@@ -104,11 +266,53 @@ WEBEXT_ANDROID_EXCLUDED = [
  ]
  
  WEBEXT_IGNORED_SCHEMA_FILES = [
@@ -11113,6 +11906,30 @@ index 5a817b1..e6cb21f 100644
 + 'webRequest.MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES': 'any',
 + 'windows.WINDOW_ID_CURRENT': 'any',
 + 'windows.WINDOW_ID_NONE': 'any'}
++
++# Chrome snapshots member availability when its namespace is first accessed.
++# These functions use live native policy at prototype creation; API requests
++# separately recheck current schema permissions after revocation.
++WEBEXT_MEMBER_PERMISSION_GATES = {('<all_urls>',): 'HasAllUrlsPermission',
++ ('<all_urls>', 'activeTab'): 'HasAllUrlsOrActiveTabPermission',
++ ('activeTab', 'declarativeNetRequestFeedback'): 'HasDNRFeedbackOrActiveTabPermission',
++ ('declarativeNetRequestFeedback',): 'HasDNRFeedbackPermission',
++ ('downloads.open',): 'HasDownloadsOpenPermission',
++ ('management',): 'HasManagementPermission',
++ ('manifest:user_scripts.api_script',): 'HasLegacyUserScriptsPermission',
++ ('nativeMessaging',): 'HasNativeMessagingPermission',
++ ('tabHide',): 'HasTabHidePermission',
++ ('userScripts',): 'HasUserScriptsPermission',
++ ('webRequestBlocking',): 'HasWebRequestBlockingPermission'}
++
++# Chrome exposes these methods even when Gecko's per-member permission would
++# hide them. Invocation still runs current schema and backend authorization.
++WEBEXT_MEMBER_VISIBILITY_ALWAYS_AVAILABLE = {
++    "tabs.captureVisibleTab",
++    "declarativeNetRequest.testMatchOutcome",
++    "declarativeNetRequest.getMatchedRules",
++    "downloads.open",
++}
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.cpp b/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.cpp
 new file mode 100644
 index 0000000..bbc14cc
@@ -11683,7 +12500,7 @@ index 0000000..5027ff3
 +
 +#endif  // mozilla_extensions_ExtensionWindows_h
 diff --git a/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py b/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
-index 92fb39f..3229374 100644
+index 92fb39f..f20c7d3 100644
 --- a/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
 +++ b/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
 @@ -47,6 +47,7 @@ with open(mozpath.join(BASE_DIR, "ExtensionWebIDL.conf")) as f:
@@ -11694,7 +12511,16 @@ index 92fb39f..3229374 100644
  
  # Special mapping for the `WebExtensionStub` to be used for API methods that
  # require special handling.
-@@ -348,6 +349,15 @@ class WebIDLHelpers:
+@@ -54,6 +55,8 @@ WEBEXT_STUBS_MAPPING = glbl["WEBEXT_STUBS_MAPPING"]
+ 
+ # Schema entries that should be hidden in workers.
+ WEBEXT_WORKER_HIDDEN_SET = glbl["WEBEXT_WORKER_HIDDEN_SET"]
++WEBEXT_MEMBER_PERMISSION_GATES = glbl["WEBEXT_MEMBER_PERMISSION_GATES"]
++WEBEXT_MEMBER_VISIBILITY_ALWAYS_AVAILABLE = glbl["WEBEXT_MEMBER_VISIBILITY_ALWAYS_AVAILABLE"]
+ 
+ # Set of the webidl type names to be threated as primitive types.
+ WEBIDL_PRIMITIVE_TYPES = glbl["WEBIDL_PRIMITIVE_TYPES"]
+@@ -348,6 +351,15 @@ class WebIDLHelpers:
              for v in api_ns.functions.values()
              if should_include(v)
          ]
@@ -11710,7 +12536,7 @@ index 92fb39f..3229374 100644
          if len(webidl_functions) > 0:
              body = body + ["\n  // API methods.\n", "\n\n".join(webidl_functions)]
  
-@@ -367,6 +377,20 @@ class WebIDLHelpers:
+@@ -367,6 +379,20 @@ class WebIDLHelpers:
          if len(webidl_props) > 0:
              body = body + ["\n  // API properties.\n", "\n\n".join(webidl_props)]
  
@@ -11731,7 +12557,7 @@ index 92fb39f..3229374 100644
          webidl_child_ns = [
              cls.to_webidl_namespace_property(v)
              for v in api_ns.get_child_namespaces()
-@@ -404,7 +428,7 @@ class WebIDLHelpers:
+@@ -404,7 +430,7 @@ class WebIDLHelpers:
              "Replaceable",
              "SameObject",
              'BinaryName="Get%s"' % prop_type,
@@ -11740,8 +12566,30 @@ index 92fb39f..3229374 100644
          ]
  
          lines = [
-@@ -455,9 +479,11 @@ class WebIDLHelpers:
+@@ -436,6 +462,16 @@ class WebIDLHelpers:
+ 
+         raise Exception("Unknown api_entry type: %s" % api_entry)
+ 
++    @classmethod
++    def member_permission_attribute(cls, api_entry, schema_group=None):
++        if api_entry.api_path_string in WEBEXT_MEMBER_VISIBILITY_ALWAYS_AVAILABLE:
++            return None
++        permissions = api_entry.get_schema_data(schema_group).get("permissions")
++        if not permissions:
++            return None
++        name = WEBEXT_MEMBER_PERMISSION_GATES[tuple(sorted(permissions))]
++        return 'Func="mozilla::extensions::ExtensionAPIBase::%s"' % name
++
+     @classmethod
+     def to_webidl_property(cls, api_property, schema_group=None):
+         """
+@@ -453,11 +489,16 @@ class WebIDLHelpers:
+         # (at the moment it seems that we may defer it)
+ 
          attrs = ["Replaceable"]
++        permission = cls.member_permission_attribute(api_property, schema_group)
++        if permission:
++            attrs.append(permission)
  
          schema_data = api_property.get_schema_data(schema_group)
 -        proptype = cls.webidl_type_from_mapping(
@@ -11755,16 +12603,30 @@ index 92fb39f..3229374 100644
  
          lines = [
              "  [%s]" % ", ".join(attrs),
-@@ -500,6 +526,8 @@ class WebIDLHelpers:
+@@ -480,6 +521,9 @@ class WebIDLHelpers:
+             if group and group not in api_event.schema_groups:
+                 return ""
+             attrs = ["Replaceable", "SameObject"]
++            permission = cls.member_permission_attribute(api_event, group)
++            if permission:
++                attrs.append(permission)
+             return "\n".join([
+                 "  [%s]" % ", ".join(attrs),
+                 "  readonly attribute ExtensionEventManager %s;" % api_event.name,
+@@ -500,7 +544,12 @@ class WebIDLHelpers:
          cls.expect_instance(api_fun, APIFunction)
  
          def generate_webidl(group):
 +            if api_fun.get_schema_data(group).get("constructible"):
 +                return "  [Throws, Replaceable]\n  readonly attribute any %s;" % api_fun.name
              attrs = ["Throws"]
++            permission = cls.member_permission_attribute(api_fun, group)
++            if permission:
++                attrs.append(permission)
              stub_attr = cls.webext_method_stub(api_fun, group)
              if stub_attr:
-@@ -686,6 +714,8 @@ class WebIDLHelpers:
+                 attrs = attrs + [stub_attr]
+@@ -686,6 +735,8 @@ class WebIDLHelpers:
          #   `any filter, optional Function` and `optional Function`
          #   are not distinguishable when called with a single
          #   parameter set to an undefined value).
@@ -11773,7 +12635,7 @@ index 92fb39f..3229374 100644
          if api_fun.has_ambiguous_stub_mapping(schema_group):
              return ["any... args"]
  
-@@ -1056,7 +1086,7 @@ class APIFunction(APIEntry):
+@@ -1056,7 +1107,7 @@ class APIFunction(APIEntry):
              # stub method per configuration set from ExtensionWebIDL.conf.
              api_path = ".".join([*self.path])
              if api_path in WEBEXT_STUBS_MAPPING:
@@ -11782,7 +12644,7 @@ index 92fb39f..3229374 100644
  
          return is_ambiguous
  
-@@ -1076,6 +1106,10 @@ class APIFunction(APIEntry):
+@@ -1076,6 +1127,10 @@ class APIFunction(APIEntry):
  
          schema_data = self.get_schema_data(schema_group)
          params = schema_data["parameters"] or []
@@ -11793,7 +12655,7 @@ index 92fb39f..3229374 100644
  
          return not all(not self.is_optional_param(param) for param in params)
  
-@@ -1278,6 +1312,8 @@ class APINamespace:
+@@ -1278,6 +1333,8 @@ class APINamespace:
              if "functions" in data:
                  for func_data in data["functions"]:
                      func_name = func_data["name"]
@@ -11943,10 +12805,10 @@ index b46d5aa..49beb5e 100644
 +["test_worker_namespaces.py"]
 diff --git a/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py b/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py
 new file mode 100644
-index 0000000..c62a67d
+index 0000000..790a529
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,207 @@
 +# This Source Code Form is subject to the terms of the Mozilla Public
 +# License, v. 2.0. If a copy of the MPL was not distributed with this
 +# file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -12080,6 +12942,76 @@ index 0000000..c62a67d
 +        parser.parse(preprocessor.out.getvalue(), name + ".webidl")
 +    definitions = parser.finish()
 +    assert len(definitions) >= len(namespaces)
++
++
++
++def test_member_permissions_preserve_chrome_visibility(write_jsonschema_fixtures):
++    schemas_data = [
++        {
++            "namespace": "management",
++            "functions": [
++                {"name": "getSelf", "type": "function", "async": True, "parameters": []},
++                {"name": "getAll", "type": "function", "async": True,
++                 "permissions": ["management"], "parameters": []},
++            ],
++            "events": [
++                {"name": "onInstalled", "type": "function",
++                 "permissions": ["management"], "parameters": []},
++            ],
++        },
++        {
++            "namespace": "runtime",
++            "functions": [
++                {"name": "sendNativeMessage", "type": "function", "async": True,
++                 "permissions": ["nativeMessaging"], "parameters": []},
++            ],
++        },
++        {
++            "namespace": "tabs",
++            "functions": [
++                {"name": "captureVisibleTab", "type": "function", "async": True,
++                 "permissions": ["<all_urls>", "activeTab"], "parameters": []},
++            ],
++        },
++        {
++            "namespace": "declarativeNetRequest",
++            "functions": [
++                {"name": "testMatchOutcome", "type": "function", "async": True,
++                 "permissions": ["declarativeNetRequestFeedback"], "parameters": []},
++                {"name": "getMatchedRules", "type": "function", "async": True,
++                 "permissions": ["declarativeNetRequestFeedback", "activeTab"], "parameters": []},
++            ],
++            "events": [
++                {"name": "onRuleMatchedDebug", "type": "function",
++                 "permissions": ["declarativeNetRequestFeedback"], "parameters": []},
++            ],
++        },
++        {
++            "namespace": "downloads",
++            "functions": [
++                {"name": "open", "type": "function", "async": True,
++                 "permissions": ["downloads.open"], "parameters": []},
++            ],
++        },
++    ]
++    schema_dir = write_jsonschema_fixtures({"snapshot.json": json.dumps(schemas_data)})
++    schemas = Schemas()
++    schemas.load_schemas(schema_dir, "toolkit")
++    schemas.parse_schemas()
++    helpers = WebIDLHelpers
++    management = schemas.get_namespace("management")
++    assert helpers.member_permission_attribute(management.functions["getSelf"]) is None
++    assert "HasManagementPermission" in helpers.to_webidl_definition(management.functions["getAll"], None)
++    assert "HasManagementPermission" in helpers.to_webidl_definition(management.events["onInstalled"], None)
++    native_message = schemas.get_namespace("runtime").functions["sendNativeMessage"]
++    assert "HasNativeMessagingPermission" in helpers.to_webidl_definition(native_message, None)
++    for namespace, method in [
++        ("tabs", "captureVisibleTab"), ("downloads", "open"),
++        ("declarativeNetRequest", "testMatchOutcome"), ("declarativeNetRequest", "getMatchedRules"),
++    ]:
++        assert helpers.member_permission_attribute(schemas.get_namespace(namespace).functions[method]) is None
++    debug_event = schemas.get_namespace("declarativeNetRequest").events["onRuleMatchedDebug"]
++    assert "HasDNRFeedbackPermission" in helpers.to_webidl_definition(debug_event, None)
 +
 +
 +if __name__ == "__main__":

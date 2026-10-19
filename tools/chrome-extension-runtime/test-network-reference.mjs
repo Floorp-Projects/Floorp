@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 // Authored DNR vectors; records real Chrome155 results without a corpus-score claim.
-import { spawn } from "node:child_process";
+import { ChromePipe } from "./chrome-cdp-pipe.mjs";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 const root = resolve(".");
 const chrome = join(
   root,
-  "_dist/chrome-reference/extracted/opt/google/chrome/chrome"
+  "_dist/chrome-reference/extracted/opt/google/chrome/chrome",
 );
 const output = mkdtempSync(
-  join(root, "_dist/chrome-runtime-tests/network-reference-")
+  join(root, "_dist/chrome-runtime-tests/network-reference-"),
 );
 const fixture = join(output, "fixture");
 mkdirSync(fixture);
@@ -22,111 +22,20 @@ writeFileSync(
     version: "1",
     permissions: ["declarativeNetRequest", "declarativeNetRequestFeedback"],
     host_permissions: ["<all_urls>"],
-  })
+  }),
 );
 writeFileSync(
   join(fixture, "probe.html"),
-  "<!doctype html><title>DNR probe</title>"
+  "<!doctype html><title>DNR probe</title>",
 );
-class ChromePipe {
-  constructor() {
-    this.next = 0;
-    this.pending = new Map();
-    this.buffer = "";
-    this.stderr = "";
-    this.process = spawn(
-      chrome,
-      [
-        "--headless",
-        "--disable-gpu",
-        "--disable-background-networking",
-        "--disable-component-update",
-        "--disable-sync",
-        "--disable-default-apps",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--remote-debugging-pipe",
-        "--enable-unsafe-extension-debugging",
-        `--user-data-dir=${join(output, "chrome-profile")}`,
-        "about:blank",
-      ],
-      { stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"] }
-    );
-    this.process.stderr.on("data", chunk => {
-      this.stderr += chunk;
-    });
-    this.process.stdio[4].on("data", chunk => {
-      this.buffer += chunk;
-      let index;
-      while ((index = this.buffer.indexOf("\0")) >= 0) {
-        const text = this.buffer.slice(0, index);
-        this.buffer = this.buffer.slice(index + 1);
-        if (!text) continue;
-        const message = JSON.parse(text);
-        const pending = this.pending.get(message.id);
-        if (pending) {
-          this.pending.delete(message.id);
-          if (message.error) {
-            pending.reject(new Error(JSON.stringify(message.error)));
-          } else pending.resolve(message.result);
-        }
-      }
-    });
-    this.process.on("error", error => this.fail(error));
-    this.process.on("exit", code =>
-      this.fail(new Error(`Chrome exited: ${code}`))
-    );
-  }
-  fail(error) {
-    for (const pending of this.pending.values()) pending.reject(error);
-    this.pending.clear();
-  }
-  call(method, params = {}, sessionId) {
-    const id = ++this.next;
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        reject(new Error(`CDP ${method} timed out`));
-      }, 8000);
-      this.pending.set(id, {
-        resolve(value) {
-          clearTimeout(timer);
-          resolve(value);
-        },
-        reject(error) {
-          clearTimeout(timer);
-          reject(error);
-        },
-      });
-      this.process.stdio[3].write(
-        JSON.stringify({
-          id,
-          method,
-          params,
-          ...(sessionId ? { sessionId } : {}),
-        }) + "\0"
-      );
-    });
-  }
-  async close() {
-    try {
-      await this.call("Browser.close");
-    } catch {
-      /* Process may already have exited. */
-    }
-    this.process.kill();
-    writeFileSync(join(output, "chrome.log"), this.stderr);
-  }
-}
-
-const browser = new ChromePipe();
+const browser = new ChromePipe(chrome, output);
 try {
   const version = await browser.call("Browser.getVersion");
   const baseline = JSON.parse(
     readFileSync(
       join(root, "tools/chrome-extension-runtime/chrome-reference.json"),
-      "utf8"
-    )
+      "utf8",
+    ),
   );
   if (
     version.product !== `Chrome/${baseline.browserVersion}` ||
@@ -146,7 +55,10 @@ try {
   });
   await browser.call("Runtime.enable", {}, sessionId);
   const source = String(async () => {
-    const d = chrome.declarativeNetRequest;
+    const d =
+      /** @type {{chrome: {declarativeNetRequest: import("./network-test-types.ts").DnrAPI & Record<string, number>}}} */ (
+        /** @type {unknown} */ (globalThis)
+      ).chrome.declarativeNetRequest;
     const patterns = [
       "",
       "é",
@@ -181,10 +93,14 @@ try {
         regex: pattern,
         requireCapturing: true,
       });
-      let matches = [];
-      if (supported.isSupported && pattern && !/[^\x00-\x7f]/.test(pattern)) {
+      const matches = [];
+      if (
+        supported.isSupported &&
+        pattern &&
+        [...pattern].every((character) => character.charCodeAt(0) <= 0x7f)
+      ) {
         await d.updateSessionRules({
-          removeRuleIds: (await d.getSessionRules()).map(rule => rule.id),
+          removeRuleIds: (await d.getSessionRules()).map((rule) => rule.id),
           addRules: [
             {
               id: ruleId,
@@ -222,6 +138,7 @@ try {
         matches,
       });
     }
+    /** @type {Record<string, number>} */
     const constants = {};
     for (const key of [
       "MAX_NUMBER_OF_DYNAMIC_RULES",
@@ -238,14 +155,16 @@ try {
   const result = await browser.call(
     "Runtime.evaluate",
     { expression: `(${source})()`, awaitPromise: true, returnByValue: true },
-    sessionId
+    sessionId,
   );
   const report = {
     schemaVersion: 1,
     scope:
       "Authored DNR API/regex vectors; not a Store-extension compatibility score",
     version,
-    ...result.result.value,
+    .../** @type {{regex: unknown[]; constants: Record<string, number>}} */ (
+      result.result.value
+    ),
     exception: result.exceptionDetails,
   };
   writeFileSync(join(output, "report.json"), JSON.stringify(report, null, 2));
@@ -255,7 +174,7 @@ try {
       patterns: report.regex?.length,
       constants: report.constants,
       exception: report.exception,
-    })
+    }),
   );
 } finally {
   await browser.close();

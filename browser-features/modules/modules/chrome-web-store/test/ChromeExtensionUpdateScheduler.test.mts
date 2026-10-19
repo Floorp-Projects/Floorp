@@ -16,7 +16,6 @@ import {
   observePrompts,
   packageVersion,
   rejected,
-  waitFor,
 } from "./ChromeExtensionUpdater.test.mts";
 import {
   assert,
@@ -67,15 +66,16 @@ async function waitAsync(
 
 const tests: TestCase[] = [
   {
-    name: "marker and report copies cannot enroll automatic updates; completed verified conversion can",
+    name:
+      "marker and report copies cannot enroll automatic updates; completed verified conversion can",
     async fn() {
-      await fixture(async (converted) =>
+      await fixture((converted) =>
         registryFixture(async (registry, path) => {
           let downloads = 0;
           const v2 = await packageVersion("2.0");
-          const updater = new ChromeExtensionUpdaterClass(async () => {
+          const updater = new ChromeExtensionUpdaterClass(() => {
             downloads++;
-            return v2;
+            return Promise.resolve(v2);
           }, registry);
           const scheduler = new ChromeExtensionUpdateSchedulerClass({
             registry,
@@ -147,14 +147,15 @@ const tests: TestCase[] = [
             status.nextCheck! > status.lastCheck!,
             "successful update schedules next periodic check",
           );
-        }),
+        })
       );
     },
   },
   {
-    name: "modifying an installed XPI invalidates automatic eligibility even when its marker remains",
+    name:
+      "modifying an installed XPI invalidates automatic eligibility even when its marker remains",
     async fn() {
-      await fixture(async (converted) =>
+      await fixture((converted) =>
         registryFixture(async (registry) => {
           await registry.recordInstalled(
             await createVerifiedUpdateProof(
@@ -168,17 +169,17 @@ const tests: TestCase[] = [
           assert(addon, "native fixture installed");
           const file = Services.io.newURI(addon.getResourceURI("").spec)
             .QueryInterface!(Ci.nsIJARURI).JARFile.QueryInterface!(
-            Ci.nsIFileURL,
-          ).file;
+              Ci.nsIFileURL,
+            ).file;
           const original = await IOUtils.read(file.path);
           const tampered = original.slice();
           tampered[tampered.length - 1] ^= 1;
           let downloads = 0;
           const scheduler = new ChromeExtensionUpdateSchedulerClass({
             registry,
-            updater: new ChromeExtensionUpdaterClass(async () => {
+            updater: new ChromeExtensionUpdaterClass(() => {
               downloads++;
-              return await packageVersion("2.0");
+              return packageVersion("2.0");
             }, registry),
           });
           try {
@@ -197,14 +198,15 @@ const tests: TestCase[] = [
           } finally {
             await IOUtils.write(file.path, original);
           }
-        }),
+        })
       );
     },
   },
   {
-    name: "automatic opt-out and no-browser deferral preserve the installed extension",
+    name:
+      "automatic opt-out and no-browser deferral preserve the installed extension",
     async fn() {
-      await fixture(async (converted) =>
+      await fixture((converted) =>
         registryFixture(async (registry) => {
           await registry.recordInstalled(
             await createVerifiedUpdateProof(
@@ -220,9 +222,9 @@ const tests: TestCase[] = [
           const scheduler = new ChromeExtensionUpdateSchedulerClass({
             registry,
             browser: () => target,
-            updater: new ChromeExtensionUpdaterClass(async () => {
+            updater: new ChromeExtensionUpdaterClass(() => {
               downloads++;
-              return v2;
+              return Promise.resolve(v2);
             }, registry),
           });
           Services.prefs.setBoolPref("extensions.update.enabled", false);
@@ -260,14 +262,15 @@ const tests: TestCase[] = [
             "2.0",
             "waiting update resumes through normal browser flow",
           );
-        }),
+        })
       );
     },
   },
   {
-    name: "scheduled permission increases use the native prompt and rejected updates back off",
+    name:
+      "scheduled permission increases use the native prompt and rejected updates back off",
     async fn() {
-      await fixture(async (converted) =>
+      await fixture((converted) =>
         registryFixture(async (registry) => {
           await registry.recordInstalled(
             await createVerifiedUpdateProof(
@@ -284,9 +287,9 @@ const tests: TestCase[] = [
           let prompted = false;
           const scheduler = new ChromeExtensionUpdateSchedulerClass({
             registry,
-            updater: new ChromeExtensionUpdaterClass(async () => {
+            updater: new ChromeExtensionUpdaterClass(() => {
               downloads++;
-              return v2;
+              return Promise.resolve(v2);
             }, registry),
           });
           const stop = observePrompts(
@@ -330,14 +333,15 @@ const tests: TestCase[] = [
             1,
             "rejected update is not immediately retried",
           );
-        }),
+        })
       );
     },
   },
   {
-    name: "explicit verified reconversion migrates a legacy installation without changing identity or storage",
+    name:
+      "explicit verified reconversion migrates a legacy installation without changing identity or storage",
     async fn() {
-      await fixture(async () =>
+      await fixture(() =>
         registryFixture(async (registry) => {
           await command("set", "legacy-migration-data");
           const updater = new ChromeExtensionUpdaterClass(
@@ -380,15 +384,16 @@ const tests: TestCase[] = [
             ID,
             "native addon identity retained",
           );
-        }),
+        })
       );
     },
   },
   {
-    name: "approved postponed proof survives registry reload and authorizes only the exact resumed package",
+    name:
+      "approved postponed proof survives registry reload and authorizes only the exact resumed package",
     async fn() {
       await fixture(
-        async (converted) =>
+        (converted) =>
           registryFixture(async (registry, path) => {
             await registry.recordInstalled(
               await createVerifiedUpdateProof(
@@ -400,7 +405,7 @@ const tests: TestCase[] = [
             );
             const v2 = await packageVersion("2.0");
             const updater = new ChromeExtensionUpdaterClass(
-              async () => v2,
+              () => Promise.resolve(v2),
               registry,
             );
             const scheduler = new ChromeExtensionUpdateSchedulerClass({
@@ -471,9 +476,10 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "startup timer runs registered updates and stop removes the scheduler timer",
+    name:
+      "startup timer runs registered updates and stop removes the scheduler timer",
     async fn() {
-      await fixture(async (converted) =>
+      await fixture((converted) =>
         registryFixture(async (registry) => {
           await registry.recordInstalled(
             await createVerifiedUpdateProof(
@@ -489,9 +495,9 @@ const tests: TestCase[] = [
             registry,
             startupDelayMs: 10,
             timerIntervalMs: 100000,
-            updater: new ChromeExtensionUpdaterClass(async () => {
+            updater: new ChromeExtensionUpdaterClass(() => {
               downloads++;
-              return v2;
+              return Promise.resolve(v2);
             }, registry),
           });
           scheduler.start();
@@ -504,7 +510,7 @@ const tests: TestCase[] = [
             await scheduler.stop();
           }
           assertEquals(downloads, 1, "timer-triggered update runs once");
-        }),
+        })
       );
     },
   },

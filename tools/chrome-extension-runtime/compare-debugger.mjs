@@ -19,9 +19,12 @@ export async function runContractComparison(
 ) {
   const tools = dirname(fileURLToPath(import.meta.url)),
     root = resolve(tools, "../..");
+  /** @param {string} name @param {string} fallback */
   const option = (name, fallback) => {
     const index = process.argv.indexOf(name);
-    return index < 0 ? fallback : resolve(process.argv[index + 1]);
+    const argument = process.argv[index + 1];
+    if (index >= 0 && !argument) throw Error("Missing value for " + name);
+    return index < 0 ? fallback : resolve(argument ?? fallback);
   };
   const chrome = option(
     "--chrome",
@@ -37,10 +40,10 @@ export async function runContractComparison(
   const baseline = JSON.parse(
     readFileSync(join(tools, "chrome-reference.json"), "utf8"),
   );
+  /** @type {import("./debugger-reference-types.ts").DebuggerComparisonReport} */
   const report = {
     passed: false,
-    scope:
-      `One self-authored ${fixtureName} contract; no real-extension compatibility percentage.`,
+    scope: `One self-authored ${fixtureName} contract; no real-extension compatibility percentage.`,
     reference: baseline,
     output,
   };
@@ -48,6 +51,7 @@ export async function runContractComparison(
     '<!doctype html><title>Native CDP contract target</title><style>#item{padding:7px;border:3px solid;margin:5px}</style><div id="item">native</div><input id="editor"><input type="file" id="upload">';
   const server = createServer(async (request, response) => {
     if (request.url === "/debugger-echo") {
+      /** @type {Uint8Array[]} */
       const chunks = [];
       for await (const chunk of request) chunks.push(chunk);
       response.writeHead(200, {
@@ -63,43 +67,49 @@ export async function runContractComparison(
     } else {
       response.writeHead(200, {
         "Content-Type": "text/html",
-        ...(request.url.startsWith("/csp-target")
+        ...((request.url ?? "").startsWith("/csp-target")
           ? {
-            "Content-Security-Policy":
-              "script-src 'none'; style-src 'none'; object-src 'none'",
-          }
+              "Content-Security-Policy":
+                "script-src 'none'; style-src 'none'; object-src 'none'",
+            }
           : {}),
       });
       response.end(html);
     }
   });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", () => resolve(undefined)),
+  );
+  const address = server.address();
+  if (!address || typeof address === "string")
+    throw Error("Authored local debugger listener missing");
   const original = join(tools, fixtureName),
     fixture = join(output, "fixture");
   mkdirSync(fixture);
   const files = Object.fromEntries(
-    readdirSync(original).sort().map(
-      (name) => [name, readFileSync(join(original, name), "utf8")],
-    ),
+    readdirSync(original)
+      .sort()
+      .map((name) => [name, readFileSync(join(original, name), "utf8")]),
   );
-  files["config.js"] = `globalThis.floorpDebuggerConfig=${
-    JSON.stringify({
-      url: `http://127.0.0.1:${server.address().port}/target`,
-      upload: join(original, "upload.txt"),
-      uploadSize: Buffer.byteLength(files["upload.txt"]),
-      nativeOverrides: process.argv.includes("--native-overrides"),
-    })
-  };`;
+  files["config.js"] = `globalThis.floorpDebuggerConfig=${JSON.stringify({
+    url: `http://127.0.0.1:${address.port}/target`,
+    upload: join(original, "upload.txt"),
+    uploadSize: Buffer.byteLength(files["upload.txt"]),
+    nativeOverrides: process.argv.includes("--native-overrides"),
+  })};`;
   for (const [name, content] of Object.entries(files)) {
     writeFileSync(join(fixture, name), content);
   }
   const manifest = JSON.parse(files["manifest.json"]);
   const id = [
-    ...createHash("sha256").update(Buffer.from(manifest.key, "base64")).digest()
+    ...createHash("sha256")
+      .update(Buffer.from(manifest.key, "base64"))
+      .digest()
       .subarray(0, 16),
-  ].flatMap((byte) => [byte >> 4, byte & 15]).map((n) =>
-    String.fromCharCode(97 + n)
-  ).join("");
+  ]
+    .flatMap((byte) => [byte >> 4, byte & 15])
+    .map((n) => String.fromCharCode(97 + n))
+    .join("");
   report.fixture = {
     name: manifest.name,
     version: manifest.version,
@@ -109,14 +119,14 @@ export async function runContractComparison(
   const browser = new ChromePipe(chrome, output);
   try {
     report.chromeVersion = await browser.call("Browser.getVersion");
-    report.chromeBinarySha256 = createHash("sha256").update(
-      readFileSync(chrome),
-    )
+    report.chromeBinarySha256 = createHash("sha256")
+      .update(readFileSync(chrome))
       .digest("hex");
     if (
       report.chromeVersion.product !== `Chrome/${baseline.browserVersion}` ||
       report.chromeBinarySha256 !== baseline.binary.sha256
-    ) throw new Error("Chrome differs from frozen official reference");
+    )
+      throw new Error("Chrome differs from frozen official reference");
     const extension = await browser.call("Extensions.loadUnpacked", {
       path: fixture,
     });
@@ -130,12 +140,19 @@ export async function runContractComparison(
     });
     const deadline = Date.now() + 45000;
     while (Date.now() < deadline) {
-      const value = await browser.call("Runtime.evaluate", {
-        expression: "globalThis.floorpReferenceReport??null",
-        returnByValue: true,
-      }, sessionId);
+      const value = await browser.call(
+        "Runtime.evaluate",
+        {
+          expression: "globalThis.floorpReferenceReport??null",
+          returnByValue: true,
+        },
+        sessionId,
+      );
       if (value.result.value) {
-        report.chrome = value.result.value;
+        report.chrome =
+          /** @type {import("./debugger-reference-types.ts").ContractProbeReport} */ (
+            value.result.value
+          );
         break;
       }
       await new Promise((resolve) => setTimeout(resolve, 30));
@@ -150,27 +167,33 @@ export async function runContractComparison(
       suite = join(output, "floorp-debugger.mts");
     writeFileSync(
       suite,
-      `import {runComparison} from ${
-        JSON.stringify(join(tools, "comparison-floorp.mjs"))
-      };\nexport async function runAllTests(){await runComparison(${
-        JSON.stringify(files)
-      },${JSON.stringify(id)},${JSON.stringify(floorpOutput)});}\n`,
+      `import {runComparison} from ${JSON.stringify(
+        join(tools, "comparison-floorp.mjs"),
+      )};\nexport async function runAllTests(){await runComparison(${JSON.stringify(
+        files,
+      )},${JSON.stringify(id)},${JSON.stringify(floorpOutput)});}\n`,
     );
+    /** @type {import("./debugger-reference-types.ts").DebuggerRunnerResult} */
     const tested = await new Promise((resolve, reject) => {
-      const child = spawn("python3", [
-        join(tools, "run-browser-tests.py"),
-        "--browser",
-        floorp,
-        "--test",
-        suite,
-        "--output",
-        output,
-        "--timeout",
-        "60",
-      ], { cwd: root });
-      let stdout = "", stderr = "";
-      child.stdout.on("data", (chunk) => stdout += chunk);
-      child.stderr.on("data", (chunk) => stderr += chunk);
+      const child = spawn(
+        "python3",
+        [
+          join(tools, "run-browser-tests.py"),
+          "--browser",
+          floorp,
+          "--test",
+          suite,
+          "--output",
+          output,
+          "--timeout",
+          "60",
+        ],
+        { cwd: root },
+      );
+      let stdout = "",
+        stderr = "";
+      child.stdout.on("data", (chunk) => (stdout += chunk));
+      child.stderr.on("data", (chunk) => (stderr += chunk));
       child.on("error", reject);
       child.on("exit", (status) => resolve({ status, stdout, stderr }));
     });
@@ -185,7 +208,10 @@ export async function runContractComparison(
       );
     }
     report.floorp = JSON.parse(readFileSync(floorpOutput, "utf8"));
-    report.matches = JSON.stringify(report.chrome.cases) ===
+    if (!report.chrome || !report.floorp)
+      throw Error("Actual debugger reports missing");
+    report.matches =
+      JSON.stringify(report.chrome.cases) ===
       JSON.stringify(report.floorp.cases);
     if (!report.matches) {
       throw new Error("Chrome and Floorp debugger contract cases differ");
@@ -193,7 +219,7 @@ export async function runContractComparison(
     report.passed = true;
   } catch (error) {
     report.error = String(error);
-    report.stack = error.stack;
+    report.stack = error instanceof Error ? error.stack : undefined;
   } finally {
     await browser.close();
     server.close();
@@ -216,6 +242,9 @@ export async function runContractComparison(
   if (!report.passed) process.exitCode = 1;
   return report;
 }
-if (resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await runContractComparison();
 }

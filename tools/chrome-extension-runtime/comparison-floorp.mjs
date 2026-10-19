@@ -1,3 +1,4 @@
+/// <reference path="../../libs/@types/gecko/index.d.ts" />
 // SPDX-License-Identifier: MPL-2.0
 import { zipSync } from "fflate/browser";
 import { transformManifest } from "../../browser-features/modules/modules/chrome-web-store/ManifestTransformer.sys.mts";
@@ -5,6 +6,7 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
+/** @param {Record<string,string>} files @param {string} id @param {string} outputPath */
 export async function runComparison(files, id, outputPath) {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
@@ -43,7 +45,9 @@ export async function runComparison(files, id, outputPath) {
     const extension = ExtensionParent.GlobalManager.extensionMap.get(
       `${id}@chromium-extension`,
     );
-    const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    const browserWindow =
+      /** @type {import("./crx-test-types.ts").BrowserWindow} */ (/** @type {unknown} */ (Services
+        .wm.getMostRecentWindow("navigator:browser")));
     tab = browserWindow.gBrowser.addTab(
       extension.baseURI.resolve("probe.html"),
       {
@@ -77,9 +81,9 @@ export async function runComparison(files, id, outputPath) {
     throw new Error("Timed out waiting for Floorp comparison fixture");
   } finally {
     if (tab) {
-      const browserWindow = Services.wm.getMostRecentWindow(
-        "navigator:browser",
-      );
+      const browserWindow =
+        /** @type {import("./crx-test-types.ts").BrowserWindow} */ (/** @type {unknown} */ (Services
+          .wm.getMostRecentWindow("navigator:browser")));
       browserWindow.gBrowser.removeTab(tab);
     }
     await addon?.uninstall();

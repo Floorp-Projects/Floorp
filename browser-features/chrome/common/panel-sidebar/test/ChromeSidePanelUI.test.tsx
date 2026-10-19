@@ -104,8 +104,9 @@ export async function runAllTests(): Promise<string[]> {
       },
     });
     controller = new KeyboardShortcutController(window, null, "linux");
+    const chromeWindow = window;
     const shortcut = () => {
-      window.dispatchEvent(
+      chromeWindow.dispatchEvent(
         new KeyboardEvent("keydown", {
           key: "Y",
           code: "KeyY",
@@ -115,7 +116,7 @@ export async function runAllTests(): Promise<string[]> {
           cancelable: true,
         }),
       );
-      window.dispatchEvent(
+      chromeWindow.dispatchEvent(
         new KeyboardEvent("keyup", {
           key: "Y",
           code: "KeyY",

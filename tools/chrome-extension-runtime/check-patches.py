@@ -28,6 +28,7 @@ PATCH_NAMES = (
     "chrome-extension-network.patch",
     "chrome-extension-response-headers.patch",
     "chrome-extension-power.patch",
+    "chrome-extension-permission-messages.patch",
     "chrome-extension-tab-groups.patch",
     "chrome-extension-webrequest.patch",
     "chrome-extension-windows.patch",
@@ -56,6 +57,10 @@ def run(arguments, cwd):
 
 
 def artifact_path(source):
+    if source.startswith("browser/modules/"):
+        return source
+    if source.startswith("toolkit/locales/en-US/") and source.endswith(".ftl"):
+        return "localization/en-US/" + source[len("toolkit/locales/en-US/"):]
     if source.startswith("toolkit/components/alerts/"):
         return "chrome/toolkit/content/global/alerts/" + source.rsplit("/", 1)[1]
     if source.startswith("browser/actors/"):

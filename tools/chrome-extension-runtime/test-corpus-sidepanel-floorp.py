@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 import threading
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +41,9 @@ def main():
     parser.add_argument("--ids", default="")
     parser.add_argument("--timeout", type=int, default=600)
     args = parser.parse_args()
+    output_root = ROOT / "_dist/chrome-runtime-tests"
+    output_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix="corpus-sidepanel-floorp-", dir=output_root))
     server = ThreadingHTTPServer(("127.0.0.1", 0), Fixture)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -55,9 +59,29 @@ def main():
             "--browser", args.browser,
             "--test", str(ROOT / "tools/chrome-extension-runtime/test-corpus-sidepanel-floorp.mjs"),
             "--timeout", str(args.timeout),
+            "--actor-module", str(ROOT / "tools/chrome-extension-runtime/CorpusSidePanelChild.sys.mjs"),
         ], env={**os.environ, "FLOORP_CORPUS_ROOT": str(ROOT), "FLOORP_CORPUS_FIXTURE": fixture,
-                "FLOORP_CORPUS_FIXTURE_METADATA": json.dumps(metadata), "FLOORP_CORPUS_IDS": args.ids})
-        return result.returncode
+                "FLOORP_CORPUS_FIXTURE_METADATA": json.dumps(metadata), "FLOORP_CORPUS_IDS": args.ids,
+                "FLOORP_CORPUS_OUTPUT": str(output)})
+        report_path = output / "report.json"
+        if not report_path.is_file():
+            print("FAILED: SidePanel primary report missing", flush=True)
+            return 1
+        report = json.loads(report_path.read_text())
+        rows = report.get("extensions", [])
+        failed = [row for row in rows if row.get("result") not in ("passed", "blocked-account")]
+        blocked = [row for row in rows if row.get("result") == "blocked-account"]
+        qualified = sum(row.get("nativeQualified") is True for row in rows)
+        if result.returncode or not rows or failed or not report.get("completed"):
+            print(f"FAILED: {len(failed)} primary rows failed; report {report_path}", flush=True)
+            return 1
+        if blocked:
+            print(f"COMPLETED UNQUALIFIED: {len(blocked)} observed account gates; "
+                  f"{qualified}/{len(rows)} native primary operations qualified; report {report_path}", flush=True)
+        else:
+            print(f"PRIMARY OPERATIONS PASSED: {len(rows)}; {qualified}/{len(rows)} native qualified; "
+                  f"report {report_path}", flush=True)
+        return 0
     finally:
         server.shutdown()
         server.server_close()

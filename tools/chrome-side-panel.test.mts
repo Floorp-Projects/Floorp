@@ -109,13 +109,13 @@ function createHarness(validMetadata = true) {
         hide: () => {
           opened.delete(windows.get(id)!);
         },
-        show: async () => {
+        show: () => {
           opened.add(windows.get(id)!);
           const target = action.chromePanelTargets.get(
             windows.get(id)!,
           ) ?? null;
           displayed.push(action.getContextData(target).panel!);
-          return true;
+          return Promise.resolve(true);
         },
       },
     } as unknown as NativeWindow;

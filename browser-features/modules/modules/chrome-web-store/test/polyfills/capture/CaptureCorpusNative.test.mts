@@ -18,14 +18,16 @@ async function until(read, label) {
   }
   throw Error("Timed out waiting for " + label);
 }
-async function inspect(browser, source) {
+function inspect(browser, source) {
   const name = "Floorp:CaptureCorpus:" + Services.uuid.generateUUID();
   return new Promise((resolve, reject) => {
     const manager = browser.messageManager;
     const timer = setTimeout(() => {
       try {
         manager.removeMessageListener(name, listener);
-      } catch {}
+      } catch {
+        // A closed extension view can already have destroyed its manager.
+      }
       reject(Error("Extension view closed before its snapshot reply"));
     }, 6000);
     const listener = (message) => {
@@ -40,31 +42,40 @@ async function inspect(browser, source) {
       "data:application/javascript," +
         encodeURIComponent(
           `(async()=>{try{const value=await (${source})();sendAsyncMessage(${
-            JSON.stringify(name)
+            JSON.stringify(
+              name,
+            )
           },{value});}catch(error){sendAsyncMessage(${
-            JSON.stringify(name)
+            JSON.stringify(
+              name,
+            )
           },{error:String(error)+error.stack});}})();`,
         ),
       false,
     );
   });
 }
-async function trustedClick(browser, selector, text = false) {
-  return until(() =>
-    inspect(
-      browser,
-      `()=>{
+function trustedClick(browser, selector, text = false) {
+  return until(
+    () =>
+      inspect(
+        browser,
+        `()=>{
     const e=${
-        text
-          ? `[...content.document.querySelectorAll('button,a,[role="button"],span,div')].filter(e=>e.textContent.trim()===${
-            JSON.stringify(selector)
-          }&&e.getBoundingClientRect().width).sort((a,b)=>a.children.length-b.children.length)[0]`
-          : `content.document.querySelector(${JSON.stringify(selector)})`
-      };
+          text
+            ? `[...content.document.querySelectorAll('button,a,[role="button"],span,div')].filter(e=>e.textContent.trim()===${
+              JSON.stringify(
+                selector,
+              )
+            }&&e.getBoundingClientRect().width).sort((a,b)=>a.children.length-b.children.length)[0]`
+            : `content.document.querySelector(${JSON.stringify(selector)})`
+        };
     if(!e)return null;e.scrollIntoView({block:'center',inline:'center'});const r=e.getBoundingClientRect();if(!r.width||!r.height)return null;const hit=content.document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);if(!(hit===e||e.contains(hit)||e.parentElement===hit))return null;
     content.synthesizeMouseEvent('mousedown',r.x+r.width/2,r.y+r.height/2,{button:0,buttons:1,clickCount:1});content.synthesizeMouseEvent('mouseup',r.x+r.width/2,r.y+r.height/2,{button:0,buttons:0,clickCount:1});return true;
   }`,
-    ), "actual unobstructed native UI " + selector);
+      ),
+    "actual unobstructed native UI " + selector,
+  );
 }
 async function capturePackage(id) {
   const { AddonManager } = ChromeUtils.importESModule(
@@ -95,7 +106,9 @@ async function capturePackage(id) {
   );
   const digest = [
     ...new Uint8Array(await crypto.subtle.digest("SHA-256", packageBytes)),
-  ].map((value) => value.toString(16).padStart(2, "0")).join("");
+  ]
+    .map((value) => value.toString(16).padStart(2, "0"))
+    .join("");
   assert(digest === frozen.packageSha256, "exact frozen Store package");
   const xpi = PathUtils.join(
     PathUtils.tempDir,
@@ -149,9 +162,15 @@ async function capturePackage(id) {
         const text = message.message;
         if (
           /filesystem|requestFileSystem|gofullpage|fdpohaocaechififmbbbbbknoalclacl|download|Chrome.*Error/i
-            .test(text)
-        ) report.console.push(text);
-      } catch {}
+            .test(
+              text,
+            )
+        ) {
+          report.console.push(text);
+        }
+      } catch {
+        // Not every console notification exposes a readable message string.
+      }
     },
   };
   Services.console.registerListener(consoleListener);
@@ -189,7 +208,27 @@ async function capturePackage(id) {
       () => extension.backgroundContext,
       "installed extension background",
     );
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Real packages open onboarding tabs from their asynchronous onInstalled
+    // handlers. Let that UI settle before activating the authored capture tab.
+    let tabsSignature = "",
+      tabsChanged = Date.now();
+    const installedAt = Date.now();
+    await until(() => {
+      const signature = [...Services.wm.getEnumerator("navigator:browser")]
+        .flatMap((candidate) =>
+          [...(candidate.gBrowser?.tabs || [])].map(
+            (tab) => tab.linkedBrowser.currentURI.spec,
+          )
+        )
+        .join("\n");
+      if (signature !== tabsSignature) {
+        tabsSignature = signature;
+        tabsChanged = Date.now();
+      }
+      return (
+        Date.now() - installedAt >= 2000 && Date.now() - tabsChanged >= 1200
+      );
+    }, "installed package onboarding tabs settled");
     window.gBrowser.selectedTab = target;
     report.source = {
       url: target.linkedBrowser.currentURI.spec,
@@ -199,7 +238,9 @@ async function capturePackage(id) {
     if (accountGate) {
       const evidence = await until(async () => {
         for (
-          const candidate of Services.wm.getEnumerator("navigator:browser")
+          const candidate of Services.wm.getEnumerator(
+            "navigator:browser",
+          )
         ) {
           for (const tab of candidate.gBrowser?.tabs || []) {
             const url = tab.linkedBrowser.currentURI.spec;
@@ -210,7 +251,9 @@ async function capturePackage(id) {
                 /^https:\/\/(?:[^/]+\.)?loom\.com\/(?:.*login|.*signup)/.test(
                   url,
                 ))
-            ) return { url, title: tab.linkedBrowser.contentTitle };
+            ) {
+              return { url, title: tab.linkedBrowser.contentTitle };
+            }
           }
         }
         for (const view of extension.views) {
@@ -218,20 +261,19 @@ async function capturePackage(id) {
             (view.viewType === "popup" || view.viewType === "tab") &&
             view.xulBrowser
           ) {
-            const snapshot = await inspect(
-              view.xulBrowser,
-              () => ({
-                text: content.document.body?.innerText,
-                title: content.document.title,
-                url: content.location.href,
-              }),
-            ).catch(() => null);
+            const snapshot = await inspect(view.xulBrowser, () => ({
+              text: content.document.body?.innerText,
+              title: content.document.title,
+              url: content.location.href,
+            })).catch(() => null);
             if (
               snapshot &&
               /sign in|log in|create an account|login|sign up/i.test(
                 snapshot.text + " " + snapshot.title,
               )
-            ) return snapshot;
+            ) {
+              return snapshot;
+            }
           }
         }
         return false;
@@ -243,8 +285,10 @@ async function capturePackage(id) {
 
     await until(
       () =>
-        [...extension.views].some((view) =>
-          view.viewType === "popup" || view.uri?.spec.includes("/capture.html")
+        [...extension.views].some(
+          (view) =>
+            view.viewType === "popup" ||
+            view.uri?.spec.includes("/capture.html"),
         ),
       "actual extension action popup",
     );
@@ -272,16 +316,19 @@ async function capturePackage(id) {
       "actual frozen extension completed capture",
     );
     if (fullPage) {
-      report.image = await until(async () =>
-        inspect(
-          result.xulBrowser,
-          `()=>{
+      report.image = await until(
+        () =>
+          inspect(
+            result.xulBrowser,
+            `()=>{
       const image=[...content.document.images].find(image=>image.naturalHeight>2000);
       if(!image)return null;
       const canvas=content.document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext('2d').drawImage(image,0,0);
       return {width:image.naturalWidth,height:image.naturalHeight,src:image.src,pixel:Array.from(canvas.getContext('2d').getImageData(20,20,1,1).data)};
     }`,
-        ), "actual stitched capture PNG decode");
+          ),
+        "actual stitched capture PNG decode",
+      );
       assert(
         report.image.height === 2590,
         "full authored page stitched to exact2590px height",
@@ -309,7 +356,9 @@ async function capturePackage(id) {
           result.xulBrowser,
           () => content.document.body.innerText.includes("Got It"),
         )
-      ) await trustedClick(result.xulBrowser, "Got It", true);
+      ) {
+        await trustedClick(result.xulBrowser, "Got It", true);
+      }
       report.image = await until(
         () =>
           inspect(
@@ -347,8 +396,8 @@ async function capturePackage(id) {
         }
       }
       const entries = await downloads.getAll();
-      const saved = entries.find((entry) =>
-        PathUtils.parent(entry.target.path) === downloadDir
+      const saved = entries.find(
+        (entry) => PathUtils.parent(entry.target.path) === downloadDir,
       );
       if (saved?.error) {
         throw Error("Actual image download failed: " + saved.error.message);
@@ -357,9 +406,12 @@ async function capturePackage(id) {
     }, "real extension Download image UI saved PNG");
     const bytes = await IOUtils.read(download.target.path);
     assert(
-      download.target.path.endsWith(".png") && bytes.length > 10000 &&
-        bytes[0] === 137 && bytes[1] === 80 &&
-        bytes[2] === 78 && bytes[3] === 71,
+      download.target.path.endsWith(".png") &&
+        bytes.length > 10000 &&
+        bytes[0] === 137 &&
+        bytes[1] === 80 &&
+        bytes[2] === 78 &&
+        bytes[3] === 71,
       "actual saved PNG file bytes",
     );
     report.media = {
@@ -367,7 +419,8 @@ async function capturePackage(id) {
       path: download.target.path,
       bytes: bytes.length,
       sha256: [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
-        .map((value) => value.toString(16).padStart(2, "0")).join(""),
+        .map((value) => value.toString(16).padStart(2, "0"))
+        .join(""),
     };
     if (!fullPage) {
       assert(
@@ -383,42 +436,41 @@ async function capturePackage(id) {
     if (report.primaryOperationResult === "not-run") {
       report.primaryOperationResult = "failure";
     }
-    report.browserPages = [...Services.wm.getEnumerator("navigator:browser")]
-      .flatMap((win) =>
-        [...(win.gBrowser?.tabs || [])].map((tab) => ({
-          url: tab.linkedBrowser.currentURI.spec,
-          title: tab.linkedBrowser.contentTitle,
-        }))
-      );
+    report.browserPages = [
+      ...Services.wm.getEnumerator("navigator:browser"),
+    ].flatMap((win) =>
+      [...(win.gBrowser?.tabs || [])].map((tab) => ({
+        url: tab.linkedBrowser.currentURI.spec,
+        title: tab.linkedBrowser.contentTitle,
+      }))
+    );
     const { Downloads } = ChromeUtils.importESModule(
       "resource://gre/modules/Downloads.sys.mjs",
     );
-    report.downloads = (await (await Downloads.getList(Downloads.ALL)).getAll())
-      .map((download) => ({
-        url: download.source.url,
-        path: download.target.path,
-        succeeded: download.succeeded,
-        error: download.error?.message,
-      }));
+    report.downloads = (
+      await (await Downloads.getList(Downloads.ALL)).getAll()
+    ).map((download) => ({
+      url: download.source.url,
+      path: download.target.path,
+      succeeded: download.succeeded,
+      error: download.error?.message,
+    }));
     const extension = ExtensionParent.GlobalManager.extensionMap.get(
       id + "@chromium-extension",
     );
     if (extension) {
       report.finalViews = await Promise.all(
-        [...extension.views].filter((view) => view.xulBrowser).map(
-          async (view) => ({
+        [...extension.views]
+          .filter((view) => view.xulBrowser)
+          .map(async (view) => ({
             type: view.viewType,
             url: view.uri?.spec,
-            snapshot: await inspect(
-              view.xulBrowser,
-              () => ({
-                text: content.document.body?.innerText,
-                ready: content.document.readyState,
-                location: content.location.href,
-              }),
-            ).catch((error) => String(error)),
-          }),
-        ),
+            snapshot: await inspect(view.xulBrowser, () => ({
+              text: content.document.body?.innerText,
+              ready: content.document.readyState,
+              location: content.location.href,
+            })).catch((error) => String(error)),
+          })),
       );
     }
     throw error;
@@ -449,9 +501,10 @@ async function capturePackage(id) {
   }
 }
 export async function runAllTests() {
-  const only = Services.env.get("FLOORP_CAPTURE_CORPUS_IDS").split(",").filter(
-    Boolean,
-  );
+  const only = Services.env
+    .get("FLOORP_CAPTURE_CORPUS_IDS")
+    .split(",")
+    .filter(Boolean);
   const records = [
     {
       id: "fdpohaocaechififmbbbbbknoalclacl",
@@ -474,8 +527,8 @@ export async function runAllTests() {
     only.every((id) => records.some((record) => record.id === id)),
     "every requested frozen package has an implemented native recipe",
   );
-  const selected = records.filter((record) =>
-    !only.length || only.includes(record.id)
+  const selected = records.filter(
+    (record) => !only.length || only.includes(record.id),
   );
   assert(selected.length > 0, "actual package recipes must execute");
   await runTests(

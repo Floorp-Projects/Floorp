@@ -1,22 +1,58 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
+/// <reference path="../../libs/@types/gecko/index.d.ts" />
 import {
   assert,
   assertEquals,
   runTests,
 } from "../../browser-features/chrome/test/utils/test_harness.ts";
 
+interface CanvasMessage {
+  data: Record<string, unknown>;
+}
+interface CanvasTab {
+  linkedBrowser: {
+    messageManager: {
+      addMessageListener(
+        name: string,
+        listener: (message: CanvasMessage) => void,
+      ): void;
+      removeMessageListener(
+        name: string,
+        listener: (message: CanvasMessage) => void,
+      ): void;
+      loadFrameScript(url: string, delayed: boolean): void;
+    };
+  };
+}
+interface CanvasWindow {
+  gBrowser: {
+    addTab(url: string, options: { triggeringPrincipal: unknown }): CanvasTab;
+    removeTab(tab: CanvasTab): void;
+  };
+  wrappedJSObject?: { __floorpRuntimeFixtureURL?: string };
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("Native Worker backing canvas", [
     {
-      name: "inert DOMParser document encodes real pixels in extension-capable content process",
+      name:
+        "inert DOMParser document encodes real pixels in extension-capable content process",
       fn: async () => {
-        const win = Services.wm.getMostRecentWindow("navigator:browser");
+        const win = Services.wm.getMostRecentWindow(
+          "navigator:browser",
+        ) as unknown as CanvasWindow | null;
+        assert(win, "native browser window is available");
+        const fixtureURL = win.wrappedJSObject?.__floorpRuntimeFixtureURL;
+        assert(
+          typeof fixtureURL === "string",
+          "runner provides the local fixture URL",
+        );
         const tab = win.gBrowser.addTab(
-          win.wrappedJSObject.__floorpRuntimeFixtureURL + "worker-target.html",
+          fixtureURL + "worker-target.html",
           {
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
           },
         );
         const topic = "floorp-worker-canvas-" + Services.uuid.generateUUID();
@@ -49,7 +85,9 @@ export async function runAllTests(): Promise<void> {
               noWindow:doc.defaultView===null,
               child:Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType!==Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT,
             });
-          } catch(error) {sendAsyncMessage(${JSON.stringify(topic)},{error:error.message});}
+          } catch(error) {sendAsyncMessage(${
+                    JSON.stringify(topic)
+                  },{error:error.message});}
         `),
                 false,
               );

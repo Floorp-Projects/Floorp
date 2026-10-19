@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: MPL-2.0
+/// <reference types="../../../libs/@types/gecko/index.d.ts" />
 (async () => {
+  const fixtureGlobals =
+    /** @type {import("../offscreen-test-types.ts").FixtureGlobals} */ (/** @type {unknown} */ (globalThis));
+  /** @type {import("../offscreen-test-types.ts").FixtureChrome} */
+  const chrome = fixtureGlobals.chrome;
+  const document = fixtureGlobals.document;
+  /** @type {import("../offscreen-test-types.ts").AuxiliaryReport} */
   const report = { passed: false, cases: {} };
   let tab;
+  /** @param {string} name @param {unknown} value */
   const check = (name, value) => {
     report.cases[name] = !!value;
     if (!value) throw new Error(name);
   };
+  /** @param {number} ms */
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   try {
     tab = await chrome.tabs.create({
-      url: floorpDebuggerConfig.url,
+      url: fixtureGlobals.floorpDebuggerConfig.url,
       active: true,
     });
     for (let i = 0; i < 100; i++) {
@@ -159,13 +168,26 @@
       rejectedNoNew = true;
     }
     check("declarativeRequiresNew", rejectedNoNew);
-    const rulesCall = (method, ...args) =>
+    /** @param {"addRules" | "getRules" | "removeRules"} method
+     * @param {import("../offscreen-test-types.ts").DeclarativeRule[] | string[]} [args]
+     * @returns {Promise<import("../offscreen-test-types.ts").DeclarativeRule[]>} */
+    const rulesCall = (method, args) =>
       new Promise((resolve, reject) => {
-        dc.onPageChanged[method](...args, (result) => {
+        /** @param {import("../offscreen-test-types.ts").DeclarativeRule[]} result */
+        const done = (result) => {
           const error = chrome.runtime.lastError;
           if (error) reject(new Error(error.message));
           else resolve(result);
-        });
+        };
+        if (method === "getRules") dc.onPageChanged.getRules(done);
+        else if (method === "addRules") {
+          dc.onPageChanged.addRules(
+            /** @type {import("../offscreen-test-types.ts").DeclarativeRule[]} */ (args),
+            done,
+          );
+        } else if (args) {
+          dc.onPageChanged.removeRules(/** @type {string[]} */ (args), done);
+        } else dc.onPageChanged.removeRules(done);
       });
     await rulesCall("removeRules");
     await chrome.action.disable(tab.id);
@@ -192,7 +214,7 @@
       await delay(30);
     }
     report.declarativeEnabled = await chrome.action.isEnabled(tab.id);
-    check("declarativeRealScriptInjection", injection.injected === "1");
+    check("declarativeRealScriptInjection", injection?.injected === "1");
     await delay(100);
     check(
       "declarativeInjectsOnce",
@@ -217,10 +239,10 @@
     report.passed = true;
   } catch (error) {
     report.error = String(error);
-    report.stack = error.stack;
+    report.stack = error instanceof Error ? error.stack : undefined;
   } finally {
     if (tab) await chrome.tabs.remove(tab.id);
-    globalThis.floorpReferenceReport = report;
+    fixtureGlobals.floorpReferenceReport = report;
     document.title = JSON.stringify(report);
   }
 })();

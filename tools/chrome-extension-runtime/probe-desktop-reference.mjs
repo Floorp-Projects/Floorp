@@ -6,17 +6,24 @@ import { dirname, resolve } from "node:path";
 import { createHash } from "node:crypto";
 const tools = dirname(fileURLToPath(import.meta.url)),
   root = resolve(tools, "../..");
+/** @type {import("./offscreen-test-types.ts").CaptureReference} */
 const baseline = JSON.parse(
   readFileSync(join(tools, "chrome-reference.json"), "utf8"),
 );
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:http";
-const server = createServer((q, r) =>
+const server = createServer((_q, r) =>
   r.end("<title>desktop capture target</title>")
 );
-await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-const url = `http://127.0.0.1:${server.address().port}/`;
+await new Promise((resolve) =>
+  server.listen(0, "127.0.0.1", () => resolve(undefined))
+);
+const address = server.address();
+if (!address || typeof address === "string") {
+  throw Error("Loopback server has no TCP address");
+}
+const url = `http://127.0.0.1:${address.port}/`;
 const output = mkdtempSync(
   join(root, "_dist/chrome-runtime-tests/desktop-chrome-contract-"),
 );
@@ -49,6 +56,7 @@ const chrome = join(
   "_dist/chrome-reference/extracted/opt/google/chrome/chrome",
 );
 const pipe = new ChromePipe(chrome, output);
+/** @type {import("./offscreen-test-types.ts").DesktopReferenceReport} */
 const report = {
   passed: false,
   output,
@@ -103,8 +111,10 @@ try {
     expression: "results",
     returnByValue: true,
   }, sessionId)).result;
-  const [missing, noGesture, click] = report.all.value;
-  report.passed = missing.idInteger && missing.callbackCalled &&
+  const [missing, noGesture, click] =
+    /** @type {import("./offscreen-test-types.ts").DesktopChooserResult[]} */ (report
+      .all.value);
+  report.passed = !!missing.idInteger && missing.callbackCalled &&
     missing.error ===
       "A target tab is required when called from a service worker context." &&
     [noGesture, click].every((result) =>

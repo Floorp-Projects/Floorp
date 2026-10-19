@@ -236,10 +236,18 @@ index e52c0c5..e56c54a 100644
  
  extern LazyLogModule gProxyLog;
 diff --git a/netwerk/base/nsProtocolProxyService.cpp b/netwerk/base/nsProtocolProxyService.cpp
-index e7923af..18baf31 100644
+index e7923af..dc62b8f 100644
 --- a/netwerk/base/nsProtocolProxyService.cpp
 +++ b/netwerk/base/nsProtocolProxyService.cpp
-@@ -120,7 +120,7 @@ nsProtocolProxyService::FilterLink::~FilterLink() {
+@@ -29,6 +29,7 @@
+ #include "nsIProtocolHandler.h"
+ #include "nsIProtocolProxyCallback.h"
+ #include "nsISystemProxySettings.h"
++#include "nsIURIMutator.h"
+ #include "nsNetCID.h"
+ #include "nsNetUtil.h"
+ #include "nsPACMan.h"
+@@ -120,7 +121,7 @@ nsProtocolProxyService::FilterLink::~FilterLink() {
  void nsProtocolProxyService::CallOnProxyAvailableCallback(
      nsProtocolProxyService* aService, nsIProtocolProxyCallback* aCallback,
      nsICancelable* aRequest, nsIChannel* aChannel, nsIProxyInfo* aProxyInfo,
@@ -248,7 +256,7 @@ index e7923af..18baf31 100644
    nsresult rv;
    nsCOMPtr<nsIURI> channelURI;
    if (aChannel) {
-@@ -133,9 +133,16 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
+@@ -133,9 +134,16 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
      nsProtocolInfo info;
      rv = aService->GetProtocolInfo(channelURI, &info);
  
@@ -268,7 +276,7 @@ index e7923af..18baf31 100644
      }
    }
  
-@@ -145,11 +152,112 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
+@@ -145,11 +153,120 @@ void nsProtocolProxyService::CallOnProxyAvailableCallback(
  // The nsPACManCallback portion of this implementation should be run
  // on the main thread - so call nsPACMan::AsyncGetProxyForURI() with
  // a true mainThreadResponse parameter.
@@ -279,7 +287,7 @@ index e7923af..18baf31 100644
 +  NS_INLINE_DECL_REFCOUNTING(ChromeScopedPAC)
 +  explicit ChromeScopedPAC(nsProtocolProxyService* aOwner,
 +                           nsISerialEventTarget* aTarget)
-+      : mOwner(aOwner), mPAC(new nsPACMan(aTarget)) {
++      : mPAC(new nsPACMan(aTarget)), mOwner(aOwner) {
 +    mOwner->mAllChromePACs.AppendElement(this);
 +  }
 +  nsresult Init(uint32_t aType, const nsACString& aPACURI) {
@@ -311,6 +319,14 @@ index e7923af..18baf31 100644
 +      aCallback->OnQueryComplete(NS_OK, "DIRECT"_ns, EmptyCString());
 +      return NS_OK;
 +    }
++    // Chromium never exposes URL credentials or fragments to a PAC script.
++    // Clone the proxy URI so the channel and ordinary Firefox resolution keep
++    // their original URI; HTTP paths and queries remain available to Chrome PAC.
++    nsCOMPtr<nsIURI> uri;
++    MOZ_TRY(NS_MutateURI(aURI)
++                .SetUserPass(EmptyCString())
++                .SetRef(EmptyCString())
++                .Finalize(uri));
 +    if (mMainThreadSystem) {
 +      nsAutoCString pacURI;
 +      nsresult rv = mMainThreadSystem->GetPACURI(pacURI);
@@ -320,10 +336,10 @@ index e7923af..18baf31 100644
 +      if (pacURI.IsEmpty() && !wpad) {
 +        nsAutoCString spec, scheme, host, result;
 +        int32_t port;
-+        MOZ_TRY(aURI->GetAsciiSpec(spec));
-+        MOZ_TRY(aURI->GetScheme(scheme));
-+        MOZ_TRY(aURI->GetAsciiHost(host));
-+        MOZ_TRY(aURI->GetPort(&port));
++        MOZ_TRY(uri->GetAsciiSpec(spec));
++        MOZ_TRY(uri->GetScheme(scheme));
++        MOZ_TRY(uri->GetAsciiHost(host));
++        MOZ_TRY(uri->GetPort(&port));
 +        if (!(aFlags & nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY)) {
 +          if (aFlags & nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY)
 +            scheme.AssignLiteral("https");
@@ -348,7 +364,7 @@ index e7923af..18baf31 100644
 +        mSystemPACSet = true;
 +      }
 +    }
-+    return mPAC->AsyncGetProxyForURI(aURI, aCallback, aFlags, true);
++    return mPAC->AsyncGetProxyForURI(uri, aCallback, aFlags, true);
 +  }
 +  void Shutdown() {
 +    mPAC->Shutdown();
@@ -382,7 +398,7 @@ index e7923af..18baf31 100644
  
    nsAsyncResolveRequest(nsProtocolProxyService* pps, nsIChannel* channel,
                          uint32_t aResolveFlags,
-@@ -163,8 +271,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -163,8 +280,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
    }
  
   private:
@@ -398,7 +414,7 @@ index e7923af..18baf31 100644
        // these xpcom pointers might need to be proxied back to the
        // main thread to delete safely, but if this request had its
        // callbacks called normally they will all be null and this is a nop
-@@ -355,7 +470,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -355,7 +479,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
    void DoCallback() {
      bool pacAvailable = true;
@@ -412,7 +428,7 @@ index e7923af..18baf31 100644
        // If the PAC service is not avail (e.g. failed pac load
        // or shutdown) then we will be going direct. Make that
        // mapping now so that any filters are still applied.
-@@ -397,7 +517,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -397,7 +526,7 @@ class nsAsyncResolveRequest final : public nsIRunnable,
          self->EnsureResolveFlagsMatch();
          nsProtocolProxyService::CallOnProxyAvailableCallback(
              self->mPPS, self->mCallback, self, self->mChannel, self->mProxyInfo,
@@ -421,7 +437,7 @@ index e7923af..18baf31 100644
  
          return NS_OK;
        };
-@@ -416,6 +536,20 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -416,6 +545,20 @@ class nsAsyncResolveRequest final : public nsIRunnable,
        nsCOMPtr<nsIURI> proxyURI;
        GetProxyURI(mChannel, getter_AddRefs(proxyURI));
  
@@ -442,7 +458,7 @@ index e7923af..18baf31 100644
        // trigger load of new pac url
        nsresult rv = mPPS->ConfigureFromPAC(mPACURL, false);
        if (NS_SUCCEEDED(rv)) {
-@@ -428,7 +562,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -428,7 +571,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
        if (NS_FAILED(rv)) {
          nsProtocolProxyService::CallOnProxyAvailableCallback(
@@ -452,7 +468,7 @@ index e7923af..18baf31 100644
        }
  
        // do not call onproxyavailable() in SUCCESS case - the newRequest will
-@@ -439,13 +574,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -439,13 +583,15 @@ class nsAsyncResolveRequest final : public nsIRunnable,
        if (NS_SUCCEEDED(mStatus)) mPPS->MaybeDisableDNSPrefetch(mProxyInfo);
        EnsureResolveFlagsMatch();
        nsProtocolProxyService::CallOnProxyAvailableCallback(
@@ -469,7 +485,7 @@ index e7923af..18baf31 100644
      mPPS = nullptr;
      mXPComPPS = nullptr;
      mChannel = nullptr;
-@@ -454,6 +591,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -454,6 +600,12 @@ class nsAsyncResolveRequest final : public nsIRunnable,
  
   private:
    nsresult mStatus{NS_OK};
@@ -482,7 +498,7 @@ index e7923af..18baf31 100644
    nsCString mPACString;
    nsCString mPACURL;
    bool mDispatched{false};
-@@ -468,7 +611,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
+@@ -468,7 +620,8 @@ class nsAsyncResolveRequest final : public nsIRunnable,
    RefPtr<AsyncApplyFilters> mAsyncFilterApplier;
  };
  
@@ -492,7 +508,7 @@ index e7923af..18baf31 100644
  
  NS_IMPL_ISUPPORTS(nsAsyncResolveRequest::AsyncApplyFilters,
                    nsIProxyProtocolFilterResult, nsICancelable, nsIRunnable)
-@@ -946,6 +1090,11 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
+@@ -946,6 +1099,11 @@ nsProtocolProxyService::Observe(nsISupports* aSubject, const char* aTopic,
      // cleanup
      mHostFiltersArray.Clear();
      mFilters.Clear();
@@ -504,7 +520,7 @@ index e7923af..18baf31 100644
  
      if (mPACMan) {
        mPACMan->Shutdown();
-@@ -1577,6 +1726,40 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
+@@ -1577,6 +1735,40 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
    rv = GetProtocolInfo(uri, &info);
    if (NS_FAILED(rv)) return rv;
  
@@ -545,7 +561,7 @@ index e7923af..18baf31 100644
    nsCOMPtr<nsIProxyInfo> pi;
    bool usePACThread;
  
-@@ -1607,18 +1790,88 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
+@@ -1607,18 +1799,88 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
    if (!usePACThread || !mPACMan) {
      // we can do it locally
      rv = ctx->ProcessLocally(info, pi, isSyncOK);
@@ -638,7 +654,7 @@ index e7923af..18baf31 100644
  // nsIProtocolProxyService
  NS_IMETHODIMP
  nsProtocolProxyService::AsyncResolve2(
-@@ -2534,7 +2787,7 @@ bool nsProtocolProxyService::IsEffectivelyDirect() {
+@@ -2534,7 +2796,7 @@ bool nsProtocolProxyService::IsEffectivelyDirect() {
      return false;
    }
  
@@ -753,10 +769,10 @@ index 3e0f9de..5c64570 100644
        GetProxyForURIResolver&& aResolver);
 diff --git a/netwerk/test/unit/test_chrome_proxy_scopes.js b/netwerk/test/unit/test_chrome_proxy_scopes.js
 new file mode 100644
-index 0000000..738cdec
+index 0000000..c386493
 --- /dev/null
 +++ b/netwerk/test/unit/test_chrome_proxy_scopes.js
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,190 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -842,7 +858,7 @@ index 0000000..738cdec
 +
 +add_task(async function chrome_pac_retains_http_path_and_hides_https_path() {
 +  const source =
-+    "function FindProxyForURL(url){return url.indexOf('/route')>=0 ? 'PROXY full.invalid:80' : 'PROXY stripped.invalid:80';}";
++    "function FindProxyForURL(url){if(url.indexOf('authored-user')>=0||url.indexOf('#')>=0)return 'PROXY leaked.invalid:80';return url.indexOf('/route')>=0 ? 'PROXY full.invalid:80' : 'PROXY stripped.invalid:80';}";
 +  const provider = {
 +    QueryInterface: ChromeUtils.generateQI(["nsIChromeProxyScopeProvider"]),
 +    getConfiguration(_target, callback) {
@@ -858,6 +874,31 @@ index 0000000..738cdec
 +      (await resolve(channel(0, "https://floorp-scopes.invalid/route"))).info
 +        .host,
 +      "stripped.invalid"
++    );
++    const original =
++      "http://authored-user:authored-password@floorp-scopes.invalid/route?query=retained#fragment";
++    const authenticated = channel(0, original);
++    Assert.equal((await resolve(authenticated)).info.host, "full.invalid");
++    Assert.equal(
++      authenticated.URI.spec,
++      original,
++      "Sanitizing PAC input does not mutate the channel URI"
++    );
++    Assert.equal(
++      (
++        await resolve(
++          channel(
++            1,
++            "https://authored-user:authored-password@floorp-scopes.invalid/route#fragment"
++          )
++        )
++      ).info.host,
++      "stripped.invalid"
++    );
++    Assert.equal(
++      (await resolve(channel(0, "http://floorp-scopes.invalid/route#fragment")))
++        .info.host,
++      "full.invalid"
 +    );
 +  } finally {
 +    pps.unregisterChromeScopeProvider(provider);

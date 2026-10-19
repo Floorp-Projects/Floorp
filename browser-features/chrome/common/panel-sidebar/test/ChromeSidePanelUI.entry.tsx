@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import { runAllTests } from "../../browser-features/chrome/common/panel-sidebar/test/ChromeSidePanelUI.test.tsx";
+import { runAllTests } from "./ChromeSidePanelUI.test.tsx";
 const target = window as unknown as { __floorpSidePanelUI: unknown };
 runAllTests().then(
   (checks) => target.__floorpSidePanelUI = { done: true, checks },
@@ -7,6 +7,6 @@ runAllTests().then(
     target.__floorpSidePanelUI = {
       done: true,
       error: String(error),
-      stack: error.stack,
+      stack: error instanceof Error ? error.stack : undefined,
     },
 );

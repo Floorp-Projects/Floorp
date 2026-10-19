@@ -235,10 +235,9 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
   const win = Services.wm.getMostRecentWindow("navigator:browser");
   const fixtureURL = win.wrappedJSObject.__floorpRuntimeFixtureURL;
   assert(typeof fixtureURL === "string", "runner provides local HTTP fixtures");
-  const originalId =
-    type === "classic"
-      ? "aaaaaaaabbbbbbbbccccccccdddddddd"
-      : "eeeeeeeeffffffffgggggggghhhhhhhh";
+  const originalId = type === "classic"
+    ? "aaaaaaaabbbbbbbbccccccccdddddddd"
+    : "eeeeeeeeffffffffgggggggghhhhhhhh";
   const id = `${originalId}@chromium-extension`;
   const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
   const target = win.gBrowser.addTab(fixtureURL + "worker-target.html", {
@@ -282,7 +281,9 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
     host_permissions: ["http://127.0.0.1/*"],
     action: {},
     default_locale: "en",
-    commands: { "worker-command": { description: "Actual native Worker command" } },
+    commands: {
+      "worker-command": { description: "Actual native Worker command" },
+    },
     omnibox: { keyword: `floorp-${type}-worker` },
     background: {
       service_worker: "worker.js",
@@ -303,7 +304,9 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
         : 'import { imported } from "./helper.mjs";') + workerBody,
     "helper.js": 'self.imported="classic-importScripts";',
     "helper.mjs": 'export const imported="module-static-import";',
-    "_locales/en/messages.json": JSON.stringify({ worker_message: { message: "Hello $1" } }),
+    "_locales/en/messages.json": JSON.stringify({
+      worker_message: { message: "Hello $1" },
+    }),
     "control.html": '<!doctype html><script src="control.js"></script>',
     "control.js": `
       document.title="control-ready";
@@ -373,20 +376,22 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       () => control?.linkedBrowser.contentTitle === "control-ready",
       "message control document",
     );
-    async function command(
+    const command = async (
       name: string,
       payload: Record<string, unknown> = {},
-    ) {
+    ) => {
       const current = ++requestId;
       control?.linkedBrowser.messageManager.loadFrameScript(
         "data:application/javascript," +
           encodeURIComponent(
-            `content.postMessage(${JSON.stringify({
-              workerTarget: true,
-              command: name,
-              requestId: current,
-              ...payload,
-            })},"*");`,
+            `content.postMessage(${
+              JSON.stringify({
+                workerTarget: true,
+                command: name,
+                requestId: current,
+                ...payload,
+              })
+            },"*");`,
           ),
         false,
       );
@@ -398,23 +403,59 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
         if (result.error) throw new Error(result.error);
         return result;
       }, `Worker ${name} response`);
-    }
+    };
     const container = (await command("container")).result;
-    assert(container.native, "extension page exposes actual native ServiceWorkerContainer");
-    assertEquals(container.scope, extension.baseURI.spec, "page ready resolves native extension registration");
-    assertEquals(container.scriptURL, extension.baseURI.resolve("worker.js"), "page sees actual background worker script");
-    assert(container.sameRegistration, "getRegistration and ready return same native registration");
-    const { ExtensionSearchHandler } = ChromeUtils.importESModule("resource://gre/modules/ExtensionSearchHandler.sys.mjs");
+    assert(
+      container.native,
+      "extension page exposes actual native ServiceWorkerContainer",
+    );
+    assertEquals(
+      container.scope,
+      extension.baseURI.spec,
+      "page ready resolves native extension registration",
+    );
+    assertEquals(
+      container.scriptURL,
+      extension.baseURI.resolve("worker.js"),
+      "page sees actual background worker script",
+    );
+    assert(
+      container.sameRegistration,
+      "getRegistration and ready return same native registration",
+    );
+    const { ExtensionSearchHandler } = ChromeUtils.importESModule(
+      "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
+    );
     const suggestions: { content: string }[][] = [];
     const search = ExtensionSearchHandler.handleSearch({
-      keyword: `floorp-${type}-worker`, text: `floorp-${type}-worker query`, inPrivateWindow: false,
+      keyword: `floorp-${type}-worker`,
+      text: `floorp-${type}-worker query`,
+      inPrivateWindow: false,
     }, (items: { content: string }[]) => suggestions.push(items));
     try {
-      await waitFor(() => suggestions.length >= 3, "repeatable native omnibox callback suggestions");
-      assertEquals(suggestions[0][0].content, "query-first", "first suggestion reaches actual omnibox handler");
-      assertEquals(suggestions[1][0].content, "query-second", "same native suggestion callback remains callable");
-      assertEquals(suggestions[2][0].content, "query-async", "asynchronous suggestion callback reaches native search");
-    } finally { ExtensionSearchHandler.handleInputCancelled(); await search; }
+      await waitFor(
+        () => suggestions.length >= 3,
+        "repeatable native omnibox callback suggestions",
+      );
+      assertEquals(
+        suggestions[0][0].content,
+        "query-first",
+        "first suggestion reaches actual omnibox handler",
+      );
+      assertEquals(
+        suggestions[1][0].content,
+        "query-second",
+        "same native suggestion callback remains callable",
+      );
+      assertEquals(
+        suggestions[2][0].content,
+        "query-async",
+        "asynchronous suggestion callback reaches native search",
+      );
+    } finally {
+      ExtensionSearchHandler.handleInputCancelled();
+      await search;
+    }
     const probe = (await command("probe")).result;
     assert(
       probe.isWorker && !probe.hasDocument && probe.sameAlias,
@@ -450,24 +491,94 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       0,
       "storage.local.remove updates backend",
     );
-    const core = (await command("core", { url: fixtureURL + "worker-core-history.html" })).result;
-    assertEquals(core.extensionInfo.incognito, false, "extension namespace returns actual regular Worker context state");
-    assert(typeof core.extensionInfo.fileAllowed === "boolean" && typeof core.extensionInfo.privateAllowed === "boolean", "extension access checks use native permission state");
-    assertEquals(core.extensionInfo.viewType.TAB, "tab", "extension.ViewType matches measured Chrome enum");
-    assertEquals(core.extensionInfo.viewType.POPUP, "popup", "extension.ViewType popup constant");
-    assert([core.extensionInfo.getViews,core.extensionInfo.getBackgroundPage,core.extensionInfo.getURL].every(value=>value==="undefined"), "DOM/MV2 extension aliases remain absent as in actual Chrome Worker");
-    assert(core.extensionInfo.updateDataUndefined && core.invalidUpdateCalls === 4, "Store-only update data has exact sync return and strict arguments");
-    assert(core.power.level.SYSTEM === "system" && core.power.level.DISPLAY === "display", "power.Level matches actual Chrome enum");
-    assert(core.power.requestUndefined && core.power.releaseUndefined, "power native WakeLock APIs return synchronously");
-    assertEquals(core.translated, "Hello native", "Worker i18n synchronously uses actual catalog substitutions");
-    assert(typeof core.language === "string" && core.languages.length > 0, "Worker locale APIs return actual browser locale data");
-    assert(["active", "idle", "locked"].includes(core.idle), "Worker idle queries native user idle service");
-    assertEquals(core.readBookmark[0].id, core.bookmark.id, "Worker bookmarks create/get uses actual Places record");
-    assert(core.bookmarkEvents.some((event: { id: string }) => event.id === core.bookmark.id), "native bookmark created event reaches Worker");
-    assert(core.visits.length > 0, "Worker history stores and reads real Places visit");
-    assert(Array.isArray(core.closed) && Array.isArray(core.topSites), "Worker sessions/topSites query native backends");
-    assert(core.commands.some((command: { name: string }) => command.name === "worker-command"), "Worker commands sees manifest command");
-    assert(core.windows.some((window: { id: number }) => window.id === core.current.id), "Worker windows returns actual current native window");
+    const core =
+      (await command("core", { url: fixtureURL + "worker-core-history.html" }))
+        .result;
+    assertEquals(
+      core.extensionInfo.incognito,
+      false,
+      "extension namespace returns actual regular Worker context state",
+    );
+    assert(
+      typeof core.extensionInfo.fileAllowed === "boolean" &&
+        typeof core.extensionInfo.privateAllowed === "boolean",
+      "extension access checks use native permission state",
+    );
+    assertEquals(
+      core.extensionInfo.viewType.TAB,
+      "tab",
+      "extension.ViewType matches measured Chrome enum",
+    );
+    assertEquals(
+      core.extensionInfo.viewType.POPUP,
+      "popup",
+      "extension.ViewType popup constant",
+    );
+    assert(
+      [
+        core.extensionInfo.getViews,
+        core.extensionInfo.getBackgroundPage,
+        core.extensionInfo.getURL,
+      ].every((value) => value === "undefined"),
+      "DOM/MV2 extension aliases remain absent as in actual Chrome Worker",
+    );
+    assert(
+      core.extensionInfo.updateDataUndefined && core.invalidUpdateCalls === 4,
+      "Store-only update data has exact sync return and strict arguments",
+    );
+    assert(
+      core.power.level.SYSTEM === "system" &&
+        core.power.level.DISPLAY === "display",
+      "power.Level matches actual Chrome enum",
+    );
+    assert(
+      core.power.requestUndefined && core.power.releaseUndefined,
+      "power native WakeLock APIs return synchronously",
+    );
+    assertEquals(
+      core.translated,
+      "Hello native",
+      "Worker i18n synchronously uses actual catalog substitutions",
+    );
+    assert(
+      typeof core.language === "string" && core.languages.length > 0,
+      "Worker locale APIs return actual browser locale data",
+    );
+    assert(
+      ["active", "idle", "locked"].includes(core.idle),
+      "Worker idle queries native user idle service",
+    );
+    assertEquals(
+      core.readBookmark[0].id,
+      core.bookmark.id,
+      "Worker bookmarks create/get uses actual Places record",
+    );
+    assert(
+      core.bookmarkEvents.some((event: { id: string }) =>
+        event.id === core.bookmark.id
+      ),
+      "native bookmark created event reaches Worker",
+    );
+    assert(
+      core.visits.length > 0,
+      "Worker history stores and reads real Places visit",
+    );
+    assert(
+      Array.isArray(core.closed) && Array.isArray(core.topSites),
+      "Worker sessions/topSites query native backends",
+    );
+    assert(
+      core.commands.some((command: { name: string }) =>
+        command.name === "worker-command"
+      ),
+      "Worker commands sees manifest command",
+    );
+    assert(
+      core.windows.some((window: { id: number }) =>
+        window.id === core.current.id
+      ),
+      "Worker windows returns actual current native window",
+    );
     const apis = (await command("apis")).result;
     assert(apis.tabs > 0, "tabs.query returns actual browser tabs");
     assertEquals(
@@ -835,15 +946,18 @@ async function testWorkerPermissions(): Promise<void> {
 export async function runAllTests(): Promise<void> {
   await runTests("WorkerNative.test.mts", [
     {
-      name: "native classic Worker imports, APIs, callbacks, storage and event restart",
+      name:
+        "native classic Worker imports, APIs, callbacks, storage and event restart",
       fn: () => testWorker("classic"),
     },
     {
-      name: "native module Worker imports, APIs, callbacks, storage and event restart",
+      name:
+        "native module Worker imports, APIs, callbacks, storage and event restart",
       fn: () => testWorker("module"),
     },
     {
-      name: "native Worker storage, host and compatibility marker permission gates",
+      name:
+        "native Worker storage, host and compatibility marker permission gates",
       fn: testWorkerPermissions,
     },
   ]);
