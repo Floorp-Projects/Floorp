@@ -1,0 +1,231 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY42_PRODUCER_TERMINAL_FAILURE_INDEPENDENT_REVIEW",
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TERMINAL_RESULT.json",
+    "bytes": 32461,
+    "sha256": "e65470250b07ff3956922c9ce32f6d7c79a24092d9fa117f4b09f828e9e05708",
+    "curatedSourceSDKFirstFailureMonitorFailureStageLogsAndPackEvidenceMatchProviderSummary": true,
+    "all49CuratedStageProjectionsMatch": true,
+    "trustedCompletionAndPreflightProjectionsMatch": true
+  },
+  "run": {
+    "id": 39185132260,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39185132260",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "caller": "d546c37feedfdfcb718b20fa7a89eb0d338df839",
+    "fixture": "e473170251a03285727571657394ce05f2f4f2be",
+    "branch": "codex/mac-native-checkpoint-recovery42-20261019"
+  },
+  "jobs": {
+    "producer": {
+      "id": 117845856861,
+      "conclusion": "failure",
+      "runner": "macos-15-intel",
+      "startedAt": "2026-10-19T01:23:34Z",
+      "completedAt": "2026-10-19T02:44:28Z"
+    },
+    "consumer": {
+      "id": 117864727905,
+      "conclusion": "skipped",
+      "startedAt": "2026-10-19T02:44:28Z",
+      "completedAt": "2026-10-19T02:44:28Z"
+    }
+  },
+  "evidenceProvenance": {
+    "runJobAndArtifactAPIIndependentlyRead": true,
+    "terminalProducerLogsFetchedOnlyAfterCompletion": true,
+    "decodedRawBytes": 271175,
+    "decodedRawSHA256": "b3f152fdf52ccb3ff9e78615e07a4c79a7503d2658e081356aeb192f7602d558",
+    "localPrivateRawExactlyMatchesProviderBytesAndHash": true,
+    "parsedPrivateSummaryBytes": 218202,
+    "parsedPrivateSummarySHA256": "e15eb85b8cc90961de2e4629fb05c9e842142b13c68cfbd45a683681d42a0469",
+    "parsedPrivateSummaryEqualsObjectInProviderIdenticalRawLog": true,
+    "rawLogsPublished": false
+  },
+  "established": {
+    "trustedCompletion": {
+      "contract": "trusted-single-purpose-runner-v1",
+      "status": "passed",
+      "naturalCompletedStages": 48,
+      "allPriorStageExitZeroNoStopOrFailurePhase": true,
+      "allPriorExactLeadersReapedZeroAndGroupsGone": true,
+      "allPriorCleanupFailuresNull": true,
+      "observationCoverage": "sampling",
+      "observedKnownBirths": 888,
+      "knownLiveBirthsRemaining": 0,
+      "knownZombieBirthsRemaining": 0,
+      "fullCensusSelfBound": true,
+      "fullCensusEntries": 509,
+      "ambientCandidates": 278,
+      "ambientCandidatesAreNotAWriterOrZeroResourceClaim": true
+    },
+    "naturalBoundaryStages": [
+      "checkpoint-exports",
+      "checkpoint-rust",
+      "checkpoint-rust-archive"
+    ],
+    "effectiveDebug": true,
+    "effectivePGO": false,
+    "sdkAcquisitionAndContentValidationStep": "success",
+    "producerActualQATests": 151,
+    "producerActualRecordingTests": 14,
+    "producerPreflightSkips": 0
+  },
+  "firstStop": {
+    "stage": "checkpoint-pack",
+    "code": "monitor-unavailable",
+    "elapsedSeconds": 4807.42,
+    "monitorSampleElapsedSeconds": 4807.37,
+    "sampleComplete": false,
+    "rssMiB": null,
+    "cpuSeconds": null,
+    "rssLowerBoundMiB": null,
+    "cpuLowerBoundSeconds": null,
+    "processCount": null,
+    "unknownKind": "inventory-timeout",
+    "operation": "kern-proc-pgrp-inventory",
+    "attempts": 3,
+    "communicateTimeoutSecondsEach": 3,
+    "retryGapSeconds": 0.25,
+    "attemptsDetail": [
+      {
+        "elapsedSeconds": 3.077,
+        "lastValidatedPhase": "project-imports",
+        "progressEvents": 1
+      },
+      {
+        "elapsedSeconds": 3.103,
+        "lastValidatedPhase": "project-imports",
+        "progressEvents": 1
+      },
+      {
+        "elapsedSeconds": 3.034,
+        "lastValidatedPhase": "abi-binding",
+        "progressEvents": 2
+      }
+    ],
+    "processCreationAndExactChildCleanupMayExtendWallClockBeyondCommunicateTimeout": true
+  },
+  "cleanup": {
+    "packExitCode": -2,
+    "reason": "monitor-unavailable",
+    "failurePhase": "group-activity",
+    "exactLeaderReap": {
+      "status": "reaped",
+      "exitCode": -2
+    },
+    "ownedGroup": "verified-gone",
+    "cleanupFailure": null,
+    "secondaryGroupProbe": {
+      "errorType": "PermissionError",
+      "errno": 1,
+      "recovery": "new exact leader reap through bounded 0.05-second wait, then fresh group probe",
+      "primaryStoppingCause": false
+    },
+    "beforeCleanupLogBytes": 0,
+    "afterCleanupLogBytes": 1510,
+    "afterCleanupClassifiedRecords": [
+      {
+        "kind": "termination",
+        "messageClass": "keyboard-interrupt"
+      }
+    ],
+    "interpretation": "Exit -2 and KeyboardInterrupt are recorded after monitor stopping and are consistent with its cleanup signal path; they do not establish an independent compiler or capture defect."
+  },
+  "resourceObservationLimits": {
+    "largestRetainedMeasuredOwnedRSSMiB": 7695,
+    "packRetainedPeakRSSMiB": 1101,
+    "minimumRetainedFreeDiskGiB": 88.74,
+    "recordedRSSDiskLimitViolation": false,
+    "fatalSampleResourceTotals": "unknown/null",
+    "unmeasuredResourceValuesAreNotZeroOrProofOfHeadroom": true,
+    "globalMemorySchedulerAndFilesystemLatency": "not measured by these records"
+  },
+  "archiveAndDownstream": {
+    "checkpointReady": false,
+    "archiveReadbackQualification": "NOT_ESTABLISHED",
+    "exactInternalPackPhaseOrArchiveFileExistenceAtStop": "UNKNOWN",
+    "uploadInputConfirmStep": "skipped",
+    "artifactUploadStep": "skipped",
+    "serviceDigestConfirmStep": "skipped",
+    "artifactAPIcount": 0,
+    "consumerRestore": "NOT_EXECUTED",
+    "fullHostTranslationUnit": "NOT_EXECUTED",
+    "fullXUL": "NOT_EXECUTED",
+    "package": "NOT_EXECUTED",
+    "nativeAuthentication": "NOT_EXECUTED",
+    "originalNativeExitCause": "UNKNOWN"
+  },
+  "diagnosticInterpretation": [
+    "The replacement trusted completion predicate actually passed after the natural Rust boundary; this stop is later and is not a global UID-zero or known-survivor rejection.",
+    "No self-bsd, self-size or group-query marker was retained in any fatal attempt. The last received progress marker is not proof of the exact instruction or syscall that blocked, nor proof that no later instruction ran.",
+    "In the immutable run source, project-imports precedes argparse/ctypes/project imports. process_census imports support, which imports networking and archive utilities. abi-binding covers load_abi file/stat/hash checks and also native reader import/CDLL/timebase initialization before the next self-bsd marker.",
+    "The observed timeout therefore does not establish a KERN_PROC_PGRP hang, a permission denial, a libproc task-ESRCH race, an archive format failure or writer mutation. Startup/import/binding/filesystem/scheduler delay remains a hypothesis.",
+    "Two earlier retained Rust samples recovered from a helper timeout with project-imports as the last marker (3.717 and 4.116 seconds). The fatal three attempts make five retained helper timeout attempts in this result; recovered samples remain distinct from the stopping sample.",
+    "The Rust log has 53 unclassified textual error markers, while its actual command naturally exited zero and archive inspection passed. Marker counts are not a compiler-failure verdict.",
+    "The receipt archiveReadbackComplete=false is interpreted as no established readback/ready qualification. There is no retained internal phase trace establishing the precise pack substep or a readback-specific failure."
+  ],
+  "staticRunSourceBasis": [
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "6dc4a5241578b54c5ff954a88cd78191250c629cec5fbb4d43b157d71fa343bc"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "sha256": "e288841181a9240a9a45cb7fe65885e6eb04a696ea770162d4b94271a68c429f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "sha256": "d150348dc76e454227108354e9b49c38675b694ce078bb598564c44bceed22b4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a"
+    }
+  ],
+  "minimalNextPatchReviewCriteria": {
+    "hypothesis": "Reduce avoidable helper userspace startup/import work and distinguish ABI verification from native reader binding, without relaxing measurement admission.",
+    "mustPreserve": [
+      "Three 3-second query attempts, existing retry gap, exact helper kill/reap, original phase/platform budgets and resource limits.",
+      "Full ABI/source/job binding, self identity proof, complete group inventory, every PID/generation/state check and no alternate API after failure.",
+      "Unknown/null totals and fail-closed stopping on persistent timeout, permission, malformed/partial output or identity failure.",
+      "Existing first failure, partial/recovered and stopping diagnostics, bounded private protocol and cleanup ownership."
+    ],
+    "targetedChecks": [
+      "Lightweight primitive extraction keeps the four function/class bodies and caller semantics; support and the helper imports share the exact same Failure class.",
+      "Actual traceback projection recognizes the new defining-module exception name and retains known fixed Failure codes without arbitrary text.",
+      "A fresh interpreter proves the helper hotpath no longer loads the networking/archive dependency chain; ordinary parent imports must not mask this test.",
+      "Any reader-binding progress addition has a strictly validated sequence/phase, preserves partial-output rejection and is interpreted only as last observed progress.",
+      "Timeout/retry, complete inventory and exact child cleanup negative controls continue to pass.",
+      "A short actual Mac cold/warm helper and bounded filesystem-hashing load comparison is required before attributing the long failure or claiming the startup fix stable."
+    ],
+    "fixImplementationOrNewRouteApprovedByThisTerminalReview": false
+  },
+  "decision": {
+    "terminalEvidence": "ACCEPTED",
+    "execution": "monitor-inconclusive",
+    "trustedNaturalBoundary": "PASSED",
+    "checkpointCaptureTransferOrRestoreQualification": "NOT_ESTABLISHED",
+    "fullOrNativeQualification": false,
+    "newPermissionsRequiredByObservedEvidence": false,
+    "rootCause": "UNKNOWN",
+    "nextStep": "Review the frozen minimal helper-startup patch and its short Mac validation route before another long validation."
+  },
+  "privacy": {
+    "rawPathsArgvEnvironmentLogsAndSignedURLsPublishedInReview": false,
+    "internalConversationPublished": false,
+    "runSourceAndNewPatchKeptSeparate": true
+  },
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "CIExecutions": 0,
+    "remoteWrites": 0,
+    "artifactOrSDKDownloads": 0,
+    "permissionChanges": 0
+  }
+}
