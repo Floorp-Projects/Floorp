@@ -1,0 +1,474 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY44_ACTUAL_INTEL_MAC_TERMINAL_AND_BOUND_RECOVERY45_VALIDATION_ROUTE",
+  "decision": {
+    "short44": "PASSED",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "long45": "GO_FOR_BOUND_TRUSTED_RUNNER_VALIDATION_WITH_FRESH_PER_ACQUISITION_CHECKS",
+    "timeoutRepair": "NOT_ESTABLISHED_FOR_PRODUCTION",
+    "fullHostXUL": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "bindings": {
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_TERMINAL_RESULT.json",
+      "bytes": 55575,
+      "sha256": "d9064217a4a9509f2ab3eca3ece3a6e049f0348671cfd71a7f8225859d0aaf8c"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": 39196405839,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39196405839",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "attempt": 1,
+      "branch": "codex/mac-native-helper-import-recovery44-20261019"
+    },
+    "job": {
+      "id": 117880029443,
+      "name": "checkpoint-producer",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "startedAt": "2026-10-19T03:48:21Z",
+      "completedAt": "2026-10-19T03:51:01Z",
+      "totalJobs": 1
+    },
+    "shortCaller": {
+      "commit": "e4f8e5538dbf191c20539fed3807aea03dc96c41",
+      "tree": "8237400ce4bfdfbc88d2fc94162cc170361c9723",
+      "workflowBytes": 3619,
+      "workflowSHA256": "8324747a37390aec7ba289777cff32d1ed2674159d1b1aecead1eeb7dee4c100"
+    },
+    "fixture": {
+      "commit": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "tree": "292123aeadd93176414b9276bd79718c1540d85a",
+      "prelaunchReadbacksVerified": true
+    },
+    "prelaunchEvidenceCommit": "bac8b549e9bf9cae35dd67c841624626a89faa50",
+    "decodedProviderLog": {
+      "bytes": 62289,
+      "sha256": "0dc61e64cac7b6b655cfc506f8cd49bccb21e880d5a5d1b8e26a680b6932a06b",
+      "independentProviderReadMatchesRetainedFile": true,
+      "retainedDirectoryMode": "0700",
+      "retainedFileMode": "0600",
+      "rawPublished": false
+    },
+    "sdkRecheck": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_SDK_PRELAUNCH_CHECK.json",
+      "bytes": 1941,
+      "sha256": "f8b15b5a2a89968891848c3485fa42e1c6fbab8e53efe63f01c4bff3f3123bd4"
+    },
+    "longCaller": {
+      "commit": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+      "tree": "58fdc3c87276ee28b6e7e3461ce3a3920a2ec779",
+      "parent": "e4f8e5538dbf191c20539fed3807aea03dc96c41",
+      "onlyChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+      "workflowBytes": 21777,
+      "workflowSHA256": "9a672056971fa4c0f457fa56e596194eafbd6f234f3dd3dfe1b1e11f3048b2b4",
+      "providerFullBytesMatchReviewedRenderedCandidate": true,
+      "fixtureUnchanged": true
+    }
+  },
+  "independentVerification": {
+    "terminalRunAndSingleJobAPIRead": true,
+    "logsFetchedOnlyAfterCompleted": true,
+    "artifactAPIRead": true,
+    "artifactCount": 0,
+    "providerCompletionObjects": 1,
+    "providerHelperImportObjects": 1,
+    "helperImportObjectWholeReceiptExact": true,
+    "completionTestAndFailureFieldsExact": true,
+    "allCuratedCompletionStageFieldsExact": true,
+    "eachSampleStatusOrdinalsProtocolGraphAndCleanupValidated": true,
+    "wholePublicReceiptPrivacyChecked": true,
+    "sdkDocumentPrivacyChecked": true,
+    "privateIdentityCredentialOrPathFieldsDetected": 0,
+    "newTestsOrCIExecutedByTerminalReviewer": false,
+    "SDKDownloadedByReviewer": false,
+    "sourceEdited": false
+  },
+  "actualMac": {
+    "qa": {
+      "total": 226,
+      "passed": 226,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 58.556
+    },
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.439
+    },
+    "finiteControl": {
+      "sourceCase": "test_helper_import_preflight.WorkloadTests.test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+      "singleValidMarker": true,
+      "status": "passed",
+      "mode": "fixed-iterations",
+      "iterations": 4,
+      "readyWorkers": 2,
+      "barriersReleased": 2,
+      "sameInheritedGroupVerified": true,
+      "MiBPerWorker": 1,
+      "diskWorkerMiB": 1,
+      "bothMeasurementsSufficient": true,
+      "bothWorkersNaturalZeroAndExactlyReaped": true,
+      "streamsClosed": true,
+      "diskRemoval": "removed-after-exact-reap",
+      "directoryRemoval": "removed-after-exact-reap",
+      "durationQualification": false
+    },
+    "completion": {
+      "status": "passed",
+      "firstFailure": null,
+      "monitorFailure": null,
+      "monitorDiagnostics": [],
+      "stages": [
+        {
+          "stage": "census-abi-compile",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "groupCleanup": "verified-gone",
+          "cleanupFailure": null,
+          "lastSampleComplete": true
+        },
+        {
+          "stage": "census-abi",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "groupCleanup": "verified-gone",
+          "cleanupFailure": null,
+          "lastSampleComplete": true
+        },
+        {
+          "stage": "system-version",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "groupCleanup": "verified-gone",
+          "cleanupFailure": null,
+          "lastSampleComplete": true
+        },
+        {
+          "stage": "completion-tests",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "groupCleanup": "verified-gone",
+          "cleanupFailure": null,
+          "lastSampleComplete": true
+        },
+        {
+          "stage": "failure-recording-tests",
+          "exitCode": 0,
+          "reason": null,
+          "failurePhase": null,
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0
+          },
+          "groupCleanup": "verified-gone",
+          "cleanupFailure": null,
+          "lastSampleComplete": true
+        }
+      ]
+    },
+    "timedComparison": {
+      "status": "passed",
+      "abiReusedAndValidated": true,
+      "firstFailure": null,
+      "monitorFailure": null,
+      "monitorDiagnostics": [],
+      "secondsRequested": 60,
+      "loadSeconds": 60.21452491000002,
+      "workers": 2,
+      "MiBPerWorker": 128,
+      "diskMiB": 64,
+      "readyWorkers": 2,
+      "barriersReleased": 2,
+      "samples": 24,
+      "pairsPerPhase": 6,
+      "phases": [
+        "idle",
+        "contended"
+      ],
+      "variants": [
+        "lean",
+        "support-preimport"
+      ],
+      "allSamplesMeasured": true,
+      "allSamplesSelfBindingVerified": true,
+      "timeouts": 0,
+      "unknownOrInvalidReplies": 0,
+      "allExactQueryChildrenReaped": true,
+      "allContendedLoadBeforeAndAfterChecksComplete": true,
+      "firstControlFailure": null,
+      "workerMeasurements": [
+        {
+          "cpuHashedBytes": 1287651328,
+          "cpuIterations": 307,
+          "diskInitialWriteBytes": 67108864,
+          "diskMiB": 64,
+          "diskReadBytes": 20602421248,
+          "diskReadIterations": 307,
+          "elapsedSeconds": 60.12359696499993,
+          "exitCode": 0,
+          "failurePresent": false,
+          "fdClosed": true,
+          "fsyncs": 308,
+          "index": 0,
+          "iterations": null,
+          "mode": "duration",
+          "schema": 1,
+          "seconds": 60,
+          "status": "passed",
+          "sufficient": true,
+          "touchedBytes": 134217728,
+          "workerMiB": 128
+        },
+        {
+          "cpuHashedBytes": 23588765696,
+          "cpuIterations": 5624,
+          "diskInitialWriteBytes": 0,
+          "diskMiB": 0,
+          "diskReadBytes": 0,
+          "diskReadIterations": 0,
+          "elapsedSeconds": 60.009961428,
+          "exitCode": 0,
+          "failurePresent": false,
+          "fdClosed": null,
+          "fsyncs": 0,
+          "index": 1,
+          "iterations": null,
+          "mode": "duration",
+          "schema": 1,
+          "seconds": 60,
+          "status": "passed",
+          "sufficient": true,
+          "touchedBytes": 134217728,
+          "workerMiB": 128
+        }
+      ],
+      "workerCleanup": [
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 0,
+          "reaped": true
+        },
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 1,
+          "reaped": true
+        }
+      ],
+      "temporaryDiskRemoval": {
+        "failure": null,
+        "status": "removed-after-exact-reap"
+      },
+      "stageCleanup": [
+        {
+          "stage": "helper-import-workload",
+          "exitCode": 0,
+          "groupCleanup": "verified-gone",
+          "leaderReap": {
+            "status": "reaped",
+            "exitCode": 0,
+            "errorType": "unavailable",
+            "errno": null
+          },
+          "cleanupFailurePresent": false,
+          "peakRSSMiB": 312,
+          "minimumFreeGiB": 108.01
+        }
+      ],
+      "perPhaseVariantStatistics": {
+        "idle/lean": {
+          "n": 6,
+          "allMeasured": true,
+          "timeout": 0,
+          "allReaped": true,
+          "min": 0.092265,
+          "median": 0.0955385,
+          "max": 0.101069,
+          "moduleCounts": [
+            102
+          ],
+          "moduleGraphs": [
+            "{\"ctypes\":true,\"darwin_activity\":true,\"http.client\":false,\"process_census\":true,\"qa_core\":true,\"socket\":false,\"ssl\":false,\"subprocess\":false,\"support\":false,\"urllib.request\":false}"
+          ],
+          "allSelfBound": true
+        },
+        "idle/support-preimport": {
+          "n": 6,
+          "allMeasured": true,
+          "timeout": 0,
+          "allReaped": true,
+          "min": 0.136673,
+          "median": 0.1423415,
+          "max": 0.149876,
+          "moduleCounts": [
+            157
+          ],
+          "moduleGraphs": [
+            "{\"ctypes\":true,\"darwin_activity\":true,\"http.client\":true,\"process_census\":true,\"qa_core\":true,\"socket\":true,\"ssl\":true,\"subprocess\":true,\"support\":true,\"urllib.request\":true}"
+          ],
+          "allSelfBound": true
+        },
+        "contended/lean": {
+          "n": 6,
+          "allMeasured": true,
+          "timeout": 0,
+          "allReaped": true,
+          "min": 0.091543,
+          "median": 0.122963,
+          "max": 0.150372,
+          "moduleCounts": [
+            102
+          ],
+          "moduleGraphs": [
+            "{\"ctypes\":true,\"darwin_activity\":true,\"http.client\":false,\"process_census\":true,\"qa_core\":true,\"socket\":false,\"ssl\":false,\"subprocess\":false,\"support\":false,\"urllib.request\":false}"
+          ],
+          "allSelfBound": true
+        },
+        "contended/support-preimport": {
+          "n": 6,
+          "allMeasured": true,
+          "timeout": 0,
+          "allReaped": true,
+          "min": 0.142279,
+          "median": 0.1827025,
+          "max": 0.215116,
+          "moduleCounts": [
+            157
+          ],
+          "moduleGraphs": [
+            "{\"ctypes\":true,\"darwin_activity\":true,\"http.client\":true,\"process_census\":true,\"qa_core\":true,\"socket\":true,\"ssl\":true,\"subprocess\":true,\"support\":true,\"urllib.request\":true}"
+          ],
+          "allSelfBound": true
+        }
+      }
+    },
+    "sdkUsedInShort": false,
+    "floorpBuildPerformed": false,
+    "newArtifacts": 0
+  },
+  "hypotheses": {
+    "H1": {
+      "statement": "Removing the unrelated support import graph reduces fresh-helper startup work.",
+      "assessment": "GRAPH_REDUCTION_CONFIRMED; WEAK_SUPPORT_FOR_STARTUP_COST_DIRECTION_IN_THIS_BOUNDED_CONTROL",
+      "evidence": "All twelve lean invocations loaded 102 modules and excluded support, urllib.request, http.client, socket, ssl and subprocess; all twelve synthetic support-preimport invocations loaded 157 modules and included them. Observed medians were lower for lean in both phases.",
+      "limits": "Six pairs per phase, fixed variant order, synthetic preimport wrapper and uncontrolled OS caches do not establish a historical causal explanation or a statistically general performance guarantee."
+    },
+    "H2": {
+      "statement": "Scheduling, filesystem, ABI/native binding or other production pressure can still exceed a fresh helper's communicate timeout.",
+      "assessment": "NOT_REJECTED",
+      "evidence": "No timeout occurred here, but the control uses two 128 MiB workers and one 64 MiB disk workload rather than the prior production pack state. Prior last-progress markers do not identify a blocked operation."
+    },
+    "recovery43InnerUnitCause": "UNKNOWN; finite control success does not recover the old inner failure",
+    "recovery42HelperTimeoutCause": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN"
+  },
+  "long45Route": {
+    "model": "trusted-single-purpose-runner-v1",
+    "branch": "codex/mac-native-checkpoint-recovery45-20261019",
+    "jobs": 2,
+    "serialDependency": "consumer needs producer",
+    "runner": "macos-15-intel",
+    "timeoutMinutesPerJob": 360,
+    "rawArtifactMaximum": 1,
+    "artifactBytesMaximum": 10737418240,
+    "retentionDays": 1,
+    "archive": false,
+    "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "fixedRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "fixedHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "sameReviewedFixture": true,
+    "communicateTimeoutSeconds": 3,
+    "attempts": 3,
+    "retryGapSeconds": 0.25,
+    "resourceOwnershipAndCleanupPolicyChanged": false,
+    "qualification": "Verified resumed build across two standard Intel jobs; freshObjdir=false, sameJob=false",
+    "preactivationAPI": {
+      "observedAtUTC": "2026-10-19T03:54:01Z",
+      "branchRefHTTPStatus": 404,
+      "recentRunsInspected": 100,
+      "existingBranchRuns": 0,
+      "activeOrQueuedOwnedRuns": 0,
+      "pointInTimeOnly": true
+    },
+    "SDK": {
+      "independentOfficialMetadataObservedAtUTC": "2026-10-19T03:53:27Z",
+      "endpointScope": "Source-run artifacts collection with per_page=100",
+      "returnedArtifacts": 34,
+      "artifact": 12133086104,
+      "name": "macos-sdk",
+      "expired": false,
+      "expiresAt": "2026-10-19T10:00:38Z",
+      "zipBytes": 105082683,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "sourceRun": 39117481043,
+      "sourceConclusion": "success",
+      "sourceStatus": "completed",
+      "sourceAttempt": 1,
+      "sourceHead": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "localRecheckProvenance": "Recorded in the bound safe SDK document; CRC/TAR/tree/JSON/plist checks were not rerun by terminal reviewer",
+      "tarBytes": 105567985,
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "canonicalTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "version": "26.5",
+      "acquisitionRule": "Each job must freshly verify official unexpired metadata, use the ordinary API and verify fixed ZIP/TAR/tree/version; HTTP or expiry failure stops. No future consumer availability guarantee is inferred.",
+      "verifiedLocalSDKUsableAfterExpiry": true,
+      "minimumSixHourLifetimeRule": false,
+      "retentionOrPermissionsChanged": false
+    },
+    "remainingChecks": [
+      "Immutable caller/render and source binding must remain the reviewed values at activation.",
+      "Retain the initial-created-push/before-zero/attempt-one guards and no overlapping owned validation run.",
+      "Repeat ordinary SDK metadata/content validation at each acquisition; do not retrieve expired content or bypass HTTP failures.",
+      "Producer must complete capture/readback/ready and raw service digest/size/retention checks; consumer must verify restore/effective configuration and full host/XUL/package/native outcomes.",
+      "Keep first failure, pre/post-cleanup evidence, recovered latest-sixteen monitor records and separate stopping monitorFailure; any unknown resource query remains unknown and fails closed."
+    ]
+  },
+  "limits": [
+    "Short success is evidence for this bounded real Mac run; it is not a production pack, checkpoint restore, full host/XUL, GUI or native authentication result.",
+    "Successful finite worker controls and actual timed measurements remain separate qualification classes.",
+    "The recorded final outer lastActivity may be a complete zero-process sample after group exit; this is not an ambient resource measurement.",
+    "The trusted runner model does not require or claim hostile same-UID immutability or an atomic filesystem snapshot.",
+    "Recovery39/40 read-only image experiments are not used as this checkpoint admission mechanism.",
+    "No new permission, authentication, runner provider, product signing, artifact retention or storage scope expansion is part of this route."
+  ]
+}

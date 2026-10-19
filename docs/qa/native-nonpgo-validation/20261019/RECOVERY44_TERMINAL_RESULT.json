@@ -1,0 +1,1905 @@
+{
+  "schema": 1,
+  "scope": "ACTUAL_INTEL_MAC_SHORT44_TERMINAL",
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39196405839,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39196405839",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-helper-import-recovery44-20261019",
+    "caller": "e4f8e5538dbf191c20539fed3807aea03dc96c41",
+    "fixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8"
+  },
+  "job": {
+    "id": 117880029443,
+    "name": "checkpoint-producer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T03:48:21Z",
+    "completedAt": "2026-10-19T03:51:01Z"
+  },
+  "prelaunchReviewCommit": "bac8b549e9bf9cae35dd67c841624626a89faa50",
+  "artifactCount": 0,
+  "completion": {
+    "status": "passed",
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "qaTests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 226,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 58.556,
+      "bytes": 46385,
+      "sha256": "1cb3ef07f3313f4542a78bd1ea3e9f9dd23234c1c5c43ec25646f45260a2569a",
+      "cases": [],
+      "nativeSelectionDiagnostics": [],
+      "heldChildBoundaryDiagnostics": [],
+      "helperWorkerControlDiagnostics": [
+        {
+          "schema": 1,
+          "case": "test_helper_import_preflight.WorkloadTests.test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+          "mode": "fixed-iterations",
+          "iterations": 4,
+          "status": "passed",
+          "readyWorkers": 2,
+          "barriersReleased": 2,
+          "sameGroupVerified": true,
+          "firstFailure": null,
+          "workerMeasurements": [
+            {
+              "index": 0,
+              "status": "passed",
+              "mode": "fixed-iterations",
+              "iterations": 4,
+              "sameGroupVerified": true,
+              "sufficient": true,
+              "fdClosed": true,
+              "failurePresent": false,
+              "exitCode": 0,
+              "workerMiB": 1,
+              "diskMiB": 1,
+              "touchedBytes": 1048576,
+              "cpuIterations": 4,
+              "cpuHashedBytes": 4194304,
+              "diskInitialWriteBytes": 1048576,
+              "diskReadIterations": 4,
+              "diskReadBytes": 4194304,
+              "fsyncs": 5,
+              "elapsedSeconds": 0.02486599299993486
+            },
+            {
+              "index": 1,
+              "status": "passed",
+              "mode": "fixed-iterations",
+              "iterations": 4,
+              "sameGroupVerified": true,
+              "sufficient": true,
+              "fdClosed": null,
+              "failurePresent": false,
+              "exitCode": 0,
+              "workerMiB": 1,
+              "diskMiB": 0,
+              "touchedBytes": 1048576,
+              "cpuIterations": 4,
+              "cpuHashedBytes": 4194304,
+              "diskInitialWriteBytes": 0,
+              "diskReadIterations": 0,
+              "diskReadBytes": 0,
+              "fsyncs": 0,
+              "elapsedSeconds": 0.012405828999931146
+            }
+          ],
+          "cleanup": [
+            {
+              "index": 0,
+              "reaped": true,
+              "exitCode": 0,
+              "failure": null,
+              "streamCloseFailed": false
+            },
+            {
+              "index": 1,
+              "reaped": true,
+              "exitCode": 0,
+              "failure": null,
+              "streamCloseFailed": false
+            }
+          ],
+          "temporaryDiskRemoval": {
+            "status": "removed-after-exact-reap",
+            "failure": null
+          },
+          "temporaryDirectoryCleanup": {
+            "status": "removed-after-exact-reap",
+            "failure": null
+          },
+          "valid": true
+        }
+      ]
+    },
+    "recordingTests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 0.439,
+      "bytes": 2757,
+      "sha256": "69197137d2c5ae40b0785d7fc11021d3e55ab35dc8ecff62402af72680b827d7",
+      "cases": [],
+      "nativeSelectionDiagnostics": [],
+      "heldChildBoundaryDiagnostics": [],
+      "helperWorkerControlDiagnostics": []
+    },
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 52,
+        "minimumFreeGiB": 108.08
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 108.08
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 108.08
+      },
+      {
+        "stage": "completion-tests",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 46385,
+        "peakRSSMiB": 96,
+        "minimumFreeGiB": 108.07
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 2757,
+        "peakRSSMiB": 14,
+        "minimumFreeGiB": 108.07
+      }
+    ]
+  },
+  "helperImportComparison": {
+    "schema": 1,
+    "status": "passed",
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "workload": {
+      "barriersReleased": 2,
+      "cleanup": [
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 0,
+          "reaped": true
+        },
+        {
+          "exitCode": 0,
+          "failure": null,
+          "index": 1,
+          "reaped": true
+        }
+      ],
+      "counts": {
+        "contended": {
+          "lean": {
+            "samples": 6,
+            "timeouts": 0,
+            "validMeasurements": 6
+          },
+          "support-preimport": {
+            "samples": 6,
+            "timeouts": 0,
+            "validMeasurements": 6
+          }
+        },
+        "idle": {
+          "lean": {
+            "samples": 6,
+            "timeouts": 0,
+            "validMeasurements": 6
+          },
+          "support-preimport": {
+            "samples": 6,
+            "timeouts": 0,
+            "validMeasurements": 6
+          }
+        }
+      },
+      "exactOldProgramReproduction": false,
+      "firstControlFailure": null,
+      "firstFailure": null,
+      "loadChecks": [
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 1,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 1,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 2,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 2,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 3,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 3,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 4,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 4,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 5,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 5,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 6,
+          "phase": "idle",
+          "variant": "lean"
+        },
+        {
+          "after": null,
+          "before": null,
+          "ordinal": 6,
+          "phase": "idle",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 1,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 1,
+          "phase": "contended",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 2,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 2,
+          "phase": "contended",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 3,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 3,
+          "phase": "contended",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 4,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 4,
+          "phase": "contended",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 5,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 5,
+          "phase": "contended",
+          "variant": "support-preimport"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 6,
+          "phase": "contended",
+          "variant": "lean"
+        },
+        {
+          "after": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "before": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "ordinal": 6,
+          "phase": "contended",
+          "variant": "support-preimport"
+        }
+      ],
+      "loadSeconds": 60.21452491000002,
+      "maximumDiskMiB": 64,
+      "originalCauseEstablished": false,
+      "osCacheFlushed": false,
+      "osCacheState": "unknown-cold-or-warm",
+      "pairsPerPhase": 6,
+      "pressureScope": "bounded-small-memory-and-disk-control",
+      "productionRSSReproduction": false,
+      "rawProcessMetadataPublished": false,
+      "readyWorkers": 2,
+      "samples": [
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.096941,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 1,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.144109,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 1,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.092265,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 2,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.140574,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 2,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.098489,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 3,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.138692,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 3,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.101069,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 4,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.144538,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 4,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.094136,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 5,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.149876,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 5,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.09339,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 6,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.136673,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": null,
+          "loadBefore": null,
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2
+          },
+          "ordinal": 6,
+          "phase": "idle",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.091543,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 1,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.142279,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 1,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.107845,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 2,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.159654,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 2,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.096608,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 3,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.154517,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 3,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.140828,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 4,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.214138,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 4,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.150372,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 5,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.205751,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 5,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.138081,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 102,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": false,
+              "process_census": true,
+              "qa_core": true,
+              "socket": false,
+              "ssl": false,
+              "subprocess": false,
+              "support": false,
+              "urllib.request": false
+            },
+            "schema": 1,
+            "variant": "lean"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 6,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "lean"
+        },
+        {
+          "cleanup": {
+            "authority": "subprocess.run-exact-child",
+            "failure": null,
+            "killedOnTimeout": false,
+            "reaped": true
+          },
+          "elapsedSeconds": 0.215116,
+          "failure": null,
+          "importGraph": {
+            "moduleCount": 157,
+            "modules": {
+              "ctypes": true,
+              "darwin_activity": true,
+              "http.client": true,
+              "process_census": true,
+              "qa_core": true,
+              "socket": true,
+              "ssl": true,
+              "subprocess": true,
+              "support": true,
+              "urllib.request": true
+            },
+            "schema": 1,
+            "variant": "support-preimport"
+          },
+          "loadAfter": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "loadBefore": {
+            "complete": true,
+            "expectedWorkers": 2,
+            "failure": null,
+            "runningWorkers": 2
+          },
+          "measurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+            "selfBindingVerified": true,
+            "snapshotBytes": 2592,
+            "snapshotEntries": 4
+          },
+          "ordinal": 6,
+          "phase": "contended",
+          "progress": {
+            "events": 11,
+            "phase": "group-decode"
+          },
+          "status": "measured",
+          "timeoutObserved": false,
+          "variant": "support-preimport"
+        }
+      ],
+      "samplingReserveSeconds": 8,
+      "seconds": 60,
+      "startupRepairEstablished": false,
+      "status": "passed",
+      "temporaryDiskRemoval": {
+        "failure": null,
+        "status": "removed-after-exact-reap"
+      },
+      "workerMeasurements": [
+        {
+          "cpuHashedBytes": 1287651328,
+          "cpuIterations": 307,
+          "diskInitialWriteBytes": 67108864,
+          "diskMiB": 64,
+          "diskReadBytes": 20602421248,
+          "diskReadIterations": 307,
+          "elapsedSeconds": 60.12359696499993,
+          "exitCode": 0,
+          "failurePresent": false,
+          "fdClosed": true,
+          "fsyncs": 308,
+          "index": 0,
+          "iterations": null,
+          "mode": "duration",
+          "schema": 1,
+          "seconds": 60,
+          "status": "passed",
+          "sufficient": true,
+          "touchedBytes": 134217728,
+          "workerMiB": 128
+        },
+        {
+          "cpuHashedBytes": 23588765696,
+          "cpuIterations": 5624,
+          "diskInitialWriteBytes": 0,
+          "diskMiB": 0,
+          "diskReadBytes": 0,
+          "diskReadIterations": 0,
+          "elapsedSeconds": 60.009961428,
+          "exitCode": 0,
+          "failurePresent": false,
+          "fdClosed": null,
+          "fsyncs": 0,
+          "index": 1,
+          "iterations": null,
+          "mode": "duration",
+          "schema": 1,
+          "seconds": 60,
+          "status": "passed",
+          "sufficient": true,
+          "touchedBytes": 134217728,
+          "workerMiB": 128
+        }
+      ],
+      "workerMiB": 128,
+      "workers": 2
+    },
+    "stages": [
+      {
+        "stage": "helper-import-workload",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "cleanupFailurePresent": false,
+        "peakRSSMiB": 312,
+        "minimumFreeGiB": 108.01,
+        "lastActivity": {
+          "unknownKinds": {},
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "stage": "other",
+          "sampleComplete": true,
+          "sampleAttempts": 1,
+          "processes": 0,
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "errorType": "unavailable",
+          "partialSamples": []
+        }
+      }
+    ],
+    "abiReused": true,
+    "sdkUsed": false,
+    "floorpBuildPerformed": false,
+    "newArtifactsStored": 0,
+    "originalCauseEstablished": false,
+    "startupRepairEstablished": false,
+    "exactOldProgramReproduction": false,
+    "productionRSSReproduction": false,
+    "osCacheState": "unknown-cold-or-warm",
+    "osCacheFlushed": false,
+    "helperTimeoutSeconds": 3,
+    "productionRetryPolicyChanged": false,
+    "resourceLimitsChanged": false,
+    "allCandidateAccountingChanged": false
+  },
+  "assessment": {
+    "shortDiagnostic": "PASSED",
+    "all24FreshHelperCallsMeasured": true,
+    "timeoutOrUnknownObserved": false,
+    "finiteUnitAndTimedQualificationSeparate": true,
+    "measuredImportGraph": "lean excludes support, urllib.request, http.client, socket, ssl and subprocess; support-preimport control includes them",
+    "original43UnitCause": "UNKNOWN",
+    "original42HelperTimeoutCause": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN",
+    "startupRepairEstablished": false,
+    "coldCacheOrProductionRSSReproduction": false,
+    "fullHostXULQualification": "NOT_TESTED",
+    "nativeAuthenticationQualification": "NOT_TESTED",
+    "next": "Independent terminal review, then approved long45 validation using the same immutable fixture and unchanged production limits."
+  },
+  "decodedProviderLog": {
+    "bytes": 62289,
+    "sha256": "0dc61e64cac7b6b655cfc506f8cd49bccb21e880d5a5d1b8e26a680b6932a06b",
+    "rawPublished": false
+  }
+}
