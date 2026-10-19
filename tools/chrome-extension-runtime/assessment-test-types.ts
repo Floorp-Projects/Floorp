@@ -142,6 +142,12 @@ export interface CorpusOperation<Snapshot = ContentSnapshot> {
   result?: string;
   primaryOperation?: string;
   primaryOperationResult: string;
+  nativeQualified?: boolean;
+  nativeEvidence?:
+    import("./native-test-types.ts").NativeCorpusBackgroundEvidence;
+  nativeCandidateIdentity?:
+    | import("./native-test-types.ts").NativeCorpusCandidateIdentity
+    | null;
   checks: string[];
   baseline?: Snapshot;
   transformed?: Snapshot;
@@ -202,8 +208,15 @@ export interface CorpusOperation<Snapshot = ContentSnapshot> {
 }
 export interface CorpusReport<Snapshot = ContentSnapshot> {
   stage: string;
+  nativeQualified?: boolean;
+  qualificationMode?: "candidate" | "historical";
   reference?: ChromeReference;
-  runtime?: { version: string; buildId: string; nativeWorkerPolicy: boolean };
+  runtime?: {
+    version: string;
+    buildId: string;
+    nativeWorkerPolicy: boolean;
+    workerWebIDLCompiled?: boolean;
+  };
   fixture: unknown;
   extensions: CorpusOperation<Snapshot>[];
   output: string;
@@ -249,7 +262,6 @@ export interface NativeView {
 export interface NativeExtensionHandle
   extends
     Omit<import("./native-test-types.ts").NativeCorpusExtension, "views"> {
-  manifest: { background?: unknown };
   views: Set<NativeView>;
 }
 export interface AssessmentExtensionParent {

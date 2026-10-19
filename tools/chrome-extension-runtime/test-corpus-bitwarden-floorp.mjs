@@ -1,19 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 import { invokeNativeCorpusAction } from "./corpus-native-action.mjs";
-import { unzipSync } from "fflate/browser";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
 );
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } =
-  /** @type {{ExtensionParent:import("./native-test-types.ts").NativeCorpusExtensionParent}} */ (ChromeUtils
-    .importESModule(
-      "resource://gre/modules/ExtensionParent.sys.mjs",
-    ));
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -22,13 +12,6 @@ const { setTimeout } = ChromeUtils.importESModule(
 );
 /** @param {number} ms */
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-/** @param {Uint8Array} bytes */
-const digest = async (bytes) =>
-  [
-    ...new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)),
-    ),
-  ].map((b) => b.toString(16).padStart(2, "0")).join("");
 export async function runAllTests() {
   const root = Services.env.get("FLOORP_CORPUS_ROOT");
   const output = Services.env.get("FLOORP_BITWARDEN_OUTPUT");
@@ -45,9 +28,13 @@ export async function runAllTests() {
   credentials.vaultURL = vault.url;
   const run = PathUtils.join(output, "floorp-primary");
   await IOUtils.makeDirectory(run);
-  /** @type {import("./sidepanel-test-types.ts").VaultReport & {fillMatches?:{username:boolean;password:boolean}}} */
+  /** @type {import("./sidepanel-test-types.ts").BitwardenFloorpReport} */
   const report = {
+    stage: "actual-Bitwarden-primary-operation",
     passed: false,
+    nativeQualified: false,
+    primaryOperationResult: "not-run",
+    cleanupCompleted: false,
     runtime: {
       version: Services.appinfo.version,
       buildId: Services.appinfo.appBuildID,
@@ -112,6 +99,9 @@ export async function runAllTests() {
   let author;
   /** @type {import("./native-test-types.ts").NativeCorpusBrowser|undefined} */
   let popup;
+  let qualifyAfterCleanup = false;
+  /** @type {string|undefined} */
+  let cleanupFailure;
   /** @template T @param {import("./native-test-types.ts").NativeCorpusBrowser|undefined} browser @param {string} name @param {object} [data] @returns {Promise<T>} */
   const query = (browser, name, data = {}) => {
     if (!browser?.browsingContext?.currentWindowGlobal) {
@@ -160,73 +150,28 @@ export async function runAllTests() {
         ));
     const frozen = corpus.extensions.find((record) => record.id === id);
     if (!frozen?.version) throw Error("Frozen Bitwarden package missing");
-    const bytes = await IOUtils.read(
-      PathUtils.join(
-        root,
-        "_dist",
-        "chrome-extension-corpus",
-        "packages",
-        `${id}.crx`,
-      ),
-    );
-    if (await digest(bytes) !== frozen.packageSha256) {
-      throw Error("Frozen Bitwarden package mismatch");
-    }
-    const conversion = await new CRXConverterClass().convert(
-      Uint8Array.from(bytes).buffer,
-      id,
-      {
-        id,
-        name: frozen.name,
-        version: frozen.version,
-      },
-    );
-    if (!conversion.success || !conversion.xpiData) {
-      throw Error(conversion.error?.message || "Conversion failed");
-    }
+    const installed = await installFrozenCorpus(root, frozen, run);
+    addon = installed.addon;
+    extension = installed.extension;
     report.extension = {
       id,
+      name: frozen.name,
       version: frozen.version,
       packageSha256: frozen.packageSha256,
-      warnings: conversion.warnings,
-      background: conversion.report?.background,
+      primaryOperation: frozen.primaryOperation,
+      primaryOperationResult: "not-run",
+      nativeQualified: false,
+      warnings: installed.warnings,
+      background: installed.background,
+      sourceIntegrity: installed.sourceIntegrity,
+      nativeEvidence: installed.nativeEvidence,
+      conversion: installed.conversion,
     };
-    const scripts = [];
-    for (
-      const [name, bytes] of Object.entries(
-        unzipSync(new Uint8Array(conversion.xpiData)),
-      )
-    ) {
-      if (!/\.(?:js|mjs|cjs)$/i.test(name)) continue;
-      const hash = await digest(bytes);
-      if (
-        hash !==
-          await digest(
-            await IOUtils.read(
-              PathUtils.join(
-                root,
-                "_dist",
-                "chrome-extension-corpus",
-                "chrome-unpacked",
-                id,
-                ...name.split("/"),
-              ),
-            ),
-          )
-      ) throw Error("Vendor script changed: " + name);
-      scripts.push(name + ":" + hash);
-    }
-    report.unchangedScriptCount = scripts.length;
-    report.unchangedScriptsSha256 = await digest(
-      new TextEncoder().encode(scripts.sort().join("\n")),
-    );
-    const xpi = PathUtils.join(run, "bitwarden.xpi");
-    await IOUtils.write(xpi, new Uint8Array(conversion.xpiData));
-    addon = await AddonManager.installTemporaryAddon(new FileUtils.File(xpi));
-    extension = ExtensionParent.GlobalManager.extensionMap.get(
-      id + "@chromium-extension",
-    );
-    if (!extension) throw Error("Native installed Bitwarden missing");
+    report.sourceIntegrity = installed.sourceIntegrity;
+    report.nativeEvidence = installed.nativeEvidence;
+    report.unchangedScriptCount = installed.unchangedScriptCount;
+    report.unchangedScriptsSha256 = installed.unchangedScriptsSha256;
+    report.primaryOperationResult = "failed-operation";
     await pause(6500);
     for (const tab of [...window.gBrowser.tabs]) {
       if (!tabsBefore.has(tab)) {
@@ -302,8 +247,12 @@ export async function runAllTests() {
               username: values.username === credentials.username,
               password: values.password === credentials.password,
             };
-            report.passed = report.fillMatches.username &&
-              report.fillMatches.password;
+            report.passed = values.secure === true &&
+              author.linkedBrowser.currentURI.spec === authoredURL &&
+              report.fillMatches.username && report.fillMatches.password;
+            report.primaryOperationResult = report.passed
+              ? "passed"
+              : "failed-operation";
           } else if (command.op !== "snapshot") throw Error("Unknown command");
           await pause(command.waitMs || 250);
           report.steps.push(command);
@@ -322,24 +271,70 @@ export async function runAllTests() {
     if (!report.passed) {
       throw Error("Actual Bitwarden primary operation was not completed");
     }
-    return report;
+    qualifyAfterCleanup = installed.nativeEvidence.candidateIdentityVerified &&
+      installed.nativeEvidence.nativeBackgroundVerified;
   } catch (error) {
     report.error = String(error);
+    report.passed = false;
+    report.primaryOperationResult = report.primaryOperationResult === "not-run"
+      ? "failed-runtime"
+      : "failed-operation";
     throw error;
   } finally {
-    await save();
-    await addon?.uninstall();
-    for (const tab of [...window.gBrowser.tabs]) {
-      if (!tabsBefore.has(tab)) {
-        window.gBrowser.removeTab(tab, { skipPermitUnload: true });
+    /** @type {string[]} */
+    const cleanupErrors = [];
+    /** @param {string} label @param {()=>Promise<unknown>|unknown} action */
+    const cleanup = async (label, action) => {
+      try {
+        await action();
+      } catch (error) {
+        cleanupErrors.push(label + ": " + String(error));
       }
+    };
+    await cleanup("uninstall", () => addon?.uninstall());
+    await cleanup("tabs", () => {
+      for (const tab of [...window.gBrowser.tabs]) {
+        if (!tabsBefore.has(tab)) {
+          window.gBrowser.removeTab(tab, { skipPermitUnload: true });
+        }
+      }
+    });
+    await cleanup(
+      "proxy",
+      () => Services.prefs.setIntPref("network.proxy.type", originalProxy),
+    );
+    await cleanup(
+      "actor",
+      () => ChromeUtils.unregisterWindowActor("CorpusBitwarden"),
+    );
+    await cleanup(
+      "resource",
+      () =>
+        /** @type {{setSubstitution(name:string,uri:nsIURI|null):void}} */ (resource)
+          .setSubstitution("floorp-bitwarden-tests", null),
+    );
+    await cleanup("dns", () => {
+      if (originalDns) {
+        Services.prefs.setStringPref("network.dns.localDomains", originalDns);
+      } else Services.prefs.clearUserPref("network.dns.localDomains");
+    });
+    report.cleanupCompleted = cleanupErrors.length === 0;
+    if (cleanupErrors.length) {
+      report.cleanupErrors = cleanupErrors;
+      report.passed = false;
+      report.primaryOperationResult = "failed-cleanup";
     }
-    Services.prefs.setIntPref("network.proxy.type", originalProxy);
-    ChromeUtils.unregisterWindowActor("CorpusBitwarden");
-    /** @type {{setSubstitution(name:string,uri:nsIURI|null):void}} */ (resource)
-      .setSubstitution("floorp-bitwarden-tests", null);
-    if (originalDns) {
-      Services.prefs.setStringPref("network.dns.localDomains", originalDns);
-    } else Services.prefs.clearUserPref("network.dns.localDomains");
+    report.nativeQualified = report.passed && report.cleanupCompleted &&
+      qualifyAfterCleanup;
+    if (report.extension) {
+      report.extension.primaryOperationResult = report.primaryOperationResult;
+      report.extension.nativeQualified = report.nativeQualified;
+    }
+    await save();
+    if (cleanupErrors.length) cleanupFailure = cleanupErrors.join("; ");
   }
+  if (cleanupFailure) {
+    throw Error("Bitwarden cleanup failed: " + cleanupFailure);
+  }
+  return report;
 }

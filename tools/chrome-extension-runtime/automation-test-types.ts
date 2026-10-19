@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { CDPResult } from "./cdp-types.ts";
+import type {
+  FrozenCorpusScriptEvidence,
+  NativeCorpusBackgroundEvidence,
+} from "./native-test-types.ts";
 export interface VisionMacro {
   Name: string;
   CreationDate: string;
@@ -71,6 +75,8 @@ export interface AutomationItem {
   result: string;
   unchangedScriptCount?: number;
   unchangedScriptsSha256?: string;
+  sourceIntegrity?: FrozenCorpusScriptEvidence;
+  nativeEvidence?: NativeCorpusBackgroundEvidence;
   warnings?: string[];
   configuration?: unknown;
   macro?: VisionMacro;

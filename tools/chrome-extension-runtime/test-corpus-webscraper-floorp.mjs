@@ -102,6 +102,8 @@ export async function runWebScraper() {
     Object.assign(item, {
       unchangedScriptCount: installed.unchangedScriptCount,
       unchangedScriptsSha256: installed.unchangedScriptsSha256,
+      sourceIntegrity: installed.sourceIntegrity,
+      nativeEvidence: installed.nativeEvidence,
       warnings: installed.warnings,
     });
     const extension = ExtensionParent.GlobalManager.extensionMap.get(

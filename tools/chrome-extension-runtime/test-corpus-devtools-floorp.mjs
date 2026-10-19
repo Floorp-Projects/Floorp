@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-/** @import {Truthy, NativeBinaryInput, CorpusLock, CorpusReport, CorpusOperation, DevtoolsSnapshot, NativeWindowHandle, NativeBrowserHandle, ActorClickData, DevtoolsActorResponses, AssessmentExtensionParentModule, ResourceProtocolHandler} from "./assessment-test-types.ts" */
-import { unzipSync } from "fflate/browser";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+/** @import {Truthy, CorpusLock, CorpusReport, CorpusOperation, DevtoolsSnapshot, NativeWindowHandle, NativeBrowserHandle, ActorClickData, DevtoolsActorResponses, ResourceProtocolHandler} from "./assessment-test-types.ts" */
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 import { attachNativeFloorpDevtools } from "./floorp-devtools-panel.mjs";
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } =
-  /** @type {AssessmentExtensionParentModule} */ (ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionParent.sys.mjs",
-  ));
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -49,15 +41,6 @@ async function query(browser, name, data) {
     clearTimeout(timer);
   }
 }
-/** @param {NativeBinaryInput} bytes */
-const digest = async (bytes) =>
-  [
-    ...new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)),
-    ),
-  ].map(
-    (byte) => byte.toString(16).padStart(2, "0"),
-  ).join("");
 export async function runAllTests() {
   const root = Services.env.get("FLOORP_CORPUS_ROOT"),
     output = Services.env.get("FLOORP_CORPUS_OUTPUT"),
@@ -77,11 +60,19 @@ export async function runAllTests() {
   );
   /** @type {CorpusReport<DevtoolsSnapshot>} */
   const report = {
+    nativeQualified: false,
+    qualificationMode:
+      Services.env.get("FLOORP_TEST_REQUIRE_NATIVE_CORPUS") === "1"
+        ? "candidate"
+        : "historical",
     stage: "actual-package-devtools-primary-operation",
     runtime: {
       version: Services.appinfo.version,
       buildId: Services.appinfo.appBuildID,
       nativeWorkerPolicy: WebExtensionPolicy.backgroundServiceWorkerEnabled,
+      workerWebIDLCompiled: ChromeUtils.importESModule(
+        "resource://gre/modules/AppConstants.sys.mjs",
+      ).AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === true,
     },
     fixture: JSON.parse(
       Services.env.get("FLOORP_CORPUS_FIXTURE_METADATA") || "{}",
@@ -126,6 +117,7 @@ export async function runAllTests() {
       /** @type {CorpusOperation<DevtoolsSnapshot>} */
       /** @type {CorpusOperation<DevtoolsSnapshot>} */
       const item = {
+        nativeQualified: false,
         id: record.id,
         name: record.name,
         version: record.version,
@@ -142,77 +134,20 @@ export async function runAllTests() {
         if (record.status !== "frozen") {
           throw Error("Original signed extension is not frozen");
         }
-        const bytes = await IOUtils.read(
-          PathUtils.join(
-            root,
-            "_dist",
-            "chrome-extension-corpus",
-            "packages",
-            record.id + ".crx",
-          ),
-        );
-        if (await digest(bytes) !== record.packageSha256) {
-          throw Error("Frozen signed CRX digest differs");
-        }
-        const conversion = await new CRXConverterClass().convert(
-          bytes.slice().buffer,
-          record.id,
-          { id: record.id, name: record.name, version: record.version },
-        );
-        item.conversion = conversion.report;
-        item.warnings = conversion.warnings;
-        if (!conversion.success || !conversion.xpiData) {
-          throw Error(
-            conversion.error?.message || "Production conversion failed",
-          );
-        }
-        const data = new DataView(
-            bytes.slice().buffer,
-            bytes.byteOffset,
-            bytes.byteLength,
-          ),
-          version = data.getUint32(4, true);
-        const offset = version === 3
-          ? 12 + data.getUint32(8, true)
-          : version === 2
-          ? 16 + data.getUint32(8, true) + data.getUint32(12, true)
-          : -1;
-        if (offset < 12 || offset >= bytes.length) {
-          throw Error("Invalid CRX archive offset");
-        }
-        /** @param {string} name */
-        const script = (name) => /\.(?:js|mjs|cjs)$/i.test(name);
-        const originals = unzipSync(bytes.subarray(offset), {
-            filter: (entry) => script(entry.name),
-          }),
-          converted = unzipSync(new Uint8Array(conversion.xpiData));
-        const names = Object.keys(originals).sort();
-        if (
-          JSON.stringify(names) !==
-            JSON.stringify(Object.keys(converted).filter(script).sort())
-        ) throw Error("Converted script inventory differs from signed CRX");
-        const hashes = [];
-        for (const name of names) {
-          const hash = await digest(originals[name]);
-          if (hash !== await digest(converted[name])) {
-            throw Error("Signed script changed: " + name);
-          }
-          hashes.push(name + ":" + hash);
-        }
-        item.unchangedScriptCount = names.length;
-        item.unchangedScriptsSha256 = await digest(
-          new TextEncoder().encode(hashes.join("\n")),
-        );
-        const path = PathUtils.join(output, record.id + ".xpi");
-        await IOUtils.write(path, new Uint8Array(conversion.xpiData));
-        addon = await AddonManager.installTemporaryAddon(
-          new FileUtils.File(path),
-        );
-        const extension = ExtensionParent.GlobalManager.extensionMap.get(
-          record.id + "@chromium-extension",
-        );
-        if (!extension) throw Error("Actual installed extension is missing");
-        item.background = extension.manifest.background;
+        const installed = await installFrozenCorpus(root, record, output);
+        addon = installed.addon;
+        const extension = installed.extension;
+        Object.assign(item, {
+          unchangedScriptCount: installed.unchangedScriptCount,
+          unchangedScriptsSha256: installed.unchangedScriptsSha256,
+          sourceIntegrity: installed.sourceIntegrity,
+          nativeEvidence: installed.nativeEvidence,
+          nativeCandidateIdentity: installed.nativeEvidence.candidateIdentity ??
+            null,
+          conversion: installed.conversion,
+          warnings: installed.warnings,
+          background: installed.background,
+        });
         const tab = win.gBrowser.addTab(fixture, {
           triggeringPrincipal: principal,
         });
@@ -320,6 +255,9 @@ export async function runAllTests() {
         for (const tab of [...win.gBrowser.tabs]) {
           if (!originalTabs.has(tab)) win.gBrowser.removeTab(tab);
         }
+        item.nativeQualified = item.primaryOperationResult === "passed" &&
+          item.nativeEvidence?.candidateIdentityVerified === true &&
+          item.nativeEvidence.nativeBackgroundVerified === true;
         await save();
       }
     }
@@ -328,6 +266,9 @@ export async function runAllTests() {
     ChromeUtils.unregisterWindowActor("CorpusDevtools");
     handler.setSubstitution("floorp-devtools-corpus", null);
   }
+  report.nativeQualified = report.extensions.length > 0 &&
+    report.extensions.every((item) => item.nativeQualified === true);
+  await save();
   if (failed) {
     throw Error(
       "Actual frozen DevTools primary operation failed; see " + output,

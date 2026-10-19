@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-/** @import {Truthy, NativeBinaryInput, CorpusLock, CorpusReport, CorpusOperation, MediaSnapshot, NativeWindowHandle, NativeTabHandle, ActorClickData, MediaActorResponses, AssessmentExtensionParentModule, ResourceProtocolHandler, MediaFixture} from "./assessment-test-types.ts" */
-import { unzipSync } from "fflate/browser";
+/** @import {Truthy, CorpusLock, CorpusReport, CorpusOperation, MediaSnapshot, NativeWindowHandle, NativeTabHandle, ActorClickData, MediaActorResponses, ResourceProtocolHandler, MediaFixture} from "./assessment-test-types.ts" */
 import { runSponsorFloorp } from "./corpus-sponsor-floorp.mjs";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } =
-  /** @type {AssessmentExtensionParentModule} */ (ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionParent.sys.mjs",
-  ));
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -28,15 +20,6 @@ async function until(read, label) {
   }
   throw Error("Timed out waiting for " + label);
 }
-/** @param {NativeBinaryInput} bytes */
-const digest = async (bytes) =>
-  [
-    ...new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new Uint8Array(bytes)),
-    ),
-  ].map(
-    (byte) => byte.toString(16).padStart(2, "0"),
-  ).join("");
 export async function runAllTests() {
   const output = Services.env.get("FLOORP_MEDIA_CORPUS_OUTPUT"),
     root = Services.env.get("FLOORP_CORPUS_ROOT"),
@@ -57,11 +40,19 @@ export async function runAllTests() {
     ));
   /** @type {CorpusReport<MediaSnapshot>} */
   const report = {
+    nativeQualified: false,
+    qualificationMode:
+      Services.env.get("FLOORP_TEST_REQUIRE_NATIVE_CORPUS") === "1"
+        ? "candidate"
+        : "historical",
     stage: "actual-package-primary-operation",
     runtime: {
       version: Services.appinfo.version,
       buildId: Services.appinfo.appBuildID,
       nativeWorkerPolicy: WebExtensionPolicy.backgroundServiceWorkerEnabled,
+      workerWebIDLCompiled: ChromeUtils.importESModule(
+        "resource://gre/modules/AppConstants.sys.mjs",
+      ).AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === true,
     },
     fixture,
     extensions: [],
@@ -172,6 +163,7 @@ export async function runAllTests() {
       /** @type {CorpusOperation<MediaSnapshot>} */
       /** @type {CorpusOperation<MediaSnapshot>} */
       const item = {
+        nativeQualified: false,
         id: record.id,
         name: record.name,
         version: record.version,
@@ -201,66 +193,20 @@ export async function runAllTests() {
           item.primaryOperationResult = "harness-fixture-unavailable";
           throw error;
         }
-        const bytes = await IOUtils.read(
-          PathUtils.join(
-            root,
-            "_dist",
-            "chrome-extension-corpus",
-            "packages",
-            record.id + ".crx",
-          ),
-        );
-        if (await digest(bytes) !== record.packageSha256) {
-          throw Error("Frozen signed package digest mismatch");
-        }
-        const conversion = await new CRXConverterClass().convert(
-          bytes.slice().buffer,
-          record.id,
-          { id: record.id, name: record.name, version: record.version },
-        );
-        item.conversion = conversion.report;
-        item.warnings = conversion.warnings;
-        if (!conversion.success || !conversion.xpiData) {
-          throw Error(
-            conversion.error?.message || "Production signed conversion failed",
-          );
-        }
-        const scripts = [];
-        for (
-          const [name, data] of Object.entries(
-            unzipSync(new Uint8Array(conversion.xpiData)),
-          ).filter(([name]) => /\.(?:js|mjs|cjs)$/i.test(name))
-        ) {
-          const original = await IOUtils.read(
-            PathUtils.join(
-              root,
-              "_dist",
-              "chrome-extension-corpus",
-              "chrome-unpacked",
-              record.id,
-              ...name.split("/"),
-            ),
-          );
-          const hash = await digest(data);
-          if (hash !== await digest(original)) {
-            throw Error("Signed script changed " + name);
-          }
-          scripts.push(name + ":" + hash);
-        }
-        item.unchangedScriptCount = scripts.length;
-        item.unchangedScriptsSha256 = await digest(
-          new TextEncoder().encode(scripts.sort().join("\n")),
-        );
-        const xpi = PathUtils.join(output, record.id + ".xpi");
-        await IOUtils.write(xpi, new Uint8Array(conversion.xpiData));
-        addon = await AddonManager.installTemporaryAddon(
-          new FileUtils.File(xpi),
-        );
-        const extension = ExtensionParent.GlobalManager.extensionMap.get(
-          record.id + "@chromium-extension",
-        );
-        if (!extension) throw Error("Actual installed extension is missing");
-        item.background = extension.manifest.background;
+        const installed = await installFrozenCorpus(root, record, output);
+        addon = installed.addon;
+        const extension = installed.extension;
+        Object.assign(item, {
+          unchangedScriptCount: installed.unchangedScriptCount,
+          unchangedScriptsSha256: installed.unchangedScriptsSha256,
+          sourceIntegrity: installed.sourceIntegrity,
+          nativeEvidence: installed.nativeEvidence,
+          nativeCandidateIdentity: installed.nativeEvidence.candidateIdentity ??
+            null,
+          conversion: installed.conversion,
+          warnings: installed.warnings,
+          background: installed.background,
+        });
         if (["Enhancer for YouTube", "SponsorBlock"].includes(record.name)) {
           await pause(500);
           item.onboardingTabs = [...win.gBrowser.tabs].filter((candidate) =>
@@ -364,6 +310,9 @@ export async function runAllTests() {
             win.gBrowser.removeTab(tab, { skipPermitUnload: true });
           }
         }
+        item.nativeQualified = item.primaryOperationResult === "passed" &&
+          item.nativeEvidence?.candidateIdentityVerified === true &&
+          item.nativeEvidence.nativeBackgroundVerified === true;
         await save();
       }
     }
@@ -374,6 +323,9 @@ export async function runAllTests() {
     resource.setSubstitution("floorp-media-corpus", null);
     await save();
   }
+  report.nativeQualified = report.extensions.length > 0 &&
+    report.extensions.every((item) => item.nativeQualified === true);
+  await save();
   if (
     !report.extensions.length ||
     report.extensions.some((item) => item.primaryOperationResult !== "passed")

@@ -136,6 +136,8 @@ export async function runAllTests() {
     addon = installed.addon;
     report.extension.unchangedScriptCount = installed.unchangedScriptCount;
     report.extension.unchangedScriptsSha256 = installed.unchangedScriptsSha256;
+    report.extension.sourceIntegrity = installed.sourceIntegrity;
+    report.extension.nativeEvidence = installed.nativeEvidence;
     report.extension.backgroundSelection = installed.background;
     const extension = ExtensionParent.GlobalManager.extensionMap.get(
       id + "@chromium-extension",

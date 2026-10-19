@@ -131,6 +131,8 @@ export async function runAllTests() {
     addon = installed.addon;
     report.extension.unchangedScriptCount = installed.unchangedScriptCount;
     report.extension.unchangedScriptsSha256 = installed.unchangedScriptsSha256;
+    report.extension.sourceIntegrity = installed.sourceIntegrity;
+    report.extension.nativeEvidence = installed.nativeEvidence;
     const ordinary = ExtensionParent.GlobalManager.extensionMap.get(
       "authored-lifecycle@floorp.test",
     );

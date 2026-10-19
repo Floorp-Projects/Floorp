@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
-/** @import {Truthy, NativeBinaryInput, CorpusLock, CorpusReport, CorpusOperation, ContentSnapshot, NativeWindowHandle, NativeTabHandle, ActorHandle, ActorClickData, ContentActorResponses, AssessmentExtensionParentModule, ResourceProtocolHandler} from "./assessment-test-types.ts" */
-import { unzipSync } from "fflate/browser";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+/** @import {Truthy, NativeBinaryInput, CorpusLock, CorpusReport, CorpusOperation, ContentSnapshot, NativeWindowHandle, NativeTabHandle, ActorHandle, ActorClickData, ContentActorResponses, ResourceProtocolHandler} from "./assessment-test-types.ts" */
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } =
-  /** @type {AssessmentExtensionParentModule} */ (ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionParent.sys.mjs",
-  ));
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
 );
@@ -75,11 +67,19 @@ export async function runAllTests() {
   );
   /** @type {CorpusReport<ContentSnapshot>} */
   const report = {
+    nativeQualified: false,
+    qualificationMode:
+      Services.env.get("FLOORP_TEST_REQUIRE_NATIVE_CORPUS") === "1"
+        ? "candidate"
+        : "historical",
     stage: "actual-package-primary-operation",
     runtime: {
       version: Services.appinfo.version,
       buildId: Services.appinfo.appBuildID,
       nativeWorkerPolicy: WebExtensionPolicy.backgroundServiceWorkerEnabled,
+      workerWebIDLCompiled: ChromeUtils.importESModule(
+        "resource://gre/modules/AppConstants.sys.mjs",
+      ).AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === true,
     },
     fixture: JSON.parse(
       Services.env.get("FLOORP_CORPUS_FIXTURE_METADATA") || "{}",
@@ -126,7 +126,6 @@ export async function runAllTests() {
     /** @type {NativeWindowHandle} */ (/** @type {unknown} */ (Services.wm
       .getMostRecentWindow("navigator:browser")));
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
-  const converter = new CRXConverterClass();
   /** @param {NativeTabHandle} tab @returns {Promise<ContentSnapshot>} */
   const snapshot = (tab) =>
     query(
@@ -144,6 +143,7 @@ export async function runAllTests() {
       /** @type {CorpusOperation<ContentSnapshot>} */
       /** @type {CorpusOperation<ContentSnapshot>} */
       const item = {
+        nativeQualified: false,
         id: record.id,
         name: record.name,
         version: record.version,
@@ -172,71 +172,20 @@ export async function runAllTests() {
           item.primaryOperationResult = "harness-fixture-unavailable";
           throw error;
         }
-        const bytes = await IOUtils.read(
-          PathUtils.join(
-            root,
-            "_dist",
-            "chrome-extension-corpus",
-            "packages",
-            record.id + ".crx",
-          ),
-        );
-        if (await digest(bytes) !== record.packageSha256) {
-          throw Error("Frozen signed CRX digest mismatch");
-        }
-        const conversion = await converter.convert(
-          bytes.slice().buffer,
-          record.id,
-          {
-            id: record.id,
-            name: record.name,
-            version: record.version,
-          },
-        );
-        item.warnings = conversion.warnings;
-        item.conversion = conversion.report;
-        if (!conversion.success || !conversion.xpiData) {
-          throw Error(
-            conversion.error?.message || "Production conversion failed",
-          );
-        }
-        const files = unzipSync(new Uint8Array(conversion.xpiData));
-        const unchanged = [];
-        for (
-          const [name, data] of Object.entries(files).filter(([name]) =>
-            /\.(?:js|mjs|cjs)$/i.test(name)
-          )
-        ) {
-          const original = await IOUtils.read(
-            PathUtils.join(
-              root,
-              "_dist",
-              "chrome-extension-corpus",
-              "chrome-unpacked",
-              record.id,
-              ...name.split("/"),
-            ),
-          );
-          const actual = await digest(data);
-          if (actual !== await digest(original)) {
-            throw Error("Signed script changed in conversion: " + name);
-          }
-          unchanged.push(name + ":" + actual);
-        }
-        item.unchangedScriptCount = unchanged.length;
-        item.unchangedScriptsSha256 = await digest(
-          new TextEncoder().encode(unchanged.sort().join("\n")),
-        );
-        const xpi = PathUtils.join(output, record.id + ".xpi");
-        await IOUtils.write(xpi, new Uint8Array(conversion.xpiData));
-        addon = await AddonManager.installTemporaryAddon(
-          new FileUtils.File(xpi),
-        );
-        const extension = ExtensionParent.GlobalManager.extensionMap.get(
-          record.id + "@chromium-extension",
-        );
-        if (!extension) throw Error("Installed native extension missing");
-        item.background = extension.manifest.background;
+        const installed = await installFrozenCorpus(root, record, output);
+        addon = installed.addon;
+        const extension = installed.extension;
+        Object.assign(item, {
+          unchangedScriptCount: installed.unchangedScriptCount,
+          unchangedScriptsSha256: installed.unchangedScriptsSha256,
+          sourceIntegrity: installed.sourceIntegrity,
+          nativeEvidence: installed.nativeEvidence,
+          nativeCandidateIdentity: installed.nativeEvidence.candidateIdentity ??
+            null,
+          conversion: installed.conversion,
+          warnings: installed.warnings,
+          background: installed.background,
+        });
         const baseline = item.baseline;
         if (!baseline) throw Error("Authored page baseline is missing");
         if (record.name === "Stylus") {
@@ -417,6 +366,9 @@ export async function runAllTests() {
             win.gBrowser.removeTab(tab, { skipPermitUnload: true });
           }
         }
+        item.nativeQualified = item.primaryOperationResult === "passed" &&
+          item.nativeEvidence?.candidateIdentityVerified === true &&
+          item.nativeEvidence.nativeBackgroundVerified === true;
         await save();
       }
     }
@@ -426,6 +378,9 @@ export async function runAllTests() {
     resource.setSubstitution("floorp-content-corpus", null);
     await save();
   }
+  report.nativeQualified = report.extensions.length > 0 &&
+    report.extensions.every((item) => item.nativeQualified === true);
+  await save();
   console.log(
     "[Content corpus] REPORT " + PathUtils.join(output, "report.json"),
   );

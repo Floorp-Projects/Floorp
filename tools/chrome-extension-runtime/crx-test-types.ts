@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
+import type {
+  FrozenCorpusScriptEvidence,
+  NativeCorpusBackgroundEvidence,
+} from "./native-test-types.ts";
 /** Concrete wire, UI and evidence records used by CRX/native-host qualifications. */
 export interface ChromeReference {
   browserVersion: string;
@@ -114,6 +118,8 @@ export interface MediaItem {
   input?: ClickEvidence[];
   unchangedScriptCount?: number;
   unchangedScriptsSha256?: string;
+  sourceIntegrity?: FrozenCorpusScriptEvidence;
+  nativeEvidence?: NativeCorpusBackgroundEvidence;
   acceptedVendorTermsForAuthoredMedia?: boolean;
   playback?: Playback;
   savedFile?: SavedMedia;

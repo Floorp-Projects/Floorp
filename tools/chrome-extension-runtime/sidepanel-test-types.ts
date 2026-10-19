@@ -106,6 +106,32 @@ export interface VaultReport {
   steps: ProbeCommand[];
   [key: string]: unknown;
 }
+export interface BitwardenFloorpEvidence {
+  id: string;
+  name: string;
+  version: string;
+  packageSha256?: string;
+  primaryOperation: string;
+  primaryOperationResult: string;
+  nativeQualified: boolean;
+  warnings?: string[];
+  background?:
+    import("../../browser-features/modules/modules/chrome-web-store/types.ts").ChromeConversionReport[
+      "background"
+    ];
+  conversion?:
+    import("../../browser-features/modules/modules/chrome-web-store/types.ts").ChromeConversionReport;
+  sourceIntegrity: import("./native-test-types.ts").FrozenCorpusScriptEvidence;
+  nativeEvidence:
+    import("./native-test-types.ts").NativeCorpusBackgroundEvidence;
+}
+export interface BitwardenFloorpReport extends VaultReport {
+  extension?: BitwardenFloorpEvidence;
+  nativeQualified: boolean;
+  primaryOperationResult: string;
+  cleanupCompleted: boolean;
+  fillMatches?: { username: boolean; password: boolean };
+}
 export interface Point {
   x: number;
   y: number;

@@ -159,6 +159,7 @@ def main():
                     if not observed:
                         item["primaryOperationResult"] = "failed"
                         item["error"] = "Required native TLS metadata request was not observed"
+                        item["nativeQualified"] = False
                         failed_transport = True
                     else:
                         item["checks"].append("Actual fixture server observed the native TLS metadata request")
@@ -168,9 +169,12 @@ def main():
                     if not observed:
                         item["primaryOperationResult"] = "failed"
                         item["error"] = "Required native TLS sponsor segment request was not observed"
+                        item["nativeQualified"] = False
                         failed_transport = True
                     else:
                         item["checks"].append("Actual fixture server observed the native TLS sponsor segment request")
+            if args.browser:
+                report["nativeQualified"] = bool(report.get("extensions")) and all(item.get("nativeQualified") is True for item in report["extensions"])
             report_path.write_text(json.dumps(report, indent=2) + "\n")
         print("REPORT " + str(report_path))
         return 1 if failed_transport else result.returncode

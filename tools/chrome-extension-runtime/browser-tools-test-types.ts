@@ -2,6 +2,10 @@
 import type { CDPEvent, CDPResult } from "./cdp-types.ts";
 import type { FrozenCorpusExtension } from "./corpus-types.ts";
 import type { ChromeConversionReport } from "../../browser-features/modules/modules/chrome-web-store/types.ts";
+import type {
+  FrozenCorpusScriptEvidence,
+  NativeCorpusBackgroundEvidence,
+} from "./native-test-types.ts";
 
 export interface OperationControl {
   tag: string;
@@ -78,6 +82,8 @@ export interface BrowserToolsExtensionReport {
   snapshots: (OperationSnapshot & { label: string })[];
   unchangedScriptCount?: number;
   unchangedScriptsSha256?: string;
+  sourceIntegrity?: FrozenCorpusScriptEvidence;
+  nativeEvidence?: NativeCorpusBackgroundEvidence;
   backgroundSelection?: ChromeConversionReport["background"];
   backgroundContextType?: string | null;
   action?: ActionObservation;
