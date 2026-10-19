@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "scope": "Recovery40 frozen correction before actual Intel Mac validation",
+  "sourceBase": "79eafbbc768f41946a3092c05cc3492aaeb67464",
+  "productionCensusGateChanged": false,
+  "resourceContractChanged": false,
+  "sdkContractChanged": false,
+  "checkpointCaptureCodeChanged": false,
+  "taskAPIProbeChanged": false,
+  "correction": {
+    "ownedImageCleanupIndependentOfROSchema": true,
+    "diskutilKnownKeyProjection": "presence/type/boolean only; diagnostic-only; no alias or meaning inference",
+    "filesystemROCriterion": "fully bound mount plus positive stable kernel statvfs ST_RDONLY and actual ordinary-write denial/hash checks",
+    "unknownFlagOrIdentity": "fail closed",
+    "sameUIDImmutabilityEstablished": false,
+    "productionEligibility": false
+  },
+  "linux": {
+    "total": 380,
+    "passed": 364,
+    "skipped": 16,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 18.689,
+    "resourceWarnings": "error",
+    "log": {
+      "bytes": 73948,
+      "sha256": "d8eb753c000955e6527992f5fe2269a072badae6a9220f2675494930b643a0f2",
+      "rawPublished": false
+    }
+  },
+  "prior39": {
+    "run": 39180177043,
+    "conclusion": "failure",
+    "tests77": "passed zero skips",
+    "taskAPI32Children": "completed",
+    "sameBirthLiveTaskESRCHSamples": 9,
+    "execBoundLiveTaskESRCHSamples": 0,
+    "imageCleanup": "unknown-not-confirmed",
+    "terminalReceiptSHA256": "9114a4802fc3626a8c41fbc92b5cb8adf7e8a23bc7404bc7a88b99ae0277b260",
+    "terminalReviewSHA256": "6116e33ad9a43ec0d49ed3e41674c8ec269fc485ade4755f79367e591ff26e87"
+  },
+  "actualMac": {
+    "status": "NOT_RUN",
+    "plannedTests": 84,
+    "expectedSkips": 0,
+    "cohort": "new short job, independent of ended39 runner",
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifacts": 0
+  },
+  "longExecution": "NO_GO_ON_HOLD"
+}

@@ -50,7 +50,7 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(value['detach'], '/dev/disk51')
         self.assertEqual(value['devices'], ('/dev/disk51', '/dev/disk52', '/dev/disk52s1'))
         for key, replacement in [('MountPoint', '/OTHER'), ('DeviceNode', '/dev/disk9'),
-                                 ('VolumeUUID', None), ('ReadOnlyVolume', None),
+                                 ('VolumeUUID', None),
                                  ('FilesystemType', 'hfs')]:
             info = disk(mount); info[key] = replacement
             with self.subTest(key=key), self.assertRaises(rb.ExperimentFailure):
@@ -111,11 +111,11 @@ class BindingTests(unittest.TestCase):
             image = rb.Image(Path(temporary), command, result)
             image.image.write_bytes(b'one'); image.backing = rb.backing_identity(image.image)
             values = [{'images': [{'image-path': str(image.image), **entry(image.mount)}]}, disk(image.mount)]
-            command.plist.side_effect = values
-            with mock.patch.object(rb.os, 'statvfs', return_value=SimpleNamespace(f_flag=rb.os.ST_RDONLY)), \
+            command.plist.side_effect = values*2
+            with mock.patch.object(rb.os, 'statvfs', return_value=SimpleNamespace(f_flag=0)), \
                  self.assertRaisesRegex(rb.ExperimentFailure, 'readonly'):
                 image.verify(readonly=True)
-            command.plist.side_effect = values
+            command.plist.side_effect = values*2
             with mock.patch.object(rb.os, 'statvfs', return_value=SimpleNamespace(f_flag=0)):
                 image.verify(readonly=False)
             receipt = json.dumps(result)
@@ -127,6 +127,7 @@ class BindingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             image = rb.Image(Path(temporary), command, result)
             image.verify = mock.Mock(return_value={'detach': '/dev/disk51'})
+            image.verify_ownership = mock.Mock(return_value={'detach': '/dev/disk51'})
             image.entry = mock.Mock(return_value={})
             def refuse(*_args, **_kwargs):
                 result['commands'].append({'stage': 'image-detach-held', 'busyTextSeen': False})
@@ -137,13 +138,15 @@ class BindingTests(unittest.TestCase):
             self.assertTrue(value['originalMountContinues'])
             self.assertFalse(value['busyTextSeen']); self.assertFalse(value['busyErrnoEstablished'])
             self.assertIsNone(value['oldHandleWriteAfterDetach'])
-            self.assertEqual(image.verify.call_count, 2)
+            self.assertEqual(image.verify.call_count, 1)
+            self.assertEqual(image.verify_ownership.call_count, 1)
             self.assertNotIn('-force', command.run.call_args.args[1])
 
     def test_successful_held_detach_preserves_unknown_old_handle(self):
         with tempfile.TemporaryDirectory() as temporary:
             image = rb.Image(Path(temporary), mock.Mock(), {'commands': []})
             image.verify = mock.Mock(return_value={'detach': '/dev/disk51'})
+            image.verify_ownership = mock.Mock(return_value={'detach': '/dev/disk51'})
             image.entry = mock.Mock(return_value=None)
             image.commands.run.return_value = (0, b'')
             with mock.patch.object(rb.os.path, 'ismount', return_value=False):
@@ -180,6 +183,99 @@ class BindingTests(unittest.TestCase):
             self.assertEqual(value['attachmentState'], 'unknown')
             self.assertFalse(value['cleanupVerified']); self.assertIsNotNone(value['failure'])
             command.run.assert_not_called()
+
+    def test_known_property_projection_has_types_without_coercion_or_private_values(self):
+        supplied = {'ReadOnlyVolume': False, 'ReadOnlyMedia': 'PRIVATE-STRING',
+            'Writable': 0, 'VolumeReadOnly': True, 'MediaWritable': ['PRIVATE-LIST'],
+            'UNKNOWN-PRIVATE-KEY': {'PRIVATE-PATH': '/PRIVATE'}}
+        value = rb.readonly_properties(supplied)
+        self.assertEqual(set(value), set(rb.DISK_READONLY_KEYS))
+        self.assertEqual(value['ReadOnlyVolume'], {'present': True, 'type': 'boolean', 'value': False})
+        self.assertEqual(value['ReadOnlyMedia'], {'present': True, 'type': 'string', 'value': None})
+        self.assertEqual(value['Writable'], {'present': True, 'type': 'integer', 'value': None})
+        self.assertEqual(value['VolumeWritable'], {'present': False, 'type': 'absent', 'value': None})
+        self.assertEqual(value['VolumeReadOnly']['value'], True)
+        self.assertNotIn('PRIVATE', json.dumps(value))
+
+    def test_missing_readonly_keys_owned_identity_cleanup_succeeds_without_state_probe(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            command = mock.Mock(); result = {'commands': [], 'bindings': []}
+            image = rb.Image(Path(temporary), command, result)
+            image.image.write_bytes(b'own'); image.backing = rb.backing_identity(image.image)
+            info = {'images': [{'image-path': str(image.image), **entry(image.mount)}]}
+            identity_disk = {key: value for key, value in disk(image.mount).items()
+                             if key not in rb.DISK_READONLY_KEYS}
+            command.plist.side_effect = [info, info, identity_disk, {'images': []}]
+            command.run.return_value = (0, b'')
+            with mock.patch.object(rb.os, 'statvfs', side_effect=PermissionError('PRIVATE')) as state, \
+                 mock.patch.object(rb.os.path, 'ismount', return_value=False):
+                value = image.cleanup()
+            state.assert_not_called()
+            self.assertTrue(value['cleanupVerified']); self.assertIsNone(value['failure'])
+            self.assertFalse(value['readOnlyPropertiesRequired']); self.assertFalse(value['statvfsRequired'])
+            self.assertEqual(value['attachmentState'], 'verified-not-attached')
+            self.assertEqual(command.run.call_args.args[1], [rb.HDIUTIL, 'detach', '/dev/disk51'])
+            properties = result['bindings'][0]['diskReadOnlyProperties']
+            self.assertTrue(all(item['present'] is False and item['value'] is None for item in properties.values()))
+            self.assertIsNone(result['bindings'][0]['diskutilReadOnlyConclusion'])
+
+    def test_missing_identity_still_forbids_cleanup_even_with_state_keys(self):
+        for key in ('DeviceNode', 'MountPoint', 'VolumeUUID'):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as temporary:
+                command = mock.Mock(); result = {'commands': [], 'bindings': []}
+                image = rb.Image(Path(temporary), command, result)
+                image.image.write_bytes(b'own'); image.backing = rb.backing_identity(image.image)
+                info = {'images': [{'image-path': str(image.image), **entry(image.mount)}]}
+                details = disk(image.mount); details.pop(key)
+                command.plist.side_effect = [info, info, details]
+                value = image.cleanup()
+                self.assertFalse(value['cleanupVerified']); self.assertIsNotNone(value['failure'])
+                self.assertEqual(value['attachmentState'], 'unknown'); command.run.assert_not_called()
+                self.assertEqual(result['bindings'][0]['ownershipStatus'], 'unavailable')
+                self.assertTrue(result['bindings'][0]['diskPropertiesObserved'])
+
+    def test_kernel_ro_fixture_controls_keep_diskutil_all_fields_diagnostic_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            command = mock.Mock(); result = {'commands': [], 'bindings': []}
+            image = rb.Image(Path(temporary), command, result)
+            image.image.write_bytes(b'own'); image.backing = rb.backing_identity(image.image)
+            info = {'images': [{'image-path': str(image.image), **entry(image.mount)}]}
+            details = disk(image.mount)
+            details.update(ReadOnlyVolume=False, ReadOnlyMedia=False, Writable=True)
+            command.plist.side_effect = [info, details]*2
+            with mock.patch.object(rb.os, 'statvfs', return_value=SimpleNamespace(f_flag=rb.os.ST_RDONLY)):
+                image.verify(readonly=True)
+            self.assertEqual(len(result['bindings']), 2)
+            for value in result['bindings']:
+                self.assertTrue(value['statvfsReadOnly']); self.assertTrue(value['kernelMountBindingVerified'])
+                self.assertTrue(value['diskutilPropertiesDiagnosticOnly'])
+                self.assertIsNone(value['diskutilReadOnlyConclusion'])
+                self.assertIs(value['diskReadOnlyProperties']['ReadOnlyMedia']['value'], False)
+            self.assertNotIn(temporary, json.dumps(result))
+
+    def test_unknown_kernel_flags_remain_unknown(self):
+        for flags in (None, True, '1', -1, 2**64):
+            observation = {}
+            with self.subTest(flags=flags), \
+                 mock.patch.object(rb.os, 'statvfs', return_value=SimpleNamespace(f_flag=flags)), \
+                 self.assertRaisesRegex(rb.ExperimentFailure, 'kernel-flags-unavailable'):
+                rb.kernel_readonly(Path('/PRIVATE'), observation)
+            self.assertIsNone(observation['statvfsReadOnly'])
+            self.assertEqual(observation['statvfsStatus'], 'unavailable')
+
+    def test_changed_mount_state_fails_after_bracketed_identity_checks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            command = mock.Mock(); result = {'commands': [], 'bindings': []}
+            image = rb.Image(Path(temporary), command, result)
+            image.image.write_bytes(b'own'); image.backing = rb.backing_identity(image.image)
+            info = {'images': [{'image-path': str(image.image), **entry(image.mount)}]}
+            command.plist.side_effect = [info, disk(image.mount)]*2
+            with mock.patch.object(rb.os, 'statvfs', side_effect=[SimpleNamespace(f_flag=1), SimpleNamespace(f_flag=0)]), \
+                 self.assertRaisesRegex(rb.ExperimentFailure, 'kernel-readonly-state-changed'):
+                image.verify(readonly=True)
+            self.assertEqual(len(result['bindings']), 2)
+            self.assertFalse(result['bindings'][-1]['kernelMountBindingVerified'])
+            self.assertTrue(all(item['ownershipStatus'] == 'verified' for item in result['bindings']))
 
 
 class UtilityTests(unittest.TestCase):
@@ -329,6 +425,7 @@ class ExperimentTests(unittest.TestCase):
     def test_cleanup_failure_retained_separately_from_original_private_exception(self):
         with tempfile.TemporaryDirectory() as temporary:
             image = mock.Mock(); image.create.side_effect = PermissionError(errno.EACCES, 'SECRET')
+            image.last_binding = None
             image.cleanup.return_value = {'failure': {'kind': 'PermissionError', 'errno': 1}}
             result = {}
             with mock.patch.object(rb.sys, 'platform', 'darwin'), mock.patch.object(rb, 'Image', return_value=image):
@@ -337,6 +434,25 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(result['firstFailure']['errno'], errno.EACCES)
         self.assertEqual(result['imageCleanup']['failure']['errno'], 1)
         self.assertEqual(result['status'], 'failed'); self.assertNotIn('SECRET', json.dumps(result))
+
+    def test_stop_schema_receipt_is_frozen_before_cleanup_observation_changes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            image = mock.Mock(); image.last_binding = {'ownershipStatus': 'verified',
+                'diskReadOnlyProperties': rb.readonly_properties({'ReadOnlyVolume': 'PRIVATE'})}
+            image.attach.side_effect = rb.ExperimentFailure('readonly-state-mismatch')
+            def cleanup():
+                image.last_binding['diskReadOnlyProperties'] = None
+                return {'failure': None, 'cleanupVerified': True}
+            image.cleanup.side_effect = cleanup
+            result = {}
+            with mock.patch.object(rb.sys, 'platform', 'darwin'), mock.patch.object(rb, 'Image', return_value=image):
+                rb.run_experiment(Path(temporary), result)
+        stop = result['stopBindingObservation']['diskReadOnlyProperties']
+        self.assertEqual(stop['ReadOnlyVolume']['type'], 'string')
+        self.assertIsNone(stop['ReadOnlyVolume']['value'])
+        self.assertEqual(result['firstFailure']['code'], 'readonly-state-mismatch')
+        self.assertTrue(result['imageCleanup']['cleanupVerified'])
+        self.assertEqual(result['qualification'], 'NO_GO'); self.assertNotIn('PRIVATE', json.dumps(result))
 
     def test_cli_emits_safe_failure_and_exclusive_private_result(self):
         with tempfile.TemporaryDirectory() as temporary:

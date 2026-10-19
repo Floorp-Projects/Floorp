@@ -6,6 +6,7 @@ The writable backing file is deliberately *not* modified by the raw-open control
 The CLI is the sole native APFS integration test; unit tests never create images.
 """
 import argparse
+import copy
 import errno
 import hashlib
 import json
@@ -29,6 +30,14 @@ TOTAL_SECONDS = 120
 CHILD_OUTPUT = 16384
 HDIUTIL = '/usr/bin/hdiutil'
 DISKUTIL = '/usr/sbin/diskutil'
+DISK_READONLY_KEYS = ('ReadOnlyVolume', 'ReadOnlyMedia', 'Writable', 'MediaReadOnly',
+                      'VolumeReadOnly', 'VolumeWritable', 'MediaWritable')
+# This public header defines ST_RDONLY's filesystem meaning. It does not document
+# diskutil plist aliases, nor bind the deployed runner's libc implementation.
+KERNEL_RO_SOURCE = ('https://github.com/apple-oss-distributions/Libc/blob/'
+    '71bbe350ab79eef58113991d817ccc6165061a64/include/sys/statvfs.h')
+KERNEL_MOUNT_SOURCE = ('https://github.com/apple-oss-distributions/xnu/blob/'
+    'xnu-11417.101.15/bsd/sys/mount.h')
 
 
 class ExperimentFailure(Exception):
@@ -179,6 +188,7 @@ def image_entry(info, image):
 
 
 def mount_binding(entry, mount, disk):
+    """Identity only: optional state-property schemas cannot authorize detach."""
     entities = entry.get('system-entities')
     require(isinstance(entities, list) and entities, 'image-entities-schema')
     devices, mounted = [], []
@@ -201,10 +211,32 @@ def mount_binding(entry, mount, disk):
             and disk.get('FilesystemType', '').lower() == 'apfs', 'disk-mount-binding')
     volume = disk.get('VolumeUUID')
     require(isinstance(volume, str) and re.fullmatch(r'[0-9A-Fa-f-]{36}', volume), 'volume-uuid-unavailable')
-    require(type(disk.get('ReadOnlyVolume')) is bool and type(disk.get('ReadOnlyMedia')) is bool,
-            'disk-readonly-unavailable')
-    return {'devices': tuple(devices), 'detach': roots[0], 'uuid': volume.lower(),
-            'diskReadOnlyVolume': disk['ReadOnlyVolume'], 'diskReadOnlyMedia': disk['ReadOnlyMedia']}
+    return {'devices': tuple(devices), 'detach': roots[0], 'uuid': volume.lower()}
+
+
+def readonly_properties(disk):
+    """Observe fixed keys without interpreting aliases or coercing their values."""
+    labels = {bool: 'boolean', int: 'integer', float: 'real', str: 'string',
+              bytes: 'data', list: 'array', dict: 'dictionary', type(None): 'null'}
+    return {key: {'present': key in disk,
+                  'type': labels.get(type(disk[key]), 'other') if key in disk else 'absent',
+                  'value': disk[key] if key in disk and type(disk[key]) is bool else None}
+            for key in DISK_READONLY_KEYS}
+
+
+def kernel_readonly(mount, observation):
+    """Unknown or invalid flags cannot become a false/true state."""
+    try:
+        flags = os.statvfs(mount).f_flag
+        require(type(flags) is int and 0 <= flags < 2**64 and
+                type(os.ST_RDONLY) is int and os.ST_RDONLY == 1, 'kernel-flags-unavailable')
+        value = bool(flags & os.ST_RDONLY)
+        observation.update(statvfsStatus='measured', statvfsReadOnly=value)
+        return value
+    except BaseException as error:
+        observation.update(statvfsStatus='unavailable', statvfsReadOnly=None,
+                           statvfsFailure=error_fact(error))
+        raise
 
 
 class Image:
@@ -215,7 +247,8 @@ class Image:
         self.mount = directory/'mount'
         self.mount.mkdir(mode=0o700)
         self.commands, self.result = commands, result
-        self.backing = self.volume = self.bound = None
+        self.backing = self.volume = self.bound = self.mount_root = None
+        self.last_binding = None
 
     def create(self):
         code, _ = self.commands.run('image-create', [HDIUTIL, 'create', '-size', '256m',
@@ -231,30 +264,57 @@ class Image:
         require(backing_identity(self.image) == self.backing, 'backing-identity-changed')
         return image_entry(info, self.image)
 
-    def verify(self, *, readonly=None, cleanup=False):
+    def verify_ownership(self, *, cleanup=False):
+        observation = {'ownershipStatus': 'collecting', 'cleanup': cleanup,
+            'diskPropertiesObserved': False, 'diskReadOnlyProperties': None,
+            'diskutilReadOnlyConclusion': None, 'diskutilPropertiesDiagnosticOnly': True,
+            'statvfsStatus': 'not-observed', 'statvfsReadOnly': None,
+            'kernelMountBindingVerified': False}
+        self.result['bindings'].append(observation)
+        self.last_binding = observation
+        try:
+            return self._verify_ownership(observation, cleanup=cleanup)
+        except BaseException as error:
+            observation.update(ownershipStatus='unavailable', ownershipFailure=error_fact(error))
+            raise
+
+    def _verify_ownership(self, observation, *, cleanup=False):
         require(not self.mount.is_symlink() and self.mount.resolve() == self.mount,
                 'mount-path-changed')
         entry = self.entry(cleanup=cleanup)
         require(entry is not None, 'owned-image-not-attached')
         disk = self.commands.plist('disk-info', [DISKUTIL, 'info', '-plist', str(self.mount)],
                                    cleanup=cleanup)
+        observation.update(diskPropertiesObserved=True, diskReadOnlyProperties=readonly_properties(disk))
         value = mount_binding(entry, self.mount, disk)
         require(self.volume is None or self.volume == value['uuid'], 'volume-uuid-changed')
         require(self.bound is None or self.bound['devices'] == value['devices'], 'image-devices-changed')
+        mounted = self.mount.lstat()
+        require(stat.S_ISDIR(mounted.st_mode), 'mount-root-not-directory')
+        root = mounted.st_dev, mounted.st_ino
+        require(self.mount_root is None or self.mount_root == root, 'mount-root-changed')
+        require(backing_identity(self.image) == self.backing, 'backing-identity-changed')
         self.volume = value['uuid']
-        flags = os.statvfs(self.mount).f_flag
-        is_ro = bool(flags & os.ST_RDONLY)
+        self.bound, self.mount_root = value, root
+        observation.update(ownershipStatus='verified', backingIdentityMatches=True, imagePathMatches=True,
+            systemEntitiesMatch=True, canonicalMountMatches=True, volumeUUIDConsistent=True,
+            backingStoredBytes=self.image.stat().st_blocks*512)
+        return value
+
+    def verify(self, *, readonly=None, cleanup=False):
+        # The kernel observation is bracketed by full image/volume/root identity
+        # checks. diskutil state keys stay observation-only until their contract
+        # on the actual runner is independently established.
+        self.verify_ownership(cleanup=cleanup)
+        first = self.last_binding
+        before = kernel_readonly(self.mount, first)
+        value = self.verify_ownership(cleanup=cleanup)
+        second = self.last_binding
+        after = kernel_readonly(self.mount, second)
+        require(before is after, 'kernel-readonly-state-changed')
+        first['kernelMountBindingVerified'] = second['kernelMountBindingVerified'] = True
         if readonly is not None:
-            require(is_ro is readonly and value['diskReadOnlyVolume'] is readonly,
-                    'readonly-state-mismatch')
-            if readonly:
-                require(value['diskReadOnlyMedia'], 'readonly-media-not-established')
-        self.bound = value
-        self.result['bindings'].append({'backingIdentityMatches': True, 'imagePathMatches': True,
-            'systemEntitiesMatch': True, 'canonicalMountMatches': True, 'volumeUUIDConsistent': True,
-            'statvfsReadOnly': is_ro, 'diskReadOnlyVolume': value['diskReadOnlyVolume'],
-            'diskReadOnlyMedia': value['diskReadOnlyMedia'],
-            'backingStoredBytes': self.image.stat().st_blocks*512})
+            require(after is readonly, 'readonly-state-mismatch')
         return value
 
     def attach(self, readonly=False):
@@ -267,19 +327,21 @@ class Image:
         args.append(str(self.image))
         attached = self.commands.plist('image-attach-ro' if readonly else 'image-attach-rw', args)
         require(isinstance(attached.get('system-entities'), list), 'attach-plist-schema')
-        self.bound = None
+        self.bound = self.mount_root = None
         value = self.verify(readonly=readonly)
         require(set(e.get('dev-entry') for e in attached['system-entities'] if isinstance(e, dict)
                     and e.get('dev-entry')) == set(value['devices']), 'attach-info-devices-mismatch')
 
     def detach(self, *, held=False, cleanup=False):
-        before = self.verify(cleanup=cleanup)
+        # Cleanup authority comes from exact identity, never optional RO fields
+        # or a state probe that might itself have caused the diagnostic failure.
+        before = self.verify_ownership(cleanup=cleanup)
         code, _ = self.commands.run('image-detach-held' if held else 'image-detach',
             [HDIUTIL, 'detach', before['detach']], cleanup=cleanup)
         entry = self.entry(cleanup=cleanup)
         if code == 0:
             require(entry is None and not os.path.ismount(self.mount), 'detach-success-not-confirmed')
-            self.bound = None
+            self.bound = self.mount_root = None
             return {'outcome': 'detached', 'originalMountContinues': False,
                     'busyErrnoEstablished': False, 'oldHandleWriteAfterDetach': None}
         require(held, 'normal-detach-failed')
@@ -291,7 +353,8 @@ class Image:
 
     def cleanup(self):
         value = {'normalDetach': None, 'failure': None, 'privateDirectoryRetained': True,
-                 'attachmentState': 'unknown', 'cleanupVerified': False}
+                 'attachmentState': 'unknown', 'cleanupVerified': False,
+                 'readOnlyPropertiesRequired': False, 'statvfsRequired': False}
         try:
             require(self.backing is not None, 'cleanup-backing-not-bound')
             entry = self.entry(cleanup=True)
@@ -444,7 +507,10 @@ def readonly_control(image, commands, result, children):
     image.attach(readonly=True)
     require(sha(payload) == expected and sha(manifest) == manifest_hash,
             'readonly-readback-mismatch')
-    value = result['readOnlyControl'] = {'status': 'collecting', 'cleanup': None}
+    value = result['readOnlyControl'] = {'status': 'collecting', 'cleanup': None,
+        'evidenceScope': 'fixture-kernel-statvfs-and-ordinary-file-operations',
+        'diskutilReadOnlyConclusion': None, 'mediaReadOnlyEstablished': None,
+        'diskutilPropertiesDiagnosticOnly': True}
     child = Child('late', payload, commands)
     children.append((child, value))
     ready = child.read()
@@ -502,6 +568,12 @@ def run_experiment(task, result):
         newArtifactsStored=0, productionGateChanged=False, imageCreated=False,
         commands=[], bindings=[], writerControls=[], readOnlyControl=None,
         backingOpenControl=None, firstFailure=None, childCleanup=[], imageCleanup=None,
+        stopBindingObservation=None, diskutilReadOnlyConclusion=None,
+        diskutilPropertySemantics='unestablished-observation-only',
+        fixtureProtectionScope='kernel-statvfs-and-ordinary-file-operations-only',
+        kernelReadOnlySemanticSource=KERNEL_RO_SOURCE,
+        kernelMountSemanticSource=KERNEL_MOUNT_SOURCE,
+        semanticSourceScope='public-flag-definitions-not-deployed-binary-matching',
         rawProcessIdentitiesPublished=False, rawUtilityOutputPublished=False,
         privateTaskPathsPublished=False, heldDetachProvesSafeFreeze=False,
         processGroupScope='inherited-outer-monitored-stage', stageGroupGone=None,
@@ -510,7 +582,8 @@ def run_experiment(task, result):
         'same-UID backing mutation is not excluded',
         'all checkpoint payload and references are not atomically frozen',
         'reopen or remount capability is not excluded',
-        'the production checkpoint route is not exercised']
+        'the production checkpoint route is not exercised',
+        'diskutil read-only property semantics are unestablished']
     commands, image, children = Commands(result), None, []
     started = time.monotonic()
     stage = 'platform'
@@ -537,6 +610,8 @@ def run_experiment(task, result):
     except BaseException as error:
         result['firstFailure'] = {'stage': stage, **error_fact(error),
             'code': str(error) if isinstance(error, ExperimentFailure) else 'diagnostic-exception'}
+        if image is not None:
+            result['stopBindingObservation'] = copy.deepcopy(image.last_binding)
     finally:
         for child, control in children:
             if control['cleanup'] is None:
