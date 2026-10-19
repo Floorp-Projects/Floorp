@@ -6,8 +6,14 @@ import {
   runTests,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import { sidebarFiles } from "./helpers/resource-paths/fixture-files.mjs";
-import { install, waitFor } from "./helpers/resource-paths/resource-path-fixture.ts";
-import type { DevtoolsModule, Toolbox } from "./helpers/resource-paths/resource-path-types.ts";
+import {
+  install,
+  waitFor,
+} from "./helpers/resource-paths/resource-path-fixture.ts";
+import type {
+  DevtoolsModule,
+  Toolbox,
+} from "./helpers/resource-paths/resource-path-types.ts";
 const { require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs",
 );
@@ -115,10 +121,14 @@ async function sidebarCase(compatible: boolean, index: number): Promise<void> {
       await height(120);
     }
     const active = toolbox;
-    await owned.cleanup();
+    await owned.uninstall();
     await waitFor(
       () => !active.inspectorExtensionSidebars.has(paneId),
       "native uninstall unregisters sidebar",
+    );
+    assert(
+      inspector.store,
+      "inspector remains alive during uninstall verification",
     );
     assert(
       !(paneId in inspector.store.getState().extensionsSidebar),

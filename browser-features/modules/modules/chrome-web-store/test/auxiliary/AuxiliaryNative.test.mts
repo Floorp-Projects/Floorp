@@ -137,26 +137,33 @@ async function testNativeAuxiliary(): Promise<void> {
         await expectReject('required marker unsupported rejects', () => chrome.tts.speak('test',{requiredEventTypes:['marker']}), /required speech events/);
         await expectReject('ttsEngine extension rejected', () => chrome.tts.speak('test',{extensionId:'pppppppppppppppppppppppppppppppp'}), /speech engines/);
         await expectReject('utterance limit', () => chrome.tts.speak('x'.repeat(32769)), /32768/);
+        const selectedVoice = voices.find(v=>v.lang.startsWith('en')) || voices[0];
         const events = [];
         const speechStartedAt = Date.now();
         await new Promise(async (resolve,reject) => {
           const timeout=setTimeout(()=>reject(new Error('native speech end timeout')),20000);
           try {
             await chrome.tts.speak('Floorp native speech synthesis. This sentence has word boundaries.', {
-              voiceName:voices.find(v=>v.lang.startsWith('en'))?.voiceName || voices[0].voiceName,
+              voiceName:selectedVoice.voiceName,
               onEvent(event) { events.push({...event, receivedAt:Date.now()}); if(event.type==='error'){clearTimeout(timeout);reject(new Error(event.errorMessage));}
                 if(event.type==='end'){clearTimeout(timeout);resolve();} }
             });
             check('speaking state after accept', await chrome.tts.isSpeaking());
           } catch(error){clearTimeout(timeout);reject(error);}
         });
-        speechEvidence={startedAt:speechStartedAt,completedAt:Date.now(),utterance:'Floorp native speech synthesis. This sentence has word boundaries.',events};
+        speechEvidence={startedAt:speechStartedAt,completedAt:Date.now(),utterance:'Floorp native speech synthesis. This sentence has word boundaries.',voice:{voiceName:selectedVoice.voiceName,lang:selectedVoice.lang,eventTypes:[...selectedVoice.eventTypes]},events};
         check('real start/end callbacks', events[0]?.type === 'start' && events.at(-1)?.type === 'end');
         check('private routing fields hidden', events.every(e=>!('srcId' in e)&&!('isFinalEvent' in e)));
         check('completed isSpeaking false', await chrome.tts.isSpeaking() === false);
         if (${nativeSpeech}) {
           check('native word events', events.some(e=>e.type==='word'&&e.charIndex>0));
-          check('native sentence events', events.some(e=>e.type==='sentence'));
+          check('native word capability is advertised', selectedVoice.eventTypes.includes('word'));
+          if (selectedVoice.eventTypes.includes('sentence')) {
+            check('native sentence events', events.some(e=>e.type==='sentence'));
+          } else {
+            check('unadvertised sentence events are absent', !events.some(e=>e.type==='sentence'));
+            await expectReject('unadvertised sentence requirement rejects', () => chrome.tts.speak('Sentence capability probe.',{voiceName:selectedVoice.voiceName,requiredEventTypes:['sentence']}), /required speech events/);
+          }
           const first=[], queued=[], replacement=[];
           const long='This is a long native speech queue and cancellation test. '.repeat(30);
           await chrome.tts.speak(long,{rate:0.8,onEvent:e=>first.push(e)});
@@ -180,7 +187,7 @@ async function testNativeAuxiliary(): Promise<void> {
         }
       }
       document.title = JSON.stringify({ok:true,results,voices:voices.length,nativeFonts:${nativeFonts},nativeSpeech:${nativeSpeech},speechEvidence,fontEvidence});
-    } catch(error) {document.title=JSON.stringify({ok:false,results,error:String(error),stack:error.stack,fontEvidence});}
+    } catch(error) {document.title=JSON.stringify({ok:false,results,error:String(error),stack:error.stack,fontEvidence,speechEvidence});}
   });
   document.title='auxiliary-ready';
   `;

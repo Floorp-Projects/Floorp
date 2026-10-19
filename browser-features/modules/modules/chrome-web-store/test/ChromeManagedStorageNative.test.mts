@@ -4,6 +4,7 @@ import { zipSync } from "fflate/browser";
 import {
   assert,
   assertEquals,
+  assertStringArrayEqual,
   runTests,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import { managedStorageProbeSource } from "./helpers/managed-storage-probe.mjs";
@@ -32,6 +33,28 @@ async function waitFor<T>(
   throw new Error(`Timed out waiting for ${label}`);
 }
 
+function sameJSONValue(actual: unknown, expected: unknown): boolean {
+  if (actual === expected) return true;
+  if (
+    actual === null || expected === null ||
+    typeof actual !== "object" || typeof expected !== "object" ||
+    Array.isArray(actual) !== Array.isArray(expected)
+  ) return false;
+  if (
+    Array.isArray(actual) && Array.isArray(expected) &&
+    actual.length !== expected.length
+  ) return false;
+  const actualObject = actual as Record<string, unknown>;
+  const expectedObject = expected as Record<string, unknown>;
+  const actualKeys = Object.keys(actualObject).sort();
+  const expectedKeys = Object.keys(expectedObject).sort();
+  return actualKeys.length === expectedKeys.length &&
+    actualKeys.every((key, index) =>
+      key === expectedKeys[index] &&
+      sameJSONValue(actualObject[key], expectedObject[key])
+    );
+}
+
 function checkResult(
   result: ManagedStorageResult,
   id: string,
@@ -43,7 +66,12 @@ function checkResult(
   assertEquals(result.worker, worker, "Actual ServiceWorkerGlobalScope");
   assertEquals(result.hasDocument, !worker, "Actual document availability");
   assertEquals(result.module, module, "Module-only worker syntax executed");
-  assertEquals(result.observations.map((row) => row.name), [
+  assertEquals(
+    result.legacyCallbacks,
+    !converted,
+    "Only MV2 negative controls use explicit callbacks",
+  );
+  assertStringArrayEqual(result.observations.map((row) => row.name), [
     "all",
     "string",
     "array",
@@ -70,19 +98,23 @@ function checkResult(
         !row.error,
         `${row.name}: ${row.error || "read succeeds without policy"}`,
       );
-      assertEquals(
-        row.value,
-        row.name === "keys"
-          ? []
-          : row.name === "defaults"
-          ? { missing: "fallback", count: 7, nested: { fixed: true } }
-          : {},
-        `${row.name} matches the Chrome no-policy store`,
+      const expectedValue = row.name === "keys"
+        ? []
+        : row.name === "defaults"
+        ? { missing: "fallback", count: 7, nested: { fixed: true } }
+        : {};
+      assert(
+        sameJSONValue(row.value, expectedValue),
+        `${row.name} matches the Chrome no-policy store (expected: ${
+          JSON.stringify(expectedValue)
+        }, actual: ${JSON.stringify(row.value)})`,
       );
     } else {
       assert(
         !!row.error && row.error.includes("Managed storage manifest not found"),
-        `${row.name} preserves Firefox missing-manifest error`,
+        `${row.name} preserves Firefox missing-manifest error (error: ${
+          row.error || "none"
+        }, value: ${JSON.stringify(row.value)})`,
       );
     }
   }
@@ -157,7 +189,7 @@ async function managedCase(
       : ""
   }${managedStorageProbeSource}\nchrome.runtime.onMessage.addListener((message, sender, sendResponse) => {if(message.managedStorageFixture !== true)return; runManagedStorageProbe().then(sendResponse); return true;});`;
   const page =
-    `${managedStorageProbeSource}\nwindow.addEventListener('message', async event => {const data = event.data; if(data?.managedStorageFixture !== true)return; try {if(data.operation === 'restrict'){await chrome.storage.managed.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'}); document.title=JSON.stringify({requestId:data.requestId, restricted:true});}else {const result = data.operation === 'worker' ? await chrome.runtime.sendMessage(data) : await runManagedStorageProbe(); document.title=JSON.stringify({requestId:data.requestId,result});}}catch(error){document.title=JSON.stringify({requestId:data.requestId,error:String(error)});}}); document.title='managed-control-ready';`;
+    `${managedStorageProbeSource}\nwindow.addEventListener('message', async event => {const data = event.data; if(data?.managedStorageFixture !== true)return; try {if(data.operation === 'restrict'){await chrome.storage.managed.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'}); document.title=JSON.stringify({requestId:data.requestId, restricted:true});}else {const result = data.operation === 'worker' ? await chrome.runtime.sendMessage(data) : await runManagedStorageProbe(${!converted}); document.title=JSON.stringify({requestId:data.requestId,result});}}catch(error){document.title=JSON.stringify({requestId:data.requestId,error:String(error)});}}); document.title='managed-control-ready';`;
   const content =
     `chrome.storage.managed.get(null).then(()=>{document.title=JSON.stringify({requestId:1,denied:false});},error=>{document.title=JSON.stringify({requestId:1,denied:/Access to storage is not allowed/.test(String(error?.message||error)),error:String(error?.message||error)});});`;
   const files = {
@@ -258,6 +290,10 @@ async function managedCase(
       }, `public managed ${operation}`);
     };
     const doc = await command("document");
+    console.log(
+      "[ChromeManagedStorageNative]",
+      JSON.stringify({ mode, realm: "document", reply: doc }),
+    );
     assert(
       !doc.error && !!doc.result,
       `Document completes: ${doc.error || "result"}`,
@@ -271,6 +307,10 @@ async function managedCase(
     );
     if (converted) {
       const reply = await command("worker");
+      console.log(
+        "[ChromeManagedStorageNative]",
+        JSON.stringify({ mode, realm: "worker", reply }),
+      );
       assert(
         !reply.error && !!reply.result,
         `Worker completes: ${reply.error || "result"}`,
@@ -336,7 +376,17 @@ async function managedCase(
   );
   assert(!await IOUtils.exists(path), "Authored XPI removed");
   if (failures.length) {
-    throw new AggregateError(failures, `Managed fixture ${mode} failed`);
+    const details = failures.map((error) =>
+      error instanceof Error
+        ? `${error.name}: ${error.message}${
+          error.stack ? `\n${error.stack}` : ""
+        }`
+        : String(error)
+    ).join("\n");
+    throw new AggregateError(
+      failures,
+      `Managed fixture ${mode} failed:\n${details}`,
+    );
   }
 }
 

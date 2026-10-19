@@ -30,15 +30,16 @@ const probe = String.raw`async function(config) {
   value.body=await (await fetch(chrome.runtime.getURL('private.txt?query=one#fragment'))).text();
   if(config.compatible) {
     const action = config.mv===2 ? chrome.browserAction : chrome.action;
-    await action.setPopup({popup:chrome.runtime.getURL('popup.html')});
-    value.popup=await action.getPopup({});
+    const actionCall=(method,details)=>config.mv===2 ? new Promise((resolve,reject)=>action[method](details,response=>{const error=chrome.runtime.lastError;if(error)reject(Error(error.message));else resolve(response);})) : action[method](details);
+    await actionCall('setPopup',{popup:chrome.runtime.getURL('popup.html')});
+    value.popup=await actionCall('getPopup',{});
     for(const [name,popup] of [
       ['foreignPopupDenied',foreign+'popup.html'],
       ['credentialPopupDenied','chrome-extension://user@'+chrome.runtime.id+'/popup.html'],
       ['portPopupDenied','chrome-extension://'+chrome.runtime.id+':9876/popup.html']]) {
-      try {await action.setPopup({popup});value[name]=false;} catch {value[name]=true;}
+      try {await actionCall('setPopup',{popup});value[name]=false;} catch {value[name]=true;}
     }
-    await action.setPopup({popup:''});
+    await actionCall('setPopup',{popup:''});
     if(config.mv===3) {
       await chrome.offscreen.createDocument({url:chrome.runtime.getURL('offscreen.html'),reasons:['DOM_PARSER'],justification:'Own alias must retain native origin'});
       try {value.offscreen=await chrome.offscreen.hasDocument();}finally {await chrome.offscreen.closeDocument();}
@@ -50,14 +51,14 @@ const probe = String.raw`async function(config) {
       try {await chrome.sidePanel.setOptions({path:foreign+'popup.html',enabled:true});value.foreignSidePanelDenied=false;}
       catch {value.foreignSidePanelDenied=true;}
     }
-    if(config.kind==='classic') {importScripts(chrome.runtime.getURL('imported.js'));value.imported=self.authoredOwnAliasImport;}
-    if(config.kind==='module') {value.dynamicImported=(await import(chrome.runtime.getURL('imported.mjs'))).authoredOwnAliasImport;}
+    if(config.kind==='classic') value.imported=self.authoredOwnAliasImport;
+    if(config.kind==='module') value.staticImported=self.authoredOwnAliasImport;
   }
-  value.externalSender=await chrome.runtime.sendMessage(config.compatible ? ${
+  value.externalSender=await new Promise((resolve,reject)=>chrome.runtime.sendMessage(config.compatible ? ${
   JSON.stringify(FOREIGN)
 } : ${
   JSON.stringify(FOREIGN + "@chromium-extension")
-}, {authoredSenderSnapshot:true});
+}, {authoredSenderSnapshot:true}, response=>{const error=chrome.runtime.lastError;if(error)reject(Error(error.message));else resolve(response);}));
   return value;
 }`;
 async function waitFor<T>(
@@ -135,6 +136,14 @@ async function testPublicURL(
         JSON.stringify(requestId)
       })return;try{document.title=JSON.stringify({requestId:event.data.requestId,value:await ${control}});}catch(error){document.title=JSON.stringify({requestId:event.data.requestId,error:String(error)});}});`,
     "worker.js":
+      (kind === "classic"
+        ? `importScripts(chrome.runtime.getURL("imported.js"));
+`
+        : kind === "module"
+        ? `import { authoredOwnAliasImport } from "chrome-extension://${ID}/imported.mjs";
+globalThis.authoredOwnAliasImport=authoredOwnAliasImport;
+`
+        : "") +
       `chrome.runtime.onMessage.addListener((message,sender)=>message.requestId===${
         JSON.stringify(requestId)
       }?(${probe})(message).then(value=>({...value,sender})):undefined);`,
@@ -398,9 +407,9 @@ async function testPublicURL(
       }
       if (kind === "module") {
         assertEquals(
-          value.dynamicImported,
+          value.staticImported,
           "real-own-alias-import",
-          "Actual module Worker dynamic import loads own alias",
+          "Actual module Worker static import loads own alias",
         );
       }
     } else assertEquals(value.id, id, "Ordinary Firefox identity unchanged");
@@ -429,7 +438,7 @@ export async function runAllTests(): Promise<void> {
         fn: () => testPublicURL("classic", 3),
       },
       {
-        name: "actual module Worker public URLs/dynamic import and consumers",
+        name: "actual module Worker public URLs/static import and consumers",
         fn: () => testPublicURL("module", 3),
       },
       {

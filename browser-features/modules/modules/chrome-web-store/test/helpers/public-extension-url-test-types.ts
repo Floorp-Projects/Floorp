@@ -53,6 +53,6 @@ export interface NativeURLResult {
     sidePanel?: { path?: string };
     foreignSidePanelDenied?: boolean;
     imported?: string;
-    dynamicImported?: string;
+    staticImported?: string;
   };
 }

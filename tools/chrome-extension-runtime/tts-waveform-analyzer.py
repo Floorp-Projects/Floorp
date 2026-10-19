@@ -72,7 +72,7 @@ class Level:
     peak: float
 
 
-def auxiliary_evidence(log: Path) -> dict[str, object]:
+def auxiliary_evidence(log: Path, runtime_os: str | None = None) -> dict[str, object]:
     reports: list[dict[str, object]] = []
     for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
         marker = '"[AuxiliaryNative]" '
@@ -99,7 +99,25 @@ def auxiliary_evidence(log: Path) -> dict[str, object]:
     events = [object_value(event, "speech event") for event in events_value]
     if not events or events[0].get("type") != "start" or events[-1].get("type") != "end":
         raise ValueError("Actual native start/end events are required")
-    for event_type in ("word", "sentence"):
+    required_boundaries = ["word", "sentence"]
+    if "voice" in evidence:
+        voice = object_value(evidence["voice"], "selected native voice")
+        capabilities = voice.get("eventTypes")
+        if (not isinstance(voice.get("voiceName"), str) or not voice["voiceName"] or
+                not isinstance(capabilities, list) or not capabilities or
+                not all(isinstance(item, str) for item in capabilities) or
+                len(set(capabilities)) != len(capabilities) or
+                "word" not in capabilities):
+            raise ValueError("Selected native voice capabilities are malformed or lack word events")
+        if "sentence" not in capabilities:
+            # The authenticated browser platform and its selected voice must
+            # agree. Legacy reports and other compiled backends stay strict.
+            if runtime_os != "Darwin":
+                raise ValueError("Only the native Darwin backend omits sentence capability")
+            if any(event.get("type") == "sentence" for event in events):
+                raise ValueError("Unadvertised native sentence event")
+            required_boundaries = ["word"]
+    for event_type in required_boundaries:
         if not any(event.get("type") == event_type for event in events):
             raise ValueError("Missing compiled native " + event_type + " event")
     first = number(events[0].get("receivedAt"), "start.receivedAt")
@@ -247,7 +265,11 @@ def analyze(directory: Path, browser_output: Path) -> dict[str, object]:
     suite = object_value(modules[0], "browser module")
     if suite.get("passed") is not True or not str(suite.get("path", "")).replace("\\", "/").endswith("/test/auxiliary/AuxiliaryNative.test.mts"):
         raise ValueError("The recording must contain only actual AuxiliaryNative suite output")
-    evidence = auxiliary_evidence(reports[0].parent / "browser.log")
+    runtime = object_value(browser.get("runtime"), "authenticated browser runtime")
+    runtime_os = runtime.get("os")
+    if not isinstance(runtime_os, str):
+        raise ValueError("Authenticated browser operating system is missing")
+    evidence = auxiliary_evidence(reports[0].parent / "browser.log", runtime_os)
     start = number(evidence["firstStartMs"], "native start")
     end = number(evidence["lastEndMs"], "native end")
     if first > start - 1000 or last < end:

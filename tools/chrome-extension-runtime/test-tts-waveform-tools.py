@@ -22,7 +22,7 @@ class Analyzer(Protocol):
     def read_packets(self, path: Path, raw_size: int) -> list[object]: ...
     def level(self, raw: bytes, packets: list[object], rate: int,
               start_ms: float, end_ms: float) -> object: ...
-    def auxiliary_evidence(self, path: Path) -> dict[str, object]: ...
+    def auxiliary_evidence(self, path: Path, runtime_os: str | None = None) -> dict[str, object]: ...
 
 
 def load_analyzer() -> Analyzer:
@@ -97,6 +97,48 @@ class NativeInputGuards(unittest.TestCase):
             with self.subTest(rate=rate, first=first, last=last):
                 with self.assertRaises(ValueError):
                     analyzer.level(b"\0\0", [], rate, first, last)
+
+    def test_selected_voice_boundaries_follow_authenticated_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "browser.log"
+
+            def evidence(capabilities: object, event_types: list[str],
+                         runtime_os: str | None = "Darwin", legacy: bool = False) -> dict[str, object]:
+                speech: dict[str, object] = {
+                    "startedAt": 900, "completedAt": 2100,
+                    "events": [{"type": kind, "receivedAt": at}
+                               for kind, at in zip(event_types, [1000, 1200, 1500, 2000])],
+                }
+                if not legacy:
+                    speech["voice"] = {"voiceName": "Actual selected voice", "eventTypes": capabilities}
+                report = {"ok": True, "nativeFonts": True, "nativeSpeech": True,
+                          "speechEvidence": speech}
+                line = 'console.log: "[AuxiliaryNative]" ' + json.dumps(json.dumps(report))
+                path.write_text(line + "\n")
+                return analyzer.auxiliary_evidence(path, runtime_os)
+
+            # This is a malformed-input parser check, never an audio/API pass.
+            no_sentence = ["start", "end", "word", "pause", "resume"]
+            evidence(no_sentence, ["start", "word", "end"])
+            for platform in (None, "Linux", "WINNT"):
+                with self.subTest(platform=platform):
+                    with self.assertRaisesRegex(ValueError, "Darwin"):
+                        evidence(no_sentence, ["start", "word", "end"], platform)
+            with self.assertRaisesRegex(ValueError, "Unadvertised"):
+                evidence(no_sentence, ["start", "word", "sentence", "end"])
+            with self.assertRaisesRegex(ValueError, "Missing compiled native sentence"):
+                evidence([*no_sentence, "sentence"], ["start", "word", "end"])
+            with self.assertRaisesRegex(ValueError, "Missing compiled native word"):
+                evidence(no_sentence, ["start", "end"])
+            for malformed in ("word", [], ["word", "word"], ["start", "end"], [1, "word"]):
+                with self.subTest(capabilities=malformed):
+                    with self.assertRaisesRegex(ValueError, "capabilities"):
+                        evidence(malformed, ["start", "word", "end"])
+            # Old Linux/Windows captures without new voice evidence retain both
+            # existing real-boundary requirements, including on a Darwin label.
+            evidence(None, ["start", "word", "sentence", "end"], legacy=True)
+            with self.assertRaisesRegex(ValueError, "Missing compiled native sentence"):
+                evidence(None, ["start", "word", "end"], legacy=True)
 
     def test_uncompiled_or_duplicate_browser_reports_rejected(self) -> None:
         report = {"ok": True, "nativeFonts": False, "nativeSpeech": False}

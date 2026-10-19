@@ -99,6 +99,13 @@ export async function install(files: Record<string, string>, id: string) {
           }, "public command " + String(data.method));
         };
       },
+      async uninstall() {
+        await addon?.uninstall();
+        addon = undefined;
+        if (ExtensionParent.GlobalManager.extensionMap.has(id)) {
+          throw new Error("Owned extension uninstall incomplete");
+        }
+      },
       async cleanup() {
         if (closed) return;
         closed = true;

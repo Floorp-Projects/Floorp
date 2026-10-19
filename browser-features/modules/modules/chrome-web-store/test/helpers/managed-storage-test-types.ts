@@ -11,6 +11,7 @@ export interface ManagedStorageObservation {
 }
 export interface ManagedStorageResult {
   observations: ManagedStorageObservation[];
+  legacyCallbacks: boolean;
   publicId: string;
   worker: boolean;
   hasDocument: boolean;
