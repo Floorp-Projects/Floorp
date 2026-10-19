@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "review": "Recovery47 resumed full-build terminal evidence",
+  "reviewedAtUtc": "2026-10-19T12:23:37.516009+00:00",
+  "decision": {
+    "terminalEvidence": "VERIFIED_FAILURE",
+    "firstStop": "EXISTING_300_MINUTE_ABSOLUTE_BUILD_PHASE_GUARD",
+    "productFailureEstablished": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeCause": "UNKNOWN",
+    "cleanup": "VERIFIED_FOR_DECLARED_OWNED_GROUPS",
+    "newHoursRunReadiness": "HOLD_PENDING_BETTER_SUBPHASE_REUSE_FEASIBILITY_EVIDENCE_OR_REVIEWED_TARGETED_DIAGNOSTIC"
+  },
+  "publicReceipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_TERMINAL_RESULT.json",
+    "bytes": 44671,
+    "sha256": "c75d15e1a29845d0d16ecd345e7013c50b034022dee881f0d6ba93e6ae1c37e7"
+  },
+  "execution": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39212933648,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39212933648",
+    "attempt": 1,
+    "event": "push",
+    "caller": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "fixture": "d3aeed32c8adabc88267e46cfbbd020f799adecb",
+    "job": 117930166634,
+    "jobName": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "runAndJobStatus": "completed",
+    "runAndJobConclusion": "failure",
+    "jobStartedAt": "2026-10-19T06:57:28Z",
+    "jobCompletedAt": "2026-10-19T11:58:12Z",
+    "jobCount": 1,
+    "newArtifacts": 0
+  },
+  "independentVerification": {
+    "providerRunJobsAndArtifactCollections": "PASS",
+    "providerDecodedLog": {
+      "bytes": 333653,
+      "sha256": "458932bb1d69ca4f86f71ff4cb4d9b422cadd9bad682a8a4980affee7c017575"
+    },
+    "providerLogMatchesSavedBytesAndDigest": true,
+    "actualReportInRawLog": {
+      "matchingObjects": 1,
+      "semanticEqualityToParsedReport": true
+    },
+    "progressObjects": {
+      "count": 621,
+      "allMatchRawLogExactly": true
+    },
+    "publicReceiptChecks": "Run/source/SDK/configuration/restore/context/stage cleanup/progress and curated before/after tail counts match raw evidence. No raw paths, process identity tags, credentials or private source text found.",
+    "apiResponseBindings": {
+      "run": {
+        "bytes": 13428,
+        "sha256": "b7edcd580bc0fe9f4ea223c6d0f237a54370e864c96cb5eb198168e63542be60"
+      },
+      "jobs": {
+        "bytes": 3790,
+        "sha256": "a480508b998a51643d074561e782a928494f195f54c546e403febb7cba7a2c57"
+      },
+      "artifacts": {
+        "bytes": 32,
+        "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+      }
+    }
+  },
+  "observedStop": {
+    "firstFailure": {
+      "code": "phase-deadline",
+      "elapsedSeconds": 18001.19,
+      "stage": "full-build"
+    },
+    "monitorFailure": null,
+    "fixedPlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "absoluteJobOriginCapsMinutes": {
+      "restore": 60,
+      "fullBuild": 300,
+      "package": 315,
+      "nativeAndMozilla": 335,
+      "final": 345,
+      "platform": 360
+    },
+    "classification": "The recorded first stop is the existing full-build phase deadline at18001.19 seconds. This is earlier than the platform360-minute limit. It is not evidence of native/browser exit or an original compiler failure.",
+    "humanCancellationObserved": false,
+    "platformLimitReached": false,
+    "scope": "Recorded guard ordering and cleanup are positively supported; no CLI/UI cancellation is present in available evidence.",
+    "fullBuildExitCode": 254,
+    "fullBuildFailurePhase": "wait",
+    "leaderReap": {
+      "status": "reaped",
+      "exitCode": 254
+    },
+    "groupCleanup": "verified-gone",
+    "cleanupFailure": null,
+    "signalPrecision": "The guard invokes owned-process cleanup. The exact delivered signal or leaf compiler termination is not separately recorded; exit254 is the observed stage result."
+  },
+  "successfulPrerequisites": {
+    "actualMacQA": {
+      "total": 305,
+      "passed": 305,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 48.099
+    },
+    "actualRecording": {
+      "total": 14,
+      "passed": 14,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.333
+    },
+    "sdk": "Official source12133086104 was acquired successfully before its expiry and content-verified. Later service expiry does not invalidate this existing local SDK.",
+    "checkpointRestore": "PASS",
+    "checkpointOriginRun": 39197008470,
+    "existingCheckpointArtifact": 12164479528,
+    "restoredContextChecks": {
+      "all11True": true,
+      "historicKeysPinned": 4,
+      "remainingActualContextKeysExact": 7
+    },
+    "resumedEffectiveConfigVerified": true,
+    "compiledConfiguration": {
+      "debug": true,
+      "pgo": false,
+      "artifact": false,
+      "testsEnabled": true
+    },
+    "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "lastCompletedMonitoredStage": "effective-config",
+    "fullBuildCompleted": false,
+    "fullHostXULCompletion": "NOT_ESTABLISHED",
+    "package": "NOT_STARTED",
+    "nativeAuthentication": "NOT_STARTED",
+    "currentMozillaHarness": "NOT_STARTED",
+    "freshObjdir": false,
+    "sameJob": false,
+    "strictSameRunQualified": false,
+    "productQualification": false
+  },
+  "ownedCleanup": {
+    "mainStages": 46,
+    "naturalZeroExitStages": 45,
+    "deadlineStoppedStages": 1,
+    "allLeadersExactlyReaped": true,
+    "allDeclaredOwnedGroupsVerifiedGone": true,
+    "cleanupFailures": 0,
+    "preflightStages": 5,
+    "preflightAllNaturalZeroReapedGoneClean": true,
+    "scope": "Declared owned stage groups and exact leaders; no all-UID or native-registry completion claim is added."
+  },
+  "resourceAndProgress": {
+    "fullBuildPeakRSSMiB": 6361,
+    "fullBuildMinimumFreeGiB": 74.35,
+    "rssLimitMiB": 10240,
+    "freeDiskMinimumGiB": 8,
+    "resourceViolationRecorded": false,
+    "totalProgressRecords": 621,
+    "fullBuildProgressRecords": 539,
+    "firstFullBuildProgress": {
+      "timestamp": "2026-10-19T07:22:38.4073430Z",
+      "stage": "full-build",
+      "elapsedMinutes": 25.2,
+      "freeGiB": 89.6,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 14,
+      "ownedGroupCPUSeconds": 0.077,
+      "processes": 1,
+      "quietSeconds": 0,
+      "states": [
+        "R"
+      ]
+    },
+    "lastFullBuildProgress": {
+      "timestamp": "2026-10-19T11:57:25.0238980Z",
+      "stage": "full-build",
+      "elapsedMinutes": 299.9,
+      "freeGiB": 74.3,
+      "logBytes": 19421104,
+      "ownedGroupRSSMiB": 272,
+      "ownedGroupCPUSeconds": 152.795,
+      "processes": 13,
+      "quietSeconds": 0,
+      "states": [
+        "R",
+        "S"
+      ]
+    },
+    "lastActivityBeforeGuard": {
+      "sampleComplete": true,
+      "processes": 12,
+      "rssMiB": 277.015625,
+      "cpuSeconds": 153.138,
+      "states": [
+        "R",
+        "S"
+      ]
+    },
+    "lastFiveMinuteBracket": {
+      "selection": "preceding-sample-at-or-before-last-sample-minus-300-seconds-through-last-sample",
+      "requestedSeconds": 300,
+      "actualSeconds": 303.277168,
+      "samples": 11,
+      "first": {
+        "timestamp": "2026-10-19T11:52:21.7467300Z",
+        "stage": "full-build",
+        "elapsedMinutes": 294.9,
+        "freeGiB": 74.6,
+        "logBytes": 18611593,
+        "ownedGroupRSSMiB": 2330,
+        "ownedGroupCPUSeconds": 183.116,
+        "processes": 12,
+        "quietSeconds": 0,
+        "states": [
+          "R",
+          "S"
+        ]
+      },
+      "last": {
+        "timestamp": "2026-10-19T11:57:25.0238980Z",
+        "stage": "full-build",
+        "elapsedMinutes": 299.9,
+        "freeGiB": 74.3,
+        "logBytes": 19421104,
+        "ownedGroupRSSMiB": 272,
+        "ownedGroupCPUSeconds": 152.795,
+        "processes": 13,
+        "quietSeconds": 0,
+        "states": [
+          "R",
+          "S"
+        ]
+      },
+      "logGrowthBytes": 809511,
+      "allQuietSecondsZero": true,
+      "allHaveRunnableOwnedProcess": true,
+      "allOwnedGroupCPUSecondsPositive": true,
+      "cpuCounterDifferenceIsWholeBuildCPU": false
+    },
+    "nearest0836Utc": {
+      "timestamp": "2026-10-19T08:36:00.3195570Z",
+      "stage": "full-build",
+      "elapsedMinutes": 98.5
+    },
+    "interpretation": "Logs grew809511bytes during the303.277168-second11-sample bracket; CPU snapshots were positive and quietSeconds remained0. This supports recorded activity, not percentage complete, remaining duration or summed whole-build CPU."
+  },
+  "monitorEvidence": {
+    "retainedCount": 16,
+    "retentionLimit": 16,
+    "totalRecoveredObservationCount": null,
+    "retainedCountIsTotal": false,
+    "allRetainedSamplesEventuallyComplete": true,
+    "retainedAttempts": {
+      "2": 15,
+      "3": 1
+    },
+    "retainedPartialUnknownCounts": {
+      "short-task-info": 15,
+      "inventory-timeout": 2
+    },
+    "unknownMeasurementsCoercedToZero": false,
+    "stoppingMonitorFailure": null,
+    "preflightRetainedDiagnostics": 0,
+    "scope": "The retained16 recovered diagnostics eventually reached complete samples at attempts2/3; older entries may have rotated out. Null stopping monitorFailure is not zero transient-query failures."
+  },
+  "failureTailEvidence": {
+    "leaderExitAlreadyObservedAtGuard": null,
+    "beforeCleanup": {
+      "fileBytes": 19548273,
+      "matchingRecordsInBoundedTail": 0
+    },
+    "afterCleanup": {
+      "fileBytes": 19556475,
+      "matchingRecordsInBoundedTail": 8
+    },
+    "tailMarkerCountsEstablishOriginalProductFailure": false,
+    "rawTextPublished": false,
+    "interpretation": "Before-cleanup bounded tail had0 classified records; after-cleanup had8 interruption records. Tail absence is not proof of no earlier compiler error, and cleanup interruption does not establish original product failure."
+  },
+  "remainingKnowledge": {
+    "lastCompletedFinegrainedFullBuildPhase": "UNKNOWN",
+    "remainingFullBuildWork": "UNKNOWN",
+    "remainingDuration": "UNKNOWN",
+    "finishWithinAdditional45Minutes": "UNKNOWN",
+    "currentCargoOrObjectReuseAcceleration": "NOT_MEASURED",
+    "checkpointEvidence": "Content and configuration restoration is proved; a controlled current-build acceleration comparison or reuse/cache-hit proof is absent.",
+    "completedPriorOriginMilestones": "Producer45 naturally completed exports/Rust/pack; this does not identify where the current full build stopped or prove a current reuse speedup.",
+    "minimumNextEvidence": "A bounded source-bound diagnostic of existing Mach completed tier/target metadata could make a future stop informative. It must preserve unknown/truncation and never infer remaining time or cache hits from timestamps or hashes alone."
+  },
+  "executionPolicyAssessment": {
+    "designReview": {
+      "bytes": 4002,
+      "sha256": "e46780b2e1ebc0ff70b1d4d99b9e127a97097dd7adf226d87acb7e4bdfe90ead"
+    },
+    "implementationReview": {
+      "bytes": 6310,
+      "sha256": "8a3047dc6aba043702436961269bd739775fb425782f6f28e16a842974502091"
+    },
+    "status": "Consumer-only shared345 implementation is source-clear with default300/315/335 and plan/context unchanged; this does not prove completion within345.",
+    "unchangedFutureCaller337a": "NOT_RELEASED_FOR_ACTIVATION: it still retains the observed300-minute cutoff.",
+    "hoursRunReadiness": "HOLD under the latest subphase/reuse/feasibility request. A further run should answer a concrete remaining-work question through reviewed bounded evidence, not claim a45-minute completion forecast.",
+    "preservedRequirements": "Shared absolute job-origin deadline; no stage or nested clock reset; restore60/platform360/resource/stall/unknown/firstFailure/cleanup unchanged; nominal345-to360 reserve accurately described.",
+    "newArtifactOrProducerNeededForThisReview": false
+  },
+  "evidenceBindings": {
+    "consumerReport": {
+      "bytes": 167479,
+      "sha256": "6e748a96ab58e4d48dfe0e5fdb3f7a793460de44e5ac3c2bfdff5400cc800038",
+      "rawPublished": false
+    },
+    "terminalAPI": {
+      "bytes": 17234,
+      "sha256": "daec1197b449f591b9f6b58fd6ca4a9da361e72222868d5b4edd38afff1756d7",
+      "rawPublished": false
+    },
+    "progressExtract": {
+      "bytes": 210894,
+      "sha256": "636265fb975407dae8491f7a6c254f8a1ed40f3bfbe24c02f03b172fa0527d27",
+      "rawPublished": false
+    },
+    "decodedProviderLog": {
+      "bytes": 333653,
+      "sha256": "458932bb1d69ca4f86f71ff4cb4d9b422cadd9bad682a8a4980affee7c017575",
+      "rawPublished": false
+    }
+  },
+  "operations": {
+    "sourceEdits": false,
+    "newCiOrRefMutation": false,
+    "payloadDownload": false,
+    "newArtifactUpload": false,
+    "signingAuthenticationOrPermissionChange": false,
+    "activeJobLogRead": false
+  }
+}
