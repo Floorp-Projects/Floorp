@@ -44,22 +44,9 @@ export class WorkspacesToolbarButton {
       "workspacesToolbarButtonPanel",
       <PopupElement ctx={ctx} />,
       null,
-      (node) => {
+      () => {
         const exec = () => {
           setTimeout(() => this.updateButtonIfNeeded(true), 500);
-
-          const syncIndicator = createWorkspaceSyncIndicator(
-            ctx,
-            () => selectedWorkspaceID() ?? undefined,
-            () => {
-              const id = selectedWorkspaceID();
-              return id ? ctx.getRawWorkspace(id)?.name ?? "" : "";
-            },
-          );
-          bindWorkspaceSyncFocusTooltip(node, syncIndicator);
-          createEffect(() =>
-            applyWorkspaceSyncIndicator(node, syncIndicator())
-          );
 
           createEffect(() => {
             const _ = configStore.showWorkspaceNameOnToolbar;
@@ -88,8 +75,39 @@ export class WorkspacesToolbarButton {
     );
 
     const setupInterval = () => {
-      const intervalId = setInterval(() => this.updateButtonIfNeeded(), 500);
-      onCleanup(() => clearInterval(intervalId));
+      const windowOwner = getOwner();
+      const boundNodes = new WeakSet<Element>();
+      let stopped = false;
+      const update = () => {
+        if (stopped) return;
+        const node = this.getButtonNode();
+        if (node && !boundNodes.has(node)) {
+          boundNodes.add(node);
+          // CustomizableUI shares onCreated across windows. Bind each window's
+          // node here so it retains that window's workspace state and lifetime.
+          runWithOwner(windowOwner, () => {
+            const syncIndicator = createWorkspaceSyncIndicator(
+              ctx,
+              () => selectedWorkspaceID() ?? undefined,
+              () => {
+                const id = selectedWorkspaceID();
+                return id ? ctx.getRawWorkspace(id)?.name ?? "" : "";
+              },
+            );
+            bindWorkspaceSyncFocusTooltip(node, syncIndicator);
+            createEffect(() =>
+              applyWorkspaceSyncIndicator(node, syncIndicator())
+            );
+          });
+        }
+        this.updateButtonIfNeeded();
+      };
+      const intervalId = setInterval(update, 500);
+      onCleanup(() => {
+        stopped = true;
+        clearInterval(intervalId);
+      });
+      update();
     };
     if (owner) runWithOwner(owner, setupInterval);
     else createRoot(setupInterval);
