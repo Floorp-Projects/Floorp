@@ -1,0 +1,216 @@
+{
+  "schema": 1,
+  "review": "Recovery54 actual Mac fixed-boundary diagnostic terminal evidence",
+  "decision": "CLEAR_FOR_PUBLICATION_OVERALL_FAILURE_PRESERVED",
+  "openPublicationFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY54_TERMINAL_RESULT.json",
+    "bytes": 21492,
+    "sha256": "21c33ca2ded74fb65e698f537f0907861416d59b241f3d0ad2d8ae66b730ae68"
+  },
+  "bindings": {
+    "run": 39322232985,
+    "job": 118298917906,
+    "attempt": 1,
+    "event": "push",
+    "branch": "codex/mac-native-streaming-recovery54-20261019",
+    "caller": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+    "callerTree": "c02bef2b2eb89dd6d476d4a19011ae32cddfb7ff",
+    "workflow": {
+      "bytes": 47930,
+      "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c"
+    },
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "fixtureTree": "de348633b4a2cf827fe31ef5ab54d145eb60fcf2",
+    "parser": {
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5",
+    "prelaunchReview": {
+      "name": "floorp-recovery54-prelaunch-review.json",
+      "bytes": 6944,
+      "sha256": "83a7d480f39dae0b322f5f2216b31a4535c6062411ca1adf1590b139535524fd"
+    },
+    "implementationReview": {
+      "name": "floorp-recovery54-implementation-review.json",
+      "bytes": 9245,
+      "sha256": "efde8764beb07dfd523c9757fb105420caf3a9f33301691e0baf29a00e656089"
+    }
+  },
+  "independentProviderEvidence": {
+    "APIAndLogReadAfterTerminal": true,
+    "soleJob": true,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T20:47:24Z",
+    "completedAt": "2026-10-19T20:52:01Z",
+    "runAndJobConclusion": "failure",
+    "artifacts": 0,
+    "decodedLog": {
+      "bytes": 108505,
+      "sha256": "ff39ce0b28e4b6266d0a9d10d6bda89cc0dcde9f1104b973e1f3705c15698d16"
+    },
+    "independentlyParsedObjects": 20,
+    "privateAPI": {
+      "name": "terminal-api.independent.private.json",
+      "bytes": 16309,
+      "sha256": "e4958cd3e2c78c52f5cedc1e04ff447256726b91c665761e1653fb655b08047c"
+    },
+    "privateParsedObjects": {
+      "name": "objects.independent.private.json",
+      "bytes": 41226,
+      "sha256": "2e55f9b165a3b8770cc6c34b68c07f8703edd5d2479cc7eae4bfe1aad55d8e35"
+    },
+    "providerProof": {
+      "name": "floorp-recovery54-independent-terminal-provider-proof.json",
+      "bytes": 1154,
+      "sha256": "8a3bab3c18899f88e04fd03093101f35245a3ffb8b5a34bb0a650b00de5dd3be"
+    }
+  },
+  "actualObservations": {
+    "originalQADensity": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "unconfirmed",
+      "reason": "build-completion-processing-limit",
+      "elapsedSeconds": 30.07684249299996,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": false,
+      "objectCount": null,
+      "compileCount": null
+    },
+    "additionalOwnedPhase": {
+      "densityObservation": {
+        "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+        "compileCount": null,
+        "completeCoverage": false,
+        "elapsedSeconds": 30.011218015999987,
+        "inputBytes": 195000385,
+        "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+        "objectCount": null,
+        "processingSeconds": 30,
+        "reason": "build-completion-processing-limit",
+        "resourceRows": 1000000,
+        "schema": 1,
+        "status": "unconfirmed"
+      },
+      "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5",
+      "lastReachedBoundary": "whole-document-validation",
+      "marks": [
+        {
+          "elapsedSeconds": 0.140053690000002,
+          "phase": "whole-document-validation"
+        }
+      ],
+      "parserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+      "realBuildPerformed": false,
+      "schema": 1,
+      "scope": "same-controlled-input-phase-observation",
+      "secondPassRowsEntered": 0
+    },
+    "QA": {
+      "total": 522,
+      "passed": 521,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "suiteSeconds": 193.697
+    },
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 1.358
+    },
+    "actualIndividualSerializerCases": 9,
+    "allNineExpectationsSatisfied": true
+  },
+  "failureAndCleanup": {
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 209.24
+    },
+    "originalQAAndFinalFailed": true,
+    "firstFailureFilePreservation": "true by executed immutable final equality predicate, not an independently downloaded private file",
+    "diagnosticContinuation": true,
+    "additionalPhaseProcedureExitCode": 0,
+    "phaseOwnedStageVerified": true,
+    "allSevenStagesExactReapedAndGroupsVerifiedGone": true,
+    "allSevenLastSamplesComplete": true,
+    "cleanupFailures": 0,
+    "preflightMonitorFailure": null,
+    "serializerMonitorFailure": null,
+    "retainedPreflightRecoveredDiagnostics": 1,
+    "retainedSerializerDiagnostics": 0,
+    "recoveredDiagnosticProjection": {
+      "stage": "checkpoint-tests",
+      "elapsedSeconds": 18.51,
+      "sampleComplete": true,
+      "sampleAttempts": 2,
+      "unknownKinds": {},
+      "partialSamples": [
+        {
+          "unknownKinds": {
+            "permission": 1
+          },
+          "formatClassifications": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo"
+            },
+            {
+              "kind": "permission",
+              "source": "libproc-taskallinfo"
+            }
+          ]
+        }
+      ],
+      "processIdentityTagsPublished": false
+    }
+  },
+  "precisionAssessment": [
+    "There are two separate collection attempts on the same fixed input. The original QA attempt reached its processing guard after 30.07684249299996 seconds; its internal reader boundary was not observed.",
+    "The additional instrumented attempt reached the processing guard after 30.011218015999987 seconds. It recorded only whole-document-validation at 0.140053690000002 seconds and did not reach the next profile-schema callback. This localizes that additional controlled traversal to the initial strict-document interval, without identifying a specific CPU, I/O, kernel or scheduler bottleneck.",
+    "The additional secondPassRowsEntered value is a known zero because the second-pass marker loop was not entered. It does not mean the input has zero rows or reveal first-pass byte/row progress. Target counts and coverage remain unconfirmed/null.",
+    "No phase attribution is transferred to the original QA attempt, Recovery50 or the unavailable Recovery48 production profile. The instrumented traversal remains a controlled fixture, not a reconstruction of the missing production profile.",
+    "The extra phase procedure validly exited zero with an unconfirmed observation. It did not promote QA or the job: the original first failure, failed QA, failed preflight and final failure remain preserved. Recording and nine serializer cases passed independently.",
+    "One retained complete second-attempt monitor sample followed a permission-classified partial sample. Its projection removes process tags. This is a recovered diagnostic, not a fatal monitor stop, and is not established as a cause of either collector deadline.",
+    "Private child-contract top-level flags and first-failure-file equality were checked by executed immutable gates. Actual individual case values were recovered from final output; no local case values were substituted.",
+    "Recovery48 stopped at its known shared345 full-build deadline. Unfinished compiler subphase and remaining work are unknown, and the original native exit cause remains unknown. No full host/XUL, current Mozilla case or native qualification was executed by this diagnostic."
+  ],
+  "publicationValidation": {
+    "curatedValuesComparedToIndependentRawAndAPI": true,
+    "negativeInvariantControlsRejected": 16,
+    "controls": {
+      "name": "floorp-recovery54-independent-terminal-controls.json",
+      "bytes": 738,
+      "sha256": "10cb2a1ad38bec2958e9ba002ab671f0f4c705554f5844502ef01ea17a994c72"
+    },
+    "publicPrivacy": "No private paths, process tags, raw argv/env, secret URLs or arbitrary exception text are published."
+  },
+  "remainingValidationBlocker": "Actual Mac dense processing still does not complete observation within the unchanged 30-second budget.",
+  "nextReviewBoundary": [
+    "Review any narrow initial-pass optimization separately against complete strict JSON semantics and unchanged input/budget/resource/ownership/stability checks.",
+    "A bounded Python version tuple and fixed JSON backend enum may help distinguish interpreter/backend context in a future short proof; neither is currently recovered as a new actual observation.",
+    "No new long build or product qualification follows from this evidence review."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutated": false,
+    "newSDKOrCheckpointDownloaded": false,
+    "heavyDensityOrFullQARerun": false,
+    "publicTerminalDocumentsWritten": 2
+  }
+}
