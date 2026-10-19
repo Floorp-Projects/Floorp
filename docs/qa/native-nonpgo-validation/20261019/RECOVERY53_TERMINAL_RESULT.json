@@ -1,0 +1,619 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY53_SAME_DENSE_INPUT_REASON_AND_INDEPENDENT_CONTROLS_TERMINAL",
+  "status": "failed",
+  "run": {
+    "id": 39319963643,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39319963643",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "caller": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae"
+  },
+  "job": {
+    "id": 118291151163,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T20:31:10Z",
+    "completedAt": "2026-10-19T20:34:37Z",
+    "conclusion": "failure"
+  },
+  "decodedProviderLog": {
+    "bytes": 88054,
+    "sha256": "0c41ec9afa3471a957a7752abcd1d456bd6c9dd64c0e994a0bc11ef076b4d194",
+    "rawPublished": false
+  },
+  "preflight": {
+    "status": "failed",
+    "diagnosticContinuation": true,
+    "QA": {
+      "status": "failed",
+      "complete": true,
+      "total": 522,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 167.465,
+      "bytes": 101111,
+      "sha256": "78320908db5cb83ce7f4536c28a7627ae0beae4fc794535e596f5c0db5cbff1c",
+      "cases": [
+        {
+          "outcome": "FAIL",
+          "test": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+          "phase": "test_whole_one_million_small_resource_rows_remain_processable",
+          "frames": [
+            {
+              "file": "test_build_completion.py",
+              "line": 450
+            }
+          ],
+          "exceptionType": "AssertionError"
+        }
+      ],
+      "passed": 521
+    },
+    "recording": {
+      "status": "passed",
+      "complete": true,
+      "total": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.519,
+      "bytes": 2757,
+      "sha256": "c367e1103c3f2ecb0f384aeea8719a0256a29fb1fa15e7783152988f463fffa4",
+      "cases": [],
+      "passed": 14
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 192.11
+    },
+    "monitorFailure": null,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "peakRSSMiB": 50,
+        "minimumFreeGiB": 107.73,
+        "logBytes": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.73,
+        "logBytes": 377
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "peakRSSMiB": 476,
+        "minimumFreeGiB": 107.54,
+        "logBytes": 101111
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "peakRSSMiB": 14,
+        "minimumFreeGiB": 107.73,
+        "logBytes": 2757
+      },
+      {
+        "stage": "monitor-preflight",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "peakRSSMiB": 10,
+        "minimumFreeGiB": 107.73,
+        "logBytes": 0
+      }
+    ]
+  },
+  "densityObservation": {
+    "schema": 1,
+    "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.01289199200005,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "completeCoverage": false,
+    "objectCount": null,
+    "compileCount": null
+  },
+  "officialFixedSource": {
+    "schema": 1,
+    "status": "passed",
+    "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "bytes": 126050,
+    "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "officialContentsAPI": true,
+    "tokenPublished": false
+  },
+  "serializerDriver": {
+    "status": "passed",
+    "contractVerified": true,
+    "firstFailure": null,
+    "driverFailure": null,
+    "monitorFailure": null,
+    "monitorFailureObserved": false,
+    "outstandingGroups": false,
+    "evidenceWriteFailure": false,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "build-completion-contract",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "peakRSSMiB": 24,
+        "minimumFreeGiB": 107.69,
+        "cleanupFailure": null
+      }
+    ]
+  },
+  "finalImmutableRuntimeGate": {
+    "status": "failed",
+    "monitorPreflightVerified": false,
+    "officialPinnedSerializerSourceVerified": true,
+    "bothSerializerFormatsAndNegativesVerified": true,
+    "ownedStageReapedAndGroupGone": true,
+    "qualification": "synthetic-serializer-contract-actual-source",
+    "realBuildPerformed": false,
+    "mozillaQualification": false,
+    "resourceQualification": false,
+    "sdkAcquired": false,
+    "checkpointDownloaded": false,
+    "newArtifacts": 0,
+    "largeWholeProfilesAndNegativesVerified": true,
+    "densityObservation": {
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "compileCount": null,
+      "completeCoverage": false,
+      "elapsedSeconds": 30.01289199200005,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "objectCount": null,
+      "processingSeconds": 30,
+      "reason": "build-completion-processing-limit",
+      "resourceRows": 1000000,
+      "schema": 1,
+      "status": "unconfirmed"
+    },
+    "recordingSuiteVerified": true,
+    "diagnosticContinuation": true,
+    "firstFailurePreserved": true,
+    "serializerCases": [
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "positive",
+        "expectationSatisfied": true,
+        "format": "jsonl",
+        "inputBytes": 12881,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 2,
+            "SharedLib": 2
+          },
+          "lastFinishedTier": {
+            "endTimeMs": 40000.0,
+            "tier": "compile"
+          },
+          "profileFormat": "jsonl",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": 35000.0,
+              "status": "observed-finished"
+            },
+            "xpcshell": {
+              "endTimeMs": 30000.0,
+              "status": "observed-finished"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "no-end",
+        "expectationSatisfied": true,
+        "format": "jsonl",
+        "inputBytes": 12620,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 0,
+            "SharedLib": 0
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": "jsonl",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "truncated",
+        "expectationSatisfied": true,
+        "format": "jsonl",
+        "inputBytes": 12879,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": false,
+          "finishedTargetCounts": {
+            "Program": null,
+            "SharedLib": null
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": null,
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "unconfirmed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "positive",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 12895,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 2,
+            "SharedLib": 2
+          },
+          "lastFinishedTier": {
+            "endTimeMs": 40000.0,
+            "tier": "compile"
+          },
+          "profileFormat": "whole-profile",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": 35000.0,
+              "status": "observed-finished"
+            },
+            "xpcshell": {
+              "endTimeMs": 30000.0,
+              "status": "observed-finished"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "no-end",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 12762,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 0,
+            "SharedLib": 0
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": "whole-profile",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "truncated",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 12893,
+        "largeProfile": false,
+        "observation": {
+          "completeCoverage": false,
+          "finishedTargetCounts": {
+            "Program": null,
+            "SharedLib": null
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": null,
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "unconfirmed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "positive",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 17845903,
+        "largeProfile": true,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 2,
+            "SharedLib": 2
+          },
+          "lastFinishedTier": {
+            "endTimeMs": 40000.0,
+            "tier": "compile"
+          },
+          "profileFormat": "whole-profile",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": 35000.0,
+              "status": "observed-finished"
+            },
+            "xpcshell": {
+              "endTimeMs": 30000.0,
+              "status": "observed-finished"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "no-end",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 17845498,
+        "largeProfile": true,
+        "observation": {
+          "completeCoverage": true,
+          "finishedTargetCounts": {
+            "Program": 0,
+            "SharedLib": 0
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": "whole-profile",
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "observed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      },
+      {
+        "cleanup": {
+          "childPipeClosed": true,
+          "failures": [],
+          "parentPipeClosed": true,
+          "processClosed": true,
+          "streamClosed": true,
+          "workerNeverStarted": true
+        },
+        "control": "truncated",
+        "expectationSatisfied": true,
+        "format": "whole-profile",
+        "inputBytes": 17845901,
+        "largeProfile": true,
+        "observation": {
+          "completeCoverage": false,
+          "finishedTargetCounts": {
+            "Program": null,
+            "SharedLib": null
+          },
+          "lastFinishedTier": {
+            "endTimeMs": null,
+            "tier": null
+          },
+          "profileFormat": null,
+          "provesBuildCompletion": false,
+          "provesCacheHit": false,
+          "status": "unconfirmed",
+          "targets": {
+            "XUL": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            },
+            "xpcshell": {
+              "endTimeMs": null,
+              "status": "unconfirmed"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "assessment": {
+    "actualSameInputReasonEstablished": "build-completion-processing-limit",
+    "actualSameInputProcessingSeconds": 30.01289199200005,
+    "parserBudgetSeconds": 30,
+    "resourceRows": 1000000,
+    "overallFailurePreserved": true,
+    "firstFailureFilePreservedByImmutableExecutedGate": true,
+    "independentRecordingPassed": true,
+    "independentNineSerializerCasesPassed": true,
+    "threeLargeWholeCasesPassed": true,
+    "individualCaseValuesRecoveredFromActualMac": true,
+    "localCaseValuesSubstituted": false,
+    "allSixStagesExactReapedAndGroupsVerifiedGone": true,
+    "monitorFailureObserved": false,
+    "cleanupFailures": 0,
+    "actualMacDenseQualification": "NOT_PASSED",
+    "actualRecovery48ProfileReproduced": false,
+    "actualMacParsePassAndBottleneckEstablished": false,
+    "validatedRereadMetActualMacBudget": false,
+    "Recovery50UnretainedReasonRetroactivelyEstablished": false,
+    "fullHostXUL": "NOT_TESTED",
+    "actualMozillaCases": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeCause": "UNKNOWN",
+    "SDKAcquired": false,
+    "checkpointDownloaded": false,
+    "artifacts": 0,
+    "newLongRunStarted": false
+  },
+  "next": "Measure only fixed bounded parser-phase boundaries on the actual Mac with the same input and 30-second budget before further parser optimization. Preserve strict complete JSON validation, file ownership/stability checks, the original first failure and failed overall outcome. No new long build or product qualification follows from this result."
+}
