@@ -1,0 +1,249 @@
+{
+  "schema": 1,
+  "review": "Recovery51 actual Mac reason diagnostic terminal evidence",
+  "decision": "CLEAR_FOR_PUBLICATION_OVERALL_FAILURE_PRESERVED",
+  "openPublicationFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY51_TERMINAL_RESULT.json",
+    "bytes": 17783,
+    "sha256": "743ff67bbbc37da62b7fabc2a8bdb08ff87c48fa01ad036d82fac8c1d9df8b9a"
+  },
+  "bindings": {
+    "run": 39315456303,
+    "job": 118275642913,
+    "attempt": 1,
+    "event": "push",
+    "branch": "codex/mac-native-streaming-recovery51-20261019",
+    "caller": "d208fe93278d6c557f41df1946a5bd57be300541",
+    "callerTree": "1c613841bf533b77b53b05883d9590a205d09719",
+    "fixture": "6996647e3fe717522a6288d6554209f0a387121e",
+    "fixtureTree": "e1c14fbcd5dad211702bd8a079528ec9789e26f5",
+    "workflow": {
+      "bytes": 36511,
+      "sha256": "b0f5e7382e1443f99a160f41e3cba5153446c9d71a363e4777ad7fc0937e2306"
+    },
+    "parser": {
+      "bytes": 24354,
+      "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+    },
+    "immutableSourceFiles": {
+      "test_build_completion.py": {
+        "bytes": 30711,
+        "sha256": "348aa2161cc38b2e391f9da1919e9370386355d76ddd8aea808785efa239b9f7"
+      },
+      "unittest_receipt.py": {
+        "bytes": 23266,
+        "sha256": "d08ca28513553b985188c41e1a4df864e004abbbfd4d08783c7a9135283e064d"
+      },
+      "test_unittest_receipt.py": {
+        "bytes": 25679,
+        "sha256": "e4bd5249891926780eaee46c9f2dcfb28269d75945d81841defbb00eef317d59"
+      }
+    },
+    "prelaunchReview": {
+      "name": "floorp-recovery51-prelaunch-review.json",
+      "bytes": 8517,
+      "sha256": "8485e871dd7f61198f039971c9b2a53b913ec04b5b186493e4c5b57cd1a1f25b"
+    }
+  },
+  "independentProviderEvidence": {
+    "APIAndLogReadAfterTerminal": true,
+    "soleJob": true,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T19:58:58Z",
+    "completedAt": "2026-10-19T20:03:13Z",
+    "runAndJobConclusion": "failure",
+    "artifacts": 0,
+    "decodedLog": {
+      "bytes": 89414,
+      "sha256": "c85c2457ef8e988bb06fd72131c26a56fb395b1fc0828fbea98f74f5992537fe"
+    },
+    "decodedLogEqualsPrivateSavedFile": true,
+    "independentlyParsedObjects": 18,
+    "objectsEqualPrivateSavedObjects": true,
+    "privateAPI": {
+      "name": "terminal-api.private.json",
+      "bytes": 16357,
+      "sha256": "fff7bb2d4b650dac75a0fea7ab390b7b34b1bbb36103601881cc1e49c14cb42c"
+    },
+    "privateParsedObjects": {
+      "name": "objects.private.json",
+      "bytes": 33430,
+      "sha256": "39237dc6ed04779fab40d6fb64dbdd79b07d28d976e0dc2b5e9c2479a3d73be2"
+    },
+    "providerProof": {
+      "name": "floorp-recovery51-independent-terminal-provider-proof.json",
+      "bytes": 2843,
+      "sha256": "ba720d2158c548e45cae70bcbc1d21b6ae8efe7f57aa85c5c041622f25db9a0d"
+    }
+  },
+  "actualDensityResult": {
+    "schema": 1,
+    "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.01288323999995,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "completeCoverage": false,
+    "objectCount": null,
+    "compileCount": null
+  },
+  "actualQA": {
+    "total": 522,
+    "passed": 521,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "suiteSeconds": 212.538,
+    "failedCase": {
+      "outcome": "FAIL",
+      "test": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "phase": "test_whole_one_million_small_resource_rows_remain_processable",
+      "frames": [
+        {
+          "file": "test_build_completion.py",
+          "line": 450
+        }
+      ],
+      "exceptionType": "AssertionError"
+    }
+  },
+  "separateActualControls": {
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "seconds": 0.496
+    },
+    "ordinaryPinnedSerializerAcquisition": {
+      "schema": 1,
+      "status": "passed",
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "officialContentsAPI": true,
+      "tokenPublished": false
+    },
+    "serializerCases": 9,
+    "caseValuesRecoveredFromActualFinalOutput": true,
+    "largeWholeInputBytes": [
+      17845903,
+      17845498,
+      17845901
+    ],
+    "allNineExpectationsSatisfied": true,
+    "positiveCases": "observed complete coverage with the expected finished targets",
+    "noEndCases": "observed complete coverage with zero finished targets",
+    "truncatedCases": "unconfirmed coverage with null counts",
+    "allSerializerHandlesClosedAndWorkerNeverStarted": true
+  },
+  "failureAndCleanup": {
+    "preflightStatus": "failed",
+    "diagnosticContinuation": true,
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 237.5
+    },
+    "finalStatus": "failed",
+    "firstFailureFilePreserved": "true by the executed immutable final equality predicate",
+    "preflightMonitorFailure": null,
+    "driverMonitorFailure": null,
+    "retainedPreflightDiagnostics": 0,
+    "retainedDriverDiagnostics": 0,
+    "actualStages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 1,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "monitor-preflight",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "build-completion-contract",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      }
+    ],
+    "allSixExactlyReapedAndGroupsVerifiedGone": true
+  },
+  "precisionAssessment": [
+    "The controlled one-million-resource-row input reached the unchanged cooperative 30-second processing guard on this actual Mac run. Its measured collector elapsed was 30.01288323999995 seconds and its reason was build-completion-processing-limit.",
+    "The density result remains unconfirmed, with false coverage and null object and compile counts. The 212.538 seconds are the whole QA suite, not the density collection duration.",
+    "The exact parse pass and performance bottleneck were not observed. A source-level optimization hypothesis is not established as the measured cause by this reason alone.",
+    "The narrowly recognized density failure allowed independent diagnostic stages to execute. QA, preflight and the final job remained failed; successful recording and serializer cases do not qualify the dense Mac path.",
+    "All nine individual case values were recovered from actual final output. Private child-contract top-level flags and first-failure-file preservation were validated by executed immutable predicates; they are not represented as separately downloaded private files. No local case values were substituted.",
+    "The projected driver leader record includes placeholder error metadata. The public receipt correctly retains the actual reaped status and typed exit code rather than interpreting that placeholder as a failure.",
+    "This result does not retrospectively establish Recovery50's unretained reason. It is not a reproduction of the missing Recovery48 production profile, whose exact format, size and compiler subphase were not recovered.",
+    "Recovery48 stopped at its known shared345 full-build deadline. Unfinished compiler subphase and remaining work remain unknown; full host/XUL, current Mozilla cases and native authentication were not tested here, and the original native exit cause remains unknown."
+  ],
+  "publicationValidation": {
+    "curatedFieldsComparedToIndependentRawAndAPI": true,
+    "nineNegativeInvariantControlsRejected": true,
+    "controls": {
+      "name": "floorp-recovery51-independent-terminal-controls.json",
+      "bytes": 453,
+      "sha256": "37eb221d5ba8ec8ba2236fbc1569bd0eb2c9857c5b9c227b080517d107b50799"
+    },
+    "publicPrivacy": "No private paths, raw process identifiers, arbitrary command text, environment values, secret URLs or conversation details were found."
+  },
+  "remainingValidationBlocker": "The same controlled dense input still fails to complete observation within the existing processing budget on the actual Intel Mac.",
+  "nextReviewBoundary": [
+    "Review any minimal performance change separately, preserving the same input, processing limit, strict complete JSON validation, ownership and stability checks, unknown semantics and resource limits.",
+    "Use local grammar, bound and timing controls followed by actual Mac evidence to evaluate the new implementation; do not relabel this failed dense qualification as a pass.",
+    "No new long build or product qualification is authorized by this evidence review."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutations": false,
+    "additionalPayloadDownloads": false,
+    "heavyFullQAOrDensityReexecutionDuringTerminalReview": false
+  }
+}
