@@ -256,26 +256,28 @@ async function testNativeDebugger(): Promise<void> {
         })).result.value.includes("inserted"),
       "native text input changes editor",
     );
+    const isMac = Services.appinfo.OS === "Darwin";
+    const selectAllModifiers = isMac ? 4 : 2;
     await command("Input.dispatchKeyEvent", {
       type: "rawKeyDown",
       key: "a",
       code: "KeyA",
       windowsVirtualKeyCode: 65,
       nativeVirtualKeyCode: 65,
-      modifiers: 2,
+      modifiers: selectAllModifiers,
     });
     await command("Input.dispatchKeyEvent", {
       type: "keyUp",
       key: "a",
       code: "KeyA",
       windowsVirtualKeyCode: 65,
-      modifiers: 2,
+      modifiers: selectAllModifiers,
     });
     await command("Input.dispatchKeyEvent", {
       type: "keyUp",
-      key: "Control",
-      code: "ControlLeft",
-      windowsVirtualKeyCode: 17,
+      key: isMac ? "Meta" : "Control",
+      code: isMac ? "MetaLeft" : "ControlLeft",
+      windowsVirtualKeyCode: isMac ? 91 : 17,
       modifiers: 0,
     });
     await command("Input.insertText", { text: "native keyboard replacement" });
