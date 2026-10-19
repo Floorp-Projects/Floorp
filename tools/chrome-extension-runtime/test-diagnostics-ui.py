@@ -368,7 +368,7 @@ export const ChromeExtensionUpdateScheduler={
             check(bool(next_instance) and next_instance != initial_instance, "Reload button restarts the actual extension background")
             details(addon_id)
 
-            japanese = json.loads((ROOT / "i18n/ja-JP/browser-chrome.json").read_text())["addons"]["chromeDiagnostics"]
+            japanese = json.loads((ROOT / "i18n/ja-JP/browser-chrome.json").read_text(encoding="utf-8"))["addons"]["chromeDiagnostics"]
             client.context("chrome")
             client.script("""
                 const {I18nUtils}=ChromeUtils.importESModule('resource://noraneko/modules/i18n/I18n-Utils.sys.mjs');
