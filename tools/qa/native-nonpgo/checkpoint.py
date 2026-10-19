@@ -569,15 +569,48 @@ def inspect(path, spec, deadline, expected_manifest, staging=None):
     return manifest
 
 
-def restore(plan_path, source, task, sdk, deadline):
+def restore(plan_path, source, task, sdk, deadline, *, replay_origin=False):
     plan = json.loads(plan_path.read_text())
     spec = plan['checkpoint']
     ready = json.loads((task / 'checkpoint-download.json').read_text())
+    require(('replay' in ready) == replay_origin, 'checkpoint-replay-opt-in')
     path = task / spec['artifactName']
     require(path.stat().st_size == ready['bytes'] <= spec['maxStoredBytes'] and
             digest(path) == ready['sha256'], 'checkpoint-download-integrity')
     manifest = inspect(path, spec, deadline, ready['manifestSHA256'])
-    require(manifest['context'] == context(plan_path, source, task, sdk), 'checkpoint-context-mismatch')
+    actual_context = context(plan_path, source, task, sdk)
+    replay_proof = None
+    if 'replay' in ready:
+        from checkpoint_replay import load_config, validate_receipt, compare_context
+        config = load_config()
+        validate_receipt(config, ready['replay'], actual_context)
+        require(all(ready.get(key) == config['origin'][origin_key] for key, origin_key in
+                    (('bytes', 'bytes'), ('sha256', 'sha256'), ('manifestSHA256', 'manifestSHA256'),
+                     ('artifact', 'artifact'), ('producerJob', 'producerJob'))),
+                'checkpoint-replay-download-binding')
+        require(manifest['buildDate'] == config['buildDate'], 'checkpoint-replay-build-date')
+        # Only fixed key names and equality booleans enter this diagnostic.
+        # Preserve a validation exception if the evidence write also fails.
+        evidence = {'contract': config['contract'], 'status': 'failed',
+                    'keysMatch': set(manifest['context']) == set(actual_context),
+                    'keyMatches': {key: manifest['context'].get(key) ==
+                                   (config['origin'][key] if key in ('run', 'attempt', 'head', 'fixture')
+                                    else value) for key, value in actual_context.items()}}
+        primary = None
+        try:
+            replay_proof = compare_context(manifest['context'], actual_context, config)
+            evidence['status'] = 'passed'
+        except BaseException as error:
+            primary = error
+            raise
+        finally:
+            try:
+                write_json(task / 'checkpoint-replay-context.json', evidence)
+            except OSError:
+                if primary is None:
+                    raise
+    else:
+        require(manifest['context'] == actual_context, 'checkpoint-context-mismatch')
     require(manifest['buildDate'] == os.environ['MOZ_BUILD_DATE'], 'checkpoint-producer-completion')
     validate_completion(manifest['boundary'], spec)
     verify_boundary_payload(manifest, task)
@@ -603,6 +636,9 @@ def restore(plan_path, source, task, sdk, deadline):
             if row['kind'] == 'dir':
                 target.mkdir(parents=True, exist_ok=True, mode=0o700)
         root.rename(mapping[name])
+    # Build the complete link graph before resolving any reference. A valid
+    # forward or cross-state chain can depend on a link created later.
+    # Directories retain their temporary writable modes through construction.
     for name, rows in manifest['states'].items():
         for row in rows:
             target = mapping[name] / row['path']
@@ -611,13 +647,22 @@ def restore(plan_path, source, task, sdk, deadline):
                         row['reference'][0] in mapping, 'checkpoint-link-reference')
                 target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
                 target.symlink_to(row['target'])
+    for name, rows in manifest['states'].items():
+        for row in rows:
+            target = mapping[name] / row['path']
+            if row['kind'] == 'link':
                 require(link_reference(target, mapping) == row['reference'], 'checkpoint-link-mismatch')
                 if stat.S_IMODE(target.lstat().st_mode) != row['mode']:
                     require(hasattr(os, 'lchmod'), 'checkpoint-link-mode-unavailable')
                     os.lchmod(target, row['mode'])
-            else:
+            elif row['kind'] == 'file':
                 target.chmod(row['mode'])
         restore_times(mapping[name], rows)
+        # Apply restrictive directory permissions only after link construction
+        # and timestamps, without changing the final captured modes.
+        directories = [row for row in rows if row['kind'] == 'dir']
+        for row in sorted(directories, key=lambda item: len(PurePosixPath(item['path']).parts), reverse=True):
+            (mapping[name] / row['path']).chmod(row['mode'])
         require(tree(mapping[name], mapping, deadline, spec['maxEntries'], spec['maxLogicalBytes'],
                      state_name=name) == rows,
                 'checkpoint-restored-tree')
@@ -626,7 +671,8 @@ def restore(plan_path, source, task, sdk, deadline):
     write_json(task / 'checkpoint-expected-config.json', {'substs': manifest['substs']})
     return {'buildDate': manifest['buildDate'], 'producerBoundary': manifest['boundary'],
             'archiveSHA256': ready['sha256'], 'manifestSHA256': ready['manifestSHA256'],
-            'qualification': spec['qualification'], 'freshObjdir': False, 'sameJob': False}
+            'qualification': config['contract'] if replay_proof is not None else spec['qualification'],
+            'replay': ready.get('replay'), 'freshObjdir': False, 'sameJob': False}
 
 
 def verify_restored_config(task):
@@ -641,14 +687,17 @@ def main():
     parser.add_argument('mode', choices=('pack', 'restore'))
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--task', type=Path, required=True)
+    parser.add_argument('--replay-origin', action='store_true')
     args = parser.parse_args()
+    require(not args.replay_origin or args.mode == 'restore', 'checkpoint-replay-role')
     plan_path = Path(__file__).with_name('plan.json')
     plan = json.loads(plan_path.read_text())
     sdk = Path(json.loads((args.task / 'sdk-materialized.json').read_text())['path'])
     minute = plan['checkpoint']['producerPackDeadlineMinutes' if args.mode == 'pack'
                                 else 'consumerRestoreDeadlineMinutes']
     deadline = float((args.task / 'started-monotonic').read_text()) + minute * 60
-    result = (pack if args.mode == 'pack' else restore)(plan_path, args.source, args.task, sdk, deadline)
+    result = (pack(plan_path, args.source, args.task, sdk, deadline) if args.mode == 'pack' else
+              restore(plan_path, args.source, args.task, sdk, deadline, replay_origin=args.replay_origin))
     write_json(args.task / ('checkpoint-' + args.mode + '.json'), result)
     print(json.dumps({'checkpoint': args.mode, 'result': result}), flush=True)
 

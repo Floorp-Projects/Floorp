@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+  "origin": {
+    "run": "39197008470",
+    "attempt": "1",
+    "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "fixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+    "producerJob": 117881829274,
+    "artifact": 12164479528,
+    "bytes": 2213942620,
+    "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "createdAt": "2026-10-19T05:20:31Z",
+    "expiresAt": "2026-10-20T05:19:56Z"
+  },
+  "buildDate": "20261019035607"
+}

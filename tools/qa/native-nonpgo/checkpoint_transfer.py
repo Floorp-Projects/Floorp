@@ -19,11 +19,14 @@ def main():
     parser.add_argument('mode', choices=('init', 'fetch', 'confirm'))
     parser.add_argument('--role', choices=('producer', 'consumer'), required=True)
     parser.add_argument('--task', type=Path, required=True)
+    parser.add_argument('--replay-origin', action='store_true')
     args = parser.parse_args()
     plan = json.loads(Path(__file__).with_name('plan.json').read_text())
     spec = plan['checkpoint']
     require(args.mode == 'init' or args.role == ('producer' if args.mode == 'confirm' else 'consumer'),
             'checkpoint-transfer-role')
+    require(not args.replay_origin or (args.mode == 'fetch' and args.role == 'consumer'),
+            'checkpoint-replay-role')
     deadline = (time.monotonic() + 90 if args.mode == 'init' else
                 float((args.task / 'started-monotonic').read_text()) +
                 (345 if args.mode == 'confirm' else 40) * 60)
@@ -61,10 +64,22 @@ def main():
         write_json(args.task / 'job-origin.json', {'job': selected[0]['id'], 'startedAt': selected[0]['started_at'],
                                                  'run': run_id, 'role': args.role})
         return
-    artifact_id = os.environ['CHECKPOINT_ARTIFACT_ID']
+    replay_config = None
+    if args.replay_origin:
+        from checkpoint_replay import load_config, validate_origin
+        replay_config = load_config()
+        selected = [row for row in jobs['jobs'] if row['name'] == 'checkpoint-consumer' and
+                    row['status'] == 'in_progress']
+        origin = json.loads((args.task / 'job-origin.json').read_text())
+        require(len(selected) == 1 and selected[0]['labels'] == ['macos-15-intel'] and
+                origin == {'job': selected[0]['id'], 'startedAt': selected[0]['started_at'],
+                           'run': run_id, 'role': 'consumer'}, 'checkpoint-replay-current-job')
+    artifact_id = (str(replay_config['origin']['artifact']) if replay_config else
+                   os.environ['CHECKPOINT_ARTIFACT_ID'])
     require(artifact_id.isdecimal(), 'checkpoint-artifact-id')
     artifact = api('artifacts/' + artifact_id)
-    require(artifact['id'] == int(artifact_id) and artifact['workflow_run']['id'] == int(run_id) and
+    artifact_run = replay_config['origin']['run'] if replay_config else run_id
+    require(artifact['id'] == int(artifact_id) and artifact['workflow_run']['id'] == int(artifact_run) and
             artifact['name'] == spec['artifactName'] and not artifact['expired'] and
             0 < artifact['size_in_bytes'] <= spec['maxStoredBytes'], 'checkpoint-artifact-provenance')
     if args.mode == 'confirm':
@@ -81,11 +96,22 @@ def main():
         write_json(args.task / 'checkpoint-service.json', value)
         print(json.dumps({'checkpointArtifact': value}), flush=True)
         return
-    producer = [row for row in jobs['jobs'] if row['name'] == 'checkpoint-producer']
-    require(len(producer) == 1 and producer[0]['conclusion'] == 'success', 'checkpoint-producer-job')
-    checksum = os.environ['CHECKPOINT_ARCHIVE_SHA256']
-    manifest_hash = os.environ['CHECKPOINT_MANIFEST_SHA256']
-    size = os.environ['CHECKPOINT_ARCHIVE_BYTES']
+    if replay_config:
+        source_run = api('runs/' + artifact_run)
+        source_jobs = api('runs/' + artifact_run + '/jobs')
+        source_artifacts = api('runs/' + artifact_run + '/artifacts')
+        validate_origin(replay_config, source_run, source_jobs, artifact, source_artifacts)
+        require(run_id != artifact_run, 'checkpoint-replay-current-run')
+        producer = [{'id': replay_config['origin']['producerJob']}]
+        checksum = replay_config['origin']['sha256']
+        manifest_hash = replay_config['origin']['manifestSHA256']
+        size = str(replay_config['origin']['bytes'])
+    else:
+        producer = [row for row in jobs['jobs'] if row['name'] == 'checkpoint-producer']
+        require(len(producer) == 1 and producer[0]['conclusion'] == 'success', 'checkpoint-producer-job')
+        checksum = os.environ['CHECKPOINT_ARCHIVE_SHA256']
+        manifest_hash = os.environ['CHECKPOINT_MANIFEST_SHA256']
+        size = os.environ['CHECKPOINT_ARCHIVE_BYTES']
     require(re.fullmatch('[0-9a-f]{64}', checksum) and re.fullmatch('[0-9a-f]{64}', manifest_hash) and
             size.isdecimal() and int(size) == artifact['size_in_bytes'] and
             artifact['digest'] == 'sha256:' + checksum, 'checkpoint-expected-digest')
@@ -113,8 +139,15 @@ def main():
     require(count == int(size) and digest(path) == checksum, 'checkpoint-download-integrity')
     with path.open('rb') as stream:
         require(stream.read(2) == b'\x1f\x8b', 'checkpoint-raw-gzip')
-    write_json(args.task / 'checkpoint-download.json', {'bytes': count, 'sha256': checksum,
-               'manifestSHA256': manifest_hash, 'artifact': int(artifact_id), 'producerJob': producer[0]['id']})
+    receipt = {'bytes': count, 'sha256': checksum, 'manifestSHA256': manifest_hash,
+               'artifact': int(artifact_id), 'producerJob': producer[0]['id']}
+    if replay_config:
+        receipt['replay'] = {'contract': replay_config['contract'], 'origin': replay_config['origin'],
+                             'currentExecution': {key: os.environ[name] for key, name in
+                                 (('repository', 'GITHUB_REPOSITORY'), ('run', 'GITHUB_RUN_ID'),
+                                  ('attempt', 'GITHUB_RUN_ATTEMPT'), ('head', 'GITHUB_SHA'),
+                                  ('fixture', 'FLOORP_FIXTURE_SHA'))}}
+    write_json(args.task / 'checkpoint-download.json', receipt)
     print(json.dumps({'checkpointDownload': {'artifact': int(artifact_id), 'bytes': count,
                                             'sha256': checksum, 'signedURLPublished': False}}), flush=True)
 

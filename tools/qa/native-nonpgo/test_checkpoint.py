@@ -285,6 +285,85 @@ class CheckpointGuards(unittest.TestCase):
     def restore(self):
         return cp.restore(self.plan_path, self.source, self.task, self.sdk, time.monotonic() + 20)
 
+    def inspected_manifest(self, ready):
+        return cp.inspect(self.task / self.plan['checkpoint']['artifactName'],
+                          self.plan['checkpoint'], time.monotonic() + 20,
+                          ready['manifestSHA256'])
+
+    def assert_exact_restored_manifest(self, manifest):
+        mapping = cp.roots(self.source, self.task, self.sdk)
+        spec = self.plan['checkpoint']
+        for name, expected in manifest['states'].items():
+            self.assertEqual(cp.tree(mapping[name], mapping, time.monotonic() + 20,
+                                     spec['maxEntries'], spec['maxLogicalBytes'], state_name=name),
+                             expected, name)
+            for row in expected:
+                path = mapping[name] / row['path']
+                self.assertEqual(path.lstat().st_mode & 0o777, row['mode'])
+                self.assertEqual(path.lstat().st_mtime_ns, row['mtimeNS'])
+                if row['kind'] == 'link':
+                    self.assertEqual(os.readlink(path), row['target'])
+                    self.assertEqual(cp.link_reference(path, mapping), row['reference'])
+        for name in cp.REFERENCES:
+            self.assertEqual(cp.tree(mapping[name], mapping, time.monotonic() + 20,
+                                     spec['maxReferenceEntries'], 8 * 1024**3, typed_links=False),
+                             manifest['references'][name], name)
+
+    def test_forward_object_symlink_chain_roundtrips_exactly(self):
+        (self.task / 'obj/chain-a').symlink_to('chain-z')
+        (self.task / 'obj/chain-z').symlink_to(self.source / 'host.h')
+        ready = self.pack()
+        manifest = self.inspected_manifest(ready)
+        self.consumer(ready)
+        self.restore()
+        self.assertEqual((self.task / 'obj/chain-a').resolve(), self.source / 'host.h')
+        self.assert_exact_restored_manifest(manifest)
+
+    def test_forward_virtualenv_python_symlink_chain_roundtrips_exactly(self):
+        binary = self.venv / 'bin'
+        binary.mkdir()
+        (binary / 'python').symlink_to('python3')
+        (binary / 'python3').symlink_to('python3.12')
+        (binary / 'python3.12').symlink_to(Path(sys.executable).resolve())
+        ready = self.pack()
+        manifest = self.inspected_manifest(ready)
+        self.consumer(ready)
+        self.restore()
+        self.assertEqual((binary / 'python').resolve(), Path(sys.executable).resolve())
+        self.assert_exact_restored_manifest(manifest)
+
+    def test_forward_symlink_chain_across_state_roots_roundtrips_exactly(self):
+        (self.venv / 'bridge-a').symlink_to(self.task / 'obj/bridge-z')
+        (self.task / 'obj/bridge-z').symlink_to(self.source / 'host.h')
+        ready = self.pack()
+        manifest = self.inspected_manifest(ready)
+        self.consumer(ready)
+        self.restore()
+        self.assertEqual((self.venv / 'bridge-a').resolve(), self.source / 'host.h')
+        self.assert_exact_restored_manifest(manifest)
+
+    def test_link_in_captured_readonly_directory_roundtrips_exactly(self):
+        directory = self.task / 'obj/readonly-parent'
+        directory.mkdir()
+        (directory / 'link').symlink_to(self.source / 'host.h')
+        directory.chmod(0o555)
+        def allow_fixture_cleanup():
+            if directory.is_dir() and not directory.is_symlink():
+                directory.chmod(0o755)
+        self.addCleanup(allow_fixture_cleanup)
+        ready = self.pack()
+        manifest = self.inspected_manifest(ready)
+        self.assertEqual(next(row['mode'] for row in manifest['states']['obj']
+                              if row['path'] == 'readonly-parent'), 0o555)
+        # The two VM simulation deletes producer state locally. Make that
+        # deletion possible without changing the already accepted archive.
+        allow_fixture_cleanup()
+        self.consumer(ready)
+        self.restore()
+        self.assertEqual(directory.stat().st_mode & 0o777, 0o555)
+        self.assertEqual((directory / 'link').resolve(), self.source / 'host.h')
+        self.assert_exact_restored_manifest(manifest)
+
     def test_roundtrip_preserves_hidden_state_mode_mtime_links_and_new_qa_origin(self):
         original = (self.task / 'obj/object.o').stat()
         ready = self.pack()

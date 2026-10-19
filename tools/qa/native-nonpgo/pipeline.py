@@ -326,7 +326,11 @@ def main():
     parser.add_argument('--harness', type=Path, required=True)
     parser.add_argument('--task', type=Path, required=True)
     parser.add_argument('--checkpoint-role', choices=('producer', 'consumer'))
+    parser.add_argument('--restore-only', action='store_true')
+    parser.add_argument('--replay-origin', action='store_true')
     args = parser.parse_args()
+    require(not args.restore_only or args.checkpoint_role == 'consumer', 'checkpoint-restore-only-role')
+    require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
@@ -390,12 +394,18 @@ def main():
         if checkpoint_role == 'consumer':
             stage = 'checkpoint-restore'
             runner.run(stage, [sys.executable, str(HERE / 'checkpoint.py'), 'restore',
-                       '--source', str(args.source), '--task', str(task)], task, checkpoint_env,
+                       '--source', str(args.source), '--task', str(task)] +
+                       (['--replay-origin'] if args.replay_origin else []), task, checkpoint_env,
                        plan['limits']['jobMinutes'], phase_deadline_minutes=plan['checkpoint']['consumerRestoreDeadlineMinutes'])
             report['checkpointRestore'] = json.loads((task / 'checkpoint-restore.json').read_text())
+            if report['checkpointRestore'].get('replay') is not None:
+                report['checkpointReplay'] = report['checkpointRestore']['replay']
+                report['qualification'] = report['checkpointRestore']['qualification']
+            stage = 'effective-config'
             runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
                        args.source, env, plan['limits']['jobMinutes'])
             from checkpoint import verify_restored_config
+            stage = 'checkpoint-effective-config-validation'
             verify_restored_config(task)
             report['resumedEffectiveConfigVerified'] = True
         else:
@@ -403,7 +413,13 @@ def main():
             runner.run('configure', [sys.executable, 'mach', 'configure'], args.source, env, plan['limits']['jobMinutes'])
             runner.run('effective-config', [sys.executable, 'mach', 'environment', '--format', 'json', '--verbose'],
                        args.source, env, plan['limits']['jobMinutes'])
+        stage = 'effective-config-validation'
         verify_config(plan, task, tools, sdk)
+        if args.restore_only:
+            report.update(status='restore-ready', restoreOnly=True,
+                          fullHostXUL='NOT_TESTED', nativeAuthentication='NOT_TESTED',
+                          qualification='verified-origin-checkpoint-restore-only')
+            raise CheckpointComplete
         if checkpoint_role == 'producer':
             from checkpoint import full_log_receipt, verify_graph
             stage = 'checkpoint-exports'
@@ -533,7 +549,8 @@ def main():
     finally:
         for key, path in (('monitorPreflight', 'monitor-preflight.json'),
                            ('sdk', 'sdk-materialized.json'), ('toolchains', 'toolchain-receipts.json'),
-                           ('effectiveConfig', 'effective-config.json'), ('source', 'source.json')):
+                           ('effectiveConfig', 'effective-config.json'), ('source', 'source.json'),
+                           ('checkpointReplayContext', 'checkpoint-replay-context.json')):
             try:
                 candidate = task / path
                 if candidate.is_file() and candidate.stat().st_size < 65536:
@@ -571,6 +588,19 @@ def main():
             if not complete:
                 runner.fail('final-proof', 'checkpoint-proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
+        if report['status'] == 'restore-ready':
+            complete = (args.restore_only and checkpoint_role == 'consumer' and
+                        all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
+                                                     'source', 'effectiveConfig', 'checkpointRestore')) and
+                        report.get('monitorPreflight', {}).get('status') == 'passed' and
+                        len(report.get('toolchains', [])) == 11 and
+                        report.get('resumedEffectiveConfigVerified') is True and
+                        report.get('native') is None and runner.failure is None and
+                        not any(row['stage'] in ('full-build', 'stage-package', 'native-suite')
+                                for row in runner.records))
+            if not complete:
+                runner.fail('final-proof', 'checkpoint-restore-proof-incomplete')
+                report['status'], report['firstFailure'] = 'failed', runner.failure
         if report['status'] == 'passed':
             complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains', 'source', 'effectiveConfig', 'native')) and
                         report.get('monitorPreflight', {}).get('status') == 'passed' and
@@ -589,7 +619,7 @@ def main():
             report['validationOutcome'] = validation_outcome(report)
         finally:
             print(json.dumps(report), flush=True)
-    return 0 if report['status'] in ('passed', 'checkpoint-ready') and runner.failure is None else 1
+    return 0 if report['status'] in ('passed', 'checkpoint-ready', 'restore-ready') and runner.failure is None else 1
 
 
 if __name__ == '__main__':

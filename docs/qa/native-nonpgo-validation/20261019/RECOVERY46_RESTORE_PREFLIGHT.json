@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY46_EXPLICIT_ORIGIN_RESTORE_ONLY_PREFLIGHT",
+  "precedingTerminalEvidenceCommit": "796ef1d5ffe8f299ffcf3b1d46bd32c61e797e55",
+  "existingOrigin": {
+    "schema": 1,
+    "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+    "origin": {
+      "run": "39197008470",
+      "attempt": "1",
+      "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+      "fixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "producerJob": 117881829274,
+      "artifact": 12164479528,
+      "bytes": 2213942620,
+      "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+      "createdAt": "2026-10-19T05:20:31Z",
+      "expiresAt": "2026-10-20T05:19:56Z"
+    },
+    "buildDate": "20261019035607"
+  },
+  "changes": [
+    {
+      "component": "checkpoint restore ordering",
+      "behavior": "Construct every link in all state roots before validating any resolved reference. Keep temporary directories writable until links and nanosecond timestamps are complete, then apply captured directory modes deepest first and compare complete trees. Captured link text/reference, ownership, file bytes, modes and nanosecond times remain required."
+    },
+    {
+      "component": "bounded failure projection",
+      "behavior": "Recognize only exact qa_core.Failure/support.Failure checkpoint codes from literal require calls in three fixed reviewed source files. Emit code and fixed-code category; category is not an observed last runtime phase. Before/after cleanup and complete bounded scan retain the recognized record without publishing traceback paths or free text."
+    },
+    {
+      "component": "explicit existing checkpoint replay",
+      "behavior": "Require opt-in at fetch, pipeline and restore. Validate the actual current active consumer against ordinary current API and its recorded job origin; separately validate exact historical completed run, successful producer and sole unexpired artifact. Verify full downloaded size/hash/gzip and all existing archive/payload/reference constraints. Compare complete context key sets; only run, attempt, head and fixture use fixed historical origin values, while every other value must equal actual current context. Keep both provenances in the receipt; never mutate manifest or real execution environment."
+    },
+    {
+      "component": "restore-only gate",
+      "behavior": "After complete restore, run mach environment and both actual restored-config and normal effective-config verification, then return restore-ready. Full build, package and native suites are not executed or qualified by this gate."
+    }
+  ],
+  "causalAssessment": {
+    "run45FirstFailure": "checkpoint-restore / nonzero-exit; complete private traceback reconstructed exactly as checkpoint-link-mismatch.",
+    "tracebackBinding": {
+      "bytes": 911,
+      "lines": 11,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94",
+      "frames": "checkpoint.py:<module>:657/main:651/restore:614 -> qa_core.py:require:14"
+    },
+    "localSourceRegressions": [
+      "forward object link chain",
+      "virtualenv Python link chain",
+      "cross-state link chain",
+      "read-only directory containing a link"
+    ],
+    "oldSourceResult": "All four newly added valid fixtures fail in immutable old code; fixed code passes all four with exact final state validation.",
+    "specificRemoteLink": "UNKNOWN",
+    "latentReadonlyDirectoryDefect": "Independently reproduced local source defect; not the recovered run45 exception type.",
+    "shortGateHypothesis": "The stored real checkpoint now restores exactly when the complete link graph exists before resolution. A failure will preserve the fixed guard/category and safe context equality map where available.",
+    "crossRunCompatibilityHypothesis": "The historical state has exactly matching plan, absolute roots, runtime, harness, runner image and Python executable content in the current standard Intel job. Mismatch remains a failure and does not permit relocation, altered sources or context rewriting.",
+    "originalNativeExitCause": "UNKNOWN",
+    "fullNativeHypothesis": "Only after successful restore and actual configuration validation can the subsequent full consumer distinguish build/package failure from native host/authentication exit with existing ownership and diagnostic controls."
+  },
+  "unchanged": {
+    "planBytes": {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "officialSDKFetch": {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4204,
+      "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff"
+    },
+    "productRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "nativeHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "archiveManifestFormat": 1,
+    "strictDefaultSameRunRestore": true,
+    "ordinaryAPIHTTPFailureStops": true,
+    "monitorUnavailableNeverZero": true,
+    "activeOwnedGroupResourceScope": true,
+    "identityExactReapAndCleanup": true,
+    "phaseResourceAndPlatformLimitsPreserved": true,
+    "SDKAcquisitionDeadlineSeconds": 600,
+    "SDKMustBeUnexpiredAtAcquisition": true,
+    "verifiedLocalSDKUsableAfterServiceExpiry": true,
+    "SDKFixedZIPTARCanonicalTreeAndVersionChecks": true
+  },
+  "storage": {
+    "existingArtifact": 12164479528,
+    "originRun": 39197008470,
+    "existingCount": 1,
+    "newArtifactUploads": 0,
+    "retentionDays": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionOrPermissionsChanged": false,
+    "LinuxLargePayloadDownload": false
+  },
+  "qualifications": {
+    "short46": "Restore and actual effective configuration only; full host/XUL, package and native authentication NOT_TESTED.",
+    "full47": "Separate consumer-only continuation using the same immutable artifact, activated only after short gate and independent review pass.",
+    "sameJob": false,
+    "freshObjdir": false,
+    "strictSameRun": false,
+    "captureFixtureEqualsExecutionFixture": false
+  },
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 9635,
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 40695,
+      "sha256": "90fd2eeae2385d9e8b7423322d53a772f59d9188246e03f436bb79c01f53d629"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+      "bytes": 10398,
+      "sha256": "f3d120a923b0abfda1afcbbb467eae2e693671380859a50887a97adb95808c32"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "bytes": 38273,
+      "sha256": "aabf860135312b91f248174768493b1fdd555b4cbf73b9d01d39e5b333165623"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_transfer.py",
+      "bytes": 10567,
+      "sha256": "8026b8cb50eea480a6d4145538f84161e485df66c7590b185a596abf9532dddb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_failure_excerpt.py",
+      "bytes": 17387,
+      "sha256": "651bdb3edbde8ffcd1e80e9ff15c987679f003d530af060140ee75b6b6328b69"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 6097,
+      "sha256": "e090c497e97607cb5b77885d98e2094ad6da3a7c37a3a60189010349a65c5825"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_restore_replay.py",
+      "bytes": 4822,
+      "sha256": "40bf8ae5325306055b1bd7d6a3b32a60694d47bbb942d53d6f4a3e918ff0720d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+      "bytes": 11556,
+      "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_replay.py",
+      "bytes": 18277,
+      "sha256": "7b20919a2d958c475ab3d16d6525229c2c048928db6d11a04900442286c5dcde"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "bytes": 635,
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    }
+  ],
+  "workflowTemplates": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_CHECKPOINT_RESTORE_WORKFLOW.yml.disabled",
+      "bytes": 10549,
+      "sha256": "ba0acdf363d593911d02fa7c1ad5945357065b303923988bdeb7b0f2d25e41dd"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_CHECKPOINT_CONSUMER_WORKFLOW.yml.disabled",
+      "bytes": 10430,
+      "sha256": "893fbfb6852c9619eb4757251bcfe4e2fae305c0910e69d6526b26c8b2631361"
+    }
+  ],
+  "publicPrivacy": {
+    "rawLogsPublished": false,
+    "privateProcessIdentitiesPublished": false,
+    "arbitraryTracebackTextPublished": false,
+    "signedDownloadURLsPublished": false
+  },
+  "validation": {
+    "total": 500,
+    "passed": 483,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 28.406,
+    "logBytes": 98924,
+    "logSHA256": "9a702c9763cb83fe53cff691ac86816031d600f13c8196a2fd801937b146dcac",
+    "resourceWarnings": "errors",
+    "actualDarwinChecks": "SKIPPED on Linux; required skip0 in Mac gate",
+    "initialHarnessInvocation": "First invocation from repository root caused one child import failure; rerun from QA module directory. No implementation workaround."
+  }
+}
