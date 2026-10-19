@@ -18,7 +18,10 @@ import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import type { TWorkspaceID } from "../utils/type.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
-import { createWorkspaceSyncIndicator } from "./workspace-sync-indicator.ts";
+import {
+  bindWorkspaceSyncFocusTooltip,
+  createWorkspaceSyncIndicator,
+} from "./workspace-sync-indicator.ts";
 
 const translationKeys = {
   createNew: "workspaces.popup.create-new" as const,
@@ -147,30 +150,34 @@ export const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
     props.ctx.reorderWorkspaceTo(draggedWorkspaceId, targetIndex);
   };
 
+  const button = (
+    <div
+      id={`workspace-${props.workspaceId}`}
+      class="workspace-panel panel-sidebar-panel"
+      data-checked={isSelected() ? "true" : undefined}
+      data-workspace-id={props.workspaceId}
+      data-workspace-sync={syncIndicator().state}
+      role="button"
+      tabIndex={0}
+      title={syncIndicator().tooltip}
+      aria-label={syncIndicator().tooltip}
+      draggable="true"
+      onClick={handleActivate}
+      onKeyDown={handleKeyDown}
+      onContextMenu={handleContextMenu}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <img src={iconUrl()} width="16" height="16" alt="" />
+    </div>
+  ) as HTMLElement;
+  bindWorkspaceSyncFocusTooltip(button, syncIndicator);
   return (
     <div class="panel-sidebar-button-wrapper workspace-panel-button-wrapper">
-      <div
-        id={`workspace-${props.workspaceId}`}
-        class="workspace-panel panel-sidebar-panel"
-        data-checked={isSelected() ? "true" : undefined}
-        data-workspace-id={props.workspaceId}
-        data-workspace-sync={syncIndicator().state}
-        role="button"
-        tabIndex={0}
-        title={syncIndicator().tooltip}
-        aria-label={syncIndicator().tooltip}
-        draggable="true"
-        onClick={handleActivate}
-        onKeyDown={handleKeyDown}
-        onContextMenu={handleContextMenu}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <img src={iconUrl()} width="16" height="16" alt="" />
-      </div>
+      {button}
     </div>
   );
 };

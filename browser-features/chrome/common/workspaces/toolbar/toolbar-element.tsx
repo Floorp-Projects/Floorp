@@ -21,6 +21,7 @@ import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import { getContainerColorName } from "../utils/container-color.ts";
 import {
   applyWorkspaceSyncIndicator,
+  bindWorkspaceSyncFocusTooltip,
   createWorkspaceSyncIndicator,
 } from "./workspace-sync-indicator.ts";
 
@@ -55,6 +56,7 @@ export class WorkspacesToolbarButton {
               return id ? ctx.getRawWorkspace(id)?.name ?? "" : "";
             },
           );
+          bindWorkspaceSyncFocusTooltip(node, syncIndicator);
           createEffect(() =>
             applyWorkspaceSyncIndicator(node, syncIndicator())
           );

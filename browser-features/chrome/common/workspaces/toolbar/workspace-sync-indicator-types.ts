@@ -2,5 +2,7 @@
 
 export interface WorkspaceSyncIndicator {
   state: "selected" | "attention" | undefined;
+  status: string;
+  error: string | null;
   tooltip: string;
 }

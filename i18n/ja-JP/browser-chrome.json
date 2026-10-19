@@ -71,7 +71,11 @@
       "invalid-workspace": "このワークスペースを同期できませんでした。256 文字以内の名前とアイコンを設定してから、もう一度お試しください。他のワークスペースは引き続き同期されます。",
       "deleted-workspace": "このワークスペースは同期から削除されました。アーカイブから復元するか、新しいワークスペースを作成して再度同期してください。",
       "indicator-selected": "{{name}} — 同期対象",
-      "indicator-attention": "{{name}} — 同期に注意が必要です: {{error}}"
+      "indicator-attention": "{{name}} — 同期エラー: {{error}}",
+      "indicator-local": "{{name}} — 同期対象外",
+      "status-selected": "同期対象",
+      "status-error": "同期エラー",
+      "status-local": "同期対象外"
     },
     "context-menu": {
       "move-up": "このワークスペースを上に移動",

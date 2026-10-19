@@ -8,7 +8,10 @@ import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
 import { workspacesDataStore } from "../data/data.ts";
-import { createWorkspaceSyncIndicator } from "./workspace-sync-indicator.ts";
+import {
+  bindWorkspaceSyncFocusTooltip,
+  createWorkspaceSyncIndicator,
+} from "./workspace-sync-indicator.ts";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -89,12 +92,13 @@ export function PopupToolbarElement(props: {
         const userContextId = () => ws().userContextId ?? 0;
         const hasContainer = () => userContextId() > 0;
         const containerColorName = () => getContainerColorName(userContextId());
-        return (
+        const button = (
           <xul:toolbarbutton
             id={`workspace-${props.workspaceId}`}
             label={ws().name}
             context="workspaces-toolbar-item-context-menu"
             class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
+            tabindex="0"
             style={{
               "list-style-image": `url(${icon()})`,
             }}
@@ -115,8 +119,32 @@ export function PopupToolbarElement(props: {
             onCommand={() => {
               props.ctx.changeWorkspace(props.workspaceId);
             }}
-          />
-        );
+          >
+            <xul:image
+              class="toolbarbutton-icon workspaceButtonIcon"
+              src={icon()}
+              aria-hidden="true"
+            />
+            <xul:vbox
+              class="workspaceButtonContent"
+              flex="1"
+              aria-hidden="true"
+            >
+              <xul:label
+                class="workspace-name"
+                value={ws().name}
+                crop="end"
+              />
+              <xul:label
+                class="workspace-sync-status"
+                value={syncIndicator().status}
+                crop="end"
+              />
+            </xul:vbox>
+          </xul:toolbarbutton>
+        ) as XULElement;
+        bindWorkspaceSyncFocusTooltip(button, syncIndicator);
+        return button;
       }}
     </Show>
   );
