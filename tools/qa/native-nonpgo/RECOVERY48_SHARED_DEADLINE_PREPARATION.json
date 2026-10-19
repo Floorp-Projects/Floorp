@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_CONSUMER_SHARED_DEADLINE_PREPARATION",
+  "status": "source-reviewed-caller-prepared-long-execution-not-started",
+  "change": {
+    "explicitFlag": "--consumer-shared-deadline",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "defaultsUnchanged": true,
+    "consumerOnly": true,
+    "restoreOnlyRejected": true,
+    "effectiveBudget": {
+      "schema": 1,
+      "profile": "consumer-shared-final-deadline-v1",
+      "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "platformMinutes": 360,
+      "sharedWorkDeadlineMinutes": 345,
+      "cleanupReserveMinutes": 15,
+      "clock": "fresh-job-monotonic-origin",
+      "deadlineReference": "absolute-from-existing-job-origin",
+      "deadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 345,
+        "consumerPackageDeadlineMinutes": 345,
+        "consumerNativeDeadlineMinutes": 345,
+        "finalDeadlineMinutes": 345
+      },
+      "legacyDeadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 300,
+        "consumerPackageDeadlineMinutes": 315,
+        "consumerNativeDeadlineMinutes": 335,
+        "finalDeadlineMinutes": 345
+      },
+      "onlyExecutionTimingChanged": true,
+      "resourceAndCompilationInputsChanged": false,
+      "clockResetAllowed": false,
+      "stageBudgetsAreAdditive": false
+    },
+    "nominalReserveOnly": true,
+    "clockReset": false,
+    "compilationOrResourceInputsChanged": false
+  },
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/consumer_time.py",
+      "bytes": 2767,
+      "sha256": "43e6e1373e57e52ca47bf14570117508d403264954e823e1d91660c917c4d839"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_consumer_time.py",
+      "bytes": 9180,
+      "sha256": "bd55c496ba98423b9b3d8236cea9a4613a0d94fc277157309cf7179a2c857866"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 45136,
+      "sha256": "f1c26bc31a8b77df6c8ca5fe52ce323b986e12d5e155932760a1e8581009bbfd"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 20842,
+      "sha256": "8291566482a3caf9e9801ca9f5798a782a49ad7eac05bd7ef840a59d0515c4f4"
+    }
+  ],
+  "localQA": {
+    "returnCode": 0,
+    "elapsedSeconds": 32.34,
+    "tests": {
+      "status": "passed",
+      "complete": true,
+      "total": 645,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    "logBytes": 125642,
+    "logSHA256": "4e09e810999526cfd4ce7b78331ca85d8653d5b092de5cfbf0fb04d06ee76140"
+  },
+  "initialLocalHarnessInvocation": {
+    "result": "one-import-error",
+    "cause": "discovery-started-at-repository-root",
+    "fixedBy": "run-from-QA-directory-as-required-by-subprocess-import-test",
+    "productionChangeRequired": false
+  },
+  "callerControls": {
+    "checks": {
+      "yamlBashInlinePythonSyntax": "passed",
+      "positiveFinalGate": true,
+      "previousFaultsRejected": 248,
+      "timeFaultsRejected": 94,
+      "allFaultsRejected": 342,
+      "priorSDKAndMozillaGateASTPreserved": true,
+      "countOnlyPreflightGateDelta": true,
+      "baseRenderedCallerUnchanged": true,
+      "consumerOnlyExplicitOptIn": true,
+      "SDKAndCheckpointStepsUnchanged": true,
+      "consumerJobs": 1,
+      "jobMinutes": 360,
+      "preflightMinutes": 10,
+      "runnerPhaseMinutes": 15,
+      "SDKMinutes": 12,
+      "artifactUploads": 0,
+      "selectedQACountResolved": true,
+      "selectedQATests": 430,
+      "recordingTests": 14
+    },
+    "executionTimeBudget": {
+      "schema": 1,
+      "profile": "consumer-shared-final-deadline-v1",
+      "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "platformMinutes": 360,
+      "sharedWorkDeadlineMinutes": 345,
+      "cleanupReserveMinutes": 15,
+      "clock": "fresh-job-monotonic-origin",
+      "deadlineReference": "absolute-from-existing-job-origin",
+      "deadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 345,
+        "consumerPackageDeadlineMinutes": 345,
+        "consumerNativeDeadlineMinutes": 345,
+        "finalDeadlineMinutes": 345
+      },
+      "legacyDeadlines": {
+        "consumerRestoreDeadlineMinutes": 60,
+        "consumerBuildDeadlineMinutes": 300,
+        "consumerPackageDeadlineMinutes": 315,
+        "consumerNativeDeadlineMinutes": 335,
+        "finalDeadlineMinutes": 345
+      },
+      "onlyExecutionTimingChanged": true,
+      "resourceAndCompilationInputsChanged": false,
+      "clockResetAllowed": false,
+      "stageBudgetsAreAdditive": false
+    },
+    "cleanupReserveMeaning": "nominal difference to platform cap; no real-time completion guarantee",
+    "candidate": {
+      "bytes": 22433,
+      "sha256": "5cdbea000e3ce4b75bfd0b8be519956dfef6ce76c83a63e287bd9e4b0e122d4e"
+    },
+    "remainingPlaceholders": [
+      "FLOORP_FIXTURE_SHA=PLACEHOLDER"
+    ],
+    "operations": {
+      "ciLaunched": false,
+      "SDKAcquired": false,
+      "remoteRefsChanged": false,
+      "sourceEdited": false
+    }
+  },
+  "selectedMacQATotal": 430,
+  "selectedRecordingTotal": 14,
+  "actualMacQualificationForThisRevision": "NOT_TESTED",
+  "longExecution": {
+    "started": false,
+    "remainingTimeForecast": "UNKNOWN",
+    "sourceAndGateReviewDoNotEstablishBuildCompletion": true,
+    "feasibilityAssessment": "RECOVERY48_RETRY_FEASIBILITY.json"
+  },
+  "preserved": {
+    "restoreDeadlineMinutes": 60,
+    "platformLimitMinutes": 360,
+    "planAndCheckpointContext": true,
+    "SDKSourceAndExpiryAcquisitionChecks": true,
+    "diskRSSLogStallLimits": true,
+    "ownedProcessCleanupAndExactReap": true,
+    "unknownIsNotZero": true,
+    "artifactUploads": 0,
+    "retentionDays": 1,
+    "productSigning": false,
+    "permissionsOrAuthenticationChanged": false
+  },
+  "designReview": {
+    "bytes": 4002,
+    "sha256": "e46780b2e1ebc0ff70b1d4d99b9e127a97097dd7adf226d87acb7e4bdfe90ead"
+  },
+  "implementationReview": {
+    "bytes": 6310,
+    "sha256": "8a3047dc6aba043702436961269bd739775fb425782f6f28e16a842974502091"
+  }
+}

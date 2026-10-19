@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "review": "Consumer execution deadline overlay design",
+  "reviewedAtUtc": "2026-10-19T12:12:12.895967+00:00",
+  "decision": "CONDITIONALLY_ACCEPTABLE_DESIGN_ONLY",
+  "implementationReviewed": false,
+  "plan": {
+    "path": "tools/qa/native-nonpgo/plan.json",
+    "bytes": 27325,
+    "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "baselineJobOriginMinutes": {
+    "restore": 60,
+    "fullBuild": 300,
+    "package": 315,
+    "nativeAndMozilla": 335,
+    "final": 345,
+    "platform": 360
+  },
+  "proposedJobOriginMinutes": {
+    "restore": 60,
+    "fullBuild": 345,
+    "package": 345,
+    "nativeAndMozilla": 345,
+    "final": 345,
+    "platform": 360
+  },
+  "compatibility": "Execution timing is not archived SDK/toolchain/source/configuration state. The original plan and full checkpoint context/reference comparison can remain byte-exact while an explicit separately recorded consumer-only policy changes effective execution deadlines.",
+  "requiredConditions": [
+    "Fixed typed schema and explicit consumer-only opt-in; reject producer selection, unknown policy, malformed/bool/nonfinite values and any bound beyond the fixed final345/platform360 contract.",
+    "Without opt-in preserve all original300/315/335 caps and existing default behavior.",
+    "Use one shared absolute deadline measured from the existing job monotonic origin, not a new duration per stage. All full-build/package/native/Mozilla call arguments and inherited runner.phase_deadline_minutes must receive the same effective deadline.",
+    "Preserve restore60, platform360, all resource/disk/log/stall limits, owned process selection, unknown/null behavior, primary failure and exact cleanup.",
+    "Before launching any subsequent stage, reject an already exhausted345 deadline. Native and Mozilla nested runners must inherit the same origin and remaining time; no nested reset or extra duration.",
+    "Record policy contract and identity, original plan digest, original and effective caps, clock origin and remaining-time semantics in public evidence separately from the unchanged content plan.",
+    "The345-to360 difference is a nominal cleanup/evidence reserve; GitHub job start can precede task clock initialization, so do not promise exactly15 wallclock minutes without measuring that difference.",
+    "If build consumes the remaining allowance, later stages remain untested and cleanup begins; the overlay provides no success guarantee or automatic retry."
+  ],
+  "minimumControls": [
+    "Default unchanged and producer/malformed/overlarge policy rejected.",
+    "Explicit consumer policy maps every relevant call and inherited/nested phase to job-origin345 while restore60 and platform360 remain exact.",
+    "Simulated elapsed301 is not rejected by the former300 phase under opt-in; default still rejects. Elapsed345 rejects a new stage; elapsed beyond345 stops existing work with primary phase-deadline.",
+    "Package/native beginning late inherit only the shared remaining time, never a fresh345-minute window.",
+    "RSS/disk/private-log/monitor-unavailable/stall and cleanup failures still fail before or independently of the effective deadline; original firstFailure is preserved.",
+    "Plan bytes, manifest/context, acquisition source, replay metadata, references and actual effective configuration remain unchanged."
+  ],
+  "observedRun47": {
+    "run": 39212933648,
+    "firstFailure": "full-build/phase-deadline",
+    "elapsedSeconds": 18001.19,
+    "monitorFailure": null,
+    "fullBuildFirstProgressJobMinutes": 25.2,
+    "fullBuildLastProgressJobMinutes": 299.9,
+    "fullBuildLastFiveMinutesLogGrowthBytes": 809511,
+    "interpretation": "The original300 phase stopped recorded continuing activity. Completion within345 is unproved; resource activity does not establish compiler success or percentage completion."
+  },
+  "operations": {
+    "sourceEdits": false,
+    "ciOrRefMutation": false,
+    "payloadAcquisition": false
+  }
+}

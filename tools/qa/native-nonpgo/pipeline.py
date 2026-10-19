@@ -19,6 +19,7 @@ from support import (Failure, Runner, clean_environment, digest, download,
 from owned_native import OwnedNative
 from checkpoint_public import public_restore
 from sdk_source import load_sdk_source, validate_acquisition_receipt
+from consumer_time import select_consumer_time
 
 
 HERE = Path(__file__).resolve().parent
@@ -334,6 +335,7 @@ def main():
     parser.add_argument('--mozilla-only', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
     parser.add_argument('--sdk-source', type=Path)
+    parser.add_argument('--consumer-shared-deadline', action='store_true')
     args = parser.parse_args()
     require(not args.restore_only or args.checkpoint_role == 'consumer', 'checkpoint-restore-only-role')
     require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
@@ -343,11 +345,17 @@ def main():
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
     plan_hash = hashlib.sha256(plan_bytes).hexdigest()
+    consumer_time = select_consumer_time(
+        plan, plan_hash, args.checkpoint_role, shared=args.consumer_shared_deadline,
+        restore_only=args.restore_only)
+    consumer_deadlines = consumer_time['deadlines']
     require((task / 'started-monotonic').is_file(), 'monotonic-origin-missing')
     started = float((task / 'started').read_text())
     runner = Runner(task, started, plan['limits'])
     report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
+    if consumer_time['evidence'] is not None:
+        report['executionTimeBudget'] = consumer_time['evidence']
     stage = 'preflight'
     sdk_source = None
     checkpoint_role = args.checkpoint_role
@@ -408,7 +416,7 @@ def main():
             runner.run(stage, [sys.executable, str(HERE / 'checkpoint.py'), 'restore',
                        '--source', str(args.source), '--task', str(task)] +
                        (['--replay-origin'] if args.replay_origin else []), task, checkpoint_env,
-                       plan['limits']['jobMinutes'], phase_deadline_minutes=plan['checkpoint']['consumerRestoreDeadlineMinutes'])
+                       plan['limits']['jobMinutes'], phase_deadline_minutes=consumer_deadlines['consumerRestoreDeadlineMinutes'])
             stage = 'checkpoint-restore-public-evidence'
             report['checkpointRestore'] = public_restore(json.loads((task / 'checkpoint-restore.json').read_text()))
             if report['checkpointRestore'].get('replay') is not None:
@@ -485,9 +493,9 @@ def main():
         stage = 'full-build'
         runner.run('full-build', [sys.executable, 'mach', 'build', '-j', '3'], args.source, env,
                    plan['limits']['buildDeadlineMinutes'],
-                   phase_deadline_minutes=plan['checkpoint']['consumerBuildDeadlineMinutes'] if checkpoint_role else None)
+                   phase_deadline_minutes=consumer_deadlines['consumerBuildDeadlineMinutes'] if checkpoint_role else None)
         if checkpoint_role:
-            runner.phase_deadline_minutes = plan['checkpoint']['consumerNativeDeadlineMinutes']
+            runner.phase_deadline_minutes = consumer_deadlines['consumerNativeDeadlineMinutes']
         object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
         report['hostObject'] = macho(object_path, 1)
         require(object_path.stat().st_mtime >= started, 'object-not-fresh')
@@ -496,7 +504,7 @@ def main():
             stage = 'mozilla-harness'
             report['mozilla'] = {}
             run_smoke(args.source, HERE, task, runner, env,
-                      plan['checkpoint']['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
+                      consumer_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
             report.update(status='mozilla-ready', mozillaOnly=True, fullHostXUL='passed',
                           stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED',
                           qualification='verified-origin-current-mozilla-xpcshell-smoke')
@@ -504,7 +512,7 @@ def main():
         stage = 'stage-package'
         runner.run('stage-package', [sys.executable, 'mach', 'build', '--allow-subdirectory-build',
                    'browser/installer/stage-package'], args.source, env, plan['limits']['buildDeadlineMinutes'],
-                   phase_deadline_minutes=plan['checkpoint']['consumerPackageDeadlineMinutes'] if checkpoint_role else None)
+                   phase_deadline_minutes=consumer_deadlines['consumerPackageDeadlineMinutes'] if checkpoint_role else None)
         apps = list((task / 'obj/dist/floorp').glob('*.app'))
         require(len(apps) == 1, 'staged-app-layout')
         app = apps[0]
@@ -530,12 +538,12 @@ def main():
                    '--harness', str(args.harness), '--task', str(task), '--build-id', env['MOZ_BUILD_DATE']],
                    task, clean_environment(task),
                    plan['limits']['nativeDeadlineMinutes'], plan['limits']['maxNativePrivateBytes'],
-                   phase_deadline_minutes=plan['checkpoint']['consumerNativeDeadlineMinutes'] if checkpoint_role else None)
+                   phase_deadline_minutes=consumer_deadlines['consumerNativeDeadlineMinutes'] if checkpoint_role else None)
         report['native'] = json.loads((task / 'native-summary.json').read_text())
         require(report['native']['status'] == 'passed', 'native-summary')
         require(digest(disposable / 'Contents/MacOS/XUL') == report['signedCopyXUL']['sha256'], 'post-test-copy-binding')
         if checkpoint_role:
-            runner.phase_deadline_minutes = plan['checkpoint']['finalDeadlineMinutes']
+            runner.phase_deadline_minutes = consumer_deadlines['finalDeadlineMinutes']
         runner.run('verify-copy-after', ['/usr/bin/codesign', '--verify', '--deep', '--strict', str(disposable)],
                    task, basic_env, plan['limits']['cleanupDeadlineMinutes'])
         report['status'] = 'passed'

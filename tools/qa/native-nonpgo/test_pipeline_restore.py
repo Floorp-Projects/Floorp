@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import time
+import sys
 import unittest
 from unittest import mock
 
@@ -78,30 +79,36 @@ class RestoreOnlyFlow(unittest.TestCase):
             object_path.write_bytes(b'object')
         return path
 
-    def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None):
+    def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None,
+               shared_deadline=False, checkpoint_role='consumer'):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
-                '--checkpoint-role', 'consumer', '--replay-origin']
+                '--checkpoint-role', checkpoint_role]
+        if checkpoint_role == 'consumer':
+            argv += ['--replay-origin']
         if restore_only:
             argv += ['--restore-only']
         if mozilla_only:
             argv += ['--mozilla-only']
         if sdk_source is not None:
             argv += ['--sdk-source', str(sdk_source)]
+        if shared_deadline:
+            argv += ['--consumer-shared-deadline']
         with mock.patch('sys.argv', argv), \
                 mock.patch.dict(os.environ, {'CHECKPOINT_BUILD_DATE': '20261019035607'}), \
-                mock.patch.object(pipeline, 'Runner', return_value=self.runner), \
+                mock.patch.object(pipeline, 'Runner', return_value=self.runner) as constructor, \
                 mock.patch.object(pipeline, 'preflight', return_value={'status': 'passed'}), \
                 mock.patch.object(pipeline, 'prepare_harness', return_value={'verified': True}), \
                 mock.patch.object(pipeline, 'prepare_source'), \
                 mock.patch.object(pipeline, 'clean_environment', return_value={'PATH': '/usr/bin'}), \
                 mock.patch.object(pipeline, 'verify_config', self.verify_config), \
-                mock.patch.object(pipeline, 'macho', return_value={'verified': True}), \
+                mock.patch.object(pipeline, 'macho', return_value=getattr(self,'macho_receipt',{'verified': True})), \
                 mock.patch('mozilla_harness_smoke.run_smoke', self.mozilla), \
                 mock.patch.object(pipeline, 'public_restore', self.public_restore), \
                 mock.patch('checkpoint.verify_restored_config') as restored_config, \
                 contextlib.redirect_stdout(io.StringIO()):
             code = pipeline.main()
+            self.runner_constructor = constructor
         return code, json.loads((self.task / 'summary.json').read_text()), restored_config
 
     def test_restore_only_verifies_actual_config_then_stops_before_full_build(self):
@@ -248,6 +255,125 @@ class RestoreOnlyFlow(unittest.TestCase):
         value = pipeline.validation_outcome(report)
         self.assertEqual(value['execution'], 'monitor-inconclusive')
         self.assertFalse(value['monitorFailureEstablishesProductFailure'])
+
+    def stage_call(self, stage):
+        return next(call for call in self.runner.run.call_args_list if call.args[0] == stage)
+
+    def test_default_consumer_keeps_legacy_deadline_and_omits_shared_budget(self):
+        _, report, _ = self.invoke(restore_only=False)
+        self.assertEqual(self.stage_call('full-build').kwargs['phase_deadline_minutes'], 300)
+        self.assertNotIn('executionTimeBudget', report)
+
+    def test_shared_build_uses_345_but_restore_still_uses_60(self):
+        _, report, _ = self.invoke(restore_only=False, shared_deadline=True)
+        self.assertEqual(self.stage_call('checkpoint-restore').kwargs['phase_deadline_minutes'], 60)
+        self.assertEqual(self.stage_call('full-build').kwargs['phase_deadline_minutes'], 345)
+        budget = report['executionTimeBudget']
+        self.assertEqual(budget['sharedWorkDeadlineMinutes'], 345)
+        self.assertEqual(budget['legacyDeadlines']['consumerBuildDeadlineMinutes'], 300)
+        self.assertEqual(budget['baselinePlanSHA256'], report['planSHA256'])
+
+    def test_shared_mozilla_inherits_same_deadline_without_recreating_runner_or_clock(self):
+        self.stop_at_full_build = False
+        markers = {name: (self.task/name).read_bytes() for name in ('started','started-monotonic')}
+        code, report, _ = self.invoke(restore_only=False, mozilla_only=True, shared_deadline=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(report['status'], 'mozilla-ready')
+        self.assertEqual(self.mozilla.call_args.args[5], 345)
+        self.assertEqual(self.runner.phase_deadline_minutes, 345)
+        self.runner_constructor.assert_called_once()
+        self.assertEqual(self.runner_constructor.call_args.args[:2],
+                         (self.task, float(markers['started'])))
+        self.assertEqual(markers, {name: (self.task/name).read_bytes() for name in markers})
+
+    def test_shared_package_has_same_absolute_deadline(self):
+        self.stop_at_full_build = False
+        def stop_package(stage, *args, **kwargs):
+            result = self.run_stage(stage, *args, **kwargs)
+            if stage == 'stage-package':
+                raise Failure('test-stop-at-package')
+            return result
+        self.runner.run.side_effect = stop_package
+        _, report, _ = self.invoke(restore_only=False, shared_deadline=True)
+        self.assertEqual(report['firstFailure']['stage'], 'stage-package')
+        self.assertEqual(self.stage_call('stage-package').kwargs['phase_deadline_minutes'],345)
+        self.assertEqual(self.runner.phase_deadline_minutes,345)
+
+    def test_shared_native_keeps_same_deadline_after_build_and_package(self):
+        import hashlib
+        self.stop_at_full_build = False
+        (self.task/'effective-config.json').write_text(json.dumps({'nativeHelpers':{}}))
+        def stop_native(stage, *args, **kwargs):
+            result = self.run_stage(stage, *args, **kwargs)
+            if stage == 'stage-package':
+                binary = self.task/'obj/dist/floorp/fixture.app/Contents/MacOS/XUL'
+                binary.parent.mkdir(parents=True)
+                binary.write_bytes(b'XUL')
+            if stage == 'native-suite':
+                raise Failure('test-stop-at-native')
+            return result
+        self.runner.run.side_effect = stop_native
+        metadata={'sha256':hashlib.sha256(b'XUL').hexdigest(), 'uuid':'fixture-uuid',
+                  'sectionsSHA256':'fixture-sections'}
+        # Original and disposable copy receive the same binary receipt in this flow test.
+        self.macho_receipt = metadata
+        with mock.patch.object(pipeline, 'OwnedNative'):
+            _, report, _ = self.invoke(restore_only=False, shared_deadline=True)
+        self.assertEqual(report['firstFailure']['stage'], 'native-suite')
+        self.assertEqual(self.stage_call('native-suite').kwargs['phase_deadline_minutes'],345)
+        self.assertEqual(self.stage_call('stage-package').kwargs['phase_deadline_minutes'],345)
+        self.assertEqual(self.runner.phase_deadline_minutes,345)
+
+    def test_shared_restore_only_is_rejected_before_work(self):
+        with mock.patch.object(pipeline,'Runner') as constructor:
+            with self.assertRaisesRegex(Failure,'consumer-time-restore-only'):
+                self.invoke(shared_deadline=True)
+            constructor.assert_not_called()
+
+    def test_shared_producer_is_rejected_before_work(self):
+        with mock.patch.object(pipeline,'Runner') as constructor:
+            with self.assertRaisesRegex(Failure,'consumer-time-role'):
+                self.invoke(restore_only=False,shared_deadline=True,checkpoint_role='producer')
+            constructor.assert_not_called()
+
+    def test_shared_unknown_role_is_rejected_by_parser_before_work(self):
+        with contextlib.redirect_stderr(io.StringIO()), mock.patch.object(pipeline,'Runner') as constructor:
+            with self.assertRaises(SystemExit):
+                self.invoke(restore_only=False,shared_deadline=True,checkpoint_role='other')
+            constructor.assert_not_called()
+
+    def test_actual_runner_cannot_launch_at_shared_deadline_or_reset_origin(self):
+        from support import Runner
+        plan=json.loads((pipeline.HERE/'plan.json').read_text())
+        (self.task/'started-monotonic').write_text('1000')
+        runner=Runner(self.task,100,plan['limits'])
+        runner.phase_deadline_minutes=345
+        with mock.patch('support.time.monotonic',return_value=1000+345*60), \
+                mock.patch('support.subprocess.Popen') as launch:
+            for explicit in (None,345):
+                with self.assertRaisesRegex(Failure,'phase-deadline-before-launch'):
+                    runner.run('after-deadline',[sys.executable,'-c','pass'],self.task,
+                               os.environ.copy(),360,phase_deadline_minutes=explicit)
+            launch.assert_not_called()
+        self.assertEqual(runner.monotonic_started,1000)
+        self.assertEqual(runner.records,[])
+
+    def test_actual_runner_can_finish_after_legacy_cutoff_with_shared_deadline(self):
+        from support import Runner
+        plan=json.loads((pipeline.HERE/'plan.json').read_text())
+        origin=time.monotonic()-321*60
+        (self.task/'started-monotonic').write_text(str(origin))
+        runner=Runner(self.task,time.time()-321*60,plan['limits'])
+        activity={'cpuSeconds':1,'rssMiB':10,'_pids':(1,), 'processes':1,
+                  'states':['S'],'sampleComplete':True}
+        with mock.patch('support.shutil.disk_usage',return_value=mock.Mock(free=64*1024**3)), \
+                mock.patch.object(runner,'group_activity',return_value=activity):
+            runner.run('after-legacy-cutoff',[sys.executable,'-c','pass'],self.task,
+                       os.environ.copy(),360,phase_deadline_minutes=345)
+        self.assertIsNone(runner.failure)
+        self.assertEqual(runner.monotonic_started,origin)
+        self.assertEqual(runner.records[-1]['leaderReap'],{'status':'reaped','exitCode':0})
+        self.assertEqual(runner.records[-1]['groupCleanup'],'verified-gone')
 
 
 if __name__ == '__main__':

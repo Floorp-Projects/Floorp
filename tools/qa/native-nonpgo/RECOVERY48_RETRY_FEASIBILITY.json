@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_RETRY_FEASIBILITY_BEFORE_LONG_EXECUTION",
+  "assessment": "UNKNOWN_COMPLETION_WITH_ADDITIONAL_45_MINUTES",
+  "currentRun": 39212933648,
+  "checkpointOriginRun": 39197008470,
+  "existingCheckpointArtifact": 12164479528,
+  "lastConfirmedSuccessfulStage": "effective-config",
+  "fullBuildSubphaseAtStop": "UNKNOWN",
+  "remainingFullBuildWork": "UNKNOWN",
+  "basis": {
+    "lastSuccessfulStageAtJobMinute": 25.1,
+    "fullBuildFirstProgressAtJobMinute": 25.2,
+    "fullBuildLastProgressAtJobMinute": 299.9,
+    "fullBuildExit": 254,
+    "failureCode": "phase-deadline",
+    "stoppingAbsoluteDeadlineMinutes": 300,
+    "sameOriginProposedDeadlineMinutes": 345,
+    "additionalWorkWindowMinutes": 45,
+    "resourcesOrMonitorCausedStop": false,
+    "privateCompilerLogBytes": 19556475,
+    "privateCompilerLogLines": 52466,
+    "privateCompilerLogRawContentRecovered": false,
+    "publicLogContainsOnlyAggregateStageProgressAndCuratedDiagnostics": true,
+    "completedRunnerHasNoProcessOrFilesystemReconnection": true,
+    "logByteGrowthIsNotWorkCompletionPercentage": true
+  },
+  "checkpointReuse": {
+    "producerExportsCompleted": true,
+    "producerRustArchiveCompleted": true,
+    "producerRustArchiveListingPassed": true,
+    "producerRustProgressSampleWindowMinutes": [
+      15.0,
+      61.4
+    ],
+    "producerElapsedIncludingPackMinutes": 83.56,
+    "consumerRestoreProgressSampleWindowMinutes": [
+      10.8,
+      25.1
+    ],
+    "consumerRestoreAnd11KeyContextPassed": true,
+    "consumerEffectiveConfigVerified": true,
+    "actualIncrementalMakeOrCargoCacheHitProven": false,
+    "actualWallTimeSavedMinutes": null,
+    "archiveIdentityDoesNotProveCompilationWasSkipped": true,
+    "sourceAndReferenceMtimesRestored": true,
+    "lostRun47IncrementalObjdirAvailable": false
+  },
+  "historicalComparison": {
+    "run": 39020119793,
+    "fullBuildExitedZero": true,
+    "lastFullBuildProgressAtJobMinute": 237.4,
+    "packageFirstProgressAtJobMinute": 237.9,
+    "effectiveConfigEqualToRestore46": true,
+    "sameCanonicalSDKTree": true,
+    "allSourceConfigurationAndArchiveBytesIdentical": false,
+    "controlledPerformanceComparison": false,
+    "durationDifferenceEstablishesCause": false,
+    "nativeOriginalCause": "UNKNOWN"
+  },
+  "remainingValidation": {
+    "fullHostXUL": "not-completed",
+    "mozillaPositiveCompiledDebug": "NOT_TESTED",
+    "mozillaOriginalCurrentSourceTest": "NOT_TESTED",
+    "mozillaDeliberateFailureDetection": "NOT_TESTED",
+    "packageAndNativeAuthentication": "NOT_TESTED"
+  },
+  "minimalReuseAndSplitOptions": [
+    {
+      "option": "same-runner stock build tiers with one shared absolute deadline",
+      "benefit": "completed tier exits would be visible while reusing the same object tree",
+      "demonstratedSpeedup": false,
+      "crossJobReuse": false,
+      "newArtifactRequired": false,
+      "constraints": "must preserve normal target closure and final full-build success requirement; compile tier may still dominate",
+      "implemented": false
+    },
+    {
+      "option": "current-source xpcshell/XUL dependency closure before broader host validation",
+      "benefit": "could prioritize real Mozilla tests before unrelated build targets",
+      "demonstratedSpeedup": false,
+      "actualMacTargetAndBundleResourceClosureVerified": false,
+      "fullHostQualificationFromTargetOnly": false,
+      "newArtifactRequired": false,
+      "constraints": "must prove XUL, xpcshell, bundle resources, modules and stock harness inputs; binaries target traverses the complete compile tier",
+      "implemented": false
+    },
+    {
+      "option": "read existing Mach resource-profile completion markers into a bounded typed receipt",
+      "benefit": "improves last-completed-phase evidence on a future stop without changing compiler inputs",
+      "demonstratedSpeedup": false,
+      "newArtifactRequired": false,
+      "constraints": "streaming and completed-profile schemas, freshness and bounds need validation; missing or truncated evidence stays unknown and cannot replace firstFailure",
+      "implemented": false
+    },
+    {
+      "option": "reuse run47 incremental object tree in another job",
+      "available": false,
+      "reason": "terminal ephemeral runner tree was not preserved",
+      "newCheckpointProducerOrArtifactWithinCurrentAuthorization": false,
+      "implemented": false
+    }
+  ],
+  "decision": {
+    "longExecutionStarted": false,
+    "sameTimeGuardRetryAutomaticallyRepeated": false,
+    "completionForecast": "UNKNOWN",
+    "nextConcreteWork": "verify the minimal current-source target and bundle closure or preserve bounded completion-marker evidence before another long consumer",
+    "platformLimitMinutes": 360,
+    "abnormalStopAndSafeCleanupPreserved": true,
+    "arbitraryHumanTimeCancellation": false
+  },
+  "sourceReferences": [
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "config/recurse.mk"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "js/xpconnect/shell/moz.build"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "python/mozbuild/mozbuild/controller/building.py"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py"
+    }
+  ]
+}

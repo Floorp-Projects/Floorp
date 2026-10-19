@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "review": "Consumer-only shared final deadline implementation",
+  "reviewedAtUtc": "2026-10-19T12:18:34.781149+00:00",
+  "decision": {
+    "source": "CLEAR",
+    "execution": "CONDITIONAL_ON_UPDATED_IMMUTABLE_ROUTE_AND_TERMINAL_REVIEW",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "findings": []
+  },
+  "sourceFreeze": {
+    "bytes": 810,
+    "sha256": "c0457e8ae9452d3f9d9750a51bd8ddb04bc419bed14d0401ebf104f0dea89b1a"
+  },
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/consumer_time.py",
+      "bytes": 2767,
+      "sha256": "43e6e1373e57e52ca47bf14570117508d403264954e823e1d91660c917c4d839"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_consumer_time.py",
+      "bytes": 9180,
+      "sha256": "bd55c496ba98423b9b3d8236cea9a4613a0d94fc277157309cf7179a2c857866"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 45136,
+      "sha256": "f1c26bc31a8b77df6c8ca5fe52ce323b986e12d5e155932760a1e8581009bbfd"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 20842,
+      "sha256": "8291566482a3caf9e9801ca9f5798a782a49ad7eac05bd7ef840a59d0515c4f4"
+    }
+  ],
+  "baseline": {
+    "fixture": "21f920f6790f78d923947886e0ddd8c6151da59a",
+    "pipeline": {
+      "bytes": 44683,
+      "sha256": "6007e9a8440aaa4b237a8f011f6abc4ba602b252ac1a1abe89c8c9180d62696a"
+    },
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "contract": {
+    "flag": "--consumer-shared-deadline",
+    "profile": "consumer-shared-final-deadline-v1",
+    "explicitOnly": true,
+    "consumerOnly": true,
+    "restoreOnlyRejected": true,
+    "defaultLegacyUnchanged": true,
+    "legacyAbsoluteJobMinutes": {
+      "restore": 60,
+      "fullBuild": 300,
+      "package": 315,
+      "nativeAndMozilla": 335,
+      "final": 345,
+      "platform": 360
+    },
+    "sharedAbsoluteJobMinutes": {
+      "restore": 60,
+      "fullBuild": 345,
+      "package": 345,
+      "nativeAndMozilla": 345,
+      "final": 345,
+      "platform": 360
+    },
+    "clock": "Existing Runner and started-monotonic marker; no new clock or per-stage duration reset.",
+    "budgetEvidence": "Only opt-in adds the separate typed executionTimeBudget object with original/effective caps, plan digest, clock semantics, fixed profile and nonadditive stages.",
+    "cleanupReserve": "345-to360 is a15-minute difference on the same task clock; GitHub job start may precede marker creation. This is a nominal reserve, not a guarantee of exactly15 wallclock minutes.",
+    "sourceDiff": "Import selector, add CLI flag, select before Runner creation, add explicit budget evidence, and substitute selected consumer deadlines for restore/full/package/native/Mozilla/inherited/final callers only.",
+    "planAndContent": "Original plan bytes and all checkpoint context, references, SDK source, compile flags, toolchain and actual configuration guards are unchanged. Policy changes execution timing, not captured build state.",
+    "safety": "Restore60, platform360, owned scope, unknown/null handling, RSS/free-disk/log/stall checks, primary failure and exact cleanup behavior remain unchanged."
+  },
+  "independentReview": {
+    "pipelineDiffComparedToImmutableBaseline": "PASS",
+    "all4FrozenFilesExact": "PASS",
+    "selector": "Strict booleans, fixed plan digest and exact integer legacy60/300/315/335/345 plus platform360; invalid role, restore-only, changed/ordered/overlarge/boolean caps reject before work.",
+    "propagation": "Selected full/package/native values and inherited Runner deadline all become345; Mozilla nested flow receives345 with the original Runner/origin. Final remains345, restore remains60.",
+    "primaryFailure": "No code clears or rewrites Runner failure or monitor evidence. Existing cleanup and resource monitoring code is unchanged.",
+    "negativeControls": [
+      "Default300/no added budget evidence.",
+      "Shared producer, unknown role and restore-only rejected before Runner construction.",
+      "Real owned child completes at simulated job age321min under shared345 with exact reap/group gone.",
+      "Inherited and explicit345 reject at the exact deadline before Popen, retaining the monotonic origin.",
+      "Full/package/native/Mozilla flow forwards the expected absolute deadline without recreating Runner or task clock.",
+      "Selector leaves plan, compilation/resource settings and environment unchanged, including failed selection and returned mapping mutation."
+    ],
+    "fullSuite": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "cwd": "tools/qa/native-nonpgo",
+      "total": 645,
+      "passed": 628,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 31.891,
+      "log": {
+        "bytes": 10924,
+        "sha256": "84ae95bb32536df45a66e93c887af33b47342235b8fb76ccfc3c7f3c799c9863"
+      }
+    }
+  },
+  "designReview": {
+    "bytes": 4002,
+    "sha256": "e46780b2e1ebc0ff70b1d4d99b9e127a97097dd7adf226d87acb7e4bdfe90ead"
+  },
+  "remainingGates": [
+    "Bind exact new source files and updated caller through immutable provider readback; the old caller337a209b retains300 and is not the shared policy route.",
+    "Updated caller must explicitly pass the shared flag, preserve one consumer/no producer/no upload and all prior source/SDK/checkpoint guards, and strictly validate the fixed14-key executionTimeBudget object plus original typed Mozilla result gate.",
+    "Verify updated selected Mac QA test count and14 recording tests, no failures/errors/skips; expected430 QA must be checked against actual frozen caller discovery.",
+    "Complete run47 terminal evidence review, then fresh unexpired official SDK/checkpoint metadata, real current/origin identity, no owned overlap and unused branch checks before activation.",
+    "Actual Mac execution under this policy, full build completion, Mozilla smoke and native authentication remain unverified. Shared345 provides a larger common work allowance, not a completion guarantee."
+  ],
+  "operations": {
+    "sourceEdits": false,
+    "ciOrRefMutation": false,
+    "activeJobLogs": false,
+    "payloadAcquisition": false,
+    "uploadSigningAuthOrPermissionChange": false
+  }
+}
