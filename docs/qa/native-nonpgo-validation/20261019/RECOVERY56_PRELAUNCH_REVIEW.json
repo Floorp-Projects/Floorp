@@ -1,0 +1,439 @@
+{
+  "schema": 1,
+  "review": "Recovery56 immutable existing-checkpoint restore-only Firefox graph prelaunch",
+  "decision": "GO",
+  "scope": "one-root-activated-existing-checkpoint-restore-only-read-only-graph-diagnostic",
+  "openP1": 0,
+  "openP2": 0,
+  "observedAt": "2026-10-19 21:43:17 UTC",
+  "fixture": {
+    "sha": "5be48e693474744f8f87ba31aff3c591bb182bec",
+    "tree": "de8ea211b5077b8f8befed610cd51c51ed47534d",
+    "parents": [
+      "c12c703c0fc767ebc43321a09a84212f5c331636"
+    ],
+    "changedPaths": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_TERMINAL_REVIEW.json",
+        "status": "added",
+        "gitBlobSHA": "af587ef136ed5b3ad21145ba542bc1a6eec07a8c"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_GRAPH_CALLER_IMPLEMENTATION_REVIEW.json",
+        "status": "added",
+        "gitBlobSHA": "14a9b28f2d07430bef429016e1c61fadf3af72d4"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_GRAPH_IMPLEMENTATION_REVIEW.json",
+        "status": "added",
+        "gitBlobSHA": "ca152db0d6cb82ba91390d98477085a1ad0b8dff"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_LOCAL_RESULT.json",
+        "status": "added",
+        "gitBlobSHA": "178f82e858e6ca7959b2d289d2702873795a69d4"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_PREPARATION.json",
+        "status": "added",
+        "gitBlobSHA": "8319867d40cb117d31a73e6d79cb2f11defc1d3d"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SDK_IMPLEMENTATION_REVIEW.json",
+        "status": "added",
+        "gitBlobSHA": "ea04518cc54bf3b05caab30267d711646564979c"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SDK_RENEWAL_EVIDENCE.json",
+        "status": "added",
+        "gitBlobSHA": "c1b84e5483c27a46266d9853dccb27c73f96f1cd"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SOURCE_FREEZE.json",
+        "status": "added",
+        "gitBlobSHA": "5a2c42c25385cbf3961c0ed9e2c6b39dc39a329c"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "status": "modified",
+        "gitBlobSHA": "139a52a175a564a118e6998353c5cd973765a9c8"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_graph.py",
+        "status": "added",
+        "gitBlobSHA": "72998c493f4a02b631b59b0a9a79a5dfb2205620"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_observer.py",
+        "status": "added",
+        "gitBlobSHA": "7260b19b53335575ef61761ddde8c9b83a359f69"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "status": "modified",
+        "gitBlobSHA": "c13cdfc1eaf659e4754cf9e4ecbb9a4b178957c4"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.py",
+        "status": "modified",
+        "gitBlobSHA": "c5023e8e0e16140d4671a453e71dfaf8502a4192"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+        "status": "modified",
+        "gitBlobSHA": "d478ef892ea1d4b616e85c4ccae462f0b6d87976"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+        "status": "modified",
+        "gitBlobSHA": "c908f4381fe96ab2e26ccbe5689b9cd4414e6f4c"
+      }
+    ],
+    "changedSourceCount": 7,
+    "addedDocumentationCount": 8,
+    "allFifteenFilesReadBackExactly": true,
+    "fileBindings": {
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_TERMINAL_REVIEW.json": {
+        "bytes": 3770,
+        "sha256": "3aa18b35f2bbfbe9a88a798f38d4bcfbbc0ea0757862daae0338b41b38ed17c7",
+        "gitBlobSHA": "af587ef136ed5b3ad21145ba542bc1a6eec07a8c"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_GRAPH_CALLER_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 8175,
+        "sha256": "8e286ff91488eb12a1034149b376af8ea898c73e7ecf7d90c90ffae32ea6b5b6",
+        "gitBlobSHA": "14a9b28f2d07430bef429016e1c61fadf3af72d4"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_GRAPH_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 6346,
+        "sha256": "b85eee0e5d895f6c87fecc1bb1ad597abbcfbb4cbc70e0e60a5b6e7a3400ed4b",
+        "gitBlobSHA": "ca152db0d6cb82ba91390d98477085a1ad0b8dff"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_LOCAL_RESULT.json": {
+        "bytes": 3174,
+        "sha256": "3242ebae92cdf7c35b8dea82046f348552bcacb161a1e3e53bbaa806f85f4977",
+        "gitBlobSHA": "178f82e858e6ca7959b2d289d2702873795a69d4"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_PREPARATION.json": {
+        "bytes": 9991,
+        "sha256": "1da5b71f5b46ece8fc325a2b90b325ae98f805ea91fc4029e63e3cb82a4d7bb5",
+        "gitBlobSHA": "8319867d40cb117d31a73e6d79cb2f11defc1d3d"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SDK_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 9385,
+        "sha256": "da83a61384471e8dd1255e6ac5e1df45db593800817cf0aba4ef0086127b4878",
+        "gitBlobSHA": "ea04518cc54bf3b05caab30267d711646564979c"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SDK_RENEWAL_EVIDENCE.json": {
+        "bytes": 9336,
+        "sha256": "ec5d42ca115f511c2cc167d08573e36ef362b5489fe7c089122c3fa23056f4e6",
+        "gitBlobSHA": "c1b84e5483c27a46266d9853dccb27c73f96f1cd"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY56_SOURCE_FREEZE.json": {
+        "bytes": 2248,
+        "sha256": "49a1af25b076e3b8ad1eb487cfa14d05983b8d94d99a68e8bae872fb4eb19e99",
+        "gitBlobSHA": "5a2c42c25385cbf3961c0ed9e2c6b39dc39a329c"
+      },
+      "tools/qa/native-nonpgo/fetch_sdk.py": {
+        "bytes": 4964,
+        "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519",
+        "gitBlobSHA": "139a52a175a564a118e6998353c5cd973765a9c8"
+      },
+      "tools/qa/native-nonpgo/firefox_target_graph.py": {
+        "bytes": 10361,
+        "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a",
+        "gitBlobSHA": "72998c493f4a02b631b59b0a9a79a5dfb2205620"
+      },
+      "tools/qa/native-nonpgo/firefox_target_observer.py": {
+        "bytes": 22432,
+        "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb",
+        "gitBlobSHA": "7260b19b53335575ef61761ddde8c9b83a359f69"
+      },
+      "tools/qa/native-nonpgo/sdk_source.json": {
+        "bytes": 1030,
+        "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+        "gitBlobSHA": "c13cdfc1eaf659e4754cf9e4ecbb9a4b178957c4"
+      },
+      "tools/qa/native-nonpgo/sdk_source.py": {
+        "bytes": 8299,
+        "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa",
+        "gitBlobSHA": "c5023e8e0e16140d4671a453e71dfaf8502a4192"
+      },
+      "tools/qa/native-nonpgo/test_sdk_source.py": {
+        "bytes": 16624,
+        "sha256": "1dff28b0ec0e557370dcec76f185e825a547ed81cab0f5706f55374a04bc6663",
+        "gitBlobSHA": "d478ef892ea1d4b616e85c4ccae462f0b6d87976"
+      },
+      "tools/qa/native-nonpgo/test_sdk_source_integration.py": {
+        "bytes": 15303,
+        "sha256": "b66cb8314b67658a3fc2b78d48bf667468293bf298c442c7d1c62448e18ae1a8",
+        "gitBlobSHA": "c908f4381fe96ab2e26ccbe5689b9cd4414e6f4c"
+      }
+    },
+    "unchangedGuardPins": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 27426,
+        "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 36824,
+        "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 27325,
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      }
+    ]
+  },
+  "caller": {
+    "sha": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "tree": "3f09bd693a0780d7e4fc3ac252d83e8f2d784dd6",
+    "parents": [
+      "b8a694e5f254e5fdc3595a2fa17700060932897a"
+    ],
+    "changedPaths": [
+      {
+        "path": ".github/workflows/mac-native-checkpoint.yml",
+        "status": "modified",
+        "gitBlobSHA": "6c26bad31400d373e58c0421d77825df3a3673eb"
+      }
+    ],
+    "workflowBytes": 57580,
+    "workflowSHA256": "8bac07811ed5b0e7a9a561d9aee1d73ac889abbe50b991cb2fda37e536e65836",
+    "branch": "codex/mac-native-firefox-graph-recovery56-20261019",
+    "dedicatedBranchMatchingRefs": 0,
+    "priorCallerRuns": 0,
+    "reviewedTemplateBytes": 57528,
+    "reviewedTemplateSHA256": "2e723905461f1e3ff58394a3ccac6056e58a6b44d5c20db970b2d47f4106668b",
+    "onlyTokenFamiliesChanged": [
+      "fixture",
+      "branch",
+      "QA-count"
+    ],
+    "replacementOccurrences": [
+      1,
+      2,
+      3
+    ],
+    "unrenderedPreparation": {
+      "bytes": 3033,
+      "sha256": "68062baef62eede7da35ac3e20e3a4b95369f03a417fee9a06ec8d0ac05ed15a",
+      "callerBytes": 57560,
+      "callerSHA256": "a384a38a03ee09261adea2c8c08081048ee64b170fcb097f1aa08a413dcb2581"
+    },
+    "renderedReadbackDistinguishedFromUnrenderedMetadata": true
+  },
+  "route": {
+    "workflowYAMLCount": 26,
+    "otherTwentyFiveWorkflowBlobSHAsUnchangedFromReviewedParent": true,
+    "matchingPushWorkflows": [
+      "mac-native-checkpoint.yml"
+    ],
+    "createEventWorkflows": 0,
+    "workflowRunEventWorkflows": 0,
+    "singleConsumerJob": true,
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "cancelInProgress": false,
+    "checkoutPersistCredentials": false,
+    "initialPushAttemptOneAndNewBranchOnly": true
+  },
+  "prerequisite": {
+    "actualMacReaderRun": 39326868656,
+    "conclusion": "success",
+    "terminalReviewSHA256": "3aa18b35f2bbfbe9a88a798f38d4bcfbbc0ea0757862daae0338b41b38ed17c7",
+    "sameControlledInputOriginalSeconds": 17.643181413000036,
+    "sameControlledInputSeparateProbeSeconds": 17.594401747000006,
+    "processingSeconds": 30,
+    "qualification": "controlled-input-reader-and-upstream-serializer-only",
+    "noGeneralProductionProfilePerformanceGuarantee": true
+  },
+  "normalAPIState": {
+    "observedAt": "2026-10-19 21:43:17 UTC",
+    "statuses": {
+      "requested": {
+        "total": 0,
+        "owned": 0
+      },
+      "waiting": {
+        "total": 0,
+        "owned": 0
+      },
+      "pending": {
+        "total": 0,
+        "owned": 0
+      },
+      "queued": {
+        "total": 1,
+        "owned": 0
+      },
+      "in_progress": {
+        "total": 0,
+        "owned": 0
+      }
+    },
+    "ownedActiveTotal": 0,
+    "branchMatchCount": 0,
+    "callerPriorRunCount": 0,
+    "prior55": {
+      "id": 39326868656,
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "headSHA": "b8a694e5f254e5fdc3595a2fa17700060932897a"
+    }
+  },
+  "sdk": {
+    "artifact": 12182302735,
+    "run": 39244172146,
+    "attempt": 1,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "event": "schedule",
+    "runConclusion": "success",
+    "producerJob": 118032017226,
+    "producerName": "Mac build [PGO] / download-macos-sdk",
+    "producerConclusion": "success",
+    "completeJobCount": 43,
+    "completeArtifactCount": 34,
+    "soleMatchingSDKArtifact": true,
+    "expired": false,
+    "expiresAt": "2026-10-20T11:23:42Z",
+    "zipBytes": 105082683,
+    "zipSHA256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+    "compressedTarBytes": 105567985,
+    "compressedTarSHA256": "a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b",
+    "uncompressedTar": {
+      "bytes": 760518144,
+      "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+    },
+    "canonicalTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "version": "26.5",
+    "sourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "baselineTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+    "qualification": "official-artifact-identical-uncompressed-tar-v1",
+    "currentMetadataMatchesActualFixedSpec": true,
+    "priorContentEvidenceSHA256": "ec5d42ca115f511c2cc167d08573e36ef362b5489fe7c089122c3fa23056f4e6",
+    "contentScanOrAcquisitionRepeatedByReviewer": false
+  },
+  "checkpoint": {
+    "originRun": 39197008470,
+    "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "attempt": 1,
+    "sourceRunConclusion": "failure",
+    "producerJob": 117881829274,
+    "producerConclusion": "success",
+    "soleArtifact": 12164479528,
+    "bytes": 2213942620,
+    "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "createdAt": "2026-10-19T05:20:31Z",
+    "expiresAt": "2026-10-20T05:19:56Z",
+    "expired": false,
+    "actualValidateOriginAcceptedNormalAPIReplies": {
+      "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+      "originVerified": true,
+      "producerJobVerified": true,
+      "soleArtifactVerified": true,
+      "unexpiredAtVerification": true,
+      "strictSameRunQualified": false,
+      "productQualification": false
+    },
+    "retentionDaysUnchanged": 1,
+    "payloadAcquiredByReviewer": false
+  },
+  "sourceAndHarnessPins": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "harnessSourceFiles": 4,
+    "startupPatchSHA256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e",
+    "failureRecordingPatchSHA256": "367f7095a17602fc986f90c344d44098366124e66384d1e2e8d3ba92f34ff3ad",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "preservedGuards": {
+    "preflightBeforeAcquisition": true,
+    "selectedMacQA": 529,
+    "recordingTests": 14,
+    "skipAllowed": 0,
+    "preflightStepMinutes": 10,
+    "existingPreflightPhaseMinutes": 15,
+    "SDKStepMinutes": 12,
+    "SDKBeforeRuntimeAndHarnessCheckout": true,
+    "normalOfficialAPIAndHTTPErrorStop": true,
+    "SDKUnexpiredBeforeAcquisition": true,
+    "SDKDownloadSeconds": 600,
+    "ZIPCRCCompressedTARRawTARTreeVersionAndStrictReceiptAnchors": true,
+    "checkpointArchiveManifestReferencesFullTreeTimesPythonContextAndConfigurationChecks": true,
+    "explicitVerifiedOriginReplayOnly": true,
+    "defaultSameRunGuardsUnchanged": true,
+    "genuineRestoreFlagOnlyAfterSuccessfulPipelineAndTypedGuardReceipts": true,
+    "allRestoreStagesNaturalZeroExactReapAndGroupGoneBeforeObserver": true,
+    "originalJobOriginRestoreMinutes": 60,
+    "observerSecondsInsideOriginalRestoreDeadline": 30,
+    "originalClockResetAllowed": false,
+    "shared345DeadlineSelected": false,
+    "resourceRSSDiskStallAndCleanupLimitsChanged": false,
+    "ownedRunnerAndCleanABIEnvironment": true,
+    "noAcquisitionTokensInObserverChild": true,
+    "fixedOwnedNoFollowHelperReadsAndExactPins": true,
+    "preReturnedPostReceiptHashEquality": true,
+    "postReadOriginalDeadlineChecksBeforeAndAfter": true,
+    "parentBindingOrDeadlineFailureClearsObservation": true,
+    "missingDriverReceiptRecoversSafePrimaryWithoutGraphQualification": true,
+    "firstFailureMonitorCleanupAndWriteFailuresRemainSeparate": true,
+    "unknownMeasurementsRemainNull": true,
+    "optionalConfigAbsenceStaysUnconfirmed": true,
+    "makeRecipeConfigureOrBuildInObserver": false,
+    "pipelineRestoreOnly": true,
+    "newArtifactUploads": 0,
+    "signingPublishingMergingOrAuthenticationSettingsChanges": false,
+    "expiryBypassAllowed": false,
+    "sixHourRemainingBuildCouplingIntroduced": false
+  },
+  "validation": {
+    "renderedCallerControlsIndependentlyRerun": 94,
+    "writerControlsIncluded": 87,
+    "additionalActualAlwaysControls": 6,
+    "actualRunnerFailPersistenceRegression": 1,
+    "ResourceWarningPolicy": "error",
+    "allShellAndInlinePythonSyntax": "passed",
+    "identicalObserverAndFinalGateFunctions": 10,
+    "reviewedGraphSourceControls": 121,
+    "originalWriterFilesAndResultsUnchanged": true,
+    "reportedFullQA": {
+      "total": 744,
+      "passed": 727,
+      "skippedDarwinOnly": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 57.79
+    },
+    "fullQAOrDensityRerunByReviewer": false,
+    "actualMacGraph": "NOT_RUN"
+  },
+  "qualificationLimits": {
+    "targetGraphObservationIsNotMinimumSufficientSuffix": true,
+    "targetGraphObservationIsNotBuildCompletionOrCacheHit": true,
+    "durationToCompletion": "UNKNOWN",
+    "fullHostXUL": "NOT_TESTED",
+    "MozillaNativeCases": "NOT_TESTED",
+    "nativeShimAuthentication": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN",
+    "newLongBuildAuthorizedByThisReview": false
+  },
+  "reviewerOperations": {
+    "CIStarted": false,
+    "remoteRefsChanged": false,
+    "repositorySourceEdited": false,
+    "SDKOrCheckpointPayloadAcquired": false,
+    "artifactUploaded": false,
+    "signingOrAuthSettingsChanged": false
+  },
+  "activationCondition": "Root freshly rechecks exact immutable pins, unused dedicated branch, no prior caller run, zero owned overlap, and normal unexpired SDK/checkpoint provenance before one activation."
+}

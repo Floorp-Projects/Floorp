@@ -1,0 +1,657 @@
+{
+  "schema": 1,
+  "scope": "retained-evidence-rebuild-cause-review-through-Recovery48",
+  "status": "READ_ONLY_REVIEW_COMPLETE_PENDING_ACTUAL_RESTORED_GRAPH",
+  "reviewedAtUTC": "2026-10-19",
+  "conclusion": {
+    "specificRedundantRecompilationCauseEstablished": false,
+    "changedConfigurationRecommended": false,
+    "checkpointIsCompletedBrowserBuild": false,
+    "substantialUnfinishedNativeWorkExpectedFromBoundary": true,
+    "actualMakeOrCargoCacheHitEstablished": false,
+    "actualMakeOrCargoCacheMissEstablished": false,
+    "minimalSufficientFirefoxTargetSuffixEstablished": false,
+    "durationToCompletion": "UNKNOWN",
+    "fortyFiveMinuteCompletionOutlook": "UNKNOWN",
+    "longExecutionDecision": "NOT_GRANTED_BY_THIS_REVIEW",
+    "forecastUnknownAloneRequiresIndefiniteHold": false
+  },
+  "fixedOrigin": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "checkpointRun": 39197008470,
+    "producerJob": 117881829274,
+    "artifact": 12164479528,
+    "bytes": 2213942620,
+    "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "buildDate": "20261019035607",
+    "producerBoundary": "pre-export/export then toolkit/library/rust/target-objects",
+    "qualification": "verified-origin-cross-run-checkpoint-replay-v1"
+  },
+  "observedFacts": [
+    {
+      "id": "F1",
+      "classification": "retained-execution-plus-source-bound-assertion",
+      "fact": "Producer45 naturally completed export and the exact Rust node, verified a real gkrust archive and dep-info, and rejected an already-built MacWebAppService.o or XUL. The captured boundary deliberately precedes completed browser C++ and XUL.",
+      "evidence": [
+        "RECOVERY45_PRODUCER_RESULT.json",
+        "pipeline.py:467-505"
+      ]
+    },
+    {
+      "id": "F2",
+      "classification": "retained-data-exact-comparison",
+      "fact": "Parsed source metadata, all eleven toolchain receipt entries, and the complete published effectiveConfig dictionaries are equal across producer45, restore46, consumer47 and consumer48. This compares the stored summary dictionaries, not every possible compiler environment variable or substitution.",
+      "sourceMetadataEqual": true,
+      "toolchainReceiptsEqual": true,
+      "effectiveConfigSummaryEqual": true,
+      "toolchainReceiptCount": 11
+    },
+    {
+      "id": "F3",
+      "classification": "retained-execution",
+      "fact": "All consumers46/47/48 passed the replay context key set and all eleven key comparisons plus resumed actual effective-config verification. The four historical run/attempt/head/fixture values are checked against the fixed producer origin; remaining context is actual-current exact, not a same-job claim.",
+      "allContextKeysPassed": true,
+      "contextKeyCount": 11,
+      "configurationSubstitutionsComparedByRestore": 41
+    },
+    {
+      "id": "F4",
+      "classification": "retained-stage-inventory-plus-executed-source",
+      "fact": "Consumer46/47/48 have no explicit configure Runner stage. After guarded restore they run mach environment and validate the restored configuration. Normal mach build may still perform its internal automatic configure or backend checks; their outcome is not retained.",
+      "explicitFreshConfigureObserved": false,
+      "internalAutomaticReconfigure": "UNKNOWN"
+    },
+    {
+      "id": "F5",
+      "classification": "retained-execution-plus-source-bound-assertion",
+      "fact": "The restored build date is the producer date, not the later job date. Source/tools/SDK content and modes are verified against the manifest; their recorded nanosecond mtimes are restored with exact per-row verification. State roots and symlink graphs are reconstructed and compared exactly. This is a restoration boundary proof, not proof that later mach does no work.",
+      "producerBuildDateReused": true,
+      "recordedMtimesRestoredExactly": true,
+      "mtimeResetToCheckoutTimeDemonstrated": false,
+      "allFilesystemMetadataClaimedIdentical": false
+    },
+    {
+      "id": "F6",
+      "classification": "retained-content-verification",
+      "fact": "Recovery48 acquired a different official SDK artifact with different ZIP and compressed TAR digests. Its entire uncompressed TAR bytes and canonical SDK tree/version match the baseline. The wire packaging change is not a demonstrated SDK compilation-content change.",
+      "differentWireArtifact": true,
+      "sameUncompressedTarBytes": true,
+      "sameCanonicalSDK": true,
+      "actualSDKContentChangeDemonstrated": false
+    },
+    {
+      "id": "F7",
+      "classification": "retained-execution",
+      "fact": "Recovery48 ran the stock mach build -j3 and stopped at its shared345 absolute full-build deadline, with firstFailure phase-deadline at20700.05seconds. It did not return zero; monitorFailure is null. Forty-five prior main stages returned natural zero and all forty-six were exactly reaped with owned groups gone and no cleanup failure.",
+      "run": 39258232399,
+      "job": 118078849382,
+      "firstFailure": {
+        "code": "phase-deadline",
+        "elapsedSeconds": 20700.05,
+        "stage": "full-build"
+      },
+      "monitorFailure": null,
+      "naturalPriorStages": 45,
+      "allMainStages": 46,
+      "fullBuildStageExit": 254
+    },
+    {
+      "id": "F8",
+      "classification": "retained-evidence-limit",
+      "fact": "Recovery48 completion observation hit the old whole-candidate16MiB size guard before parsing the full candidate. Counts, phase, actual candidate bytes and validated whole format remain unknown. Its compiler-private log and actual resource profile are not available in retained evidence. Later synthetic reader controls cannot recover those files or establish the old build subphase.",
+      "completionObservation": "unconfirmed",
+      "reason": "build-completion-whole-size-limit",
+      "actualWholeFormatValidated": false,
+      "actualProfileBytes": null,
+      "completedTargets": null,
+      "compilerSubphase": "UNKNOWN"
+    }
+  ],
+  "sourceOnlyInferences": [
+    {
+      "id": "S1",
+      "classification": "fixed-ref-source-dependency",
+      "inference": "xpcshell uses GeckoProgram dependent linkage, hence xul-real plus NSPR/mozglue. xul-real links static xul and gkrust. Cocoa app-shim objects belong to xul. A genuine current-source xpcshell test cannot simply bypass XUL or its required Cocoa objects.",
+      "actualRestoredGraphObservedInThisReview": false,
+      "refs": [
+        "js/xpconnect/shell/moz.build:5",
+        "build/gecko_templates.mozbuild:24-40",
+        "toolkit/library/build/moz.build:5-13",
+        "widget/cocoa/moz.build:108,189-204"
+      ]
+    },
+    {
+      "id": "S2",
+      "classification": "fixed-ref-source-scope",
+      "inference": "The stock full build traverses the configured normal tiers and all default compile roots, which can include roots outside the xpcshell closure. The binaries target also compiles all native default roots and macOS tools; it is not a shell-only shortcut. Which roots are avoidable for the existing test and bundle must be derived from the actual restored graph.",
+      "refs": [
+        "config/baseconfig.mk:41-68",
+        "config/recurse.mk:37-45",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:788-833"
+      ]
+    },
+    {
+      "id": "S3",
+      "classification": "fixed-ref-source-bundle-requirement",
+      "inference": "The current smoke expects the configured app bundle, XUL/xpcshell, generated modules, stock harness inputs and auxiliary programs. Mac bundle assembly declares the browser executable and configured extra inputs in the tools tier. A successful shell compile closure alone therefore does not establish a runnable existing smoke or full-host qualification.",
+      "refs": [
+        "browser/app/moz.build:74-108",
+        "python/mozbuild/mozbuild/backend/recursivemake.py:1995-2071",
+        "RECOVERY48_MINIMAL_MOZILLA_TARGET_REVIEW.json"
+      ]
+    },
+    {
+      "id": "S4",
+      "classification": "fixed-ref-source-possible-retrigger",
+      "inference": "mach writes .mozconfig.json with FileAvoidWrite, then can reconfigure if config.status/config_status_deps.in is missing or a dependency is newer/missing. Backend regeneration can also occur for newer/missing dependencies or missing recorded outputs. Retained effective-config success does not tell whether later build-side checks fired.",
+      "observedIn47Or48": "UNKNOWN",
+      "refs": [
+        "python/mozbuild/mozbuild/controller/building.py:1357-1393,1963-1981",
+        "python/mozbuild/mozbuild/base.py:237-319"
+      ]
+    },
+    {
+      "id": "S5",
+      "classification": "fixed-ref-source-guarded-rust-rule",
+      "inference": "The archive rule uses Cargo dep-info plus manifest/lock/dependency mtimes to decide whether to recurse to force-cargo-library-build; that force recipe then invokes Cargo. Cargo invocation and actual Rust recompilation are separate decisions. Neither invocation, skip nor cache miss is established for47/48 by the preserved archive hash alone.",
+      "observedInvocation": "UNKNOWN",
+      "observedRecompilation": "UNKNOWN",
+      "refs": [
+        "config/makefiles/rust.mk:276-305,309-341"
+      ]
+    },
+    {
+      "id": "S6",
+      "classification": "fixed-ref-source-generated-header",
+      "inference": "Export has forced buildid/source-repo stubs, but generated files use FileAvoidWrite and buildid_header consumes MOZ_BUILD_DATE. Reusing the producer build date avoids an intentional date-content change. This does not prove every generated file is unchanged or every export action is skipped.",
+      "refs": [
+        "Makefile.in:18-26",
+        "build/variables.py:13-29",
+        "python/mozbuild/mozbuild/action/file_generate.py:96-100"
+      ]
+    }
+  ],
+  "rebuildHypothesisMatrix": [
+    {
+      "hypothesis": "consumer explicitly starts a fresh configure",
+      "status": "NOT_OBSERVED",
+      "basis": "No configure stage and the consumer branch restores then queries mach environment."
+    },
+    {
+      "hypothesis": "changed runtime patches or mozconfig content",
+      "status": "NOT_DEMONSTRATED",
+      "basis": "Retained source metadata, including mozconfig/patch set/host digests, is equal in45/46/47/48; manifest reference-content guard passed."
+    },
+    {
+      "hypothesis": "changed compiler or materialized toolchain bytes",
+      "status": "NOT_DEMONSTRATED",
+      "basis": "All eleven toolchain receipts and selected compiler/profile summary equal; reference content guard passed."
+    },
+    {
+      "hypothesis": "new build date invalidates generated headers",
+      "status": "NOT_DEMONSTRATED",
+      "basis": "All restored consumers use the fixed producer date20261019035607."
+    },
+    {
+      "hypothesis": "checkout mtimes replace captured source/object mtimes",
+      "status": "NOT_DEMONSTRATED",
+      "basis": "Restoration requires exact captured nanosecond mtimes. Later process updates are not retained."
+    },
+    {
+      "hypothesis": "changed compressed SDK artifact invalidates SDK compilation content",
+      "status": "NOT_DEMONSTRATED",
+      "basis": "Wire hashes differ in48, but complete uncompressed TAR bytes and canonical tree are equal."
+    },
+    {
+      "hypothesis": "mach automatic reconfigure or backend regeneration",
+      "status": "UNKNOWN",
+      "basis": "Checks exist in pinned source; trigger result and actual dependency relations were not retained."
+    },
+    {
+      "hypothesis": "make or Cargo rebuilds the saved gkrust archive",
+      "status": "UNKNOWN",
+      "basis": "Archive/dep-info restoration is verified; subsequent rule/cargo freshness decisions and compiler invocations are not."
+    },
+    {
+      "hypothesis": "full build spends time on default roots unnecessary for shell-only compile",
+      "status": "SOURCE_SUPPORTED_CANDIDATE_NOT_MEASURED",
+      "basis": "Full compile has all default roots; actual restored closure and runnable bundle suffix are pending."
+    },
+    {
+      "hypothesis": "ordinary first-time C++/XUL/link/bundle work dominates",
+      "status": "BOUNDARY_REQUIRES_SUCH_WORK_COST_UNKNOWN",
+      "basis": "Checkpoint is not a completed browser; exact progress, critical path and duration cannot be recovered."
+    }
+  ],
+  "minimumNecessaryConfigurationAssessment": {
+    "retain": [
+      "fixed7dd source and patches",
+      "compiled debug enabled",
+      "tests enabled for real xpcshell harness",
+      "nonPGO/nonLTO profile",
+      "fixed toolchains and SDK content",
+      "existing absolute roots and build date",
+      "existing resource and unknown-failure guards"
+    ],
+    "why": "These are the current test subject and checkpoint compatibility conditions. No retained evidence justifies changing them to explain the deadline stop.",
+    "configurationChangeAsCacheFixJustified": false,
+    "targetOrderingWithoutConfigurationChangeIsCandidate": true,
+    "targetOrderingProvenSufficientOrFaster": false,
+    "allHostTargetsMayBeDropped": false
+  },
+  "minimalNextTest": {
+    "firstMilestone": "Existing-checkpoint guarded restore-only plus stable read-only generated target-graph observation; no make/configure/build recipes.",
+    "requiredEvidence": [
+      "same origin archive and manifest digests",
+      "actual source/toolchain/SDK content and replay context guards",
+      "resumed effective configuration",
+      "stable generated root.mk and root-deps.mk digests",
+      "literal xpcshell-to-XUL-to-gkrust and Cocoa reachability",
+      "configured default roots and misc/libs/tools suffix declarations",
+      "typed unknowns for opaque or unsupported graph/configuration data",
+      "natural owned-stage completion and cleanup"
+    ],
+    "proves": "The configured dependency relations present in this restored checkpoint under the recognized literal generated grammar.",
+    "doesNotProve": [
+      "which old47/48 compiler subphase ran",
+      "that a target will be skipped",
+      "Cargo cache hit",
+      "minimum usable bundle suffix",
+      "target build success",
+      "time remaining",
+      "full-host or native-authentication qualification"
+    ],
+    "optionalSmallDiscriminatorIfReconfigureHypothesisRemainsMaterial": {
+      "scope": "Bounded read-only classification of the pinned mach stale checks on the restored tree, without running make or writing .mozconfig.json.",
+      "items": [
+        "config.status and config_status_deps.in presence",
+        "bounded counts of missing or newer recorded configure dependencies",
+        "backend marker/dependency-list presence and missing recorded backend outputs",
+        "aggregate whether a stale dependency falls outside preserved state/reference roots",
+        "gkrust archive/dep-info hash and recorded mtime consistency"
+      ],
+      "privacy": "Only fixed categories, counts, equality booleans and digests; no raw dependency paths or environment text.",
+      "limits": "This observes pre-build staleness only. Current mozconfig serialization can itself change at mach build, and absence of stale recorded dependencies does not establish Cargo cache hits or completion time.",
+      "implementedOrExecutedHere": false
+    },
+    "avoid": [
+      "unqualified make -n or make -p as a read-only substitute; included makefiles and shell expansion can execute work",
+      "discarding required XUL/Cocoa/bundle prerequisites",
+      "changing the plan or compilation flags to make an old checkpoint appear compatible",
+      "claiming actual old-profile recovery from synthetic reader controls",
+      "another identical hours trial justified solely by extra time"
+    ],
+    "afterMilestone": "Use the actual graph and current successful reader qualification to choose a discriminating next build route. An unknown forecast alone is not grounds for indefinite hold; preserve explicit target/full-host qualification boundaries."
+  },
+  "evidenceBindings": {
+    "publicReceipts": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_PRODUCER_RESULT.json",
+        "bytes": 40745,
+        "sha256": "1db0bb56a162738842d3d0b712a69ac053986af1b6a3723757357493622d60a9"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_TERMINAL_RESULT.json",
+        "bytes": 36661,
+        "sha256": "261a465f53494ba36b1714f5acf838a73f6356c828e0d35fa23addce675f5888"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_TERMINAL_RESULT.json",
+        "bytes": 44671,
+        "sha256": "c75d15e1a29845d0d16ecd345e7013c50b034022dee881f0d6ba93e6ae1c37e7"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY48_TERMINAL_RESULT.json",
+        "bytes": 41624,
+        "sha256": "f71de3e5bfe40a7286831133af94ea8658562532f2f52be04418ef31b8e6afcf"
+      }
+    ],
+    "retainedPrivateReports": [
+      {
+        "role": "producer45",
+        "path": "producer-report.private.json",
+        "bytes": 215597,
+        "sha256": "b63edb5a4ecf953bf2d63866e191c785db15879b035d7a623eaa138e42a011d7"
+      },
+      {
+        "role": "restore46",
+        "path": "consumer-report.private.json",
+        "bytes": 196663,
+        "sha256": "ee290763c33c01a1cd7985cf88c41061c0f6c6ffe794eb494ecbc9cdc3509432"
+      },
+      {
+        "role": "consumer47",
+        "path": "consumer-report.private.json",
+        "bytes": 167479,
+        "sha256": "6e748a96ab58e4d48dfe0e5fdb3f7a793460de44e5ac3c2bfdff5400cc800038"
+      },
+      {
+        "role": "consumer48",
+        "path": "consumer-report.private.json",
+        "bytes": 169344,
+        "sha256": "258cfd7e5d6a0ed65cf7126ed8833190ef56c0f15f0d6bf65e428130073c75dd"
+      }
+    ],
+    "retainedDecodedLogs": [
+      {
+        "path": "producer45-decoded-private-log",
+        "bytes": 297704,
+        "sha256": "8c412d8c9af531684a6f456100a9b599f1fb40a343500a3b8123d84f39367db1"
+      },
+      {
+        "path": "restore46-decoded-private-log",
+        "bytes": 238467,
+        "sha256": "bbebeaef191b71379a5edd68fa8280c04f626f026b08dc50f95a43e8d88fc4cf"
+      },
+      {
+        "path": "consumer47-decoded-private-log",
+        "bytes": 333653,
+        "sha256": "458932bb1d69ca4f86f71ff4cb4d9b422cadd9bad682a8a4980affee7c017575"
+      },
+      {
+        "path": "consumer48-decoded-private-log",
+        "bytes": 386490,
+        "sha256": "293e7f3f8c7c12a2d68454d8d2122317237d944c7115d1d1d0408e58494aa123"
+      }
+    ],
+    "qaSource": [
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 47069,
+        "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/checkpoint.py",
+        "bytes": 38160,
+        "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+        "bytes": 11556,
+        "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/support.py",
+        "bytes": 34225,
+        "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 27325,
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      }
+    ],
+    "runtimeSource": [
+      {
+        "path": "python/mozbuild/mozbuild/controller/building.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 78700,
+        "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640",
+        "reviewedLines": [
+          [
+            1338,
+            1393
+          ],
+          [
+            1433,
+            1439
+          ],
+          [
+            1538,
+            1556
+          ],
+          [
+            1963,
+            1981
+          ]
+        ]
+      },
+      {
+        "path": "python/mozbuild/mozbuild/base.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 45302,
+        "sha256": "23d86c23ee7068e6be588f6275003a821a7d774e986280a2fc6c8593b610317d",
+        "reviewedLines": [
+          [
+            237,
+            319
+          ]
+        ]
+      },
+      {
+        "path": "config/baseconfig.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 2424,
+        "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4",
+        "reviewedLines": [
+          [
+            41,
+            68
+          ]
+        ]
+      },
+      {
+        "path": "config/recurse.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8560,
+        "sha256": "3eb934988225cb3724676f437b3635813a223d7213f164d9a7e6be15755721ce",
+        "reviewedLines": [
+          [
+            25,
+            45
+          ],
+          [
+            69,
+            86
+          ],
+          [
+            207,
+            222
+          ]
+        ]
+      },
+      {
+        "path": "config/makefiles/rust.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 18861,
+        "sha256": "2eb12ce954b8ccf2a98e8ac2ac4cbc4103480d69a3e89f8d6f064bc5b42f052e",
+        "reviewedLines": [
+          [
+            276,
+            305
+          ],
+          [
+            309,
+            341
+          ]
+        ]
+      },
+      {
+        "path": "Makefile.in",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 6284,
+        "sha256": "0a887dbea2b82b1a8517db1a764fe9ef85de3d6da0c11c68b5118ab453f453ad",
+        "reviewedLines": [
+          [
+            18,
+            34
+          ],
+          [
+            54,
+            62
+          ]
+        ]
+      },
+      {
+        "path": "client.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 2457,
+        "sha256": "699b6253aab2f88da2a6a9ecd3d46410b7a763531fa54ead4f10af1dc3b0da7a",
+        "reviewedLines": [
+          [
+            46,
+            61
+          ]
+        ]
+      },
+      {
+        "path": "build/variables.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 3984,
+        "sha256": "12a9ab738616e99b5a5b2b080911a6078e69087b602cc91a0ca089992286bbfa",
+        "reviewedLines": [
+          [
+            13,
+            29
+          ],
+          [
+            84,
+            110
+          ]
+        ]
+      },
+      {
+        "path": "python/mozbuild/mozbuild/action/file_generate.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 5161,
+        "sha256": "63947a1c1e43796dd35aaa54dea053c7fccadbc5886f4a5903217b6e4ddd0a63",
+        "reviewedLines": [
+          [
+            96,
+            100
+          ]
+        ]
+      },
+      {
+        "path": "js/xpconnect/shell/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 1994,
+        "sha256": "bdfe6aca1eb5dfcde216c2e53d2c89f64259e8b4c7da1c2fdfefd92cd67d804b",
+        "reviewedLines": [
+          [
+            5,
+            20
+          ]
+        ]
+      },
+      {
+        "path": "build/gecko_templates.mozbuild",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 3997,
+        "sha256": "65730546837dd62d7984f01669ba6f7ceaf42238fcc831d18724c2589925757e",
+        "reviewedLines": [
+          [
+            24,
+            40
+          ]
+        ]
+      },
+      {
+        "path": "toolkit/library/build/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 1448,
+        "sha256": "f3ffb0e009148bd09849d6132913cd23a5d6421204dc199d228fbcfe733d22a3",
+        "reviewedLines": [
+          [
+            5,
+            13
+          ]
+        ]
+      },
+      {
+        "path": "widget/cocoa/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 5496,
+        "sha256": "209d892533eeb7eb7e72d3a3c3109bc248ebec84764cea177456459b83132613",
+        "reviewedLines": [
+          [
+            108,
+            108
+          ],
+          [
+            189,
+            204
+          ]
+        ]
+      },
+      {
+        "path": "browser/app/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8690,
+        "sha256": "a4c71c07a9ffe5e362432c11fff9f9ab5dbbff0cb5930f8263d469e4c5eab57c",
+        "reviewedLines": [
+          [
+            74,
+            108
+          ]
+        ]
+      },
+      {
+        "path": "python/mozbuild/mozbuild/backend/recursivemake.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 97110,
+        "sha256": "b5f799f5b4a0c43611afbe6ba73a8c124958d6e67193f7b36a7dbad8259267de",
+        "reviewedLines": [
+          [
+            788,
+            833
+          ],
+          [
+            1586,
+            1610
+          ],
+          [
+            1995,
+            2071
+          ]
+        ]
+      },
+      {
+        "path": ".github/workflows/mozconfigs/macosx64-x86_64.mozconfig",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 873,
+        "sha256": "8997298667a649ab55f413dfce16a19dbcd4d763536c1dea3ad7a4c49604ecb4",
+        "reviewedLines": [
+          [
+            1,
+            24
+          ]
+        ]
+      }
+    ],
+    "priorStaticDependencyReview": {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_MINIMAL_MOZILLA_TARGET_REVIEW.json",
+      "bytes": 23255,
+      "sha256": "6edbefbc7b8a507283aaa458ad2077d0eec65dffd0f9cd76b31c1682d95d1436"
+    }
+  },
+  "operations": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "refChanged": false,
+    "artifactDownloaded": false,
+    "SDKDownloaded": false,
+    "buildExecuted": false,
+    "heavyTestsExecuted": false,
+    "retainedEvidenceRead": true,
+    "fixedRefGitSourceRead": true
+  },
+  "privacy": {
+    "rawPathsPublished": false,
+    "rawLogsPublished": false,
+    "rawEnvironmentOrArgvPublished": false,
+    "rawProcessIdentitiesPublished": false,
+    "signedURLsPublished": false,
+    "arbitraryExceptionTextPublished": false,
+    "internalConversationPublished": false
+  },
+  "unresolvedProductQuestions": [
+    "actual restored generated graph",
+    "actual minimum runnable Firefox test suffix",
+    "actual cache reuse or redundant recompilation",
+    "unfinished compiler subphase and work remaining",
+    "original native exit cause"
+  ]
+}
