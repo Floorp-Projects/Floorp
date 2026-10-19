@@ -1,0 +1,282 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY39_SHORT_BOUNDARY_AND_TASK_API_IMPLEMENTATION_PRELAUNCH_REVIEW",
+  "checkedAtUTC": "2026-10-19T00:16:00Z",
+  "decision": {
+    "shortDiagnostic": "GO",
+    "longExecution": "NO_GO_ON_HOLD",
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0
+  },
+  "immutableRoute": {
+    "fixture": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "9b6b8bae8cdfb72690312a87e4f65d75af63498d",
+      "tree": "67df8eac82b80f3514e1ef3afa967270e336f0f0",
+      "parent": "522ef2a502adac41e6e65bb4cca4a8100a77e85a",
+      "providerFileReadbackMatches": 14
+    },
+    "caller": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "ef198f5c88e9a2a30101821f480fcd46632326cb",
+      "tree": "74d5f3fb8e177756c3f4d8be4a38a1c69cb27638",
+      "parent": "55d51f051dd3c370308acb7764d49a325840da86",
+      "onlyChangedFile": ".github/workflows/mac-native-checkpoint.yml",
+      "workflowBytes": 3140,
+      "workflowSHA256": "b9d6a79b910b0acc328903b6c4e66e8fae9fd78b53d9c2d03eaf91147ec3cfb7",
+      "providerBytesMatch": true,
+      "renderDifference": "One fixture placeholder replaced by the exact reviewed fixture commit."
+    },
+    "branch": "codex/mac-native-boundary-recovery39-20261019",
+    "branchBeforeExecution": "NOT_FOUND_404",
+    "previousBranchRuns": 0,
+    "ownedInProgressRuns": 0,
+    "ownedQueuedRuns": 0,
+    "snapshotLimit": "Branch and run state are point-in-time observations; recheck before activation.",
+    "otherWorkflowScope": "The caller changes one workflow. Other workflow triggers are unchanged from the previously reviewed immutable caller base; no new broad trigger is introduced."
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 30661,
+      "sha256": "e642422e91f21351cd6663067373db0bd5a2b4c01bf6e153382279554f608289",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "bytes": 24604,
+      "sha256": "053a38b85409058719cf7f4c24eb04b5f03d97833d8e882c2e9cc50b31974993",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/boundary_diagnostic.py",
+      "bytes": 7253,
+      "sha256": "0d82dabc52b2054b7502dd3028b3042d9f043a1e56dc1276756c3109421b55a1",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_boundary_diagnostic.py",
+      "bytes": 6464,
+      "sha256": "4516e55daf8b1704e471096dc708e7d500dee4ca9a60e5addf450b8052b44880",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/task_api_experiment.py",
+      "bytes": 25755,
+      "sha256": "bd63c1f7a524f0c153da41315c385a6f3682fdf6856b3bb93c29fa7ffe4f9490",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_task_api_experiment.py",
+      "bytes": 20794,
+      "sha256": "ab880553ef6d40a6ed6df9df4c2ecebc8c58ee63f726de24fef83c411526adc7",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/readonly_boundary_experiment.py",
+      "bytes": 28149,
+      "sha256": "8f0b90da9b1aedc4a6cd299fb62e5051de0a9e735159f03900d49cda0be502b6",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_readonly_boundary_experiment.py",
+      "bytes": 21698,
+      "sha256": "12759f55c68278a0635047b3782457eca8d5f0a5f4dc9b5d591a14beea26ae09",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_BOUNDARY_DESIGN.md",
+      "bytes": 7137,
+      "sha256": "d31d7f3b658987d0e9aa2b6527f7a97ea63762752d0a17186b253f2f8b8a7961",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_BOUNDARY_DESIGN_REVIEW.json",
+      "bytes": 23103,
+      "sha256": "17dd13b2d82d94deab414d04938f6a841d249334136879af6e8d71f7179a2fca",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_BOUNDARY_WORKFLOW.yml.disabled",
+      "bytes": 3122,
+      "sha256": "684b14ba1354fe49c1f42d4186a398779188db163fc1d3a4e11a477d7aa071d0",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_CAPTURE_COUNTEREXAMPLE.json",
+      "bytes": 387,
+      "sha256": "6cc682fe4891457085e1cdff795b723dbbe8180bdc4aa03375c88161ed5bc956",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_DAILY_HOST_STATE_REVIEW.json",
+      "bytes": 22678,
+      "sha256": "6277ecf02489fee337183b0d3d1b773af59bdd37533fa194c8769d44685f27a2",
+      "providerBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_LOCAL_RESULT.json",
+      "bytes": 3847,
+      "sha256": "3d42bc257a798e4f7df5467add5a5ae85f56e60620ff9b3895220edd10ca8ebc",
+      "providerBytesMatch": true
+    }
+  ],
+  "testsExecutedByReviewer": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_readonly_boundary_experiment test_task_api_experiment test_checkpoint test_boundary_diagnostic -q",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "total": 77,
+      "passed": 76,
+      "skipped": 1,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 1.125,
+      "privateLogBytes": 110,
+      "privateLogSHA256": "d70ff24e51553e935854c1a6b1bc8bef390c7c2ba8b55e69bda81dbd05149b3d"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "total": 373,
+      "passed": 357,
+      "skipped": 16,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 18.639,
+      "privateLogBytes": 9156,
+      "privateLogSHA256": "99775897dc4ee105bc7de9c76e1dd7832ad01e1b05db3ffdf77225cbf457c4b8"
+    }
+  ],
+  "additionalReviewerChecks": [
+    "Actual successful-procedure then image-cleanup-denied fault injection retains fixed image-cleanup firstFailure, failed status and NO_GO qualification.",
+    "The original late-object counterexample now rejects without a checkpoint-ready marker; existing targeted tests also reject late references, state roots and mutation of the exact tar stream.",
+    "All fourteen frozen source/evidence files exactly matched independent immutable provider readback; rendered caller bytes and commit ancestry matched.",
+    "Workflow YAML, all Bash run blocks and inline Python parsed successfully; all eight reviewed Python source/test files parsed successfully.",
+    "Ten unchanged production files matched the committed local-result hash bindings. Immutable-provider equality for those unchanged files is recorded in that preparation result.",
+    "Public evidence wording identifies the old counterexample as pre-hardening and removes internal participant references."
+  ],
+  "implementationAssessment": {
+    "checkpointHardening": {
+      "sameStreamHashedAndArchived": true,
+      "exactDescriptorNoFollow": true,
+      "descriptorIdentityAndMetadataCheckedBeforeAfter": true,
+      "postPackReferenceAndStateReenumeration": true,
+      "newStateRootSetChecked": true,
+      "atomicFilesystemSnapshot": false,
+      "guarantee": "Rejects the demonstrated late-object/reference/root and during-stream mutation counterexamples. Sequential scans do not establish a globally coherent immutable capture point."
+    },
+    "taskAPIProbe": {
+      "scope": "Exact pipe-controlled, generation-bound unreaped Python children only.",
+      "monitoring": "Children inherit the outer monitored process group; only exact Popen children are signalled or reaped. Outer Runner owns group cleanup and resource monitoring.",
+      "queries": "Production DarwinActivity reader is unchanged. Flavor4 is comparison evidence only; full BSD and unique-exec observations are retained separately.",
+      "retention": "Counts plus first controlled/unavailable/recheck evidence, latest sixteen samples/queries and separate stopping sample.",
+      "deadlineLimit": "Synchronous native calls are not interrupted by the inner clock. The outer Runner and job deadline remain the hard execution boundary.",
+      "historicalRun35Cause": "UNKNOWN",
+      "historicalRaceReproductionOrRepair": "NOT_ESTABLISHED"
+    },
+    "readOnlyImageProbe": {
+      "fixtureOnly": true,
+      "apfsCLIExecutionsPlanned": 1,
+      "virtualImageBytes": 268435456,
+      "checkedAllocatedBackingCapBytes": 134217728,
+      "normalDetachOnly": true,
+      "rawBackingControl": "Open and close O_RDWR with zero bytes written; no second read-write attachment.",
+      "controls": [
+        "Baseline child writes through a held writable descriptor.",
+        "Shared mapping writes after closing the original descriptor.",
+        "Exact owned children are released/reaped before read-only reattachment.",
+        "Late path opening, new-file creation and rename must return EROFS.",
+        "Writable shared mapping from a read-only descriptor must be denied; private mapping must leave file bytes unchanged."
+      ],
+      "binding": "Private backing dev/inode/UID/link-count, canonical mount, hdiutil entities, device set and volume UUID are checked before relevant operations. Unbound or ambiguous devices are never detached.",
+      "cleanup": "Each exact child cleanup and non-force owned-image detach have bounded attempts and safe failure detail. Original primary failure remains separate; cleanup-only failure sets a fixed firstFailure.",
+      "heldDetachResult": "Nonzero plus a still-bound writable attachment is an observed refusal, not proof of EBUSY. Successful held detach does not prove old-handle revocation.",
+      "qualification": "NO_GO for every observation outcome; read-only mount success does not establish same-UID backing/remount immutability or a complete frozen source/tools/SDK/payload view."
+    },
+    "driver": {
+      "targetGate": "77 actual Mac tests, zero skips; APFS integration is then executed by the CLI once.",
+      "childReceipts": "Bounded existing regular-file JSON, required completed/observation-only/nonqualification fields checked. Zero process exit alone cannot qualify the diagnostic.",
+      "evidence": "Early failure and child failure retain structured receipt. First stage failure, stopping monitor detail, latest sixteen monitor diagnostics and ordered cleanup records are exported; evidence-write failure cannot become success."
+    }
+  },
+  "resolvedFindings": [
+    {
+      "priority": "P1",
+      "issue": "Diagnostic children and utilities escaped the monitored process group.",
+      "resolution": "They now inherit the outer group, exact child reap is distinct from outer group-gone proof, and portable real-child tests verify inheritance."
+    },
+    {
+      "priority": "P2",
+      "issue": "Unbound or partial image creation/attachment cleanup could be mistaken for verified absence.",
+      "resolution": "Unknown backing/device identity remains unknown and failed; no detach occurs without exact ownership binding."
+    },
+    {
+      "priority": "P2",
+      "issue": "Early diagnostic and cleanup/evidence failures could lose primary failure or imply successful qualification.",
+      "resolution": "Early mkdir is protected, fixed public failure codes and contradictory-success guards are tested, cleanup-only firstFailure is explicit, and failed evidence write cannot return success."
+    },
+    {
+      "priority": "P2",
+      "issue": "Public notes used present-tense pre-hardening behavior and an internal participant reference.",
+      "resolution": "Final hash-bound documentation identifies the historical implementation and uses technical source-verification wording."
+    }
+  ],
+  "workflowControls": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobTimeoutMinutes": 20,
+    "observationStepTimeoutMinutes": 16,
+    "internalPhaseDeadlineMinutes": 15,
+    "createdPushOnly": true,
+    "beforeAllZeroRequired": true,
+    "attemptOneRequired": true,
+    "exactRepositoryAndBranchRequired": true,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "cancelInProgress": false,
+    "checkoutAction": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "persistCredentials": false,
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "nativeAuthenticationExercise": false,
+    "permissionOrAuthenticationSettingChanges": false,
+    "forceDetachOrUnrelatedSignals": false
+  },
+  "actualMacRemainingGate": {
+    "status": "NOT_EXECUTED_IN_THIS_REVIEW_LINUX_ENVIRONMENT",
+    "required": [
+      "Immutable fixture/caller binding and unused branch/run state must still match at activation.",
+      "All 77 target tests pass with zero skips under the unchanged Runner.",
+      "Controlled task API live/zombie observations complete, with exact child reap and outer group cleanup proved independently.",
+      "One small APFS image procedure completes with exact binding, operation-specific results and verified non-force cleanup.",
+      "All primary, monitor, child, image and evidence failures remain visible; no successful diagnostic result grants checkpoint eligibility."
+    ],
+    "failurePolicy": "Keep unknown unavailable and preserve the first failure. A diagnostic failure does not enable a long retry or a production gate relaxation."
+  },
+  "historicalEvidenceScope": {
+    "fixedDesignReviewSHA256": "17dd13b2d82d94deab414d04938f6a841d249334136879af6e8d71f7179a2fca",
+    "designReviewImplementation": "The design review counterexample evaluates the pre-hardening pack. This implementation review binds the hardened pack and preserves the atomicity limitation.",
+    "dailyNativeComparison": "Separate source-bound diagnosis and recording proposal only; actual Shim authentication cause remains unknown. No daily result qualifies this checkpoint cohort."
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "signedURLsPublished": false,
+    "processIdentitiesPublished": false,
+    "privatePathsPublished": false,
+    "rawArgvOrEnvironmentPublished": false,
+    "internalConversationPublished": false
+  },
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "newCI": 0,
+    "artifactOperations": 0,
+    "largeDownloads": 0,
+    "externalWrites": 0,
+    "macExecution": 0
+  }
+}
