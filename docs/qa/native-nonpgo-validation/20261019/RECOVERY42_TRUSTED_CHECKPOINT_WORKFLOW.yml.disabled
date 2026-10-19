@@ -1,0 +1,367 @@
+name: Trusted completion resumed Intel validation
+'on':
+  push:
+    branches: [codex/mac-native-checkpoint-recovery42-20261019]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: isolated-intel-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  FLOORP_FIXTURE_SHA: FIXTURE_PENDING_REVIEW
+  HARNESS_SHA: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
+  RUNTIME_SHA: 7dd619742b25567e479eeda97ae071d10542ad0b
+jobs:
+  producer:
+    name: checkpoint-producer
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+    outputs:
+      artifactID: ${{ steps.upload.outputs.artifact-id }}
+      bytes: ${{ steps.pipeline.outputs.bytes }}
+      sha256: ${{ steps.pipeline.outputs.sha256 }}
+      manifestSHA256: ${{ steps.pipeline.outputs.manifestSHA256 }}
+      buildDate: ${{ steps.pipeline.outputs.buildDate }}
+    steps:
+      - name: Bound the initial authorized execution
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-checkpoint-recovery42-20261019
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test '${{ github.event.created }}' = true
+          test '${{ github.event.before }}' = 0000000000000000000000000000000000000000
+          TASK_PYTHON="$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3"
+          test -x "$TASK_PYTHON"
+          echo "TASK_PYTHON=$TASK_PYTHON" >> "$GITHUB_ENV"
+          echo "TASK_ROOT=$RUNNER_TEMP/floorp-native-checkpoint" >> "$GITHUB_ENV"
+      - name: Checkout immutable reviewed fixture
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.FLOORP_FIXTURE_SHA }}
+          path: fixture
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Establish this job's fresh clock and task root
+        timeout-minutes: 3
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py init --role producer --task "$TASK_ROOT"
+      - name: Verify actual native process monitor before acquisition
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib,re,sys
+          helper=pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'fixture/tools/qa/native-nonpgo'
+          sys.path.insert(0,str(helper))
+          from support import Runner,clean_environment,require,write_json
+          from darwin_activity import probe
+          from unittest_receipt import receipt as unittest_receipt
+          from process_census import BINDING_KEYS,prepare_abi,load_abi,snapshot
+          task=pathlib.Path(os.environ['TASK_ROOT'])
+          plan=json.loads((helper/'plan.json').read_text())
+          runner=Runner(task,float((task/'started').read_text()),plan['limits'])
+          env=clean_environment(task)
+          temporary=task/'monitor-tmp'
+          temporary.mkdir(mode=0o700)
+          env['TMPDIR']=str(temporary)
+          env['PYTHONDONTWRITEBYTECODE']='1'
+          env['PYTHONWARNINGS']='error::ResourceWarning'
+          env['PATH']+=':/usr/local/bin'
+          result={'status':'failed'}
+          try:
+              own=probe().read(os.getpid(),os.getpgrp())
+              require(own['status']=='measured' and own['rssMiB']>0,'monitor-native-self-unavailable')
+              result['self']={key:own[key] for key in ('status','rssMiB','cpuSeconds','state')}
+              abi=prepare_abi(task,runner,env)
+              os.environ['FLOORP_CENSUS_ABI']=str(abi)
+              env.update({key:os.environ[key] for key in (*BINDING_KEYS,'TASK_ROOT')})
+              env['FLOORP_CENSUS_ABI']=str(abi)
+              result['census']=snapshot(load_abi(abi))['measurement']
+              with pathlib.Path(os.environ['GITHUB_ENV']).open('a') as output:
+                  output.write('FLOORP_CENSUS_ABI='+str(abi)+'\n')
+              if 'producer'=='producer':
+                  suites=[('checkpoint-tests',[sys.executable,'-m','unittest','-v',
+                      'test_checkpoint','test_process_census','test_guards','test_shim_failure_patch',
+                      'test_completion_preflight','test_unittest_receipt'],151,False),
+                      ('failure-recording-tests',[sys.executable,'-m','unittest','discover','-v',
+                      '-s',str(helper.parents[1]/'app-shim'),'-p','test_shim_failure_diagnostics.py'],14,True)]
+                  for test_stage,command,expected,recording in suites:
+                      try:
+                          runner.run(test_stage,command,helper,env,360,phase_deadline_minutes=15)
+                      finally:
+                          result[test_stage]=unittest_receipt(task/(test_stage+'.private.log'),recording=recording)
+                      tests=result[test_stage]
+                      require(tests['complete'] and tests['status']=='passed' and
+                              tests['total']==expected and tests['skipped']==0,'checkpoint-mac-tests')
+              script="import subprocess; [subprocess.run(['/bin/sh','-c','/bin/sleep 0.1'],check=True) for _ in range(20)]"
+              runner.run('monitor-preflight',[sys.executable,'-c',script],task,env,360,phase_deadline_minutes=15)
+              require(any(row['stage']=='monitor-preflight' and (row['lastActivity'] or {}).get('sampleComplete') is True and
+                          (row['lastActivity'] or {}).get('counterSource')=='libproc-taskallinfo' for row in runner.records),
+                      'monitor-preflight-no-complete-sample')
+              result['status']='passed'
+          finally:
+              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,firstFailure=runner.failure)
+              write_json(task/'monitor-preflight.json',result)
+              print(json.dumps({'monitorPreflight':result}),flush=True)
+          PYCODE
+      - name: Checkout immutable Runtime source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ env.RUNTIME_SHA }}
+          path: source
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+      - name: Checkout immutable native harness
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.HARNESS_SHA }}
+          path: harness
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: tools/app-shim
+      - name: Acquire the official unexpired content-matched SDK
+        timeout-minutes: 12
+        env:
+          SDK_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/fetch_sdk.py --plan fixture/tools/qa/native-nonpgo/plan.json --output "$TASK_ROOT/sdk-download"
+      - name: Complete natural Rust boundary and verify checkpoint
+        id: pipeline
+        env:
+          CHECKPOINT_BUILD_DATE: ''
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/pipeline.py --source "$GITHUB_WORKSPACE/source" --fixture "$GITHUB_WORKSPACE/fixture" --harness "$GITHUB_WORKSPACE/harness" --task "$TASK_ROOT" --checkpoint-role producer
+      - name: Confirm bounded immutable upload input and reserved time
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib,sys,time
+          sys.path.insert(0,str(pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'fixture/tools/qa/native-nonpgo'))
+          from support import digest,require
+          task=pathlib.Path(os.environ['TASK_ROOT'])
+          ready=json.loads((task/'checkpoint-ready.json').read_text())
+          summary=json.loads((task/'summary.json').read_text())
+          path=task/'checkpoint.tar.gz'
+          require(summary['status']=='checkpoint-ready' and summary['firstFailure'] is None and summary['monitorFailure'] is None,'checkpoint-ready-proof')
+          require(path.is_file() and not path.is_symlink() and 0<path.stat().st_size==ready['bytes']<=10*1024**3 and digest(path)==ready['sha256'],'checkpoint-upload-input')
+          require(time.monotonic()-float((task/'started-monotonic').read_text())<305*60,'checkpoint-upload-start-deadline')
+          path.chmod(0o400)
+          PYCODE
+      - name: Upload the one raw checkpoint for one day
+        id: upload
+        timeout-minutes: 30
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          path: ${{ env.TASK_ROOT }}/checkpoint.tar.gz
+          archive: false
+          retention-days: 1
+          overwrite: false
+          if-no-files-found: error
+      - name: Verify service digest size and retention
+        timeout-minutes: 3
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+          CHECKPOINT_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          CHECKPOINT_ACTION_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py confirm --role producer --task "$TASK_ROOT"
+      - name: Confirm this stage's bounded evidence
+        if: always()
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ ! -x "${TASK_PYTHON:-}" || -z "${TASK_ROOT:-}" ]]; then
+            echo '{"status":"failed","code":"initial-setup-incomplete"}'
+            exit 1
+          fi
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib
+          task=pathlib.Path(os.environ['TASK_ROOT'])
+          summary=task/'summary.json'
+          if not summary.is_file():
+              print(json.dumps({'status':'failed','code':'summary-missing'}),flush=True)
+              raise SystemExit(1)
+          value=json.loads(summary.read_text())
+          expected='checkpoint-ready' if 'producer'=='producer' else 'passed'
+          passed=value['status']==expected and value['firstFailure'] is None and value['monitorFailure'] is None
+          if 'producer'=='producer': passed=passed and (task/'checkpoint-service.json').is_file()
+          if 'producer'=='consumer': passed=passed and value.get('native',{}).get('status')=='passed' and value.get('resumedEffectiveConfigVerified') is True
+          print(json.dumps({'role':'producer','status':'passed' if passed else 'failed','qualification':'verified-resumed-build-across-two-standard-intel-jobs','freshObjdir':False,'sameJob':False}),flush=True)
+          raise SystemExit(0 if passed else 1)
+          PYCODE
+  consumer:
+    name: checkpoint-consumer
+    needs: producer
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+    steps:
+      - name: Bound the initial authorized execution
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-checkpoint-recovery42-20261019
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test '${{ github.event.created }}' = true
+          test '${{ github.event.before }}' = 0000000000000000000000000000000000000000
+          TASK_PYTHON="$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3"
+          test -x "$TASK_PYTHON"
+          echo "TASK_PYTHON=$TASK_PYTHON" >> "$GITHUB_ENV"
+          echo "TASK_ROOT=$RUNNER_TEMP/floorp-native-checkpoint" >> "$GITHUB_ENV"
+      - name: Checkout immutable reviewed fixture
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.FLOORP_FIXTURE_SHA }}
+          path: fixture
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Establish this job's fresh clock and task root
+        timeout-minutes: 3
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py init --role consumer --task "$TASK_ROOT"
+      - name: Verify actual native process monitor before acquisition
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib,re,sys
+          helper=pathlib.Path(os.environ['GITHUB_WORKSPACE'])/'fixture/tools/qa/native-nonpgo'
+          sys.path.insert(0,str(helper))
+          from support import Runner,clean_environment,require,write_json
+          from darwin_activity import probe
+          from unittest_receipt import receipt as unittest_receipt
+          from process_census import BINDING_KEYS,prepare_abi,load_abi,snapshot
+          task=pathlib.Path(os.environ['TASK_ROOT'])
+          plan=json.loads((helper/'plan.json').read_text())
+          runner=Runner(task,float((task/'started').read_text()),plan['limits'])
+          env=clean_environment(task)
+          temporary=task/'monitor-tmp'
+          temporary.mkdir(mode=0o700)
+          env['TMPDIR']=str(temporary)
+          env['PYTHONDONTWRITEBYTECODE']='1'
+          env['PYTHONWARNINGS']='error::ResourceWarning'
+          env['PATH']+=':/usr/local/bin'
+          result={'status':'failed'}
+          try:
+              own=probe().read(os.getpid(),os.getpgrp())
+              require(own['status']=='measured' and own['rssMiB']>0,'monitor-native-self-unavailable')
+              result['self']={key:own[key] for key in ('status','rssMiB','cpuSeconds','state')}
+              abi=prepare_abi(task,runner,env)
+              os.environ['FLOORP_CENSUS_ABI']=str(abi)
+              env.update({key:os.environ[key] for key in (*BINDING_KEYS,'TASK_ROOT')})
+              env['FLOORP_CENSUS_ABI']=str(abi)
+              result['census']=snapshot(load_abi(abi))['measurement']
+              with pathlib.Path(os.environ['GITHUB_ENV']).open('a') as output:
+                  output.write('FLOORP_CENSUS_ABI='+str(abi)+'\n')
+              if 'consumer'=='producer':
+                  suites=[('checkpoint-tests',[sys.executable,'-m','unittest','-v',
+                      'test_checkpoint','test_process_census','test_guards','test_shim_failure_patch',
+                      'test_completion_preflight','test_unittest_receipt'],151,False),
+                      ('failure-recording-tests',[sys.executable,'-m','unittest','discover','-v',
+                      '-s',str(helper.parents[1]/'app-shim'),'-p','test_shim_failure_diagnostics.py'],14,True)]
+                  for test_stage,command,expected,recording in suites:
+                      try:
+                          runner.run(test_stage,command,helper,env,360,phase_deadline_minutes=15)
+                      finally:
+                          result[test_stage]=unittest_receipt(task/(test_stage+'.private.log'),recording=recording)
+                      tests=result[test_stage]
+                      require(tests['complete'] and tests['status']=='passed' and
+                              tests['total']==expected and tests['skipped']==0,'checkpoint-mac-tests')
+              script="import subprocess; [subprocess.run(['/bin/sh','-c','/bin/sleep 0.1'],check=True) for _ in range(20)]"
+              runner.run('monitor-preflight',[sys.executable,'-c',script],task,env,360,phase_deadline_minutes=15)
+              require(any(row['stage']=='monitor-preflight' and (row['lastActivity'] or {}).get('sampleComplete') is True and
+                          (row['lastActivity'] or {}).get('counterSource')=='libproc-taskallinfo' for row in runner.records),
+                      'monitor-preflight-no-complete-sample')
+              result['status']='passed'
+          finally:
+              result.update(stages=runner.records,monitorFailure=runner.monitor_failure,firstFailure=runner.failure)
+              write_json(task/'monitor-preflight.json',result)
+              print(json.dumps({'monitorPreflight':result}),flush=True)
+          PYCODE
+      - name: Checkout immutable Runtime source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ env.RUNTIME_SHA }}
+          path: source
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+      - name: Checkout immutable native harness
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.HARNESS_SHA }}
+          path: harness
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: tools/app-shim
+      - name: Acquire the official unexpired content-matched SDK
+        timeout-minutes: 12
+        env:
+          SDK_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/fetch_sdk.py --plan fixture/tools/qa/native-nonpgo/plan.json --output "$TASK_ROOT/sdk-download"
+      - name: Download only the verified successful producer checkpoint
+        timeout-minutes: 25
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+          CHECKPOINT_ARTIFACT_ID: ${{ needs.producer.outputs.artifactID }}
+          CHECKPOINT_ARCHIVE_SHA256: ${{ needs.producer.outputs.sha256 }}
+          CHECKPOINT_MANIFEST_SHA256: ${{ needs.producer.outputs.manifestSHA256 }}
+          CHECKPOINT_ARCHIVE_BYTES: ${{ needs.producer.outputs.bytes }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py fetch --role consumer --task "$TASK_ROOT"
+      - name: Restore verified state then finish full host XUL and native authentication
+        id: pipeline
+        env:
+          CHECKPOINT_BUILD_DATE: ${{ needs.producer.outputs.buildDate }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/pipeline.py --source "$GITHUB_WORKSPACE/source" --fixture "$GITHUB_WORKSPACE/fixture" --harness "$GITHUB_WORKSPACE/harness" --task "$TASK_ROOT" --checkpoint-role consumer
+      - name: Confirm this stage's bounded evidence
+        if: always()
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          if [[ ! -x "${TASK_PYTHON:-}" || -z "${TASK_ROOT:-}" ]]; then
+            echo '{"status":"failed","code":"initial-setup-incomplete"}'
+            exit 1
+          fi
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib
+          task=pathlib.Path(os.environ['TASK_ROOT'])
+          summary=task/'summary.json'
+          if not summary.is_file():
+              print(json.dumps({'status':'failed','code':'summary-missing'}),flush=True)
+              raise SystemExit(1)
+          value=json.loads(summary.read_text())
+          expected='checkpoint-ready' if 'consumer'=='producer' else 'passed'
+          passed=value['status']==expected and value['firstFailure'] is None and value['monitorFailure'] is None
+          if 'consumer'=='producer': passed=passed and (task/'checkpoint-service.json').is_file()
+          if 'consumer'=='consumer': passed=passed and value.get('native',{}).get('status')=='passed' and value.get('resumedEffectiveConfigVerified') is True
+          print(json.dumps({'role':'consumer','status':'passed' if passed else 'failed','qualification':'verified-resumed-build-across-two-standard-intel-jobs','freshObjdir':False,'sameJob':False}),flush=True)
+          raise SystemExit(0 if passed else 1)
+          PYCODE

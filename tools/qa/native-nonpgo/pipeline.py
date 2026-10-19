@@ -139,8 +139,30 @@ def prepare_harness(plan, harness, fixture, runner, env):
     if helper:
         shutil.copyfile(fixture / helper['source'], harness / helper['target'])
         require(digest(harness / helper['target']) == helper['sha256'], 'harness-inventory-helper-hash')
-    return {'commit': plan['harness']['commit'], 'patchSHA256': pin['sha256'],
-            'baseSHA256': pin['baseSHA256'], 'patchedSHA256': pin['patchedSHA256']}
+    result = {'commit': plan['harness']['commit'], 'patchSHA256': pin['sha256'],
+              'baseSHA256': pin['baseSHA256'], 'patchedSHA256': pin['patchedSHA256']}
+    recording = plan['harness'].get('failureDiagnosticsPatch')
+    if recording:
+        recording_patch = fixture / recording['path']
+        require(digest(recording_patch) == recording['sha256'], 'harness-recording-patch-hash')
+        for row in recording['targets']:
+            require(digest(harness / row['target']) == row['baseSHA256'], 'harness-recording-base-hash')
+        for row in recording['helpers']:
+            require(digest(fixture / row['source']) == row['sha256'] and
+                    not (harness / row['target']).exists(), 'harness-recording-helper-binding')
+        runner.run('harness-recording-check', ['git', 'apply', '--check', str(recording_patch)],
+                   harness, env, plan['limits']['jobMinutes'])
+        runner.run('harness-recording-apply', ['git', 'apply', str(recording_patch)],
+                   harness, env, plan['limits']['jobMinutes'])
+        for row in recording['targets']:
+            require(digest(harness / row['target']) == row['patchedSHA256'], 'harness-recording-patched-hash')
+        for row in recording['helpers']:
+            shutil.copyfile(fixture / row['source'], harness / row['target'])
+            require(digest(harness / row['target']) == row['sha256'], 'harness-recording-helper-hash')
+        result['failureRecording'] = {'patchSHA256': recording['sha256'],
+            'targets': [{'target':row['target'],'sha256':row['patchedSHA256']}
+                        for row in recording['targets']]}
+    return result
 
 
 def prepare_source(plan, source, fixture, task, tools, sdk, runner, env):
@@ -329,12 +351,9 @@ def main():
         basic_env = clean_environment(task)
         basic_env['PATH'] += ':/usr/local/bin'
         report['preflight'] = preflight(plan, args.source, args.fixture, args.harness, task)
-        owned_baseline = None
         if checkpoint_role == 'producer':
-            from checkpoint import owned_processes
             runner.observed_processes = set()
-            report['checkpointCensusBaseline'] = {}
-            owned_baseline = owned_processes(report['checkpointCensusBaseline'])
+            report['checkpointBoundaryContract'] = plan['checkpoint']['boundaryContract']
         stage = 'harness'
         report['harness'] = prepare_harness(plan, args.harness, args.fixture, runner, basic_env)
         stage = 'sdk'
@@ -411,30 +430,16 @@ def main():
             host = task / 'obj/widget/cocoa/MacWebAppService.o'
             require(not host.exists() and not host.is_symlink(), 'checkpoint-host-already-built')
             require(not any((task / 'obj/dist/bin').glob('XUL*')), 'checkpoint-xul-already-built')
-            stage = 'checkpoint-census'
-            census_completion = report['checkpointCensusCompletion'] = {}
+            stage = 'checkpoint-build-completion'
             report['checkpointStageObservations'] = {
                 'status': runner.observation_status, 'identities': len(runner.observed_processes),
                 'scope': 'sampled measured stage-group identities; absence is not proof of unrelated ancestry'}
-            from census_convergence import wait_for_boundary
-            census_wait = report['checkpointCensusWait'] = {}
-            census_completion.update(status='unavailable',newCandidateIdentities=None)
-            try:
-                census_completion = wait_for_boundary(owned_baseline,census_wait,runner)
-            finally:
-                if census_wait.get('samples'):
-                    report['checkpointCensusCompletion'] = census_wait['samples'][-1]['boundary']
-            require(runner.failure is None and runner.monitor_failure is None and
-                    all(row['exitCode'] == 0 and row['groupCleanup'] == 'verified-gone' and
-                        row['leaderReap']['status'] == 'reaped' and row['cleanupFailure'] is None
-                        for row in runner.records), 'checkpoint-stage-completion')
-            boundary.update(status='passed', interrupted=False, newOwnedSurvivors=0,
-                            archiveSHA256=digest(archive), depInfoSHA256=digest(depinfo),
-                            censusScope='primary KERN_PROC snapshot identities with worker effective or real UID; baseline before all build preparation',
-                            census={'baseline':report['checkpointCensusBaseline'],'completion':census_completion},
+            from checkpoint import completed_build
+            completion = report['checkpointBuildCompletion'] = {}
+            boundary.update(completed_build(runner, completion))
+            boundary.update(archiveSHA256=digest(archive), depInfoSHA256=digest(depinfo),
                             logs={name: full_log_receipt(task / (name + '.private.log'))
-                                  for name in ('checkpoint-exports', 'checkpoint-rust')},
-                            stages=[row for row in runner.records if row['stage'].startswith('checkpoint-')])
+                                  for name in ('checkpoint-exports', 'checkpoint-rust')})
             require(all(row['complete'] for row in boundary['logs'].values()), 'checkpoint-log-unavailable')
             write_json(task / 'checkpoint-boundary.json', boundary)
             stage = 'checkpoint-pack'

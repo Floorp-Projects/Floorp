@@ -1,0 +1,27 @@
+{
+  "actualMacGUIOrKernelValidated": false,
+  "baseInputsProviderReadOnly": true,
+  "compiledModules": 6,
+  "contextAuthenticationTimeoutAndThreeCleanupFailuresRetained": true,
+  "contextExistingMonitorReused": true,
+  "contextLegacyCountsAndLifecyclePreserved": true,
+  "externalWritesPerformed": false,
+  "fixedHarnessCommit": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "pinsSHA256": "46c4dd14c707cab62a311129770e43756a36d8ce6fe14aafa1b273ded5cb7e79",
+  "preCleanupFileMode600": true,
+  "preCleanupRecordBeforeFirstCleanup": true,
+  "recordingApplied": true,
+  "recordingApplyCheck": true,
+  "runtimeEarlyFailurePreAndPostSnapshotsRetained": true,
+  "startupApplied": true,
+  "startupApplyCheck": true,
+  "startupHostClassASTUnchanged": true,
+  "startupPatchUnchanged": true,
+  "testLogSHA256": "097a83b5a278414924fa3f5d3e256bde3ead938fe6dbc4fd7f4fe61847991d46",
+  "testScriptSHA256": "3a1073a3a72bdaeef9a9fd60bb39c06933199c4b348ddf20fa8528ab89284ee1",
+  "tests": {
+    "passed": 3,
+    "skipped": 0,
+    "warningPolicy": "error::ResourceWarning"
+  }
+}

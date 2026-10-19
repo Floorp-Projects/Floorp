@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "scope": "TRUSTED_SINGLE_PURPOSE_RUNNER_COMPLETION_AND_PRE_CLEANUP_RECORDING",
+  "boundaryContract": "trusted-single-purpose-runner-v1",
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 35186,
+      "sha256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 38473,
+      "sha256": "b2d4afdbf59771ef1090f8c7470dae99b198fd4eab1b1df4810e05e8e9bbfe6a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 10804,
+      "sha256": "d150348dc76e454227108354e9b49c38675b694ce078bb598564c44bceed22b4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "bytes": 11562,
+      "sha256": "c4270e18440e9c4079347cc9a67f58e399cca9913bc11b7eed8fe034db6f5499"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+      "bytes": 7565,
+      "sha256": "873ccd2ee7458c796d5517e28f020d6f53b6902ba3123c211049c01cb5f25731"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/completion_preflight.py",
+      "bytes": 5567,
+      "sha256": "1313296dd1645ed2201c1a3bb3976d534ce9b84602728bda37d874648a54bd66"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "bytes": 34204,
+      "sha256": "94d0af617c1142df439b9654666a26b112ec79da657b92ca7bb1ca049c8e899b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_process_census.py",
+      "bytes": 9576,
+      "sha256": "b785634ae2ef674bef0af993ba43472a90c818f0018eb21f38c83c133106278b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 85486,
+      "sha256": "894c25af906b0923d294d8c4234fe8514883c5ca817125b7bbd61e94895a7231"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_shim_failure_patch.py",
+      "bytes": 13890,
+      "sha256": "e273d0cd0919241a4e18069c22baa3f4347bc3e65ca045f00f59ec42814a2d0d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_completion_preflight.py",
+      "bytes": 4981,
+      "sha256": "bb9211286187390f5fc3f59a27bdc83604c3ff66aebed872cb67819f0cb00235"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/shim-failure-recording.patch",
+      "bytes": 12717,
+      "sha256": "367f7095a17602fc986f90c344d44098366124e66384d1e2e8d3ba92f34ff3ad"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-test-runtime.py",
+      "bytes": 47527,
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-test-context-menu.py",
+      "bytes": 18363,
+      "sha256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-shim_diagnostics.py",
+      "bytes": 5731,
+      "sha256": "4607da57c3ae874952f26b8926ec2bbe16e5ccdb86374b2a8a261c5f7be95a18"
+    },
+    {
+      "path": "tools/app-shim/test-runtime.py",
+      "bytes": 48679,
+      "sha256": "601341a644d89382dd8f30b6025146b87407fb7c8a52260efff9f8ecccfdce76"
+    },
+    {
+      "path": "tools/app-shim/test-context-menu.py",
+      "bytes": 11394,
+      "sha256": "f3cc372b9e07d47e5865f9d9dfbfbe981d662848fc8e87b32e01806cfe195400"
+    },
+    {
+      "path": "tools/app-shim/shim_failure_diagnostics.py",
+      "bytes": 19910,
+      "sha256": "9c9dd722725577dd31b4389e3244c4199e124c3dee468e91458e01c059e6976d"
+    },
+    {
+      "path": "tools/app-shim/test_shim_failure_diagnostics.py",
+      "bytes": 18620,
+      "sha256": "bc8259f2124d12d2f63fe8ccb90be98dedd7a7da14819297ae4564706bb9c5f0"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_TRUSTED_RUNNER_CONTRACT.md",
+      "bytes": 6495,
+      "sha256": "047e264cd5d2efee629efbfaff91ee5044183b2b17dba912321ed1d19ef9fcd8"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_SHIM_FAILURE_RECORDING.md",
+      "bytes": 2967,
+      "sha256": "e694c9c186dcf6dd24cd34bf7743dac320169f2da946378ac5c3bf56f5481732"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_COMPLETION_WORKFLOW.yml.disabled",
+      "bytes": 3129,
+      "sha256": "9abb17564f548663cae72282aba4ed9883bf03a09f6f0663d4d1eb17ea75ac1e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 17454,
+      "sha256": "048e0318543519af7eca67db44faa28c3a97b6d336828b16078c4fb10ee4d746"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 14596,
+      "sha256": "4564a491de8fea6cce5a1b4a02ddcf3de060f270d622379f993753a427f86292"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 19587,
+      "sha256": "bd8a7fb51713dacdf9477f6e6df701a2260eab65c4fa222198e6ba8d1b76a94e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_VALIDATION_HYPOTHESES.md",
+      "bytes": 2573,
+      "sha256": "bd65085eced3e9c0ee6fda3c9b14a1b75c949db342bf504ded11b9848c6f22b6"
+    }
+  ],
+  "tests": [
+    {
+      "scope": "full-qa-linux",
+      "receipt": {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 401,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 17,
+        "status": "passed",
+        "seconds": 19.926,
+        "bytes": 77919,
+        "sha256": "1050880c4be3f18a012fe02ee2102b5d037e31269e447dde4b1d3f0ac578e261",
+        "cases": [],
+        "nativeSelectionDiagnostics": [],
+        "heldChildBoundaryDiagnostics": []
+      }
+    },
+    {
+      "scope": "daily-recording-linux",
+      "receipt": {
+        "complete": true,
+        "rawContentPublished": false,
+        "exceptionTextPublished": false,
+        "total": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "status": "passed",
+        "seconds": 0.036,
+        "bytes": 2757,
+        "sha256": "8785faeec403c6ab295ad93b266495e46161771ff327a8c98738bb4df6fe5677",
+        "cases": [],
+        "nativeSelectionDiagnostics": [],
+        "heldChildBoundaryDiagnostics": []
+      }
+    }
+  ],
+  "checkpointAdmissionChanged": true,
+  "oldGlobalUIDWaitRequired": false,
+  "activeOwnedGroupResourceLimitsChanged": false,
+  "unknownOwnedResourceUsageBecomesZero": false,
+  "knownBuildBirthsCheckedAcrossCredentials": true,
+  "knownZombiesRemainCleanupFailure": true,
+  "hostileSameUIDImmutabilityRequired": false,
+  "atomicFilesystemSnapshotClaimed": false,
+  "sdkAcquisitionPerformed": false,
+  "floorpBuildPerformed": false,
+  "nativeAuthenticationTested": false,
+  "shortMacPreflight": "NOT_YET_RUN",
+  "longExecution": "NOT_STARTED",
+  "remainingValidation": [
+    "actual Mac known-child lifecycle and bound patch fixture tests",
+    "long producer build completion and archive transfer/restore",
+    "consumer full host TU/XUL/package and native authentication"
+  ],
+  "privacy": {
+    "rawLogsPublished": false,
+    "privatePathsPublished": false,
+    "internalConversationPublished": false
+  },
+  "shortMacExpectedTests": {
+    "qa": 151,
+    "recording": 14,
+    "skipsAllowed": 0
+  },
+  "inactiveLongCandidate": "RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+  "recordingFailureReceipt": "explicit fixed source opt-in; canonical fixed frame names; arbitrary text excluded"
+}

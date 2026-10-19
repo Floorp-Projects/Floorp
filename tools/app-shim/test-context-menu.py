@@ -62,6 +62,8 @@ def main():
              'app.update.enabled':False,'datareporting.policy.dataSubmissionEnabled':False}
     (profile / 'user.js').write_text('\n'.join(f'user_pref({json.dumps(k)}, {json.dumps(v)});' for k,v in prefs.items())+'\n')
     report = {'status':'failed','browser':str(browser),'output':str(output),'requestedIterations':args.iterations}
+    diagnostics = h.failure_diagnostics.Recorder(output)
+    phase = 'host'
     app_id = '{'+str(uuid.uuid4())+'}'
     host = client = server = None
     log = (output / 'browser.log').open('w')
@@ -78,12 +80,16 @@ def main():
         identity = json.loads(client.script(f'return {h.SERVICE}.hostIdentityJSON;'))
         profile_id = 'context-menu-'+uuid.uuid4().hex
         bundle = h.seal_bundle(output,browser/'Contents/MacOS/floorp-app-shim',identity,profile,app_id,profile_id)
+        diagnostics.start_monitor(bundle/'Contents/MacOS/floorp-app-shim',host,h.HostProcess._process_rows)
         client.script(f'''{STATE}={{events:[],failures:[],crashes:[]}};
 {STATE}.observer={{observe(s,t,d){{if(t==='floorp-web-app-shim-event'){{const e=JSON.parse(d);
 if(e.type!==111){STATE}.events.push(e);}}else if(t==='oop-frameloader-crashed'){{
 {STATE}.crashes.push({{time:Date.now(),data:d}});}}else {STATE}.failures.push(d);}}}};
 for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.addObserver({STATE}.observer,t);
-{h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);{h.SERVICE}.launchApp(arguments[0]);''',app_id,profile_id,str(bundle))
+{h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);''',app_id,profile_id,str(bundle))
+        diagnostics.install_observer(client,STATE,app_id)
+        phase = 'authenticate'
+        client.script(f'{h.SERVICE}.launchApp(arguments[0]);',app_id)
         connected = h.wait_for('Shim authentication',lambda:next((e for e in client.script(f'return {STATE}.events;') if e['type']=='connected'),None),20)
         server = http.server.ThreadingHTTPServer(('127.0.0.1',0),Page)
         threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -105,6 +111,7 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         geometry = client.script(f'const b={STATE}.window.gBrowser.selectedBrowser;const r=b.getBoundingClientRect();return {{x:r.x,y:r.y,remote:b.isRemoteBrowser,remoteType:b.remoteType,pid:b.frameLoader.remoteTab.osPid}};')
         if not geometry['remote']:raise RuntimeError('Fixture must use a remote content process')
         report.update({'hostPid':host.pid,'shimPid':connected['payload']['pid'],'contentProcess':geometry,'results':[]})
+        phase = 'context-menu'
         for iteration in range(args.iterations):
             client.context('chrome')
             for kind in ('mouseDown','mouseUp'):
@@ -135,6 +142,7 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
         report['status']='passed'
         code=0
     except Exception as error:
+        diagnostics.functional_failure(phase,error)
         report['error']=str(error)
         if client:
             try:
@@ -142,19 +150,30 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
                 report['nativeState']=client.script(f'return {{crashes:{STATE}?.crashes,failures:{STATE}?.failures}};')
             except Exception as inner:report['stateError']=str(inner)
     finally:
+        diagnostics.before_cleanup(host,client,STATE)
         if client:
-            try:
+            def stop_service():
                 client.context('chrome')
                 client.script(f'''for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.removeObserver({STATE}.observer,t);
 if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.sendControl(arguments[0],40,'{{}}');''',app_id)
-            except Exception as error:
-                report['cleanupError']=str(error)
-                report['status']='failed'
-                code=1
-            client.close()
-        if server:server.shutdown();server.server_close()
-        if host:host.close()
-        log.close()
+            diagnostics.cleanup('browser-service-stop',stop_service)
+            diagnostics.cleanup('marionette-close',client.close)
+        if server:
+            def stop_server():
+                try:server.shutdown()
+                finally:server.server_close()
+            diagnostics.cleanup('fixture-server-stop',stop_server)
+        if host:diagnostics.cleanup('browser-host-close',host.close)
+        if diagnostics.monitor is not None:
+            diagnostics.cleanup('child-monitor-close',diagnostics.monitor.close)
+        diagnostics.cleanup('browser-log-close',log.close)
+        diagnostics.after_cleanup(host)
+        report['failureDiagnostics']=diagnostics.summary()
+        if diagnostics.failed():
+            report['diagnosticsIncomplete']=True
+            report['cleanupError']='Native diagnostic or cleanup failure; see failureDiagnostics'
+            report['status']='failed'
+            code=1
         (output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps(report,indent=2))
     return code

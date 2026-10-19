@@ -28,7 +28,7 @@ import materialize
 import monitor_native_preflight
 from darwin_activity import BSDInfo, DarwinActivity, TaskAllInfo, TaskInfo
 from support import Failure, ProgressWatch, Runner, clean_environment, digest, extract_tar, scan_tar
-from native_suite import cause_failure_snapshot, context_result, failure_snapshot
+from native_suite import cause_failure_snapshot, context_result, failure_snapshot, failure_recording
 from pipeline import macho, prepare_harness, verify_config
 from owned_native import MacProcesses, OwnedNative
 
@@ -41,17 +41,57 @@ class Guards(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_independent_failure_recording_projection_retains_pre_cleanup_and_drops_private_data(self):
+        fixture = Path(__file__).resolve().parents[3]
+        value = {'failureDiagnostics': {'schema':1, 'private':'PRIVATE-SENTINEL',
+            'firstFunctionalFailure':{'phase':'authenticate-shim','code':'shim-authentication-timeout',
+                                      'kind':'TimeoutError','observedAtMs':123,'message':'PRIVATE-SENTINEL'},
+            'beforeCleanup':{'observedAtMs':123,'host':{'status':'observed',
+                'browserLiveness':'alive','launcherExitCode':0,'requestedSignal':None,
+                'pid':90123,'argv':['PRIVATE-SENTINEL']},
+                'childMonitor':{'status':'not-observed'},
+                'events':{'status':'observed','events':[],'count':0}},
+            'afterCleanup':{'observedAtMs':125,'host':{'status':'observed',
+                'browserLiveness':'exit-observed','requestedSignal':2}},
+            'firstCleanupFailure':{'operation':'browser-service-stop','completed':False,
+                'failure':{'kind':'RuntimeError','message':'PRIVATE-SENTINEL'}}}}
+        result = failure_recording(fixture, value)
+        self.assertTrue(result['available'])
+        self.assertEqual(result['firstFunctionalFailure']['code'], 'shim-authentication-timeout')
+        self.assertIsNone(result['beforeCleanup']['host']['requestedSignal'])
+        self.assertEqual(result['afterCleanup']['host']['requestedSignal'], 2)
+        self.assertEqual(result['firstCleanupFailure']['operation'], 'browser-service-stop')
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(result))
+        self.assertNotIn('90123', json.dumps(result))
+
+    def test_missing_failure_recording_is_unknown_and_loader_error_stays_private(self):
+        with mock.patch('native_suite.load_module', side_effect=RuntimeError('PRIVATE-SENTINEL')):
+            result = failure_recording(self.root, {})
+        self.assertEqual(result, {'schema':1,'available':False})
+
     def patched_host_class(self):
         fixture = Path(__file__).resolve().parents[3]
         plan = json.loads(Path(__file__).with_name('plan.json').read_text())
         harness = self.root / 'harness'
         target = harness / plan['harness']['startupPatch']['target']
         target.parent.mkdir(parents=True)
-        target.write_bytes((fixture / plan['harness']['startupPatch']['target']).read_bytes())
+        bases = fixture / 'tools/qa/native-nonpgo/fixtures'
+        target.write_bytes((bases / ('harness-' + target.name)).read_bytes())
         for row in plan['harness']['startupPatch'].get('additionalFiles', []):
             destination = harness / row['target']
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes((fixture / row['target']).read_bytes())
+        for row in plan['harness'].get('failureDiagnosticsPatch', {}).get('targets', []):
+            destination = harness / row['target']
+            if not destination.exists():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes((bases / ('harness-' + destination.name)).read_bytes())
+        for row in plan['harness']['files']:
+            destination = harness / row['path']
+            if not destination.exists():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                fixed = bases / ('harness-' + destination.name)
+                destination.write_bytes((fixed if fixed.exists() else fixture / row['path']).read_bytes())
         runner = mock.Mock()
         def run(stage, command, cwd, env, minutes):
             self.assertEqual(minutes, 360)
@@ -59,6 +99,7 @@ class Guards(unittest.TestCase):
         runner.run.side_effect = run
         proof = prepare_harness(plan, harness, fixture, runner, os.environ.copy())
         self.assertEqual(proof['patchedSHA256'], plan['harness']['startupPatch']['patchedSHA256'])
+        monitor_native_preflight.verify_harness(harness, plan, prepared=True)
         module = native_cause.load_module('startup_harness', target)
         host = module.HostProcess.__new__(module.HostProcess)
         host.launch_services, host.pid, host.identity = True, None, None

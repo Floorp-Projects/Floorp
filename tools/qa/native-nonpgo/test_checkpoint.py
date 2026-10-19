@@ -10,11 +10,125 @@ import sys
 import tarfile
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
 import checkpoint as cp
 from support import Failure, Runner, digest
+
+
+def completed_records():
+    return [{'stage': name, 'exitCode': 0, 'reason': None, 'failurePhase': None,
+             'groupCleanup': 'verified-gone', 'leaderReap': {'status': 'reaped', 'exitCode': 0},
+             'cleanupFailure': None} for name in ('configure', 'effective-config',
+             'checkpoint-exports', 'checkpoint-rust', 'checkpoint-rust-archive')]
+
+
+def cleanup_checkpoint_child(child):
+    # addCleanup runs this independently of a test's primary exception. Reuse
+    # the bounded exact-Popen TERM/KILL/reap path, never signal a census PID.
+    from task_api_experiment import cleanup_child
+    failure = None
+    try:
+        if child.stdin and not child.stdin.closed:
+            child.stdin.close()
+    except BaseException as error:
+        failure = type(error).__name__
+    receipt = {}
+    cleanup_child(child, {}, None, receipt)
+    if failure or receipt['cleanupFailures'] or not receipt['leaderReaped']:
+        raise AssertionError('checkpoint-child-cleanup-incomplete')
+
+
+class CompletedBuildTests(unittest.TestCase):
+    def runner(self):
+        return SimpleNamespace(failure=None, monitor_failure=None, groups=set(),
+            records=completed_records(), observation_status='sampling',
+            observed_processes={(90001,123456789,42)})
+
+    def test_ambient_processes_are_not_build_survivors_or_resource_zero(self):
+        runner = self.runner()
+        details = {}
+        def known(observed, receipt):
+            self.assertEqual(observed, runner.observed_processes)
+            receipt.update(candidateIdentities=239, selfBindingVerified=True,
+                           trackedLiveBirths=0)
+            return {'live': set(), 'zombies':set()}
+        with mock.patch.object(cp, 'known_build_processes', side_effect=known):
+            result = cp.completed_build(runner, details)
+        self.assertEqual(result['status'], 'passed')
+        self.assertEqual(result['knownBuildIdentityCheck']['measurement']['candidateIdentities'],239)
+        self.assertEqual(result['backgroundResourceUsage'], 'NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE')
+        self.assertNotIn('newOwnedSurvivors', result)
+        self.assertNotIn('rssMiB', result)
+
+    def test_known_live_birth_rejects_even_if_original_process_group_is_gone(self):
+        runner = self.runner()
+        details = {}
+        with mock.patch.object(cp, 'known_build_processes', return_value={
+                'live':runner.observed_processes,'zombies':set()}), \
+                self.assertRaisesRegex(Failure, 'checkpoint-known-build-survivors'):
+            cp.completed_build(runner, details)
+        self.assertEqual(details['knownBuildIdentityCheck']['remainingLive'], 1)
+        self.assertEqual(details['knownBuildIdentityCheck']['status'], 'rejected')
+
+    def test_known_zombie_remains_a_cleanup_failure_even_though_not_a_writer(self):
+        runner, details = self.runner(), {}
+        with mock.patch.object(cp, 'known_build_processes', return_value={
+                'live':set(),'zombies':runner.observed_processes}), \
+                self.assertRaisesRegex(Failure, 'checkpoint-known-build-survivors'):
+            cp.completed_build(runner, details)
+        self.assertEqual(details['knownBuildIdentityCheck']['remainingLive'], 0)
+        self.assertEqual(details['knownBuildIdentityCheck']['remainingZombies'], 1)
+
+    def test_snapshot_unknown_and_coverage_loss_never_mean_no_survivors(self):
+        runner = self.runner()
+        details = {}
+        with mock.patch.object(cp, 'known_build_processes', side_effect=Failure('census-sysctl-permission')), \
+                self.assertRaisesRegex(Failure, 'census-sysctl-permission'):
+            cp.completed_build(runner, details)
+        self.assertIsNone(details['knownBuildIdentityCheck']['remainingLive'])
+        for status in ('unavailable', 'truncated', 'disabled'):
+            runner.observation_status = status
+            with mock.patch.object(cp, 'known_build_processes') as snapshot, \
+                    self.assertRaisesRegex(Failure, 'checkpoint-build-observation-unavailable'):
+                cp.completed_build(runner, {})
+            snapshot.assert_not_called()
+
+    def test_failure_monitor_open_group_and_unreaped_or_stopped_stages_reject(self):
+        for field, value in (('failure', {'code':'failed'}), ('monitor_failure', {'unknown':True}),
+                             ('groups', {90001})):
+            runner = self.runner()
+            setattr(runner, field, value)
+            with self.subTest(field=field), self.assertRaisesRegex(Failure, 'checkpoint-stage-completion'):
+                cp.completed_build(runner, {})
+        for changes in ({'exitCode':1}, {'reason':'controlled-stop'}, {'failurePhase':'cleanup'},
+                        {'groupCleanup':'unverified'}, {'leaderReap':{'status':'still-running','exitCode':None}},
+                        {'cleanupFailure':'denied'}):
+            rows = completed_records()
+            rows[-2].update(changes)
+            with self.subTest(changes=changes), self.assertRaisesRegex(Failure, 'checkpoint-stage-completion'):
+                cp.verify_completed_stages(rows)
+
+    def test_cleanup_error_is_recorded_without_replacing_primary_test_failure(self):
+        child = mock.Mock(stdin=None, returncode=None)
+        child.wait.side_effect = subprocess.TimeoutExpired('controlled-child', 2)
+        class ControlledFailure(unittest.TestCase):
+            def runTest(self):
+                self.addCleanup(cleanup_checkpoint_child, child)
+                raise RuntimeError('controlled-primary-failure')
+        result = unittest.TestResult()
+        ControlledFailure().run(result)
+        self.assertEqual(len(result.errors), 1)
+        self.assertIn('controlled-primary-failure', result.errors[0][1])
+        self.assertEqual(len(result.failures), 1)
+        self.assertIn('checkpoint-child-cleanup-incomplete', result.failures[0][1])
+        child.terminate.assert_called_once()
+        child.kill.assert_called_once()
+        for rows in (completed_records()[:-1], completed_records()+[completed_records()[-1]]):
+            with self.assertRaisesRegex(Failure, 'checkpoint-required-stage'):
+                cp.verify_completed_stages(rows)
 
 
 class CheckpointGuards(unittest.TestCase):
@@ -46,9 +160,19 @@ class CheckpointGuards(unittest.TestCase):
         (self.task / 'started-monotonic').write_text(str(time.monotonic()))
         (self.task / 'started').write_text(str(time.time()))
         (self.task / 'first-failure.json').write_text('{"code":"OLD-QA-STATE"}\n')
-        (self.task / 'checkpoint-boundary.json').write_text(json.dumps(
-            {'status': 'passed', 'node': cp.NODE, 'newOwnedSurvivors': 0, 'interrupted': False}))
-        (self.task / 'effective-config.private.log').write_text(json.dumps({'substs': {}}))
+        self.rust_archive = self.task / 'obj/x86_64-apple-darwin/release/libgkrust.a'
+        self.rust_archive.parent.mkdir(parents=True)
+        self.rust_archive.write_bytes(b'!<arch>\nfixture member\n')
+        self.rust_archive.with_suffix('.d').write_text('libgkrust.a: fixture.rs\n')
+        self.boundary = {'status': 'passed', 'contract': cp.BOUNDARY_CONTRACT, 'node': cp.NODE,
+            'knownBuildSurvivors': 0, 'interrupted': False, 'stages': completed_records(),
+            'knownBuildIdentityCheck': {'status':'passed','remainingLive':0,'remainingZombies':0,'observedBirths':3},
+            'archiveSHA256':digest(self.rust_archive),
+            'depInfoSHA256':digest(self.rust_archive.with_suffix('.d'))}
+        (self.task / 'checkpoint-boundary.json').write_text(json.dumps(self.boundary))
+        (self.task / 'effective-config.private.log').write_text(json.dumps({'substs': {
+            'RUST_TARGET':'x86_64-apple-darwin','MOZ_CARGO_DEFAULT_PROFILE_DIR':'release',
+            'MOZ_DEBUG_RUST':False}}))
         self.plan = json.loads(Path(__file__).with_name('plan.json').read_text())
         self.plan['checkpoint'].update(maxStoredBytes=1024**2, maxLogicalBytes=1024**2,
                                        maxEntries=100, maxReferenceEntries=100)
@@ -182,6 +306,21 @@ class CheckpointGuards(unittest.TestCase):
         self.assertFalse((self.task / 'effective-config.private.log').exists())
         self.assertTrue((self.task / 'checkpoint-expected-config.json').exists())
 
+    def test_completed_mapping_writer_can_be_packed_and_restored_after_exact_reap(self):
+        target = self.task / 'obj/object.o'
+        child = subprocess.Popen([sys.executable, '-c',
+            'import mmap,os,sys; f=open(sys.argv[1],"r+b"); '
+            'm=mmap.mmap(f.fileno(),0); f.close(); '
+            'm[:]=b"x"*len(m); m.flush(); m.close()', str(target)])
+        self.addCleanup(cleanup_checkpoint_child, child)
+        self.assertEqual(child.wait(timeout=5), 0)
+        expected = b'x' * len(b'completed object fixture')
+        self.assertEqual(target.read_bytes(), expected)
+        ready = self.pack()
+        self.consumer(ready)
+        self.restore()
+        self.assertEqual(target.read_bytes(), expected)
+
     def test_late_object_after_manifest_enumeration_prevents_ready(self):
         original = cp.tree
         changed = False
@@ -287,12 +426,22 @@ class CheckpointGuards(unittest.TestCase):
         self.assertFalse(cp.full_log_receipt(path)['complete'])
 
     def test_interrupted_or_residual_process_boundary_never_packs(self):
-        for changes in ({'interrupted': True}, {'status': 'failed'}, {'newOwnedSurvivors': 1}):
-            boundary = {'status': 'passed', 'node': cp.NODE, 'newOwnedSurvivors': 0, 'interrupted': False}
+        for changes in ({'interrupted': True}, {'status': 'failed'}, {'knownBuildSurvivors': 1},
+                        {'contract':'legacy-global-uid-zero'}):
+            boundary = self.boundary
             (self.task / 'checkpoint-boundary.json').write_text(json.dumps({**boundary, **changes}))
             with self.subTest(changes=changes), self.assertRaisesRegex(Failure, 'checkpoint-boundary'):
                 self.pack()
             self.assertFalse((self.task / 'checkpoint-ready.json').exists())
+
+    def test_boundary_archive_and_depinfo_changes_prevent_ready(self):
+        for path in (self.rust_archive, self.rust_archive.with_suffix('.d')):
+            before = path.read_bytes()
+            path.write_bytes(before + b'late changed output\n')
+            with self.subTest(output=path.suffix), self.assertRaisesRegex(Failure, 'checkpoint-boundary-output-changed'):
+                self.pack()
+            self.assertFalse((self.task / 'checkpoint-ready.json').exists())
+            path.write_bytes(before)
 
     def test_caps_stop_before_ready_or_upload(self):
         self.plan['checkpoint']['maxStoredBytes'] = 100
@@ -448,6 +597,30 @@ class CheckpointGuards(unittest.TestCase):
                 child.terminate()
                 child.wait(timeout=5)
             self.assertFalse(any(row[0] == child.pid for row in cp.owned_processes() - before))
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'actual Darwin known-child lifecycle')
+    def test_real_mac_known_child_live_zombie_and_exact_reap(self):
+        from darwin_activity import probe
+        with mock.patch.dict(os.environ, self.real_census_binding):
+            child = subprocess.Popen([sys.executable, '-c', 'import sys; sys.stdin.buffer.read()'],
+                                     stdin=subprocess.PIPE)
+            self.addCleanup(cleanup_checkpoint_child, child)
+            state, identity, _ = probe().bsd(child.pid)
+            self.assertEqual(state, 'measured')
+            birth = (identity.pid,identity.start_sec,identity.start_usec)
+            value = cp.known_build_processes({birth}, {})
+            self.assertEqual(value, {'live':{birth},'zombies':set()})
+            child.stdin.close()
+            deadline = time.monotonic() + 5
+            while True:
+                value = cp.known_build_processes({birth}, {})
+                if value['zombies']:
+                    break
+                self.assertLess(time.monotonic(), deadline)
+                time.sleep(0.01)
+            self.assertEqual(value, {'live':set(),'zombies':{birth}})
+            self.assertEqual(child.wait(timeout=5), 0)
+            self.assertEqual(cp.known_build_processes({birth}, {}), {'live':set(),'zombies':set()})
 
 
 if __name__ == '__main__':

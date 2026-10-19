@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 from support import Failure, clean_environment, require, write_json
-from native_cause import STREAM_MARKERS
+from native_cause import STREAM_MARKERS, load_module
 
 
 def read_one(directory, name):
@@ -30,6 +30,16 @@ def context_result(value):
                 for e in kernel['events']), 'context-shim-cleanup-exit')
     return {'status': 'passed', 'attempted': 20, 'trustedContextMenus': 20,
             'shimPID': value['shimPid'], 'cleanupKernelExitObserved': True}
+
+
+def failure_recording(harness, value):
+    """Reproject the independent pre/post record without replacing first cause."""
+    try:
+        helper = load_module('native_failure_recording',
+            harness / 'tools/app-shim/shim_failure_diagnostics.py')
+        return helper.project_diagnostics(value.get('failureDiagnostics'))
+    except Exception:
+        return {'schema': 1, 'available': False}
 
 
 def failure_snapshot(value):
@@ -120,7 +130,8 @@ def main():
     private = args.task / 'native-private'
     private.mkdir(mode=0o700)
     env = clean_environment(args.task)
-    report = {'status': 'failed', 'contextMenu': None, 'gui': None, 'firstCause': None}
+    report = {'status': 'failed', 'contextMenu': None, 'gui': None, 'firstCause': None,
+              'nativeFailureDiagnostics': {}}
     child = None
     try:
         commands = [
@@ -135,6 +146,12 @@ def main():
             with (private / (name + '.private.log')).open('xb') as output:
                 child = subprocess.Popen(command, env=env, stdout=output, stderr=subprocess.STDOUT)
                 code = child.wait()
+            if name in ('context', 'gui'):
+                try:
+                    value = read_one(private / name, 'report.json' if name == 'gui' else 'result.json')
+                except Exception:
+                    value = {}
+                report['nativeFailureDiagnostics'][name] = failure_recording(args.harness, value)
             if code and name == 'context':
                 try:
                     report['firstFailureSnapshot'] = failure_snapshot(read_one(private / name, 'result.json'))

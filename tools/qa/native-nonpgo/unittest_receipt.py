@@ -145,11 +145,16 @@ def held_child_public(value):
     return result
 
 
-def source_identities():
+def source_identities(recording=False):
     cases, phases, lines = set(), set(), {}
-    for path in HERE.glob('*.py'):
+    paths = list(HERE.glob('*.py'))
+    if recording:
+        root = HERE.parents[1] / 'app-shim'
+        paths.extend(root / name for name in ('test_shim_failure_diagnostics.py',
+            'shim_failure_diagnostics.py', 'test-runtime.py', 'test-context-menu.py', 'shim_lifecycle.py'))
+    for path in paths:
         source = path.read_text()
-        lines[path.name] = len(source.splitlines())
+        lines[path.resolve()] = len(source.splitlines())
         if not path.name.startswith('test_'):
             continue
         tree = ast.parse(source)
@@ -192,11 +197,11 @@ def known_failure_codes():
     return codes
 
 
-def receipt(path):
+def receipt(path, *, recording=False):
     result = {'complete': False, 'rawContentPublished': False, 'exceptionTextPublished': False,
               'total': None, 'failures': None, 'errors': None, 'skipped': None, 'status': 'unknown'}
     try:
-        identities, source_lines = source_identities()
+        identities, source_lines = source_identities(recording)
         exception_types = {name for name, value in vars(builtins).items()
                            if isinstance(value, type) and issubclass(value, BaseException)}
         exception_types.update(('support.Failure', 'subprocess.CalledProcessError',
@@ -256,9 +261,10 @@ def receipt(path):
                 frame = re.fullmatch(r'  File "([^"]+)", line ([0-9]+), in ([A-Za-z_][A-Za-z_0-9]*|<module>)', line)
                 if frame:
                     file = Path(frame[1])
-                    if (file.name in source_lines and file.resolve().parent == HERE and
-                            0 < int(frame[2]) <= source_lines[file.name] and len(current['frames']) < 32):
-                        current['frames'].append({'file':file.name, 'line':int(frame[2])})
+                    fixed_file = file.resolve()
+                    if (fixed_file in source_lines and
+                            0 < int(frame[2]) <= source_lines[fixed_file] and len(current['frames']) < 32):
+                        current['frames'].append({'file':fixed_file.name, 'line':int(frame[2])})
                 exception = re.fullmatch(r'([A-Za-z_][A-Za-z_0-9.]*)(?:: (.*))?', line)
                 if exception and exception[1] in exception_types:
                     current['exceptionType'] = exception[1]

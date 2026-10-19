@@ -1,0 +1,231 @@
+diff --git a/tools/app-shim/test-context-menu.py b/tools/app-shim/test-context-menu.py
+index 835bb30..49ef148 100644
+--- a/tools/app-shim/test-context-menu.py
++++ b/tools/app-shim/test-context-menu.py
+@@ -67,6 +67,7 @@ def main():
+     (profile / 'user.js').write_text('\n'.join(f'user_pref({json.dumps(k)}, {json.dumps(v)});' for k,v in prefs.items())+'\n')
+     report = {'status':'failed','browser':str(browser),'output':str(output),
+               'requestedIterations':args.iterations,'attemptedIterations':0,'phase':'launch-host'}
++    failure_recorder = h.failure_diagnostics.Recorder(output)
+     app_id = '{'+str(uuid.uuid4())+'}'
+     host = client = server = monitor = None
+     private_logs = output / '.private-logs'
+@@ -120,6 +121,7 @@ crashCount:{STATE}?.crashes?.length ?? 0,failureCount:{STATE}?.failures?.length
+         shim_executable = bundle / 'Contents/MacOS/floorp-app-shim'
+         (output/'binary-inspection.json').write_text(json.dumps(lifecycle.binary_summary(shim_executable),indent=2)+'\n')
+         monitor = lifecycle.ShimMonitor(shim_executable, host.pid, h.HostProcess._process_rows)
++        failure_recorder.monitor = monitor
+         monitor.start()
+         monitor.mark('launch-call-start')
+         client.script(f'''{STATE}={{events:[],failures:[],crashes:[],authEvents:[],authCount:0}};
+@@ -135,7 +137,9 @@ if({STATE}.authEvents.length>64){STATE}.authEvents.shift();}}
+ if(e.type!==111){{e.diagnosticTime=Date.now();{STATE}.events.push(e);}}}}else if(t==='oop-frameloader-crashed'){{
+ {STATE}.crashes.push({{time:Date.now(),data:d}});}}else {STATE}.failures.push(d);}}}};
+ for(const t of ['floorp-web-app-shim-event','floorp-web-app-presentation-failed','oop-frameloader-crashed'])Services.obs.addObserver({STATE}.observer,t);
+-{h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);{h.SERVICE}.launchApp(arguments[0]);''',app_id,profile_id,str(bundle))
++{h.SERVICE}.configure(arguments[1]);{h.SERVICE}.registerApp(arguments[0],arguments[2]);''',app_id,profile_id,str(bundle))
++        failure_recorder.install_observer(client,STATE,app_id)
++        client.script(f'{h.SERVICE}.launchApp(arguments[0]);',app_id)
+         monitor.mark('launch-call-returned')
+         report['phase'] = 'authenticate-shim'
+         connected = h.wait_for('Shim authentication',lambda:next((e for e in client.script(f'return {STATE}.events;') if e['type']=='connected'),None),20)
+@@ -194,6 +198,7 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
+         report['phase']='completed'
+         code=0
+     except Exception as error:
++        failure_recorder.functional_failure(report['phase'],error)
+         if monitor:
+             monitor.mark('first-test-failure')
+         report['error']=diagnostics.error_summary(error)
+@@ -201,6 +206,7 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);'''),20)
+         report.pop('finalState', None)
+         diagnostics.write_first_failure(output, report)
+     finally:
++        failure_recorder.before_cleanup(host,client,STATE)
+         report.pop('nativeState', None)
+         if report['status'] != 'passed':
+             report.pop('finalState', None)
+@@ -232,18 +238,33 @@ if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.se
+                 actions.append(('host', host.close))
+             actions.append(('log', log.close))
+             for name, action in actions:
+-                try:
+-                    action()
+-                except Exception as error:
+-                    report.setdefault('cleanupErrors', []).append({'step':name, **diagnostics.error_summary(error)})
++                captured_errors = []
++                def recorded_action():
++                    try:
++                        action()
++                    except Exception as error:
++                        captured_errors.append(diagnostics.error_summary(error))
++                        raise
++                operation = {'shim':'browser-service-stop','client':'marionette-close',
++                    'server':'fixture-server-stop','server-socket':'fixture-server-stop',
++                    'host':'browser-host-close','log':'browser-log-close'}[name]
++                if not failure_recorder.cleanup(operation,recorded_action):
++                    error = captured_errors[0] if captured_errors else {'type':'other','codes':[]}
++                    report.setdefault('cleanupErrors', []).append({'step':name, **error})
+                     report['status']='failed'
+                     code=1
+             report['afterCleanup'] = {'host':diagnostics.process_summary(host)}
+             if monitor:
+-                try:
+-                    monitor.close()
+-                except Exception as error:
+-                    report.setdefault('diagnosticErrors', []).append({'step':'monitor-close', **diagnostics.error_summary(error)})
++                monitor_errors = []
++                def close_monitor():
++                    try:
++                        monitor.close()
++                    except Exception as error:
++                        monitor_errors.append(diagnostics.error_summary(error))
++                        raise
++                if not failure_recorder.cleanup('child-monitor-close',close_monitor):
++                    error = monitor_errors[0] if monitor_errors else {'type':'other','codes':[]}
++                    report.setdefault('diagnosticErrors', []).append({'step':'monitor-close', **error})
+                     report['diagnosticsIncomplete'] = True
+                     report['status'] = 'failed'
+                     code = 1
+@@ -294,6 +315,12 @@ if({STATE}?.window&&!{STATE}.window.closed){STATE}.window.close();{h.SERVICE}.se
+                 report['streamError'] = diagnostics.error_summary(error)
+                 report['status']='failed'
+                 code=1
++            failure_recorder.after_cleanup(host)
++            report['failureDiagnostics'] = failure_recorder.summary()
++            if failure_recorder.failed():
++                report['diagnosticsIncomplete'] = True
++                report['status'] = 'failed'
++                code = 1
+             if report['status'] != 'passed':
+                 diagnostics.write_first_failure(output, report)
+             (output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
+diff --git a/tools/app-shim/test-runtime.py b/tools/app-shim/test-runtime.py
+index b9bc0e7..c8283b6 100644
+--- a/tools/app-shim/test-runtime.py
++++ b/tools/app-shim/test-runtime.py
+@@ -5,6 +5,7 @@
+ import argparse
+ import ctypes
+ import http.server
++import importlib.util
+ import json
+ import os
+ from pathlib import Path
+@@ -21,6 +22,12 @@ import time
+ import uuid
+ 
+ 
++_diagnostic_spec = importlib.util.spec_from_file_location(
++    'app_shim_failure_diagnostics', Path(__file__).with_name('shim_failure_diagnostics.py'))
++failure_diagnostics = importlib.util.module_from_spec(_diagnostic_spec)
++_diagnostic_spec.loader.exec_module(failure_diagnostics)
++
++
+ class Marionette:
+     def __init__(self, port, *, bidi=False):
+         self.socket = socket.create_connection(("127.0.0.1", port), timeout=5)
+@@ -482,6 +489,7 @@ def main():
+     with (browser / "Contents/Info.plist").open("rb") as stream:
+         binary = browser / "Contents/MacOS" / plistlib.load(stream)["CFBundleExecutable"]
+     report = {"status": "failed", "phase": "host-signature", "browser": str(browser), "output": str(output)}
++    diagnostics = failure_diagnostics.Recorder(output)
+     host = client = server = None
+     log = (output / "browser.log").open("w")
+     events = []
+@@ -540,6 +548,7 @@ def main():
+             Services.obs.addObserver(state.observer, 'floorp-web-app-shim-event');
+             return true;
+         """, app_id)
++        diagnostics.install_observer(client, STATE, app_id)
+         if args.frontend_modules:
+             modules = args.frontend_modules.resolve(strict=True)
+             client.script(f"""
+@@ -557,6 +566,7 @@ def main():
+             """, str(modules), str(profile), str(output / "Applications"), str(binary), str(shim))
+         else:
+             bundle = seal_bundle(output, shim, identity, profile, app_id, profile_id)
++            diagnostics.start_monitor(bundle / 'Contents/MacOS/floorp-app-shim', host, HostProcess._process_rows)
+             client.script(f"{SERVICE}.configure(arguments[0]); {SERVICE}.registerApp(arguments[1], arguments[2]);", profile_id, app_id, str(bundle))
+ 
+         Fixture.token = uuid.uuid4().hex
+@@ -837,43 +847,50 @@ def main():
+             exit_code = 0
+         report["phase"] = "complete"
+     except Exception as error:
++        diagnostics.functional_failure(report['phase'], error)
+         report["error"] = str(error)
+         print(f"Runtime smoke failed in {report['phase']}: {error}", file=sys.stderr)
+     finally:
+-        if client and host and host.verified and host.poll() is None:
+-            try:
++        diagnostics.before_cleanup(host, client, STATE)
++        def stop_service():
++            nonlocal events
++            if client and host and host.verified and host.poll() is None:
+                 client.context("chrome")
+-                events = client.script(f"return {STATE}?.events ?? [];")
++                try:
++                    events = client.script(f"return {STATE}?.events ?? [];")
++                except BaseException as error:
++                    diagnostics.diagnostic_error('legacy-functional-event-snapshot', error)
+                 client.script(f"if ({STATE}?.window && !{STATE}.window.closed) {STATE}.window.close(); {SERVICE}.stop(); if ({STATE}?.observer) Services.obs.removeObserver({STATE}.observer, 'floorp-web-app-shim-event');")
+-            except Exception as error:
+-                report["cleanupError"] = str(error)
+-                report["status"] = "failed"
+-                exit_code = 1
++        diagnostics.cleanup('browser-service-stop', stop_service)
+         if client:
+-            if host and host.verified:
+-                client.close()
+-            else:
+-                client.socket.close()
++            diagnostics.cleanup('marionette-close', client.close if host and host.verified else client.socket.close)
+         if host:
+-            try:
+-                host.close()
+-            except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+-                report["hostCleanupError"] = str(error)
+-                report["status"] = "failed"
+-                exit_code = 1
+-            report["hostExitCode"] = host.returncode
+-            if host.returncode not in (None, 0, -int(host.requested_signal or 0)):
+-                report["hostCleanupError"] = f"Browser exited abnormally: {host.returncode}"
+-                report["status"] = "failed"
+-                exit_code = 1
+-            if args.launch_services:
+-                report["launcherExitCode"] = host.process.returncode
+-                if host.returncode is None:
+-                    report["hostExitCodeUnavailable"] = "Browser exited before a kernel exit-status event was observed"
++            diagnostics.cleanup('browser-host-close', host.close)
++        if diagnostics.monitor is not None:
++            diagnostics.cleanup('child-monitor-close', diagnostics.monitor.close)
+         if server:
+-            server.shutdown()
+-            server.server_close()
+-        log.close()
++            def stop_server():
++                try:
++                    server.shutdown()
++                finally:
++                    server.server_close()
++            diagnostics.cleanup('fixture-server-stop', stop_server)
++        diagnostics.cleanup('browser-log-close', log.close)
++        diagnostics.after_cleanup(host)
++        report['failureDiagnostics'] = diagnostics.summary()
++        after_host = report['failureDiagnostics']['afterCleanup']['host']
++        report['hostExitCode'] = after_host['browserExitCode']
++        report['launcherExitCode'] = after_host['launcherExitCode']
++        requested = after_host['requestedSignal']
++        if report['hostExitCode'] not in (None, 0, -(requested or 0)):
++            report['hostCleanupError'] = 'Browser exited abnormally; see failureDiagnostics'
++            exit_code = 1
++            report['status'] = 'failed'
++        if diagnostics.failed():
++            report['diagnosticsIncomplete'] = True
++            report['cleanupError'] = 'Native diagnostic or cleanup failure; see failureDiagnostics'
++            report['status'] = 'failed'
++            exit_code = 1
+         report["events"] = events
+         report["requests"] = Fixture.requests
+         (output / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")

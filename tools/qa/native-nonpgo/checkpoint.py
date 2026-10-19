@@ -23,6 +23,7 @@ from failure_excerpt import classify, normalized_diagnostic
 STATES = ('obj', 'mozbuild', 'cargo', 'rustup')
 REFERENCES = ('source', 'tools', 'sdk')
 NODE = 'toolkit/library/rust/target-objects'
+BOUNDARY_CONTRACT = 'trusted-single-purpose-runner-v1'
 MANIFEST_LIMIT = 512 * 1024**2
 SUBSTS = ('MOZ_DEBUG ENABLE_TESTS MOZ_PROFILE_GENERATE MOZ_PROFILE_USE MOZ_PGO MOZ_LTO '
           'TARGET_CPU HOST_CPU_ARCH OS_ARCH OS_TARGET CC_TYPE CC_VERSION MOZ_APP_VERSION '
@@ -215,6 +216,85 @@ def owned_processes(details=None):
     return value['identities']
 
 
+def verify_completed_stages(records):
+    """Accept natural completion only, including every preceding owned stage."""
+    require(bool(records) and all(
+        row.get('exitCode') == 0 and type(row.get('exitCode')) is int and
+        row.get('reason') is None and row.get('failurePhase') is None and
+        row.get('groupCleanup') == 'verified-gone' and
+        row.get('leaderReap') == {'status': 'reaped', 'exitCode': 0} and
+        row.get('cleanupFailure') is None for row in records), 'checkpoint-stage-completion')
+    for name in ('configure', 'effective-config', 'checkpoint-exports', 'checkpoint-rust',
+                 'checkpoint-rust-archive'):
+        require(sum(row.get('stage') == name for row in records) == 1,
+                'checkpoint-required-stage')
+
+
+def known_build_processes(observed, details):
+    from process_census import load_abi, snapshot
+    value = snapshot(load_abi(Path(os.environ['FLOORP_CENSUS_ABI'])), tracked_births=observed)
+    details.update(value['measurement'])
+    return {'live': value['trackedLiveBirths'], 'zombies': value['trackedZombieBirths']}
+
+
+def completed_build(runner, receipt):
+    """Trusted build completion, not a claim that all same-UID processes are gone."""
+    receipt.update(contract=BOUNDARY_CONTRACT, status='collecting', interrupted=None,
+                   resourceScope='active-owned-stage-process-group',
+                   backgroundResourceUsage='NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE',
+                   knownBuildIdentityCheck={'status': 'unavailable', 'remainingLive': None,
+                       'remainingZombies': None,
+                       'scope': 'sampled owned stage-group birth identities; no complete ancestry claim'})
+    require(runner.failure is None and runner.monitor_failure is None and not runner.groups,
+            'checkpoint-stage-completion')
+    verify_completed_stages(runner.records)
+    observed = runner.observed_processes
+    receipt['observationCoverage'] = runner.observation_status
+    require(runner.observation_status == 'sampling' and isinstance(observed, set) and
+            bool(observed) and all(isinstance(row, tuple) and len(row) == 3 and
+                all(type(value) is int for value in row) and 0 < row[0] < 2**31 and row[1] > 0 and
+                0 <= row[2] < 1000000 for row in observed), 'checkpoint-build-observation-unavailable')
+    check = receipt['knownBuildIdentityCheck']
+    check['observedBirths'] = len(observed)
+    measurement = check['measurement'] = {}
+    # One identity snapshot checks known children, including a sampled child that
+    # escaped its old process group. UID membership alone establishes neither
+    # build ownership nor writer status; ambient task counters are not queried.
+    current = known_build_processes(observed, measurement)
+    remaining, zombies = len(current['live']), len(current['zombies'])
+    check.update(status='rejected' if remaining or zombies else 'passed',
+                 remainingLive=remaining, remainingZombies=zombies)
+    require(remaining == zombies == 0, 'checkpoint-known-build-survivors')
+    receipt.update(status='passed', interrupted=False, knownBuildSurvivors=0,
+                   stages=[dict(row) for row in runner.records])
+    return receipt
+
+
+def validate_completion(boundary, spec):
+    check = boundary.get('knownBuildIdentityCheck', {})
+    require(spec.get('boundaryContract') == BOUNDARY_CONTRACT and
+            boundary.get('contract') == BOUNDARY_CONTRACT and
+            boundary.get('status') == 'passed' and boundary.get('node') == NODE and
+            boundary.get('knownBuildSurvivors') == 0 and boundary.get('interrupted') is False and
+            check.get('status') == 'passed' and check.get('remainingLive') == 0 and
+            check.get('remainingZombies') == 0 and
+            type(check.get('observedBirths')) is int and check['observedBirths'] > 0,
+            'checkpoint-boundary')
+    verify_completed_stages(boundary.get('stages', []))
+
+
+def verify_boundary_payload(manifest, task):
+    """Bind the successful Rust boundary outputs to the captured file hashes."""
+    data = {'substs': manifest['substs']}
+    archive = rust_output(task, data)
+    rows = {row['path']: row for row in manifest['states']['obj']}
+    for path, key in ((archive, 'archiveSHA256'), (archive.with_suffix('.d'), 'depInfoSHA256')):
+        row = rows.get(str(path.relative_to(task / 'obj')), {})
+        require(row.get('kind') == 'file' and row.get('sha256') == manifest['boundary'].get(key) and
+                type(row.get('bytes')) is int and row['bytes'] > 0,
+                'checkpoint-boundary-output-changed')
+
+
 def verify_owned_boundary(baseline, receipt, observed_births=None):
     """Retain safe census evidence before rejecting any new candidate identity."""
     added = measure_owned_boundary(baseline, receipt, observed_births)
@@ -379,8 +459,7 @@ def pack(plan_path, source, task, sdk, deadline):
     plan = json.loads(plan_path.read_text())
     spec = plan['checkpoint']
     boundary = json.loads((task / 'checkpoint-boundary.json').read_text())
-    require(boundary['status'] == 'passed' and boundary['node'] == NODE and
-            boundary['newOwnedSurvivors'] == 0 and not boundary['interrupted'], 'checkpoint-boundary')
+    validate_completion(boundary, spec)
     mapping = roots(source, task, sdk)
     data = json.loads((task / 'effective-config.private.log').read_text())
     manifest = {'schema': 1, 'context': context(plan_path, source, task, sdk),
@@ -395,6 +474,7 @@ def pack(plan_path, source, task, sdk, deadline):
             manifest['states'][name] = tree(mapping[name], mapping, scan_deadline,
                                             spec['maxEntries'], spec['maxLogicalBytes'], state_name=name)
     require('obj' in manifest['states'] and 'mozbuild' in manifest['states'], 'checkpoint-required-state')
+    verify_boundary_payload(manifest, task)
     require(any(row['kind'] == 'file' and '/_virtualenvs/' in row['path']
                 for row in manifest['states']['mozbuild']), 'checkpoint-python-venv-missing')
     count = sum(len(rows) for rows in manifest['states'].values())
@@ -498,9 +578,9 @@ def restore(plan_path, source, task, sdk, deadline):
             digest(path) == ready['sha256'], 'checkpoint-download-integrity')
     manifest = inspect(path, spec, deadline, ready['manifestSHA256'])
     require(manifest['context'] == context(plan_path, source, task, sdk), 'checkpoint-context-mismatch')
-    require(manifest['buildDate'] == os.environ['MOZ_BUILD_DATE'] and
-            manifest['boundary']['status'] == 'passed' and not manifest['boundary']['interrupted'] and
-            manifest['boundary']['newOwnedSurvivors'] == 0, 'checkpoint-producer-completion')
+    require(manifest['buildDate'] == os.environ['MOZ_BUILD_DATE'], 'checkpoint-producer-completion')
+    validate_completion(manifest['boundary'], spec)
+    verify_boundary_payload(manifest, task)
     mapping = roots(source, task, sdk)
     require(set(manifest['references']) == set(REFERENCES), 'checkpoint-reference-roots')
     for name in REFERENCES:

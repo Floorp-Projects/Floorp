@@ -93,9 +93,18 @@ def load_abi(path):
     return layout
 
 
-def decode(data, layout, uid, ruid, own_pid, own_birth, include_pid_one=False):
+def decode(data, layout, uid, ruid, own_pid, own_birth, include_pid_one=False, tracked_births=None):
     size = layout['recordBytes']
     require(0 < len(data) <= CAP and len(data)%size==0, 'census-snapshot-length')
+    tracking = tracked_births is not None
+    tracked_births = set() if tracked_births is None else tracked_births
+    require(isinstance(tracked_births, set) and len(tracked_births) <= 100000 and all(
+        isinstance(row, tuple) and len(row) == 3 and all(type(value) is int for value in row) and
+        0 < row[0] < 2**31 and row[1] > 0 and 0 <= row[2] < 1000000 for row in tracked_births),
+        'census-tracked-births')
+    tracked_pids = {row[0] for row in tracked_births}
+    tracked_live = set()
+    tracked_zombies = set()
     seen, births, own, zombies, pid_one = set(), set(), None, 0, None
     for offset in range(0,len(data),size):
         row = {name:int.from_bytes(data[offset+field['offset']:offset+field['offset']+field['bytes']],
@@ -104,6 +113,14 @@ def decode(data, layout, uid, ruid, own_pid, own_birth, include_pid_one=False):
         require(0 <= pid < 2**31 and pid not in seen, 'census-snapshot-pid')
         seen.add(pid)
         require(all(0 <= row[name] < 2**32-1 for name in ('uid','ruid')), 'census-snapshot-credentials')
+        if pid in tracked_pids:
+            require(row['startSec'] > 0 and 0 <= row['startUsec'] < 1000000 and
+                    row['state'] in (1,2,3,4,5), 'census-tracked-identity-unavailable')
+            birth = (pid, row['startSec'], row['startUsec'])
+            if birth in tracked_births and row['state'] != 5:
+                tracked_live.add(birth)
+            elif birth in tracked_births:
+                tracked_zombies.add(birth)
         if include_pid_one and pid == 1:
             require(row['startSec'] > 0 and 0 <= row['startUsec'] < 1000000 and
                     row['state'] in (1,2,3,4), 'census-pid-one-identity')
@@ -127,10 +144,16 @@ def decode(data, layout, uid, ruid, own_pid, own_birth, include_pid_one=False):
     if include_pid_one:
         require(pid_one is not None, 'census-pid-one-unavailable')
         result['pidOne'] = pid_one
+    if tracking:
+        result['trackedLiveBirths'] = tracked_live
+        result['trackedZombieBirths'] = tracked_zombies
+        result['measurement'].update(trackedBirths=len(tracked_births), trackedLiveBirths=len(tracked_live),
+                                    trackedZombieBirths=len(tracked_zombies),
+                                    trackedScope='known births independent of current credentials')
     return result
 
 
-def snapshot(layout, system=None, self_probe=None, include_pid_one=False):
+def snapshot(layout, system=None, self_probe=None, include_pid_one=False, tracked_births=None):
     validate_layout(layout)
     system = system if system is not None else ctypes.CDLL('/usr/lib/libSystem.B.dylib',use_errno=True)
     system.sysctl.argtypes = [ctypes.POINTER(ctypes.c_int),ctypes.c_uint,ctypes.c_void_p,
@@ -172,7 +195,8 @@ def snapshot(layout, system=None, self_probe=None, include_pid_one=False):
             raise Failure('census-sysctl-data-unavailable')
         require(0 < length.value <= capacity, 'census-sysctl-returned-size')
         value = decode(data.raw[:length.value],layout,os.geteuid(),os.getuid(),os.getpid(),
-                       (own.start_sec,own.start_usec),include_pid_one=include_pid_one)
+                       (own.start_sec,own.start_usec),include_pid_one=include_pid_one,
+                       tracked_births=tracked_births)
         value['measurement'].update(attempts=attempt+1,retryErrnos=retries,
                                     layoutSHA256=hashlib.sha256(canonical(layout)).hexdigest())
         return value

@@ -197,3 +197,27 @@ class UnittestReceiptGuards(unittest.TestCase):
         self.assertTrue(value['complete'])
         self.assertEqual(value['cases'][0]['frames'],[{'file':'checkpoint.py','line':1}])
         self.assertNotIn('PRIVATE_SENTINEL',json.dumps(value))
+
+    def test_recording_failure_identity_and_fixed_frames_survive_without_private_data(self):
+        root = Path(__file__).resolve().parents[2] / 'app-shim'
+        alias = self.path.parent / 'PRIVATE-SENTINEL-ALIAS.py'
+        alias.symlink_to(root / 'shim_failure_diagnostics.py')
+        method = 'test_event_history_keeps_first_and_terminal_separately_from_recent_sixteen'
+        self.path.write_text('FAIL: '+method+' (test_shim_failure_diagnostics.ProjectionTests.'+method+')\n'
+            f'  File "{root / "test_shim_failure_diagnostics.py"}", line 1, in {method}\n'
+            f'  File "{root / "shim_failure_diagnostics.py"}", line 1, in event_history\n'
+            f'  File "{alias}", line 1, in PRIVATE_FUNCTION\n'
+            f'  File "{self.path.parent / "shim_failure_diagnostics.py"}", line 1, in PRIVATE_FUNCTION\n'
+            'AssertionError: PRIVATE-SENTINEL-NONCE\nRan 1 test in 0.1s\nFAILED (failures=1)\n')
+        self.assertFalse(receipt(self.path)['complete'])
+        value = receipt(self.path, recording=True)
+        self.assertTrue(value['complete'])
+        self.assertEqual(value['status'], 'failed')
+        self.assertEqual(value['cases'][0]['test'], 'test_shim_failure_diagnostics.ProjectionTests.'+method)
+        self.assertEqual(value['cases'][0]['exceptionType'], 'AssertionError')
+        self.assertEqual(value['cases'][0]['frames'], [
+            {'file':'test_shim_failure_diagnostics.py','line':1},
+            {'file':'shim_failure_diagnostics.py','line':1},
+            {'file':'shim_failure_diagnostics.py','line':1}])
+        self.assertNotIn('PRIVATE', json.dumps(value))
+        self.assertNotIn(str(root), json.dumps(value))

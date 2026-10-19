@@ -128,6 +128,24 @@ class CensusGuards(unittest.TestCase):
             after=pc.decode(raw({},change),layout(),501,501,41,(123,4))['identities']
             self.assertEqual(len(after-before),1)
 
+    def test_known_build_birth_is_tracked_even_after_all_credentials_change(self):
+        value = pc.decode(raw({}, {'pid':42, 'uid':0, 'ruid':0}), layout(),501,501,41,(123,4),
+                          tracked_births={(42,123,4)})
+        self.assertNotIn((42,123,4,0,0), value['identities'])
+        self.assertEqual(value['trackedLiveBirths'], {(42,123,4)})
+        self.assertEqual(value['measurement']['trackedLiveBirths'], 1)
+
+    def test_known_build_birth_replacement_and_zombie_are_distinct_from_live(self):
+        for changes in ({'startUsec':5}, {'state':5}):
+            value = pc.decode(raw({}, {'pid':42,'uid':0,'ruid':0,**changes}), layout(),501,501,
+                              41,(123,4),tracked_births={(42,123,4)})
+            self.assertEqual(value['trackedLiveBirths'], set())
+            self.assertEqual(value['trackedZombieBirths'], {(42,123,4)} if changes.get('state') == 5 else set())
+        for changes in ({'startSec':0}, {'startUsec':1000000}, {'state':0}):
+            with self.subTest(changes=changes), self.assertRaisesRegex(Failure, 'census-tracked-identity-unavailable'):
+                pc.decode(raw({}, {'pid':42,'uid':0,'ruid':0,**changes}), layout(),501,501,
+                          41,(123,4),tracked_births={(42,123,4)})
+
     def test_abi_rejects_out_of_bounds_overlapping_wrong_width_or_signedness(self):
         variants=[]
         for field,changes in (('uid',{'signed':True}),('startSec',{'bytes':4}),('ruid',{'offset':20}),('pid',{'offset':10000})):

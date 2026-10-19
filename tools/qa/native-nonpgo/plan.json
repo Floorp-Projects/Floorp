@@ -22,10 +22,15 @@
     "archiveMode": "raw-single-file",
     "artifactName": "checkpoint.tar.gz",
     "boundaryNode": "toolkit/library/rust/target-objects",
+    "boundaryContract": "trusted-single-purpose-runner-v1",
+    "runnerTrust": "trusted-single-purpose-standard-github-runner-no-concurrent-user-builds",
+    "writerCompletion": "natural-owned-stage-exit-reap-group-gone-and-known-birth-check",
+    "resourceScope": "active-owned-stage-process-group",
+    "globalUIDDeltaRole": "not-checkpoint-eligibility-or-resource-ownership",
     "censusABI": "fixed-header-inspector-and-libproc-self-binding",
     "censusAPI": "sysctl-kern-proc-all",
     "censusFallback": false,
-    "censusUnavailable": "fail",
+    "censusUnavailable": "known-build-identity-check-fails-closed",
     "consumerBuildDeadlineMinutes": 300,
     "consumerNativeDeadlineMinutes": 335,
     "consumerPackageDeadlineMinutes": 315,
@@ -107,6 +112,29 @@
       "scope": "Preserve exact LaunchServices startup identity and replace native census ps producers with ordinary read-only process APIs; no resource-monitor exclusions or permission changes.",
       "sha256": "de997184f529e3bd14a077625cfa8b10ad5794da6760bea034fa2e594a44a17e",
       "target": "tools/app-shim/test-runtime.py"
+    },
+    "failureDiagnosticsPatch": {
+      "helpers": [
+        {
+          "sha256": "9c9dd722725577dd31b4389e3244c4199e124c3dee468e91458e01c059e6976d",
+          "source": "tools/app-shim/shim_failure_diagnostics.py",
+          "target": "tools/app-shim/shim_failure_diagnostics.py"
+        }
+      ],
+      "path": "tools/qa/native-nonpgo/shim-failure-recording.patch",
+      "sha256": "367f7095a17602fc986f90c344d44098366124e66384d1e2e8d3ba92f34ff3ad",
+      "targets": [
+        {
+          "baseSHA256": "e6cd34f8008a9a3f45496c4474de77552756aee7afc109b9ea745a07a6365c11",
+          "patchedSHA256": "e6faff97fceda35fafa9ccb3a2295356552d179a1f51b4eda617096d1b453562",
+          "target": "tools/app-shim/test-runtime.py"
+        },
+        {
+          "baseSHA256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911",
+          "patchedSHA256": "af5ef137ab04d5d54db03e5bdb0bb81305c8a36e329518cf66cdd0637ec64473",
+          "target": "tools/app-shim/test-context-menu.py"
+        }
+      ]
     }
   },
   "limits": {

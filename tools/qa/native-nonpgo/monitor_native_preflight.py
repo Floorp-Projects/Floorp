@@ -24,11 +24,16 @@ def verify_harness(harness, plan, prepared=False):
         pin = plan['harness']['startupPatch']
         changed[pin['target']] = pin['patchedSHA256']
         changed.update({row['target']: row['patchedSHA256'] for row in pin.get('additionalFiles', [])})
+        recording = plan['harness'].get('failureDiagnosticsPatch', {})
+        changed.update({row['target']: row['patchedSHA256'] for row in recording.get('targets', [])})
     for row in plan['harness']['files']:
         require(digest(harness / row['path']) == changed.get(row['path'], row['sha256']), 'census-harness-binding')
     if prepared and plan['harness']['startupPatch'].get('inventoryHelper'):
         helper = plan['harness']['startupPatch']['inventoryHelper']
         require(digest(harness / helper['target']) == helper['sha256'], 'census-inventory-helper-binding')
+    if prepared:
+        for row in plan['harness'].get('failureDiagnosticsPatch', {}).get('helpers', []):
+            require(digest(harness / row['target']) == row['sha256'], 'census-recording-helper-binding')
 
 
 def workload(harness, task):
