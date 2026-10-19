@@ -21,3 +21,10 @@ tools/chrome-extension-runtime/native-port-state-candidate-host.py text eol=lf
 tools/chrome-extension-runtime/quiet-native-worker-probe.js text eol=lf
 tools/chrome-extension-runtime/quiet-native-document-probe.js text eol=lf
 tools/chrome-extension-runtime/native-messaging-candidate-host.py text eol=lf
+
+# Shared authored resource/sidebar programs must keep the measured bytes.
+browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/programs-source.js text eol=lf
+browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/sidebar-source.js text eol=lf
+
+# Shared isolated-world fixture bytes match the measured Chrome reference.
+tools/chrome-extension-runtime/fixtures/content-worlds/* text eol=lf

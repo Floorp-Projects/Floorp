@@ -33,7 +33,7 @@ async function waitFor<T>(
 
 const receiver = `
   function reply(event, value, sender) {
-    return { event, value: value.value, senderId: sender.id, ownId: browser.runtime.id };
+    return { event, value: value.value, senderId: sender.id, senderUrl: sender.url, senderOrigin: sender.origin, ownId: browser.runtime.id };
   }
   browser.runtime.onMessage.addListener((value, sender) =>
     Promise.resolve(reply('internal', value, sender)));
@@ -154,7 +154,7 @@ async function testInstalledMessaging(): Promise<void> {
       () => registry.get(addonId),
       "installed extension",
     );
-    const fixture = { id: addonId, extension, addon, path };
+    const fixture = { id: addonId, compatible, extension, addon, path };
     fixtures.push(fixture);
     await waitFor(
       () =>
@@ -208,6 +208,34 @@ async function testInstalledMessaging(): Promise<void> {
     );
     assertEquals(reply.result?.ownId, ownId, "receiver public ID");
     assertEquals(reply.result?.value, "roundtrip", "payload round trip");
+    const from = fixtures.find((fixture) =>
+      fixture.compatible
+        ? `${senderId}@chromium-extension` === fixture.id
+        : senderId === fixture.id
+    );
+    const to = fixtures.find((fixture) =>
+      fixture.compatible
+        ? `${ownId}@chromium-extension` === fixture.id
+        : ownId === fixture.id
+    );
+    assert(from && to, "Both real sender/receiver fixtures are installed");
+    const nativeUrl =
+      from.extension.backgroundContext!.xulBrowser.currentURI.spec;
+    const sourceURI = Services.io.newURI(nativeUrl);
+    const expectedUrl = from.compatible && to.compatible
+      ? `chrome-extension://${senderId}${sourceURI.pathQueryRef}`
+      : nativeUrl;
+    assertEquals(
+      reply.result?.senderUrl,
+      expectedUrl,
+      "DOC message and Port sender URL presentation is receiver scoped",
+    );
+    assertEquals(
+      reply.result?.senderOrigin,
+      from.extension.backgroundContext!.xulBrowser.browsingContext
+        .currentWindowGlobal.documentPrincipal.originNoSuffix,
+      "Actual sender principal origin remains native",
+    );
   }
   function denied(reply: CommandResult): void {
     assert(
@@ -259,8 +287,8 @@ async function testInstalledMessaging(): Promise<void> {
       "runtime.id preserves original Chrome ID",
     );
     assert(
-      inspected.result?.url.startsWith("moz-extension://"),
-      "getURL keeps the native resolver",
+      inspected.result?.url === `chrome-extension://${a}/resource.txt`,
+      "Trusted Chrome getURL exposes its public alias",
     );
     assertEquals(
       inspected.result?.resource,
@@ -271,6 +299,12 @@ async function testInstalledMessaging(): Promise<void> {
       (await command(firefox, "inspect")).result?.id,
       firefox.id,
       "Firefox runtime.id unchanged",
+    );
+    assert(
+      (await command(firefox, "inspect")).result?.url.startsWith(
+        "moz-extension://",
+      ),
+      "Ordinary Firefox public getURL remains native",
     );
     for (const operation of ["message", "port"] as const) {
       success(await command(source, operation), "internal", a, a);

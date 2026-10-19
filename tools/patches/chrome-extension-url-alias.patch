@@ -38,3 +38,179 @@ index bc64f8f..b97d88e 100644
 +   Ci.nsIProtocolHandler.URI_HAS_WEB_EXPOSED_ORIGIN, -1);
 +
  ExtensionManager.init();
+diff --git a/modules/ExtensionActions.sys.mjs b/modules/ExtensionActions.sys.mjs
+--- a/modules/ExtensionActions.sys.mjs
++++ b/modules/ExtensionActions.sys.mjs
+@@ -329,7 +329,12 @@
+         // root.
+         // For internal consistency, we currently resolve both relative to the
+         // calling context.
+-        let url = details.popup && context.uri.resolve(details.popup);
++        const chromeId = ExtensionUtils.getChromeExtensionId(extension);
++        const popup = details.popup &&
++          ExtensionUtils.canonicalizeChromeExtensionResourceURL(extension, details.popup);
++        // Chrome resolves popup paths against the extension root. Preserve the
++        // original context-relative Gecko behavior for ordinary extensions.
++        let url = popup && (chromeId ? extension.baseURI : context.uri).resolve(popup);
+ 
+         if (url && !context.checkLoadURL(url)) {
+           return Promise.reject({ message: `Access denied for URL ${url}` });
+@@ -347,7 +352,7 @@
+         if (
+           url &&
+           !url.startsWith(extension.baseURI.spec) &&
+-          (context.extension.manifestVersion >= 3 ||
++          (chromeId || context.extension.manifestVersion >= 3 ||
+             lazy.MV2_ACTION_POPURL_RESTRICTED)
+         ) {
+           return Promise.reject({ message: `Access denied for URL ${url}` });
+@@ -356,7 +361,14 @@
+         this.setPropertyFromDetails(details, "popup", url);
+       },
+       getPopup: details => {
+-        return this.getPropertyFromDetails(details, "popup");
++        const popup = this.getPropertyFromDetails(details, "popup");
++        if (popup && ExtensionUtils.getChromeExtensionId(extension)) {
++          const uri = Services.io.newURI(popup);
++          if (uri.prePath === extension.baseURI.prePath) {
++            return ExtensionUtils.getExtensionPublicURL(extension, uri.pathQueryRef);
++          }
++        }
++        return popup;
+       },
+     };
+   }
+diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
+--- a/modules/ExtensionParent.sys.mjs
++++ b/modules/ExtensionParent.sys.mjs
+@@ -312,6 +312,22 @@
+       url: source.url,
+     };
+ 
++    if (publicId && typeof source.url === "string") {
++      // Only presentation to a Chrome receiver changes. Keep native routing and
++      // principals, and never label a web page or another extension as own.
++      try {
++        const uri = Services.io.newURI(source.url);
++        if (uri.schemeIs("moz-extension") &&
++            uri.prePath === sourceExtension.baseURI.prePath) {
++          sender.url = ExtensionUtils.getExtensionPublicURL(
++            sourceExtension, uri.pathQueryRef
++          );
++        }
++      } catch {
++        // A missing/invalid source resource is never promoted to a Chrome alias.
++      }
++    }
++
+     if (JSWindowActorParent.isInstance(source.actor)) {
+       let { currentWindowContext, top } = source.actor.browsingContext;
+       let browser = top.embedderElement;
+@@ -333,8 +349,10 @@
+       // We intend the serialization of null principals *and* file scheme to be
+       // "null".
+       sender.origin = new URL(principal.originNoSuffix).origin;
+-    } else if (source.verified) {
+-      sender.origin = `moz-extension://${extension.uuid}`;
++    } else if (source.verified && sourceExtension) {
++      // A verified Worker has no WindowGlobal principal here. Its installed
++      // source owns this origin; the receiving extension may be different.
++      sender.origin = `moz-extension://${sourceExtension.uuid}`;
+     }
+ 
+     return sender;
+diff --git a/modules/ExtensionUtils.sys.mjs b/modules/ExtensionUtils.sys.mjs
+--- a/modules/ExtensionUtils.sys.mjs
++++ b/modules/ExtensionUtils.sys.mjs
+@@ -338,6 +338,43 @@
+     return url.schemeIs("moz-extension");
+   }
+   return false;
++}
++
++// Public Chrome URLs are presentation/resource aliases only. Keep internal
++// extension.getURL/baseURI/principals, schema resolution and IPC addresses native.
++function getExtensionPublicURL(extension, path) {
++  const id = getChromeExtensionId(extension);
++  if (!id) return extension.getURL(path);
++  // Match Chrome's UrlFromPathAndId fixed-prefix construction. Resolving path
++  // against a base would let absolute or protocol-relative input change origin.
++  const slash = path.startsWith("/") ? "" : "/";
++  // Chrome registers its extension scheme as a standard hierarchical GURL;
++  // Gecko's dynamically registered alias uses the unknown-scheme parser.
++  // A fixed-own-host standard URI gives the same path canonicalization
++  // (including backslashes). This constructs a string, never a channel.
++  const canonical = Services.io.newURI(`https://${id}${slash}${path}`);
++  if (canonical.host !== id || canonical.userPass || canonical.port !== -1) {
++    throw new ExtensionError("Invalid public Chrome extension URL");
++  }
++  return "chrome-extension:" + canonical.spec.slice("https:".length);
++}
++
++// Use only at an API boundary which accepts an absolute own resource URL.
++// Foreign aliases cannot become privileged own URLs, including public WAR URLs.
++function canonicalizeChromeExtensionResourceURL(extension, value) {
++  const id = getChromeExtensionId(extension);
++  if (!id || !/^chrome-extension:/i.test(value)) return value;
++  let alias;
++  try { alias = new URL(value); } catch {
++    throw new ExtensionError("Invalid Chrome extension resource URL");
++  }
++  if (alias.protocol !== "chrome-extension:" || alias.hostname !== id ||
++      alias.username || alias.password || alias.port) {
++    throw new ExtensionError("Resource URL must belong to the extension");
++  }
++  // Concatenate the path; resolving a // path could replace the native host.
++  return Services.io.newURI(extension.baseURI.prePath +
++    alias.pathname + alias.search + alias.hash).spec;
+ }
+ 
+ /**
+@@ -396,6 +433,8 @@
+   promiseEvent,
+   promiseObserved,
+   promiseTimeout,
++  getExtensionPublicURL,
++  canonicalizeChromeExtensionResourceURL,
+   DefaultMap,
+   DefaultWeakMap,
+   ExtensionError,
+diff --git a/chrome/toolkit/content/extensions/child/ext-extension.js b/chrome/toolkit/content/extensions/child/ext-extension.js
+--- a/chrome/toolkit/content/extensions/child/ext-extension.js
++++ b/chrome/toolkit/content/extensions/child/ext-extension.js
+@@ -8,7 +8,7 @@
+   getAPI(context) {
+     let api = {
+       getURL(url) {
+-        return context.extension.getURL(url);
++        return ExtensionUtils.getExtensionPublicURL(context.extension, url);
+       },
+ 
+       get lastError() {
+diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/toolkit/content/extensions/child/ext-runtime.js
+--- a/chrome/toolkit/content/extensions/child/ext-runtime.js
++++ b/chrome/toolkit/content/extensions/child/ext-runtime.js
+@@ -217,7 +217,7 @@
+         id: ExtensionUtils.getChromeExtensionId(extension) || extension.id,
+ 
+         getURL(url) {
+-          return extension.getURL(url);
++          return ExtensionUtils.getExtensionPublicURL(extension, url);
+         },
+ 
+         getDocumentId(target) {
+diff --git a/chrome/toolkit/content/extensions/parent/ext-offscreen.js b/chrome/toolkit/content/extensions/parent/ext-offscreen.js
+--- a/chrome/toolkit/content/extensions/parent/ext-offscreen.js
++++ b/chrome/toolkit/content/extensions/parent/ext-offscreen.js
+@@ -93,7 +93,10 @@
+               "Only a single offscreen document may be created."
+             );
+           }
+-          const uri = Services.io.newURI(extension.baseURI.resolve(options.url));
++          const resource = ExtensionUtils.canonicalizeChromeExtensionResourceURL(
++            extension, options.url
++          );
++          const uri = Services.io.newURI(extension.baseURI.resolve(resource));
+           if (!uri.schemeIs("moz-extension") ||
+               uri.prePath !== extension.baseURI.prePath) {
+             throw new ExtensionUtils.ExtensionError(

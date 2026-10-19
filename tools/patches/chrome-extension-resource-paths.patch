@@ -1,0 +1,32 @@
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -1086,7 +1086,12 @@
+   constructor(context, messageManager, localAPICan, contextData) {
+     this.context = context;
+     this.messageManager = messageManager;
+-    this.url = contextData.url;
++    // Chrome extension resource paths are rooted at the extension, including
++    // schema ExtensionURL arguments from nested documents and Workers. Keep
++    // the real context URI and proxy metadata in contextData unchanged.
++    this.url = ExtensionUtils.getChromeExtensionId(context.extension)
++      ? context.extension.baseURI.spec
++      : contextData.url;
+ 
+     // The root namespace of all locally implemented APIs. If an extension calls
+     // an API that does not exist in this object, then the implementation is
+diff --git a/chrome/toolkit/content/extensions/parent/ext-scripting.js b/chrome/toolkit/content/extensions/parent/ext-scripting.js
+--- a/chrome/toolkit/content/extensions/parent/ext-scripting.js
++++ b/chrome/toolkit/content/extensions/parent/ext-scripting.js
+@@ -72,7 +72,10 @@
+ 
+   if (details.files) {
+     for (const file of details.files) {
+-      let url = context.uri.resolve(file);
++      const baseURI = ExtensionUtils.getChromeExtensionId(context.extension)
++        ? context.extension.baseURI
++        : context.uri;
++      let url = baseURI.resolve(file);
+       if (!tab.extension.isExtensionURL(url)) {
+         throw new ExtensionError(
+           "Files to be injected must be within the extension"

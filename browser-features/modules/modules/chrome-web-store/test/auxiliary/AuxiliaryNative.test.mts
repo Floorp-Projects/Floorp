@@ -8,6 +8,7 @@ import {
   runTests,
 } from "../../../../../chrome/test/utils/test_harness.ts";
 import { assertAuxiliaryDefaults } from "./auxiliary-defaults.mts";
+import { selectAuxiliaryFontPair } from "./auxiliary-font-fixture.mts";
 import type {
   AuxiliaryOrdinaryApis,
   AuxiliaryTtsModule,
@@ -46,9 +47,11 @@ async function testNativeAuxiliary(): Promise<void> {
       "the packaged media candidate must include compiled font and speech backends",
     );
   }
+  const selectedFontPair = nativeFonts ? await selectAuxiliaryFontPair() : null;
   const background = `
   const results = [];
   let speechEvidence = null;
+  let fontEvidence = null;
   const check = (name, value) => { if (!value) throw new Error(name); results.push(name); };
   const expectReject = async (name, action, match) => {
     try { await action(); } catch (error) { check(name, match.test(error.message)); return; }
@@ -85,15 +88,24 @@ async function testNativeAuxiliary(): Promise<void> {
       await new Promise(resolve => setTimeout(resolve,50));
       check('font size real change events', changes.some(e => e.pixelSize === 23 && e.levelOfControl === 'controlled_by_this_extension'));
       if (${nativeFonts}) {
-        const a = fonts.find(f => f.fontId === 'DejaVu Sans') || fonts[0];
-        const b = fonts.find(f => f.fontId === 'DejaVu Serif') || fonts[1];
+        const selected = ${JSON.stringify(selectedFontPair)};
+        const a = fonts.find(f => f.fontId === selected.fontIds[0]);
+        const b = fonts.find(f => f.fontId === selected.fontIds[1]);
+        check('validated Worker font pair is publicly installed', Boolean(a && b));
+        fontEvidence = {selected, latin:null, cyrillic:null};
         const events = [];
         chrome.fontSettings.onFontChanged.addListener(e => events.push(e));
         await chrome.fontSettings.setFont({script:'Latn',genericFamily:'serif',fontId:a.fontId});
         await chrome.fontSettings.setFont({script:'Cyrl',genericFamily:'serif',fontId:b.fontId});
         check('Latin script value', (await chrome.fontSettings.getFont({script:'Latn',genericFamily:'serif'})).fontId === a.fontId);
-        check('Worker Latin script uses real font', Math.abs(await workerMeasure('20px serif','Floorp text') - await workerMeasure('20px '+JSON.stringify(a.fontId),'Floorp text')) < 0.01);
-        check('Worker Cyrillic script uses real font', Math.abs(await workerMeasure('20px serif','Кириллица') - await workerMeasure('20px '+JSON.stringify(b.fontId),'Кириллица')) < 0.01);
+        const latinGeneric = await workerMeasure('20px serif','Floorp text');
+        const latinExplicit = await workerMeasure('20px '+JSON.stringify(a.fontId),'Floorp text');
+        fontEvidence.latin = {fontId:a.fontId,genericWidth:latinGeneric,explicitWidth:latinExplicit};
+        check('Worker Latin script uses real font', Math.abs(latinGeneric - latinExplicit) < 0.01);
+        const cyrillicGeneric = await workerMeasure('20px serif','Кириллица');
+        const cyrillicExplicit = await workerMeasure('20px '+JSON.stringify(b.fontId),'Кириллица');
+        fontEvidence.cyrillic = {fontId:b.fontId,genericWidth:cyrillicGeneric,explicitWidth:cyrillicExplicit};
+        check('Worker Cyrillic script uses real font', Math.abs(cyrillicGeneric - cyrillicExplicit) < 0.01);
         check('Cyrillic separate value', (await chrome.fontSettings.getFont({script:'Cyrl',genericFamily:'serif'})).fontId === b.fontId);
         await chrome.fontSettings.setFont({genericFamily:'sansserif',fontId:a.fontId});
         check('global script value', (await chrome.fontSettings.getFont({genericFamily:'sansserif'})).fontId === a.fontId);
@@ -167,8 +179,8 @@ async function testNativeAuxiliary(): Promise<void> {
           check('replacement final event', replacement.some(e=>['interrupted','cancelled','end'].includes(e.type)));
         }
       }
-      document.title = JSON.stringify({ok:true,results,voices:voices.length,nativeFonts:${nativeFonts},nativeSpeech:${nativeSpeech},speechEvidence});
-    } catch(error) {document.title=JSON.stringify({ok:false,results,error:String(error),stack:error.stack});}
+      document.title = JSON.stringify({ok:true,results,voices:voices.length,nativeFonts:${nativeFonts},nativeSpeech:${nativeSpeech},speechEvidence,fontEvidence});
+    } catch(error) {document.title=JSON.stringify({ok:false,results,error:String(error),stack:error.stack,fontEvidence});}
   });
   document.title='auxiliary-ready';
   `;

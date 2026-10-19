@@ -46,7 +46,7 @@ new file mode 100644
 index 0000000..a8a46b2
 --- /dev/null
 +++ b/browser/chrome/browser/content/browser/parent/ext-sidePanel.js
-@@ -0,0 +1,435 @@
+@@ -0,0 +1,436 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -136,7 +136,8 @@ index 0000000..a8a46b2
 +
 +  resolvePath(path) {
 +    const { extension } = this;
-+    const url = extension.baseURI.resolve(path);
++    const resource = ExtensionUtils.canonicalizeChromeExtensionResourceURL(extension, path);
++    const url = extension.baseURI.resolve(resource);
 +    const uri = Services.io.newURI(url);
 +    if (
 +      !path || uri.scheme !== extension.baseURI.scheme ||

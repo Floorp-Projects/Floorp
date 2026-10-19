@@ -1650,10 +1650,10 @@ index 78e5e28..cd71265 100644
    }
  };
 diff --git a/chrome/toolkit/content/extensions/parent/ext-storage.js b/chrome/toolkit/content/extensions/parent/ext-storage.js
-index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f0607b4d6 100644
+index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..d8cab67a09728cb60b3a15de2b6dd8dc30a1338c 100644
 --- a/chrome/toolkit/content/extensions/parent/ext-storage.js
 +++ b/chrome/toolkit/content/extensions/parent/ext-storage.js
-@@ -19,13 +19,13 @@ ChromeUtils.defineLazyGetter(this, "extensionStorageSync", () => {
+@@ -19,13 +19,13 @@
    // TODO bug 1637465: Remove Kinto-based implementation.
    if (Services.prefs.getBoolPref("webextensions.storage.sync.kinto")) {
      const { extensionStorageSyncKinto } = ChromeUtils.importESModule(
@@ -1669,7 +1669,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
    );
    return extensionStorageSync;
  });
-@@ -34,10 +34,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
+@@ -34,10 +34,10 @@
    this,
    "prefStorageSyncEnabled",
    "webextensions.storage.sync.enabled",
@@ -1682,7 +1682,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
    const EXCEPTION_MESSAGE =
      "The storage API will not work with a temporary addon ID. " +
      "Please add an explicit addon ID to your manifest. " +
-@@ -89,7 +89,7 @@ const lookupManagedStorage = async (extensionId, context) => {
+@@ -89,7 +89,7 @@
    let info = await NativeManifests.lookupManifest(
      "storage",
      extensionId,
@@ -1691,7 +1691,19 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
    );
    if (info) {
      return ExtensionStorage._serializableMap(info.manifest.data);
-@@ -115,6 +115,7 @@ const getManagedStorageManifestData = async (extension, context) => {
+@@ -106,6 +106,11 @@
+   }
+ 
+   if (!lookup) {
++    if (ExtensionUtils.getChromeExtensionId(extension)) {
++      // Chrome exposes an empty, read-only managed store without a policy.
++      // Leave the absent lookup uncached so a later policy can still appear.
++      return ExtensionStorage._serializableMap({});
++    }
+     throw new ExtensionError("Managed storage manifest not found");
+   }
+ 
+@@ -115,6 +120,7 @@
  this.storage = class extends ExtensionAPIPersistent {
    constructor(extension) {
      super(extension);
@@ -1699,7 +1711,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
  
      const messageName = `Extension:StorageLocalOnChanged:${extension.uuid}`;
      Services.ppmm.addMessageListener(messageName, this);
-@@ -123,12 +124,38 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -123,12 +129,38 @@
      };
    }
  
@@ -1740,7 +1752,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
        });
  
        // Session storage is not exposed to content scripts, and `context` does
-@@ -137,16 +164,21 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -137,16 +169,21 @@
        if (
          !context ||
          context.envType === "addon_parent" ||
@@ -1766,7 +1778,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
        });
  
        return {
-@@ -155,45 +187,51 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -155,45 +192,51 @@
            unregisterSession?.();
            unregisterSync();
          },
@@ -1830,7 +1842,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
          },
        };
      },
-@@ -204,16 +242,16 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -204,16 +247,16 @@
      ExtensionStorage.addOnChangedListener(extensionId, onStorageLocalChanged);
      ExtensionStorageIDB.addOnChangedListener(
        extensionId,
@@ -1850,7 +1862,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
        );
      };
    }
-@@ -236,12 +274,12 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -236,12 +279,12 @@
      extensionStorageSync.addOnChangedListener(
        extension,
        onStorageSyncChanged,
@@ -1865,7 +1877,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
        );
        // May be void if ExtensionStorageSyncKinto.sys.mjs was not used.
        // ExtensionStorageSync.sys.mjs does not use the context.
-@@ -269,7 +307,7 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -269,7 +312,7 @@
    getAPI(context) {
      let { extension } = context;
  
@@ -1874,7 +1886,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
        storage: {
          local: {
            async callMethodInParentProcess(method, args) {
-@@ -281,7 +319,7 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -281,7 +324,7 @@
              const persisted = extension.hasPermission("unlimitedStorage");
              const db = await ExtensionStorageIDB.open(
                res.storagePrincipal.deserialize(this, true),
@@ -1883,7 +1895,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
              );
              try {
                const changes = await db[method](...args);
-@@ -295,7 +333,7 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -295,7 +338,7 @@
                    error: err,
                    extensionId: extension.id,
                    storageMethod: method,
@@ -1892,7 +1904,7 @@ index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..bbf3cc5cec97f28994b2f3bc976ffa4f
                ).message;
                return Promise.reject({
                  message: String(normalizedError),
-@@ -437,5 +475,44 @@ this.storage = class extends ExtensionAPIPersistent {
+@@ -437,5 +480,44 @@
          }).api(),
        },
      };
