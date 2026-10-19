@@ -96,6 +96,8 @@ export function bindWorkspaceSyncFocusTooltip(
     const current = indicator();
     if (
       dismissed || !node.isConnected || targetDocument.activeElement !== node ||
+      Services.focus.activeWindow !== targetDocument.defaultView ||
+      !targetDocument.hasFocus() ||
       current.state !== "attention" || !current.error
     ) {
       hide();

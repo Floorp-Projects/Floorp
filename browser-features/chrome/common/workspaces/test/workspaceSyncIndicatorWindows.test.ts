@@ -312,6 +312,44 @@ async function testRealWindowsKeepIndependentIndicators(): Promise<void> {
       survivorNode.getAttribute("aria-label")?.includes(reason),
       "the accessible description includes the same complete reason",
     );
+    window.focus();
+    await waitFor(
+      () =>
+        Object.is(Services.focus.activeWindow, window) &&
+        document.hasFocus() &&
+        !document.documentElement.matches(":-moz-window-inactive"),
+      "the existing runner becomes active while the survivor keeps its error",
+    );
+    await waitFor(
+      () => tooltip.state === "closed",
+      "native window deactivation closes the survivor's explanation",
+    );
+    let inactiveShows = 0;
+    const onInactiveShowing = () => inactiveShows++;
+    tooltip.addEventListener("popupshowing", onInactiveShowing);
+    try {
+      notify();
+      await new Promise<void>((resolve) =>
+        Services.tm.dispatchToMainThread(resolve)
+      );
+      assert(
+        !Object.is(Services.focus.activeWindow, survivor) &&
+          !survivor.document.hasFocus(),
+        "the survivor stays inactive during its controller revision",
+      );
+      assertEquals(
+        inactiveShows,
+        0,
+        "a background revision must not show an error popup",
+      );
+      assertEquals(
+        tooltip.state,
+        "closed",
+        "a background error stays visually hidden",
+      );
+    } finally {
+      tooltip.removeEventListener("popupshowing", onInactiveShowing);
+    }
     errors.clear();
     notify();
     await check(owned[1], 1, "selected", "survivor error cleared");

@@ -89,6 +89,16 @@ async function waitForUI(
   }
 }
 
+async function activateTestWindow(): Promise<void> {
+  window.focus();
+  await waitForUI(
+    () =>
+      Object.is(Services.focus.activeWindow, window) && document.hasFocus() &&
+      !document.documentElement.matches(":-moz-window-inactive"),
+    "the test window becomes natively active before exercising focus",
+  );
+}
+
 async function withEnglish(test: () => void | Promise<void>): Promise<void> {
   assert(
     i18next.isInitialized,
@@ -329,6 +339,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
   void
 > {
   await withEnglish(async () => {
+    await activateTestWindow();
     const boundary = createBoundary();
     const originalData = workspacesDataStore.data;
     const seededData = new Map(
@@ -775,6 +786,7 @@ async function testFocusedErrorTooltipUsesNativePopupAndCleansUp(): Promise<
   void
 > {
   await withEnglish(async () => {
+    await activateTestWindow();
     const boundary = createBoundary();
     const [workspaceId, setWorkspaceId] = createSignal(boundary.firstId);
     const host = document.createXULElement("toolbar");
