@@ -24,6 +24,20 @@ from process_census import BINDING_KEYS, load_abi, prepare_abi
 HERE = Path(__file__).resolve().parent
 TIMEOUT = 3
 VARIANTS = ('lean', 'support-preimport')
+WORKER_CONTROL_CASE = ('test_helper_import_preflight.WorkloadTests.'
+    'test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+CONTROL_FAILURE_CODES = (
+    'helper-import-arguments', 'helper-import-binding-environment', 'helper-import-child-cleanup',
+    'helper-import-control-failed', 'helper-import-control-group', 'helper-import-disk-binding',
+    'helper-import-disk-cleanup', 'helper-import-disk-removal', 'helper-import-graph',
+    'helper-import-insufficient-load', 'helper-import-lean-unavailable', 'helper-import-load-duration',
+    'helper-import-load-ended-early', 'helper-import-platform', 'helper-import-preflight-failed',
+    'helper-import-receipt-write', 'helper-import-sample-arguments', 'helper-import-sample-unavailable',
+    'helper-import-stage-cleanup', 'helper-import-task-directory', 'helper-import-tmp-directory',
+    'helper-import-variant-graph', 'helper-import-worker-arguments', 'helper-import-worker-barrier',
+    'helper-import-worker-exit', 'helper-import-worker-ready', 'helper-import-worker-ready-timeout',
+    'helper-import-worker-receipt', 'helper-import-worker-mode', 'helper-import-worker-write',
+    'helper-import-workload-directory', 'helper-import-workload-failed', 'helper-import-workload-receipt')
 GRAPH_FIELDS = ('qa_core', 'support', 'process_census', 'darwin_activity', 'ssl',
                 'urllib.request', 'http.client', 'socket', 'subprocess', 'ctypes')
 WRAPPER = '''import json,os,runpy,sys
@@ -44,7 +58,8 @@ def safe_error(error):
         'permission' if isinstance(error, PermissionError) else
         'os-error' if isinstance(error, OSError) else
         'failure' if isinstance(error, Failure) else 'exception',
-        'errno': error.errno if isinstance(error, OSError) and type(error.errno) is int else None}
+        'errno': error.errno if isinstance(error, OSError) and type(error.errno) is int else None,
+        'failureCode': str(error) if isinstance(error, Failure) and str(error) in CONTROL_FAILURE_CODES else None}
 
 
 def persist(path, result, label):
@@ -62,11 +77,140 @@ def persist(path, result, label):
 
 def number(value, *, integer=False, signed=False):
     valid = type(value) is int if integer else type(value) in (int, float)
-    return value if valid and math.isfinite(value) and abs(value) < 2**63 and (signed or value >= 0) else None
+    return value if valid and abs(value) < 2**63 and math.isfinite(value) and (signed or value >= 0) else None
 
 
 def choice(value, allowed, fallback='other'):
     return value if type(value) is str and value in allowed else fallback
+
+
+def worker_control_projection(value):
+    """Pure, bounded fixture receipt. Invalid input never becomes valid on readback."""
+    valid = isinstance(value, dict)
+    value = value if valid else {}
+    valid = valid and value.get('valid', True) is True
+    def check(condition):
+        nonlocal valid
+        valid = valid and condition
+    def enum(item, options, *, optional=False):
+        if optional and item is None:
+            return None
+        if type(item) is str and item in options:
+            return item
+        check(False)
+        return None
+    def numeric(item, *, integer=True, optional=True, signed=False, maximum=2**63-1):
+        if optional and item is None:
+            return None
+        projected = number(item, integer=integer, signed=signed)
+        if projected is None or abs(projected) > maximum:
+            check(False)
+            return None
+        return projected
+    def boolean(item, *, optional=False):
+        if optional and item is None:
+            return None
+        if type(item) is bool:
+            return item
+        check(False)
+        return None
+    def error(item, *, first=False, cleanup=False):
+        if item is None:
+            return None
+        if not isinstance(item, dict):
+            check(False)
+            return None
+        row = {'kind': enum(item.get('kind'), ('timeout', 'permission', 'process-lookup',
+            'os-error', 'failure', 'exception', 'interrupted')),
+            'errno': numeric(item.get('errno'), maximum=2**31-1),
+            'failureCode': enum(item.get('failureCode'), CONTROL_FAILURE_CODES, optional=True)}
+        if first:
+            row.update(phase=enum(item.get('phase'), ('setup', 'worker-launch', 'worker-ready', 'worker-group',
+                'worker-barrier', 'worker-wait', 'worker-measurements', 'assertions', 'cleanup',
+                'disk-cleanup', 'temporary-cleanup', 'finished')),
+                code=enum(item.get('code'), CONTROL_FAILURE_CODES))
+        if cleanup:
+            row['operation'] = enum(item.get('operation'), ('poll', 'terminate', 'wait', 'kill',
+                'wait-after-kill', 'close-stream', 'collect-cleanup'))
+        return row
+    def entries(item):
+        if not isinstance(item, list):
+            check(False)
+            return []
+        check(len(item) <= 2)
+        rows, seen = [], set()
+        for row in item[:2]:
+            if not isinstance(row, dict):
+                check(False)
+                continue
+            index = numeric(row.get('index'), optional=False, maximum=1)
+            check(index not in seen)
+            seen.add(index)
+            rows.append((index, row))
+        return rows
+    check(type(value.get('schema')) is int and value['schema'] == 1)
+    check(value.get('case') == WORKER_CONTROL_CASE and value.get('mode') == 'fixed-iterations')
+    check(type(value.get('iterations')) is int and value['iterations'] == 4)
+    result = {'schema': 1, 'case': WORKER_CONTROL_CASE, 'mode': 'fixed-iterations', 'iterations': 4,
+        'status': enum(value.get('status'), ('passed', 'failed', 'unavailable')) or 'unavailable',
+        'readyWorkers': numeric(value.get('readyWorkers'), optional=False, maximum=2),
+        'barriersReleased': numeric(value.get('barriersReleased'), optional=False, maximum=2),
+        'sameGroupVerified': boolean(value.get('sameGroupVerified')),
+        'firstFailure': error(value.get('firstFailure'), first=True),
+        'workerMeasurements': [], 'cleanup': []}
+    for index, raw in entries(value.get('workerMeasurements')):
+        row = {'index': index, 'status': enum(raw.get('status'), ('passed', 'failed', 'unavailable')),
+            'mode': enum(raw.get('mode'), ('fixed-iterations',), optional=True),
+            'iterations': numeric(raw.get('iterations'), maximum=4),
+            'sameGroupVerified': boolean(raw.get('sameGroupVerified')),
+            'sufficient': boolean(raw.get('sufficient')),
+            'fdClosed': boolean(raw.get('fdClosed'), optional=True),
+            'failurePresent': boolean(raw.get('failurePresent'), optional=True),
+            'exitCode': numeric(raw.get('exitCode'), signed=True, maximum=2**31-1)}
+        for key in ('workerMiB', 'diskMiB', 'touchedBytes', 'cpuIterations', 'cpuHashedBytes',
+                    'diskInitialWriteBytes', 'diskReadIterations', 'diskReadBytes', 'fsyncs'):
+            row[key] = numeric(raw.get(key))
+        row['elapsedSeconds'] = numeric(raw.get('elapsedSeconds'), integer=False, maximum=3600)
+        if row['status'] == 'passed':
+            check(row['mode'] == 'fixed-iterations' and row['iterations'] == 4 and
+                row['workerMiB'] == 1 and row['diskMiB'] == (1 if index == 0 else 0) and
+                row['touchedBytes'] == 1024**2 and row['cpuIterations'] == 4 and
+                row['cpuHashedBytes'] == 4*1024**2 and row['elapsedSeconds'] is not None and
+                row['failurePresent'] is False and row['diskInitialWriteBytes'] == (1024**2 if index == 0 else 0) and
+                row['diskReadIterations'] == (4 if index == 0 else 0) and
+                row['diskReadBytes'] == (4*1024**2 if index == 0 else 0) and
+                row['fsyncs'] == (5 if index == 0 else 0) and
+                row['fdClosed'] is (True if index == 0 else None))
+        result['workerMeasurements'].append(row)
+    for index, raw in entries(value.get('cleanup')):
+        result['cleanup'].append({'index': index, 'reaped': boolean(raw.get('reaped')),
+            'exitCode': numeric(raw.get('exitCode'), signed=True, maximum=2**31-1),
+            'failure': error(raw.get('failure'), cleanup=True),
+            'streamCloseFailed': boolean(raw.get('streamCloseFailed', False))})
+    removal = value.get('temporaryDiskRemoval')
+    if not isinstance(removal, dict):
+        check(False)
+        removal = {}
+    result['temporaryDiskRemoval'] = {'status': enum(removal.get('status'),
+        ('unverified', 'absent', 'removed-after-exact-reap')), 'failure': error(removal.get('failure'))}
+    directory = value.get('temporaryDirectoryCleanup')
+    if not isinstance(directory, dict):
+        check(False)
+        directory = {}
+    result['temporaryDirectoryCleanup'] = {'status': enum(directory.get('status'),
+        ('not-created', 'removed-after-exact-reap', 'deferred-unverified', 'failed')),
+        'failure': error(directory.get('failure'))}
+    if result['status'] == 'passed':
+        check(result['readyWorkers'] == result['barriersReleased'] == 2 and result['sameGroupVerified'] is True and
+            result['firstFailure'] is None and len(result['workerMeasurements']) == len(result['cleanup']) == 2 and
+            all(row['status'] == 'passed' and row['sufficient'] is True and row['sameGroupVerified'] is True and
+                row['exitCode'] == 0 for row in result['workerMeasurements']) and
+            all(row['reaped'] is True and row['exitCode'] == 0 and row['failure'] is None and
+                row['streamCloseFailed'] is False for row in result['cleanup']) and
+            result['temporaryDiskRemoval'] == {'status': 'removed-after-exact-reap', 'failure': None} and
+            result['temporaryDirectoryCleanup'] == {'status': 'removed-after-exact-reap', 'failure': None})
+    result['valid'] = bool(valid)
+    return result
 
 
 STAGES = ('census-abi-compile', 'census-abi', 'helper-import-workload')
@@ -273,12 +417,15 @@ def read_ready(child, seconds=15):
     require(bytes(data) == b'ready\n', 'helper-import-worker-ready')
 
 
-def worker(task, seconds, mib, disk_mib=0, index=0):
+def worker(task, seconds, mib, disk_mib=0, index=0, *, iterations=None):
     require(type(seconds) in (int, float) and math.isfinite(seconds) and 0 < seconds <= 90 and
             type(mib) is int and 1 <= mib <= 256 and type(disk_mib) is int and 0 <= disk_mib <= 128 and
-            type(index) is int and 0 <= index <= 2 and (index == 0 or disk_mib == 0),
+            type(index) is int and 0 <= index <= 2 and (index == 0 or disk_mib == 0) and
+            (iterations is None or type(iterations) is int and iterations == 4 and mib == 1 and disk_mib <= 1),
             'helper-import-worker-arguments')
-    result = {'schema': 1, 'index': index, 'status': 'failed', 'seconds': seconds,
+    result = {'schema': 1, 'index': index, 'status': 'failed',
+        'mode': 'duration' if iterations is None else 'fixed-iterations', 'iterations': iterations,
+        'seconds': seconds if iterations is None else None,
         'workerMiB': mib, 'diskMiB': disk_mib, 'touchedBytes': 0, 'cpuIterations': 0,
         'cpuHashedBytes': 0, 'diskInitialWriteBytes': 0, 'diskReadIterations': 0,
         'diskReadBytes': 0, 'fsyncs': 0, 'elapsedSeconds': None, 'fdClosed': None,
@@ -308,7 +455,7 @@ def worker(task, seconds, mib, disk_mib=0, index=0):
                 'helper-import-worker-barrier')
         began = time.monotonic()
         until = began+seconds
-        while time.monotonic() < until:
+        while (time.monotonic() < until if iterations is None else result['cpuIterations'] < iterations):
             hashlib.sha256(memoryview(memory)[:4*1024**2]).digest()
             result['cpuIterations'] += 1
             result['cpuHashedBytes'] += min(len(memory), 4*1024**2)
@@ -342,19 +489,23 @@ def worker(task, seconds, mib, disk_mib=0, index=0):
     return result
 
 
-def worker_measurement(task, index, seconds, mib, disk_mib):
+def worker_measurement(task, index, seconds, mib, disk_mib, *, iterations=None):
     path = task/('worker-'+str(index)+'.json')
     require(not path.is_symlink() and path.stat().st_size <= 8192, 'helper-import-worker-receipt')
     raw = json.loads(path.read_text())
     require(isinstance(raw, dict) and raw.get('schema') == 1 and type(raw.get('index')) is int and
             raw['index'] == index and raw.get('status') in ('passed', 'failed') and
-            type(raw.get('seconds')) in (int, float) and raw['seconds'] == seconds and
             type(raw.get('workerMiB')) is int and raw['workerMiB'] == mib and
             type(raw.get('diskMiB')) is int and raw['diskMiB'] == disk_mib,
             'helper-import-worker-receipt')
+    require((iterations is None and raw.get('mode') == 'duration' and raw.get('iterations') is None and
+             type(raw.get('seconds')) in (int, float) and raw['seconds'] == seconds) or
+            (type(iterations) is int and iterations == 4 and raw.get('mode') == 'fixed-iterations' and
+             type(raw.get('iterations')) is int and raw['iterations'] == iterations and raw.get('seconds') is None),
+            'helper-import-worker-mode')
     keys = ('touchedBytes', 'cpuIterations', 'cpuHashedBytes', 'diskInitialWriteBytes',
             'diskReadIterations', 'diskReadBytes', 'fsyncs')
-    value = {key: raw[key] for key in ('schema', 'index', 'status', 'seconds', 'workerMiB', 'diskMiB')}
+    value = {key: raw[key] for key in ('schema', 'index', 'status', 'mode', 'iterations', 'seconds', 'workerMiB', 'diskMiB')}
     for key in keys:
         require(number(raw.get(key), integer=True) is not None, 'helper-import-worker-receipt')
         value[key] = raw[key]
@@ -364,7 +515,9 @@ def worker_measurement(task, index, seconds, mib, disk_mib):
     value['sufficient'] = (value['status'] == 'passed' and not value['failurePresent'] and
         value['touchedBytes'] == mib*1024**2 and value['cpuIterations'] > 0 and
         value['cpuHashedBytes'] == value['cpuIterations']*min(mib, 4)*1024**2 and
-        value['elapsedSeconds'] is not None and value['elapsedSeconds'] >= seconds and
+        value['elapsedSeconds'] is not None and
+        (iterations is None and value['elapsedSeconds'] >= seconds or
+         iterations is not None and value['cpuIterations'] == iterations) and
         value['diskInitialWriteBytes'] == disk_mib*1024**2 and
         (disk_mib == 0 and value['diskReadBytes'] == value['diskReadIterations'] == value['fsyncs'] == 0 or
          disk_mib > 0 and value['fdClosed'] is True and value['diskReadIterations'] > 0 and
@@ -604,9 +757,11 @@ def main():
     parser.add_argument('--disk-mib', type=int, default=64)
     parser.add_argument('--worker-disk-mib', type=int, default=0)
     parser.add_argument('--worker-index', type=int, default=0)
+    parser.add_argument('--worker-iterations', type=int)
     args = parser.parse_args()
     if args.worker:
-        result = worker(args.task, args.seconds, args.mib, args.worker_disk_mib, args.worker_index)
+        result = worker(args.task, args.seconds, args.mib, args.worker_disk_mib, args.worker_index,
+                        iterations=args.worker_iterations)
         return 0 if result['status'] == 'passed' else 1
     validate_arguments(args.seconds, args.pairs, args.workers, args.mib, args.disk_mib)
     if args.workload:

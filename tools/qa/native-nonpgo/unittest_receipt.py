@@ -18,6 +18,11 @@ HELD_CHILD_CASE = ('test_actual_held_child_rejects_until_exit_and_preserves_unre
                    '(test_census_convergence.ConvergenceGuards.'
                    'test_actual_held_child_rejects_until_exit_and_preserves_unrelated_candidates)')
 
+HELPER_WORKER_ID = ('test_helper_import_preflight.WorkloadTests.'
+                    'test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+HELPER_WORKER_METHOD = HELPER_WORKER_ID.rsplit('.', 1)[1]
+HELPER_WORKER_CASE = HELPER_WORKER_METHOD + ' (' + HELPER_WORKER_ID + ')'
+
 
 def held_resource_public(value):
     from census_convergence import safe_query,safe_reason,read_diagnostic
@@ -211,6 +216,7 @@ def receipt(path, *, recording=False):
         checksum = hashlib.sha256()
         failures, counts, outcomes, current, diagnostics = [], [], [], None, []
         held_diagnostics=[];held_seen=False
+        worker_diagnostics=[];worker_seen=False
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         with os.fdopen(descriptor, 'rb') as stream:
             info = os.fstat(stream.fileno())
@@ -223,6 +229,21 @@ def receipt(path, *, recording=False):
                 line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', raw.decode('utf-8')).rstrip('\n\r')
                 if line.startswith(HELD_CHILD_CASE) and ' ... skipped ' not in line:
                     held_seen=True
+                if line.startswith(HELPER_WORKER_CASE) and ' ... skipped ' not in line:
+                    worker_seen=True
+                worker_marker=line.find('{"helperImportControlDiagnostic":')
+                if worker_marker>=0:
+                    from helper_import_preflight import worker_control_projection
+                    require(not worker_diagnostics,'unittest-helper-worker-duplicate')
+                    require(line[:worker_marker].strip()==HELPER_WORKER_CASE+' ...',
+                            'unittest-helper-worker-case-binding')
+                    worker=json.loads(line[worker_marker:])
+                    require(set(worker)=={'helperImportControlDiagnostic'},'unittest-helper-worker-marker')
+                    projected=worker_control_projection(worker['helperImportControlDiagnostic'])
+                    require(projected.get('valid') is True and projected.get('case')==HELPER_WORKER_ID and
+                            (HELPER_WORKER_METHOD,HELPER_WORKER_ID) in identities,
+                            'unittest-helper-worker-shape')
+                    worker_diagnostics.append(projected)
                 held_marker=line.find('{"heldChildBoundaryControl":')
                 if held_marker>=0:
                     require(not held_diagnostics,'unittest-held-child-duplicate')
@@ -278,13 +299,18 @@ def receipt(path, *, recording=False):
                     'unittest-log-changed')
         require(len(counts) == len(outcomes) == 1, 'unittest-log-result-missing')
         require(held_seen==bool(held_diagnostics),'unittest-held-child-missing')
+        worker_seen=worker_seen or any(row['test']==HELPER_WORKER_ID for row in failures)
+        require(worker_seen==bool(worker_diagnostics),'unittest-helper-worker-missing')
         outcome = outcomes[0]
         require(outcome['status']!='passed' or all(row['status']=='passed' for row in held_diagnostics),
                 'unittest-held-child-status')
+        require(outcome['status']!='passed' or all(row['status']=='passed' for row in worker_diagnostics),
+                'unittest-helper-worker-status')
         require(sum(row['outcome']=='ERROR' for row in failures)==outcome['errors'] and
                 sum(row['outcome']=='FAIL' for row in failures)==outcome['failures'], 'unittest-log-case-count')
         return {**result, **outcome, 'complete': True, 'total':counts[0][0], 'seconds':counts[0][1],
                 'bytes':total, 'sha256':checksum.hexdigest(), 'cases':failures,
-                'nativeSelectionDiagnostics':diagnostics,'heldChildBoundaryDiagnostics':held_diagnostics}
+                'nativeSelectionDiagnostics':diagnostics,'heldChildBoundaryDiagnostics':held_diagnostics,
+                'helperWorkerControlDiagnostics':worker_diagnostics}
     except Exception as error:
         return {**result, 'errorType':type(error).__name__}

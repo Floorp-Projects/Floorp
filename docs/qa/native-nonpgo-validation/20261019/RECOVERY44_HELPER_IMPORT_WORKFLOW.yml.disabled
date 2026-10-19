@@ -1,0 +1,82 @@
+name: Short Intel helper import and contention controls
+'on':
+  push:
+    branches: [codex/mac-native-helper-import-recovery44-20261019]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: isolated-intel-checkpoint-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  FLOORP_FIXTURE_SHA: FIXTURE_PENDING_REVIEW
+  HARNESS_SHA: cbe45a7d7480d713b2c40a9ed348420126e6ccb0
+  RUNTIME_SHA: 7dd619742b25567e479eeda97ae071d10542ad0b
+jobs:
+  producer:
+    name: checkpoint-producer
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - name: Bound the initial diagnostic execution
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = Floorp-Projects/Floorp-Runtime
+          test "$GITHUB_REF" = refs/heads/codex/mac-native-helper-import-recovery44-20261019
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test '${{ github.event.created }}' = true
+          test '${{ github.event.before }}' = 0000000000000000000000000000000000000000
+          TASK_PYTHON="$RUNNER_TOOL_CACHE/Python/3.12.10/x64/bin/python3"
+          test -x "$TASK_PYTHON"
+          echo "TASK_PYTHON=$TASK_PYTHON" >> "$GITHUB_ENV"
+          echo "TASK_ROOT=$RUNNER_TEMP/floorp-native-checkpoint" >> "$GITHUB_ENV"
+      - name: Checkout immutable reviewed fixture
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: Floorp-Projects/Floorp
+          ref: ${{ env.FLOORP_FIXTURE_SHA }}
+          path: fixture
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Establish this job's fresh clock and private root
+        timeout-minutes: 3
+        env:
+          CHECKPOINT_READ_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/checkpoint_transfer.py init --role producer --task "$TASK_ROOT"
+      - name: Test trusted completion and pre-cleanup recording contracts
+        timeout-minutes: 16
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/completion_preflight.py --task "$TASK_ROOT" --expected-qa-tests 226 --expected-recording-tests 14
+      - name: Compare fresh helper imports under bounded owned contention
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          "$TASK_PYTHON" fixture/tools/qa/native-nonpgo/helper_import_preflight.py --task "$TASK_ROOT"
+      - name: Verify both bounded diagnostic receipts
+        if: always()
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          "$TASK_PYTHON" - <<'PYCODE'
+          import json,os,pathlib
+          passed=True
+          for filename,label in (('completion-preflight.json','completion'),('helper-import-preflight.json','helper-import')):
+              current=False
+              try:
+                  path=pathlib.Path(os.environ['TASK_ROOT'])/filename
+                  if not path.is_symlink() and 0<path.stat().st_size<=1024**2:
+                      value=json.loads(path.read_text())
+                      current=value['status']=='passed' and value['firstFailure'] is None and value['monitorFailure'] is None
+              except (OSError,ValueError,KeyError,TypeError):
+                  pass
+              passed=passed and current
+              print(json.dumps({'diagnostic':label,'status':'passed' if current else 'failed',
+                                'newArtifacts':0,'fullBuildQualification':'NOT_TESTED'}),flush=True)
+          raise SystemExit(0 if passed else 1)
+          PYCODE

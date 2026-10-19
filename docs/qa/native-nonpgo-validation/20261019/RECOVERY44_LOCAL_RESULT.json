@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY44_FINITE_WORKER_CONTROL_LOCAL_VALIDATION",
+  "baselineFixture": "8135abdafa050694c32cf87dce680bd61816fb22",
+  "precedingTerminalEvidence": "782bba8af6205cf1e815826187f6270d2c520b32",
+  "decision": "LOCAL_TESTS_PASS_ACTUAL_INTEL_MAC_PENDING",
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/helper_import_preflight.py",
+      "bytes": 43224,
+      "sha256": "f93c73d3fa3bfd0cf96ddf32a661b819be38aff41da9c7d638ee9adcde4c6458"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_helper_import_preflight.py",
+      "bytes": 53953,
+      "sha256": "c62ea24e48fcea1267f7b5f39d0aeccbd86a6dca2a254de89150d54edadf6eb7"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 19380,
+      "sha256": "451acce17afde8ff03a12ecd5cc838812e40f9a6be60e4032d23a5af470a10aa"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 20665,
+      "sha256": "68e207c7b96f53b7a4cca2848693deddb72fc9af9a957d7ce989964dd33d6529"
+    }
+  ],
+  "fullQA": {
+    "complete": true,
+    "rawContentPublished": false,
+    "exceptionTextPublished": false,
+    "total": 446,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 17,
+    "status": "passed",
+    "seconds": 25.323,
+    "bytes": 88627,
+    "sha256": "c5ccd5cb561bf14c33c449f2393b69c69e273ffafb2d4bef8fd2469c50074340",
+    "cases": [],
+    "nativeSelectionDiagnostics": [],
+    "heldChildBoundaryDiagnostics": [],
+    "helperWorkerControlDiagnostics": [
+      {
+        "schema": 1,
+        "case": "test_helper_import_preflight.WorkloadTests.test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+        "mode": "fixed-iterations",
+        "iterations": 4,
+        "status": "passed",
+        "readyWorkers": 2,
+        "barriersReleased": 2,
+        "sameGroupVerified": true,
+        "firstFailure": null,
+        "workerMeasurements": [
+          {
+            "index": 0,
+            "status": "passed",
+            "mode": "fixed-iterations",
+            "iterations": 4,
+            "sameGroupVerified": true,
+            "sufficient": true,
+            "fdClosed": true,
+            "failurePresent": false,
+            "exitCode": 0,
+            "workerMiB": 1,
+            "diskMiB": 1,
+            "touchedBytes": 1048576,
+            "cpuIterations": 4,
+            "cpuHashedBytes": 4194304,
+            "diskInitialWriteBytes": 1048576,
+            "diskReadIterations": 4,
+            "diskReadBytes": 4194304,
+            "fsyncs": 5,
+            "elapsedSeconds": 0.006676413002423942
+          },
+          {
+            "index": 1,
+            "status": "passed",
+            "mode": "fixed-iterations",
+            "iterations": 4,
+            "sameGroupVerified": true,
+            "sufficient": true,
+            "fdClosed": null,
+            "failurePresent": false,
+            "exitCode": 0,
+            "workerMiB": 1,
+            "diskMiB": 0,
+            "touchedBytes": 1048576,
+            "cpuIterations": 4,
+            "cpuHashedBytes": 4194304,
+            "diskInitialWriteBytes": 0,
+            "diskReadIterations": 0,
+            "diskReadBytes": 0,
+            "fsyncs": 0,
+            "elapsedSeconds": 0.002517838991479948
+          }
+        ],
+        "cleanup": [
+          {
+            "index": 0,
+            "reaped": true,
+            "exitCode": 0,
+            "failure": null,
+            "streamCloseFailed": false
+          },
+          {
+            "index": 1,
+            "reaped": true,
+            "exitCode": 0,
+            "failure": null,
+            "streamCloseFailed": false
+          }
+        ],
+        "temporaryDiskRemoval": {
+          "status": "removed-after-exact-reap",
+          "failure": null
+        },
+        "temporaryDirectoryCleanup": {
+          "status": "removed-after-exact-reap",
+          "failure": null
+        },
+        "valid": true
+      }
+    ],
+    "exitCode": 0,
+    "wallSeconds": 25.661
+  },
+  "executedPlatform": "Linux",
+  "requiredActualMac": {
+    "qaTests": 226,
+    "recordingTests": 14,
+    "skipped": 0,
+    "realContendedSeconds": 60,
+    "pairsPerPhase": 6,
+    "workers": 2,
+    "workerMiB": 128,
+    "diskMiB": 64
+  },
+  "preservedProductionContract": {
+    "helperTimeoutSeconds": 3,
+    "resourceLimitsChanged": false,
+    "retryPolicyChanged": false,
+    "cleanupPolicyChanged": false,
+    "SDKPolicyChanged": false,
+    "storageOrRetentionChanged": false,
+    "nativeHarnessChanged": false,
+    "productSourceChanged": false
+  },
+  "unchangedHelperFunctionAST": [
+    "persist",
+    "choice",
+    "runner_failure",
+    "monitor_projection",
+    "stage_projection",
+    "validate_arguments",
+    "helper_environment",
+    "import_graph",
+    "timeout_context",
+    "sample",
+    "read_ready",
+    "load_presence",
+    "disk_binding",
+    "workload",
+    "select_abi",
+    "run_experiment"
+  ],
+  "helperChanges": [
+    "allowlisted fixed Failure code retention",
+    "numeric range check before finite conversion for enormous integers",
+    "explicit optional finite worker mode and receipt mode separation",
+    "case bound idempotent worker control projection",
+    "CLI wiring for explicit finite worker mode"
+  ],
+  "independentFocused": {
+    "total": 54,
+    "passed": 54,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 14.506,
+    "privateLogBytes": 12700,
+    "privateLogSHA256": "450f20edbb98961341b26778ac659cb0b2e7f5a25ad6a0346c056b73e8fc3312"
+  },
+  "syntax": {
+    "short44": {
+      "shellBlocks": 5,
+      "inlinePython": 1,
+      "jobs": 1
+    },
+    "inactiveLong45": {
+      "shellBlocks": 15,
+      "inlinePython": 5,
+      "jobs": 2
+    }
+  },
+  "resolvedPrelaunchFinding": {
+    "priority": "P2",
+    "condition": "Temporary directory removal must require exact-child reap and closed streams; no implicit deletion while cleanup is unknown",
+    "negativeCases": [
+      "short cleanup rows",
+      "unreaped child",
+      "denied cleanup"
+    ],
+    "status": "FIXED_AND_INDEPENDENTLY_VERIFIED"
+  },
+  "limits": {
+    "recovery43InnerCause": "UNKNOWN",
+    "recovery42TimeoutCause": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN",
+    "fullHostXUL": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "coldCacheOrProductionRSSReproductionClaimed": false,
+    "newCIStarted": false,
+    "newArtifacts": 0
+  }
+}

@@ -4,7 +4,8 @@ import json
 import tempfile
 import unittest
 
-from unittest_receipt import receipt,held_child_public,held_child_control_passed,held_resource_public,HELD_CHILD_CASE
+from unittest_receipt import (receipt,held_child_public,held_child_control_passed,held_resource_public,
+    HELD_CHILD_CASE,HELPER_WORKER_CASE,HELPER_WORKER_ID,HELPER_WORKER_METHOD)
 
 
 class UnittestReceiptGuards(unittest.TestCase):
@@ -33,6 +34,82 @@ class UnittestReceiptGuards(unittest.TestCase):
         marker=json.dumps({'heldChildBoundaryControl':value})
         self.path.write_text(HELD_CHILD_CASE+' ... '+marker+'\nok\n'+extra+'Ran 1 test in 1.0s\nOK\n')
         return marker
+
+    def worker_value(self):
+        from test_helper_import_preflight import control_value
+        return control_value()
+
+    def write_worker(self,value,*,failed=False,extra=''):
+        marker=json.dumps({'helperImportControlDiagnostic':value})
+        ending=('FAIL\nFAIL: '+HELPER_WORKER_METHOD+' ('+HELPER_WORKER_ID+')\n'
+            'AssertionError: PRIVATE-ASSERTION\nRan 1 test in 1.0s\nFAILED (failures=1)\n') if failed else (
+            'ok\n'+extra+'Ran 1 test in 1.0s\nOK\n')
+        self.path.write_text(HELPER_WORKER_CASE+' ... '+marker+'\n'+ending)
+        return marker
+
+    def test_helper_worker_success_is_case_bound_and_idempotent_without_private_extras(self):
+        from helper_import_preflight import worker_control_projection
+        value=self.worker_value();value.update(rawPID=8675309,private='PRIVATE-WORKER')
+        for row in value['workerMeasurements']+value['cleanup']:
+            row.update(argv='PRIVATE-ARGV',path='PRIVATE-PATH',rawPID=8675309)
+        self.write_worker(value)
+        result=receipt(self.path)
+        self.assertTrue(result['complete'])
+        control=result['helperWorkerControlDiagnostics'][0]
+        self.assertEqual(control['case'],HELPER_WORKER_ID)
+        self.assertEqual(control['mode'],'fixed-iterations')
+        self.assertEqual(control['iterations'],4)
+        self.assertEqual(control['temporaryDirectoryCleanup']['status'],'removed-after-exact-reap')
+        self.assertEqual(worker_control_projection(control),control)
+        self.assertNotIn('PRIVATE-',json.dumps(result));self.assertNotIn('8675309',json.dumps(result))
+
+    def test_helper_worker_failure_preserves_primary_and_independent_cleanup(self):
+        value=self.worker_value();value.update(status='failed',firstFailure={
+            'phase':'worker-ready','code':'helper-import-worker-ready-timeout',
+            'kind':'timeout','errno':None,'failureCode':None,'private':'PRIVATE-FIRST'})
+        value['cleanup'][0]['failure']={'operation':'wait','kind':'os-error','errno':5,
+            'failureCode':None,'private':'PRIVATE-CLEANUP'}
+        value['temporaryDiskRemoval']={'status':'unverified','failure':None}
+        value['temporaryDirectoryCleanup']={'status':'deferred-unverified','failure':None}
+        self.write_worker(value,failed=True)
+        result=receipt(self.path)
+        self.assertTrue(result['complete']);self.assertEqual(result['failures'],1)
+        control=result['helperWorkerControlDiagnostics'][0]
+        self.assertEqual(control['firstFailure']['phase'],'worker-ready')
+        self.assertEqual(control['firstFailure']['code'],'helper-import-worker-ready-timeout')
+        self.assertEqual(control['cleanup'][0]['failure']['errno'],5)
+        self.assertEqual(control['temporaryDiskRemoval']['status'],'unverified')
+        self.assertEqual(control['temporaryDirectoryCleanup']['status'],'deferred-unverified')
+        self.assertNotIn('PRIVATE-',json.dumps(result))
+
+    def test_helper_worker_missing_duplicate_truncated_or_wrong_case_marker_is_unknown(self):
+        marker=self.write_worker(self.worker_value());original=self.path.read_text()
+        for text in (original.replace(marker,''),original.replace('\nok\n','\n'+marker+'\nok\n'),
+            original.replace(marker,marker[:-1]),
+            original.replace(HELPER_WORKER_CASE+' ... ',''),
+            original.replace(HELPER_WORKER_CASE,'test_unknown (test_unknown.Case.test_unknown)')):
+            self.path.write_text(text)
+            self.assertFalse(receipt(self.path)['complete'])
+
+    def test_helper_worker_malformed_private_or_false_pass_cannot_qualify(self):
+        for change in ({'schema':True},{'case':'PRIVATE-CASE'},{'mode':'duration'},
+            {'iterations':True},{'valid':False},{'readyWorkers':float('nan')},
+            {'workerMeasurements':[]},{'cleanup':[]},
+            {'temporaryDirectoryCleanup':{'status':'deferred-unverified','failure':None}},
+            {'temporaryDiskRemoval':{'status':'unverified','failure':None}}):
+            self.write_worker({**self.worker_value(),**change})
+            value=receipt(self.path)
+            self.assertFalse(value['complete']);self.assertNotIn('PRIVATE-',json.dumps(value))
+        value=self.worker_value();value['status']='failed'
+        self.write_worker(value)
+        self.assertFalse(receipt(self.path)['complete'])
+
+    def test_helper_worker_skipped_case_requires_no_marker(self):
+        self.path.write_text(HELPER_WORKER_CASE+' ... skipped PRIVATE-REASON\n'
+            'Ran 1 test in 1.0s\nOK (skipped=1)\n')
+        value=receipt(self.path)
+        self.assertTrue(value['complete']);self.assertEqual(value['skipped'],1)
+        self.assertEqual(value['helperWorkerControlDiagnostics'],[])
 
     def test_held_child_natural_zero_and_safe_deadline_are_distinct_nonqualification_controls(self):
         for outcome in ('natural-zero','safely-rejected-deadline'):

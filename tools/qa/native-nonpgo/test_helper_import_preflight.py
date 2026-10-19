@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -35,6 +36,65 @@ def graph(variant):
 def measured(variant, phase, ordinal, *_args):
     return {'variant': variant, 'phase': phase, 'ordinal': ordinal, 'status': 'measured',
         'timeoutObserved': False, 'cleanup': {'reaped': True}, 'measurement': {'snapshotEntries': 1}}
+
+
+def control_value():
+    rows = []
+    for index in range(2):
+        rows.append({'index': index, 'status': 'passed', 'mode': 'fixed-iterations', 'iterations': 4,
+            'sameGroupVerified': True, 'sufficient': True, 'fdClosed': True if index == 0 else None,
+            'failurePresent': False, 'exitCode': 0, 'workerMiB': 1, 'diskMiB': 1 if index == 0 else 0,
+            'touchedBytes': 1024**2, 'cpuIterations': 4, 'cpuHashedBytes': 4*1024**2,
+            'diskInitialWriteBytes': 1024**2 if index == 0 else 0,
+            'diskReadIterations': 4 if index == 0 else 0, 'diskReadBytes': 4*1024**2 if index == 0 else 0,
+            'fsyncs': 5 if index == 0 else 0, 'elapsedSeconds': .01})
+    return {'schema': 1, 'case': hp.WORKER_CONTROL_CASE, 'mode': 'fixed-iterations', 'iterations': 4,
+        'status': 'passed', 'readyWorkers': 2, 'barriersReleased': 2, 'sameGroupVerified': True,
+        'firstFailure': None, 'workerMeasurements': rows,
+        'cleanup': [{'index': index, 'reaped': True, 'exitCode': 0, 'failure': None} for index in range(2)],
+        'temporaryDiskRemoval': {'status': 'removed-after-exact-reap', 'failure': None},
+        'temporaryDirectoryCleanup': {'status': 'removed-after-exact-reap', 'failure': None}}
+
+
+@contextlib.contextmanager
+def timed_doubles(task):
+    """Test timed orchestration without racing a subsecond real child lifetime."""
+    clock = SimpleNamespace(now=0.)
+    class Child:
+        def __init__(self):
+            self.returncode = None
+            self.stdout, self.stdin = io.BytesIO(), io.BytesIO()
+        def poll(self):
+            if clock.now >= 60 and self.returncode is None:
+                self.returncode = 0
+            return self.returncode
+        def wait(self, timeout=None):
+            clock.now = max(clock.now, 60.)
+            self.returncode = 0 if self.returncode is None else self.returncode
+            return self.returncode
+        def terminate(self): self.returncode = -15
+        def kill(self): self.returncode = -9
+    children = [Child(), Child()]
+    next_child = iter(children)
+    def spawn(args, **kwargs):
+        if '--worker-iterations' in args or kwargs.get('start_new_session'):
+            raise AssertionError('duration orchestration changed worker scope or mode')
+        return next(next_child)
+    def measurement(_task, index, seconds, mib, disk_mib):
+        return {'index': index, 'status': 'passed', 'mode': 'duration', 'iterations': None,
+            'seconds': seconds, 'workerMiB': mib, 'diskMiB': disk_mib,
+            'touchedBytes': mib*1024**2, 'cpuIterations': 10, 'cpuHashedBytes': 10*mib*1024**2,
+            'diskInitialWriteBytes': disk_mib*1024**2, 'diskReadIterations': 10 if disk_mib else 0,
+            'diskReadBytes': 10*disk_mib*1024**2, 'fsyncs': 11 if disk_mib else 0,
+            'elapsedSeconds': seconds, 'fdClosed': True if disk_mib else None,
+            'failurePresent': False, 'sufficient': True}
+    def advance(seconds): clock.now += seconds
+    (task/'disk-control.bin').write_bytes(b'x'*1024**2)
+    with mock.patch.object(hp.time, 'monotonic', side_effect=lambda: clock.now), \
+         mock.patch.object(hp.time, 'sleep', side_effect=advance), \
+         mock.patch.object(hp.subprocess, 'Popen', side_effect=spawn), mock.patch.object(hp, 'read_ready'), \
+         mock.patch.object(hp, 'worker_measurement', side_effect=measurement):
+        yield children
 
 
 class SamplingTests(unittest.TestCase):
@@ -146,27 +206,288 @@ class SamplingTests(unittest.TestCase):
 
 class WorkloadTests(unittest.TestCase):
     def test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions(self):
+        from inventory_stress import cleanup_children
+        result = {'schema': 1, 'case': hp.WORKER_CONTROL_CASE, 'status': 'unavailable',
+            'mode': 'fixed-iterations', 'iterations': 4, 'readyWorkers': 0, 'barriersReleased': 0,
+            'sameGroupVerified': False, 'firstFailure': None, 'workerMeasurements': [], 'cleanup': [],
+            'temporaryDiskRemoval': {'status': 'unverified', 'failure': None},
+            'temporaryDirectoryCleanup': {'status': 'not-created', 'failure': None}}
+        children, groups = [], []
+        backing = primary = task = None
+        all_launched_reaped = False
+        phase = 'setup'
+        def record(error):
+            nonlocal primary
+            if primary is None:
+                primary = error
+                result['firstFailure'] = {'phase': phase, 'code': 'helper-import-control-failed', **hp.safe_error(error)}
+        try:
+            task = Path(tempfile.mkdtemp(prefix='helper-import-control-'))
+            result['temporaryDirectoryCleanup']['status'] = 'deferred-unverified'
+            with mock.patch.dict(os.environ, environment()):
+                phase = 'worker-launch'
+                for index in range(2):
+                    children.append(subprocess.Popen([sys.executable, str(Path(hp.__file__).resolve()), '--worker',
+                        '--task', str(task), '--seconds', '60', '--mib', '1', '--worker-index', str(index),
+                        '--worker-disk-mib', '1' if index == 0 else '0', '--worker-iterations', '4'],
+                        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                        env=hp.helper_environment(os.environ)))
+                phase = 'worker-ready'
+                for child in children:
+                    hp.read_ready(child)
+                    result['readyWorkers'] += 1
+                phase = 'worker-group'
+                for child in children:
+                    same = os.getpgid(child.pid) == os.getpgrp()
+                    groups.append(same)
+                    hp.require(same, 'helper-import-control-group')
+                result['sameGroupVerified'] = all(groups) and len(groups) == 2
+                backing = hp.disk_binding(task/'disk-control.bin', 1024**2)
+                phase = 'worker-barrier'
+                for child in children:
+                    child.stdin.write(b'1'); child.stdin.flush(); child.stdin.close()
+                    result['barriersReleased'] += 1
+                phase = 'worker-wait'
+                for child in children:
+                    hp.require(child.wait(timeout=15) == 0, 'helper-import-worker-exit')
+        except BaseException as error:
+            record(error)
+        finally:
+            try:
+                phase = 'cleanup'
+                try:
+                    rows = cleanup_children(children)
+                    hp.require(isinstance(rows, list) and len(rows) == len(children) and
+                        all(isinstance(row, dict) and type(row.get('index')) is int and row['index'] == index and
+                            type(row.get('reaped')) is bool and
+                            (row.get('exitCode') is None or type(row['exitCode']) is int) and
+                            'failure' in row for index, row in enumerate(rows)), 'helper-import-child-cleanup')
+                    result['cleanup'] = rows
+                except BaseException as error:
+                    record(error)
+                    result['cleanup'] = [{'index': index, 'reaped': False, 'exitCode': None,
+                        'failure': {'operation': 'collect-cleanup', **hp.safe_error(error)}}
+                        for index in range(len(children))]
+                all_launched_reaped = len(result['cleanup']) == len(children) and all(
+                    row['reaped'] is True and type(row['exitCode']) is int and row['failure'] is None and
+                    type(child.returncode) is int and child.returncode == row['exitCode'] and
+                    not row.get('streamCloseFailed') and
+                    all(stream is None or stream.closed is True for stream in (child.stdin, child.stdout))
+                    for row, child in zip(result['cleanup'], children))
+                if not all_launched_reaped:
+                    record(hp.Failure('helper-import-child-cleanup'))
+                phase = 'worker-measurements'
+                for index, child in enumerate(children):
+                    try:
+                        value = hp.worker_measurement(task, index, 60, 1, 1 if index == 0 else 0, iterations=4)
+                    except BaseException as error:
+                        record(error)
+                        value = {'index': index, 'status': 'unavailable', 'sufficient': False}
+                    value['exitCode'] = result['cleanup'][index]['exitCode']
+                    value['sameGroupVerified'] = index < len(groups) and groups[index] is True
+                    result['workerMeasurements'].append(value)
+                phase = 'disk-cleanup'
+                cleanup_complete = len(children) == 2 and all_launched_reaped
+                try:
+                    if backing is not None and cleanup_complete:
+                        hp.require(hp.disk_binding(task/'disk-control.bin', 1024**2) == backing, 'helper-import-disk-binding')
+                        (task/'disk-control.bin').unlink()
+                        hp.require(not os.path.lexists(task/'disk-control.bin'), 'helper-import-disk-removal')
+                        result['temporaryDiskRemoval']['status'] = 'removed-after-exact-reap'
+                    elif task is not None and not os.path.lexists(task/'disk-control.bin'):
+                        result['temporaryDiskRemoval']['status'] = 'absent'
+                except BaseException as error:
+                    result['temporaryDiskRemoval']['failure'] = hp.safe_error(error)
+                    record(error)
+                phase = 'assertions'
+                if primary is None:
+                    self.assertEqual(result['readyWorkers'], 2); self.assertEqual(result['barriersReleased'], 2)
+                    self.assertTrue(result['sameGroupVerified']); self.assertTrue(cleanup_complete)
+                    self.assertTrue(all(row['exitCode'] == 0 for row in result['cleanup']))
+                    self.assertEqual(result['temporaryDiskRemoval']['status'], 'removed-after-exact-reap')
+                    self.assertEqual(len(result['workerMeasurements']), 2)
+                    for index, row in enumerate(result['workerMeasurements']):
+                        self.assertTrue(row['sufficient']); self.assertEqual(row['exitCode'], 0)
+                        self.assertEqual(row['mode'], 'fixed-iterations'); self.assertEqual(row['iterations'], 4)
+                        self.assertIsNone(row['seconds']); self.assertEqual(row['touchedBytes'], 1024**2)
+                        self.assertEqual(row['cpuIterations'], 4); self.assertEqual(row['cpuHashedBytes'], 4*1024**2)
+                        self.assertEqual(row['diskReadBytes'], 4*1024**2 if index == 0 else 0)
+                        self.assertEqual(row['fsyncs'], 5 if index == 0 else 0)
+                        self.assertIs(row['fdClosed'], True if index == 0 else None)
+            except BaseException as error:
+                record(error)
+            finally:
+                phase = 'temporary-cleanup'
+                try:
+                    if task is not None and all_launched_reaped:
+                        shutil.rmtree(task)
+                        hp.require(not os.path.lexists(task), 'helper-import-disk-removal')
+                        result['temporaryDirectoryCleanup']['status'] = 'removed-after-exact-reap'
+                except BaseException as error:
+                    result['temporaryDirectoryCleanup'].update(status='failed', failure=hp.safe_error(error))
+                    record(error)
+                finally:
+                    if primary is None:
+                        try:
+                            self.assertTrue(hp.worker_control_projection({**result, 'status': 'passed'})['valid'])
+                        except BaseException as error:
+                            record(error)
+                    result['status'] = 'passed' if primary is None else 'failed'
+                    print(json.dumps({'helperImportControlDiagnostic': hp.worker_control_projection(result)}), flush=True)
+                if primary is not None:
+                    raise primary
+
+    def test_iterations_mode_is_never_a_duration_measurement_or_production_worker_argument(self):
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()):
+            task = Path(temporary)
+            completed = subprocess.run([sys.executable, str(Path(hp.__file__).resolve()), '--worker',
+                '--task', str(task), '--seconds', '60', '--mib', '1', '--worker-iterations', '4'],
+                input=b'1', capture_output=True, timeout=3, env=hp.helper_environment(os.environ))
+            self.assertEqual(completed.returncode, 0)
+            finite = hp.worker_measurement(task, 0, 60, 1, 0, iterations=4)
+            self.assertTrue(finite['sufficient']); self.assertEqual(finite['cpuIterations'], 4)
+            self.assertIsNone(finite['seconds'])
+            with self.assertRaises(hp.Failure) as denied:
+                hp.worker_measurement(task, 0, 60, 1, 0)
+            self.assertEqual(str(denied.exception), 'helper-import-worker-mode')
+            for invalid in (True, 0, 3, 5):
+                with self.subTest(iterations=invalid), self.assertRaises(hp.Failure):
+                    hp.worker(task, 60, 1, iterations=invalid)
         with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()), \
-             mock.patch.object(hp, 'sample', side_effect=measured), contextlib.redirect_stdout(io.StringIO()):
-            result = hp.workload(Path(temporary), seconds=.25, pairs=2, workers=2, mib=1, disk_mib=1)
-            self.assertEqual(result['status'], 'passed', result['firstFailure'])
-            self.assertFalse((Path(temporary)/'disk-control.bin').exists())
-            self.assertEqual(result['temporaryDiskRemoval']['status'], 'removed-after-exact-reap')
-            self.assertEqual(result['readyWorkers'], 2); self.assertEqual(result['barriersReleased'], 2)
-            self.assertTrue(all(row['reaped'] and row['exitCode'] == 0 and row['failure'] is None for row in result['cleanup']))
-            self.assertTrue(all(row['sufficient'] and row['cpuIterations'] > 0 and row['elapsedSeconds'] >= .25
-                                and row['exitCode'] == 0 for row in result['workerMeasurements']))
-            self.assertEqual(result['workerMeasurements'][0]['diskInitialWriteBytes'], 1024**2)
-            self.assertGreaterEqual(result['workerMeasurements'][0]['diskReadBytes'], 1024**2)
-            self.assertGreaterEqual(result['workerMeasurements'][0]['fsyncs'], 2)
-            self.assertEqual(result['workerMeasurements'][1]['diskInitialWriteBytes'], 0)
-            for row in result['samples']:
-                if row['phase'] == 'contended':
-                    self.assertTrue(row['loadBefore']['complete']); self.assertTrue(row['loadAfter']['complete'])
-            self.assertEqual([row['variant'] for row in result['samples']], list(hp.VARIANTS)*4)
-            for phase in ('idle', 'contended'):
-                self.assertEqual(result['counts'][phase]['lean']['validMeasurements'], 2)
-            self.assertNotIn('PRIVATE', json.dumps(result)); self.assertEqual(result['osCacheState'], 'unknown-cold-or-warm')
+             timed_doubles(Path(temporary)), mock.patch.object(hp, 'sample', side_effect=measured), \
+             contextlib.redirect_stdout(io.StringIO()):
+            timed = hp.workload(Path(temporary), seconds=60, pairs=2, workers=2, mib=1, disk_mib=1)
+        self.assertEqual(timed['status'], 'passed'); self.assertEqual(timed['loadSeconds'], 60)
+        self.assertEqual(timed['samplingReserveSeconds'], 8)
+        self.assertEqual([row['variant'] for row in timed['samples']], list(hp.VARIANTS)*4)
+        for row in timed['samples']:
+            if row['phase'] == 'contended':
+                self.assertTrue(row['loadBefore']['complete']); self.assertTrue(row['loadAfter']['complete'])
+
+    def test_tiny_fixture_failure_emits_one_safe_marker_after_independent_reap_and_disk_cleanup(self):
+        original = hp.worker_measurement
+        def failure(task, index, *_args, **kwargs):
+            if index == 0:
+                raise PermissionError(errno.EACCES, 'PRIVATE-MEASUREMENT')
+            return original(task, index, *_args, **kwargs)
+        case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+        outcome = unittest.TestResult()
+        with mock.patch.object(hp, 'worker_measurement', side_effect=failure), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            case.run(outcome)
+        self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(outcome.failures), 0)
+        self.assertEqual(len(output.getvalue().splitlines()), 1)
+        receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+        self.assertEqual(receipt['status'], 'failed'); self.assertTrue(receipt['valid'])
+        self.assertEqual(receipt['firstFailure']['phase'], 'worker-measurements')
+        self.assertEqual(receipt['firstFailure']['kind'], 'permission')
+        self.assertEqual(receipt['firstFailure']['errno'], errno.EACCES)
+        self.assertTrue(all(row['reaped'] and row['exitCode'] == 0 for row in receipt['cleanup']))
+        self.assertEqual(receipt['temporaryDiskRemoval']['status'], 'removed-after-exact-reap')
+        self.assertNotIn('PRIVATE', output.getvalue())
+
+    def test_tiny_fixture_failed_spawn_keeps_primary_and_still_emits_one_structured_marker(self):
+        case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+        outcome = unittest.TestResult()
+        with mock.patch.object(hp.subprocess, 'Popen', side_effect=PermissionError(errno.EACCES, 'PRIVATE-SPAWN')), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            case.run(outcome)
+        self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(output.getvalue().splitlines()), 1)
+        receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+        self.assertEqual(receipt['status'], 'failed'); self.assertTrue(receipt['valid'])
+        self.assertEqual(receipt['firstFailure']['phase'], 'worker-launch')
+        self.assertEqual(receipt['firstFailure']['errno'], errno.EACCES)
+        self.assertEqual(receipt['cleanup'], []); self.assertEqual(receipt['workerMeasurements'], [])
+        self.assertEqual(receipt['temporaryDiskRemoval']['status'], 'absent')
+        self.assertNotIn('PRIVATE', output.getvalue())
+
+    def test_tiny_fixture_short_cleanup_result_is_unknown_and_marker_still_reaches_outer_finally(self):
+        from inventory_stress import cleanup_children
+        for mode in ('short', 'unreaped', 'denied'):
+            proven = []
+            def incomplete(children):
+                rows = cleanup_children(children)
+                proven.extend(row['reaped'] and row['exitCode'] == 0 for row in rows)
+                if mode == 'short':
+                    return rows[:1]
+                rows[0].update(reaped=False, exitCode=None, failure=None if mode == 'unreaped' else
+                    {'operation': 'wait', 'kind': 'permission', 'errno': errno.EPERM})
+                return rows
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as outer:
+                task = Path(outer)/'control'; task.mkdir(mode=0o700)
+                case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+                outcome = unittest.TestResult()
+                with mock.patch.object(tempfile, 'mkdtemp', return_value=str(task)), \
+                     mock.patch('inventory_stress.cleanup_children', side_effect=incomplete), \
+                     mock.patch.object(shutil, 'rmtree') as remove, contextlib.redirect_stdout(io.StringIO()) as output:
+                    case.run(outcome)
+                self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(output.getvalue().splitlines()), 1)
+                receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+                self.assertTrue(receipt['valid']); self.assertEqual(receipt['status'], 'failed')
+                self.assertEqual(receipt['firstFailure']['phase'], 'cleanup')
+                self.assertEqual(receipt['firstFailure']['failureCode'], 'helper-import-child-cleanup')
+                self.assertEqual(len(receipt['cleanup']), 2)
+                self.assertFalse(receipt['cleanup'][0]['reaped']); self.assertIsNone(receipt['cleanup'][0]['exitCode'])
+                self.assertEqual(receipt['temporaryDiskRemoval']['status'], 'unverified')
+                self.assertEqual(receipt['temporaryDirectoryCleanup']['status'], 'deferred-unverified')
+                remove.assert_not_called(); self.assertTrue(task.is_dir()); self.assertTrue((task/'disk-control.bin').is_file())
+                # The injected receipt is unknown; independent real-child proof permits this test's outer teardown.
+                self.assertEqual(proven, [True, True])
+                if mode == 'denied':
+                    self.assertEqual(receipt['cleanup'][0]['failure']['errno'], errno.EPERM)
+
+    def test_tiny_fixture_directory_setup_failure_also_emits_exactly_one_safe_marker(self):
+        case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+        outcome = unittest.TestResult()
+        with mock.patch.object(tempfile, 'mkdtemp', side_effect=PermissionError(errno.EACCES, 'PRIVATE-SETUP')), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            case.run(outcome)
+        self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(output.getvalue().splitlines()), 1)
+        receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+        self.assertTrue(receipt['valid']); self.assertEqual(receipt['status'], 'failed')
+        self.assertEqual(receipt['firstFailure']['phase'], 'setup')
+        self.assertEqual(receipt['firstFailure']['errno'], errno.EACCES)
+        self.assertEqual(receipt['cleanup'], []); self.assertNotIn('PRIVATE', output.getvalue())
+
+    def test_tiny_fixture_directory_cleanup_failure_preserves_metrics_and_emits_single_failed_marker(self):
+        directory = shutil.rmtree
+        def fail(task):
+            directory(task)
+            raise PermissionError(errno.EACCES, 'PRIVATE-TEMPORARY-CLEANUP')
+        case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+        outcome = unittest.TestResult()
+        with mock.patch.object(shutil, 'rmtree', side_effect=fail), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            case.run(outcome)
+        self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(output.getvalue().splitlines()), 1)
+        receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+        self.assertTrue(receipt['valid']); self.assertEqual(receipt['status'], 'failed')
+        self.assertEqual(receipt['firstFailure']['phase'], 'temporary-cleanup')
+        self.assertEqual(receipt['firstFailure']['errno'], errno.EACCES)
+        self.assertTrue(all(row['reaped'] and row['exitCode'] == 0 for row in receipt['cleanup']))
+        self.assertTrue(all(row['sufficient'] for row in receipt['workerMeasurements']))
+        self.assertEqual(receipt['temporaryDiskRemoval']['status'], 'removed-after-exact-reap')
+        self.assertEqual(receipt['temporaryDirectoryCleanup']['status'], 'failed')
+        self.assertEqual(receipt['temporaryDirectoryCleanup']['failure']['errno'], errno.EACCES)
+        self.assertNotIn('PRIVATE', output.getvalue())
+
+    def test_tiny_fixture_primary_survives_independent_directory_cleanup_denial(self):
+        directory = shutil.rmtree
+        def fail(task):
+            directory(task)
+            raise PermissionError(errno.EPERM, 'PRIVATE-SECONDARY')
+        case = WorkloadTests('test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions')
+        outcome = unittest.TestResult()
+        with mock.patch.object(hp.subprocess, 'Popen', side_effect=PermissionError(errno.EACCES, 'PRIVATE-PRIMARY')), \
+             mock.patch.object(shutil, 'rmtree', side_effect=fail), contextlib.redirect_stdout(io.StringIO()) as output:
+            case.run(outcome)
+        self.assertEqual(len(outcome.errors), 1); self.assertEqual(len(output.getvalue().splitlines()), 1)
+        receipt = json.loads(output.getvalue())['helperImportControlDiagnostic']
+        self.assertTrue(receipt['valid']); self.assertEqual(receipt['status'], 'failed')
+        self.assertEqual(receipt['firstFailure']['phase'], 'worker-launch')
+        self.assertEqual(receipt['firstFailure']['errno'], errno.EACCES)
+        self.assertEqual(receipt['temporaryDirectoryCleanup']['failure']['errno'], errno.EPERM)
+        self.assertNotIn('PRIVATE', output.getvalue())
 
     def test_partial_spawn_failure_still_reaps_first_owned_child_and_preserves_cause(self):
         child = mock.Mock(returncode=None); child.poll.return_value = None
@@ -190,8 +511,9 @@ class WorkloadTests(unittest.TestCase):
             if variant == 'support-preimport': value.update(status='timeout', timeoutObserved=True)
             return value
         with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()), \
-             mock.patch.object(hp, 'sample', side_effect=unknown), contextlib.redirect_stdout(io.StringIO()):
-            value = hp.workload(Path(temporary), seconds=.2, pairs=2, workers=2, mib=1, disk_mib=1)
+             timed_doubles(Path(temporary)), mock.patch.object(hp, 'sample', side_effect=unknown), \
+             contextlib.redirect_stdout(io.StringIO()):
+            value = hp.workload(Path(temporary), seconds=60, pairs=2, workers=2, mib=1, disk_mib=1)
         self.assertEqual(value['status'], 'passed', value['firstFailure']); self.assertIsNone(value['firstFailure'])
         self.assertIsNotNone(value['firstControlFailure'])
         self.assertEqual(value['counts']['idle']['support-preimport']['timeouts'], 2)
@@ -215,14 +537,14 @@ class WorkloadTests(unittest.TestCase):
         self.assertTrue(row['failurePresent']); self.assertNotIn('PRIVATE', json.dumps(row))
 
     def test_insufficient_actual_work_is_failure_even_if_process_exits_zero(self):
-        def insufficient(*args):
-            value = original(*args); value['sufficient'] = False; return value
-        original = hp.worker_measurement
         with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()), \
-             mock.patch.object(hp, 'sample', side_effect=measured), \
-             mock.patch.object(hp, 'worker_measurement', side_effect=insufficient), \
+             timed_doubles(Path(temporary)), mock.patch.object(hp, 'sample', side_effect=measured), \
              contextlib.redirect_stdout(io.StringIO()):
-            value = hp.workload(Path(temporary), seconds=.15, pairs=2, workers=2, mib=1, disk_mib=1)
+            original = hp.worker_measurement.side_effect
+            def insufficient(*args):
+                value = original(*args); value['sufficient'] = False; return value
+            with mock.patch.object(hp, 'worker_measurement', side_effect=insufficient):
+                value = hp.workload(Path(temporary), seconds=60, pairs=2, workers=2, mib=1, disk_mib=1)
         self.assertEqual(value['status'], 'failed'); self.assertEqual(value['firstFailure']['phase'], 'worker-measurements')
         self.assertTrue(all(row['exitCode'] == 0 for row in value['workerMeasurements']))
         self.assertEqual(value['temporaryDiskRemoval']['status'], 'removed-after-exact-reap')
@@ -235,9 +557,9 @@ class WorkloadTests(unittest.TestCase):
             return original(children, expected) if calls == 1 else {
                 'expectedWorkers': 2, 'runningWorkers': 1, 'complete': False, 'failure': None}
         with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()), \
-             mock.patch.object(hp, 'sample', side_effect=measured), \
+             timed_doubles(Path(temporary)), mock.patch.object(hp, 'sample', side_effect=measured), \
              mock.patch.object(hp, 'load_presence', side_effect=vanished), contextlib.redirect_stdout(io.StringIO()):
-            value = hp.workload(Path(temporary), seconds=.15, pairs=2, workers=2, mib=1, disk_mib=1)
+            value = hp.workload(Path(temporary), seconds=60, pairs=2, workers=2, mib=1, disk_mib=1)
         self.assertEqual(value['status'], 'failed')
         self.assertTrue(value['loadChecks'][-1]['before']['complete'])
         self.assertFalse(value['loadChecks'][-1]['after']['complete'])
@@ -250,10 +572,10 @@ class WorkloadTests(unittest.TestCase):
             rows[0].update(reaped=False, failure={'operation': 'wait', 'kind': 'permission'})
             return rows
         with tempfile.TemporaryDirectory() as temporary, mock.patch.dict(os.environ, environment()), \
-             mock.patch.object(hp, 'sample', side_effect=measured), \
+             timed_doubles(Path(temporary)), mock.patch.object(hp, 'sample', side_effect=measured), \
              mock.patch('inventory_stress.cleanup_children', side_effect=cleanup), \
              contextlib.redirect_stdout(io.StringIO()):
-            value = hp.workload(Path(temporary), seconds=.15, pairs=2, workers=2, mib=1, disk_mib=1)
+            value = hp.workload(Path(temporary), seconds=60, pairs=2, workers=2, mib=1, disk_mib=1)
             self.assertTrue((Path(temporary)/'disk-control.bin').is_file())
         self.assertEqual(value['status'], 'failed'); self.assertEqual(value['firstFailure']['phase'], 'cleanup')
         self.assertEqual(value['temporaryDiskRemoval']['status'], 'unverified')
@@ -266,6 +588,63 @@ class WorkloadTests(unittest.TestCase):
             self.assertNotEqual(hp.disk_binding(path, 1), identity)
             path.unlink(); path.symlink_to(task/'original.bin')
             with self.assertRaises(hp.Failure): hp.disk_binding(path, 1)
+
+
+class ControlProjectionTests(unittest.TestCase):
+    def test_projection_is_pure_idempotent_bounded_and_drops_private_fields_at_every_level(self):
+        value = control_value(); value.update(argv=['PRIVATE'], pid=987654321)
+        value['workerMeasurements'][0].update(path='/PRIVATE', nonce='SECRET', rawPID=987654321)
+        value['cleanup'][0].update(raw='PRIVATE', argv=['PRIVATE'])
+        before = json.dumps(value, sort_keys=True)
+        projected = hp.worker_control_projection(value)
+        self.assertTrue(projected['valid']); self.assertEqual(projected['status'], 'passed')
+        self.assertEqual(hp.worker_control_projection(projected), projected)
+        self.assertEqual(json.dumps(value, sort_keys=True), before)
+        self.assertNotIn('PRIVATE', json.dumps(projected)); self.assertNotIn('987654321', json.dumps(projected))
+        self.assertNotIn('SECRET', json.dumps(projected))
+
+    def test_failed_control_preserves_first_cause_and_cleanup_failure_independently(self):
+        value = control_value(); value.update(status='failed', sameGroupVerified=False,
+            firstFailure={'phase': 'worker-wait', 'code': 'helper-import-control-failed',
+                'kind': 'timeout', 'errno': None, 'failureCode': None, 'message': 'PRIVATE'})
+        value['cleanup'][0].update(reaped=False, exitCode=None,
+            failure={'operation': 'wait-after-kill', 'kind': 'permission', 'errno': errno.EPERM, 'argv': 'PRIVATE'})
+        value['temporaryDiskRemoval'] = {'status': 'unverified', 'failure': None, 'path': 'PRIVATE'}
+        projected = hp.worker_control_projection(value)
+        self.assertTrue(projected['valid']); self.assertEqual(projected['status'], 'failed')
+        self.assertEqual(projected['firstFailure']['kind'], 'timeout')
+        self.assertEqual(projected['cleanup'][0]['failure']['operation'], 'wait-after-kill')
+        self.assertEqual(projected['cleanup'][0]['failure']['errno'], errno.EPERM)
+        self.assertIsNone(projected['cleanup'][0]['exitCode'])
+        self.assertEqual(hp.worker_control_projection(projected), projected)
+        self.assertNotIn('PRIVATE', json.dumps(projected))
+
+    def test_malformed_or_inconsistent_controls_stay_invalid_on_reprojection_without_secret_leaks(self):
+        changes = [{'schema': True}, {'case': 'PRIVATE'}, {'mode': 'duration'}, {'iterations': True},
+            {'readyWorkers': True}, {'barriersReleased': -1}, {'sameGroupVerified': 987654321},
+            {'firstFailure': {'phase': 'PRIVATE', 'code': 'PRIVATE', 'kind': 'PRIVATE', 'errno': 'PRIVATE'}},
+            {'workerMeasurements': [control_value()['workerMeasurements'][0]]*3},
+            {'cleanup': [{'index': 0, 'reaped': False, 'exitCode': None, 'failure': None}]},
+            {'temporaryDiskRemoval': {'status': 'PRIVATE'}}, {'valid': False}]
+        for change in changes:
+            with self.subTest(change=change):
+                value = hp.worker_control_projection({**control_value(), **change})
+                self.assertFalse(value['valid']); self.assertEqual(hp.worker_control_projection(value), value)
+                self.assertNotIn('PRIVATE', json.dumps(value)); self.assertNotIn('987654321', json.dumps(value))
+        for counter in (True, float('nan'), float('inf'), -1, 2**10000):
+            value = control_value(); value['workerMeasurements'][0]['cpuIterations'] = counter
+            projected = hp.worker_control_projection(value)
+            self.assertFalse(projected['valid']); self.assertEqual(hp.worker_control_projection(projected), projected)
+        for raw in (None, [], 'PRIVATE'):
+            projected = hp.worker_control_projection(raw)
+            self.assertFalse(projected['valid']); self.assertEqual(hp.worker_control_projection(projected), projected)
+
+    def test_safe_failure_code_is_allowlisted_and_unknown_exception_text_is_never_copied(self):
+        known = hp.safe_error(hp.Failure('helper-import-load-ended-early'))
+        unknown = hp.safe_error(hp.Failure('PRIVATE-PATH-ARGV-NONCE'))
+        self.assertEqual(known['failureCode'], 'helper-import-load-ended-early')
+        self.assertEqual(known['kind'], 'failure'); self.assertIsNone(unknown['failureCode'])
+        self.assertNotIn('PRIVATE', json.dumps(unknown))
 
 
 class DriverTests(unittest.TestCase):
