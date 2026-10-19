@@ -1,0 +1,297 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY44_FINITE_WORKER_CONTROL_AND_SHORT_MAC_PREFLIGHT_REVIEW",
+  "decision": {
+    "short44": "GO",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "long45": "INACTIVE_CONDITIONAL_VALIDATION_CANDIDATE_AFTER_SHORT_TERMINAL_REVIEW",
+    "actualMac": "NOT_EXECUTED by this review; Linux validation only",
+    "helperTimeoutRepair": "NOT_ESTABLISHED",
+    "fullHostXUL": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "bindings": {
+    "fixture": {
+      "commit": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "tree": "292123aeadd93176414b9276bd79718c1540d85a",
+      "parent": "782bba8af6205cf1e815826187f6270d2c520b32",
+      "changedFiles": 8,
+      "providerFilesFullyRead": 8,
+      "localBytesAndSHA256Match": true
+    },
+    "caller": {
+      "commit": "e4f8e5538dbf191c20539fed3807aea03dc96c41",
+      "tree": "8237400ce4bfdfbc88d2fc94162cc170361c9723",
+      "parent": "5873b369b8193202a370876835fad41d6a353c2b",
+      "onlyChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+      "bytes": 3619,
+      "sha256": "8324747a37390aec7ba289777cff32d1ed2674159d1b1aecead1eeb7dee4c100",
+      "providerBytesExact": true,
+      "renderedDifference": "Fixed fixture placeholder substitution only"
+    },
+    "long45Rendered": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_TRUSTED_CHECKPOINT_WORKFLOW.rendered.yml.disabled",
+      "bytes": 21777,
+      "sha256": "9a672056971fa4c0f457fa56e596194eafbd6f234f3dd3dfe1b1e11f3048b2b4",
+      "fixturePlaceholderOnlySubstitution": true,
+      "callerAndBranchNotCreated": true
+    },
+    "precedingTerminal": {
+      "run": 39194618542,
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_TERMINAL_RESULT.json",
+      "bytes": 5487,
+      "sha256": "003e97c24d0cf5efc04031c9a1a89754d465d31a13e6a8b844c16b6ca6584776",
+      "independentlyReviewed": true,
+      "cause": "UNKNOWN",
+      "realTimedBenchmark": "NOT_EXECUTED"
+    },
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0"
+  },
+  "files": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_HELPER_IMPORT_WORKFLOW.yml.disabled",
+      "bytes": 3601,
+      "sha256": "465f5a95055f7f07eedd8a8df1919a272719be961b460181d9142d87230d9165"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_LOCAL_RESULT.json",
+      "bytes": 6354,
+      "sha256": "0a147617b3e7d46325cdddaf4fdb5f8ccc170867b8db48e5717d743ab993d964"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_WORKER_CONTROL_FIX.md",
+      "bytes": 2529,
+      "sha256": "4d8b4e5f74b7a93b71f493a35125182dd7d8db86be0e38a187114145686de246"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 21759,
+      "sha256": "bd83d4d5c4f3edd3da813f0115ec4809eeed9f8333a9e3f2e668c1ec463e037c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/helper_import_preflight.py",
+      "bytes": 43224,
+      "sha256": "f93c73d3fa3bfd0cf96ddf32a661b819be38aff41da9c7d638ee9adcde4c6458"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_helper_import_preflight.py",
+      "bytes": 53953,
+      "sha256": "c62ea24e48fcea1267f7b5f39d0aeccbd86a6dca2a254de89150d54edadf6eb7"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 20665,
+      "sha256": "68e207c7b96f53b7a4cca2848693deddb72fc9af9a957d7ce989964dd33d6529"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 19380,
+      "sha256": "451acce17afde8ff03a12ecd5cc838812e40f9a6be60e4032d23a5af470a10aa"
+    }
+  ],
+  "independentExecuted": [
+    {
+      "suite": "test_helper_import_preflight test_unittest_receipt",
+      "cwd": "tools/qa/native-nonpgo",
+      "total": 54,
+      "passed": 54,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 14.506,
+      "exitCode": 0,
+      "privateLogBytes": 12700,
+      "privateLogSHA256": "450f20edbb98961341b26778ac659cb0b2e7f5a25ad6a0346c056b73e8fc3312"
+    },
+    {
+      "suite": "python -m unittest discover -v -s .",
+      "cwd": "tools/qa/native-nonpgo",
+      "total": 446,
+      "passed": 429,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 25.244,
+      "exitCode": 0,
+      "privateLogBytes": 88627,
+      "privateLogSHA256": "4def7e9239e248cee8ac591d1cba62fe423a4e6236b607a839d965f045fccc82"
+    }
+  ],
+  "independentControls": {
+    "resourceWarningsAsErrors": true,
+    "bytecodeWriting": false,
+    "rawLogsPublished": false,
+    "realVerboseLogRoundtrip": {
+      "source": "Final 54-case executed log parsed by the actual unittest_receipt",
+      "complete": true,
+      "total": 54,
+      "status": "passed",
+      "singleExactCaseMarker": true,
+      "finiteMode": "fixed-iterations",
+      "iterations": 4,
+      "bothWorkersSufficient": true,
+      "bothExactChildrenReapedZero": true,
+      "sameInheritedGroupVerified": true,
+      "streamsClosed": true,
+      "diskRemoval": "removed-after-exact-reap",
+      "directoryRemoval": "removed-after-exact-reap"
+    },
+    "fullSuiteReceiptRoundtrip": {
+      "complete": true,
+      "total": 446,
+      "skipped": 17,
+      "singleValidWorkerMarker": true
+    },
+    "finiteVsDuration": {
+      "explicitFiniteModeOnly": true,
+      "finiteReceiptSecondsNull": true,
+      "durationReaderRejectsFiniteReceipt": true,
+      "finiteModeNeverPassedToTimedWorkerArguments": true,
+      "fixedIterationsMustEqualFour": true,
+      "workerMemoryMiB": 1,
+      "diskWorkerMiB": 1
+    },
+    "protocol": {
+      "exactVerboseCasePrefixRequired": true,
+      "sourceASTIdentityRequired": true,
+      "oneMarkerRequiredForExecutedCase": true,
+      "duplicateMissingMalformedOrWrongCaseRejected": true,
+      "skippedCaseRequiresNoMarker": true,
+      "failedControlCannotAccompanyPassedSuite": true,
+      "unknownKeysAndPrivateTextNotProjected": true,
+      "invalidProjectionCannotBecomeValidOnReadback": true
+    },
+    "preservedHelperASTs": [
+      "persist",
+      "choice",
+      "runner_failure",
+      "monitor_projection",
+      "stage_projection",
+      "validate_arguments",
+      "helper_environment",
+      "import_graph",
+      "timeout_context",
+      "sample",
+      "read_ready",
+      "load_presence",
+      "disk_binding",
+      "workload",
+      "select_abi",
+      "run_experiment"
+    ],
+    "helperDefinitionChanges": [
+      "allowlisted fixed Failure code retention",
+      "bounded numeric range validation before finite conversion",
+      "explicit finite worker mode and mode-bound reader",
+      "bounded idempotent fixed-case worker control projection",
+      "finite-worker CLI argument wiring"
+    ],
+    "workflowYAMLBashAndInlinePythonValid": true,
+    "selectedActualQASuiteCount": 226,
+    "scopeComparison": "Provider comparison changes only the four reviewed source/test files and four technical documents/templates; production Runner, resource reader, census, checkpoint admission/pack/restore, plan, SDK pins and native harness are unchanged."
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "subject": "Implicit temporary-directory deletion bypassed exact-child cleanup requirement",
+      "resolution": "Use an explicitly owned mkdtemp directory without implicit finalizer deletion. Require all launched exact children to have matching reaped return codes, closed streams and successful cleanup before deleting the private tree. Otherwise preserve deferred-unverified state and the primary failure.",
+      "negativeEvidence": [
+        "short cleanup result",
+        "unreaped result",
+        "denied cleanup"
+      ],
+      "assertions": "All three cases require no rmtree call, retained private directory and backing file, failed status and one safe marker. Negative tests independently reap their real children before their own outer teardown.",
+      "successEvidence": "Real finite child control and actual log parser roundtrip verify bound disk and directory removal only after exact reap."
+    }
+  ],
+  "shortRoute": {
+    "branch": "codex/mac-native-helper-import-recovery44-20261019",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "python": "3.12.10",
+    "timeoutMinutes": 20,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "initialCreatedPushOnly": true,
+    "beforeZeroOnly": true,
+    "attempt": 1,
+    "expectedActualQA": 226,
+    "expectedActualRecording": 14,
+    "requiredSkips": 0,
+    "SDK": false,
+    "FloorpBuild": false,
+    "artifactUpload": false,
+    "GUIOrNativeAuthentication": false,
+    "timedBenchmark": {
+      "seconds": 60,
+      "workers": 2,
+      "MiBPerWorker": 128,
+      "diskMiB": 64,
+      "pairsPerPhase": 6,
+      "phases": [
+        "idle",
+        "contended"
+      ],
+      "variants": [
+        "lean",
+        "support-preimport"
+      ],
+      "lastPairTargetSeconds": 52,
+      "liveBeforeAndAfterEachContendedCall": true,
+      "sufficientActualByteAndIterationCountersRequired": true
+    },
+    "productionMonitor": {
+      "communicateTimeoutSeconds": 3,
+      "attempts": 3,
+      "retryGapSeconds": 0.25,
+      "creationAndCleanupMayAddElapsedTime": true,
+      "resourceLimitsUnchanged": true,
+      "unknownResourcesRemainUnknown": true,
+      "ownershipAndExactCleanupUnchanged": true,
+      "recoveredLatest16AndSeparateStopDiagnosticsRetained": true
+    },
+    "pointInTimeAPI": {
+      "observedAtUTC": "2026-10-19T03:46:33Z",
+      "branchRefHTTPStatus": 404,
+      "recentRunsInspected": 100,
+      "newBranchRuns": 0,
+      "activeOrQueuedOwnedRuns": 0
+    },
+    "otherWorkflowTriggerReview": "Existing pinned trigger review reused; caller comparison confirms no other Runtime workflow changed."
+  },
+  "long45Candidate": {
+    "status": "NOT_ACTIVATED",
+    "model": "trusted-single-purpose-runner-v1",
+    "jobs": 2,
+    "serialDependency": "consumer needs producer",
+    "timeoutMinutesPerJob": 360,
+    "rawArtifactMaximum": 1,
+    "artifactBytesMaximum": 10737418240,
+    "retentionDays": 1,
+    "archive": false,
+    "uploadAction": "cf430e030ddbb5b0abf93d22962f4752f3646cd9",
+    "SDKAcquisition": "Fresh official unexpired metadata and ordinary fixed-content verification per job",
+    "qualification": "resumed build across two standard Intel jobs; freshObjdir=false and sameJob=false",
+    "conditions": [
+      "Short44 actual 226 QA and 14 recording tests must pass with zero skips and a valid finite control marker.",
+      "Actual 60-second idle/contended workload must complete with valid lean helper evidence, real byte/CPU/disk counters, before/after worker liveness and complete exact cleanup; review heavy-control unavailable results separately.",
+      "Terminal receipts must retain original firstFailure, recovered latest-sixteen diagnostics and separate stopping monitorFailure, including failure paths.",
+      "Only after terminal review is clear: bind the immutable long caller/render, fresh SDK metadata/content route, unused initial-push branch and no owned active/queued overlap.",
+      "Long validation must independently establish capture/readback/ready, raw service transfer, consumer restore/effective configuration and full host/XUL/package/native results."
+    ]
+  },
+  "limits": [
+    "Recovery43 inner failure remains UNKNOWN. The 0.25-second scheduling/liveness conflict is a plausible counterexample, not a proven historical cause.",
+    "Separating the finite child unit from duration admission does not establish Recovery42 helper-timeout repair or future production stability.",
+    "The finite four-iteration control is not a 60-second load measurement. Timed orchestration doubles are unit evidence; the next actual Mac diagnostic must supply real timed evidence.",
+    "The support-preimport wrapper is synthetic, not an exact replay of the old helper. Fresh interpreter calls do not establish cold/warm OS caches.",
+    "Small bounded CPU/memory/disk pressure does not reproduce prior production RSS, scheduler or filesystem state.",
+    "Trusted single-purpose runner requirements apply; no hostile same-UID immutability or atomic snapshot guarantee is claimed.",
+    "No source edit, CI start, SDK acquisition, artifact operation, product signing, publication or authentication/permission change was performed by this review."
+  ]
+}
