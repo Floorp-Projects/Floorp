@@ -1,0 +1,22 @@
+{
+  "originalSha256": "a23945710b78f704ffe47edd4a31c58c43742417b79fa8dff5586f9273b925c8",
+  "originalPrefixBeforeRunAllTestsSha256": "a0c121208dfa97cc3eed19c612ecff26035dab18651f9dd4e6894bb7fe46bae7",
+  "replacements": [
+    {
+      "before": "  try {\n    const mediaDirectory",
+      "after": "  try {\n    await observeMacOSPickerPhase(\"before-request\");\n    const mediaDirectory"
+    },
+    {
+      "before": "      nativePanel().button.click();",
+      "after": "      await observeMacOSPickerPhase(\"before-allow\");\n      nativePanel().button.click();\n      await observeMacOSPickerPhase(\"after-allow\");"
+    },
+    {
+      "before": "  } finally {\n    for (const dialog of ownedDialogs)",
+      "after": "  } finally {\n    try { await observeMacOSPickerPhase(\"finally\"); }\n    catch (observationError) { console.error(\"OS_PICKER_FINAL_OBSERVATION_ERROR\", String(observationError)); }\n    for (const dialog of ownedDialogs)"
+    }
+  ],
+  "phaseHelper": "async function observeMacOSPickerPhase(phase: string): Promise<void> {\n  const directory = Services.env.get(\"FLOORP_TEST_MAC_OS_PICKER_PHASES\");\n  if (!directory) throw Error(\"External picker observer directory is missing\");\n  await IOUtils.writeUTF8(\n    PathUtils.join(directory, phase + \".request.json\"),\n    JSON.stringify({ phase, browserTime: Date.now() }),\n  );\n  const end = Date.now() + 6000;\n  const ack = PathUtils.join(directory, phase + \".ack.json\");\n  while (!(await IOUtils.exists(ack))) {\n    if (Date.now() >= end) throw Error(\"External picker snapshot deadline: \" + phase);\n    await new Promise((resolve) => setTimeout(resolve, 25));\n  }\n}\n\n",
+  "replacementEntry": "export function runAllTests() {\n  return runTests(\"DesktopScreenNative OS observation only\", [{\n    name: \"original record-screen request with external OS observation\",\n    fn: () => desktopScreen(\"record-screen\"),\n  }]);\n}\n",
+  "previewSha256": "74abeda7d61c347d37a9b41ac28a4ae8c05156685bfd8bff943162462efa27f0",
+  "originalAssertionsAndAllowAndWaitBoundsRetainedByExactInverse": true
+}
