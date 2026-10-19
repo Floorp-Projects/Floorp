@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY53_REUSE_FULL_DOCUMENT_VALIDATION_FOR_SAME_FD_COLUMN_READS",
+  "sourceFreeze": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 25024,
+        "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 32864,
+        "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+      }
+    ],
+    "baselineFixture": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+    "baselineParserSHA256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9",
+    "processingSeconds": 30,
+    "fullQA": 737,
+    "MacQA": 522,
+    "recording": 14,
+    "sameInputBytes": 195000385,
+    "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "denseFailureAssertionLine": 450
+  },
+  "previousActualMac": {
+    "run": 39317742303,
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.004407363999974,
+    "sameControlledInput": true,
+    "recordingPassed": 14,
+    "serializerCasesPassed": 9,
+    "overall": "failed",
+    "evidenceCommit": "54e8559a5c9f2a2591e08f3c09441b2df894d82b"
+  },
+  "change": "Use the plain bounded JSON decoder only for indexed array rereads after successful complete strict validation of the same descriptor. The initial whole-document pass and JSONL path retain duplicate-key, finite-number, UTF-8, depth, key, value and row checks. Final descriptor/path/ctime/size/directory identities remain mandatory; a changed input discards every count.",
+  "performanceHypothesis": "Avoid repeating Python duplicate-key, finite-float and nested-bound callbacks for already validated column values. Linux phase measurements are analysis only and do not attribute the Mac timeout to a specific pass.",
+  "rereadBounds": {
+    "fastChunkBytes": 65536,
+    "scalarFallbackValueBytes": 1048576,
+    "sameDescriptorOnly": true,
+    "noPathReopenOrTemporaryCopy": true
+  },
+  "unchanged": {
+    "processingSeconds": 30,
+    "maxInputBytes": 2147483648,
+    "sameControlledInput": true,
+    "unknownCountsAreNull": true,
+    "firstPassStrictJSONAndFiniteNumbers": true,
+    "ownershipAndCleanup": true,
+    "sourceToolchainsConfigAndBuildArguments": true
+  },
+  "localQA": {
+    "total": 737,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 17,
+    "seconds": 60.699,
+    "passed": 720,
+    "resourceWarningsAreErrors": true,
+    "sameInputObservation": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 7.849560203001602,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    }
+  },
+  "initialLocalAttempt": {
+    "status": "failed",
+    "total": 737,
+    "failures": 6,
+    "errors": 1,
+    "skipped": 17,
+    "cause": "existing 8 GiB free-disk reserve preempted unrelated monitor expectations; parser tests passed",
+    "sameInputSeconds": 7.77124919599737,
+    "correction": "Moved previously acquired local SDK copies between local task volumes, then repeated the unchanged suite. No limits, API retention or permissions changed."
+  },
+  "caller": {
+    "bytes": 36460,
+    "sha256": "cb4a7cfa86b1d2147190fbdfcea9d1dd5c8a7cd066dff33962bb27b10d65224d",
+    "relativeToReviewedRecovery52": "Only dedicated name, branch and fixture placeholder differ; inline diagnostic continuation, acquisition and final gate code are byte-identical.",
+    "priorReviewedControls": {
+      "negativeCandidateFaultsRejected": 1032,
+      "sourceAPIMocks": 5,
+      "inlineMockFlows": 7,
+      "semanticsUnchanged": true
+    }
+  },
+  "shortMac": {
+    "branch": "codex/mac-native-streaming-recovery53-20261019",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "requiredQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "longBuild": false,
+    "actualStatus": "NOT_RUN"
+  },
+  "qualification": "Local evidence only. Actual Mac dense performance, the missing production profile, full host/XUL, current Mozilla cases and native authentication remain unqualified."
+}

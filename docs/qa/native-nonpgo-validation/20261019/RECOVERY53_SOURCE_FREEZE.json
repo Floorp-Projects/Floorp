@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 32864,
+      "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+    }
+  ],
+  "baselineFixture": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+  "baselineParserSHA256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9",
+  "processingSeconds": 30,
+  "fullQA": 737,
+  "MacQA": 522,
+  "recording": 14,
+  "sameInputBytes": 195000385,
+  "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+  "denseFailureAssertionLine": 450
+}

@@ -141,8 +141,10 @@ def _constant(_):
     raise _Unknown('json')
 
 
-def _decode(raw):
+def _decode(raw, validated=False):
     try:
+        if validated:
+            return json.loads(raw.decode('utf-8'))
         return json.loads(raw.decode('utf-8'), object_pairs_hook=_pairs,
                           parse_float=_float, parse_constant=_constant)
     except (ValueError, UnicodeError, RecursionError):
@@ -224,6 +226,7 @@ _NONSPACE = re.compile(rb'[^ \t\r\n]')
 _SPECIAL = re.compile(rb'["\\\x00-\x1f]')
 _DELIMITER = re.compile(rb'[ \t\r\n,\]}]')
 _DECODER = json.JSONDecoder(object_pairs_hook=_pairs, parse_float=_float, parse_constant=_constant)
+_VALIDATED_DECODER = json.JSONDecoder()
 _UNDECODED = object()
 
 
@@ -260,11 +263,13 @@ class _JSONStream:
     No independent pathname open, shared descriptor offset, or temporary copy
     is needed. Object keys, depth and individual decoded values are bounded.
     """
-    def __init__(self, descriptor, start, end, deadline):
+    def __init__(self, descriptor, start, end, deadline, validated=False):
         self.fd, self.pos, self.end, self.deadline = descriptor, start, end, deadline
         self.base, self.buffer, self.index = start, b'', {}
         self.text = None
         self.failed_batch_base = None
+        self.validated = validated
+        self.decoder = _VALIDATED_DECODER if validated else _DECODER
 
     def buffered(self):
         if self.pos == self.end:
@@ -327,7 +332,7 @@ class _JSONStream:
                 _need(self.pos - start <= MAX_LINE_BYTES, 'value-limit')
                 if match:
                     break
-        return _decode(self.raw(start))
+        return _decode(self.raw(start), self.validated)
 
     @staticmethod
     def child(path, key):
@@ -343,7 +348,7 @@ class _JSONStream:
             return _UNDECODED
         start = self.pos - self.base
         try:
-            value, end = _DECODER.raw_decode(self.text, start)
+            value, end = self.decoder.raw_decode(self.text, start)
         except (ValueError, RecursionError):
             return _UNDECODED
         if end == len(self.buffer):
@@ -352,7 +357,8 @@ class _JSONStream:
         elif self.buffer[end] not in b' \t\r\n,]}':
             return _UNDECODED
         _need(end - start <= MAX_LINE_BYTES, 'value-limit')
-        _bounded_decoded(value, depth)
+        if not self.validated:
+            _bounded_decoded(value, depth)
         self.pos = self.base + end
         return value
 
@@ -373,13 +379,14 @@ class _JSONStream:
         if cut <= start:
             return _UNDECODED
         try:
-            values = _decode(b'[' + self.buffer[start:cut] + b']')
+            values = _decode(b'[' + self.buffer[start:cut] + b']', self.validated)
         except _Unknown:
             self.failed_batch_base = self.base
             return _UNDECODED
         if not values:
             return _UNDECODED
-        _bounded_decoded(values, depth)
+        if not self.validated:
+            _bounded_decoded(values, depth)
         self.pos = self.base + cut + 1
         return values
 
@@ -448,7 +455,9 @@ class _JSONStream:
 
 
 def _array_values(descriptor, span, deadline):
-    reader = _JSONStream(descriptor, span['start'] + 1, span['end'] - 1, deadline)
+    # Only called after the same descriptor's complete strict validation.
+    # collect discards every result if its final file/FD identity checks fail.
+    reader = _JSONStream(descriptor, span['start'] + 1, span['end'] - 1, deadline, validated=True)
     remaining = span['count']
     while remaining:
         reader.whitespace()

@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "review": "Recovery53 reuse of a completed strict whole-profile validation pass",
+  "decision": "CODE_AND_SHORT_DIAGNOSTIC_CANDIDATE_CLEAR_PENDING_IMMUTABLE_BINDINGS",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 32864,
+      "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+    }
+  ],
+  "baseline": {
+    "fixture": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+    "parserSHA256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9",
+    "terminalResult": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY52_TERMINAL_RESULT.json",
+      "bytes": 17980,
+      "sha256": "a43ea54d56051431bbd052d7a86f29aa6da1e138d29576143afce58e1c12ed9b"
+    },
+    "actualMacQualification": "NOT_PASSED",
+    "knownActualReason": "build-completion-processing-limit",
+    "actualMacParsePassAndBottleneck": "UNKNOWN"
+  },
+  "changeAssessment": [
+    "Only private whole-profile column and string-table iterators enable validated decoding. The initial complete document cursor and JSONL decoding retain strict duplicate-key, nonfinite-number, UTF8, grammar and bound validation.",
+    "The whole document is validated through its trailing EOF before metadata/schema and any array iteration. The indexed spans and counts remain tied to the same already-open descriptor; no independent pathname open is added.",
+    "The validated pass uses the ordinary bounded decoder and avoids repeating container-bound walks and number/key hooks on data already validated. This includes bounded scalar fallback values as well as the 64 KiB fast chunks; individual raw values remain limited to 1 MiB.",
+    "Marker schema, finite times, integer indices, phase/end relationships, column cardinality, aggregate bounds and fixed public target names remain independently enforced. The unchanged final FD/path/directory and ctime/mtime/size identities must match before any aggregate result is published.",
+    "A file change between validation and aggregation yields unconfirmed coverage and null counts. This preserves the declared trusted single-purpose-runner contract; it does not introduce a claim of an atomic snapshot or protection against arbitrary hostile same-UID rewriting.",
+    "The same 195000385-byte input and SHA256, one million resource rows, 30-second cooperative budget, assertion frame 450, caps, clocks, resource limits and diagnostic continuation/final-failure semantics remain unchanged."
+  ],
+  "independentValidation": {
+    "resourceWarningPolicy": "error::ResourceWarning",
+    "focusedTests": {
+      "count": 6,
+      "passed": 6,
+      "seconds": 1.232,
+      "coverage": [
+        "new invalid trailing JSON never enters validated iterators",
+        "changed file discards all counts",
+        "column lengths/index/phase types",
+        "column and metadata ordering",
+        "truncation and trailing JSON",
+        "category/stack lengths and ignored value validation"
+      ]
+    },
+    "strictGrammar": {
+      "name": "floorp-recovery53-independent-differential.json",
+      "bytes": 420,
+      "sha256": "87e7e48be42a649c65af7c77604765328108f97461c06214aa38338983daf467",
+      "checks": 15480,
+      "mismatches": 0
+    },
+    "structuralBounds": {
+      "name": "floorp-recovery53-independent-bounds-control.json",
+      "bytes": 224,
+      "sha256": "141b2d5dc253c9496b654d0af041c121b20c399cccb771f057e80c11c7ef1870",
+      "checks": 777,
+      "mismatches": 0
+    },
+    "wholeProfileComparison": {
+      "name": "floorp-recovery53-independent-whole-parity.json",
+      "bytes": 482,
+      "sha256": "644511281cb415b46023c31e0a3f2cdae80f2383437c1dedc77d9b230aef6c6b",
+      "immutableBaseline": "Recovery52",
+      "profiles": 31,
+      "chunks": [
+        7,
+        31,
+        65536
+      ],
+      "exactResultAndAcceptanceComparisons": 93,
+      "mismatches": 0,
+      "postValidationSameSizeRestoredMtimeMutationsRejected": 2,
+      "mutations": [
+        "nonfinite resource value",
+        "duplicate resource key"
+      ]
+    },
+    "staticCallsitesAndCallerComparison": {
+      "name": "floorp-recovery53-independent-static-controls.json",
+      "bytes": 459,
+      "sha256": "3c47887db04524bd530536579f6723d80af9123721fd7245cd1caabce8c35733"
+    },
+    "heavyFullQAOrDensityReexecutionByReviewer": false
+  },
+  "reportedFullRegressionIndependentlyRead": {
+    "platform": "Linux",
+    "Python": "3.12.14",
+    "total": 737,
+    "passed": 720,
+    "DarwinSkipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 60.699,
+    "log": {
+      "name": "floorp-recovery53-linux-full-retry.private.log",
+      "bytes": 141883,
+      "sha256": "dd8626fb3474e0130a1152d771ffad41b3d1b9ec5d984afbc3d068542efb46e7"
+    },
+    "structuredReceipt": {
+      "name": "floorp-recovery53-linux-full-result.json",
+      "bytes": 3257,
+      "sha256": "230d4e051fad6cbf577baf8d777b8e75d24ead3a52a5bdbef43ff2d5dd5c4950"
+    },
+    "densityObservation": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 7.849560203001602,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    },
+    "earlierRun": "The earlier local full run recorded six failures and one error while the unchanged free-disk-reserve guard preempted unrelated monitor controls. After restoring normal available space, the unchanged source passed the full regression; no resource limit was relaxed."
+  },
+  "candidateRoute": {
+    "name": "floorp-recovery53-caller.yml",
+    "bytes": 36460,
+    "sha256": "cb4a7cfa86b1d2147190fbdfcea9d1dd5c8a7cd066dff33962bb27b10d65224d",
+    "comparison": "The parsed workflow differs from the reviewed Recovery52 workflow only in its name, dedicated branch and fixture placeholder. Existing strict diagnostic continuation and final gate bodies are unchanged.",
+    "requiresImmutableBinding": true,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointAcquisition": false,
+    "realBuild": false,
+    "artifactUpload": false,
+    "existingNegativeAndFlowControls": "Recovery52 controls may be inherited through the exact unchanged gate bodies; they were not redundantly rerun for this label-only candidate."
+  },
+  "documentBindings": [
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY53_SOURCE_FREEZE.json",
+      "bytes": 775,
+      "sha256": "83698255ddfa7cf191302b301dc2cd2788a1a6f335e0d41295490171419afe85"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY53_PREPARATION.json",
+      "bytes": 4568,
+      "sha256": "ec39f78ceeccaa9802283fe8a8bb7c9d3ea4c90a320d056f5db67d5d672f5981"
+    }
+  ],
+  "precisionAndRemainingGate": [
+    "Linux phase observations and the faster Linux collector result support testing reduced repeat work; they do not establish which pass exhausted the budget on either actual Mac run.",
+    "Recovery52 reached the same processing guard after the primitive-prefix optimization. A budget-censored result cannot quantify improvement or prove the optimization had no effect.",
+    "Actual Intel Mac dense-input qualification remains unproven for this candidate. One short diagnostic requires immutable source/caller readback, no owned-job overlap, an unused branch and the unchanged strict gates.",
+    "An isolated density failure may continue to independent recording and serializer observations only under the inherited exact safety predicate; it must retain the original first failure and final failed job.",
+    "No new long build or product/Mozilla/native qualification follows from this source review. Recovery48 stopped at its known shared345 full-build deadline; unfinished compiler subphase and remaining work are unknown, and the original native exit cause remains unknown."
+  ],
+  "reviewerActions": {
+    "productionSourceEdited": false,
+    "CIOrRefMutated": false,
+    "newSDKOrCheckpointDownloaded": false,
+    "actualMacExecuted": false
+  }
+}

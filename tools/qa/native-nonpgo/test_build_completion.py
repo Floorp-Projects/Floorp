@@ -477,6 +477,12 @@ class CompletionTests(unittest.TestCase):
                        b',"ignored":[1,,2]}', b',"ignored":[,1]}', b',"ignored":[1,2 3]}'):
             self.write(base + suffix)
             self.unknown(bc.collect(self.task, self.snapshot))
+        for suffix in (b',"ignored":NaN}', b',"ignored":1e999}',
+                       b',"ignored":{"a":1,"\\u0061":2}}', b',"ignored":"\xff"}'):
+            self.write(base + suffix)
+            with mock.patch.object(bc, '_array_values') as columns:
+                self.unknown(bc.collect(self.task, self.snapshot))
+            columns.assert_not_called()
 
     def test_whole_batch_row_cap_counts_all_values_not_only_last_element(self):
         data = whole([marker()]);data['ignored'] = [0, 0, 0, 0]
@@ -522,14 +528,36 @@ class CompletionTests(unittest.TestCase):
         with self.assertRaises(OSError):os.fstat(descriptors[0])
 
     def test_changed_file_after_parse_discards_all_counts(self):
-        path = self.write(jsonl([marker()]));original = bc._parse
+        original = bc._parse
         def change(*args):
             result = original(*args)
             with path.open('ab') as stream:
                 stream.write(b'\n')
             return result
-        with mock.patch.object(bc, '_parse', side_effect=change):
-            self.unknown(bc.collect(self.task, self.snapshot))
+        for raw in (jsonl([marker()]), json.dumps(whole([marker()])).encode()):
+            path = self.write(raw)
+            with mock.patch.object(bc, '_parse', side_effect=change):
+                result = bc.collect(self.task, self.snapshot)
+            self.unknown(result)
+            self.assertEqual(result['reason'], 'build-completion-file-changed')
+        raw = json.dumps(whole([marker()])).encode()
+        path = self.write(raw);read_column = bc._array_values;changed = False
+        def replace_after_validation(*args):
+            nonlocal changed
+            if not changed:
+                changed = True;before = path.stat()
+                token = b'MacWebAppService.o'
+                replacement = raw.replace(token, b'X' * len(token))
+                self.assertNotEqual(replacement, raw)
+                with path.open('r+b') as stream:
+                    stream.write(replacement)
+                os.utime(path, ns=(before.st_atime_ns, before.st_mtime_ns))
+            yield from read_column(*args)
+        with mock.patch.object(bc, '_array_values', side_effect=replace_after_validation):
+            result = bc.collect(self.task, self.snapshot)
+        self.assertTrue(changed)
+        self.unknown(result)
+        self.assertEqual(result['reason'], 'build-completion-file-changed')
 
     def test_snapshot_validation_and_input_are_not_mutated(self):
         self.write(jsonl([marker()]));original = copy.deepcopy(self.snapshot)
