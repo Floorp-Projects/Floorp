@@ -1,5 +1,9 @@
 /// <reference path="../../libs/@types/gecko/index.d.ts" />
 // SPDX-License-Identifier: MPL-2.0
+import {
+  automationIds,
+  selectAutomationIds,
+} from "./automation-corpus-selection.mjs";
 import { boundedAutomationQuery } from "./automation-query.mjs";
 import { invokeNativeCorpusAction } from "./corpus-native-action.mjs";
 import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
@@ -12,6 +16,7 @@ import {
   expectedCustomer,
   uiVisionId,
   uiVisionMacro,
+  webscraperId,
 } from "./corpus-automation-recipes.mjs";
 /** @type {{ExtensionParent:import("./native-test-types.ts").NativeCorpusExtensionParent}} */
 const { ExtensionParent } = ChromeUtils.importESModule(
@@ -195,6 +200,25 @@ async function runUIVision() {
         .catch(() => null);
       return state?.ready === "complete" && (state?.text?.length ?? 0) > 20;
     }, "real extension macro UI");
+    item.onboarding = await boundedAutomationQuery(
+      panelActor().sendQuery("AcknowledgeUIVisionWelcome"),
+      "AcknowledgeUIVisionWelcome",
+    );
+    if (
+      item.onboarding.shown && (!item.onboarding.clicked ||
+        !item.onboarding.events.some((event) =>
+          event.type === "click" && event.trusted
+        ))
+    ) {
+      throw Error("Genuine UI.Vision welcome acknowledgement did not complete");
+    }
+    await until(async () => {
+      const state = await boundedAutomationQuery(
+        panelActor().sendQuery("Snapshot"),
+        "Snapshot",
+      );
+      return !state.text.includes("Your macros are all still here");
+    }, "actual UI.Vision welcome dialog to close");
     item.macro = uiVisionMacro(url);
     await boundedAutomationQuery(
       actor(target).sendQuery("RunUIVision", { url, macro: item.macro }),
@@ -571,19 +595,53 @@ async function runBrowserflow() {
   }
 }
 export async function runAllTests() {
-  const failures = [];
-  for (const run of [runUIVision, runAutoma, runBrowserflow, runWebScraper]) {
-    try {
-      await run();
-    } catch (error) {
-      failures.push(String(error));
-    }
+  const root = Services.env.get("FLOORP_CORPUS_ROOT"),
+    output = Services.env.get("FLOORP_CORPUS_OUTPUT");
+  if (!root || !output) {
+    throw Error("Automation corpus root and output are required");
   }
-  const output = Services.env.get("FLOORP_CORPUS_OUTPUT"),
-    reports = [];
-  for (const product of ["ui-vision", "automa", "browserflow", "web-scraper"]) {
-    const path = PathUtils.join(output, product, "report.json");
-    if (await IOUtils.exists(path)) reports.push(await IOUtils.readJSON(path));
+  /** @type {import("./corpus-types.ts").FrozenCorpus} */
+  const corpus = await IOUtils.readJSON(
+    PathUtils.join(
+      root,
+      "tools",
+      "chrome-extension-runtime",
+      "corpus-lock.json",
+    ),
+  );
+  const selected = selectAutomationIds(
+    Services.env.get("FLOORP_CORPUS_IDS"),
+    corpus,
+  );
+  const operations = new Map([
+    [uiVisionId, { product: "ui-vision", run: runUIVision }],
+    [automaId, { product: "automa", run: runAutoma }],
+    [browserflowId, { product: "browserflow", run: runBrowserflow }],
+    [webscraperId, { product: "web-scraper", run: runWebScraper }],
+  ]);
+  const failures = [];
+  /** @type {import("./automation-test-types.ts").AutomationReport[]} */
+  const reports = [];
+  for (const id of selected) {
+    const operation = operations.get(id);
+    if (!operation) throw Error("Automation operation missing for " + id);
+    try {
+      await operation.run();
+    } catch (error) {
+      failures.push(id + ": " + String(error));
+    }
+    const path = PathUtils.join(output, operation.product, "report.json");
+    if (!await IOUtils.exists(path)) {
+      failures.push("Missing selected automation report for " + id);
+      continue;
+    }
+    /** @type {import("./automation-test-types.ts").AutomationReport} */
+    const report = await IOUtils.readJSON(path);
+    if (report.extensions.length !== 1 || report.extensions[0].id !== id) {
+      failures.push("Selected automation report ID mismatch for " + id);
+      continue;
+    }
+    reports.push(report);
   }
   await IOUtils.writeJSON(PathUtils.join(output, "report.json"), {
     stage: "frozen-automation-primary-operation",
@@ -591,6 +649,8 @@ export async function runAllTests() {
       version: Services.appinfo.version,
       buildId: Services.appinfo.appBuildID,
     },
+    selectedIds: selected,
+    unattemptedIds: automationIds.filter((id) => !selected.includes(id)),
     extensions: reports.flatMap((report) => report.extensions),
     failures,
     output,

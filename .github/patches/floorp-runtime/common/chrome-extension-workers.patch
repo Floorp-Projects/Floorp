@@ -216,6 +216,61 @@ index a09818a..cfc32f9 100644
  'ExtensionAlarms': {
      'headerFile': 'mozilla/extensions/ExtensionAlarms.h',
      'nativeType': 'mozilla::extensions::ExtensionAlarms',
+diff --git a/dom/cache/Cache.cpp b/dom/cache/Cache.cpp
+index 6cf7fa9..d3e37bb 100644
+--- a/dom/cache/Cache.cpp
++++ b/dom/cache/Cache.cpp
+@@ -4,6 +4,8 @@
+ 
+ #include "mozilla/dom/cache/Cache.h"
+ 
++#include "mozilla/ExtensionPolicyService.h"
++
+ #include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+ #include "js/PropertyAndElement.h"  // JS_GetElement
+ #include "mozilla/ErrorResult.h"
+@@ -28,6 +30,18 @@ namespace mozilla::dom::cache {
+ 
+ using mozilla::ipc::PBackgroundChild;
+ 
++static TypeUtils::SchemeAction SchemeForCachePut(Namespace aNamespace,
++                                                 nsIURI* aURI) {
++  if (aNamespace == CHROME_ONLY_NAMESPACE && aURI->SchemeIs("moz-extension")) {
++    RefPtr<extensions::WebExtensionPolicyCore> policy =
++        ExtensionPolicyService::GetCoreByURL(extensions::URLInfo(aURI));
++    if (policy && policy->BackgroundServiceWorkerAllowed()) {
++      return TypeUtils::IgnoreInvalidScheme;
++    }
++  }
++  return TypeUtils::TypeErrorOnInvalidScheme;
++}
++
+ bool IsValidPutRequestURL(nsIURI* aUrl, ErrorResult& aRv) {
+   if (!TypeUtils::URLHasValidScheme(aUrl)) {
+     aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>("Request",
+@@ -394,7 +408,9 @@ already_AddRefed<Promise> Cache::Put(JSContext* aCx,
+ 
+   AutoChildOpArgs args(this, CachePutAllArgs(), 1);
+ 
+-  args.Add(aCx, *ir, ReadBody, TypeErrorOnInvalidScheme, aResponse, aRv);
++  args.Add(aCx, *ir, ReadBody,
++           SchemeForCachePut(mNamespace, ir->GetURLWithoutFragment()),
++           aResponse, aRv);
+   if (NS_WARN_IF(aRv.Failed())) {
+     return nullptr;
+   }
+@@ -578,8 +594,9 @@ already_AddRefed<Promise> Cache::PutAll(
+ 
+   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
+     SafeRefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
+-    args.Add(aCx, *ir, ReadBody, TypeErrorOnInvalidScheme, *aResponseList[i],
+-             aRv);
++    args.Add(aCx, *ir, ReadBody,
++             SchemeForCachePut(mNamespace, ir->GetURLWithoutFragment()),
++             *aResponseList[i], aRv);
+     if (NS_WARN_IF(aRv.Failed())) {
+       return nullptr;
+     }
 diff --git a/dom/chrome-webidl/WebExtensionPolicy.webidl b/dom/chrome-webidl/WebExtensionPolicy.webidl
 index 6269e68..57f215a 100644
 --- a/dom/chrome-webidl/WebExtensionPolicy.webidl
@@ -263,6 +318,18 @@ index 5b7ba39..1dc1286 100644
      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
      return nullptr;
    }
+diff --git a/dom/serviceworkers/ServiceWorkerInfo.cpp b/dom/serviceworkers/ServiceWorkerInfo.cpp
+index cdacf92..6102be4 100644
+--- a/dom/serviceworkers/ServiceWorkerInfo.cpp
++++ b/dom/serviceworkers/ServiceWorkerInfo.cpp
+@@ -196,6 +196,7 @@ ServiceWorkerInfo::TerminateWorker(JSContext* aCx,
+   }
+ 
+   mServiceWorkerPrivate->TerminateWorker(Some(outer));
++  outer.forget(aPromise);
+   return NS_OK;
+ }
+ 
 diff --git a/dom/serviceworkers/ServiceWorkerManager.cpp b/dom/serviceworkers/ServiceWorkerManager.cpp
 index cf74cd4..22d29b4 100644
 --- a/dom/serviceworkers/ServiceWorkerManager.cpp
@@ -337,20 +404,113 @@ index cf74cd4..22d29b4 100644
      outer->MaybeRejectWithNotAllowedError(
          "Not an extension principal or extension disabled");
      outer.forget(aPromise);
+diff --git a/dom/serviceworkers/ServiceWorkerPrivate.cpp b/dom/serviceworkers/ServiceWorkerPrivate.cpp
+index f11ca0c..f5371c7 100644
+--- a/dom/serviceworkers/ServiceWorkerPrivate.cpp
++++ b/dom/serviceworkers/ServiceWorkerPrivate.cpp
+@@ -523,6 +523,9 @@ nsresult ServiceWorkerPrivate::Initialize() {
+   };
+ 
+   auto neutralizeOnFailure = MakeScopeExit([&] {
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++            ("ServiceWorkerPrivate::Initialize failed: %s",
++             failureReason ? failureReason : "unknown"));
+     NS_WARNING(nsPrintfCString("ServiceWorkerPrivate::Initialize failed: %s",
+                                failureReason ? failureReason : "unknown")
+                    .get());
 diff --git a/dom/serviceworkers/ServiceWorkerScriptCache.cpp b/dom/serviceworkers/ServiceWorkerScriptCache.cpp
-index 475fe3f..5e10d00 100644
+index 475fe3f..9fe89d0 100644
 --- a/dom/serviceworkers/ServiceWorkerScriptCache.cpp
 +++ b/dom/serviceworkers/ServiceWorkerScriptCache.cpp
-@@ -9,6 +9,8 @@
+@@ -9,6 +9,9 @@
  #include "js/PropertyAndElement.h"  // JS_GetElement
  #include "js/Utility.h"             // JS::FreePolicy
  #include "mozilla/ScopeExit.h"
++#include "mozilla/Logging.h"
 +#include "mozilla/ExtensionPolicyService.h"
 +#include "mozilla/extensions/WebExtensionPolicy.h"
  #include "mozilla/StaticPrefs_extensions.h"
  #include "mozilla/TaskQueue.h"
  #include "mozilla/UniquePtr.h"
-@@ -929,8 +931,12 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
+@@ -40,6 +43,8 @@ using mozilla::dom::cache::Cache;
+ using mozilla::dom::cache::CacheStorage;
+ using mozilla::ipc::PrincipalInfo;
+ 
++extern mozilla::LazyLogModule sWorkerTelemetryLog;
++
+ namespace mozilla::dom::serviceWorkerScriptCache {
+ 
+ namespace {
+@@ -465,6 +470,8 @@ class CompareManager final : public PromiseNativeHandler {
+ 
+   void ManageNewCache(JSContext* aCx, JS::Handle<JS::Value> aValue) {
+     MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForOpen);
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++            ("ServiceWorker new script cache opened"));
+ 
+     // RAII Cleanup when fails.
+     nsresult rv = NS_ERROR_FAILURE;
+@@ -510,6 +517,9 @@ class CompareManager final : public PromiseNativeHandler {
+     ErrorResult result;
+     result = serviceWorkerScriptCache::GenerateCacheName(mNewCacheName);
+     if (NS_WARN_IF(result.Failed())) {
++      MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++              ("ServiceWorker cannot name script cache: status=0x%08x",
++               result.ErrorCodeAsInt()));
+       MOZ_ASSERT(!result.IsErrorWithMessage());
+       Fail(result.StealNSResult());
+       return;
+@@ -518,11 +528,16 @@ class CompareManager final : public PromiseNativeHandler {
+     RefPtr<Promise> cacheOpenPromise =
+         mCacheStorage->Open(mNewCacheName, result);
+     if (NS_WARN_IF(result.Failed())) {
++      MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++              ("ServiceWorker cannot open new script cache: status=0x%08x",
++               result.ErrorCodeAsInt()));
+       MOZ_ASSERT(!result.IsErrorWithMessage());
+       Fail(result.StealNSResult());
+       return;
+     }
+ 
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++            ("ServiceWorker new script cache open requested"));
+     mState = WaitingForOpen;
+     cacheOpenPromise->AppendNativeHandler(this);
+   }
+@@ -581,15 +596,22 @@ class CompareManager final : public PromiseNativeHandler {
+     // continue since Cache does not yet support starting a read that is being
+     // written to.
+     ErrorResult result;
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++            ("ServiceWorker script cache Put starts"));
+     RefPtr<Promise> cachePromise = aCache->Put(aCx, request, *response, result);
+     result.WouldReportJSException();
+     if (NS_WARN_IF(result.Failed())) {
++      MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++              ("ServiceWorker script cache Put failed: status=0x%08x",
++               result.ErrorCodeAsInt()));
+       // No exception here because there are no ReadableStreams involved here.
+       MOZ_ASSERT(!result.IsJSException());
+       MOZ_ASSERT(!result.IsErrorWithMessage());
+       return result.StealNSResult();
+     }
+ 
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++            ("ServiceWorker script cache Put requested"));
+     mPendingCount += 1;
+     cachePromise->AppendNativeHandler(this);
+     return NS_OK;
+@@ -784,6 +806,9 @@ void CompareNetwork::NetworkFinish(nsresult aRv) {
+   MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForBothFinished ||
+                         mState == WaitingForNetworkFinished);
+ 
++  MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++          ("ServiceWorker script network complete: status=0x%08x",
++           static_cast<uint32_t>(aRv)));
+   mNetworkResult = aRv;
+ 
+   if (mState == WaitingForBothFinished) {
+@@ -929,8 +954,12 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
    channel->GetOriginalURI(getter_AddRefs(uri));
    bool isExtension = uri->SchemeIs("moz-extension");
  
@@ -364,6 +524,76 @@ index 475fe3f..5e10d00 100644
      // Return earlier with error is the worker script is a moz-extension url
      // but the feature isn't enabled by prefs.
      return NS_ERROR_FAILURE;
+@@ -1340,6 +1369,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+   mURL = aURL;
+   mPrincipal = aPrincipal;
+ 
++  MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug,
++          ("ServiceWorker script comparison starts"));
++
+   // Always create a CacheStorage since we want to write the network entry to
+   // the cache even if there isn't an existing one.
+   AutoJSAPI jsapi;
+@@ -1348,6 +1380,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+   mCacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, result);
+   if (NS_WARN_IF(result.Failed())) {
+     MOZ_ASSERT(!result.IsErrorWithMessage());
++    MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++            ("ServiceWorker cannot create script cache: status=0x%08x",
++             static_cast<uint32_t>(result.ErrorCodeAsInt())));
+     return result.StealNSResult();
+   }
+ 
+@@ -1356,6 +1391,9 @@ nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
+     mState = WaitingForScriptOrComparisonResult;
+     nsresult rv = FetchScript(aURL, true /* aIsMainScript */);
+     if (NS_WARN_IF(NS_FAILED(rv))) {
++      MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++              ("ServiceWorker cannot fetch script: status=0x%08x",
++               static_cast<uint32_t>(rv)));
+       return rv;
+     }
+ 
+@@ -1418,6 +1456,9 @@ void CompareManager::RejectedCallback(JSContext* aCx,
+                                       JS::Handle<JS::Value> aValue,
+                                       ErrorResult& aRv) {
+   MOZ_ASSERT(NS_IsMainThread());
++  MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++          ("ServiceWorker script cache promise rejected: state=%u",
++           static_cast<uint32_t>(mState)));
+   switch (mState) {
+     case Finished:
+       return;
+diff --git a/dom/serviceworkers/ServiceWorkerUpdateJob.cpp b/dom/serviceworkers/ServiceWorkerUpdateJob.cpp
+index 7674dc1..e518836 100644
+--- a/dom/serviceworkers/ServiceWorkerUpdateJob.cpp
++++ b/dom/serviceworkers/ServiceWorkerUpdateJob.cpp
+@@ -5,6 +5,7 @@
+ #include "ServiceWorkerUpdateJob.h"
+ 
+ #include "ServiceWorkerManager.h"
++#include "mozilla/Logging.h"
+ #include "ServiceWorkerPrivate.h"
+ #include "ServiceWorkerRegistrationInfo.h"
+ #include "ServiceWorkerScriptCache.h"
+@@ -15,6 +16,8 @@
+ #include "nsNetUtil.h"
+ #include "nsProxyRelease.h"
+ 
++extern mozilla::LazyLogModule sWorkerTelemetryLog;
++
+ namespace mozilla::dom {
+ 
+ using serviceWorkerScriptCache::OnFailure;
+@@ -166,6 +169,8 @@ ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob() = default;
+ void ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv) {
+   MOZ_ASSERT(NS_IsMainThread());
+   MOZ_ASSERT(aRv.Failed());
++  MOZ_LOG(sWorkerTelemetryLog, LogLevel::Warning,
++          ("ServiceWorker update failed: status=0x%08x", aRv.ErrorCodeAsInt()));
+ 
+   // Cleanup after a failed installation.  This essentially implements
+   // step 13 of the Install algorithm.
 diff --git a/dom/serviceworkers/ServiceWorkerUtils.cpp b/dom/serviceworkers/ServiceWorkerUtils.cpp
 index 18e846f..8ac5259 100644
 --- a/dom/serviceworkers/ServiceWorkerUtils.cpp
@@ -1816,10 +2046,10 @@ index 0000000..f08322c
 +};
 diff --git a/dom/webidl/ExtensionPower.webidl b/dom/webidl/ExtensionPower.webidl
 new file mode 100644
-index 0000000..b8dffbd
+index 0000000..f1f8f71
 --- /dev/null
 +++ b/dom/webidl/ExtensionPower.webidl
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,19 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1838,8 +2068,6 @@ index 0000000..b8dffbd
 +
 +  [Throws, WebExtensionStub="NoReturn"]
 +  undefined releaseKeepAwake(any... args);
-+  [Replaceable]
-+  readonly attribute any Level;
 +};
 diff --git a/dom/webidl/ExtensionPrivacy.webidl b/dom/webidl/ExtensionPrivacy.webidl
 new file mode 100644
@@ -3358,15 +3586,36 @@ index 0af1935..2b05052 100644
        dependencies: this.dependencies,
        persistentBackground: this.persistentBackground,
 diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/components/extensions/ExtensionChild.sys.mjs
-index f0c8b87..b2432e3 100644
+index f0c8b87..b467d01 100644
 --- a/toolkit/components/extensions/ExtensionChild.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionChild.sys.mjs
-@@ -432,2 +432,4 @@ export class ExtensionChild extends EventEmitter {
+@@ -138,2 +138,20 @@ Services.obs.addObserver(StrongPromise, "extensions-onMessage-witness");
+ 
++/**
++ * Call an actual native Worker message listener and retain its response witness.
++ * The resulting Promise lives in the privileged transport realm. Accept only
++ * the native listener interface here; ordinary MessageEvent response Promises
++ * continue to require the extension principal in wrapResponse.
++ */
++export function callWorkerMessageListener(eventListener, args, location) {
++  if (!(eventListener instanceof Ci.mozIExtensionEventListener)) {
++    throw new ExtensionError("Expected a native Worker message listener");
++  }
++  return StrongPromise.wrap(
++    eventListener.callListener(args, {
++      callbackType: Ci.mozIExtensionListenerCallOptions.CALLBACK_SEND_RESPONSE,
++    }),
++    location
++  );
++}
++
+ // Simple single-event emitter-like helper, exposes the EventManager api.
+@@ -432,2 +450,4 @@ export class ExtensionChild extends EventEmitter {
        this.backgroundWorkerScript = ed.backgroundWorkerScript;
 +      this.backgroundTypeModule = ed.backgroundTypeModule;
 +      this.backgroundServiceWorkerCompatibility = ed.backgroundServiceWorkerCompatibility;
        this.childModules = ed.childModules;
-@@ -473,3 +475,8 @@ export class ExtensionChild extends EventEmitter {
+@@ -473,3 +493,8 @@ export class ExtensionChild extends EventEmitter {
    get permissions() {
 -    return new Set(this.policy.permissions);
 +    const permissions = this.policy.permissions;
@@ -3376,12 +3625,73 @@ index f0c8b87..b2432e3 100644
 +      ? permissions.filter(permission => !permission.startsWith("manifest:"))
 +      : permissions);
    }
-@@ -658,2 +665,3 @@ export class ProxyAPIImplementation extends SchemaAPIInterface {
+@@ -658,2 +683,3 @@ export class ProxyAPIImplementation extends SchemaAPIInterface {
      const isHandlingUserInput =
 +      context.isHandlingUserInput ??
        context.contentWindow?.windowUtils?.isHandlingUserInput;
+diff --git a/toolkit/components/extensions/ExtensionContent.sys.mjs b/toolkit/components/extensions/ExtensionContent.sys.mjs
+index db8b70e..83355eb 100644
+--- a/toolkit/components/extensions/ExtensionContent.sys.mjs
++++ b/toolkit/components/extensions/ExtensionContent.sys.mjs
+@@ -667,6 +667,18 @@ class Script {
+       return;
+     }
+ 
++    const { extension } = context;
++    if (this.matcher.isUserScript && extension.manifestVersion >= 3 &&
++        ExtensionUtils.getChromeExtensionId(extension)) {
++      const policy = this.matcher.extension;
++      if (!policy?.active || extension.policy !== policy ||
++          WebExtensionPolicy.getByID(extension.id) !== policy ||
++          !policy.hasPermission("userScripts") ||
++          !policy.hasPermission("internal:floorpChromeUserScriptsAllowed")) {
++        return;
++      }
++    }
++
+     if (this.css.length || this.cssCodeHash) {
+       if (this.removeCSS) {
+         this.removeStyleSheets(window);
+@@ -685,8 +697,6 @@ class Script {
+       }
+     }
+ 
+-    const { extension } = context;
+-
+     // The evaluations below may throw, in which case the promise will be
+     // automatically rejected.
+     lazy.ExtensionTelemetry.contentScriptInjection.stopwatchStart(
+diff --git a/toolkit/components/extensions/ExtensionParent.sys.mjs b/toolkit/components/extensions/ExtensionParent.sys.mjs
+index a006dae..9c6001a 100644
+--- a/toolkit/components/extensions/ExtensionParent.sys.mjs
++++ b/toolkit/components/extensions/ExtensionParent.sys.mjs
+@@ -1122,6 +1122,24 @@ class BackgroundWorkerContextParent extends ProxyContextParent {
+ 
+     extension.emit("extension-proxy-context-load", this);
+   }
++
++  toExtensionContext() {
++    // A Service Worker has no document, frame, tab or window. The public
++    // context UUID is assigned by runtime.getContexts for this actual context.
++    return {
++      contextId: undefined,
++      contextType: this.contextType,
++      incognito: this.incognito,
++      frameId: -1,
++      tabId: -1,
++      windowId: -1,
++    };
++  }
++
++  unload() {
++    super.unload();
++    this.extension.views.delete(this);
++  }
+ }
+ 
+ ParentAPIManager = {
 diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
-index bc64f8f..f243c2d 100644
+index bc64f8f..0e89961 100644
 --- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 @@ -141,6 +141,11 @@ ExtensionManager = {
@@ -3438,7 +3748,7 @@ index bc64f8f..f243c2d 100644
        return context.childManager.handleWebIDLAPIRequest(request);
      } catch (error) {
        // Propagate errors related to parameter validation when the error object
-@@ -516,17 +540,62 @@ export var ExtensionAPIRequestHandler = {
+@@ -516,17 +540,70 @@ export var ExtensionAPIRequestHandler = {
    },
  
    validateAndNormalizeRequestArgs({ context, request }) {
@@ -3448,6 +3758,14 @@ index bc64f8f..f243c2d 100644
 +      if (property && (Object.hasOwn(property, "value") || Array.isArray(property.enumeration))) {
 +        return [];
 +      }
++    }
++    if (context.extension.backgroundServiceWorkerCompatibility &&
++        request.apiNamespace.split(".")[0] === "userScripts" &&
++        !context.extension.policy.hasPermission(
++          "internal:floorpChromeUserScriptsAllowed")) {
++      throw new context.Error(
++        `'${request.apiNamespace}.${request.apiName}' is not available in this context.`
++      );
 +    }
      if (
 -      !lazy.Schemas.checkPermissions(request.apiNamespace, context.extension)
@@ -3503,7 +3821,7 @@ index bc64f8f..f243c2d 100644
      if (request.apiObjectType) {
        // skip parameter validation on request targeting an api object,
        // even the JS-based implementation of the API objects are not
-@@ -538,12 +607,49 @@ export var ExtensionAPIRequestHandler = {
+@@ -538,12 +615,54 @@ export var ExtensionAPIRequestHandler = {
        return request.args;
      }
  
@@ -3548,26 +3866,98 @@ index bc64f8f..f243c2d 100644
        request
      );
 +    if (ttsSourceId !== undefined) {
-+      normalizedArgs.push(ttsSourceId);
++      // The public async schema includes its omitted completion callback.
++      // Native C++ owns that callback; the parent expects the source ID here.
++      if (normalizedArgs.length !== 3 || normalizedArgs[2] !== null) {
++        throw new Error("Unexpected normalized tts.speak callback slot.");
++      }
++      normalizedArgs[2] = ttsSourceId;
 +    }
 +    return normalizedArgs;
    },
  };
  
 diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
-index c1847ca..4883173 100644
+index c1847ca..11f614b 100644
 --- a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
-@@ -73,7 +73,7 @@ class WorkerMessageEvent extends MessageEvent {
-     const { eventListener } = request;
-     return function (message, sender) {
-       return eventListener.callListener([message, sender], {
--        eventListenerType:
-+        callbackType:
-           Ci.mozIExtensionListenerCallOptions.CALLBACK_SEND_RESPONSE,
-       });
+@@ -10,6 +10,7 @@
+ import {
+   ChildAPIManager,
+   ChildLocalAPIImplementation,
++  callWorkerMessageListener,
+   ExtensionActivityLogChild,
+   MessageEvent,
+   Messenger,
+@@ -69,13 +70,46 @@
      };
-@@ -193,6 +193,22 @@ class WorkerMessenger extends Messenger {
+   }
+ 
++  emit(holder, sender) {
++    if (!this.fires.size || !this.context.active) {
++      return { received: false };
++    }
++
++    sender = Cu.cloneInto(sender, this.context.cloneScope);
++    const message = holder.deserialize(this.context.cloneScope);
++    const fires = [...this.fires];
++    return new Promise((resolve, reject) => {
++      let unhandled = fires.length;
++      for (const fire of fires) {
++        let response;
++        try {
++          response = fire.raw(message, sender);
++        } catch (error) {
++          reject(this.unwrapOrSanitizeError(error));
++          continue;
++        }
++        response.then(
++          result => {
++            if (result.handled) {
++              resolve({ response: true, value: result.value });
++            } else if (!--unhandled) {
++              resolve({ received: true, response: false });
++            }
++          },
++          error => reject(this.unwrapOrSanitizeError(error))
++        );
++      }
++    });
++  }
++
+   createListenerForAPIRequest(request) {
+-    const { eventListener } = request;
++    const { eventListener, callerSavedFrame } = request;
+     return function (message, sender) {
+-      return eventListener.callListener([message, sender], {
+-        eventListenerType:
+-          Ci.mozIExtensionListenerCallOptions.CALLBACK_SEND_RESPONSE,
+-      });
++      return callWorkerMessageListener(
++        eventListener,
++        [message, sender],
++        callerSavedFrame
++      );
+     };
+   }
+ }
+@@ -95,10 +129,14 @@
+ 
+   createListenerForAPIRequest(request) {
+     const { eventListener } = request;
++    const { context } = this;
+     switch (this.name) {
+       case "Port.onDisconnect":
+-        return function (port) {
++        return function (port, error) {
++          const lastError = ExtensionUtils.getChromeExtensionId(context.extension) &&
++            error ? { message: context.normalizeError(error).message } : undefined;
+           eventListener.callListener([], {
++            lastError,
+             apiObjectType: Ci.mozIExtensionListenerCallOptions.RUNTIME_PORT,
+             apiObjectDescriptor: {
+               portId: port.portId,
+@@ -193,6 +231,22 @@
      );
    }
  
@@ -3590,7 +3980,7 @@ index c1847ca..4883173 100644
    close() {
      this.portsById.clear();
    }
-@@ -221,8 +237,12 @@ class WorkerMessenger extends Messenger {
+@@ -221,8 +275,12 @@
      return { portId, name };
    }
  
@@ -3604,7 +3994,7 @@ index c1847ca..4883173 100644
      if (this.context.active && event.fires.size) {
        let port = new WorkerPort(this.context, portId, name, false, sender);
        this.portsById.set(`${port.portId}`, port);
-@@ -310,6 +330,19 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -310,6 +368,19 @@
      // apiPathToEventString is a string that represents the full API path
      // related to the event name (e.g. "runtime.onConnect", or "runtime.Port.onMessage")
      this.eventListenerWrappers = new DefaultMap(() => new WeakMap());
@@ -3624,7 +4014,7 @@ index c1847ca..4883173 100644
    }
  
    getImplementation(namespace, name) {
-@@ -346,10 +379,59 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -346,10 +417,59 @@
     */
    handleWebIDLAPIRequest(request) {
      try {
@@ -3685,7 +4075,7 @@ index c1847ca..4883173 100644
            result = this.handleForProxyAPIImplementation(request, impl);
          } else {
            result = this.callAPIImplementation(request, impl);
-@@ -494,16 +576,73 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -494,16 +614,73 @@
      }
  
      const { eventListener } = request;
@@ -3760,7 +4150,7 @@ index c1847ca..4883173 100644
          this.eventListenerWrappers.delete(eventListener);
          // Failing to send the request to remove the listener in the parent
          // process shouldn't prevent the extension or context shutdown,
-@@ -521,6 +660,16 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -521,6 +698,16 @@
          }
        },
      };
@@ -3777,9 +4167,11 @@ index c1847ca..4883173 100644
      this.storeListenerWrapper(request, listener);
      this.context.callOnClose(listener._callOnClose);
      return listener;
-@@ -598,12 +747,33 @@ class WorkerContextChild extends BaseContext {
+@@ -597,13 +784,45 @@
+     // as structure clone data, we may remove this if we are changing the
      // internals to not use the context.cloneScope).
      this.workerCloneScope = {
++      Object,
        Promise,
 +      TypeError,
        // The instances of this Error constructor will be recognized by the
@@ -3808,10 +4200,20 @@ index c1847ca..4883173 100644
 +      this.workerCanvasDocument = null;
 +    }});
 +
++  }
++
++  jsonStringify(...args) {
++    if (!this.extension.backgroundServiceWorkerCompatibility) {
++      return super.jsonStringify(...args);
++    }
++    // Native requests have already crossed the Worker structured-clone boundary.
++    // Their plain objects belong to this privileged backing realm, so passing
++    // them to an extension-principal JSON sandbox would hide their properties.
++    return JSON.stringify(...args);
    }
  
    getCreateProxyContextData() {
-@@ -650,6 +820,10 @@ class WorkerContextChild extends BaseContext {
+@@ -650,6 +869,10 @@
      return this.webidlAPIRequest;
    }
  
@@ -3911,7 +4313,7 @@ index 093b045..464c89c 100644
        apiRequest.args,
        this.paramsValidationContexts.get(extContext)
 diff --git a/toolkit/components/extensions/WebExtensionPolicy.cpp b/toolkit/components/extensions/WebExtensionPolicy.cpp
-index 5860d50..8bf21a3 100644
+index 5860d50..e3e3e59 100644
 --- a/toolkit/components/extensions/WebExtensionPolicy.cpp
 +++ b/toolkit/components/extensions/WebExtensionPolicy.cpp
 @@ -220,6 +220,9 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(GlobalObject& aGlobal,
@@ -3945,6 +4347,33 @@ index 5860d50..8bf21a3 100644
  /* static */
  bool WebExtensionPolicy::UseRemoteWebExtensions(GlobalObject& aGlobal) {
    return EPS().UseRemoteExtensions();
+@@ -931,10 +948,22 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc,
+     return false;
+   }
+ 
+-  if (mIsUserScript && mExtension &&
+-      !mExtension->HasPermission(nsGkAtoms::userScripts)) {
+-    // The "userScripts" permission can be revoked after script registration.
+-    return false;
++  if (mIsUserScript && mExtension) {
++    if (mExtension->ChromeCompatibilityEnabled() &&
++        mExtension->ManifestVersion() >= 3) {
++      if (!mExtension->Active()) {
++        return false;
++      }
++      nsTArray<nsString> permissions;
++      mExtension->GetPermissions(permissions);
++      if (!permissions.Contains(u"userScripts"_ns) ||
++          !permissions.Contains(
++              u"internal:floorpChromeUserScriptsAllowed"_ns)) {
++        return false;
++      }
++    } else if (!mExtension->HasPermission(nsGkAtoms::userScripts)) {
++      return false;
++    }
+   }
+ 
+   // Top-level about:blank is a special case. Unlike about:blank frames/windows
 diff --git a/toolkit/components/extensions/WebExtensionPolicy.h b/toolkit/components/extensions/WebExtensionPolicy.h
 index 0615e3e..25d3573 100644
 --- a/toolkit/components/extensions/WebExtensionPolicy.h
@@ -4061,10 +4490,19 @@ index 7e1eca8..bb71f32 100644
      MARIONETTE_MANIFESTS += ["test/marionette/manifest-serviceworker.toml"]
      XPCSHELL_TESTS_MANIFESTS += [
 diff --git a/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl b/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
-index d7eb403..b19742b 100644
+index d7eb403..8a08174 100644
 --- a/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
 +++ b/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
-@@ -24,6 +24,9 @@ interface mozIExtensionListenerCallOptions : nsISupports
+@@ -15,7 +15,7 @@
+   readonly attribute unsigned long long descriptorId;
+ };
+ 
+-[scriptable, uuid(876d45db-5c1b-4c9b-9148-1c86b33d120b)]
++[scriptable, uuid(3bd107d1-e0da-4208-8f39-bce50c7a902a)]
+ interface mozIExtensionListenerCallOptions : nsISupports
+ {
+   cenum APIObjectType: 8 {
+@@ -24,6 +24,9 @@
  
      // A runtime.Port instance is prepended to the event listener call arguments.
      RUNTIME_PORT,
@@ -4074,17 +4512,21 @@ index d7eb403..b19742b 100644
    };
  
    readonly attribute mozIExtensionListenerCallOptions_APIObjectType apiObjectType;
-@@ -37,6 +40,9 @@ interface mozIExtensionListenerCallOptions : nsISupports
+@@ -36,6 +39,13 @@
+   // An optional boolean to be set to true if the api object should be
    // prepended to the rest of the call arguments (by default it is appended).
    readonly attribute boolean apiObjectPrepended;
- 
++
 +  readonly attribute boolean isHandlingUserInput;
 +  readonly attribute boolean isFinalCall;
 +
++  // Optional trusted callback error, scoped to this native listener invocation.
++  // It is cloned with call arguments, never exposed as an extra callback argument.
++  readonly attribute jsval lastError;
+ 
    cenum CallbackType: 8 {
      // Default: no callback argument is passed to the call to the event listener.
-     CALLBACK_NONE,
-@@ -51,6 +57,10 @@ interface mozIExtensionListenerCallOptions : nsISupports
+@@ -51,6 +61,10 @@
      // - if the event listener already returned a Promise, sendResponse calls
      //   are ignored
      CALLBACK_SEND_RESPONSE,
@@ -4095,22 +4537,41 @@ index d7eb403..b19742b 100644
    };
  
    attribute mozIExtensionListenerCallOptions_CallbackType callbackType;
-@@ -112,6 +122,8 @@ interface mozIExtensionAPIRequest : nsISupports
+@@ -111,6 +125,8 @@
+ 
    // Set for requests coming from an extension service worker.
    readonly attribute mozIExtensionServiceWorkerInfo serviceWorkerInfo;
- 
-+  readonly attribute boolean isHandlingUserInput;
 +
++  readonly attribute boolean isHandlingUserInput;
+ 
    // Set for `addListener`/`removeListener` API requests.
    readonly attribute mozIExtensionEventListener eventListener;
- };
 diff --git a/toolkit/components/extensions/parent/ext-backgroundPage.js b/toolkit/components/extensions/parent/ext-backgroundPage.js
-index 6c131be..d73aa46 100644
+index 6c131be..3fb5637 100644
 --- a/toolkit/components/extensions/parent/ext-backgroundPage.js
 +++ b/toolkit/components/extensions/parent/ext-backgroundPage.js
-@@ -205,48 +205,71 @@ class BackgroundWorker {
+@@ -174,6 +174,10 @@ class BackgroundPage extends HiddenExtensionPage {
+ }
+ 
+ // Responsible for the background.service_worker section of the manifest.
++// A stopped parent state does not mean the child Worker has finished teardown.
++// Keep the actual native completion barrier across consecutive background owners.
++const pendingWorkerShutdowns = new WeakMap();
++
+ class BackgroundWorker {
+   constructor(extension, options) {
+     this.extension = extension;
+@@ -204,49 +208,88 @@ class BackgroundWorker {
+ 
    async build() {
      const { extension } = this;
++    const pendingShutdown = pendingWorkerShutdowns.get(extension);
++    if (pendingShutdown) {
++      await pendingShutdown;
++      if (this.closed || extension.hasShutdown) {
++        throw new Error("Extension shut down while its previous Worker was terminating");
++      }
++    }
      let context;
 -    const contextPromise = new Promise(resolve => {
 -      // TODO bug 1844486: resolve and/or unwatch when startup is interrupted.
@@ -4186,7 +4647,16 @@ index 6c131be..d73aa46 100644
 +      if (this.extension.hasShutdown || !registration?.activeWorker) {
 +        registration?.forceShutdown();
 +      } else {
-+        registration.activeWorker.terminateWorker().catch(Cu.reportError);
++        if (!pendingWorkerShutdowns.has(this.extension)) {
++          const extension = this.extension;
++          const termination = registration.activeWorker.terminateWorker();
++          pendingWorkerShutdowns.set(extension, termination);
++          termination.then(() => {
++            if (pendingWorkerShutdowns.get(extension) === termination) {
++              pendingWorkerShutdowns.delete(extension);
++            }
++          }, Cu.reportError);
++        }
 +      }
      }
    }
@@ -4202,7 +4672,7 @@ index 6c131be..d73aa46 100644
        const resolveOnActive = () => {
          if (
            registrationInfo.activeWorker?.state ===
-@@ -282,7 +305,11 @@ class BackgroundWorker {
+@@ -282,7 +325,11 @@ class BackgroundWorker {
          },
        };
        registrationInfo.addListener(listener);
@@ -4215,7 +4685,7 @@ index 6c131be..d73aa46 100644
    }
  }
  
-@@ -551,6 +578,11 @@ class BackgroundContextOwner {
+@@ -551,6 +598,11 @@ class BackgroundContextOwner {
      // When the background is gone without replacement, switch to STOPPED.
      // TODO bug 1286083: Drop support for navigations.
  
@@ -4659,20 +5129,20 @@ index 6a29b4c..94f42e8 100644
    }
  
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
-index 915d54d..02c028d 100644
+index 5bfc0b3..87f9fcf 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionAPIBase.h
-@@ -5,6 +5,9 @@
+@@ -4,6 +4,9 @@
+ 
  #ifndef mozilla_extensions_ExtensionAPIBase_h
  #define mozilla_extensions_ExtensionAPIBase_h
- 
++
 +#include <functional>
 +#include <initializer_list>
-+
+ 
  #include "mozilla/dom/BindingDeclarations.h"
  #include "mozilla/dom/FunctionBinding.h"
- #include "mozilla/dom/PromiseNativeHandler.h"
-@@ -57,6 +60,50 @@ class ExtensionSetting;
+@@ -57,6 +60,50 @@
  
  class ExtensionAPIBase {
   public:
@@ -4723,7 +5193,7 @@ index 915d54d..02c028d 100644
    // WebExtensionStub methods shared between multiple API namespaces.
  
    virtual void CallWebExtMethodNotImplementedNoReturn(
-@@ -153,6 +200,9 @@ class ExtensionAPIBase {
+@@ -153,6 +200,9 @@
    virtual nsString GetAPIObjectId() const = 0;
  
   private:
@@ -4733,7 +5203,7 @@ index 915d54d..02c028d 100644
    void CallWebExtMethodAsyncInternal(JSContext* aCx,
                                       const nsAString& aApiMethod,
                                       const dom::Sequence<JS::Value>& aArgs,
-@@ -177,9 +227,18 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
+@@ -177,9 +227,18 @@
   public:
    NS_DECL_THREADSAFE_ISUPPORTS
  
@@ -4753,8 +5223,13 @@ index 915d54d..02c028d 100644
  
    MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
                                             JS::Handle<JS::Value> aValue,
-@@ -190,18 +249,17 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
+@@ -188,20 +247,20 @@
+                                            JS::Handle<JS::Value> aValue,
+                                            ErrorResult& aRv) override;
  
++  static void ReportUncheckedLastError(JSContext* aCx,
++                                       JS::Handle<JS::Value> aValue);
++
   private:
    ChromeCompatCallbackHandler(ExtensionBrowser* aExtensionBrowser,
 -                              const RefPtr<dom::Function>& aCallback)
@@ -4764,12 +5239,12 @@ index 915d54d..02c028d 100644
 -  }
 -
 -  ~ChromeCompatCallbackHandler() = default;
+-
+-  void ReportUncheckedLastError(JSContext* aCx, JS::Handle<JS::Value> aValue);
 +                              const RefPtr<dom::Function>& aCallback,
 +                              ResultMode aResultMode,
 +                              std::function<bool()> aShouldInvoke);
 +  ~ChromeCompatCallbackHandler();
- 
-   void ReportUncheckedLastError(JSContext* aCx, JS::Handle<JS::Value> aValue);
  
    RefPtr<dom::Function> mCallback;
    RefPtr<ExtensionBrowser> mExtensionBrowser;
@@ -4819,10 +5294,9 @@ index e7ce153..4e5a1c7 100644
  
    // Only set for addListener/removeListener API requests.
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionAPIRequestForwarder.cpp b/toolkit/components/extensions/webidl-api/ExtensionAPIRequestForwarder.cpp
-index 70d384c..bf72521 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionAPIRequestForwarder.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionAPIRequestForwarder.cpp
-@@ -293,6 +293,7 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
+@@ -293,6 +293,7 @@
    dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
  
    mSWDescriptorId = workerPrivate->ServiceWorkerID();
@@ -4830,7 +5304,20 @@ index 70d384c..bf72521 100644
  
    auto* workerScope = workerPrivate->GlobalScope();
    if (NS_WARN_IF(!workerScope)) {
-@@ -436,6 +437,7 @@ already_AddRefed<ExtensionAPIRequest> RequestWorkerRunnable::CreateAPIRequest(
+@@ -367,8 +368,10 @@
+   MOZ_ASSERT(NS_IsMainThread());
+   if (mStackHolder.isSome()) {
+     JS::Rooted<JSObject*> savedFrame(aCx, mStackHolder->get()->ReadStack(aCx));
+-    MOZ_ASSERT(savedFrame);
+-    aRetval.setObject(*savedFrame);
++    // Native promise reactions may forward requests without a JavaScript stack.
++    if (savedFrame) {
++      aRetval.setObject(*savedFrame);
++    }
+     mStackHolder = Nothing();
+   }
+ }
+@@ -436,6 +439,7 @@
    RefPtr<ExtensionAPIRequest> request = new ExtensionAPIRequest(
        mOuterRequest->GetRequestType(), *mOuterRequest->GetRequestTarget());
    request->Init(mClientInfo, mSWDescriptorId, callArgs, callerStackValue);
@@ -5103,13 +5590,14 @@ index 0000000..e239440
 +
 +#endif  // mozilla_extensions_ExtensionBookmarks_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-index a4e2836..39ec23e 100644
+index a4e2836..4378bb4 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-@@ -3,26 +3,292 @@
+@@ -3,26 +3,315 @@
   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
  #include "ExtensionBrowser.h"
++#include "mozilla/HoldDropJSObjects.h"
 +#include <initializer_list>
 +#include "mozilla/BasePrincipal.h"
 +#include "mozilla/dom/BindingUtils.h"
@@ -5247,6 +5735,11 @@ index a4e2836..39ec23e 100644
 +        break;
 +      }
 +    }
++    if (i == size_t(ChromeNamespaceIndex::userScripts)) {
++      visible =
++          aPermissions.Contains(u"userScripts"_ns) &&
++          aPermissions.Contains(u"internal:floorpChromeUserScriptsAllowed"_ns);
++    }
 +    if (visible) result |= uint64_t(1) << i;
 +  }
 +  return result;
@@ -5270,8 +5763,11 @@ index a4e2836..39ec23e 100644
 +                                                        aResolved);
 +}
 +
-+bool ChromeRootEnumerate(JSContext* aCx, JS::Handle<JSObject*> aRoot) {
-+  return ChromeRootOwner(aRoot)->EnumerateChromeNamespaces(aCx, aRoot);
++bool ChromeRootEnumerate(JSContext* aCx, JS::Handle<JSObject*> aRoot,
++                         JS::MutableHandleIdVector aProperties,
++                         bool /*aEnumerableOnly*/) {
++  return ChromeRootOwner(aRoot)->EnumerateChromeNamespaces(aCx, aRoot,
++                                                           aProperties);
 +}
 +
 +bool ChromeRootDelete(JSContext* aCx, JS::Handle<JSObject*> aRoot,
@@ -5283,10 +5779,9 @@ index a4e2836..39ec23e 100644
 +}
 +
 +const JSClassOps kChromeRootOps = {
-+    nullptr, ChromeRootDelete,  ChromeRootEnumerate,
-+    nullptr, ChromeRootResolve, nullptr,
-+    nullptr, nullptr,           nullptr,
-+    nullptr};
++    nullptr,           ChromeRootDelete, nullptr, ChromeRootEnumerate,
++    ChromeRootResolve, nullptr,          nullptr, nullptr,
++    nullptr,           nullptr};
 +const JSClass kChromeRootClass = {"Object", JSCLASS_HAS_RESERVED_SLOTS(1),
 +                                  &kChromeRootOps};
 +}  // namespace
@@ -5301,7 +5796,15 @@ index a4e2836..39ec23e 100644
 +          BasePrincipal::Cast(worker->GetPrincipal())->AddonPolicyCore()) {
 +    nsTArray<nsString> permissions;
 +    core->GetPermissionsGrantedSince(mChromeExposureGeneration, permissions);
-+    mChromeExposedNamespaces |= ChromeNamespaceMask(permissions);
++    constexpr auto userScriptsMask =
++        uint64_t(1) << size_t(ChromeNamespaceIndex::userScripts);
++    mChromeExposedNamespaces |=
++        ChromeNamespaceMask(permissions) & ~userScriptsMask;
++    permissions.Clear();
++    core->GetPermissions(permissions);
++    return (mChromeExposedNamespaces |
++            (ChromeNamespaceMask(permissions) & userScriptsMask)) &
++           ~mChromeDeletedNamespaces;
 +  }
 +  return mChromeExposedNamespaces & ~mChromeDeletedNamespaces;
 +}
@@ -5328,6 +5831,7 @@ index a4e2836..39ec23e 100644
 +        return false;                                                        \
 +      JS::Rooted<JSObject*> reflector(aCx, &value.toObject());               \
 +      if (!ExtensionAPIBase::OwnChromeMethods(aCx, reflector)) return false; \
++      mChromeExposedNamespaces |= uint64_t(1) << index;                      \
 +      *aResolved = true;                                                     \
 +      return true;                                                           \
 +    }                                                                        \
@@ -5337,8 +5841,9 @@ index a4e2836..39ec23e 100644
 +  return true;
 +}
 +
-+bool ExtensionBrowser::EnumerateChromeNamespaces(JSContext* aCx,
-+                                                 JS::Handle<JSObject*> aRoot) {
++bool ExtensionBrowser::EnumerateChromeNamespaces(
++    JSContext* aCx, JS::Handle<JSObject*> aRoot,
++    JS::MutableHandleIdVector aProperties) {
 +  const auto visible = ChromeNamespaceExposure();
 +  for (size_t i = 0; i < kChromeNamespaceCount; ++i) {
 +    if (!(visible & (uint64_t(1) << i))) continue;
@@ -5349,10 +5854,11 @@ index a4e2836..39ec23e 100644
 +    if (!JS_StringToId(aCx, name, &id)) return false;
 +    bool exists;
 +    if (!JS_AlreadyHasOwnPropertyById(aCx, aRoot, id, &exists)) return false;
-+    if (!exists) {
-+      bool resolved;
-+      if (!ResolveChromeNamespace(aCx, aRoot, id, &resolved)) return false;
-+    }
++    // Report lazy, enumerable names without resolving their genuine SDK
++    // objects. Chrome snapshots member permissions when the namespace is first
++    // read; Object.keys/Reflect.ownKeys must not take that snapshot. Real own
++    // properties are enumerated by SpiderMonkey with their actual descriptors.
++    if (!exists && !aProperties.append(id)) return false;
 +  }
 +  return true;
 +}
@@ -5390,6 +5896,10 @@ index a4e2836..39ec23e 100644
 +      return;
 +    }
 +    JS::SetReservedSlot(object, 0, helper);
++    if (!mHoldsChromeJSObjects) {
++      mozilla::HoldJSObjects(this);
++      mHoldsChromeJSObjects = true;
++    }
 +    mChromeAPIObject = object;
 +  }
 +  aResult.setObject(*mChromeAPIObject);
@@ -5399,7 +5909,7 @@ index a4e2836..39ec23e 100644
  NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionBrowser)
  NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBrowser)
  NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBrowser)
-@@ -34,8 +300,44 @@ NS_INTERFACE_MAP_END
+@@ -34,8 +323,44 @@ NS_INTERFACE_MAP_END
  
  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
@@ -5444,7 +5954,7 @@ index a4e2836..39ec23e 100644
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionProxy)
-@@ -43,6 +345,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
+@@ -43,6 +368,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionRuntime)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionScripting)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTest)
@@ -5452,7 +5962,7 @@ index a4e2836..39ec23e 100644
    tmp->mLastError.setUndefined();
    tmp->mPortsLookup.Clear();
    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-@@ -50,8 +353,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+@@ -50,8 +376,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
@@ -5497,7 +6007,7 @@ index a4e2836..39ec23e 100644
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
-@@ -62,6 +401,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
+@@ -62,6 +424,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
  
  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ExtensionBrowser)
@@ -5505,7 +6015,7 @@ index a4e2836..39ec23e 100644
    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mLastError)
    NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
  NS_IMPL_CYCLE_COLLECTION_TRACE_END
-@@ -69,6 +409,17 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
+@@ -69,6 +432,25 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
  ExtensionBrowser::ExtensionBrowser(nsIGlobalObject* aGlobal)
      : mGlobal(aGlobal) {
    MOZ_DIAGNOSTIC_ASSERT(mGlobal);
@@ -5517,13 +6027,21 @@ index a4e2836..39ec23e 100644
 +      nsTArray<nsString> permissions;
 +      mChromeExposureGeneration =
 +          core->GetPermissionsWithGeneration(permissions);
-+      mChromeExposedNamespaces = ChromeNamespaceMask(permissions);
++      mChromeExposedNamespaces =
++          ChromeNamespaceMask(permissions) &
++          ~(uint64_t(1) << size_t(ChromeNamespaceIndex::userScripts));
 +    }
++  }
++}
++
++ExtensionBrowser::~ExtensionBrowser() {
++  if (mHoldsChromeJSObjects) {
++    mozilla::DropJSObjects(this);
 +  }
  }
  
  JSObject* ExtensionBrowser::WrapObject(JSContext* aCx,
-@@ -94,11 +445,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
+@@ -94,11 +476,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
        !NS_IsMainThread(),
        "ExtensionAPI webidl bindings does not yet support main thread globals");
  
@@ -5535,7 +6053,7 @@ index a4e2836..39ec23e 100644
    auto* workerPrivate = mozilla::dom::GetWorkerPrivateFromContext(aCx);
    MOZ_ASSERT(workerPrivate);
    MOZ_ASSERT(workerPrivate->IsServiceWorker());
-@@ -126,6 +472,13 @@ void CreateAndDispatchInitWorkerContextRunnable() {
+@@ -126,6 +503,13 @@ void CreateAndDispatchInitWorkerContextRunnable() {
      return;
    }
  
@@ -5549,7 +6067,7 @@ index a4e2836..39ec23e 100644
    Maybe<dom::ClientInfo> clientInfo = workerScope->GetClientInfo();
    if (NS_WARN_IF(clientInfo.isNothing())) {
      return;
-@@ -201,6 +554,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
+@@ -201,6 +585,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
    mPortsLookup.Remove(aPortId);
  }
  
@@ -5706,7 +6224,7 @@ index a4e2836..39ec23e 100644
  ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
    if (!mExtensionAlarms) {
      mExtensionAlarms = new ExtensionAlarms(mGlobal, this);
-@@ -217,6 +720,113 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
+@@ -217,6 +751,113 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
    return mExtensionBrowserSettings;
  }
  
@@ -5821,7 +6339,7 @@ index a4e2836..39ec23e 100644
    if (!mExtensionDns) {
      mExtensionDns = new ExtensionDns(mGlobal, this);
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
-index 840a550..aaa6f42 100644
+index 840a550..0893958 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
 @@ -21,8 +21,43 @@ class ErrorResult;
@@ -5868,7 +6386,7 @@ index 840a550..aaa6f42 100644
  class ExtensionDns;
  class ExtensionMockAPI;
  class ExtensionPort;
-@@ -65,6 +100,14 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -65,6 +100,15 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   public:
    explicit ExtensionBrowser(nsIGlobalObject* aGlobal);
  
@@ -5877,13 +6395,14 @@ index 840a550..aaa6f42 100644
 +  uint64_t ChromeNamespaceExposure();
 +  bool ResolveChromeNamespace(JSContext* aCx, JS::Handle<JSObject*> aRoot,
 +                              JS::Handle<jsid> aId, bool* aResolved);
-+  bool EnumerateChromeNamespaces(JSContext* aCx, JS::Handle<JSObject*> aRoot);
++  bool EnumerateChromeNamespaces(JSContext* aCx, JS::Handle<JSObject*> aRoot,
++                                 JS::MutableHandleIdVector aProperties);
 +  void DeleteChromeNamespace(JS::Handle<jsid> aId);
 +
    // Helpers used for the expected behavior of the browser.runtime.lastError
    // and browser.extension.lastError.
    void SetLastError(JS::Handle<JS::Value> aLastError);
-@@ -107,8 +150,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -107,8 +151,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
  
    nsIGlobalObject* GetParentObject() const;
  
@@ -5928,18 +6447,23 @@ index 840a550..aaa6f42 100644
    ExtensionDns* GetExtensionDns();
    ExtensionMockAPI* GetExtensionMockAPI();
    ExtensionProxy* GetExtensionProxy();
-@@ -124,6 +203,10 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
-   ~ExtensionBrowser() = default;
+@@ -121,9 +201,14 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionBrowser)
+ 
+  private:
+-  ~ExtensionBrowser() = default;
++  ~ExtensionBrowser();
  
    nsCOMPtr<nsIGlobalObject> mGlobal;
 +  JS::Heap<JSObject*> mChromeAPIObject{nullptr};
++  bool mHoldsChromeJSObjects = false;
 +  uint64_t mChromeExposureGeneration = 0;
 +  uint64_t mChromeExposedNamespaces = 0;
 +  uint64_t mChromeDeletedNamespaces = 0;
    JS::Heap<JS::Value> mLastError;
    bool mCheckedLastError = false;
    nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
-@@ -138,8 +221,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -138,8 +223,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
    // assertion `MOZ_ASSERT(!globalScopeAlive)`, after that
    // `nsCycleCollector_shutdown()` has been called and we don't expect anything
    // to be keeping the service worker global scope alive).
@@ -7228,22 +7752,52 @@ index 0000000..fdc03e3
 +
 +#endif  // mozilla_extensions_ExtensionDownloads_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp b/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
-index e857984..2757e0a 100644
+index e857984..c36920f 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
-@@ -5,8 +5,11 @@
+@@ -3,10 +3,15 @@
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
  #include "ExtensionEventListener.h"
++#include "ExtensionAPIBase.h"
  #include "ExtensionAPIRequestForwarder.h"
  #include "ExtensionPort.h"
+-
 +#include "ExtensionOmnibox.h"
- 
++#include "js/PropertyAndElement.h"
++
 +#include "mozilla/ScopeExit.h"
  #include "mozilla/dom/ClonedErrorHolder.h"
 +#include "mozilla/dom/UserActivation.h"
  #include "mozilla/dom/FunctionBinding.h"
  #include "mozilla/dom/Promise.h"
  #include "mozilla/dom/Promise-inl.h"
-@@ -168,7 +171,11 @@ already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
+@@ -91,6 +96,8 @@
+     }
+   }
+ 
++  bool WasCalled() const { return mWasCalled; }
++
+   static bool Call(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+     JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+     JS::Rooted<JSObject*> callee(aCx, &args.callee());
+@@ -106,6 +113,7 @@
+       return true;
+     }
+ 
++    sendResponse->mWasCalled = true;
+     sendResponse->mPromise->MaybeResolve(args.get(0));
+     sendResponse->Cleanup();
+ 
+@@ -121,6 +129,7 @@
+   RefPtr<dom::Promise> mPromise;
+   JS::Heap<JS::Value> mValue;
+   RefPtr<dom::StrongWorkerRef> mWorkerRef;
++  bool mWasCalled = false;
+ };
+ 
+ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SendResponseCallback)
+@@ -168,7 +177,11 @@
    MOZ_ASSERT(workerPrivate);
    workerPrivate->AssertIsOnWorkerThread();
    RefPtr<dom::StrongWorkerRef> workerRef = dom::StrongWorkerRef::Create(
@@ -7256,7 +7810,7 @@ index e857984..2757e0a 100644
    if (!workerRef) {
      aRv.Throw(NS_ERROR_UNEXPECTED);
      return nullptr;
-@@ -210,10 +217,15 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+@@ -210,12 +223,25 @@
    MOZ_ASSERT(NS_IsMainThread());
    NS_ENSURE_ARG_POINTER(aPromiseResult);
  
@@ -7265,14 +7819,24 @@ index e857984..2757e0a 100644
    // Process and validate call options.
    APIObjectType apiObjectType = APIObjectType::NONE;
    JS::Rooted<JS::Value> apiObjectDescriptor(aCx);
++  JS::Rooted<JS::Value> lastError(aCx);
    if (aCallOptions) {
 +    bool eventHandlingUserInput = false;
 +    aCallOptions->GetIsHandlingUserInput(&eventHandlingUserInput);
 +    handlingUserInput |= eventHandlingUserInput;
      aCallOptions->GetApiObjectType(&apiObjectType);
      aCallOptions->GetApiObjectDescriptor(&apiObjectDescriptor);
++    nsresult rv = aCallOptions->GetLastError(&lastError);
++    if (NS_FAILED(rv)) {
++      return rv;
++    }
++    if (!lastError.isNullOrUndefined() && !lastError.isObject()) {
++      return NS_ERROR_INVALID_ARG;
++    }
  
-@@ -232,6 +244,7 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+     // Explicitly check that the APIObjectType is one of expected ones,
+     // raise to the caller an explicit error if it is not.
+@@ -232,6 +258,7 @@
          }
          break;
        case APIObjectType::RUNTIME_PORT:
@@ -7280,17 +7844,31 @@ index e857984..2757e0a 100644
          if (NS_WARN_IF(apiObjectDescriptor.isNullOrUndefined())) {
            JS_ReportErrorASCII(aCx,
                                "Unexpected null apiObjectDescriptor on "
-@@ -298,7 +311,8 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+@@ -290,6 +317,13 @@
+     }
+   }
+ 
++  // Keep optional callback error metadata inside the existing traced clone
++  // holder. The worker removes this private slot before calling extension code.
++  const bool hasLastError = lastError.isObject();
++  if (hasLastError && !args.AppendElement(lastError, fallible)) {
++    return NS_ERROR_OUT_OF_MEMORY;
++  }
++
+   UniquePtr<dom::StructuredCloneHolder> argsHolder =
+       SerializeCallArguments(args, aCx, rv);
+   if (NS_WARN_IF(rv.Failed())) {
+@@ -298,7 +332,8 @@
  
    RefPtr<ExtensionListenerCallWorkerRunnable> runnable =
        new ExtensionListenerCallWorkerRunnable(this, std::move(argsHolder),
 -                                              aCallOptions, retPromise);
 +                                              aCallOptions, retPromise,
-+                                              handlingUserInput);
++                                              handlingUserInput, hasLastError);
    runnable->Dispatch(GetWorkerPrivate());
    retPromise.forget(aPromiseResult);
  
-@@ -330,6 +344,12 @@ void ExtensionListenerCallWorkerRunnable::DeserializeCallArguments(
+@@ -330,6 +365,12 @@
  
  bool ExtensionListenerCallWorkerRunnable::WorkerRun(
      JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) {
@@ -7303,7 +7881,21 @@ index e857984..2757e0a 100644
    MOZ_ASSERT(aWorkerPrivate);
    aWorkerPrivate->AssertIsOnWorkerThread();
    auto global = mListener->GetGlobalObject();
-@@ -402,20 +422,26 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -354,6 +395,13 @@
+   DeserializeCallArguments(aCx, argsSequence, rv);
+   if (NS_WARN_IF(rv.Failed())) {
+     return true;
++  }
++
++  JS::Rooted<JS::Value> lastError(aCx);
++  if (mHasLastError) {
++    MOZ_DIAGNOSTIC_ASSERT(!argsSequence.IsEmpty());
++    lastError = argsSequence.LastElement();
++    argsSequence.RemoveLastElement();
+   }
+ 
+   RefPtr<dom::Promise> retPromise;
+@@ -402,20 +450,26 @@
          aCx, argsSequence.ElementAt(apiObjectIdx));
      JS::Rooted<JS::Value> apiObjectValue(aCx);
  
@@ -7344,7 +7936,12 @@ index e857984..2757e0a 100644
      }
  
      argsSequence.ReplaceElementAt(apiObjectIdx, apiObjectValue);
-@@ -427,7 +453,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -423,11 +477,13 @@
+ 
+   // Create callback argument and append it to the call arguments.
+   JS::Rooted<JSObject*> sendResponseObj(aCx);
++  RefPtr<SendResponseCallback> sendResponsePtr;
+ 
    switch (mCallbackArgType) {
      case CallbackType::CALLBACK_NONE:
        break;
@@ -7354,19 +7951,75 @@ index e857984..2757e0a 100644
        JS::Rooted<JSFunction*> sendResponseFn(
            aCx, js::NewFunctionWithReserved(aCx, SendResponseCallback::Call,
                                             /* nargs */ 1, 0, "sendResponse"));
-@@ -476,6 +503,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -441,9 +497,8 @@
+       // the SendReponseCallback instance from the resolved slot to resolve
+       // the promise and invalidated the sendResponse callback (any new call
+       // becomes a noop).
+-      RefPtr<SendResponseCallback> sendResponsePtr =
+-          SendResponseCallback::Create(global, retPromise, sendResponseValue,
+-                                       rv);
++      sendResponsePtr = SendResponseCallback::Create(global, retPromise,
++                                                     sendResponseValue, rv);
+       if (NS_WARN_IF(rv.Failed())) {
+         retPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+         return true;
+@@ -476,8 +531,25 @@
    JS::Rooted<JS::Value> retval(aCx);
    ErrorResult erv;
    erv.MightThrowJSException();
+-  MOZ_KnownLive(fn)->Call(argsSequence, &retval, erv, "WebExtensionAPIEvent",
+-                          dom::Function::eRethrowExceptions);
 +  const bool previousUserInput = aWorkerPrivate->ExtensionHandlingUserInput();
 +  aWorkerPrivate->SetExtensionHandlingUserInput(mHandlingUserInput);
 +  const auto restoreUserInput = MakeScopeExit([&] {
 +    aWorkerPrivate->SetExtensionHandlingUserInput(previousUserInput);
 +  });
-   MOZ_KnownLive(fn)->Call(argsSequence, &retval, erv, "WebExtensionAPIEvent",
-                           dom::Function::eRethrowExceptions);
++  {
++    const bool hasLastError =
++        mHasLastError && aWorkerPrivate->ExtensionChromeCompatibilityEnabled();
++    if (hasLastError) {
++      extensionBrowser->SetLastError(lastError);
++    }
++    const auto clearLastError = MakeScopeExit([&] {
++      if (hasLastError && extensionBrowser->ClearLastError()) {
++        ChromeCompatCallbackHandler::ReportUncheckedLastError(aCx, lastError);
++      }
++    });
++    MOZ_KnownLive(fn)->Call(argsSequence, &retval, erv, "WebExtensionAPIEvent",
++                            dom::Function::eRethrowExceptions);
++  }
  
-@@ -544,6 +576,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+   // Calling the callback may have thrown an exception.
+   // TODO: add a ListenerCallOptions to optionally report the exception
+@@ -516,20 +588,13 @@
+       return true;
+     }
+ 
+-    // If the retval isn't true and it is not a Promise object,
+-    // the listener isn't handling the event, and we resolve the
+-    // promise with undefined (if the listener didn't reply already
+-    // by calling sendResponse synchronsouly).
+-    // undefined (
+-    if (!ExtensionEventListener::IsPromise(aCx, retval)) {
+-      // Mark this listener call as cancelled,
+-      // ExtensionListenerCallPromiseResult will check to know that it should
+-      // release the main thread promise without resolving it.
+-      //
+-      // TODO: double-check if we should also cancel rejecting the promise
+-      // returned by mozIExtensionEventListener.callListener when the listener
+-      // call throws (by comparing it with the behavior on the current
+-      // privileged-based API implementation).
++    // A synchronous sendResponse has already accepted the message even if
++    // the listener returns undefined. Otherwise only true or a Promise keeps
++    // an asynchronous response channel open.
++    if (!sendResponsePtr->WasCalled() &&
++        !ExtensionEventListener::IsPromise(aCx, retval)) {
++      // Explicitly report an ignored listener to the parent. Leaving this
++      // promise pending would hide the all-listeners-unhandled case.
+       mIsCallResultCancelled = true;
+       retPromise->MaybeResolveWithUndefined();
+ 
+@@ -544,6 +609,11 @@
      }
    }
  
@@ -7378,17 +8031,76 @@ index e857984..2757e0a 100644
    retPromise->MaybeResolve(retval);
  
    return true;
+@@ -573,19 +643,6 @@
+     PromiseCallbackType aCallbackType) {
+   MOZ_ASSERT(mWorkerRef);
+   mWorkerRef->Private()->AssertIsOnWorkerThread();
+-
+-  // The listener call was cancelled (e.g. when a runtime.onMessage listener
+-  // returned false), release resources associated with this promise handler
+-  // on the main thread without resolving the promise associated to the
+-  // extension event listener call.
+-  if (mWorkerRunnable->IsCallResultCancelled()) {
+-    auto releaseMainThreadPromise = [runnable = std::move(mWorkerRunnable),
+-                                     workerRef = std::move(mWorkerRef)]() {};
+-    nsCOMPtr<nsIRunnable> runnable =
+-        NS_NewRunnableFunction(__func__, std::move(releaseMainThreadPromise));
+-    NS_DispatchToMainThread(runnable);
+-    return;
+-  }
+ 
+   JS::Rooted<JS::Value> retval(aCx, aValue);
+ 
+@@ -628,7 +685,12 @@
+     return;
+   }
+ 
++  const bool isMessageResponse =
++      mWorkerRunnable->mCallbackArgType ==
++      ExtensionEventListener::CallbackType::CALLBACK_SEND_RESPONSE;
++  const bool handled = !mWorkerRunnable->IsCallResultCancelled();
+   auto resolveMainThreadPromise = [callbackType = aCallbackType,
++                                   isMessageResponse, handled,
+                                    resHolder = std::move(resHolder),
+                                    runnable = std::move(mWorkerRunnable),
+                                    workerRef = std::move(mWorkerRef)]() {
+@@ -649,7 +711,24 @@
+     } else {
+       switch (callbackType) {
+         case PromiseCallbackType::Resolve:
+-          promiseResult->MaybeResolve(jsvalue);
++          if (isMessageResponse) {
++            // This envelope belongs to the trusted native transport, not to
++            // the extension's response. It distinguishes ignored listeners
++            // from listeners which deliberately respond with undefined.
++            JS::Rooted<JSObject*> response(cx, JS_NewPlainObject(cx));
++            if (!response ||
++                !JS_DefineProperty(cx, response, "handled", handled,
++                                   JSPROP_ENUMERATE) ||
++                !JS_DefineProperty(cx, response, "value", jsvalue,
++                                   JSPROP_ENUMERATE)) {
++              JS_ClearPendingException(cx);
++              promiseResult->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
++              break;
++            }
++            promiseResult->MaybeResolve(response);
++          } else {
++            promiseResult->MaybeResolve(jsvalue);
++          }
+           break;
+         case PromiseCallbackType::Reject:
+           promiseResult->MaybeReject(jsvalue);
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.h b/toolkit/components/extensions/webidl-api/ExtensionEventListener.h
-index 3feae36..25b2bd2 100644
+index 3feae36..6dfa8bc 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionEventListener.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionEventListener.h
-@@ -131,13 +131,15 @@ class ExtensionListenerCallWorkerRunnable final
+@@ -131,13 +131,16 @@
        const RefPtr<ExtensionEventListener>& aExtensionEventListener,
        UniquePtr<dom::StructuredCloneHolder> aArgsHolder,
        ListenerCallOptions* aCallOptions,
 -      RefPtr<dom::Promise> aPromiseRetval = nullptr)
 +      RefPtr<dom::Promise> aPromiseRetval = nullptr,
-+      bool aHandlingUserInput = false)
++      bool aHandlingUserInput = false, bool aHasLastError = false)
        : WorkerThreadRunnable("ExtensionListenerCallWorkerRunnable"),
          mListener(aExtensionEventListener),
          mArgsHolder(std::move(aArgsHolder)),
@@ -7396,11 +8108,12 @@ index 3feae36..25b2bd2 100644
          mAPIObjectType(APIObjectType::NONE),
 -        mCallbackArgType(CallbackType::CALLBACK_NONE) {
 +        mCallbackArgType(CallbackType::CALLBACK_NONE),
-+        mHandlingUserInput(aHandlingUserInput) {
++        mHandlingUserInput(aHandlingUserInput),
++        mHasLastError(aHasLastError) {
      MOZ_ASSERT(NS_IsMainThread());
      MOZ_ASSERT(aExtensionEventListener);
  
-@@ -145,6 +147,7 @@ class ExtensionListenerCallWorkerRunnable final
+@@ -145,6 +148,7 @@
        aCallOptions->GetApiObjectType(&mAPIObjectType);
        aCallOptions->GetApiObjectPrepended(&mAPIObjectPrepended);
        aCallOptions->GetCallbackType(&mCallbackArgType);
@@ -7408,11 +8121,12 @@ index 3feae36..25b2bd2 100644
      }
    }
  
-@@ -183,6 +186,8 @@ class ExtensionListenerCallWorkerRunnable final
+@@ -183,6 +187,9 @@
    bool mAPIObjectPrepended = false;
    APIObjectType mAPIObjectType;
    CallbackType mCallbackArgType;
 +  bool mHandlingUserInput;
++  bool mHasLastError;
 +  bool mIsFinalCall = false;
  };
  
@@ -9103,15 +9817,17 @@ index 14836e8..5187a92 100644
  nsIGlobalObject* ExtensionPort::GetParentObject() const { return mGlobal; }
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPower.cpp b/toolkit/components/extensions/webidl-api/ExtensionPower.cpp
 new file mode 100644
-index 0000000..f02763f
+index 0000000..6ddebf9
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPower.cpp
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,63 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
 +#include "ExtensionPower.h"
++#include "ExtensionAPIGetProperty.h"
++#include "js/PropertyAndElement.h"
 +#include "ExtensionEventManager.h"
 +
 +#include "mozilla/dom/ExtensionPowerBinding.h"
@@ -9145,23 +9861,35 @@ index 0000000..f02763f
 +
 +JSObject* ExtensionPower::WrapObject(JSContext* aCx,
 +                                     JS::Handle<JSObject*> aGivenProto) {
-+  return dom::ExtensionPower_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JS::Value> value(aCx);
++  ErrorResult rv;
++  auto request = GetProperty(u"Level"_ns);
++  request->Run(GetGlobalObject(), aCx, &value, rv);
++  if (rv.MaybeSetPendingException(aCx, "Power.Level")) {
++    return nullptr;
++  }
++  if (!value.isObject()) {
++    JS_ReportErrorASCII(aCx, "Invalid Power.Level schema value");
++    return nullptr;
++  }
++  JS::Rooted<JSObject*> wrapper(
++      aCx, dom::ExtensionPower_Binding::Wrap(aCx, this, aGivenProto));
++  if (!wrapper ||
++      !JS_DefineProperty(aCx, wrapper, "Level", value, JSPROP_ENUMERATE)) {
++    return nullptr;
++  }
++  return wrapper;
 +}
 +
 +nsIGlobalObject* ExtensionPower::GetParentObject() const { return mGlobal; }
 +
-+void ExtensionPower::GetLevel(JSContext* aCx,
-+                              JS::MutableHandle<JS::Value> aRetval) {
-+  GetWebExtPropertyAsJSValue(aCx, u"Level"_ns, aRetval);
-+}
-+
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPower.h b/toolkit/components/extensions/webidl-api/ExtensionPower.h
 new file mode 100644
-index 0000000..9ef178c
+index 0000000..a85b15f
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPower.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,50 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9198,7 +9926,6 @@ index 0000000..9ef178c
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
-+  void GetLevel(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 +  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionPower)
@@ -10660,15 +11387,17 @@ index 0000000..12996cd
 +#endif  // mozilla_extensions_ExtensionStorageArea_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTabCapture.cpp b/toolkit/components/extensions/webidl-api/ExtensionTabCapture.cpp
 new file mode 100644
-index 0000000..80fd615
+index 0000000..f5de07a
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTabCapture.cpp
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,69 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
 +#include "ExtensionTabCapture.h"
++#include "ExtensionAPIGetProperty.h"
++#include "js/PropertyAndElement.h"
 +#include "ExtensionEventManager.h"
 +
 +#include "mozilla/dom/ExtensionTabCaptureBinding.h"
@@ -10703,7 +11432,24 @@ index 0000000..80fd615
 +
 +JSObject* ExtensionTabCapture::WrapObject(JSContext* aCx,
 +                                          JS::Handle<JSObject*> aGivenProto) {
-+  return dom::ExtensionTabCapture_Binding::Wrap(aCx, this, aGivenProto);
++  JS::Rooted<JS::Value> value(aCx);
++  ErrorResult rv;
++  auto request = GetProperty(u"TabCaptureState"_ns);
++  request->Run(GetGlobalObject(), aCx, &value, rv);
++  if (rv.MaybeSetPendingException(aCx, "TabCapture.TabCaptureState")) {
++    return nullptr;
++  }
++  if (!value.isObject()) {
++    JS_ReportErrorASCII(aCx, "Invalid TabCapture.TabCaptureState schema value");
++    return nullptr;
++  }
++  JS::Rooted<JSObject*> wrapper(
++      aCx, dom::ExtensionTabCapture_Binding::Wrap(aCx, this, aGivenProto));
++  if (!wrapper || !JS_DefineProperty(aCx, wrapper, "TabCaptureState", value,
++                                     JSPROP_ENUMERATE)) {
++    return nullptr;
++  }
++  return wrapper;
 +}
 +
 +nsIGlobalObject* ExtensionTabCapture::GetParentObject() const {
@@ -13016,3 +13762,23 @@ index 0000000..790a529
 +
 +if __name__ == "__main__":
 +    mozunit.main()
+diff --git a/toolkit/modules/ActorManagerParent.sys.mjs b/toolkit/modules/ActorManagerParent.sys.mjs
+index c63bcb4..c2c7f8a 100644
+--- a/toolkit/modules/ActorManagerParent.sys.mjs
++++ b/toolkit/modules/ActorManagerParent.sys.mjs
+@@ -88,10 +88,11 @@ let JSPROCESSACTORS = {
+     child: {
+       esModuleURI: "resource://gre/modules/ConduitsChild.sys.mjs",
+     },
+-    // This actor is only meant to be used when MV3 background service worker
+-    // implementation is enabled (which is currently only allowed in Nightly
+-    // and gated by this about:config preference).
+-    enablePreference: "extensions.backgroundServiceWorker.enabled",
++    // Compiled Chrome workers use an immutable per-extension policy while
++    // ordinary extension worker selection still follows the existing pref.
++    ...(AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED
++      ? {}
++      : { enablePreference: "extensions.backgroundServiceWorker.enabled" }),
+   },
+ 
+   // A single process (shared with MLEngine) that controls all of the translations.

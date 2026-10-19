@@ -6,10 +6,28 @@ import {
   assertEquals,
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
+import type {
+  ComponentAddon,
+  ComponentAddonManager,
+  ComponentBrowser,
+  ComponentExtensionParent,
+  ComponentNativeWindow,
+  ComponentTab,
+  FileSystemProbe,
+  FileSystemResult,
+} from "../../helpers/capture-component-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-async function until(read, label) {
+async function until<T>(
+  read: () =>
+    | T
+    | false
+    | undefined
+    | null
+    | Promise<T | false | undefined | null>,
+  label: string,
+): Promise<T> {
   const end = Date.now() + 20000;
   while (Date.now() < end) {
     const value = await read();
@@ -21,10 +39,10 @@ async function until(read, label) {
 async function fileSystem() {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as unknown as { AddonManager: ComponentAddonManager };
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as unknown as { ExtensionParent: ComponentExtensionParent };
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
@@ -34,9 +52,9 @@ async function fileSystem() {
     PathUtils.tempDir,
     "floorp-native-fs-" + Services.uuid.generateUUID() + ".xpi",
   );
-  let addon;
-  const extras = [], tabs = [];
-  const foreignProbe = (url) =>
+  let addon: ComponentAddon | undefined | null;
+  const extras: (string | ComponentAddon)[] = [], tabs: ComponentTab[] = [];
+  const foreignProbe = (url: string) =>
     `const image=()=>new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(false);img.onerror=()=>resolve(true);img.src=${
       JSON.stringify(url)
     };});(async()=>{let fetchDenied=false,downloadDenied=false;try{await(await fetch(${
@@ -120,7 +138,9 @@ async function fileSystem() {
       if (title.startsWith("FAIL:")) throw Error(title);
       return title.startsWith("{");
     }, "real persistent filesystem write, fetch and image decode");
-    const result = JSON.parse(background.xulBrowser.contentTitle);
+    const result = JSON.parse(
+      background.xulBrowser.contentTitle,
+    ) as FileSystemResult;
     await IOUtils.writeUTF8(
       "/tmp/floorp-native-filesystem-result.json",
       JSON.stringify(result),
@@ -155,12 +175,15 @@ async function fileSystem() {
       result.malformedBuffer,
       "numeric pseudo-buffer rejected before parent allocation",
     );
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    const readProbe = (browser) =>
+    const window = Services.wm.getMostRecentWindow(
+      "navigator:browser",
+    ) as unknown as ComponentNativeWindow;
+    const readProbe = (browser: ComponentBrowser) =>
       until(() => {
         const title = browser.contentTitle;
         if (title.startsWith("FAIL:")) throw Error(title);
-        return title.startsWith("FSSEC:") && JSON.parse(title.slice(6));
+        return title.startsWith("FSSEC:") &&
+          JSON.parse(title.slice(6)) as FileSystemProbe;
       }, "real origin/CSP probe");
     for (const marked of [true, false]) {
       const otherOriginal = marked
@@ -282,7 +305,7 @@ async function fileSystem() {
       "extensions.floorpChromeFileSystem.maxEntries",
       8,
     );
-    const post = (command) =>
+    const post = (command: string) =>
       background.xulBrowser.messageManager.loadFrameScript(
         "data:application/javascript," +
           encodeURIComponent(
@@ -322,7 +345,9 @@ async function fileSystem() {
     Services.prefs.clearUserPref(
       "extensions.floorpChromeFileSystem.maxEntries",
     );
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    const window = Services.wm.getMostRecentWindow(
+      "navigator:browser",
+    ) as unknown as ComponentNativeWindow;
     for (const tab of tabs) if (tab.isConnected) window.gBrowser.removeTab(tab);
     for (const extra of extras) {
       if (typeof extra === "string") {

@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 import { zipSync } from "fflate/browser";
+import type {
+  DesktopCaptureAddon,
+  DesktopCaptureAddonManager,
+  DesktopCaptureCommand,
+  DesktopCaptureContext,
+  DesktopCaptureDialog,
+  DesktopCaptureDialogList,
+  DesktopCaptureExtensionParent,
+  DesktopCaptureWindow,
+  DesktopCaptureWindowMediator,
+} from "../../helpers/desktop-capture-test-types.ts";
 import {
   assert,
   assertEquals,
@@ -9,7 +20,10 @@ import {
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-async function until(read, label) {
+async function until<T>(
+  read: () => T | false | undefined | Promise<T | false | undefined>,
+  label: string,
+): Promise<T> {
   const limit = Date.now() + 25000;
   while (Date.now() < limit) {
     const value = await read();
@@ -18,7 +32,7 @@ async function until(read, label) {
   }
   throw new Error("Timed out waiting for " + label);
 }
-function post(context, data) {
+function post(context: DesktopCaptureContext, data: DesktopCaptureCommand) {
   context.xulBrowser.messageManager.loadFrameScript(
     "data:application/javascript," +
       encodeURIComponent(`content.postMessage(${JSON.stringify(data)},"*")`),
@@ -28,14 +42,16 @@ function post(context, data) {
 async function desktopAPI() {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as unknown as { AddonManager: DesktopCaptureAddonManager };
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as unknown as { ExtensionParent: DesktopCaptureExtensionParent };
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
+  const window = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as unknown as DesktopCaptureWindow;
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
   const target = window.gBrowser.addTab("about:blank", {
     triggeringPrincipal: principal,
@@ -54,9 +70,11 @@ async function desktopAPI() {
   const autoplay = Services.prefs.prefHasUserValue("media.autoplay.default")
     ? Services.prefs.getIntPref("media.autoplay.default")
     : null;
-  let addon;
+  let addon: DesktopCaptureAddon | undefined;
   const dialogs = () =>
-    [...Services.wm.getEnumerator(null)].filter((item) =>
+    [...(Services.wm as unknown as DesktopCaptureWindowMediator).getEnumerator(
+      null,
+    )].filter((item) =>
       !item.closed &&
       item.document.documentURI === "chrome://global/content/selectDialog.xhtml"
     );
@@ -65,13 +83,17 @@ async function desktopAPI() {
       () =>
         dialogs().find((item) =>
           item.document.readyState === "complete" &&
-          item.document.getElementById("list")?.itemCount
+          (item.document.getElementById("list") as unknown as
+            | DesktopCaptureDialogList
+            | null)?.itemCount
         ),
       "native selection dialog",
     );
-  const accept = async (choose) => {
+  const accept = async (choose: number | string) => {
     const dialog = await nextDialog();
-    const list = dialog.document.getElementById("list");
+    const list = dialog.document.getElementById(
+      "list",
+    ) as unknown as DesktopCaptureDialogList;
     const labels = Array.from(
       { length: list.itemCount },
       (_, index) => list.getItemAtIndex(index).label,
@@ -84,7 +106,8 @@ async function desktopAPI() {
       "native chooser offers requested source: " + JSON.stringify(labels),
     );
     list.selectedIndex = index;
-    dialog.document.querySelector("dialog").acceptDialog();
+    (dialog.document.querySelector("dialog") as unknown as DesktopCaptureDialog)
+      .acceptDialog();
     await until(() => dialog.closed, "native dialog accepted");
   };
   try {
@@ -156,7 +179,8 @@ async function desktopAPI() {
       "chooseDesktopMedia returns a synchronous integer ID: " +
         JSON.stringify(request),
     );
-    first.document.querySelector("dialog").cancelDialog();
+    (first.document.querySelector("dialog") as unknown as DesktopCaptureDialog)
+      .cancelDialog();
     await until(
       () => background.xulBrowser.contentTitle.includes('"phase":"empty"'),
       "native user cancellation callback",

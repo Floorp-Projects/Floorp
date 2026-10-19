@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Authored isolated content timer target</title>
+<script>
+  // Context creation can precede this parser even for document_end scripts.
+  // Check named native source as well as identity to detect an early page leak.
+  const names = ["setTimeout", "clearTimeout", "setInterval", "clearInterval"];
+  const originals = Object.fromEntries(names.map(name => [name, window[name]]));
+  const results = {};
+  const convertedId = new URL(location.href).searchParams.get("convertedId");
+  if (convertedId) document.documentElement.setAttribute("data-converted-timer-id", convertedId);
+  window.addEventListener("message", event => {
+    if (event.source !== window || event.data?.target !== "authored-content-timer-contract" ||
+        typeof event.data.id !== "string" || event.data.result?.realm !== "isolated-content-script") return;
+    results[event.data.id] = event.data.result;
+    if (event.data.id === convertedId) document.documentElement.setAttribute("data-converted-timer-ready", "");
+    document.title = "timer-contracts:" + JSON.stringify({
+      pageTimersUnchanged: names.every(name => window[name] === originals[name]),
+      pageTimersNative: names.every(name => {
+        const source = Function.prototype.toString.call(window[name]);
+        return source.includes("[native code]") &&
+          new RegExp("^function\\s+" + name + "\\s*\\(").test(source);
+      }),
+      results,
+    });
+  });
+</script>
+<main>Authored content timer receiver and world isolation target</main>

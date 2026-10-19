@@ -29,6 +29,7 @@ if (
 const parent = join(root, "_dist/chrome-runtime-tests");
 mkdirSync(parent, { recursive: true });
 const output = mkdtempSync(join(parent, "worker-member-reference-"));
+const rootAccessOnly = process.argv.includes("--pre-read-root");
 const server = createServer((_request, response) =>
   response.end(
     "<!doctype html><title>Native worker member permission reference</title>Authored local permission target",
@@ -49,7 +50,10 @@ const report = {
   output,
   passed: false,
   scope:
-    "Self-authored Chrome155 classic/module Worker member visibility. No native hosts installed or invoked, and no foreign addon mutation.",
+    "Self-authored Chrome155 classic/module Worker member visibility. No native hosts installed or invoked, and no foreign addon mutation." +
+    (rootAccessOnly
+      ? " Pre-grant root enumeration/descriptor observation in fresh Workers; no native qualification claim."
+      : ""),
   cases: [],
 };
 /** @param {number} milliseconds */
@@ -101,10 +105,17 @@ try {
   const kinds = ["classic", "module"];
   for (const kind of kinds) {
     /** @type {import("./worker-member-reference-types.ts").NativeMemberCase["mode"][]} */
-    const modes = ["undeclared", "optional", "optional-unread"];
+    const modes = rootAccessOnly
+      ? [
+        "optional-unread",
+        "optional-unread-keys",
+        "optional-unread-ownKeys",
+        "optional-unread-descriptor",
+      ]
+      : ["undeclared", "optional", "optional-unread"];
     for (const mode of modes) {
       const optional = mode !== "undeclared";
-      const unread = mode === "optional-unread";
+      const unread = mode.startsWith("optional-unread");
       const directory = join(
         output,
         `${kind}-${mode}`,
@@ -179,6 +190,17 @@ try {
         "({generation,sameChrome:chrome===originalChrome})",
       );
       item.preRequestIdentity = initialIdentity;
+      if (rootAccessOnly) {
+        const access = mode === "optional-unread"
+          ? "none"
+          : mode.slice("optional-unread-".length);
+        item.preGrantRootAccess = await evaluate(
+          sessionId,
+          `(()=>{const kind=${
+            JSON.stringify(access)
+          };if(kind==='none')return{kind};if(kind==='keys')return{kind,names:Object.keys(chrome)};if(kind==='ownKeys')return{kind,names:Reflect.ownKeys(chrome).map(String)};const d=Object.getOwnPropertyDescriptor(chrome,'management');return{kind,descriptor:d?{configurable:d.configurable,enumerable:d.enumerable,writable:d.writable,valueType:typeof d.value,get:typeof d.get,set:typeof d.set}:null};})()`,
+        );
+      }
       if (!unread) {
         item.initial = await state();
         item.ownInfo = await evaluate(
@@ -232,7 +254,10 @@ try {
       await pause(500);
       const phase = await evaluate(sessionId, "phase");
       if (phase === "prompting") {
-        const screenshot = join(output, kind + "-permission-prompt.png");
+        const screenshot = join(
+          output,
+          kind + "-" + mode + "-permission-prompt.png",
+        );
         execFileSync("import", [
           "-display",
           process.env.DISPLAY || ":101",
@@ -274,6 +299,11 @@ try {
         ]);
       } else if (phase === "granted") item.decision = { kind: "quiet-grant" };
       else throw Error("Actual optional request was " + phase);
+      if (rootAccessOnly && item.decision.kind !== "native-prompt") {
+        throw Error(
+          "Pre-read root oracle requires an actual native Allow prompt",
+        );
+      }
       await until(
         async () =>
           ["granted", "denied", "error"].includes(
@@ -295,7 +325,45 @@ try {
       );
       await pause(1500);
       item.grantedLater = await state();
+      if (rootAccessOnly) {
+        const descriptorRead = mode === "optional-unread-descriptor";
+        for (const [name, shape] of Object.entries(item.grantedLater.members)) {
+          const managementPrivileged = name === "getAll" ||
+            name === "setEnabled";
+          const expected = descriptorRead && managementPrivileged
+            ? "undefined"
+            : "function";
+          if (shape.type !== expected) {
+            throw Error(
+              "Native Chrome root pre-read method snapshot changed: " + mode +
+                " " + name + " expected " + expected + " got " + shape.type,
+            );
+          }
+        }
+        const before = item.preGrantRootAccess;
+        if (descriptorRead) {
+          const descriptor = before?.descriptor;
+          if (
+            descriptor?.valueType !== "object" || !descriptor.writable ||
+            !descriptor.enumerable || !descriptor.configurable ||
+            descriptor.get !== "undefined" || descriptor.set !== "undefined"
+          ) {
+            throw Error(
+              "Native Chrome root descriptor no longer materializes an own data namespace",
+            );
+          }
+        } else if (
+          before?.kind !== "none" &&
+          (!before?.names?.includes("management") ||
+            !before.names.includes("runtime"))
+        ) {
+          throw Error(
+            "Native Chrome root enumeration omitted public namespaces",
+          );
+        }
+      }
       if (
+        (!rootAccessOnly || mode === "optional-unread") &&
         ["getAll", "setEnabled", "connectNative", "sendNativeMessage"].some(
           (name) =>
             item.grantedLater?.members[name].type !==
@@ -372,7 +440,7 @@ try {
         throw Error("Actual granted/revoked method identity contract differs");
       }
       if (
-        unread &&
+        item.grantedLater.members.getAll.type === "function" &&
         (item.revokedGetAll?.name !== "Error" ||
           !item.revokedGetAll.message?.includes(
             "is not available in this context",

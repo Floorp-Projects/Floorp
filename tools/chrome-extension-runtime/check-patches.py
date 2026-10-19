@@ -10,6 +10,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PATCH_NAMES = (
+    "chrome-extension-content-timers.patch",
+    "chrome-extension-port-disconnect.patch",
     "chrome-extension-native-messaging.patch",
     "chrome-extension-offscreen.patch",
     "chrome-side-panel.patch",
@@ -34,6 +36,9 @@ PATCH_NAMES = (
     "chrome-extension-windows.patch",
     "chrome-extension-auxiliary.patch",
     "chrome-extension-auxiliary-content.patch",
+    "chrome-extension-user-scripts-permissions.patch",
+    "chrome-user-scripts-allow.patch",
+    "chrome-management-identity.patch",
 )
 NATIVE_ONLY_PATCH_NAMES = (
     "chrome-extension-debugger-native.patch",

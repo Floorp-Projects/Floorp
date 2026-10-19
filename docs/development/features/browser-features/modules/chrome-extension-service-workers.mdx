@@ -13,9 +13,17 @@ to an old binary cannot enable compiled Worker bindings.
 
 The candidate's WebIDL parser and C++ binding generator checks pass. Native
 classes and generated bindings are checked against the candidate's actual
-headers. These are compile checks; the full native build and actual Worker
-lifecycle suite remain the execution gates. Historical Firefox 157 document
-fallback results do not qualify this implementation.
+headers. A complete Runtime 158 developer build starts actual classic and
+module background Workers with the global experimental policy disabled; its
+internal script-cache regression and sixteen public messaging cases also pass.
+Developer tests also verify native context records, actual stop/event/restart,
+headed optional-management grant and revocation, and cached API lifetime across
+actual Worker garbage collection. The complete SDK regression suite passes on
+the Linux developer build, including native speech callbacks
+and event wake-up after termination. Production package gates remain under
+verification.
+Developer runs do not qualify a production package. Historical Firefox 157
+document fallback results do not qualify this implementation.
 
 ## Selection and loading
 
@@ -24,7 +32,14 @@ A separate immutable per-extension policy selects native execution only for a
 valid Chrome compatibility marker with matching original/installed IDs, and
 only when WebIDL bindings were compiled. Registration, script loading and API
 exposure use that policy. Ordinary Firefox extensions retain upstream selection;
-the existing experimental preference still supports upstream tests.
+the existing experimental preference still supports upstream tests. The native
+internal script cache also checks the target URL's current thread-safe extension
+policy instead of requiring that global preference. This allowance is confined
+to the privileged internal cache namespace; public Cache API scheme validation
+keeps its existing behavior.
+The process conduit actor is registered on compiled Worker builds independently
+of the global experimental preference. Actual Worker creation and every conduit
+request still pass their extension policy and context checks.
 
 The converter reads the actual `AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED` flag.
 It does not use the globally disabled experimental Worker preference as a
@@ -58,6 +73,10 @@ New bindings have WebIDL definitions, build-list entries, generated binding
 configuration, native classes, Browser getters and cycle collection. An empty
 namespace or generated NotImplemented success is not a backend implementation.
 Schema enum properties use the actual schema enumeration and Chrome key naming.
+Power.Level and tabCapture.TabCaptureState are installed directly by their native
+wrappers as own writable, enumerable and configurable data properties. Deleting
+them leaves no prototype accessor fallback; their values are retained after
+permission revocation while method calls still require current authorization.
 Worker-only API availability follows the Chrome reference: DOM-only extension
 aliases such as getViews/getBackgroundPage/getURL are not invented in Workers.
 
@@ -71,6 +90,15 @@ Worker starts with only its current grants. Internal manifest-presence tokens
 are kept out of the extension's public permission Set and `permissions.getAll`.
 Ordinary Firefox extensions retain the original native DOM root.
 
+MV3 Chrome `userScripts` also requires the per-extension **Allow user scripts**
+switch in the Add-ons Manager permissions panel. Its private setting never
+grants the public `userScripts` permission. Turning it off denies current and
+captured API calls and suspends registered scripts in both USER_SCRIPT and MAIN
+worlds, including pending injections. Registrations remain stored and resume
+when permission and the setting are both enabled. Pages and Workers retain an
+already observed SDK object, while an unread namespace stays hidden after
+revocation. Ordinary Firefox and legacy MV2 user-script behavior is preserved.
+
 Member visibility is sampled when a native namespace is first accessed, matching
 the measured Chrome contract. Public namespaces such as `runtime` and
 `management` omit permission-restricted methods when initialized without their
@@ -79,15 +107,39 @@ Captured permitted functions remain present after revocation, with live call
 authorization denying further access. The generator keeps explicit measured
 visibility exceptions for APIs whose callable surface remains available.
 
+Root enumeration stays lazy: `Object.keys(chrome)` and `Reflect.ownKeys(chrome)`
+list available namespace names without creating SDK objects or sampling member
+permissions. An explicit namespace read or property descriptor materializes that
+namespace, matching Chrome. The native enumeration hook preserves authored own
+properties and their flags; sealing/freezing uses the engine's lazy-property
+resolution before closing the object.
+
 Native methods are own writable, enumerable and configurable data properties.
 Their reserved-slot forwarders call the genuine compiled IDL function with its
 original SDK receiver, so detached calls preserve the extension context. Only
 matching generated native methods are mirrored; shared-prototype script,
 callable Proxy, WebAssembly, builtin and accessor additions are ignored.
 
+The native cached Chrome root participates in the engine's JavaScript holder
+tracing. Its SDK objects, functions and authored properties survive collection
+between asynchronous callbacks. A separate classic/module regression requires
+an unreachable weak sentinel to be collected before verifying those identities
+and genuine asynchronous storage operations.
+
+Management results use original Chrome IDs for converted add-ons, including
+disabled add-ons whose native installation metadata retains that identity.
+`management.get` and `setEnabled` accept those IDs with the existing permission
+and policy checks. Chrome uninstall events carry the ID string; ordinary Firefox
+callers retain upstream IDs and event objects.
+
 
 Special contracts are implemented where generic JSON dispatch is insufficient:
 
+- `runtime.onMessage` uses a native handled/value response envelope. Ignored
+  listeners settle without winning over another listener's response; synchronous
+  `sendResponse`, returned Promises and asynchronous callbacks retain their
+  distinct behavior. A native-listener-only witness hook handles the transport
+  Promise without weakening ordinary message-response principal checks.
 - Callable `scripting.executeScript` functions and JSON arguments are serialized
   on the Worker thread, then handled by the real injection backend.
 - `contextMenus.create` returns its ID synchronously while completion and errors
@@ -99,6 +151,9 @@ Special contracts are implemented where generic JSON dispatch is insufficient:
   old-input callbacks expire. A callback may deliver multiple suggestion sets.
 - TTS retains `options.onEvent` on the Worker thread and routes genuine engine
   events back to it. Terminal events, failure and shutdown release callbacks.
+  Parent-side numeric checks reject invalid volume, pitch and nonfinite or
+  excessive rates before changing speech state. These errors currently reject
+  asynchronously; Chrome rejects them synchronously in its bindings.
 - Synchronous i18n resolves the extension's actual locale catalog rather than
   depending on an unavailable synchronous parent request.
 - `extension.setUpdateUrlData` validates one string of at most 1024 characters
@@ -120,15 +175,35 @@ Idle termination preserves the registration and primes persistent listeners.
 A subsequent real event starts the registered worker and delivers the event.
 Startup watchers and activation listeners are removed on shutdown. Disable,
 update and uninstall terminate old contexts and release pending calls, callbacks
-and Ports; old extension generations cannot handle new events.
+and Ports; old extension generations cannot handle new events. Worker context
+records use real proxy lifetimes and omit document fields. Context teardown
+removes the old background view, and native termination returns its actual
+completion Promise to the privileged caller.
+A new background owner waits for that exact previous termination Promise before
+registering startup watchers or waking a Worker. This prevents a stopped parent
+state from starting a new incarnation while the old child context is unloading.
+Native Promise reactions can forward cleanup requests without a JavaScript
+caller stack. The main-thread request retains an undefined stack in that case;
+it creates a saved-frame object only when deserialization returned an object.
+`ChromeTtsValidationNative.test.mts` exercises this path with rejected speech
+requests and event callbacks in actual document and Worker contexts.
 
 ## Execution gates
+
+For native registration diagnosis, `MOZ_LOG=WorkerTelemetry:5` reports script
+comparison, cache/fetch failure status, update failure and worker initialization
+stages. This logging is off by default and adds no permission bypass or fallback;
+the new failure records contain stage names and error codes rather than URLs or
+extension data.
 
 The production browser suite is:
 
 ```sh
 python3 tools/chrome-extension-runtime/run-browser-tests.py \
   --browser /path/to/rebuilt/floorp \
+  --candidate-manifest /path/to/native-runtime-manifest.json \
+  --headed \
+  --actor-module browser-features/modules/modules/chrome-web-store/test/helpers/UserScriptsConsentUIChild.sys.mjs \
   --test browser-features/modules/modules/chrome-web-store/test/workers/WorkerNative.test.mts
 ```
 
@@ -137,9 +212,19 @@ function/file injection, callback/Promise/lastError behavior, native contexts,
 permission failures and real event wake-up after termination. Tests also cover
 tab/cookie/group/font changes, native speech callbacks, locale catalogs and
 additional namespace contracts. Missing compiled bindings fail explicitly.
+`WorkerMessagingNative.test.mts` separately checks sixteen public message cases
+across classic and module Workers: returned Promises and rejections, synchronous
+and asynchronous callbacks, ignored listeners, multiple listeners and late
+callbacks. A sender timeout is a failure. Its expected results come from the
+frozen Chrome reference rather than the native transport implementation.
 `WorkerPermissionsNative.test.mts` requires a headed native candidate and uses
 a real toolbar invocation and permission prompt. It checks optional grant,
 revocation, retained references, ordinary root descriptors and a fresh Worker.
+`WorkerMemberPermissionsNative.test.mts` separately tests lazy root enumeration
+and descriptor materialization with actual optional-management consent. Its
+execution and the other headed permission tests are mandatory production
+candidate gates. A raw developer build may provide early API feedback, but
+does not qualify a production package.
 `NativeBackgroundSelection.test.mts` separately checks converter selection,
 classic/module preservation, cross-browser background precedence and diagnostic
 mode reporting; both suites are in the native candidate CI gate.

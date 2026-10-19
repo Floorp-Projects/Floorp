@@ -41,7 +41,9 @@ def main():
     addon_id = chrome_id + "@chromium-extension"
     manifest = {
         "manifest_version": 3, "name": "Chrome Diagnostics Fixture", "version": "2.4.1",
-        "permissions": ["storage"], "background": {"scripts": ["background.js"]},
+        "permissions": ["storage", "sidePanel"], "background": {"scripts": ["background.js"]},
+        "side_panel": {"default_path": "panel.html"},
+        "commands": {"fixture": {"description": "Diagnostics shortcut fixture", "suggested_key": {"default": "Ctrl+Shift+Y"}}},
         "browser_specific_settings": {"gecko": {
             "id": addon_id, "floorp_chrome_extension": {"schema_version": 1, "original_id": chrome_id}}},
     }
@@ -55,6 +57,7 @@ def main():
         archive.writestr("manifest.json", json.dumps(manifest))
         archive.writestr("__floorp_chrome__/conversion-report.json", json.dumps(conversion))
         archive.writestr("background.js", "document.title=crypto.randomUUID();browser.runtime.onMessage.addListener(()=>Promise.resolve('ready')); ")
+        archive.writestr("panel.html", "<!doctype html><title>Diagnostics sidebar fixture</title>")
     ordinary_id = "ordinary-diagnostics@example.com"
     ordinary = output / "ordinary.xpi"
     with zipfile.ZipFile(ordinary, "w") as archive:
@@ -215,6 +218,59 @@ export const ChromeExtensionUpdateScheduler={
                 client.script("document.querySelector('[data-chrome-action='+arguments[0]+']').click();", action)
                 runtime.wait_for(action, lambda: client.script("return document.querySelector('floorp-chrome-extension-diagnostics').getAttribute('aria-busy') !== 'true';"), 20)
 
+            report["managementNavigation"] = []
+
+            def open_hub_settings(action, url):
+                original = client.command("WebDriver:GetWindowHandle")["value"]
+                before = set(client.handles())
+                client.context("chrome")
+                owner = client.script("return window.windowUtils.outerWindowID;")
+                client.context("content")
+                client.script("document.querySelector('[data-chrome-action='+arguments[0]+']').click();", action)
+                created = set()
+                try:
+                    created = runtime.wait_for("one new Floorp settings tab", lambda: (set(client.handles()) - before) or None, 20)
+                    check(len(created) == 1, action + " opens exactly one owned settings tab")
+                    client.switch(next(iter(created)))
+                    client.context("chrome")
+                    check(client.script("return window.windowUtils.outerWindowID;") == owner,
+                          action + " uses the browser window that owns the Add-ons Manager")
+                    client.context("content")
+                    state = runtime.wait_for("real Floorp settings route", lambda: client.script("""
+                        const heading=document.querySelector('#settings-content .floorp-page-heading');
+                        return location.href === arguments[0] && heading?.textContent.trim()
+                            ? {url:location.href,heading:heading.textContent.trim(),documentURI:document.documentURI}
+                            : null;
+                    """, url), 30)
+                    check(not state["documentURI"].startswith("about:neterror"), action + " loads the actual Floorp settings application")
+                    report["managementNavigation"].append({"action": action, "ownerWindowId": owner, **state})
+                finally:
+                    for handle in created:
+                        if handle in client.handles():
+                            client.switch(handle)
+                            client.context("content")
+                            client.command("WebDriver:CloseWindow")
+                    client.switch(original)
+                    client.context("content")
+
+            check(client.script("return !document.querySelector('[data-chrome-action=sidebar-settings]').hidden;"),
+                  "Converted side-panel extensions offer the existing sidebar pin settings")
+            open_hub_settings("sidebar-settings", "about:hub#/features/sidebar")
+            open_hub_settings("floorp-shortcuts", "about:hub#/features/shortcuts")
+            client.script("document.querySelector('[data-chrome-action=extension-shortcuts]').click();")
+            shortcuts = runtime.wait_for("this extension's native shortcut editor", lambda: client.script("""
+                const view=document.querySelector('addon-shortcuts');
+                const card=view?.querySelector('.shortcut.card[addon-id="'+arguments[0]+'"]');
+                const input=card?.querySelector('input[name=fixture]');
+                return view?.getAttribute('extension-id') === arguments[0] && input
+                    ? {id:card.getAttribute('addon-id'),command:input.name,shortcut:input.getAttribute('shortcut')}
+                    : null;
+            """, addon_id), 20)
+            check(shortcuts["id"] == addon_id and shortcuts["command"] == "fixture" and bool(shortcuts["shortcut"]),
+                  "Extension shortcuts focus the selected addon's real registered command")
+            report["managementNavigation"].append({"action": "extension-shortcuts", **shortcuts})
+            details(addon_id)
+
             def scheduler_state(**changes):
                 client.context("chrome")
                 result=client.script("""
@@ -319,7 +375,7 @@ export const ChromeExtensionUpdateScheduler={
             client.context("content")
             click("refresh")
             japanese_text = client.script("return document.querySelector('floorp-chrome-extension-diagnostics').textContent;")
-            check(japanese["heading"] in japanese_text and japanese["reload"] in japanese_text and japanese["automaticUpdates"] in japanese_text, "Japanese catalog strings render for headings and controls")
+            check(all(japanese[key] in japanese_text for key in ["heading", "reload", "automaticUpdates", "sidebarSettings", "extensionShortcuts", "floorpShortcuts"]), "Japanese catalog strings render for headings and controls")
             screenshot = client.command("WebDriver:TakeScreenshot", {"full": True})
             (output / "diagnostics-ja.png").write_bytes(base64.b64decode(screenshot.get("value", screenshot) if isinstance(screenshot, dict) else screenshot))
             client.context("chrome")
@@ -331,9 +387,11 @@ export const ChromeExtensionUpdateScheduler={
             runtime.wait_for("disable fixture", lambda: client.script("return window.__disabledFixture;"), 10)
             client.context("content")
             details(addon_id)
+            check(client.script("return !document.querySelector('[data-chrome-action=sidebar-settings]').hidden;"), "Disabled declared side panels retain a route to pin settings without enabling the extension")
             check(client.script("return document.querySelector('[data-chrome-action=reload]').disabled;"), "Reload is disabled for inactive extensions and cannot enable them accidentally")
             check(client.script("return document.querySelector('floorp-chrome-extension-diagnostics').diagnostics.contexts.length === 0;"), "Disabled extensions report no running contexts")
             details(missing_report_id)
+            check(client.script("return document.querySelector('[data-chrome-action=sidebar-settings]').hidden;"), "Extensions without side-panel declarations do not show a panel pin action")
             check(client.script("""
                 const element=document.querySelector('floorp-chrome-extension-diagnostics');
                 return !element.hidden && !!element.diagnostics.conversionError && element.diagnostics.conversion === null;
@@ -344,6 +402,7 @@ export const ChromeExtensionUpdateScheduler={
                 return {hidden:element.hidden,legacyHidden:element.querySelector('.floorp-chrome-diagnostics-legacy').hidden,
                     provenance:element.diagnostics?.extension.provenance,schema:element.diagnostics?.extension.runtimeSchemaVersion};
             """)
+            check(client.script("return document.querySelector('[data-chrome-action=sidebar-settings]').hidden;"), "Legacy markers do not acquire a Chrome side-panel management action")
             check(not legacy_state["hidden"] and not legacy_state["legacyHidden"] and legacy_state["provenance"] == "legacy-unverified" and legacy_state["schema"] is None,
                   "Legacy conversions display an unverified-source notice without claiming runtime support")
             check(client.script("return document.querySelector('[data-chrome-action=automatic-updates]').disabled && !document.querySelector('.floorp-chrome-diagnostics-automatic-migration').hidden;"), "Legacy installations require explicit verified Reapply and cannot enable automatic updates")

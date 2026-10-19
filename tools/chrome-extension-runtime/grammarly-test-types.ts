@@ -51,6 +51,10 @@ export interface GrammarlyContentControl {
   text: string;
   rect: NativeRect;
 }
+export interface GrammarlyPoint {
+  x: number;
+  y: number;
+}
 export interface GrammarlyEvidence {
   id: string;
   name: string;
@@ -65,6 +69,15 @@ export interface GrammarlyEvidence {
   nativeWorker?: Protocol.Target.TargetInfo;
   afterCheckRequest?: GrammarlySnapshot;
   contentControls?: GrammarlyContentControl[];
+  inlineSuggestion?: GrammarlySnapshot;
+  nativeSuggestionAction?: {
+    kind: "native-hover";
+    word: string;
+    point: GrammarlyPoint;
+  };
+  observedRequiredAccountGate?: { text: string; controls: string[] };
+  primaryOperationAttempted?: boolean;
+  observedPrerequisiteStatus?: string;
   nativePopup?: Protocol.Target.TargetInfo;
   popup?: GrammarlySnapshot;
   blockers?: string[];

@@ -61,7 +61,7 @@ index e69606d..6193fb9 100644
        "signon.autologin.proxy": value.autoLogin,
        "network.proxy.socks_remote_dns": value.proxyDNS,
        "network.proxy.socks5_remote_dns": value.proxyDNS,
-@@ -91,6 +95,1074 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
+@@ -91,6 +95,1084 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
    },
  });
  
@@ -630,8 +630,18 @@ index e69606d..6193fb9 100644
 +      "nsIChromeProxyScopeProvider" in Ci ? ["nsIChromeProxyScopeProvider"] : []
 +    ),
 +    getConfiguration(channel, callback) {
-+      const privateContext =
++      let privateContext =
 +        channel.loadInfo.originAttributes.privateBrowsingId > 0;
++      // Speculative channels may inherit a spanning extension's regular
++      // principal while their native load context belongs to a private window.
++      // Honor that channel state before any regular PAC can observe the URL.
++      try {
++        privateContext ||= channel.QueryInterface(
++          Ci.nsIPrivateBrowsingChannel
++        ).isChannelPrivate;
++      } catch {
++        // Non-HTTP channels may not implement nsIPrivateBrowsingChannel.
++      }
 +      const current = ChromeProxyScopes.selected(privateContext);
 +      // Ordinary Firefox's setting path and regular inherited configuration
 +      // keep their native backend. Every selected private Chrome configuration
@@ -1136,7 +1146,7 @@ index e69606d..6193fb9 100644
  function registerProxyFilterEvent(
    context,
    extension,
-@@ -144,6 +1216,9 @@ function registerProxyFilterEvent(
+@@ -144,6 +1226,9 @@ function registerProxyFilterEvent(
  
  this.proxy = class extends ExtensionAPIPersistent {
    PERSISTENT_EVENTS = {
@@ -1146,7 +1156,7 @@ index e69606d..6193fb9 100644
      onRequest({ fire, context }, params) {
        return registerProxyFilterEvent(context, this.extension, fire, ...params);
      },
-@@ -152,8 +1227,9 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -152,8 +1237,9 @@ this.proxy = class extends ExtensionAPIPersistent {
    getAPI(context) {
      let { extension } = context;
      let self = this;
@@ -1157,7 +1167,7 @@ index e69606d..6193fb9 100644
        proxy: {
          onRequest: new EventManager({
            context,
-@@ -183,54 +1259,8 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -183,54 +1269,8 @@ this.proxy = class extends ExtensionAPIPersistent {
              context,
              name: "proxy.settings",
              callback() {
@@ -1214,7 +1224,7 @@ index e69606d..6193fb9 100644
              },
              // proxy.settings is unsupported on android.
              validate() {
-@@ -262,6 +1292,11 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -262,6 +1302,11 @@ this.proxy = class extends ExtensionAPIPersistent {
                }
  
                let value = details.value;
@@ -1226,7 +1236,7 @@ index e69606d..6193fb9 100644
  
                // proxyType is optional and it should default to "system" when missing.
                if (value.proxyType == null) {
-@@ -348,5 +1383,24 @@ this.proxy = class extends ExtensionAPIPersistent {
+@@ -348,5 +1393,24 @@ this.proxy = class extends ExtensionAPIPersistent {
          ),
        },
      };

@@ -55,7 +55,9 @@ def main():
     parser.add_argument("--browser", required=True, type=Path)
     parser.add_argument("--timeout", default=180, type=int)
     args = parser.parse_args()
-    output = Path(tempfile.mkdtemp(prefix="corpus-downloadhelper-floorp-", dir=ROOT / "_dist/chrome-runtime-tests"))
+    output_root = ROOT / "_dist/chrome-runtime-tests"
+    output_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix="corpus-downloadhelper-floorp-", dir=output_root))
     media_path = output / "authored-video.mp4"
     subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-f", "lavfi", "-i", "testsrc2=size=640x360:rate=24", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000", "-t", "4", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18", "-threads", "1", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart", str(media_path)], check=True)
     server = ThreadingHTTPServer(("127.0.0.1", 0), Fixture)

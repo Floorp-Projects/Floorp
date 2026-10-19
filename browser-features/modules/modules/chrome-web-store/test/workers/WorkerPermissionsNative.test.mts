@@ -10,9 +10,12 @@ import { invokeNativeCorpusAction } from "../../../../../../tools/chrome-extensi
 import type { NativeCorpusTab } from "../../../../../../tools/chrome-extension-runtime/native-test-types.ts";
 import type {
   Denial,
+  EnumPropertyMutation,
+  EnumPropertySnapshot,
   ManagementPermission,
   MethodShape,
   OrdinaryObject,
+  PermissionClock,
   PromptWindow,
   Shape,
   StorageMirror,
@@ -35,6 +38,18 @@ function assertOwnMethod(value: MethodShape, label: string): void {
     label + " is an own writable/enumerable/configurable data function",
   );
 }
+function assertOwnEnum(value: EnumPropertySnapshot, label: string): void {
+  const shape = value.shape;
+  assert(
+    shape.type === "object" && shape.inNamespace && shape.own && shape.keys &&
+      shape.descriptor?.valueType === "object" &&
+      shape.descriptor.writable && shape.descriptor.enumerable &&
+      shape.descriptor.configurable &&
+      shape.descriptor.getType === "undefined" &&
+      shape.descriptor.setType === "undefined" && value.sameValue,
+    label + " is stable own writable/enumerable/configurable data",
+  );
+}
 async function until<T>(
   read: () =>
     | T
@@ -54,13 +69,14 @@ async function until<T>(
 }
 const program = `
 const generation=crypto.randomUUID(),sdk=chrome,events=[];
-let phase='ready',savedPower,savedCapture,savedRequest,savedRelease,savedGetCaptured,lastError;
+let phase='ready',savedPower,savedCapture,savedRequest,savedRelease,savedGetCaptured,savedLevel,savedCaptureState,lastError;
 const requested={permissions:['power','tabCapture']};
 function methodShape(namespace,key){const descriptor=Object.getOwnPropertyDescriptor(namespace,key);return {type:typeof namespace[key],inNamespace:key in namespace,own:!!descriptor,keys:Object.keys(namespace).includes(key),descriptor:descriptor?{writable:descriptor.writable,enumerable:descriptor.enumerable,configurable:descriptor.configurable,valueType:typeof descriptor.value,getType:typeof descriptor.get,setType:typeof descriptor.set}:null};}
+function enumSnapshot(namespace,key,original){const value=namespace[key];return {shape:methodShape(namespace,key),sameValue:value===namespace[key]&&value===original,keys:Object.keys(value),value};}
 chrome.permissions.onAdded.addListener(value=>events.push({event:'added',permissions:value.permissions||[]}));
 chrome.permissions.onRemoved.addListener(value=>events.push({event:'removed',permissions:value.permissions||[]}));
 async function shape(){return {generation,sameChrome:chrome===sdk,isWorker:typeof ServiceWorkerGlobalScope!=='undefined'&&self instanceof ServiceWorkerGlobalScope,hasDocument:typeof document!=='undefined',phase,contains:await chrome.permissions.contains(requested),power:typeof chrome.power,tabCapture:typeof chrome.tabCapture,keys:Object.keys(chrome),powerIn:'power' in chrome,captureIn:'tabCapture' in chrome,samePower:savedPower?savedPower===chrome.power:null,sameCapture:savedCapture?savedCapture===chrome.tabCapture:null,sameMethods:savedRequest?savedRequest===chrome.power.requestKeepAwake&&savedRelease===chrome.power.releaseKeepAwake&&savedGetCaptured===chrome.tabCapture.getCapturedTabs:null,events,level:savedPower?.Level,captureState:savedCapture?.TabCaptureState,error:lastError};}
-chrome.action.onClicked.addListener(async()=>{phase='prompting';try{const granted=await chrome.permissions.request(requested);phase=granted?'granted':'denied';if(granted){savedPower=chrome.power;savedCapture=chrome.tabCapture;savedRequest=savedPower.requestKeepAwake;savedRelease=savedPower.releaseKeepAwake;savedGetCaptured=savedCapture.getCapturedTabs;}}catch(error){phase='error';lastError=String(error);}});
+chrome.action.onClicked.addListener(async()=>{phase='prompting';try{const granted=await chrome.permissions.request(requested);phase=granted?'granted':'denied';if(granted){savedPower=chrome.power;savedCapture=chrome.tabCapture;savedRequest=savedPower.requestKeepAwake;savedRelease=savedPower.releaseKeepAwake;savedGetCaptured=savedCapture.getCapturedTabs;savedLevel=savedPower.Level;savedCaptureState=savedCapture.TabCaptureState;}}catch(error){phase='error';lastError=String(error);}});
 chrome.runtime.onMessage.addListener(message=>{if(message.nativeOptionalPermission!==true)return;return(async()=>{
  switch(message.operation){
  case 'inspect':return shape();
@@ -89,6 +105,8 @@ chrome.runtime.onMessage.addListener(message=>{if(message.nativeOptionalPermissi
  }
  case 'ordinaryObject':{let receiver=false;Object.defineProperty(chrome,'floorpFixtureGetter',{get(){receiver=this===chrome;return 'authored-getter';},configurable:true,enumerable:true});Object.defineProperty(chrome,'floorpFixtureLocked',{value:7,writable:false,enumerable:false,configurable:false});chrome.floorpFixtureOrdinary=19;const normalValue=chrome.floorpFixtureOrdinary,deleted=delete chrome.floorpFixtureOrdinary;const getterValue=chrome.floorpFixtureGetter;delete chrome.floorpFixtureGetter;const descriptor=Object.getOwnPropertyDescriptor(chrome,'floorpFixtureLocked');return {plainPrototype:Object.getPrototypeOf(chrome)===Object.prototype,tag:Object.prototype.toString.call(chrome),getterValue,getterReceiver:receiver,lockedValue:chrome.floorpFixtureLocked,lockedFlags:descriptor.writable===false&&descriptor.enumerable===false&&descriptor.configurable===false&&!Object.keys(chrome).includes('floorpFixtureLocked'),setLocked:Reflect.set(chrome,'floorpFixtureLocked',8),deleteLocked:Reflect.deleteProperty(chrome,'floorpFixtureLocked'),normalValue,deleted,unknownType:typeof chrome.floorpUnknownNamespace,thenType:typeof chrome.then,constructorIsObject:chrome.constructor===Object};}
  case 'apiDescriptors':return {requestKeepAwake:methodShape(savedPower,'requestKeepAwake'),releaseKeepAwake:methodShape(savedPower,'releaseKeepAwake'),getCapturedTabs:methodShape(savedCapture,'getCapturedTabs')};
+ case 'enumDescriptors':return {power:enumSnapshot(savedPower,'Level',savedLevel),capture:enumSnapshot(savedCapture,'TabCaptureState',savedCaptureState)};
+ case 'enumMutations':{const results={};for(const [name,namespace,key,original] of [['power',savedPower,'Level',savedLevel],['capture',savedCapture,'TabCaptureState',savedCaptureState]]){const descriptor=Object.getOwnPropertyDescriptor(namespace,key);if(!descriptor)throw Error('Missing own enum descriptor: '+name);try{const replacement={floorpAuthoredReplacement:true};namespace[key]=replacement;const assigned=namespace[key]===replacement,deleted=Reflect.deleteProperty(namespace,key),missing=!(key in namespace)&&typeof namespace[key]==='undefined'&&!Object.getOwnPropertyDescriptor(namespace,key)&&!Object.keys(namespace).includes(key);Object.defineProperty(namespace,key,descriptor);results[name]={assigned,deleted,missing,restored:namespace[key]===original,shape:methodShape(namespace,key)};}finally{Object.defineProperty(namespace,key,descriptor);}}return results;}
  case 'powerRequest':return {type:typeof savedRequest('system')};
  case 'powerRelease':return {type:typeof savedRelease()};
  case 'capture':return {tabs:await savedGetCaptured()};
@@ -110,9 +128,20 @@ async function allowNativePrompt(
       current?.options.name !== name ||
       window.PopupNotifications.panel.state !== "open"
     ) return false;
-    return window.PopupNotifications.panel.querySelector(
+    const node = window.PopupNotifications.panel.querySelector(
       "popupnotification[popupid='addon-webext-permissions']",
     );
+    if (
+      !node?.isConnected || Services.focus.activeWindow !== window ||
+      node.matches(":-moz-window-inactive") ||
+      !Number.isFinite(current.timeShown) ||
+      (ChromeUtils as PermissionClock).now() - current.timeShown <
+        Math.max(
+            0,
+            Services.prefs.getIntPref("security.notification_enable_delay"),
+          ) + 100
+    ) return false;
+    return node;
   }, "actual optional power/tabCapture permission doorhanger");
   const node = notification as Element & { button?: HTMLElement };
   const button = node.button ||
@@ -292,7 +321,10 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
       "real extension control page",
     );
     let sequence = 0;
-    const command = async <T,>(operation: string): Promise<T> => {
+    const command = async <T,>(
+      operation: string,
+      phase = operation,
+    ): Promise<T> => {
       const request = ++sequence;
       controlBrowser.messageManager.loadFrameScript(
         "data:application/javascript," +
@@ -317,11 +349,11 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
         } catch {
           return false;
         }
-      }, "native Worker " + operation);
+      }, "native " + type + " Worker " + phase + " request " + request);
       if (response.error) throw Error(response.error);
       return response.result;
     };
-    const initial = await command<Shape>("inspect");
+    const initial = await command<Shape>("inspect", "initial inspection");
     assert(
       initial.isWorker && !initial.hasDocument && initial.sameChrome,
       "probe runs in a native Worker with stable Chrome object",
@@ -341,9 +373,10 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
       "object",
       "public management namespace is available without management permission",
     );
-    assert(
-      management.selfId === id || management.selfId === original,
-      "public management.getSelf returns the installed caller's own identity",
+    assertEquals(
+      management.selfId,
+      original,
+      "public management.getSelf returns the caller's original Chrome identity",
     );
     assertOwnMethod(management.getSelf, "public management.getSelf");
     assertOwnMethod(management.getURL, "public runtime.getURL");
@@ -437,6 +470,12 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
           .getSystemPrincipal(),
       },
     );
+    await until(
+      () =>
+        target?.linkedBrowser.contentTitle ===
+          "Native optional permission action target",
+      "fully loaded action target before real consent",
+    );
     let observedPair = false;
     const observer = {
       observe(subject: nsISupports) {
@@ -470,7 +509,7 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
       () => observedPair,
       "actual optional permission request observer",
     );
-    const beforeConsent = await command<Shape>("inspect");
+    const beforeConsent = await command<Shape>("inspect", "pending consent");
     assert(
       beforeConsent.phase === "prompting" && !beforeConsent.contains &&
         beforeConsent.power === "undefined" &&
@@ -479,7 +518,7 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
     );
     await allowNativePrompt(window, name);
     const granted = await until(async () => {
-      const value = await command<Shape>("inspect");
+      const value = await command<Shape>("inspect", "after permission grant");
       if (value.error) throw Error(value.error);
       return value.phase === "granted" && value.power === "object" &&
         value.tabCapture === "object" && value;
@@ -513,6 +552,27 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
     for (const [name, descriptor] of Object.entries(apiDescriptors)) {
       assertOwnMethod(descriptor, "granted " + name);
     }
+    const enumDescriptors = await command<Record<string, EnumPropertySnapshot>>(
+      "enumDescriptors",
+    );
+    for (const [name, snapshot] of Object.entries(enumDescriptors)) {
+      assertOwnEnum(snapshot, "granted " + name + " enum");
+    }
+    assertEquals(
+      JSON.stringify(Object.entries(enumDescriptors.power.value).sort()),
+      JSON.stringify([["DISPLAY", "display"], ["SYSTEM", "system"]]),
+      "power enum contains the genuine Chrome names and values",
+    );
+    assertEquals(
+      JSON.stringify(Object.entries(enumDescriptors.capture.value).sort()),
+      JSON.stringify([
+        ["ACTIVE", "active"],
+        ["ERROR", "error"],
+        ["PENDING", "pending"],
+        ["STOPPED", "stopped"],
+      ]),
+      "tabCapture enum contains the genuine Chrome names and values",
+    );
     const power = Cc["@mozilla.org/power/powermanagerservice;1"].getService(
       Ci.nsIPowerManagerService,
     ) as nsIPowerManagerService & { newWakeLockForChromeExtension?: unknown };
@@ -554,7 +614,7 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
       "actual permissions.remove revokes the granted pair",
     );
     const revoked = await until(async () => {
-      const value = await command<Shape>("inspect");
+      const value = await command<Shape>("inspect", "after permission removal");
       return !value.contains && value.events.some((event) =>
         event.event === "removed"
       ) && value;
@@ -603,12 +663,41 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
       "unlocked",
       "revoked calls cannot acquire a native wake lock",
     );
+    const revokedEnums = await command<Record<string, EnumPropertySnapshot>>(
+      "enumDescriptors",
+    );
+    for (const [name, snapshot] of Object.entries(revokedEnums)) {
+      assertOwnEnum(snapshot, "revoked retained " + name + " enum");
+      assertEquals(
+        JSON.stringify(Object.entries(snapshot.value).sort()),
+        JSON.stringify(Object.entries(enumDescriptors[name].value).sort()),
+        "revocation preserves the retained " + name + " enum values",
+      );
+    }
+    const enumMutations = await command<Record<string, EnumPropertyMutation>>(
+      "enumMutations",
+    );
+    for (const [name, result] of Object.entries(enumMutations)) {
+      assert(
+        result.assigned && result.deleted && result.missing &&
+          result.restored &&
+          result.shape.own && result.shape.keys &&
+          result.shape.descriptor?.valueType === "object" &&
+          result.shape.descriptor.writable &&
+          result.shape.descriptor.enumerable &&
+          result.shape.descriptor.configurable &&
+          result.shape.descriptor.getType === "undefined" &&
+          result.shape.descriptor.setType === "undefined",
+        name +
+          " enum supports assignment, true deletion and exact data-property restoration after revoked calls were denied",
+      );
+    }
     await extension.terminateBackground();
     await until(
       () => extension.backgroundState === "stopped",
       "actual native Worker termination",
     );
-    const restarted = await command<Shape>("inspect");
+    const restarted = await command<Shape>("inspect", "after Worker restart");
     assert(
       restarted.generation !== initial.generation && restarted.isWorker &&
         !restarted.hasDocument,
@@ -634,8 +723,11 @@ async function fixture(type: "classic" | "module" | "ordinary"): Promise<void> {
           action,
           granted,
           apiDescriptors,
+          enumDescriptors,
           revoked,
           denials,
+          revokedEnums,
+          enumMutations,
           restarted,
         }),
     );

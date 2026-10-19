@@ -16,6 +16,31 @@ import zipfile
 spec = importlib.util.spec_from_file_location("candidate_identity", Path(__file__).with_name("candidate-identity.py"))
 identity = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(identity)
+selection = identity._selection
+
+
+class CandidatePackageSelectionTests(unittest.TestCase):
+    def test_windows_product_and_auxiliary_zip_select_only_the_application(self):
+        product = {"name": "floorp-158.0.1.en-US.win64.zip", "sha256": "product"}
+        auxiliary = {"name": "floorp-158.0.1.en-US.win64.xpt_artifacts.zip", "sha256": "typelibs"}
+        self.assertEqual(selection.select_native_package([auxiliary, product], "windows"), product)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for entry in [product, auxiliary]:
+                (root / entry["name"]).write_bytes(b"authored selection fixture, never executed")
+            self.assertEqual(selection.distributable_packages(root), [root / product["name"]])
+
+    def test_multiple_real_product_zips_remain_ambiguous(self):
+        entries = [{"name": name} for name in
+                   ["floorp-one.zip", "floorp-two.zip", "floorp-one.xpt_artifacts.zip"]]
+        with self.assertRaisesRegex(RuntimeError, "exactly one native product"):
+            selection.select_native_package(entries, "windows")
+        self.assertTrue(selection.is_product_archive("floorp-other-artifact.zip"))
+        self.assertTrue(selection.is_product_archive("floorp-xpt_artifacts.zip"))
+
+    def test_auxiliary_zip_cannot_supply_a_missing_product(self):
+        with self.assertRaisesRegex(RuntimeError, "exactly one native product"):
+            selection.select_native_package([{"name": "floorp-one.xpt_artifacts.zip"}], "windows")
 
 
 class CandidateIdentityTests(unittest.TestCase):
@@ -130,6 +155,26 @@ class CandidateIdentityTests(unittest.TestCase):
             archive.writestr("../outside", b"must never be extracted")
         with self.assertRaisesRegex(ValueError, "Unsafe native archive path"):
             identity._archive_inventory(package, self.app / "floorp")
+
+    def test_windows_authentication_with_typelib_zip_and_ambiguous_products(self):
+        self.package = self.root / "floorp-fixture.zip"
+        with zipfile.ZipFile(self.package, "w") as archive:
+            for name, data in self.files.items():
+                archive.writestr("floorp/" + name, data)
+        lock_path = self.root / "floorp-runtime.lock.json"
+        lock = json.loads(lock_path.read_text())
+        lock["artifacts"][0]["platform"] = "windows"
+        lock_path.write_text(json.dumps(lock))
+        self.manifest["platform"] = "windows"
+        self.write_manifest()
+        self.manifest["packages"].append({"name": "floorp-fixture.xpt_artifacts.zip"})
+        self.manifest_path.write_text(json.dumps(self.manifest))
+        with patch.object(identity.sys, "platform", "win32"):
+            self.assertEqual(self.authenticate()["verifiedFileCount"], 4)
+            self.manifest["packages"].append({"name": "floorp-other-product.zip"})
+            self.manifest_path.write_text(json.dumps(self.manifest))
+            with self.assertRaisesRegex(RuntimeError, "exactly one native product"):
+                self.authenticate()
 
     def test_symlink_escape_rejected(self):
         if not hasattr(Path, "symlink_to"):

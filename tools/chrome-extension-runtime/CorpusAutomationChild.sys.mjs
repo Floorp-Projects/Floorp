@@ -32,7 +32,7 @@ export class CorpusAutomationChild extends JSWindowActorChild {
         ),
       };
     }
-    if (name === "WebScraperControl") {
+    if (name === "WebScraperControl" || name === "WebScraperControlState") {
       if (
         !/^moz-extension:\/\/.+\/devtools_web_scraper_panel\.html(?:#|$)/.test(
           document.documentURI,
@@ -58,6 +58,40 @@ export class CorpusAutomationChild extends JSWindowActorChild {
           : document.querySelector(
             controls[data.control] || "floorp-no-such-control",
           ));
+      if (name === "WebScraperControlState") {
+        element?.scrollIntoView({ block: "center", inline: "center" });
+        const rect = element?.getBoundingClientRect();
+        const visible = !!element && !!rect?.width && !!rect.height &&
+          nativeWindow.getComputedStyle(element)?.getPropertyValue(
+              "visibility",
+            ) === "visible";
+        const enabled = !!element && !element.hasAttribute("disabled") &&
+          element.getAttribute("aria-disabled") !== "true" &&
+          !element.classList.contains("disabled");
+        const hit = visible && rect
+          ? document.elementFromPoint(
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2,
+          )
+          : null;
+        const table = document.querySelector(
+          "#selector-tree table.selector-table",
+        );
+        const tableRect = table?.getBoundingClientRect();
+        return {
+          url: document.documentURI,
+          ready: document.readyState,
+          control: data.control,
+          present: !!element,
+          visible,
+          enabled,
+          unobstructed: !!element && (hit === element || element.contains(hit)),
+          activeSitemapId:
+            document.querySelector("#navbar-active-sitemap-id")?.textContent
+              ?.trim() || "",
+          selectorViewReady: !!tableRect?.width && !!tableRect.height,
+        };
+      }
       if (!element) {
         throw Error("Actual Web Scraper control missing: " + data.control);
       }
@@ -94,6 +128,76 @@ export class CorpusAutomationChild extends JSWindowActorChild {
         clickCount: 1,
       });
       return { clickedActualControl: data.control };
+    }
+    if (name === "AcknowledgeUIVisionWelcome") {
+      if (
+        !/^moz-extension:\/\/[^/]+\/sidepanel\.html(?:[?#]|$)/.test(
+          document.documentURI,
+        ) ||
+        document.nodePrincipal.addonId !==
+          "gcbalfbdmfieckjlnblleoemohcganoc@chromium-extension"
+      ) {
+        throw Error("Expected the original UI.Vision side-panel document");
+      }
+      const dialog = document.querySelector(".macro-setup-dialog");
+      const title =
+        dialog?.querySelector(".ant-modal-title")?.textContent?.trim() || null;
+      if (!dialog || !dialog.getBoundingClientRect().width) {
+        return { shown: false, clicked: false, title, events: [] };
+      }
+      if (title !== "Your macros are all still here") {
+        throw Error("Unknown UI.Vision onboarding dialog");
+      }
+      const button =
+        /** @type {HTMLButtonElement|null} */ (dialog.querySelector(
+          ".ant-modal-footer button.ant-btn-primary",
+        ));
+      if (!button || button.disabled || button.textContent?.trim() !== "OK") {
+        throw Error("Actual UI.Vision welcome acknowledgement is unavailable");
+      }
+      button.scrollIntoView({ block: "center", inline: "center" });
+      const rect = button.getBoundingClientRect();
+      const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
+      const hit = document.elementFromPoint(x, y);
+      if (
+        !rect.width || !rect.height || (hit !== button && !button.contains(hit))
+      ) {
+        throw Error(
+          "Actual UI.Vision welcome acknowledgement is hidden or occluded",
+        );
+      }
+      /** @type {import("./automation-test-types.ts").UIVisionWelcomeObservation["events"]} */
+      const events = [];
+      /** @param {Event} event */
+      const observe = (event) =>
+        events.push({ type: event.type, trusted: event.isTrusted });
+      for (const type of ["mousedown", "mouseup", "click"]) {
+        button.addEventListener(type, observe);
+      }
+      try {
+        nativeWindow.synthesizeMouseEvent("mousemove", x, y, {});
+        nativeWindow.synthesizeMouseEvent("mousedown", x, y, {
+          button: 0,
+          buttons: 1,
+          clickCount: 1,
+        });
+        nativeWindow.synthesizeMouseEvent("mouseup", x, y, {
+          button: 0,
+          buttons: 0,
+          clickCount: 1,
+        });
+        await new Promise((resolve) => nativeWindow.setTimeout(resolve, 50));
+        if (!events.some((event) => event.type === "click" && event.trusted)) {
+          throw Error(
+            "UI.Vision welcome control did not receive a trusted native click",
+          );
+        }
+        return { shown: true, clicked: true, title, events };
+      } finally {
+        for (const type of ["mousedown", "mouseup", "click"]) {
+          button.removeEventListener(type, observe);
+        }
+      }
     }
     if (name === "ConfigureUIVision") {
       if (!/^moz-extension:\/\/.+\/options\.html$/.test(document.documentURI)) {

@@ -25,10 +25,12 @@ giving Chrome ID `deeefbhaclcgmcjdgbnfdmjmmdjdgfjk`.
 The Floorp fixture uses the production manifest transformer. The report retains
 raw results and normalizes only nondeterministic context IDs and native URL
 schemes when comparing runtime IDs, self messages, Ports, context filters, and
-Offscreen document messaging/lifetimes. It separately records Chrome’s real
-Service Worker and Floorp’s current event-page background. This difference is
-required to remain visible; a matching API fixture does not establish Worker
-compatibility or a real-extension compatibility rate.
+Offscreen document messaging/lifetimes. It separately records each browser’s
+actual background context. The initial development-artifact comparison used a
+Floorp event page; rebuilt native candidates must retain and execute the signed
+manifest’s Service Worker. Historical event-page results remain visible and do
+not establish native Worker compatibility or a real-extension compatibility
+rate.
 
 Reports and temporary profiles go under
 `_dist/chrome-runtime-tests/comparison-*`. The initial reference download
@@ -95,6 +97,30 @@ exact fixture URL include pattern, including the server port. Every recipe
 requires an actual effect, navigation persistence, and restoration after
 uninstall. A saved editor or registered bootstrap alone does not pass.
 
+The Floorp wrapper always runs headed. On Linux it creates a fresh `xvfb-run`
+display and a private `xfwm4`/D-Bus session through the owned window-manager
+wrapper, including when another `DISPLAY` is inherited. Install `xvfb`, `xauth`,
+`xfwm4`, `dbus-x11` and `x11-utils` first. macOS and Windows use their real
+desktop session. The private consent actor is copied with `--actor-module` and
+remains bound to the complete executed-source inventory.
+
+For an authenticated original MV3 manifest declaring `userScripts`, the Floorp
+recipe additionally checks the installed Chrome compatibility ID, opens that
+addon's real Add-ons Manager permissions panel, and clicks the visible **Allow
+user scripts** switch with trusted native input. Its report retains the original
+required/optional declaration, selected addon ID, native click events and saved
+before/after states. This switch changes only the independent browser setting;
+an ungranted optional public permission still blocks execution. Dark Reader and
+Stylus declare no `userScripts` permission and receive no consent UI step. No
+extension script, preference or permission store is rewritten by the recipe.
+
+Use `FLOORP_TEST_CANDIDATE_MANIFEST=/absolute/path/candidate-manifest.json` when
+running the command against a production candidate. The shared installer still
+requires the exact authenticated package/build, required native background mode
+and complete unchanged original script inventory before a primary can qualify.
+Running a raw developer binary remains explicitly unqualified; this readiness
+change adds no native qualification or corpus success.
+
 The Floorp run verifies the frozen CRX digest, invokes the production signed
 converter, and compares every packaged script digest before installing the
 result. Its test actors are explicitly copied into the private profile's
@@ -112,21 +138,40 @@ The generic browser runner also accepts `--candidate-manifest` directly. The
 manifest and its original package must remain together. This mode verifies the
 locked source, current Floorp commit, maintained patches, package checksum and
 installed files, then checks the running build ID, operating system, ABI and
-compiled bindings before executing a suite. Corpus background checks require
-the actual native Worker when the signed manifest selected one. Reports retain
-the authenticated candidate identity; runs without this option remain historical
-or development evidence and cannot qualify a production release.
+compiled bindings before executing a suite. Corpus background checks require the
+actual native Worker when the signed manifest selected one. Reports retain the
+authenticated candidate identity; runs without this option remain historical or
+development evidence and cannot qualify a production release.
 
 The candidate CI executes separate core, media, headed permission-consent and
 headed screen/window recording groups on each target operating system. The
 desktop group must record and decode actual source pixels; merely opening its
 chooser does not pass. Local production checks must preserve the browser's
-content sandbox, including unsetting any inherited
-`MOZ_DISABLE_CONTENT_SANDBOX` development override.
+content sandbox, including unsetting any inherited `MOZ_DISABLE_CONTENT_SANDBOX`
+development override.
 
 Use `--headed` for the reference when an extension selects a different code path
 for HeadlessChrome. It uses the actual browser user agent and requires a
 caller-owned display; it does not override browser identity.
+
+The automation corpus can select the three local primary operations without
+running Browserflow’s separate account-boundary observation:
+
+```sh
+python3 tools/chrome-extension-runtime/test-corpus-automation-floorp.py --browser <compiled-binary> \
+  --ids gcbalfbdmfieckjlnblleoemohcganoc,infppggnoaenmfagbfknfkancpbljcca,jnhgnonknehpejjnehehllkliplmbmhn \
+  --output /path/to/evidence --timeout 360
+```
+
+The wrapper creates a fresh evidence directory under `--output` and always runs
+headed. Linux uses the same owned Xvfb/window-manager session described above;
+macOS and Windows use their native desktop. UI.Vision and Automa must execute
+their real form macros and produce exactly one click. Web Scraper must extract
+the exact authored product rows through its real DevTools panel. Only selected
+IDs run or contribute operation reports; omitted IDs remain explicitly
+unattempted. Omitting `--ids` retains all four operations, including
+Browserflow’s account-boundary observation. No account observation counts as a
+primary pass.
 
 The controlled media/metadata corpus uses a native decoded WebM, ordinary TLS
 verification, private profile certificate trust, and exact private DNS aliases:
@@ -160,14 +205,14 @@ The reference opens the genuine headed Chrome frontend and uses native keyboard
 input to dock it, then native pointer input to select the extension's panel. The
 Floorp counterpart opens Gecko's actual toolbox and selects the registered
 extension tool. React Developer Tools must expose the real component tree,
-inspect the authored component's `count` prop, and observe `0` becoming `1` after
-a native click in the actual React application. Both require actual panel
-removal after uninstall. Redux DevTools must expose the actual authored store in its native State view,
-observe `count` changing from `0` to `1`, and record the real
-`AUTHORED_INCREMENT` action after native app input. Both recipes verify panel
-removal after uninstall. The React package's thirteen scripts and Redux
-package's seven scripts are verified
-against its frozen signed CRX; opening the frontend alone cannot pass.
+inspect the authored component's `count` prop, and observe `0` becoming `1`
+after a native click in the actual React application. Both require actual panel
+removal after uninstall. Redux DevTools must expose the actual authored store in
+its native State view, observe `count` changing from `0` to `1`, and record the
+real `AUTHORED_INCREMENT` action after native app input. Both recipes verify
+panel removal after uninstall. The React package's thirteen scripts and Redux
+package's seven scripts are verified against its frozen signed CRX; opening the
+frontend alone cannot pass.
 
 `build-devtools-fixture.mjs` uses the project's existing React 19.2.6, ReactDOM
 19.2.6, Redux 5.0.1, and scheduler 0.27.0 packages. It records their existing

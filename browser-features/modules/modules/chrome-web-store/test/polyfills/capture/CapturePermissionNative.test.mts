@@ -6,13 +6,18 @@ import {
   assertEquals,
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
+import type {
+  ComponentAddonManager,
+  ComponentExtensionParent,
+  ComponentNativeWindow,
+} from "../../helpers/capture-component-test-types.ts";
 
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
 async function waitFor<T>(
-  read: () => T | undefined | false,
+  read: () => T | undefined | false | null,
   description: string,
 ): Promise<T> {
   const deadline = Date.now() + 8000;
@@ -27,14 +32,16 @@ async function waitFor<T>(
 async function testCameraPermission(): Promise<void> {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as unknown as { AddonManager: ComponentAddonManager };
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as unknown as { ExtensionParent: ComponentExtensionParent };
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const win = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as unknown as ComponentNativeWindow;
   const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
   const target = win.gBrowser.addTab("about:blank", {
     triggeringPrincipal: systemPrincipal,

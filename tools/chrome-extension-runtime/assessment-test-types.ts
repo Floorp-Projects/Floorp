@@ -54,6 +54,7 @@ export interface PropsObservation {
 export interface DevtoolsSnapshot extends PanelSnapshot {
   reactCount?: string | null;
   reduxCount?: string | null;
+  vueCount?: string | null;
   props?: PropsObservation | null;
 }
 export interface EditorSnapshot {

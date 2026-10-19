@@ -18,6 +18,7 @@ interface Diagnostics {
     chromeId: string;
     provenance: string;
     runtimeSchemaVersion: number | null;
+    hasSidePanel: boolean;
   };
   conversion: {
     originalVersion: string;
@@ -40,11 +41,16 @@ function harness(
     mismatchedReport = false,
     signature = undefined as unknown,
     background = undefined as unknown,
+    sidePanel = "none",
   } = {},
 ) {
   const chromeId = "c".repeat(32);
   const id = chromeId + "@chromium-extension";
   const manifest = {
+    ...(sidePanel === "permission" ? { permissions: ["sidePanel"] } : {}),
+    ...(sidePanel === "declaration"
+      ? { side_panel: { default_path: "panel.html" } }
+      : {}),
     browser_specific_settings: {
       gecko: {
         id,
@@ -93,7 +99,17 @@ function harness(
     },
     readInputStreamToString: (input: { data: string }) => input.data,
   };
+  const navigation: unknown[] = [];
+  let navigationOwner: unknown = {
+    closed: false,
+    openTrustedLinkIn: (url: string, where: string, options: unknown) => {
+      navigation.push({ url, where, options });
+    },
+  };
   const scope = {
+    getBrowserElement: () => ({
+      ownerDocument: { defaultView: navigationOwner },
+    }),
     AboutAddonsHTMLElement: class {},
     ChromeUtils: {
       importESModule: (uri: string) =>
@@ -105,16 +121,17 @@ function harness(
     customElements: { define: () => {} },
   };
   runInNewContext(
-    source!.replace(/^import .*?;\n/ms, "").replaceAll(
+    source!.replace(/^import .*?;\n/gms, "").replaceAll(
       "export async function",
       "async function",
     ).replaceAll("export class", "class") +
-      "\nglobalThis.collect=collectChromeExtensionDiagnostics;globalThis.fallback=FALLBACK_STRINGS;",
+      "\nglobalThis.collect=collectChromeExtensionDiagnostics;globalThis.fallback=FALLBACK_STRINGS;globalThis.navigate=FloorpChromeExtensionDiagnostics.prototype.openFloorpSettings;",
     scope,
   );
   const loaded = scope as unknown as {
     collect: (addon: unknown) => Promise<Diagnostics | null>;
     fallback: Record<string, string>;
+    navigate: (action: string) => void;
   };
   const addon = {
     id,
@@ -123,7 +140,12 @@ function harness(
     isActive: false,
     getResourceURI: (path: string) => path,
   };
-  return { ...loaded, addon };
+  return {
+    ...loaded,
+    addon,
+    navigation,
+    removeNavigationOwner: () => navigationOwner = null,
+  };
 }
 
 Deno.test("diagnostics preserve conversion data for a disabled extension", async () => {
@@ -248,4 +270,78 @@ Deno.test("diagnostics normalize optional background metadata without trusting r
     assertEquals(data.conversion.background, undefined);
     assertEquals(data.conversionError, null);
   }
+});
+
+Deno.test("diagnostics offer sidebar pin settings only for converted side-panel declarations", async () => {
+  for (const sidePanel of ["permission", "declaration"]) {
+    const { collect, addon } = harness({ sidePanel });
+    const data = await collect(addon);
+    assert(
+      data?.extension.hasSidePanel,
+      "A declared Chrome panel has a settings path even while disabled",
+    );
+    const legacy = harness({ legacy: true, sidePanel });
+    assertEquals(
+      (await legacy.collect(legacy.addon))?.extension.hasSidePanel,
+      false,
+    );
+  }
+  const ordinary = harness();
+  assertEquals(
+    (await ordinary.collect(ordinary.addon))?.extension.hasSidePanel,
+    false,
+  );
+});
+
+Deno.test("diagnostics settings navigation stays in its owning browser and rejects unknown routes", () => {
+  const { navigate, navigation, removeNavigationOwner } = harness();
+  navigate("sidebar-settings");
+  navigate("floorp-shortcuts");
+  assertEquals(
+    JSON.stringify(navigation),
+    JSON.stringify([
+      {
+        url: "about:hub#/features/sidebar",
+        where: "tab",
+        options: { relatedToCurrent: true, allowInheritPrincipal: false },
+      },
+      {
+        url: "about:hub#/features/shortcuts",
+        where: "tab",
+        options: { relatedToCurrent: true, allowInheritPrincipal: false },
+      },
+    ]),
+  );
+  for (
+    const invalid of [
+      "https://example.org/",
+      "constructor",
+      "toString",
+      "extension-shortcuts",
+    ]
+  ) {
+    let denied = false;
+    try {
+      navigate(invalid);
+    } catch (error) {
+      denied = String(error).includes(
+        "owning browser cannot open Floorp settings",
+      );
+    }
+    assert(denied, `Unknown settings action rejects: ${invalid}`);
+  }
+  removeNavigationOwner();
+  let denied = false;
+  try {
+    navigate("sidebar-settings");
+  } catch (error) {
+    denied = String(error).includes(
+      "owning browser cannot open Floorp settings",
+    );
+  }
+  assert(
+    denied,
+    "A closed or missing owner never falls back to another browser window",
+  );
+  assertEquals(navigation.length, 2, "Denied navigation opens no tab");
 });

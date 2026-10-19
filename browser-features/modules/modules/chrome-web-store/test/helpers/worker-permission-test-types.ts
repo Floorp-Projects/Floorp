@@ -3,6 +3,7 @@ import type {
   NativeCorpusExtension,
   NativeCorpusWindow,
 } from "../../../../../../tools/chrome-extension-runtime/native-test-types.ts";
+export type PermissionClock = typeof ChromeUtils & { now(): number };
 
 export type WorkerExtension = NativeCorpusExtension & {
   backgroundState: string;
@@ -58,6 +59,19 @@ export type MethodShape = {
     setType: string;
   } | null;
 };
+export type EnumPropertySnapshot = {
+  shape: MethodShape;
+  sameValue: boolean;
+  keys: string[];
+  value: Record<string, string>;
+};
+export type EnumPropertyMutation = {
+  assigned: boolean;
+  deleted: boolean;
+  missing: boolean;
+  restored: boolean;
+  shape: MethodShape;
+};
 export type ManagementPermission = {
   namespaceType: string;
   selfId: string;
@@ -82,6 +96,9 @@ export type StorageMirror = {
 };
 export type PromptWindow = NativeCorpusWindow & {
   PopupNotifications: {
-    getNotification(id: string): { options: { name?: string } } | null;
+    getNotification(id: string): {
+      readonly timeShown: number;
+      options: { name?: string };
+    } | null;
   };
 };

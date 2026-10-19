@@ -3,7 +3,9 @@ import { assert, assertEquals } from "@std/assert";
 import { runInNewContext } from "node:vm";
 import type {
   ProxyNativeConfiguration,
+  ProxyNativeScopeConfiguration,
   ProxyTestAddon,
+  ProxyTestChannel,
   ProxyTestExtension,
   ProxyVMContext,
 } from "./proxy_scopes_test_types.ts";
@@ -230,6 +232,63 @@ Deno.test("Scoped proxy selection isolates private overrides and preserves uncha
   assertEquals(h.scopes.state.private, null);
   assertEquals(
     h.scopes.configuration(h.scopes.state.regular, false).key,
+    regularKey,
+  );
+});
+
+Deno.test("Private speculative channel state takes precedence over a spanning extension's regular principal", async () => {
+  const h = await harness();
+  const ext = h.extension("e".repeat(32), 100);
+  await h.scopes.set(
+    ext,
+    { value: h.config("regular.invalid"), scope: "regular_only" },
+    h.nativeSet(ext),
+    h.nativeClear(ext),
+  );
+  await h.scopes.set(
+    ext,
+    { value: h.config("private.invalid"), scope: "incognito_persistent" },
+    h.nativeSet(ext),
+    h.nativeClear(ext),
+  );
+  assert(h.scopes.state.regular);
+  assert(h.scopes.state.private);
+  const privateKey = h.scopes.configuration(h.scopes.state.private, true).key;
+  const regularKey = h.scopes.configuration(h.scopes.state.regular, false).key;
+  const observe = (channel: ProxyTestChannel) =>
+    new Promise<ProxyNativeScopeConfiguration | null>((resolve) => {
+      assert(h.scopes.provider.getConfiguration(channel, {
+        onConfiguration: resolve,
+      }));
+    });
+  const privateChannel = {
+    loadInfo: { originAttributes: { privateBrowsingId: 0 } },
+    QueryInterface: () => ({ isChannelPrivate: true }),
+  };
+  assertEquals((await observe(privateChannel))?.key, privateKey);
+  assertEquals(
+    (await observe({
+      loadInfo: { originAttributes: { privateBrowsingId: 0 } },
+      QueryInterface: () => ({ isChannelPrivate: false }),
+    }))?.key,
+    regularKey,
+  );
+  assertEquals(
+    (await observe({
+      loadInfo: { originAttributes: { privateBrowsingId: 1 } },
+      QueryInterface: () => {
+        throw new Error("The native private channel interface is unavailable");
+      },
+    }))?.key,
+    privateKey,
+  );
+  assertEquals(
+    (await observe({
+      loadInfo: { originAttributes: { privateBrowsingId: 0 } },
+      QueryInterface: () => {
+        throw new Error("The native private channel interface is unavailable");
+      },
+    }))?.key,
     regularKey,
   );
 });

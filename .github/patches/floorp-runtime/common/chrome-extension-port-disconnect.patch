@@ -1,0 +1,133 @@
+diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/components/extensions/ExtensionChild.sys.mjs
+--- a/toolkit/components/extensions/ExtensionChild.sys.mjs
++++ b/toolkit/components/extensions/ExtensionChild.sys.mjs
+@@ -169,6 +169,75 @@
+   /** @returns {any} */
+   emit(...args) {
+     return [...this.fires].map(fire => fire.asyncWithoutClone(...args));
++  }
++}
++
++/**
++ * Chrome document disconnect listeners keep lastError through the microtask
++ * checkpoint of their dispatch, but must clear it before another task runs.
++ * The native task wrapper drains microtasks before nsThread drains direct tasks.
++ * WorkerPort supplies its own event manager and transports the error separately.
++ */
++class PortDisconnectEvent extends SimpleEventAPI {
++  emit(port, error = null) {
++    const { context } = this;
++    if (!error || !ExtensionUtils.getChromeExtensionId(context.extension)) {
++      return super.emit(port);
++    }
++
++    const fires = [...this.fires];
++    if (!fires.length) {
++      return [];
++    }
++    const lastError = Cu.cloneInto(
++      { message: context.normalizeError(error).message },
++      context.cloneScope
++    );
++    Services.tm.dispatchToMainThreadWithMicroTask(() => {
++      if (!context.active || context.unloaded) {
++        return;
++      }
++      const previousError = context._lastError;
++      const previousChecked = context.checkedLastError;
++      let checked = false;
++      let fired = false;
++      try {
++        for (const fire of fires) {
++          if (!context.active || context.unloaded || !this.fires.has(fire)) {
++            continue;
++          }
++          context.lastError = lastError;
++          fired = true;
++          fire.syncWithoutClone(port);
++          checked ||= context.checkedLastError;
++        }
++      } finally {
++        if (fired) {
++          context.lastError = lastError;
++          context.checkedLastError = checked;
++          const cleanup = () => {
++            if (context._lastError !== lastError) {
++              return;
++            }
++            try {
++              if (!context.checkedLastError) {
++                Cu.reportError(`Unchecked lastError value: ${lastError.message}`);
++              }
++            } finally {
++              context._lastError = previousError;
++              context.checkedLastError = previousChecked;
++            }
++          };
++          try {
++            Services.tm.dispatchDirectTaskToCurrentThread(cleanup);
++          } catch (dispatchError) {
++            cleanup();
++            throw dispatchError;
++          }
++        }
++      }
++    });
++    return [];
+   }
+ }
+ 
+@@ -269,7 +338,7 @@
+   initEventManagers() {
+     const { context } = this;
+     this.onMessage = new SimpleEventAPI(context, "Port.onMessage");
+-    this.onDisconnect = new SimpleEventAPI(context, "Port.onDisconnect");
++    this.onDisconnect = new PortDisconnectEvent(context, "Port.onDisconnect");
+   }
+ 
+   getAPI() {
+@@ -277,7 +346,9 @@
+     return {
+       name: this.name,
+       sender: this.sender,
+-      error: null,
++      ...(ExtensionUtils.getChromeExtensionId(this.context.extension)
++        ? {}
++        : { error: null }),
+       onMessage: this.onMessage.api(),
+       onDisconnect: this.onDisconnect.api(),
+       postMessage: this.sendPortMessage.bind(this),
+@@ -292,8 +363,13 @@
+   recvPortDisconnect({ error = null }) {
+     this.conduit.close();
+     if (this.context.active) {
+-      this.api.error = error && this.context.normalizeError(error);
+-      this.onDisconnect.emit(this.api);
++      if (ExtensionUtils.getChromeExtensionId(this.context.extension)) {
++        // Keep the trusted transport error separate from the mutable public Port.
++        this.onDisconnect.emit(this.api, error);
++      } else {
++        this.api.error = error && this.context.normalizeError(error);
++        this.onDisconnect.emit(this.api);
++      }
+     }
+   }
+ 
+diff --git a/toolkit/components/extensions/ExtensionCommon.sys.mjs b/toolkit/components/extensions/ExtensionCommon.sys.mjs
+--- a/toolkit/components/extensions/ExtensionCommon.sys.mjs
++++ b/toolkit/components/extensions/ExtensionCommon.sys.mjs
+@@ -2833,6 +2833,14 @@
+         this.context.logActivity("api_event", this.name, { args, result });
+         return result;
+       },
++      syncWithoutClone: (...args) => {
++        if (shouldFire()) {
++          resetIdle();
++          let result = this.context.applySafeWithoutClone(callback, args);
++          this.context.logActivity("api_event", this.name, { args, result });
++          return result;
++        }
++      },
+       asyncWithoutClone: (...args) => {
+         return Promise.resolve().then(() => {
+           if (shouldFire()) {

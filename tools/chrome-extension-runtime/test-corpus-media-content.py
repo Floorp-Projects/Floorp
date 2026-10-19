@@ -31,7 +31,9 @@ def main():
     parser.add_argument("--headed", action="store_true")
     parser.add_argument("--browser", type=Path, help="Run the production Floorp converter instead of the reference")
     args = parser.parse_args()
-    output = Path(tempfile.mkdtemp(prefix="corpus-media-floorp-" if args.browser else "corpus-media-reference-", dir=ROOT / "_dist/chrome-runtime-tests"))
+    output_root = ROOT / "_dist/chrome-runtime-tests"
+    output_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix="corpus-media-floorp-" if args.browser else "corpus-media-reference-", dir=output_root))
     tls = output / "tls"
     tls.mkdir(mode=0o700)
     run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(tls / "ca-key.pem"), "-out", str(tls / "ca.pem"), "-days", "3", "-subj", "/CN=Floorp authored media fixture CA", "-addext", "basicConstraints=critical,CA:TRUE", "-addext", "keyUsage=critical,keyCertSign,cRLSign"])

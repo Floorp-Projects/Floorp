@@ -132,10 +132,10 @@ index a070edc..e41e39f 100644
          },
        },
 diff --git a/toolkit/components/extensions/parent/ext-identity.js b/toolkit/components/extensions/parent/ext-identity.js
-index f273601..60c8dfe 100644
+index f273601..625015c 100644
 --- a/toolkit/components/extensions/parent/ext-identity.js
 +++ b/toolkit/components/extensions/parent/ext-identity.js
-@@ -1,157 +1,543 @@
+@@ -1,157 +1,556 @@
  /* This Source Code Form is subject to the terms of the Mozilla Public
 - * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 - * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -263,6 +263,10 @@ index f273601..60c8dfe 100644
 +    args,
    );
 -
++  // A native window may close before its browser document commits.
++  if (window.closed) {
++    return Promise.reject({ message: "User cancelled or denied access." });
++  }
    return new Promise((resolve, reject) => {
 -    let httpActivityDistributor = Cc[
 +    const distributor = Cc[
@@ -298,6 +302,7 @@ index f273601..60c8dfe 100644
 +    const cleanup = () => {
 +      window.removeEventListener("unload", unload);
 +      window.removeEventListener("load", loaded);
++      Services.ww.unregisterNotification(windowObserver);
 +      progressBrowser?.removeProgressListener(progress);
 +      distributor.removeObserver(observer);
 +      Services.obs.removeObserver(observer, "http-on-modify-request");
@@ -318,6 +323,13 @@ index f273601..60c8dfe 100644
 +    const unload = () => {
 +      if (!window.document.isUncommittedInitialDocument)
 +        finish({ message: "User cancelled or denied access." });
++    };
++    const windowObserver = {
++      observe(subject, topic) {
++        if (topic === "domwindowclosed" && subject === window) {
++          finish({ message: "User cancelled or denied access." });
++        }
++      },
 +    };
 +    const onNavigation = (uri, request) => {
 +      if (!uri || !matchesRedirect(uri.spec, redirectURI)) return;
@@ -393,6 +405,7 @@ index f273601..60c8dfe 100644
      };
 +    distributor.addObserver(observer);
 +    Services.obs.addObserver(observer, "http-on-modify-request");
++    Services.ww.registerNotification(windowObserver);
 +    window.addEventListener("unload", unload);
 +    window.addEventListener("load", loaded, { once: true });
 +    if (window.document.readyState === "complete") loaded();

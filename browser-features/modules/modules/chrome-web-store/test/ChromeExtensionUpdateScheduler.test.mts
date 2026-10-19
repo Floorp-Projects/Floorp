@@ -8,6 +8,7 @@ import {
 import { ChromeExtensionUpdaterClass } from "../ChromeExtensionUpdater.sys.mts";
 import { ChromeExtensionUpdateSchedulerClass } from "../ChromeExtensionUpdateScheduler.sys.mts";
 import {
+  assertWorkerReplaced,
   browser,
   command,
   fixture,
@@ -16,6 +17,7 @@ import {
   observePrompts,
   packageVersion,
   rejected,
+  workerSnapshot,
 } from "./ChromeExtensionUpdater.test.mts";
 import {
   assert,
@@ -24,7 +26,7 @@ import {
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
 
-const { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 
@@ -115,6 +117,7 @@ const tests: TestCase[] = [
             "authorization persists in profile registry",
           );
           await command("set", "automatic-update-storage");
+          const beforeWorker = await workerSnapshot();
           const before = (await manager().getAddonByID(ID))!.userPermissions;
           await scheduler.runDueUpdates({ force: true });
           assertEquals(
@@ -122,6 +125,7 @@ const tests: TestCase[] = [
             "2.0",
             "automatic native update actually installed",
           );
+          await assertWorkerReplaced(beforeWorker, "2.0");
           assertEquals(
             (await command("get")).value,
             "automatic-update-storage",
@@ -255,6 +259,7 @@ const tests: TestCase[] = [
             "1.0",
             "no-window deferral retains old version",
           );
+          const beforeWorker = await workerSnapshot();
           target = browser();
           await scheduler.runDueUpdates();
           assertEquals(
@@ -262,6 +267,7 @@ const tests: TestCase[] = [
             "2.0",
             "waiting update resumes through normal browser flow",
           );
+          await assertWorkerReplaced(beforeWorker, "2.0");
         })
       );
     },
@@ -368,7 +374,9 @@ const tests: TestCase[] = [
             "migration-required",
             "preparing a candidate does not authorize old installed XPI",
           );
+          const beforeWorker = await workerSnapshot();
           await updater.installUpdate(ID, browser());
+          await assertWorkerReplaced(beforeWorker, "1.0");
           assertEquals(
             (await scheduler.getStatus(ID)).eligibility,
             "verified",
@@ -412,6 +420,7 @@ const tests: TestCase[] = [
               registry,
               updater,
             });
+            const beforeWorker = await workerSnapshot();
             await scheduler.runDueUpdates({ force: true });
             assertEquals(
               (await scheduler.getStatus(ID)).state,
@@ -430,6 +439,21 @@ const tests: TestCase[] = [
               "1.0",
               "old running package remains independently bound",
             );
+            const postponedReply = await command("get");
+            assertEquals(
+              postponedReply.contextId,
+              beforeWorker.contextId,
+              "scheduled postponement retains the running Worker",
+            );
+            assertEquals(
+              postponedReply.pending,
+              "2.0",
+              "the actual Worker received the scheduled update event",
+            );
+            assert(
+              !beforeWorker.context.unloaded,
+              "scheduled postponement leaves the old Worker running",
+            );
             const pending = (await manager().getAllInstalls()).find(
               (install) =>
                 install.addon?.id === ID &&
@@ -437,19 +461,31 @@ const tests: TestCase[] = [
             );
             assert(pending, "native deferred installation exists");
             await new Promise<void>((resolve, reject) => {
+              const finish = (error?: Error) => {
+                clearTimeout(timer);
+                pending.removeListener(listener);
+                if (error) reject(error);
+                else resolve();
+              };
               const listener = {
                 onInstallEnded() {
-                  pending.removeListener(listener);
-                  resolve();
+                  finish();
                 },
                 onInstallFailed() {
-                  pending.removeListener(listener);
-                  reject(new Error("Native postponed resume failed"));
+                  finish(new Error("Native postponed resume failed"));
+                },
+                onInstallCancelled() {
+                  finish(new Error("Native postponed resume cancelled"));
                 },
               };
+              const timer = setTimeout(
+                () => finish(new Error("Native postponed resume timed out")),
+                15000,
+              );
               pending.addListener(listener);
               pending.continuePostponedInstall();
             });
+            await assertWorkerReplaced(beforeWorker, "2.0");
             await waitAsync(async () => {
               const saved = (await IOUtils.readJSON(path)) as {
                 registrations: Array<{ version: string }>;
@@ -500,6 +536,7 @@ const tests: TestCase[] = [
               return Promise.resolve(v2);
             }, registry),
           });
+          const beforeWorker = await workerSnapshot();
           scheduler.start();
           try {
             await waitAsync(
@@ -510,6 +547,7 @@ const tests: TestCase[] = [
             await scheduler.stop();
           }
           assertEquals(downloads, 1, "timer-triggered update runs once");
+          await assertWorkerReplaced(beforeWorker, "2.0");
         })
       );
     },

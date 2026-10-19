@@ -4,7 +4,7 @@
   "referenceBinarySha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76",
   "runtimeSourceCommit": "1553b7b550dfe555684628d175e0c1701a785d0b",
   "corpusFrozenAtUTC": "2026-10-18T23:59:25.555Z",
-  "scope": "Signed-package usage inventory plus authored Chrome/Floorp protocol contract, not a primary-operation compatibility score.",
+  "scope": "Historical signed-package source inventory captured against runtimeSourceCommit, including supplemental package IDs outside the immutable selected50. Authored protocol observations and literal references do not qualify a current native candidate or change the selected50 denominator.",
   "extensions": [
     {
       "id": "infppggnoaenmfagbfknfkancpbljcca",
@@ -324,7 +324,8 @@
       "packageSha256": "7dcd525de140525b6f446c09aa68b8d0ac1b3b7e0d16a5b6da54ef14dfb8adb8",
       "status": "frozen",
       "literalCommandAndEventReferences": [],
-      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution."
+      "inventoryLimit": "Literal CDP strings in frozen JavaScript archives; dynamic method construction and successful primary operations require separate execution.",
+      "selectionScope": "Supplemental corrected package ID; outside the immutable selected50. Its availability does not replace the selected Puppeteer Recorder row."
     },
     {
       "id": "mdnleldcmiljblolnjhpnblkcekpdkpa",

@@ -25,8 +25,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--headed", action="store_true")
     parser.add_argument("--browser", type=Path)
+    parser.add_argument("--environment-proxy", action="store_true", help="Use normal environment proxy/public CA in the disposable Floorp profile")
     args = parser.parse_args()
-    output = Path(tempfile.mkdtemp(prefix="corpus-languagetool-floorp-" if args.browser else "corpus-languagetool-reference-", dir=ROOT / "_dist/chrome-runtime-tests"))
+    if args.environment_proxy and not args.browser:
+        parser.error("--environment-proxy requires --browser; the frozen Chrome reference is unchanged")
+    output_root = ROOT / "_dist/chrome-runtime-tests"
+    output_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix="corpus-languagetool-floorp-" if args.browser else "corpus-languagetool-reference-", dir=output_root))
     record = next(item for item in json.loads((TOOLS / "corpus-lock.json").read_text())["extensions"] if item["id"] == ID)
     package = ROOT / "_dist/chrome-extension-corpus/packages" / (ID + ".crx")
     if hashlib.sha256(package.read_bytes()).hexdigest() != record["packageSha256"]:
@@ -69,6 +74,8 @@ def main():
     command = ["node", str(TOOLS / "test-corpus-languagetool.mjs")]
     if args.browser:
         command = ["python3", str(TOOLS / "run-browser-tests.py"), "--browser", str(args.browser), "--test", str(TOOLS / "test-corpus-languagetool-floorp.mjs"), "--actor-module", str(TOOLS / "CorpusLanguageToolChild.sys.mjs"), "--timeout", "180"]
+    if args.environment_proxy:
+        command.append("--environment-proxy")
     if args.headed:
         command.append("--headed")
     try:

@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 import { zipSync } from "fflate/browser";
+import type {
+  DesktopCaptureAddon,
+  DesktopCaptureAddonManager,
+  DesktopCaptureAssertEquals,
+  DesktopCaptureExtensionParent,
+  DesktopCaptureWindow,
+  DesktopSourceModule,
+  DesktopSourcePage,
+} from "../../helpers/desktop-capture-test-types.ts";
 import {
   assert,
   assertEquals,
@@ -9,7 +18,10 @@ import {
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-async function until(read, label) {
+async function until<T>(
+  read: () => T | false | undefined | Promise<T | false | undefined>,
+  label: string,
+): Promise<T> {
   const limit = Date.now() + 20000;
   while (Date.now() < limit) {
     const value = await read();
@@ -21,17 +33,19 @@ async function until(read, label) {
 async function desktopSource() {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as unknown as { AddonManager: DesktopCaptureAddonManager };
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as unknown as { ExtensionParent: DesktopCaptureExtensionParent };
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
   const { DesktopSourcePage } = ChromeUtils.importESModule(
     "resource://gre/modules/ChromeExtensionDesktopSource.sys.mjs",
-  );
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
+  ) as unknown as DesktopSourceModule;
+  const window = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as unknown as DesktopCaptureWindow;
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
   const target = window.gBrowser.addTab("about:blank", {
     triggeringPrincipal: principal,
@@ -50,7 +64,9 @@ async function desktopSource() {
   const autoplay = Services.prefs.prefHasUserValue("media.autoplay.default")
     ? Services.prefs.getIntPref("media.autoplay.default")
     : null;
-  let addon, page, peer;
+  let addon: DesktopCaptureAddon | undefined,
+    page: DesktopSourcePage | undefined,
+    peer: RTCPeerConnection | undefined;
   try {
     Services.prefs.setIntPref("media.autoplay.default", 0);
     await IOUtils.writeUTF8(
@@ -112,7 +128,9 @@ async function desktopSource() {
           pickerToken: "unregistered-test-picker",
         });
       } catch (error) {
-        rejected = /Runtime with the native picker bridge/.test(error.message);
+        rejected = /Runtime with the native picker bridge/.test(
+          (error as Error).message,
+        );
       }
       assert(
         rejected,
@@ -123,11 +141,11 @@ async function desktopSource() {
     page = new DesktopSourcePage(extension);
     await page.open();
     assertEquals(
-      page.windowGlobal.documentPrincipal.originNoSuffix,
+      page.windowGlobal!.documentPrincipal.originNoSuffix,
       extension.baseURI.prePath,
       "private source document belongs to extension",
     );
-    const sourcePrincipal = page.windowGlobal.documentPrincipal;
+    const sourcePrincipal = page.windowGlobal!.documentPrincipal;
     const expiry = Date.now() + 10000;
     assertEquals(
       Services.perms.testExactPermissionFromPrincipal(
@@ -140,8 +158,8 @@ async function desktopSource() {
     Services.perms.addFromPrincipal(
       sourcePrincipal,
       "MediaManagerVideo",
-      Services.perms.ALLOW_ACTION,
-      Services.perms.EXPIRE_TIME,
+      Services.perms.ALLOW_ACTION!,
+      Services.perms.EXPIRE_TIME!,
       expiry,
     );
     const selected = await page.select({
@@ -160,20 +178,26 @@ async function desktopSource() {
     peer.addEventListener("track", (event) => stream.addTrack(event.track));
     await peer.setRemoteDescription(offer);
     await peer.setLocalDescription(await peer.createAnswer());
-    await until(() => peer.iceGatheringState === "complete", "receiver ICE");
-    await page.answer(sessionId, peer.localDescription.toJSON());
+    await until(() => peer!.iceGatheringState === "complete", "receiver ICE");
+    await page.answer(sessionId, peer.localDescription!.toJSON());
     await until(
-      () => peer.connectionState === "connected",
+      () => peer!.connectionState === "connected",
       "real source RTP transport",
     );
-    assertEquals(stream.getVideoTracks().length, 1);
-    assertEquals(stream.getAudioTracks().length, 1);
+    (assertEquals as DesktopCaptureAssertEquals)(
+      stream.getVideoTracks().length,
+      1,
+    );
+    (assertEquals as DesktopCaptureAssertEquals)(
+      stream.getAudioTracks().length,
+      1,
+    );
     await extension.terminateBackground();
     assert(!page.unloaded, "source host survives background suspension");
     const video = window.document.createElementNS(
       "http://www.w3.org/1999/xhtml",
       "video",
-    );
+    ) as HTMLVideoElement;
     video.muted = true;
     video.srcObject = stream;
     await video.play();
@@ -198,17 +222,17 @@ async function desktopSource() {
     const canvas = window.document.createElementNS(
       "http://www.w3.org/1999/xhtml",
       "canvas",
-    );
+    ) as HTMLCanvasElement;
     canvas.width = 2;
     canvas.height = 2;
     const context = canvas.getContext("2d");
-    context.drawImage(video, 0, 0, 2, 2);
-    const pixel = Array.from(context.getImageData(1, 1, 1, 1).data);
+    context!.drawImage(video, 0, 0, 2, 2);
+    const pixel = Array.from(context!.getImageData(1, 1, 1, 1).data);
     let bytes = 0;
     const recorder = new window.MediaRecorder(stream, {
       mimeType: "video/webm;codecs=vp8,opus",
     });
-    const done = new Promise((resolve) => {
+    const done = new Promise<Event>((resolve) => {
       recorder.ondataavailable = (event) => bytes += event.data.size;
       recorder.onstop = resolve;
     });

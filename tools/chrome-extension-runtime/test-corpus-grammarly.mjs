@@ -259,6 +259,41 @@ try {
     appSession,
     `(()=>{function all(root){return [...root.querySelectorAll('*')].flatMap(e=>[e,...(e.shadowRoot?all(e.shadowRoot):[])])}return all(document).filter(e=>e.getBoundingClientRect().width&&((e.getAttribute('class')||'').includes('status')||e.getAttribute('role')||e.getAttribute('aria-label'))).map(e=>({tag:e.tagName,role:e.getAttribute('role'),aria:e.getAttribute('aria-label'),title:e.getAttribute('title'),className:e.getAttribute('class'),text:e.textContent.trim().slice(0,100),rect:e.getBoundingClientRect().toJSON()}))})()`,
   );
+  // Read genuine text geometry and hover the actual product-marked word.
+  // No product suggestion handlers or application state are invoked directly.
+  /** @type {import("./grammarly-test-types.ts").GrammarlyPoint} */
+  const hoverPoint = await evaluateNativeUI(
+    browser,
+    appSession,
+    `(()=>{const e=document.getElementById('writing'),r=e.getBoundingClientRect(),s=getComputedStyle(e),c=document.createElement('canvas').getContext('2d');if(!c)throw Error('Actual text metrics unavailable');c.font=s.font;return{x:r.x+parseFloat(s.borderLeftWidth)+parseFloat(s.paddingLeft)+c.measureText('She ').width+c.measureText('go').width/2,y:r.y+parseFloat(s.borderTopWidth)+parseFloat(s.paddingTop)+parseFloat(s.fontSize)/2}})()`,
+  );
+  await browser.call("Target.activateTarget", { targetId: target.targetId });
+  await browser.call("Page.bringToFront", {}, appSession);
+  await browser.call("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    ...hoverPoint,
+    buttons: 0,
+  }, appSession);
+  await pause(1200);
+  item.nativeSuggestionAction = {
+    kind: "native-hover",
+    word: "go",
+    point: hoverPoint,
+  };
+  /** @type {import("./grammarly-test-types.ts").GrammarlySnapshot} */
+  const inlineSuggestion = await evaluateNativeUI(
+    browser,
+    appSession,
+    snapshot,
+  );
+  item.inlineSuggestion = inlineSuggestion;
+  writeFileSync(
+    join(output, "inline-suggestion.png"),
+    Buffer.from(
+      (await browser.call("Page.captureScreenshot", {}, appSession)).data,
+      "base64",
+    ),
+  );
   await browser.call("Target.activateTarget", { targetId: target.targetId });
   const nativeTab =
     (await browser.call("Target.getTargets", { filter: [{ type: "tab" }] }))
@@ -298,9 +333,35 @@ try {
     item.observedAccountUI =
       "Real product offers sign-in for account features; mandatory account requirement for core writing correction is not established";
   }
-  item.result = item.primaryOperationResult = "primary-not-completed";
-  item.primaryOperationExplanation =
-    "The real product has not applied a correction or retained it after navigation. Popup/content initialization alone is not a primary-operation pass.";
+  const inlineText = inlineSuggestion.text;
+  if (
+    /you[’']re signed out of Grammarly/i.test(inlineText) &&
+    /won[’']t get any writing suggestions until you sign back in/i.test(
+      inlineText,
+    )
+  ) {
+    item.observedRequiredAccountGate = {
+      text: inlineText,
+      controls: inlineSuggestion.buttons.map((button) =>
+        button.text || button.aria || ""
+      ).filter(Boolean),
+    };
+    item.primaryOperationAttempted = false;
+    item.observedPrerequisiteStatus =
+      "mandatory-sign-in-for-inline-suggestions";
+    item.observedAccountUI =
+      "Actual inline suggestion action requires sign-in; the separate toolbar popup also advertises optional account features";
+    item.blockers.push(
+      "Actual inline suggestion card requires signing back in before correction controls are available",
+    );
+    item.result = item.primaryOperationResult = "not-attempted-account-gate";
+    item.primaryOperationExplanation =
+      "The genuine product displays an explicit sign-in requirement at the actual underlined-word suggestion action. No login was attempted and no correction/navigation primary pass is claimed.";
+  } else {
+    item.result = item.primaryOperationResult = "primary-not-completed";
+    item.primaryOperationExplanation =
+      "The real product has not applied a correction and repeated it after navigation. Popup/content initialization alone is not a primary-operation pass.";
+  }
 } catch (error) {
   item.result = item.primaryOperationResult = "failed";
   item.error = error instanceof Error

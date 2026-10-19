@@ -4,6 +4,7 @@
 import argparse
 from collections import deque
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,10 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
+_selection_spec = importlib.util.spec_from_file_location(
+    "candidate_package_selection", ROOT / "tools/chrome-extension-runtime/candidate-package-selection.py")
+_selection = importlib.util.module_from_spec(_selection_spec)
+_selection_spec.loader.exec_module(_selection)
 
 
 def run(args, cwd, env, log=None):
@@ -44,8 +49,9 @@ def main():
     args = parser.parse_args()
     if len(args.build_id) != 14 or not args.build_id.isdecimal():
         parser.error("--build-id must be a 14-digit UTC build ID")
+    # mach's desktop completion notifier can block on hosted macOS runners.
     env = {**os.environ, "MOZ_BUILD_DATE": args.build_id, "CARGO_INCREMENTAL": "0",
-           "RUSTUP_TOOLCHAIN": "1.95.0", "NODE_ENV": "production"}
+           "RUSTUP_TOOLCHAIN": "1.95.0", "NODE_ENV": "production", "MOZ_NOSPAM": "1"}
     compiler_cache = shutil.which("sccache")
     if compiler_cache:
         env["RUSTC_WRAPPER"] = compiler_cache
@@ -124,10 +130,10 @@ def main():
     run(["bash", ROOT / "static/gecko/pref/override.sh", preferences], ROOT, env)
     shutil.copyfile(ROOT / "_dist/buildid2", resources / "browser/buildid2")
     run([sys.executable, "./mach", "--no-interactive", "package"], source, env, logs / "package.log")
-    packages = sorted(path for path in (obj / "dist").glob("floorp-*")
-                      if path.is_file() and path.name.endswith((".zip", ".tar.xz", ".tar.gz", ".dmg")))
+    packages = _selection.distributable_packages(obj / "dist")
     if not packages:
         raise RuntimeError("Native build succeeded without a distributable package")
+    _selection.select_native_package([{"name": path.name} for path in packages], args.platform)
     manifest = json.loads((state / "applied-source.json").read_text())
     manifest.update({"schemaVersion": 1, "platform": args.platform, "target": target,
                      "buildId": args.build_id, "productionOverlay": True,

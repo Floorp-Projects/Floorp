@@ -7,6 +7,11 @@ import {
   assertEquals,
   runTests,
 } from "../../../../../chrome/test/utils/test_harness.ts";
+import { assertAuxiliaryDefaults } from "./auxiliary-defaults.mts";
+import type {
+  AuxiliaryOrdinaryApis,
+  AuxiliaryTtsModule,
+} from "../helpers/auxiliary-native-test-types.ts";
 
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
@@ -54,6 +59,7 @@ async function testNativeAuxiliary(): Promise<void> {
     try {
       check('fontSettings namespace', typeof chrome.fontSettings.getFontList === 'function');
       check('tts namespace', typeof chrome.tts.getVoices === 'function');
+      check('private speech backend flag hidden', !('mozFloorpChromeTts' in new SpeechSynthesisUtterance()));
       const fonts = await chrome.fontSettings.getFontList();
       check('real installed fonts', fonts.length > 10 && fonts.every(f => f.fontId && f.displayName));
       const callbackFonts = await new Promise(resolve => chrome.fontSettings.getFontList(resolve));
@@ -205,7 +211,7 @@ async function testNativeAuxiliary(): Promise<void> {
         "background.js": encode(
           marked
             ? background
-            : `document.title=JSON.stringify({fontSettings:typeof chrome.fontSettings,tts:typeof chrome.tts});`,
+            : `document.title=JSON.stringify({fontSettings:typeof chrome.fontSettings,tts:typeof chrome.tts,privateSpeechOptIn:'mozFloorpChromeTts' in new SpeechSynthesisUtterance()});`,
         ),
       }),
     );
@@ -240,7 +246,9 @@ async function testNativeAuxiliary(): Promise<void> {
         ),
       "ordinary API isolation",
     );
-    const ordinaryApis = JSON.parse(ordinaryView.xulBrowser.contentTitle);
+    const ordinaryApis = JSON.parse(
+      ordinaryView.xulBrowser.contentTitle,
+    ) as AuxiliaryOrdinaryApis;
     assertEquals(
       ordinaryApis.fontSettings,
       "undefined",
@@ -250,6 +258,11 @@ async function testNativeAuxiliary(): Promise<void> {
       ordinaryApis.tts,
       "undefined",
       "ordinary Firefox extension has no tts",
+    );
+    assertEquals(
+      ordinaryApis.privateSpeechOptIn,
+      false,
+      "ordinary Firefox extension cannot select the privileged native speech path",
     );
     await install(addonId, true);
     const extension = await waitFor(
@@ -278,6 +291,12 @@ async function testNativeAuxiliary(): Promise<void> {
         (error as Error).stack,
       );
       throw error;
+    }
+    if (nativeSpeech) {
+      await assertAuxiliaryDefaults(
+        parentTts as unknown as AuxiliaryTtsModule,
+        extension.backgroundContext,
+      );
     }
     view.xulBrowser.messageManager.loadFrameScript(
       "data:application/javascript," +
@@ -318,7 +337,9 @@ async function testNativeAuxiliary(): Promise<void> {
     ) as unknown as
       | (Window & {
         InspectorUtils: {
-          getUsedFontFaces(range: Range): Array<{ CSSFamilyName: string }>;
+          getUsedFontFaces(
+            range: Range,
+          ): Array<{ CSSFamilyName: string; name: string }>;
         };
       })
       | null;
@@ -330,16 +351,21 @@ async function testNativeAuxiliary(): Promise<void> {
     stage.style.cssText =
       "position:fixed;top:0;left:0;font-size:40px;opacity:0.01";
     browserWindow.document.documentElement.appendChild(stage);
-    const usedFonts = (text: string, family: string): string[] => {
+    const usedFaces = (text: string, family: string) => {
       stage.textContent = text;
       stage.style.fontFamily = family;
       stage.getBoundingClientRect();
       const range = browserWindow.document.createRange();
       range.selectNodeContents(stage);
-      return browserWindow.InspectorUtils.getUsedFontFaces(range).map((face) =>
-        face.CSSFamilyName
-      );
+      return browserWindow.InspectorUtils.getUsedFontFaces(range).map((
+        face,
+      ) => ({
+        family: face.CSSFamilyName,
+        name: face.name,
+      }));
     };
+    const usedFonts = (text: string, family: string): string[] =>
+      usedFaces(text, family).map((face) => face.family);
     try {
       const baseline = usedFonts("Latin sample", "serif");
       assert(
@@ -347,51 +373,103 @@ async function testNativeAuxiliary(): Promise<void> {
         "real InspectorUtils observes actual glyph fonts",
       );
       if (nativeFonts) {
+        const installedFonts = await fontApi.getFontList() as Array<
+          { fontId: string }
+        >;
+        const available = new Set(installedFonts.map((font) => font.fontId));
+        const candidates = Services.appinfo.OS === "Linux"
+          ? [["DejaVu Sans", "DejaVu Serif"], ["Arial", "Times New Roman"]]
+          : [["Arial", "Times New Roman"], ["DejaVu Sans", "DejaVu Serif"]];
+        const inspect = (fontId: string) => ({
+          fontId,
+          latin: usedFaces("Latin sample", JSON.stringify(fontId)),
+          cyrillic: usedFaces("Кириллица", JSON.stringify(fontId)),
+        });
+        const rendered = (font: ReturnType<typeof inspect>) =>
+          [font.latin, font.cyrillic].every((faces) =>
+            faces.length > 0 &&
+            faces.every((face) =>
+              face.family.toLowerCase() === font.fontId.toLowerCase() &&
+              face.name
+            )
+          );
+        const fingerprint = (faces: ReturnType<typeof usedFaces>) =>
+          [...new Set(faces.map((face) => face.name))].sort().join("\n");
+        const baselineFaces = usedFaces("Latin sample", "serif");
+        const selected = candidates.filter((pair) =>
+          pair.every((font) => available.has(font))
+        )
+          .map(([a, b]) => ({ a: inspect(a), b: inspect(b) }))
+          .find((pair) =>
+            rendered(pair.a) && rendered(pair.b) &&
+            fingerprint(pair.a.latin) !== fingerprint(pair.b.latin) &&
+            fingerprint(pair.a.cyrillic) !== fingerprint(pair.b.cyrillic) &&
+            fingerprint(pair.a.latin) !== fingerprint(baselineFaces)
+          );
+        assert(
+          selected,
+          `Actual installed Latin/Cyrillic fonts must provide distinct glyph faces: ${
+            JSON.stringify({
+              os: Services.appinfo.OS,
+              candidates,
+              baselineFaces,
+              availablePreferred: candidates.flat().filter((font) =>
+                available.has(font)
+              ),
+            })
+          }`,
+        );
+        const latinFont = selected.a.fontId, cyrillicFont = selected.b.fontId;
+        console.log(
+          "[AuxiliaryNative] actual font evidence",
+          JSON.stringify({
+            os: Services.appinfo.OS,
+            installedFontCount: installedFonts.length,
+            baselineFaces,
+            latinOverride: selected.a,
+            cyrillicOverride: selected.b,
+          }),
+        );
         await fontApi.setFont({
           script: "Latn",
           genericFamily: "serif",
-          fontId: "DejaVu Sans",
+          fontId: latinFont,
         });
         await fontApi.setFont({
           script: "Cyrl",
           genericFamily: "serif",
-          fontId: "DejaVu Serif",
+          fontId: cyrillicFont,
         });
         assert(
-          usedFonts("Latin sample", "serif").some((name) =>
-            name === "DejaVu Sans"
-          ),
+          usedFonts("Latin sample", "serif").some((name) => name === latinFont),
           "Latin override changes native glyph font",
         );
         assert(
-          usedFonts("Кириллица", "serif").some((name) =>
-            name === "DejaVu Serif"
-          ),
+          usedFonts("Кириллица", "serif").some((name) => name === cyrillicFont),
           "Cyrillic override retains independent native glyph font",
         );
         assert(
-          usedFonts("Latin sample", '"DejaVu Serif", serif').some((name) =>
-            name === "DejaVu Serif"
-          ),
+          usedFonts("Latin sample", JSON.stringify(cyrillicFont) + ", serif")
+            .some((name) => name === cyrillicFont),
           "explicit page font retains CSS priority",
         );
         await fontApi.setFont({
           genericFamily: "fantasy",
-          fontId: "DejaVu Sans",
+          fontId: latinFont,
         });
         assert(
           usedFonts("Latin sample", "fantasy").some((name) =>
-            name === "DejaVu Sans"
+            name === latinFont
           ),
           "global script override changes generic native glyphs",
         );
         await fontApi.setFont({
           genericFamily: "standard",
-          fontId: "DejaVu Sans",
+          fontId: latinFont,
         });
         assert(
           usedFonts("Latin sample", "initial").some((name) =>
-            name === "DejaVu Sans"
+            name === latinFont
           ),
           "standard setting affects initial font family",
         );
@@ -405,6 +483,11 @@ async function testNativeAuxiliary(): Promise<void> {
         ) {
           await fontApi.clearFont({ script, genericFamily });
         }
+        assertEquals(
+          fingerprint(usedFaces("Latin sample", "serif")),
+          fingerprint(baselineFaces),
+          "clear restores the original native glyph faces",
+        );
         assertEquals(
           usedFonts("Latin sample", "serif").join(","),
           baseline.join(","),

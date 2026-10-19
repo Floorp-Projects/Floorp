@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
-/** @import {Truthy, NativeBinaryInput, CorpusLock, CorpusReport, CorpusOperation, ContentSnapshot, NativeWindowHandle, NativeTabHandle, ActorHandle, ActorClickData, ContentActorResponses, ResourceProtocolHandler} from "./assessment-test-types.ts" */
+/** @import {Truthy, NativeBinaryInput, CorpusLock, ContentSnapshot, NativeWindowHandle, NativeTabHandle, ActorHandle, ActorClickData, ContentActorResponses, ResourceProtocolHandler} from "./assessment-test-types.ts" */
+/** @import {ContentCorpusReport, ContentCorpusOperation} from "./content-corpus-test-types.ts" */
+/** @import {UserScriptsUIWindow} from "../../browser-features/modules/modules/chrome-web-store/test/helpers/user-scripts-consent-test-types.ts" */
 import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
+import { allowFrozenCorpusUserScripts } from "./corpus-user-scripts-consent.mjs";
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -65,7 +68,7 @@ export async function runAllTests() {
       "corpus-lock.json",
     ),
   );
-  /** @type {CorpusReport<ContentSnapshot>} */
+  /** @type {ContentCorpusReport} */
   const report = {
     nativeQualified: false,
     qualificationMode:
@@ -140,8 +143,7 @@ export async function runAllTests() {
         selected.includes(item.id)
       )
     ) {
-      /** @type {CorpusOperation<ContentSnapshot>} */
-      /** @type {CorpusOperation<ContentSnapshot>} */
+      /** @type {ContentCorpusOperation} */
       const item = {
         nativeQualified: false,
         id: record.id,
@@ -186,6 +188,21 @@ export async function runAllTests() {
           warnings: installed.warnings,
           background: installed.background,
         });
+        item.userScriptsConsent = await allowFrozenCorpusUserScripts(
+          installed,
+          record,
+          /** @type {UserScriptsUIWindow} */ (/** @type {unknown} */ (win)),
+        );
+        if (item.userScriptsConsent) {
+          item.checks.push(
+            "Authenticated signed MV3 declaration and exact Chrome identity authorized the real visible Allow user scripts UI; trusted input and saved public/private states are retained",
+          );
+          if (!item.userScriptsConsent.ui.statusAfter.permissionGranted) {
+            throw Error(
+              "The independent Allow setting did not grant the optional public userScripts permission; a real product permission grant is still required",
+            );
+          }
+        }
         const baseline = item.baseline;
         if (!baseline) throw Error("Authored page baseline is missing");
         if (record.name === "Stylus") {

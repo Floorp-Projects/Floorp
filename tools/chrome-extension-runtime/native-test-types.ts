@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 /// <reference types="jsr:@types/gecko" />
 
-import type { ChromeConversionReport } from "../../browser-features/modules/modules/chrome-web-store/types.ts";
+import type {
+  ChromeConversionReport,
+  ChromeManifest,
+} from "../../browser-features/modules/modules/chrome-web-store/types.ts";
 
 export interface NativeCorpusActor {
   sendQuery<Result = unknown>(name: string, data?: object): Promise<Result>;
@@ -91,6 +94,7 @@ export interface NativeCorpusExtensionParent {
 
 export interface InstalledFrozenCorpus {
   addon: NativeCorpusAddon;
+  originalManifest: ChromeManifest;
   unchangedScriptCount: number;
   unchangedScriptsSha256: string;
   warnings?: string[];
@@ -116,6 +120,7 @@ export interface NativeCorpusBackgroundInput {
 
 export interface NativeCorpusBackgroundSnapshot
   extends NativeCorpusBackgroundInput {
+  runId: string | null;
   strictNative: boolean;
   version: string;
   buildId: string;

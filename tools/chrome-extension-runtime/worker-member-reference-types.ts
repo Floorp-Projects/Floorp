@@ -33,11 +33,22 @@ export interface MemberPermissionState {
 }
 export interface NativeMemberCase {
   kind: WorkerKind;
-  mode: "undeclared" | "optional" | "optional-unread";
+  mode:
+    | "undeclared"
+    | "optional"
+    | "optional-unread"
+    | "optional-unread-keys"
+    | "optional-unread-ownKeys"
+    | "optional-unread-descriptor";
   extensionId: string;
   workerTargetId: string;
   initial?: MemberPermissionState;
   preRequestIdentity?: { generation: string; sameChrome: boolean };
+  preGrantRootAccess?: {
+    kind: "none" | "keys" | "ownKeys" | "descriptor";
+    names?: string[];
+    descriptor?: NativeMemberShape["descriptor"];
+  };
   ownInfo?: { id: string; name: string };
   decision?: {
     kind: "native-prompt";

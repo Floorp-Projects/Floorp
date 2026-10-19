@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import re
 import signal
 import shutil
 import socket
@@ -18,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import uuid
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 
@@ -25,12 +27,52 @@ sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class UserScriptsParserBarriers:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.states = {}
+
+    def create(self, token):
+        with self.lock:
+            if token in self.states or len(self.states) >= 64:
+                raise ValueError("Parser barrier token is reused or capacity exceeded")
+            self.states[token] = {"event": threading.Event(), "scriptRequested": False,
+                                  "released": False, "timedOut": False}
+
+    def wait(self, token):
+        with self.lock:
+            state = self.states[token]
+            state["scriptRequested"] = True
+        finished = state["event"].wait(30)
+        with self.lock:
+            state["timedOut"] = not finished
+
+    def status(self, token):
+        with self.lock:
+            state = self.states.get(token, {})
+            return {key: state.get(key, False) for key in
+                    ("scriptRequested", "released", "timedOut")}
+
+    def release(self, token):
+        with self.lock:
+            state = self.states[token]
+            state["released"] = True
+            state["event"].set()
+
+    def close(self):
+        with self.lock:
+            for state in self.states.values():
+                state["event"].set()
+
+
 class FixtureHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
 
     def do_GET(self):
-        if self.path.startswith("/debugger-echo"):
+        if self.path.startswith("/user-scripts-consent/"):
+            self._user_scripts_consent()
+        elif self.path.startswith("/debugger-echo"):
             self._debugger_echo()
         elif self.path.startswith("/identity-"):
             self._identity()
@@ -38,10 +80,53 @@ class FixtureHandler(SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
-        if self.path.startswith("/debugger-echo"):
+        if self.path.startswith("/user-scripts-consent/"):
+            self._user_scripts_consent()
+        elif self.path.startswith("/debugger-echo"):
             self._debugger_echo()
         else:
             self.send_error(404)
+
+    def _user_scripts_consent(self):
+        request = urlsplit(self.path)
+        values = parse_qs(request.query).get("token", [])
+        if len(values) != 1 or re.fullmatch(r"[0-9a-f]{32}", values[0]) is None:
+            self.send_error(400, "Expected an owned parser barrier token")
+            return
+        token = values[0]
+        barriers = self.server.user_scripts_barriers
+        content_type = "application/json"
+        try:
+            if request.path == "/user-scripts-consent/held.html" and self.command == "GET":
+                barriers.create(token)
+                body = ('<!doctype html><title>Floorp held user scripts document</title>'
+                        '<script src="/user-scripts-consent/barrier.js?token=' + token + '"></script>'
+                        '<main id="user-script-consent-fixture">Owned delayed parser document</main>').encode()
+                content_type = "text/html; charset=utf-8"
+            elif request.path == "/user-scripts-consent/barrier.js" and self.command == "GET":
+                barriers.wait(token)
+                body = b"// Owned parser barrier completed.\n"
+                content_type = "text/javascript; charset=utf-8"
+            elif request.path == "/user-scripts-consent/status" and self.command == "GET":
+                body = json.dumps(barriers.status(token)).encode()
+            elif request.path == "/user-scripts-consent/release" and self.command == "POST":
+                barriers.release(token)
+                body = json.dumps(barriers.status(token)).encode()
+            else:
+                self.send_error(405, "Unsupported parser barrier operation")
+                return
+        except KeyError:
+            self.send_error(404, "Unknown parser barrier token")
+            return
+        except ValueError as error:
+            self.send_error(409, str(error))
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _debugger_echo(self):
         body = self.rfile.read(int(self.headers.get("Content-Length", "0")))
@@ -110,6 +195,104 @@ def browser_binary(path):
     raise ValueError(f"No browser executable found in {path}")
 
 
+def file_record(path):
+    path = Path(path).resolve(strict=True)
+    if not path.is_file():
+        raise ValueError(f"Expected a source file: {path}")
+    data = path.read_bytes()
+    return {"path": str(path), "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+
+
+def verify_file_records(records):
+    for record in records:
+        current = file_record(record["path"])
+        if any(current[key] != record[key] for key in ("path", "sha256", "bytes")):
+            raise RuntimeError(f"Execution source changed: {record['path']}")
+
+
+def bundle_input_records(metafile):
+    inputs = json.loads(Path(metafile).read_text(encoding="utf-8"))["inputs"]
+    if not isinstance(inputs, dict) or not inputs:
+        raise ValueError("Bundled tests must identify all esbuild input files")
+    records = []
+    for name, info in inputs.items():
+        record = file_record(ROOT / name)
+        if type(info.get("bytes")) is not int or info["bytes"] != record["bytes"]:
+            raise RuntimeError(f"Bundled input size differs from the source: {name}")
+        records.append(record)
+    if len({record["path"] for record in records}) != len(records):
+        raise ValueError("Bundled inputs contain duplicate canonical source paths")
+    return sorted(records, key=lambda record: record["path"])
+
+
+def esbuild_command(esbuild):
+    # esbuild's install script may replace its Node entry with the native
+    # executable. Launch ELF, PE and Mach-O directly; keep JavaScript wrappers
+    # under Node, including Windows where .cmd shims require a command shell.
+    with Path(esbuild).open("rb") as stream:
+        header = stream.read(4)
+    native_headers = (
+        b"\x7fELF", b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe",
+        b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
+        b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca",
+        b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca",
+    )
+    if header in native_headers or header.startswith(b"MZ"):
+        return [str(esbuild)]
+    return ["node", str(esbuild)]
+
+
+def bundle_test(esbuild, test, browser_globals, bundle, metafile):
+    source = file_record(test)
+    command = [*esbuild_command(esbuild), str(test), "--bundle", "--format=esm",
+               f"--inject:{browser_globals}", f"--outfile={bundle}", f"--metafile={metafile}"]
+    # Discover dependencies first, then bind the actual executed build to their
+    # before/after bytes. Entry-only hashes miss changes to imported operations.
+    subprocess.run([*command, "--log-level=error"], check=True, cwd=ROOT)
+    inputs = bundle_input_records(metafile)
+    subprocess.run(command, check=True, cwd=ROOT)
+    if bundle_input_records(metafile) != inputs:
+        raise RuntimeError(f"Test dependency graph or source changed while bundling: {test}")
+    verify_file_records([source, *inputs])
+    return {
+        "testSourceSha256": source["sha256"],
+        "bundleSha256": file_record(bundle)["sha256"],
+        "bundleMetafileSha256": file_record(metafile)["sha256"],
+        "bundleInputs": inputs,
+    }
+
+
+def copy_actor_module(source, actor_directory, retained_directory):
+    record = file_record(source)
+    for directory in (actor_directory, retained_directory):
+        directory.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(record["path"], directory / Path(record["path"]).name)
+    record.update({
+        "loadedPath": str((actor_directory / Path(record["path"]).name).resolve()),
+        "copiedPath": str((retained_directory / Path(record["path"]).name).resolve()),
+    })
+    verify_actor_modules([record])
+    return record
+
+
+def verify_actor_modules(records):
+    for record in records:
+        verify_file_records([record, *[
+            {**record, "path": record[key]} for key in ("loadedPath", "copiedPath")
+        ]])
+
+
+def verify_execution_sources(provenance, bundles, actors):
+    for index, record in enumerate(provenance):
+        verify_file_records(record["bundleInputs"])
+        metafile = bundles / f"test-{index}.meta.json"
+        if (file_record(metafile)["sha256"] != record["bundleMetafileSha256"] or
+                bundle_input_records(metafile) != record["bundleInputs"] or
+                file_record(bundles / f"test-{index}.mjs")["sha256"] != record["bundleSha256"]):
+            raise RuntimeError("Executed bundle or complete input manifest changed")
+    verify_actor_modules(actors)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--browser", required=True, type=Path)
@@ -160,21 +343,20 @@ def main():
         export const clearTimeout = window.clearTimeout.bind(window);
         export const setInterval = window.setInterval.bind(window);
         export const clearInterval = window.clearInterval.bind(window);
-    """)
-    # Deno's Windows .cmd shim is a shell script, not an executable accepted by
-    # CreateProcess. Invoke the real package's JavaScript entry through Node on
-    # every platform and keep arguments out of a command shell.
+    """, encoding="utf-8", newline="\n")
+    # Use the package entry instead of a shell-dependent .cmd shim. Its bytes
+    # determine whether installation left a Node wrapper or a native executable.
     esbuild_entries = sorted((ROOT / "node_modules/.deno").glob(
         "esbuild@*/node_modules/esbuild/bin/esbuild"))
     esbuild_entries.append(ROOT / "node_modules/esbuild/bin/esbuild")
     esbuild = next((path for path in esbuild_entries if path.is_file()), None)
     if not esbuild:
         parser.error("Install project dependencies before running browser suites (esbuild is required)")
+    test_provenance = []
     for index, test in enumerate(tests):
-        subprocess.run(["node", str(esbuild), str(test), "--bundle", "--format=esm",
-                        f"--inject:{browser_globals}",
-                        f"--outfile={bundles / f'test-{index}.mjs'}"],
-                       check=True, cwd=ROOT)
+        test_provenance.append(bundle_test(
+            esbuild, test, browser_globals, bundles / f"test-{index}.mjs",
+            bundles / f"test-{index}.meta.json"))
 
     spec = importlib.util.spec_from_file_location(
         "runtime_smoke", ROOT / "tools/app-shim/test-runtime.py")
@@ -184,13 +366,13 @@ def main():
     profile.mkdir(mode=0o700)
     actor_directory = profile / "chrome/runtime-actors"
     actor_names = set()
+    actor_modules = []
     for module in args.actor_module:
         module = module.resolve(strict=True)
         if not module.is_file() or module.name in actor_names:
             parser.error("Actor modules must be distinct files with unique names")
         actor_names.add(module.name)
-        actor_directory.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(module, actor_directory / module.name)
+        actor_modules.append(copy_actor_module(module, actor_directory, bundles / "actors"))
     port = smoke.unused_port()
     prefs = {
         "marionette.port": port,
@@ -217,24 +399,30 @@ def main():
     (profile / "user.js").write_text("\n".join(
         f"user_pref({json.dumps(key)}, {json.dumps(value)});"
         for key, value in prefs.items()) + "\n")
-    report = {"passed": False, "browser": str(binary), "modules": [], "networkEnvironment": network_report}
+    run_id = uuid.uuid4().hex
+    report = {"passed": False, "runId": run_id, "browser": str(binary), "modules": [], "networkEnvironment": network_report,
+              "actorModules": actor_modules,
+              "buildScope": "authenticated-native-candidate" if candidate is not None else "unqualified-browser-run"}
     if candidate is not None:
         report["candidate"] = candidate
     client = host = None
     fixture_handler = partial(FixtureHandler, directory=str(
         ROOT / "tools/chrome-extension-runtime/fixtures"))
     fixture_server = ThreadingHTTPServer(("127.0.0.1", 0), fixture_handler)
+    fixture_server.user_scripts_barriers = UserScriptsParserBarriers()
     fixture_thread = threading.Thread(target=fixture_server.serve_forever, daemon=True)
     fixture_thread.start()
     fixture_url = f"http://127.0.0.1:{fixture_server.server_port}/"
     with (output / "browser.log").open("w") as log:
         try:
+            verify_execution_sources(test_provenance, bundles, actor_modules)
             command = [str(binary), "--no-remote", "--profile", str(profile),
                        "--marionette", "--remote-allow-system-access"]
             if not args.headed:
                 command.append("--headless")
             command.append("about:blank")
             browser_env = {**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
+                           "FLOORP_TEST_RUN_ID": run_id,
                            "FLOORP_TEST_REQUIRE_NATIVE_CORPUS": "1" if candidate is not None else "0",
                            "FLOORP_TEST_NATIVE_CANDIDATE_IDENTITY": json.dumps(candidate_provenance),
                            "FLOORP_TEST_ACTOR_DIRECTORY": str(actor_directory) if args.actor_module else ""}
@@ -309,12 +497,18 @@ def main():
                     return window.wrappedJSObject.__floorpRuntimeTest.done
                         ? window.wrappedJSObject.__floorpRuntimeTest : null;
                 """), args.timeout)
-                report["modules"].append({"path": str(test), **result})
+                report["modules"].append({
+                    "path": str(test),
+                    **test_provenance[index],
+                    **result,
+                })
                 print(f"{'PASS' if result.get('passed') else 'FAIL'} {test}", flush=True)
+            verify_execution_sources(test_provenance, bundles, actor_modules)
             report["passed"] = all(result["passed"] for result in report["modules"])
         except Exception as error:
             report["error"] = str(error)
         finally:
+            fixture_server.user_scripts_barriers.close()
             fixture_server.shutdown()
             fixture_server.server_close()
             fixture_thread.join(timeout=5)

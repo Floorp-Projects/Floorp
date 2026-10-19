@@ -725,7 +725,7 @@ diff --git a/modules/ChromeExtensionCaptureChild.sys.mjs b/modules/ChromeExtensi
 new file mode 100644
 --- /dev/null
 +++ b/modules/ChromeExtensionCaptureChild.sys.mjs
-@@ -0,0 +1,474 @@
+@@ -0,0 +1,557 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -759,6 +759,40 @@ new file mode 100644
 +        .then(resolve, error => reject(context.normalizeError(error)));
 +    }, context.cloneScope)
 +  );
++}
++
++// A context can be destroyed before its parent-side stop notification arrives.
++// Drop our ownership first, then dispose every still-live native resource. A
++// dead wrapper has already lost its document; touching it would abort cleanup
++// of the other sessions. Unexpected failures are reported after all operations.
++function cleanup(operations) {
++  const errors = [];
++  for (const operation of operations) {
++    try {
++      operation();
++    } catch (error) {
++      errors.push(error);
++    }
++  }
++  if (errors.length === 1) throw errors[0];
++  if (errors.length) throw new AggregateError(errors, "Capture cleanup failed.");
++}
++
++function stopTrack(track) {
++  if (!Cu.isDeadWrapper(track)) track.stop();
++}
++
++function stopStream(stream) {
++  if (!stream || Cu.isDeadWrapper(stream)) return;
++  cleanup(stream.getTracks().map(track => () => stopTrack(track)));
++}
++
++function closePeer(peer) {
++  if (!Cu.isDeadWrapper(peer)) peer.close();
++}
++
++function disconnectSource(source) {
++  if (source && !Cu.isDeadWrapper(source)) source.disconnect();
 +}
 +
 +function videoConstraints(request) {
@@ -843,27 +877,38 @@ new file mode 100644
 +    if (closed) return;
 +    closed = true;
 +    state.audioSources.delete(sessionId);
-+    for (const { peer, source } of peers.values()) {
-+      source?.disconnect();
-+      peer.close();
-+    }
++    const currentPeers = [...peers.values()];
 +    peers.clear();
-+    destination.stream.getTracks().forEach(track => track.stop());
-+    audioContext.close().catch(Cu.reportError);
++    cleanup([
++      ...currentPeers.flatMap(({ peer, source }) => [
++        () => disconnectSource(source),
++        () => closePeer(peer),
++      ]),
++      () => {
++        if (!Cu.isDeadWrapper(destination)) stopStream(destination.stream);
++      },
++      () => {
++        if (!Cu.isDeadWrapper(audioContext))
++          audioContext.close().catch(Cu.reportError);
++      },
++    ]);
 +  };
 +  const attach = async (sourceId, offer) => {
 +    if (closed) return;
 +    const previous = peers.get(sourceId);
-+    previous?.source?.disconnect();
-+    previous?.peer.close();
 +    peers.delete(sourceId);
++    if (previous)
++      cleanup([
++        () => disconnectSource(previous.source),
++        () => closePeer(previous.peer),
++      ]);
 +    if (!offer) return;
 +    const peer = new window.RTCPeerConnection({ iceServers: [] });
 +    const item = { peer };
 +    peers.set(sourceId, item);
 +    peer.addEventListener("track", event => {
 +      if (closed) {
-+        event.track.stop();
++        stopTrack(event.track);
 +        return;
 +      }
 +      const source = audioContext.createMediaStreamSource(
@@ -926,11 +971,16 @@ new file mode 100644
 +      const active = state.audioSources.get(id);
 +      if (active)
 +        active.attach(sourceId, offer).catch(error => {
-+          active.close();
 +          const recording = state.streams.get(id);
-+          recording?.stream.getTracks().forEach(track => track.stop());
-+          call("_streamStopped", [id, true]).catch(Cu.reportError);
-+          Cu.reportError(error);
++          state.streams.delete(id);
++          if (recording) clearInterval(recording.timer);
++          try {
++            cleanup([active.close, () => stopStream(recording?.stream)]);
++          } finally {
++            if (!context.unloaded)
++              call("_streamStopped", [id, true]).catch(Cu.reportError);
++            Cu.reportError(error);
++          }
 +        });
 +    };
 +    context.childManager
@@ -953,17 +1003,23 @@ new file mode 100644
 +
 +async function receiveDesktop(context, sessionId, call, stream, options) {
 +  const peer = new context.contentWindow.RTCPeerConnection({ iceServers: [] });
++  let closed = false;
 +  const close = () => {
-+    peer.close();
-+    stream.getTracks().forEach(track => track.stop());
++    if (closed) return;
++    closed = true;
++    cleanup([() => closePeer(peer), () => stopStream(stream)]);
 +  };
 +  peer.addEventListener("track", event => {
++    if (closed) {
++      stopTrack(event.track);
++      return;
++    }
 +    if (
 +      (event.track.kind === "audio" && options.audio) ||
 +      (event.track.kind === "video" && options.video)
 +    )
 +      stream.addTrack(event.track);
-+    else event.track.stop();
++    else stopTrack(event.track);
 +  });
 +  try {
 +    await peer.setRemoteDescription(await call("_desktopOffer", [sessionId]));
@@ -1022,20 +1078,22 @@ new file mode 100644
 +
 +async function consume(context, request) {
 +  const state = states.get(context);
-+  if (!state || context.unloaded)
++  if (!state || state.closed || context.unloaded)
 +    throw new ExtensionError("Capture document is no longer available.");
 +  const { token, video, audio, wantsVideo, kind } = videoConstraints(request);
 +  const namespace = kind === "desktop" ? "desktopCapture" : "tabCapture";
 +  if (!state.stopListeners.has(namespace)) {
 +    const stopListener = sessionId => {
 +      const active = state.streams.get(sessionId);
++      state.streams.delete(sessionId);
++      if (state.pending.has(sessionId)) state.revoked.add(sessionId);
 +      if (active) {
 +        clearInterval(active.timer);
-+        active.stream.getTracks().forEach(track => track.stop());
-+        active.closeAudio?.();
-+        state.streams.delete(sessionId);
++        cleanup([
++          () => stopStream(active.stream),
++          () => active.closeAudio?.(),
++        ]);
 +      }
-+      if (state.pending.has(sessionId)) state.revoked.add(sessionId);
 +    };
 +    context.childManager
 +      .getImplementation(namespace, "_onStreamStop")
@@ -1073,7 +1131,7 @@ new file mode 100644
 +      audioState = await receiveAudio(context, sessionId, call, stream, state);
 +    }
 +    if (context.unloaded) {
-+      stream.getTracks().forEach(track => track.stop());
++      stopStream(stream);
 +      throw new ExtensionError("Capture document was closed.");
 +    }
 +    await call("_streamStarted", [sessionId]);
@@ -1082,12 +1140,20 @@ new file mode 100644
 +    }
 +    const tracks = stream.getTracks();
 +    const timer = setInterval(() => {
-+      if (tracks.every(track => track.readyState === "ended")) {
++      if (
++        context.unloaded ||
++        state.closed ||
++        tracks.some(track => Cu.isDeadWrapper(track)) ||
++        tracks.every(track => track.readyState === "ended")
++      ) {
 +        clearInterval(timer);
 +        state.streams.delete(sessionId);
-+        audioState?.close();
-+        if (!context.unloaded)
-+          call("_streamStopped", [sessionId]).catch(Cu.reportError);
++        try {
++          cleanup([() => stopStream(stream), () => audioState?.close()]);
++        } finally {
++          if (!context.unloaded)
++            call("_streamStopped", [sessionId]).catch(Cu.reportError);
++        }
 +      }
 +    }, 100);
 +    state.streams.set(sessionId, {
@@ -1097,9 +1163,11 @@ new file mode 100644
 +    });
 +    return stream;
 +  } catch (error) {
-+    audioState?.close();
-+    stream?.getTracks().forEach(track => track.stop());
-+    if (!context.unloaded) await call("_streamStopped", [sessionId, true]);
++    try {
++      cleanup([() => audioState?.close(), () => stopStream(stream)]);
++    } finally {
++      if (!context.unloaded) await call("_streamStopped", [sessionId, true]);
++    }
 +    throw error;
 +  } finally {
 +    state.pending.delete(sessionId);
@@ -1124,6 +1192,7 @@ new file mode 100644
 +      sandbox
 +    );
 +    const state = {
++      closed: false,
 +      devices,
 +      original,
 +      streams: new Map(),
@@ -1150,14 +1219,28 @@ new file mode 100644
 +    });
 +    context.callOnClose({
 +      close() {
-+        for (const { stream, timer, closeAudio } of state.streams.values()) {
-+          closeAudio?.();
-+          clearInterval(timer);
-+          stream.getTracks().forEach(track => track.stop());
-+        }
++        state.closed = true;
++        const active = [...state.streams.values()];
++        const audio = [...state.audioSources.values()];
 +        state.streams.clear();
++        state.audioSources.clear();
++        state.pending.clear();
++        state.revoked.clear();
++        state.stopListeners.clear();
++        state.audioListener = null;
 +        states.delete(context);
-+        Cu.nukeSandbox(sandbox);
++        for (const { timer } of active) clearInterval(timer);
++        try {
++          cleanup([
++            ...active.flatMap(({ stream, closeAudio }) => [
++              () => stopStream(stream),
++              () => closeAudio?.(),
++            ]),
++            ...audio.map(source => source.close),
++          ]);
++        } finally {
++          Cu.nukeSandbox(sandbox);
++        }
 +      },
 +    });
 +  },
@@ -1226,13 +1309,22 @@ diff --git a/chrome/toolkit/content/extensions/schemas/tab_capture.json b/chrome
 new file mode 100644
 --- /dev/null
 +++ b/chrome/toolkit/content/extensions/schemas/tab_capture.json
-@@ -0,0 +1,281 @@
+@@ -0,0 +1,294 @@
 +[
 +  {
 +    "namespace": "manifest",
 +    "types": [
 +      {
 +        "$extend": "PermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": ["tabCapture"]
++          }
++        ]
++      },
++      {
++        "$extend": "OptionalPermission",
 +        "choices": [
 +          {
 +            "type": "string",
@@ -1247,6 +1339,11 @@ new file mode 100644
 +    "permissions": ["tabCapture"],
 +    "types": [
 +      {
++        "id": "TabCaptureState",
++        "type": "string",
++        "enum": ["active", "error", "pending", "stopped"]
++      },
++      {
 +        "id": "CaptureInfo",
 +        "type": "object",
 +        "properties": {
@@ -1254,8 +1351,7 @@ new file mode 100644
 +            "type": "integer"
 +          },
 +          "status": {
-+            "type": "string",
-+            "enum": ["pending", "active", "stopped", "error"]
++            "$ref": "TabCaptureState"
 +          },
 +          "fullscreen": {
 +            "type": "boolean"

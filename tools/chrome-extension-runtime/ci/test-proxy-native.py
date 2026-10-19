@@ -76,12 +76,23 @@ if (!result.passed) throw new Error(result.error || "Native PAC scope regression
         resources = binary.parent.parent / "Resources"
     command = [str(binary), "--xpcshell", "-g", str(resources), "-a", str(resources), "-m", "-f", str(script)]
     report = {"passed": False, "command": command,
-              "testSha256": hashlib.sha256(code.encode()).hexdigest()}
+              "testSha256": hashlib.sha256(code.encode()).hexdigest(),
+              "harnessMode": "upstream-default-parent-XPCOM",
+              "socketProcessNetworking": False,
+              "scope": "native-parent-PAC-unit-vectors; separate browser socket/privacy tests remain required"}
+    # Match the pinned upstream xpcshell harness's default, not its optional
+    # network.http.network_access_on_socket_process.enabled=true mode:
+    # https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/testing/xpcshell/runxpcshelltests.py#L1632-L1635
+    # This environment belongs only to this child shell. Browser tests retain
+    # their normal socket process and independently verify actual private URLs.
+    shell_env = {**os.environ, "MOZ_HEADLESS": "1", "MOZ_CRASHREPORTER_DISABLE": "1",
+                 "MOZ_NO_REMOTE": "1", "MOZ_DISABLE_SOCKET_PROCESS": "1",
+                 "XRE_PROFILE_PATH": str(profile), "XRE_PROFILE_LOCAL_PATH": str(profile),
+                 "XPCSHELL_TEST_PROFILE_DIR": str(profile)}
+    shell_env.pop("MOZ_FORCE_USE_SOCKET_PROCESS", None)
     try:
         result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
-                                env={**os.environ, "MOZ_HEADLESS": "1", "MOZ_CRASHREPORTER_DISABLE": "1",
-                                     "MOZ_NO_REMOTE": "1", "XRE_PROFILE_PATH": str(profile),
-                                     "XRE_PROFILE_LOCAL_PATH": str(profile), "XPCSHELL_TEST_PROFILE_DIR": str(profile)})
+                                env=shell_env)
         (output / "xpcshell.log").write_text(result.stdout + result.stderr)
         reports = [line[len(MARKER):] for line in result.stdout.splitlines() if line.startswith(MARKER)]
         report["exitCode"] = result.returncode

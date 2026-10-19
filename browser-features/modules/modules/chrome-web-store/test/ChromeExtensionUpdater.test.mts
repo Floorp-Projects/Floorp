@@ -7,7 +7,12 @@ import type {
   NativeManager,
   PermissionPrompt,
   Reply,
+  UpdateWorkerSnapshot,
 } from "./helpers/update-test-types.ts";
+import type {
+  NativeCorpusTab,
+  NativeCorpusWindow,
+} from "../../../../../tools/chrome-extension-runtime/native-test-types.ts";
 import { CRXConverterClass } from "../CRXConverter.sys.mts";
 import type { ChromeConversionReport } from "../types.ts";
 import { ChromeExtensionUpdaterClass } from "../ChromeExtensionUpdater.sys.mts";
@@ -78,24 +83,129 @@ export async function command(
     () => extension.backgroundContext,
     "background context",
   );
-  const sequence = ++request;
-  const payload = { updaterFixture: true, request: sequence, operation, value };
-  context.xulBrowser.messageManager.loadFrameScript(
-    `data:application/javascript,${
-      encodeURIComponent(
-        `content.postMessage(${JSON.stringify(payload)}, '*');`,
-      )
-    }`,
-    false,
+  assertEquals(
+    context.viewType,
+    "background_worker",
+    "compiled Worker runs the fixture",
   );
-  return await waitFor(() => {
-    try {
-      const reply = JSON.parse(context.xulBrowser.contentTitle) as Reply;
-      return reply.request === sequence ? reply : false;
-    } catch {
-      return false;
-    }
-  }, "storage response");
+  assert(!context.xulBrowser, "the Worker has no background document browser");
+  const win = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as NativeCorpusWindow;
+  let tab: NativeCorpusTab | undefined;
+  const sequence = ++request;
+  try {
+    // Use an ordinary extension page as the sender. A compiled Worker has
+    // neither a document title nor a message manager to drive directly.
+    tab = win.gBrowser.addTab(extension.baseURI.resolve("control.html"), {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    const control = tab.linkedBrowser;
+    await waitFor(
+      () => control.contentTitle === "updater-control-ready",
+      "extension sender page",
+    );
+    const payload = {
+      updaterFixture: true,
+      request: sequence,
+      operation,
+      value,
+    };
+    control.messageManager.loadFrameScript(
+      `data:application/javascript,${
+        encodeURIComponent(
+          `content.postMessage(${JSON.stringify(payload)}, '*');`,
+        )
+      }`,
+      false,
+    );
+    const reply = await waitFor(() => {
+      try {
+        const reply = JSON.parse(control.contentTitle) as Reply;
+        return reply.request === sequence ? reply : false;
+      } catch {
+        return false;
+      }
+    }, "actual Worker storage response");
+    assert(!reply.error, `Worker command succeeds: ${reply.error}`);
+    assert(
+      reply.noDocument && reply.noWindow,
+      "the response comes from a documentless Worker",
+    );
+    assert(
+      typeof reply.contextId === "string" && reply.contextId.length > 0,
+      "the Worker reports its public context UUID",
+    );
+    return reply;
+  } finally {
+    if (tab) win.gBrowser.removeTab(tab);
+  }
+}
+
+export async function workerSnapshot(): Promise<UpdateWorkerSnapshot> {
+  const reply = await command("get");
+  const extension = registry().get(ID);
+  const context = extension?.backgroundContext;
+  assert(
+    extension && context,
+    "the responding native Worker remains registered",
+  );
+  assert(
+    typeof reply.contextId === "string",
+    "public Worker context UUID exists",
+  );
+  return { extension, context, contextId: reply.contextId };
+}
+
+export async function assertWorkerReplaced(
+  before: UpdateWorkerSnapshot,
+  version: string,
+): Promise<void> {
+  await waitFor(
+    () => before.context.unloaded,
+    "old native Worker context termination",
+  );
+  assert(
+    !before.extension.views.has(before.context),
+    "old context leaves the actual extension view registry",
+  );
+  const current = await workerSnapshot();
+  assert(
+    current.extension !== before.extension,
+    "native update creates a fresh extension instance",
+  );
+  assert(
+    current.context !== before.context,
+    "native update creates a fresh Worker context",
+  );
+  assert(
+    current.contextId !== before.contextId,
+    "the new Worker has a different public context UUID",
+  );
+  const reply = await command("get");
+  assertEquals(
+    reply.version,
+    version,
+    "the fresh Worker executes the updated package",
+  );
+  assertEquals(
+    reply.id,
+    CRX_TEST_ID,
+    "the fresh Worker retains the original Chrome ID",
+  );
+  console.log(
+    "UPDATER_WORKER_EVIDENCE",
+    JSON.stringify({
+      version,
+      originalId: reply.id,
+      oldContextId: before.contextId,
+      newContextId: current.contextId,
+      oldUnloaded: before.context.unloaded,
+      viewType: current.context.viewType,
+      noDocument: reply.noDocument,
+      noWindow: reply.noWindow,
+    }),
+  );
 }
 
 export async function packageVersion(
@@ -104,6 +214,7 @@ export async function packageVersion(
     permissions?: string[];
     postpone?: boolean;
     impersonate?: boolean;
+    scriptType?: "classic" | "module";
   } = {},
 ): Promise<ArrayBuffer> {
   return await createSignedCRX3(
@@ -115,28 +226,51 @@ export async function packageVersion(
           version,
           permissions: options.permissions ?? ["storage"],
           optional_permissions: ["alarms"],
-          background: { service_worker: "background.js" },
+          background: {
+            service_worker: "background.js",
+            ...(options.scriptType === "module" ? { type: "module" } : {}),
+          },
         }),
       ),
       "background.js": encoder.encode(`
+      ${
+        options.scriptType === "module"
+          ? "export const moduleFixtureURL = import.meta.url;"
+          : ""
+      }
       let pending;
       ${
         options.postpone
           ? "browser.runtime.onUpdateAvailable.addListener(update => { pending = update.version; });"
           : ""
       }
-      window.addEventListener('message', async event => {
-        const data = event.data;
-        if (!data || data.updaterFixture !== true) return;
-        try {
-          if (data.operation === 'set') await browser.storage.local.set({ retained: data.value });
-          const stored = await browser.storage.local.get('retained');
-          document.title = JSON.stringify({ request: data.request, value: stored.retained,
-            id: browser.runtime.id, version: browser.runtime.getManifest().version, pending });
-        } catch (error) { document.title = JSON.stringify({ request: data.request, error: String(error) }); }
+      browser.runtime.onMessage.addListener(data => {
+        if (!data || data.updaterFixture !== true) return undefined;
+        return (async () => {
+          try {
+            if (data.operation === 'set') await browser.storage.local.set({ retained: data.value });
+            const stored = await browser.storage.local.get('retained');
+            const contexts = await browser.runtime.getContexts({ contextTypes: ['BACKGROUND'] });
+            if (contexts.length !== 1) throw new Error('Expected exactly one actual background Worker');
+            return { request: data.request, value: stored.retained,
+              id: browser.runtime.id, version: browser.runtime.getManifest().version, pending,
+              contextId: contexts[0].contextId,
+              noDocument: typeof document === 'undefined', noWindow: typeof window === 'undefined' };
+          } catch (error) { return { request: data.request, error: String(error) }; }
+        })();
       });
-      document.title = JSON.stringify({ ready: true });
     `),
+      "control.html": encoder.encode(
+        '<!doctype html><script src="control.js"></script>',
+      ),
+      "control.js": encoder.encode(`
+        document.title = 'updater-control-ready';
+        window.addEventListener('message', async event => {
+          if (!event.data || event.data.updaterFixture !== true) return;
+          try { document.title = JSON.stringify(await browser.runtime.sendMessage(event.data)); }
+          catch (error) { document.title = JSON.stringify({ request: event.data.request, error: String(error) }); }
+        });
+      `),
     }),
     options.impersonate
       ? { algorithm: "ecdsa", declaredChromeId: CRX_TEST_ID }
@@ -223,17 +357,21 @@ export async function initialInstall(
         preferUpdateOverInstall: false,
       });
     });
-    await waitFor(
-      () =>
-        registry()
-          .get(ID)
-          ?.backgroundContext?.xulBrowser.contentTitle.includes('"ready":true'),
-      "initial background ready",
+    const ready = await command("get");
+    assertEquals(
+      ready.id,
+      CRX_TEST_ID,
+      "initial Worker sees the original signed Chrome ID",
     );
     const installed = await manager().getAddonByID(ID);
     assert(
       installed && !installed.temporarilyInstalled,
       "fixture uses permanent AddonManager install",
+    );
+    assertEquals(
+      ready.version,
+      installed.version,
+      "the Worker executes the installed package version",
     );
     assert(converted.report, "fixture conversion report");
     return { xpiData: converted.xpiData, report: converted.report };
@@ -248,7 +386,7 @@ export async function fixture(
     xpiData: ArrayBuffer;
     report: ChromeConversionReport;
   }) => Promise<void>,
-  options: { postpone?: boolean } = {},
+  options: { postpone?: boolean; scriptType?: "classic" | "module" } = {},
 ): Promise<void> {
   const oldTemporaryFiles = new Set(
     await IOUtils.getChildren(PathUtils.tempDir),
@@ -261,25 +399,51 @@ export async function fixture(
     true,
   );
   Services.prefs.setBoolPref("xpinstall.signatures.required", false);
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs",
+  );
   try {
+    assert(
+      AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED,
+      "compiled Worker bindings are required for update regressions",
+    );
+    assertEquals(
+      WebExtensionPolicy.backgroundServiceWorkerEnabled,
+      false,
+      "the global experimental Worker policy remains disabled",
+    );
     const converted = await initialInstall(
       await packageVersion("1.0", options),
     );
     await fn(converted);
   } finally {
-    for (const install of await manager().getAllInstalls()) {
-      if (
-        install.addon?.id === ID &&
-        install.state === manager().STATE_POSTPONED
-      ) {
-        install.cancel();
+    try {
+      for (const install of await manager().getAllInstalls()) {
+        if (
+          install.addon?.id === ID &&
+          install.state === manager().STATE_POSTPONED
+        ) {
+          install.cancel();
+        }
       }
+      const finalContext = registry().get(ID)?.backgroundContext;
+      const addon = await manager().getAddonByID(ID);
+      if (addon) await addon.uninstall();
+      if (finalContext) {
+        await waitFor(
+          () => finalContext.unloaded,
+          "final native Worker context termination",
+        );
+      }
+      await waitFor(
+        () => !registry().has(ID),
+        "extension removal from the native registry",
+      );
+    } finally {
+      if (hadPref) {
+        Services.prefs.setBoolPref("xpinstall.signatures.required", signing);
+      } else Services.prefs.clearUserPref("xpinstall.signatures.required");
     }
-    const addon = await manager().getAddonByID(ID);
-    if (addon) await addon.uninstall();
-    if (hadPref) {
-      Services.prefs.setBoolPref("xpinstall.signatures.required", signing);
-    } else Services.prefs.clearUserPref("xpinstall.signatures.required");
     let leaked: string[] = [];
     const deadline = Date.now() + 3000;
     do {
@@ -331,6 +495,7 @@ const tests: TestCase[] = [
         const optionalBefore = await ExtensionPermissions.get(ID);
         const stored = await command("set", "survives-update");
         assert(!stored.error, "storage set succeeds");
+        const beforeWorker = await workerSnapshot();
         const data = await packageVersion("2.0");
         const updater = new ChromeExtensionUpdaterClass((id) => {
           assertEquals(id, CRX_TEST_ID, "download uses original Chrome ID");
@@ -348,15 +513,7 @@ const tests: TestCase[] = [
           "normal native installation finishes",
         );
         assertEquals(result.version, "2.0", "installed version returned");
-        await waitFor(
-          () =>
-            registry()
-              .get(ID)
-              ?.backgroundContext?.xulBrowser.contentTitle.includes(
-                '"ready":true',
-              ),
-          "updated background ready",
-        );
+        await assertWorkerReplaced(beforeWorker, "2.0");
         const after = await manager().getAddonByID(ID);
         assert(after, "updated addon exists");
         assertEquals(after.id, ID, "internal identity retained");
@@ -388,6 +545,32 @@ const tests: TestCase[] = [
   },
   {
     name:
+      "signed module Worker update preserves storage and replaces the actual execution context",
+    async fn() {
+      await fixture(async () => {
+        await command("set", "module-update-storage");
+        const beforeWorker = await workerSnapshot();
+        const data = await packageVersion("2.0", { scriptType: "module" });
+        const updater = new ChromeExtensionUpdaterClass(() =>
+          Promise.resolve(data)
+        );
+        await updater.checkForUpdate(ID);
+        assertEquals(
+          (await updater.installUpdate(ID, browser())).status,
+          "installed",
+          "native module update finishes",
+        );
+        await assertWorkerReplaced(beforeWorker, "2.0");
+        assertEquals(
+          (await command("get")).value,
+          "module-update-storage",
+          "module Worker storage survives replacement",
+        );
+      }, { scriptType: "module" });
+    },
+  },
+  {
+    name:
       "equal version requires explicit reconversion and older signed package never downgrades",
     async fn() {
       await fixture(async () => {
@@ -400,6 +583,7 @@ const tests: TestCase[] = [
           "up-to-date",
           "equal versions do not update by default",
         );
+        const beforeWorker = await workerSnapshot();
         const reconvert = await updater.checkForUpdate(ID, { reconvert: true });
         assertEquals(
           reconvert.kind,
@@ -416,6 +600,7 @@ const tests: TestCase[] = [
           "installed",
           "normal AddonManager reconversion works",
         );
+        await assertWorkerReplaced(beforeWorker, "1.0");
         data = await packageVersion("0.9");
         assertEquals(
           (await updater.checkForUpdate(ID, { reconvert: true })).status,
@@ -487,6 +672,7 @@ const tests: TestCase[] = [
             })
             : v3;
         });
+        const beforeWorker = await workerSnapshot();
         const first = updater.checkForUpdate(ID);
         await waitFor(() => release, "first download waiting");
         const second = await updater.checkForUpdate(ID);
@@ -502,6 +688,7 @@ const tests: TestCase[] = [
           "3.0",
           "newest prepared package installed",
         );
+        await assertWorkerReplaced(beforeWorker, "3.0");
       });
     },
   },
@@ -634,6 +821,7 @@ const tests: TestCase[] = [
           Promise.resolve(v2)
         );
         await updater.checkForUpdate(ID);
+        const beforeWorker = await workerSnapshot();
         let competing: Promise<void> | undefined;
         const stop = observePrompts(
           "webextension-update-permission-prompt",
@@ -661,6 +849,7 @@ const tests: TestCase[] = [
           "3.0",
           "waiting older package cannot downgrade externally installed version",
         );
+        await assertWorkerReplaced(beforeWorker, "3.0");
       });
     },
   },
@@ -674,6 +863,7 @@ const tests: TestCase[] = [
           const updater = new ChromeExtensionUpdaterClass(() =>
             Promise.resolve(data)
           );
+          const beforeWorker = await workerSnapshot();
           await updater.checkForUpdate(ID);
           const result = await updater.installUpdate(ID, browser());
           assertEquals(
@@ -686,6 +876,21 @@ const tests: TestCase[] = [
             (await manager().getAddonByID(ID))?.version,
             "1.0",
             "old context remains until extension reload",
+          );
+          const postponedReply = await command("get");
+          assertEquals(
+            postponedReply.contextId,
+            beforeWorker.contextId,
+            "postponement retains the running Worker context",
+          );
+          assertEquals(
+            postponedReply.pending,
+            "2.0",
+            "the real Worker received runtime.onUpdateAvailable",
+          );
+          assert(
+            !beforeWorker.context.unloaded,
+            "postponement does not terminate the old Worker",
           );
           const pending = (await manager().getAllInstalls()).find(
             (install) =>
@@ -722,6 +927,7 @@ const tests: TestCase[] = [
             "2.0",
             "staged native update can resume after service returns",
           );
+          await assertWorkerReplaced(beforeWorker, "2.0");
         },
         { postpone: true },
       );

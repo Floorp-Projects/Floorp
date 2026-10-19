@@ -1,0 +1,538 @@
+diff --git a/modules/ChromeExtensionUserScriptsConsent.sys.mjs b/modules/ChromeExtensionUserScriptsConsent.sys.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..72cdb74e9bffac4ec8c14caf6e737ff1597a537e
+--- /dev/null
++++ b/modules/ChromeExtensionUserScriptsConsent.sys.mjs
+@@ -0,0 +1,146 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
++import { ExtensionPermissions } from "resource://gre/modules/ExtensionPermissions.sys.mjs";
++import { ExtensionTaskScheduler } from "resource://gre/modules/ExtensionTaskScheduler.sys.mjs";
++import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
++import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
++
++export const CHROME_USER_SCRIPTS_ALLOWED_PERMISSION =
++  "internal:floorpChromeUserScriptsAllowed";
++
++const queues = new ExtensionTaskScheduler();
++const generations = new Map();
++function generation(id) {
++  if (!generations.has(id)) generations.set(id, {});
++  return generations.get(id);
++}
++function replaced(addon) {
++  if (generations.has(addon.id)) generations.set(addon.id, {});
++}
++AddonManager.addAddonListener({
++  onInstalling: replaced,
++  onInstalled: replaced,
++  onUninstalling: replaced,
++  onUninstalled: replaced,
++});
++
++function isEligible(extension) {
++  const { manifest } = extension;
++  return !!ExtensionUtils.getChromeExtensionId(extension) &&
++    manifest.manifest_version === 3 &&
++    !!(manifest.permissions?.includes("userScripts") ||
++      manifest.optional_permissions?.includes("userScripts"));
++}
++
++function activeExtension(id) {
++  return WebExtensionPolicy.getByID(id)?.extension ?? null;
++}
++
++function assertCurrent(snapshot) {
++  if (generation(snapshot.id) !== snapshot.generation ||
++      snapshot.addon.version !== snapshot.version ||
++      activeExtension(snapshot.id) !== snapshot.extension) {
++    throw new Error("The extension changed while its user script setting was being read or changed.");
++  }
++}
++
++function readManifest(uri) {
++  return new Promise((resolve, reject) => {
++    NetUtil.asyncFetch({
++      uri,
++      loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
++      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
++      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
++    }, (stream, result) => {
++      try {
++        if (!Components.isSuccessCode(result)) {
++          throw new Error("The installed extension manifest could not be read.");
++        }
++        const length = stream.available();
++        if (length > 1024 * 1024) throw new Error("The installed extension manifest is too large.");
++        resolve(JSON.parse(NetUtil.readInputStreamToString(stream, length, {
++          charset: "UTF-8",
++        })));
++      } catch (error) {
++        reject(error);
++      }
++    });
++  });
++}
++
++async function snapshotFor(id) {
++  if (typeof id !== "string" || !/^[a-p]{32}@chromium-extension$/.test(id)) return null;
++  const captured = generation(id);
++  const addon = await AddonManager.getAddonByID(id);
++  if (generation(id) !== captured) throw new Error("The extension changed while its user script setting was being read.");
++  if (!addon || addon.type !== "extension") return null;
++  const snapshot = {
++    id,
++    generation: captured,
++    addon,
++    version: addon.version,
++    extension: activeExtension(id),
++  };
++  snapshot.manifest = snapshot.extension?.manifest ??
++    await readManifest(addon.getResourceURI("manifest.json"));
++  assertCurrent(snapshot);
++  return snapshot;
++}
++
++async function statusFor(snapshot) {
++  if (!snapshot || !isEligible(snapshot)) {
++    return { eligible: false, allowed: false, permissionGranted: false };
++  }
++  const stored = await ExtensionPermissions.get(snapshot.id);
++  assertCurrent(snapshot);
++  const permissionGranted = snapshot.extension
++    ? snapshot.extension.hasPermission("userScripts")
++    : snapshot.manifest.permissions?.includes("userScripts") ||
++      stored.permissions.includes("userScripts");
++  return {
++    eligible: true,
++    allowed: stored.permissions.includes(CHROME_USER_SCRIPTS_ALLOWED_PERMISSION),
++    permissionGranted: !!permissionGranted,
++  };
++}
++
++export const ChromeExtensionUserScriptsConsent = {
++  isEligible,
++
++  // Required declarations remain public permissions. This independent native
++  // setting authorizes execution only after the user changes the browser UI.
++  isAllowed(extension) {
++    return isEligible(extension) && extension.hasPermission("userScripts") &&
++      extension.hasPermission(CHROME_USER_SCRIPTS_ALLOWED_PERMISSION);
++  },
++
++  async getStatus(id) {
++    return statusFor(await snapshotFor(id));
++  },
++
++  async setAllowed(id, allowed) {
++    if (typeof allowed !== "boolean") throw new TypeError("The user script setting must be a boolean.");
++    const captured = generation(id);
++    return queues.runWriteTask(id, async () => {
++      if (generation(id) !== captured) throw new Error("The extension changed before its user script setting could be changed.");
++      const snapshot = await snapshotFor(id);
++      if (!snapshot || !isEligible(snapshot)) throw new Error("This extension has no Chrome user script setting.");
++      assertCurrent(snapshot);
++      // Enqueue into the native permission store synchronously after checking
++      // the package generation. A subsequent uninstall's removeAll is ordered
++      // after this operation. Never roll back a later install's permissions.
++      await ExtensionPermissions[allowed ? "add" : "remove"](id, {
++        permissions: [CHROME_USER_SCRIPTS_ALLOWED_PERMISSION],
++        origins: [],
++        data_collection: [],
++      }, snapshot.extension ?? undefined);
++      assertCurrent(snapshot);
++      // Disabling suspends execution through live policy checks. Registrations
++      // and world configuration persist so re-enabling restores them.
++      return statusFor(snapshot);
++    });
++  },
++};
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+index 17fe16a7d6db8432f4283d8f6707f02a4bac1105..8be906fcaa68e5ad6d8f5cbc435ea0ba716d4eb6 100644
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -883,7 +883,10 @@
+ 
+     this.permissionsChangedCallbacks = new Set();
+     this.updatePermissions = null;
+-    if (this.context.extension.optionalPermissions.length) {
++    if (this.context.extension.optionalPermissions.length ||
++        (ExtensionUtils.getChromeExtensionId(this.context.extension) &&
++         this.context.extension.manifest.manifest_version === 3 &&
++         this.context.extension.manifest.permissions?.includes("userScripts"))) {
+       this.updatePermissions = () => {
+         for (let callback of this.permissionsChangedCallbacks) {
+           try {
+diff --git a/modules/Schemas.sys.mjs b/modules/Schemas.sys.mjs
+index 057034f8c24512561dac34298af64c971b94abc6..9847d1e444c2ebfebfbb3ff4b8e83cc2713d97c6 100644
+--- a/modules/Schemas.sys.mjs
++++ b/modules/Schemas.sys.mjs
+@@ -822,6 +822,14 @@
+     !!ExtensionUtils.getChromeExtensionId(extension);
+ }
+ 
++function isChromeUserScriptsEntry(entry) {
++  const namespace = entry.path[0] || entry.name;
++  const extension = entry.context.params.context?.extension;
++  return namespace === "userScripts" &&
++    extension?.manifest?.manifest_version === 3 &&
++    !!ExtensionUtils.getChromeExtensionId(extension);
++}
++
+ class InjectionEntry {
+   constructor(context, entry, parentObj, name, path, parentEntry) {
+     this.context = context;
+@@ -854,6 +862,7 @@
+    *        revoked based on its permissions.
+    */
+   get isRevokable() {
++    if (isChromeUserScriptsEntry(this)) return true;
+     return (
+       this.entry.permissions &&
+       this.entry.permissions.some(perm =>
+@@ -868,6 +877,16 @@
+    *        appropriate permissions to access this entry.
+    */
+   get hasPermission() {
++    if (isChromeUserScriptsEntry(this)) {
++      // Once genuinely exposed, Chrome keeps the same SDK object and methods
++      // after the browser setting is turned off. Parent execution checks stay
++      // live; this bit authorizes only the already-observed public surface.
++      if (this.context.chromeUserScriptsExposed === true) return true;
++      if (!this.context.hasPermission("userScripts") ||
++          !this.context.hasPermission("internal:floorpChromeUserScriptsAllowed")) {
++        return false;
++      }
++    }
+     return (
+       !this.entry.permissions ||
+       hasChromeMemberPermissionOverride(
+@@ -948,6 +967,13 @@
+     }
+ 
+     if (!this.hasPermission) {
++      // A lazy namespace installed during ON may first be read after OFF.
++      // Chrome materializes undefined in that case, without exposing an SDK.
++      // The pending entry can replace it when both permissions are granted.
++      if (!this.path.length && this.name === "userScripts" &&
++          isChromeUserScriptsEntry(this)) {
++        return { value: undefined };
++      }
+       return;
+     }
+ 
+@@ -956,6 +982,12 @@
+       return undefined;
+     }
+ 
++    if (!this.path.length && this.name === "userScripts" &&
++        isChromeUserScriptsEntry(this) &&
++        this.context.hasPermission("userScripts") &&
++        this.context.hasPermission("internal:floorpChromeUserScriptsAllowed")) {
++      this.context.chromeUserScriptsExposed = true;
++    }
+     return this.injected.descriptor;
+   }
+ 
+@@ -993,6 +1025,7 @@
+   }
+ 
+   maybeInject() {
++    if (isChromeUserScriptsEntry(this) && !this.hasPermission) return;
+     if (!this.injected && !this.lazyInjected) {
+       this.lazyInject();
+     }
+@@ -1171,6 +1204,10 @@
+       parentEntry
+     );
+ 
++    if (isChromeUserScriptsEntry(injection) && !injection.hasPermission) {
++      if (injection.shouldInject) this.pendingEntries.add(injection);
++      return;
++    }
+     injection.lazyInject();
+   }
+ }
+diff --git a/chrome/toolkit/content/extensions/parent/ext-userScripts.js b/chrome/toolkit/content/extensions/parent/ext-userScripts.js
+index cd6c0e51125534392ffced62eeb4c47956d51479..d0c58b9f528523f4162ab3ac210865a050f1b201 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-userScripts.js
++++ b/chrome/toolkit/content/extensions/parent/ext-userScripts.js
+@@ -6,6 +6,7 @@
+ 
+ ChromeUtils.defineESModuleGetters(this, {
+   ExtensionUserScripts: "resource://gre/modules/ExtensionUserScripts.sys.mjs",
++  ChromeExtensionUserScriptsConsent: "resource://gre/modules/ChromeExtensionUserScriptsConsent.sys.mjs",
+ });
+ 
+ var { ExtensionUtils } = ChromeUtils.importESModule(
+@@ -122,6 +123,21 @@
+     }
+ 
+     const usm = extension.userScriptsManager;
++    const chromeControlled = !!ExtensionUtils.getChromeExtensionId(extension);
++    const runTask = (method, write, callback) => {
++      const check = () => {
++        if (chromeControlled && (context.unloaded ||
++            WebExtensionPolicy.getByID(extension.id)?.extension !== extension ||
++            !ChromeExtensionUserScriptsConsent.isAllowed(extension))) {
++          throw new ExtensionError(`'userScripts.${method}' is not available in this context.`);
++        }
++      };
++      check();
++      return usm[write ? "runWriteTask" : "runReadTask"](() => {
++        check();
++        return callback();
++      });
++    };
+ 
+     return {
+       userScripts: {
+@@ -129,7 +145,7 @@
+           ensureIdsValidAndUnique(scripts.map(s => s.id));
+           scripts.forEach(s => ensureValidWorldId(s.worldId));
+ 
+-          return usm.runWriteTask(async () => {
++          return runTask("register", true, async () => {
+             await usm.registerNewScripts(scripts);
+           });
+         },
+@@ -138,7 +154,7 @@
+           ensureIdsValidAndUnique(scripts.map(s => s.id));
+           scripts.forEach(s => ensureValidWorldId(s.worldId));
+ 
+-          return usm.runWriteTask(async () => {
++          return runTask("update", true, async () => {
+             await usm.updateScripts(scripts);
+           });
+         },
+@@ -148,7 +164,7 @@
+           if (ids) {
+             ensureIdsValidAndUnique(ids);
+           }
+-          return usm.runWriteTask(async () => {
++          return runTask("unregister", true, async () => {
+             await usm.unregisterScripts(ids);
+           });
+         },
+@@ -158,27 +174,27 @@
+           if (ids) {
+             ensureIdsValidAndUnique(ids);
+           }
+-          return usm.runReadTask(async () => {
++          return runTask("getScripts", false, async () => {
+             return usm.getScripts(ids);
+           });
+         },
+ 
+         configureWorld: async properties => {
+           ensureValidWorldId(properties.worldId);
+-          return usm.runWriteTask(async () => {
++          return runTask("configureWorld", true, async () => {
+             await usm.configureWorld(properties);
+           });
+         },
+ 
+         resetWorldConfiguration: async worldId => {
+           ensureValidWorldId(worldId);
+-          return usm.runWriteTask(async () => {
++          return runTask("resetWorldConfiguration", true, async () => {
+             await usm.resetWorldConfiguration(worldId);
+           });
+         },
+ 
+         getWorldConfigurations: async () => {
+-          return usm.runReadTask(async () => {
++          return runTask("getWorldConfigurations", false, async () => {
+             return usm.getWorldConfigurations();
+           });
+         },
+@@ -186,7 +202,7 @@
+         execute: async injection => {
+           ensureValidWorldId(injection.worldId);
+           let { promise, resolve } = Promise.withResolvers();
+-          await usm.runReadTask(async () => {
++          await runTask("execute", false, async () => {
+             // The usm.executeScript call may take an arbitrary amount of time,
+             // e.g. if the executed code ends up returning a promise. To prevent
+             // that from blocking the queue (when a "write" operation is queued),
+diff --git a/localization/en-US/toolkit/global/extensionPermissions.ftl b/localization/en-US/toolkit/global/extensionPermissions.ftl
+index 9bf02d4aa4485ef26ed8ce28a7ba5ef476aef9a3..0ba37075da0b4fb12c051e0b24117cd5b4c94bf4 100644
+--- a/localization/en-US/toolkit/global/extensionPermissions.ftl
++++ b/localization/en-US/toolkit/global/extensionPermissions.ftl
+@@ -40,6 +40,12 @@
+ # A shorter warning is displayed in UI surfaces with little room, such as a permission prompt.
+ webext-perms-extra-warning-userScripts-short = Unverified scripts can pose security and privacy risks. Only run scripts from extensions or sources you trust.
+ 
++# Chrome's independent, per-extension user script execution setting.
++floorp-user-scripts-allow = Allow user scripts
++floorp-user-scripts-allow-ja = ユーザースクリプトの実行を許可
++floorp-user-scripts-error = The user script setting could not be changed.
++floorp-user-scripts-error-ja = ユーザースクリプトの設定を変更できませんでした。
++
+ ## Short form to be used in lists or in a string (`webext-perms-description-data-some`)
+ ## that formats some of the data collection permissions below using `Intl.ListFormat`.
+ ##
+diff --git a/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs b/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs
+index 0758789f60b4e6a8ada70e9c37b00e89a711f4ed..3bcda3324ca15002765d28840ad2d0dd8a23a19a 100644
+--- a/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs
++++ b/chrome/toolkit/content/mozapps/extensions/components/addon-permissions-list.mjs
+@@ -4,6 +4,7 @@
+ 
+ import { AboutAddonsHTMLElement } from "../aboutaddons-utils.mjs";
+ import { AddonCard } from "./addon-card.mjs";
++import "./floorp-chrome-user-scripts-toggle.mjs";
+ 
+ const { XPCOMUtils } = ChromeUtils.importESModule(
+   "resource://gre/modules/XPCOMUtils.sys.mjs"
+@@ -300,6 +301,11 @@
+       supportL10n: "addon-data-collection-learnmore",
+     });
+ 
++    const chromeUserScripts = document.createElement("floorp-chrome-user-scripts-toggle");
++    chromeUserScripts.hidden = true;
++    this.appendChild(chromeUserScripts);
++    chromeUserScripts.setAddon(this.addon);
++
+     this.appendChild(permissionsFrag);
+     if (this.addon.hasDataCollectionPermissions) {
+       this.appendChild(dataCollectionFrag);
+diff --git a/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-user-scripts-toggle.mjs b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-user-scripts-toggle.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..77f6704267dddad1c3e0191c0dadb6e63d409677
+--- /dev/null
++++ b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-user-scripts-toggle.mjs
+@@ -0,0 +1,131 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import { AboutAddonsHTMLElement } from "../aboutaddons-utils.mjs";
++
++const { ChromeExtensionUserScriptsConsent } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionUserScriptsConsent.sys.mjs"
++);
++const { AddonManager } = ChromeUtils.importESModule(
++  "resource://gre/modules/AddonManager.sys.mjs"
++);
++const { ExtensionPermissions } = ChromeUtils.importESModule(
++  "resource://gre/modules/ExtensionPermissions.sys.mjs"
++);
++const { PERMISSION_L10N } = ChromeUtils.importESModule(
++  "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
++);
++
++class FloorpChromeUserScriptsToggle extends AboutAddonsHTMLElement {
++  static get markup() {
++    return `<template>
++      <moz-toggle data-chrome-user-scripts-allow>
++        <moz-message-bar type="warning" slot="nested"></moz-message-bar>
++      </moz-toggle>
++      <p role="status" data-chrome-user-scripts-error></p>
++    </template>`;
++  }
++
++  constructor() {
++    super();
++    this.generation = 0;
++    this.permissionsChanged = (_event, change) => {
++      if (change.extensionId === this.addon?.id) this.refresh();
++    };
++    const addonChanged = addon => {
++      if (addon.id === this.addon?.id) this.refresh();
++    };
++    this.addonListener = {
++      onInstalled: addonChanged,
++      onEnabled: addonChanged,
++      onDisabled: addonChanged,
++      onUninstalled: addonChanged,
++    };
++  }
++
++  connectedCallback() {
++    if (!this.listening) {
++      ExtensionPermissions.addListener(this.permissionsChanged);
++      AddonManager.addAddonListener(this.addonListener);
++      this.listening = true;
++    }
++    this.refresh();
++  }
++
++  disconnectedCallback() {
++    ++this.generation;
++    if (this.listening) {
++      ExtensionPermissions.removeListener(this.permissionsChanged);
++      AddonManager.removeAddonListener(this.addonListener);
++      this.listening = false;
++    }
++  }
++
++  setAddon(addon) {
++    this.addon = addon;
++    this.refresh();
++  }
++
++  string(name) {
++    const suffix = Services.locale.appLocaleAsBCP47.startsWith("ja") ? "-ja" : "";
++    return PERMISSION_L10N.formatValueSync(`floorp-user-scripts-${name}${suffix}`);
++  }
++
++  async refresh() {
++    const generation = ++this.generation;
++    const addon = this.addon;
++    if (!addon || !this.isConnected) return;
++    try {
++      const status = await ChromeExtensionUserScriptsConsent.getStatus(addon.id);
++      if (generation !== this.generation || addon !== this.addon || !this.isConnected) return;
++      this.hidden = !status.eligible;
++      if (!status.eligible) {
++        this.textContent = "";
++        return;
++      }
++      if (!this.firstElementChild) {
++        this.appendChild(FloorpChromeUserScriptsToggle.fragment);
++        const toggle = this.querySelector("moz-toggle");
++        toggle.addEventListener("toggle", event => this.toggle(event));
++        this.querySelector("moz-message-bar").messageL10nId =
++          "webext-perms-extra-warning-userScripts-long";
++      }
++      const toggle = this.querySelector("moz-toggle");
++      toggle.setAttribute("label", this.string("allow"));
++      toggle.pressed = status.allowed;
++      toggle.disabled = this.changing === true;
++    } catch (error) {
++      if (generation !== this.generation || addon !== this.addon || !this.isConnected) return;
++      const toggle = this.querySelector("moz-toggle");
++      this.hidden = !toggle;
++      if (toggle) {
++        toggle.disabled = true;
++        this.querySelector("[data-chrome-user-scripts-error]").textContent = this.string("error");
++      }
++      console.error("[ChromeUserScriptsConsent]", error);
++    }
++  }
++
++  async toggle(event) {
++    const toggle = this.querySelector("moz-toggle");
++    if (event.target !== toggle || this.changing || !this.addon) return;
++    event.stopPropagation();
++    const addon = this.addon;
++    const error = this.querySelector("[data-chrome-user-scripts-error]");
++    error.textContent = "";
++    this.changing = true;
++    toggle.disabled = true;
++    try {
++      await ChromeExtensionUserScriptsConsent.setAllowed(addon.id, toggle.pressed);
++    } catch (failure) {
++      if (addon === this.addon && this.isConnected) error.textContent = this.string("error");
++      console.error("[ChromeUserScriptsConsent]", failure);
++    } finally {
++      this.changing = false;
++      if (addon === this.addon && this.isConnected) await this.refresh();
++    }
++  }
++}
++
++customElements.define("floorp-chrome-user-scripts-toggle", FloorpChromeUserScriptsToggle);

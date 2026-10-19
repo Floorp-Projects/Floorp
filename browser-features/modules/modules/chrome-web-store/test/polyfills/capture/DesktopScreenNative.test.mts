@@ -16,8 +16,11 @@ import type {
   DesktopExtensionParent,
   DesktopNativeWindow,
   DesktopRecording,
+  DesktopResponseIdentity,
+  DesktopScreenCase,
   DesktopScreenReport,
   DesktopSelectionStatus,
+  DesktopSitePermissions,
   DesktopSourceChoice,
   DesktopSourceKind,
   DesktopSourceList,
@@ -46,7 +49,7 @@ async function until<T>(
   throw Error("Timed out waiting for " + label);
 }
 
-async function desktopScreen(): Promise<void> {
+async function desktopScreen(mode: DesktopScreenCase): Promise<void> {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
   ) as unknown as { AddonManager: CaptureAddonManager };
@@ -59,6 +62,9 @@ async function desktopScreen(): Promise<void> {
   const { AppConstants } = ChromeUtils.importESModule(
     "resource://gre/modules/AppConstants.sys.mjs",
   );
+  const { SitePermissions } = ChromeUtils.importESModule(
+    "resource:///modules/SitePermissions.sys.mjs",
+  ) as unknown as { SitePermissions: DesktopSitePermissions };
   const window = Services.wm.getMostRecentWindow("navigator:browser") as
     | DesktopNativeWindow
     | null;
@@ -89,10 +95,13 @@ async function desktopScreen(): Promise<void> {
   );
   const report: DesktopScreenReport = {
     os: AppConstants.platform,
+    case: mode,
+    requests: [],
     selections: [],
     recordings: [],
   };
   let addon: CaptureAddon | undefined;
+  const ownedDialogs = new Set<CaptureDialogWindow>();
   const dialogs = () =>
     ([...Services.wm.getEnumerator("")] as unknown as CaptureDialogWindow[])
       .filter(
@@ -103,7 +112,7 @@ async function desktopScreen(): Promise<void> {
       );
   const post = (
     browser: CaptureBrowser,
-    command: { kind: DesktopSourceKind },
+    command: { kind: DesktopSourceKind; commandId: string },
   ) =>
     browser.messageManager.loadFrameScript(
       "data:application/javascript," +
@@ -114,11 +123,17 @@ async function desktopScreen(): Promise<void> {
         ),
       false,
     );
-  function read<Result>(browser: CaptureBrowser): Promise<Result> {
+  function read<Result extends DesktopResponseIdentity>(
+    browser: CaptureBrowser,
+    commandId: string,
+  ): Promise<Result> {
     return until(() => {
       const title = browser.contentTitle;
-      if (title.startsWith("FAIL:")) throw Error(title);
-      return title.startsWith("{") && JSON.parse(title) as Result;
+      if (!title.startsWith("{")) return false;
+      const value = JSON.parse(title) as DesktopResponseIdentity;
+      if (value.commandId !== commandId) return false;
+      if (value.phase === "error") throw Error(value.error);
+      return value as Result;
     }, "extension desktop capture response");
   }
   try {
@@ -159,10 +174,10 @@ async function desktopScreen(): Promise<void> {
         },
       }),
       "background.js":
-        `window.addEventListener('message',event=>{if(!event.data.kind)return;const kind=event.data.kind;try{const requestId=chrome.desktopCapture.chooseDesktopMedia([kind,'audio'],async(token,options)=>{try{if(chrome.runtime.lastError)throw Error(chrome.runtime.lastError.message);if(!token){document.title=JSON.stringify({phase:'denied'});return;}if(!await chrome.offscreen.hasDocument())await chrome.offscreen.createDocument({url:'offscreen.html',reasons:['USER_MEDIA'],justification:'Record explicitly selected native desktop source'});await chrome.runtime.sendMessage({token,kind,options});document.title=JSON.stringify({phase:'selected',options});}catch(error){document.title='FAIL:'+error;}});document.title=JSON.stringify({phase:'requested',requestId});}catch(error){document.title='FAIL:'+error;}});`,
+        `window.addEventListener('message',event=>{if(!event.data.kind||typeof event.data.commandId!=='string')return;const {kind,commandId}=event.data;let requestId;try{requestId=chrome.desktopCapture.chooseDesktopMedia([kind,'audio'],async(token,options)=>{try{if(chrome.runtime.lastError)throw Error(chrome.runtime.lastError.message);if(token===''){document.title=JSON.stringify({phase:'denied',commandId,requestId});return;}if(typeof token!=='string')throw Error('Native chooser returned a non-string stream ID');if(!await chrome.offscreen.hasDocument())await chrome.offscreen.createDocument({url:'offscreen.html',reasons:['USER_MEDIA'],justification:'Record explicitly selected native desktop source'});await chrome.runtime.sendMessage({token,kind,options,commandId,requestId});document.title=JSON.stringify({phase:'selected',options,commandId,requestId});}catch(error){document.title=JSON.stringify({phase:'error',commandId,requestId,error:String(error)});}});document.title=JSON.stringify({phase:'requested',requestId,commandId});}catch(error){document.title=JSON.stringify({phase:'error',commandId,requestId,error:String(error)});}});document.title=JSON.stringify({phase:'ready'});`,
       "offscreen.html": '<script src="offscreen.js"></script>',
       "offscreen.js":
-        `chrome.runtime.onMessage.addListener(async message=>{try{document.title='WAIT';if(message.options.canRequestAudioTrack)throw Error('Unimplemented system audio was advertised');const mandatory={chromeMediaSource:'desktop',chromeMediaSourceId:message.token};const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{mandatory}});const source=document.createElement('video');source.muted=true;source.srcObject=stream;await source.play();await new Promise(resolve=>setTimeout(resolve,800));const pixels=video=>{const canvas=document.createElement('canvas');canvas.width=160;canvas.height=100;const context=canvas.getContext('2d');context.drawImage(video,0,0,160,100);const data=context.getImageData(0,0,160,100).data;let green=0;for(let i=0;i<data.length;i+=4)if(data[i]<40&&data[i+1]>180&&data[i+2]<40)green++;return green/16000;};const liveGreen=pixels(source),chunks=[];const recorder=new MediaRecorder(stream);const stopped=new Promise(resolve=>{recorder.ondataavailable=event=>chunks.push(event.data);recorder.onstop=resolve;});recorder.start();await new Promise(resolve=>setTimeout(resolve,900));recorder.stop();await stopped;stream.getTracks().forEach(track=>track.stop());const blob=new Blob(chunks,{type:recorder.mimeType}),url=URL.createObjectURL(blob),replay=document.createElement('video');replay.muted=true;replay.src=url;await replay.play();await new Promise(resolve=>setTimeout(resolve,100));const replayGreen=pixels(replay),bytes=await blob.arrayBuffer();let encoded='';for(const byte of new Uint8Array(bytes))encoded+=String.fromCharCode(byte);const result={kind:message.kind,liveGreen,replayGreen,width:replay.videoWidth,height:replay.videoHeight,bytes:bytes.byteLength,mimeType:blob.type,base64:btoa(encoded),audio:stream.getAudioTracks().length};replay.pause();URL.revokeObjectURL(url);document.title=JSON.stringify(result);}catch(error){document.title='FAIL:'+error;}});`,
+        `chrome.runtime.onMessage.addListener(async message=>{try{document.title=JSON.stringify({phase:'starting',commandId:message.commandId,requestId:message.requestId});if(message.options.canRequestAudioTrack)throw Error('Unimplemented system audio was advertised');const mandatory={chromeMediaSource:'desktop',chromeMediaSourceId:message.token};const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{mandatory}});const source=document.createElement('video');source.muted=true;source.srcObject=stream;await source.play();await new Promise(resolve=>setTimeout(resolve,800));const pixels=video=>{const canvas=document.createElement('canvas');canvas.width=160;canvas.height=100;const context=canvas.getContext('2d');context.drawImage(video,0,0,160,100);const data=context.getImageData(0,0,160,100).data;let green=0;for(let i=0;i<data.length;i+=4)if(data[i]<40&&data[i+1]>180&&data[i+2]<40)green++;return green/16000;};const liveGreen=pixels(source),chunks=[];const recorder=new MediaRecorder(stream);const stopped=new Promise(resolve=>{recorder.ondataavailable=event=>chunks.push(event.data);recorder.onstop=resolve;});recorder.start();await new Promise(resolve=>setTimeout(resolve,900));recorder.stop();await stopped;stream.getTracks().forEach(track=>track.stop());const blob=new Blob(chunks,{type:recorder.mimeType}),url=URL.createObjectURL(blob),replay=document.createElement('video');replay.muted=true;replay.src=url;await replay.play();await new Promise(resolve=>setTimeout(resolve,100));const replayGreen=pixels(replay),bytes=await blob.arrayBuffer();let encoded='';for(const byte of new Uint8Array(bytes))encoded+=String.fromCharCode(byte);const result={phase:'recorded',commandId:message.commandId,requestId:message.requestId,kind:message.kind,liveGreen,replayGreen,width:replay.videoWidth,height:replay.videoHeight,bytes:bytes.byteLength,mimeType:blob.type,base64:btoa(encoded),audio:stream.getAudioTracks().length};replay.pause();URL.revokeObjectURL(url);document.title=JSON.stringify(result);}catch(error){document.title=JSON.stringify({phase:'error',commandId:message.commandId,requestId:message.requestId,error:String(error)});}});`,
     };
     await IOUtils.write(
       xpi,
@@ -181,22 +196,68 @@ async function desktopScreen(): Promise<void> {
       "screen chooser extension",
     );
     const background = await until(
-      () => extension.backgroundContext,
-      "background document",
+      () => {
+        const context = extension.backgroundContext;
+        return context?.xulBrowser?.contentTitle === '{"phase":"ready"}'
+          ? context
+          : false;
+      },
+      "background document listener readiness",
     );
-    const chooseKind = async (kind: DesktopSourceKind): Promise<object> => {
+    const screenPermission = () =>
+      SitePermissions.getForPrincipal(
+        extension.principal,
+        "screen",
+        target.linkedBrowser,
+      );
+    report.initialScreenPermission = screenPermission();
+    assertEquals(
+      report.initialScreenPermission.state,
+      SitePermissions.UNKNOWN,
+      "each independently owned tab/addon context starts without a screen grant or denial",
+    );
+    const saveReport = () =>
+      IOUtils.writeUTF8(
+        PathUtils.join(
+          mediaDirectory,
+          `floorp-desktop-screen-native-result-${mode}.json`,
+        ),
+        JSON.stringify(report, null, 2),
+      );
+    const requestKind = async (
+      kind: DesktopSourceKind,
+      accept = true,
+    ): Promise<string> => {
       window.gBrowser.selectedTab = target;
-      post(background.xulBrowser, { kind });
+      const existingDialogs = new Set(dialogs());
+      const commandId = String(Services.uuid.generateUUID());
+      post(background.xulBrowser, { kind, commandId });
+      const requested = await read<DesktopSelectionStatus>(
+        background.xulBrowser,
+        commandId,
+      );
+      assertEquals(
+        requested.phase,
+        "requested",
+        "current command was accepted",
+      );
+      assert(
+        Number.isInteger(requested.requestId),
+        "native chooser synchronously returns an integer request ID",
+      );
+      report.requests.push(requested);
       const dialog = await until(
         () =>
           dialogs().find(
             (item) =>
+              !existingDialogs.has(item) &&
               item.document.readyState === "complete" &&
               (item.document.getElementById("list") as NativeDialogList | null)
                 ?.itemCount,
           ),
         "owned native source-kind chooser",
       );
+      ownedDialogs.add(dialog);
       const list = dialog.document.getElementById("list") as
         | NativeDialogList
         | null;
@@ -211,10 +272,25 @@ async function desktopScreen(): Promise<void> {
         | NativeDialog
         | null;
       assert(dialogElement, "native source-kind chooser dialog exists");
-      dialogElement.acceptDialog();
-      return until(() => {
+      if (accept) dialogElement.acceptDialog();
+      else dialogElement.cancelDialog();
+      return commandId;
+    };
+    const chooseKind = async (kind: DesktopSourceKind): Promise<string> => {
+      const commandId = await requestKind(kind);
+      await until(() => {
         const title = background.xulBrowser.contentTitle;
-        if (title.startsWith("FAIL:")) throw Error(title);
+        if (title.startsWith("{")) {
+          const status = JSON.parse(title) as DesktopSelectionStatus;
+          if (status.commandId === commandId) {
+            if (status.phase === "error") throw Error(status.error);
+            if (status.phase === "denied") {
+              throw Error(
+                "Native desktop request was denied before source consent",
+              );
+            }
+          }
+        }
         const notification = window.PopupNotifications.getNotification(
           "webRTC-shareDevices",
           target.linkedBrowser,
@@ -225,8 +301,8 @@ async function desktopScreen(): Promise<void> {
           notification
         );
       }, "actual native WebRTC source chooser");
+      return commandId;
     };
-    await chooseKind("screen");
     const nativePanel = (): CapturePermissionPanel => {
       const panel = window.PopupNotifications.panel.querySelector(
         "popupnotification",
@@ -234,15 +310,82 @@ async function desktopScreen(): Promise<void> {
       assert(panel, "native permission prompt remains open");
       return panel;
     };
-    nativePanel().secondaryButton.click();
-    await until(
-      async () =>
-        (await read<DesktopSelectionStatus>(background.xulBrowser)).phase ===
-          "denied",
-      "native screen-sharing denial yields empty token",
-    );
-    for (const kind of ["screen", "window"] as const) {
-      await chooseKind(kind);
+    const deniedCallback = (commandId: string) =>
+      until(
+        async () => {
+          const status = await read<DesktopSelectionStatus>(
+            background.xulBrowser,
+            commandId,
+          );
+          if (status.phase !== "denied") return false;
+          assertEquals(
+            status.requestId,
+            report.requests.find((request) => request.commandId === commandId)
+              ?.requestId,
+            "denial callback belongs to the current native chooser request",
+          );
+          return status;
+        },
+        "native screen-sharing denial yields empty token",
+      );
+    if (mode === "block-denial" || mode === "kind-cancel") {
+      let commandId: string;
+      if (mode === "kind-cancel") {
+        const cancelledId = await requestKind("screen", false);
+        const cancelled = await deniedCallback(cancelledId);
+        const permission = screenPermission();
+        assertEquals(
+          permission.state,
+          SitePermissions.UNKNOWN,
+          "cancelling source-kind selection does not create a screen block",
+        );
+        commandId = await chooseKind("screen");
+        report.kindCancellation = {
+          commandId: cancelledId,
+          requestId: cancelled.requestId,
+          callbackEmpty: true,
+          permission,
+          freshPermissionPrompt: true,
+        };
+      } else {
+        commandId = await chooseKind("screen");
+      }
+      nativePanel().secondaryButton.click();
+      const denied = await deniedCallback(commandId);
+      const permission = screenPermission();
+      assertEquals(
+        permission.state,
+        SitePermissions.BLOCK,
+        "native WebRTC Block persists the user's denial",
+      );
+      assertEquals(
+        permission.scope,
+        SitePermissions.SCOPE_TEMPORARY,
+        "native Block remains scoped to this owned tab",
+      );
+      const repeatedId = await requestKind("screen");
+      await deniedCallback(repeatedId);
+      assert(
+        !window.PopupNotifications.getNotification(
+          "webRTC-shareDevices",
+          target.linkedBrowser,
+        ),
+        "a repeated request respects the native block without another consent prompt",
+      );
+      report.denial = {
+        commandId,
+        requestId: denied.requestId,
+        callbackEmpty: true,
+        permission,
+        repeatedRequestDenied: true,
+      };
+      await saveReport();
+      return;
+    }
+    for (
+      const kind of [mode === "record-screen" ? "screen" : "window"] as const
+    ) {
+      const commandId = await chooseKind(kind);
       const list = window.document.getElementById(
         "webRTC-selectWindow-menulist",
       ) as DesktopSourceList | null;
@@ -292,9 +435,18 @@ async function desktopScreen(): Promise<void> {
         "actual Offscreen stream consumer",
       );
       const result = await until(async () => {
-        const value = await read<DesktopRecording>(offscreen.xulBrowser);
+        const value = await read<DesktopRecording>(
+          offscreen.xulBrowser,
+          commandId,
+        );
         return value.kind === kind && value;
       }, "recorded and decoded native desktop WebM");
+      assertEquals(
+        result.requestId,
+        report.requests.find((request) => request.commandId === commandId)
+          ?.requestId,
+        "recording belongs to the current native chooser request",
+      );
       assert(
         result.width > 200 && result.height > 200 && result.bytes > 1000,
         "actual native desktop stream records playable WebM",
@@ -334,16 +486,10 @@ async function desktopScreen(): Promise<void> {
       ].map((value) => value.toString(16).padStart(2, "0")).join("");
       report.recordings.push({ ...recording, path: output, sha256 });
     }
-    await IOUtils.writeUTF8(
-      PathUtils.join(
-        mediaDirectory,
-        "floorp-desktop-screen-native-result.json",
-      ),
-      JSON.stringify(report, null, 2),
-    );
+    await saveReport();
     console.log("[DesktopScreenNative]", JSON.stringify(report));
   } finally {
-    for (const dialog of dialogs()) dialog.close();
+    for (const dialog of ownedDialogs) if (!dialog.closed) dialog.close();
     await addon?.uninstall();
     if (target.isConnected) window.gBrowser.removeTab(target);
     await IOUtils.remove(xpi, { ignoreAbsent: true });
@@ -353,9 +499,22 @@ async function desktopScreen(): Promise<void> {
 export function runAllTests() {
   return runTests("DesktopScreenNative.test.mts", [
     {
+      name: "native WebRTC Block denies repeated requests in the same tab",
+      fn: () => desktopScreen("block-denial"),
+    },
+    {
+      name: "source-kind cancellation permits a fresh native consent prompt",
+      fn: () => desktopScreen("kind-cancel"),
+    },
+    {
       name:
-        "real screen/window chooser consent, denial, native pixels and playable media",
-      fn: desktopScreen,
+        "fresh screen consent records native green pixels and playable media",
+      fn: () => desktopScreen("record-screen"),
+    },
+    {
+      name:
+        "fresh window consent records native green pixels and playable media",
+      fn: () => desktopScreen("record-window"),
     },
   ]);
 }

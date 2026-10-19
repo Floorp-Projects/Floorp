@@ -69,7 +69,7 @@ index 9f2697f962a75f6507ce771ef94e1c84a212dedf..3381ef8760bd2f8f3541b0e9c99b9aa0
    switch (window.arguments.length) {
      default:
 +    case 13: {
-+      const actions=window.arguments[12];
++      const actions=window.arguments[12].QueryInterface(Ci.nsIArray);
 +      const container=document.getElementById("alertActions");
 +      for(let index=0;index<actions.length;index++) {
 +        const action=actions.queryElementAt(index,Ci.nsIAlertAction);
@@ -686,16 +686,19 @@ index 0000000000000000000000000000000000000000..2485d00373ebd906088bbdf5a7499e29
 +}
 diff --git a/modules/ChromeDeclarativeContentChild.sys.mjs b/modules/ChromeDeclarativeContentChild.sys.mjs
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b4bb4980d2cb9673edf70fa68ee1ac8eee39022
+index 0000000000000000000000000000000000000000..e5b7e4237ec467670705842a58902e05d10319c1
 --- /dev/null
 +++ b/modules/ChromeDeclarativeContentChild.sys.mjs
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,88 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
 +export class ChromeDeclarativeContentChild extends JSWindowActorChild {
 +  handleEvent() {
++    if (this.destroyed) {
++      return;
++    }
 +    if (!this.observer && this.document.documentElement) {
 +      this.observer = new this.contentWindow.MutationObserver(() =>
 +        this.changed()
@@ -719,20 +722,23 @@ index 0000000000000000000000000000000000000000..3b4bb4980d2cb9673edf70fa68ee1ac8
 +        attributes: true,
 +        characterData: true,
 +      });
++      this.listenerDocument = this.document;
 +      for (const name of ["input", "change", "click", "focusin", "focusout"]) {
-+        this.document.addEventListener(name, this, { capture: true });
++        this.listenerDocument.addEventListener(name, this, { capture: true });
 +      }
 +    }
 +    this.changed();
 +  }
 +  changed() {
-+    if (this.queued) {
++    if (this.destroyed || this.queued) {
 +      return;
 +    }
 +    this.queued = true;
 +    this.contentWindow.setTimeout(() => {
 +      this.queued = false;
-+      this.sendAsyncMessage("Changed");
++      if (!this.destroyed) {
++        this.sendAsyncMessage("Changed");
++      }
 +    }, 0);
 +  }
 +  receiveMessage({ name, data }) {
@@ -752,12 +758,23 @@ index 0000000000000000000000000000000000000000..3b4bb4980d2cb9673edf70fa68ee1ac8
 +    return undefined;
 +  }
 +  didDestroy() {
-+    this.progress?.removeProgressListener(this.progressListener);
-+    this.progressListener = null;
-+    this.progress = null;
-+    this.observer?.disconnect();
-+    for (const name of ["input", "change", "click", "focusin", "focusout"]) {
-+      this.document.removeEventListener(name, this, { capture: true });
++    this.destroyed = true;
++    try {
++      this.progress?.removeProgressListener(this.progressListener);
++    } catch (error) {
++      // The docshell can remove the listener before actor teardown.
++      if (error?.result !== Cr.NS_ERROR_FAILURE) {
++        throw error;
++      }
++    } finally {
++      this.progressListener = null;
++      this.progress = null;
++      this.observer?.disconnect();
++      this.observer = null;
++      for (const name of ["input", "change", "click", "focusin", "focusout"]) {
++        this.listenerDocument?.removeEventListener(name, this, { capture: true });
++      }
++      this.listenerDocument = null;
 +    }
 +  }
 +}
@@ -1380,7 +1397,7 @@ index 0000000000000000000000000000000000000000..e1b5de574e4a89dc169966722d3f4e52
 +  }
 +};
 diff --git a/chrome/toolkit/content/extensions/parent/ext-notifications.js b/chrome/toolkit/content/extensions/parent/ext-notifications.js
-index 78e5e2801c72c80a6c0f6ed25d0b2737cd9e00da..70c820fce46bda9a28f90d7164d89c28f8773dd6 100644
+index 78e5e28..cd71265 100644
 --- a/chrome/toolkit/content/extensions/parent/ext-notifications.js
 +++ b/chrome/toolkit/content/extensions/parent/ext-notifications.js
 @@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(ToolkitModules, {
@@ -1564,7 +1581,7 @@ index 78e5e2801c72c80a6c0f6ed25d0b2737cd9e00da..70c820fce46bda9a28f90d7164d89c28
        };
  
        this.notificationsMap.on("closed", listener);
-@@ -182,10 +270,30 @@ this.notifications = class extends ExtensionAPIPersistent {
+@@ -182,10 +270,34 @@ this.notifications = class extends ExtensionAPIPersistent {
  
    getAPI(context) {
      let notificationsMap = this.notificationsMap;
@@ -1578,7 +1595,11 @@ index 78e5e2801c72c80a6c0f6ed25d0b2737cd9e00da..70c820fce46bda9a28f90d7164d89c28
 +        update: async (id, changes) => {
 +          const old = notificationsMap.get(id);
 +          if (!old) return false;
-+          const options = { ...old.options, ...changes };
++          // Omitted schema properties normalize to null; preserve existing values.
++          const updates = Object.fromEntries(
++            Object.entries(changes).filter(([, value]) => value != null),
++          );
++          const options = { ...old.options, ...updates };
 +          new Notification(context, notificationsMap, id, options);
 +          return true;
 +        },
@@ -1591,12 +1612,12 @@ index 78e5e2801c72c80a6c0f6ed25d0b2737cd9e00da..70c820fce46bda9a28f90d7164d89c28
 +          extensionApi: this,
 +        }).api(),
          create: (notificationId, options) => {
-+          if (!chromeCompatible && options.buttons !== undefined)
++          if (!chromeCompatible && options.buttons != null)
 +            throw new ExtensionUtils.ExtensionError("Property buttons is unsupported by Firefox");
            if (!notificationId) {
              notificationId = String(this.nextId++);
            }
-@@ -210,7 +318,7 @@ this.notifications = class extends ExtensionAPIPersistent {
+@@ -210,7 +322,7 @@ this.notifications = class extends ExtensionAPIPersistent {
          getAll: function () {
            let result = {};
            notificationsMap.forEach((value, key) => {
@@ -1605,7 +1626,7 @@ index 78e5e2801c72c80a6c0f6ed25d0b2737cd9e00da..70c820fce46bda9a28f90d7164d89c28
            });
            return Promise.resolve(result);
          },
-@@ -237,8 +345,21 @@ this.notifications = class extends ExtensionAPIPersistent {
+@@ -237,8 +349,21 @@ this.notifications = class extends ExtensionAPIPersistent {
          }).api(),
  
          // TODO Bug 1190681, implement button support.

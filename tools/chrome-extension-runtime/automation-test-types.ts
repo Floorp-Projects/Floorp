@@ -67,6 +67,12 @@ export interface AutomationObserved {
   clickCount?: string;
   rows?: string[][];
 }
+export interface UIVisionWelcomeObservation {
+  shown: boolean;
+  clicked: boolean;
+  title: string | null;
+  events: { type: string; trusted: boolean }[];
+}
 export interface AutomationItem {
   id: string;
   name: string;
@@ -79,6 +85,7 @@ export interface AutomationItem {
   nativeEvidence?: NativeCorpusBackgroundEvidence;
   warnings?: string[];
   configuration?: unknown;
+  onboarding?: UIVisionWelcomeObservation;
   macro?: VisionMacro;
   workflow?: AutomaWorkflow;
   observed?: AutomationObserved | null;
@@ -97,6 +104,8 @@ export interface AutomationItem {
   selectedTabs?: unknown;
   nativePanel?: unknown;
   sitemap?: Sitemap;
+  importedControlState?: ScraperControlState;
+  scrapeMenuControlState?: ScraperControlState;
   input?: unknown;
   imported?: { url: string } | null;
   rows?: string[][];
@@ -119,6 +128,17 @@ export type ScraperControl =
   | "scrapeForm"
   | "start"
   | "refresh";
+export interface ScraperControlState {
+  url: string;
+  ready: string;
+  control: ScraperControl;
+  present: boolean;
+  visible: boolean;
+  enabled: boolean;
+  unobstructed: boolean;
+  activeSitemapId: string;
+  selectorViewReady: boolean;
+}
 export interface AutomationActorData {
   control?: ScraperControl;
   sitemap?: Sitemap;
@@ -129,6 +149,9 @@ export interface AutomationActorData {
 }
 export interface AutomationActor {
   sendQuery(name: "Snapshot"): Promise<AutomationSnapshot>;
+  sendQuery(
+    name: "AcknowledgeUIVisionWelcome",
+  ): Promise<UIVisionWelcomeObservation>;
   sendQuery(
     name: "ReadAutomaConfiguration" | "ReadAutomaEngineState",
   ): Promise<AutomaStorage>;
@@ -150,6 +173,10 @@ export interface AutomationActor {
     name: "RunAutoma",
     data: { name: string },
   ): Promise<{ clickedActualExecuteControl: boolean }>;
+  sendQuery(
+    name: "WebScraperControlState",
+    data: { control: ScraperControl },
+  ): Promise<ScraperControlState>;
   sendQuery(
     name: "WebScraperControl",
     data: { control: ScraperControl; sitemap?: Sitemap },

@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-import { unzipSync } from "fflate/browser";
-import { CRXConverterClass } from "../../browser-features/modules/modules/chrome-web-store/CRXConverter.sys.mts";
+import { installFrozenCorpus } from "./corpus-install-fixture.mjs";
 import { runLanguageToolOperation } from "./corpus-languagetool-operation.mjs";
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
-);
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs",
-);
-const { ExtensionParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/ExtensionParent.sys.mjs",
 );
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs",
@@ -32,16 +25,12 @@ async function until(read, label) {
   }
   throw Error("Timed out waiting for " + label);
 }
-/** @param {Uint8Array} bytes */
-const digest = async (bytes) =>
-  [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice()))]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
 export async function runAllTests() {
   const output = Services.env.get("FLOORP_LANGUAGETOOL_OUTPUT"),
     root = Services.env.get("FLOORP_CORPUS_ROOT");
-  if (!output || !root)
+  if (!output || !root) {
     throw Error("Private LanguageTool fixture output/root required");
+  }
   const id = "oldceeleldhonbafppcapldpdifcinji";
   /** @type {import("./network-test-types.ts").LanguageFixture} */
   const fixture = await IOUtils.readJSON(
@@ -60,7 +49,7 @@ export async function runAllTests() {
     );
   const record = corpus.extensions.find((item) => item.id === id);
   if (!record) throw Error("Frozen LanguageTool record missing");
-  /** @type {import("./network-test-types.ts").LanguageItem} */
+  /** @type {import("./languagetool-native-test-types.ts").NativeLanguageItem} */
   const item = {
     id,
     name: record.name,
@@ -68,9 +57,11 @@ export async function runAllTests() {
     packageSha256: record.packageSha256,
     primaryOperation: record.primaryOperation,
     primaryOperationResult: "not-run",
+    nativeQualified: false,
+    cleanupCompleted: false,
     checks: [],
   };
-  /** @type {import("./network-test-types.ts").LanguageReport & {runtime: {version: string; buildId: string; nativeWorkerCompiled: boolean}}} */
+  /** @type {import("./languagetool-native-test-types.ts").NativeLanguageReport} */
   const report = {
     stage: "actual-package-primary-operation",
     runtime: {
@@ -126,11 +117,13 @@ export async function runAllTests() {
         if (!subject.QueryInterface) return;
         const channel = subject.QueryInterface(Ci.nsIHttpChannel);
         if (
-          !/^https:\/\/(?:api(?:-fallback)?\.languagetool\.org|api\.languagetoolplus\.com)\/v2\/check(?:\?|$)/.test(
-            channel.URI.spec,
-          )
-        )
+          !/^https:\/\/(?:api(?:-fallback)?\.languagetool\.org|api\.languagetoolplus\.com)\/v2\/check(?:\?|$)/
+            .test(
+              channel.URI.spec,
+            )
+        ) {
           return;
+        }
         (item.nativeServiceRequests ??= []).push({
           topic,
           url: channel.URI.spec.split(/[?#]/)[0],
@@ -145,9 +138,10 @@ export async function runAllTests() {
       }
     },
   };
-  for (const topic of ["http-on-modify-request", "http-on-examine-response"])
+  for (const topic of ["http-on-modify-request", "http-on-examine-response"]) {
     Services.obs.addObserver(transportObserver, topic);
-  /** @type {import("./network-test-types.ts").InstalledAddon | null | undefined} */
+  }
+  /** @type {import("./native-test-types.ts").NativeCorpusAddon | null | undefined} */
   let addon;
   /** @type {import("./network-test-types.ts").NativeTab | undefined} */
   let tab;
@@ -183,8 +177,8 @@ export async function runAllTests() {
   function navigate(url) {
     const target = tab;
     if (!target) throw Error("Grammar tab missing");
-    const old =
-      target.linkedBrowser.browsingContext.currentWindowGlobal?.innerWindowId;
+    const old = target.linkedBrowser.browsingContext.currentWindowGlobal
+      ?.innerWindowId;
     target.linkedBrowser.loadURI(Services.io.newURI(url), {
       triggeringPrincipal: principal,
     });
@@ -192,7 +186,7 @@ export async function runAllTests() {
       const value = await query(target, "Snapshot").catch(() => null);
       return (
         target.linkedBrowser.browsingContext.currentWindowGlobal
-          ?.innerWindowId !== old &&
+            ?.innerWindowId !== old &&
         value?.ready === "complete" &&
         value.url === url &&
         value
@@ -207,75 +201,26 @@ export async function runAllTests() {
       const value = await query(editorTab, "Snapshot").catch(() => null);
       return value?.ready === "complete" && value.url === fixture.url && value;
     }, "authored native grammar editor");
-    const bytes = await IOUtils.read(
-      PathUtils.join(
-        root,
-        "_dist",
-        "chrome-extension-corpus",
-        "packages",
-        id + ".crx",
-      ),
-    );
-    if ((await digest(bytes)) !== record.packageSha256)
-      throw Error("Frozen signed package digest mismatch");
-    const converted = await new CRXConverterClass().convert(
-      bytes.slice().buffer,
-      id,
-      {
-        id,
-        name: record.name,
-        version: record.version,
-      },
-    );
-    item.conversion = converted.report;
-    item.warnings = converted.warnings;
-    if (!converted.success || !converted.xpiData)
-      throw Error(
-        converted.error?.message || "Production signed conversion failed",
-      );
-    const scripts = [];
-    for (const [name, data] of Object.entries(
-      unzipSync(new Uint8Array(converted.xpiData)),
-    ).filter(([name]) => /\.(?:js|mjs|cjs)$/i.test(name))) {
-      const original = await IOUtils.read(
-        PathUtils.join(
-          root,
-          "_dist",
-          "chrome-extension-corpus",
-          "chrome-unpacked",
-          id,
-          ...name.split("/"),
-        ),
-      );
-      const hash = await digest(data);
-      if (hash !== (await digest(original)))
-        throw Error("Signed script changed " + name);
-      scripts.push(name + ":" + hash);
-    }
-    item.sourceIntegrity = {
-      unchangedScriptCount: scripts.length,
-      unchangedScriptsSha256: await digest(
-        new TextEncoder().encode(scripts.sort().join("\n")),
-      ),
-    };
-    const xpi = PathUtils.join(output, id + ".xpi");
-    await IOUtils.write(xpi, new Uint8Array(converted.xpiData));
-    addon = await AddonManager.installTemporaryAddon(new FileUtils.File(xpi));
-    const extension = ExtensionParent.GlobalManager.extensionMap.get(
-      id + "@chromium-extension",
-    );
-    item.background = extension?.manifest.background;
+    const installed = await installFrozenCorpus(root, record, output);
+    addon = installed.addon;
+    item.conversion = installed.conversion;
+    item.warnings = installed.warnings;
+    item.sourceIntegrity = installed.sourceIntegrity;
+    item.nativeEvidence = installed.nativeEvidence;
+    item.background = installed.background;
     await until(
-      () => extension?.backgroundContext?.viewType === "background_worker",
+      () =>
+        installed.extension.backgroundContext?.viewType === "background_worker",
       "genuine compiled LanguageTool background_worker",
     );
     if (
       !report.runtime.nativeWorkerCompiled ||
-      converted.report?.background?.selected !== "service_worker"
-    )
+      installed.background?.selected !== "service_worker"
+    ) {
       throw Error(
         "Primary operation requires production-selected compiled service worker",
       );
+    }
     item.nativeWorkerVerified = true;
     const welcome = await until(
       () =>
@@ -324,8 +269,9 @@ export async function runAllTests() {
         "Disposable browser profile; authored synthetic sentence only; no account",
     };
     await pause(500);
-    if ([...win.gBrowser.tabs].includes(welcome))
+    if ([...win.gBrowser.tabs].includes(welcome)) {
       win.gBrowser.removeTab(welcome, { skipPermitUnload: true });
+    }
     win.gBrowser.selectedTab = tab;
     await navigate(fixture.url);
     const verifyRemoval = await runLanguageToolOperation({
@@ -344,30 +290,70 @@ export async function runAllTests() {
     await addon.uninstall();
     addon = null;
     await verifyRemoval();
-    if (!item.nativeServiceRequests?.some((request) => request.status === 200))
+    if (
+      !item.nativeServiceRequests?.some((request) => request.status === 200)
+    ) {
       throw Error(
         "Actual native LanguageTool service response was not observed",
       );
+    }
     item.checks.push(
       "The native HTTP channel observed the actual LanguageTool HTTPS check service returning status 200",
     );
     item.primaryOperationResult = "passed";
   } catch (error) {
-    if (item.primaryOperationResult === "not-run")
+    if (item.primaryOperationResult === "not-run") {
       item.primaryOperationResult = "failed";
+    }
     item.error = String(error);
     if (tab) item.lastSnapshot = await query(tab, "Snapshot").catch(() => null);
   } finally {
-    for (const topic of ["http-on-modify-request", "http-on-examine-response"])
-      Services.obs.removeObserver(transportObserver, topic);
-    if (addon) await addon.uninstall().catch(() => {});
-    for (const candidate of [...win.gBrowser.tabs])
-      if (!originalTabs.has(candidate))
-        win.gBrowser.removeTab(candidate, { skipPermitUnload: true });
-    ChromeUtils.unregisterWindowActor("CorpusLanguageTool");
-    resource.setSubstitution("floorp-languagetool-corpus", null);
+    /** @type {string[]} */
+    const cleanupErrors = [];
+    /** @param {() => void | Promise<void>} operation */
+    const cleanup = async (operation) => {
+      try {
+        await operation();
+      } catch (error) {
+        cleanupErrors.push(String(error));
+      }
+    };
+    for (
+      const topic of ["http-on-modify-request", "http-on-examine-response"]
+    ) {
+      await cleanup(() =>
+        Services.obs.removeObserver(transportObserver, topic)
+      );
+    }
+    await cleanup(async () => {
+      await addon?.uninstall();
+    });
+    for (const candidate of [...win.gBrowser.tabs]) {
+      if (!originalTabs.has(candidate)) {
+        await cleanup(() =>
+          win.gBrowser.removeTab(candidate, { skipPermitUnload: true })
+        );
+      }
+    }
+    await cleanup(() =>
+      ChromeUtils.unregisterWindowActor("CorpusLanguageTool")
+    );
+    await cleanup(() =>
+      resource.setSubstitution("floorp-languagetool-corpus", null)
+    );
+    item.cleanupCompleted = cleanupErrors.length === 0;
+    if (cleanupErrors.length) item.cleanupError = cleanupErrors.join("\n");
+    item.nativeQualified = item.primaryOperationResult === "passed" &&
+      item.cleanupCompleted &&
+      item.nativeEvidence?.candidateIdentityVerified === true &&
+      item.nativeEvidence.nativeBackgroundVerified === true;
     await save();
   }
-  if (item.primaryOperationResult !== "passed")
-    throw Error("Real LanguageTool primary operation failed: " + item.error);
+
+  if (item.primaryOperationResult !== "passed" || !item.cleanupCompleted) {
+    throw Error(
+      "Real LanguageTool primary operation failed: " +
+        (item.error || item.cleanupError),
+    );
+  }
 }

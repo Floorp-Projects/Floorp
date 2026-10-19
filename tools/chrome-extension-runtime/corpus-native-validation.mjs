@@ -7,6 +7,11 @@
  */
 export function validateNativeCorpusBackground(snapshot) {
   if (!snapshot.strictNative) return;
+  if (!snapshot.runId || !/^[a-f0-9]{32}$/.test(snapshot.runId)) {
+    throw Error(
+      "Strict native corpus requires its actual host invocation run ID",
+    );
+  }
   if (
     !snapshot.candidateIdentity ||
     snapshot.candidateIdentity.buildId !== snapshot.buildId

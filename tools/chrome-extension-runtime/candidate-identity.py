@@ -8,6 +8,7 @@ signature or an independent attestation that a manifest was honestly produced.
 """
 import configparser
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -21,7 +22,10 @@ import zipfile
 
 _HOST = {"linux": "linux", "win32": "windows", "darwin": "mac"}
 _OS = {"linux": "Linux", "windows": "WINNT", "mac": "Darwin"}
-_SUFFIX = {"linux": (".tar.xz", ".tar.gz"), "windows": (".zip",), "mac": (".dmg",)}
+_selection_spec = importlib.util.spec_from_file_location(
+    "candidate_package_selection", Path(__file__).with_name("candidate-package-selection.py"))
+_selection = importlib.util.module_from_spec(_selection_spec)
+_selection_spec.loader.exec_module(_selection)
 _MAX_FILES = 100000
 _MAX_BYTES = 12 * 1024 ** 3
 
@@ -192,10 +196,7 @@ def authenticate_candidate(manifest_path, binary, root):
     if len(versions) != 1:
         raise RuntimeError("Runtime lock must specify one unambiguous native version")
     version = versions.pop()
-    packages = [entry for entry in manifest.get("packages", []) if entry.get("name", "").endswith(_SUFFIX[platform])]
-    if len(packages) != 1:
-        raise RuntimeError("Candidate must identify exactly one native platform package")
-    expected = packages[0]
+    expected = _selection.select_native_package(manifest.get("packages", []), platform)
     name = expected["name"]
     if Path(name).name != name or "/" in name or "\\" in name or ":" in name:
         raise ValueError("Candidate package name must be a single filename")

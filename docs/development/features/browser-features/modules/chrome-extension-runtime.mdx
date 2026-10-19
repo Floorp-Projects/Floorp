@@ -41,6 +41,9 @@ compatibility behavior only when its original ID and installed ID agree.
 Converted extension contexts expose the original 32-character Chrome
 `runtime.id`; native permission and storage routing continue to use Gecko IDs.
 Ordinary Firefox extensions retain their existing API behavior and public IDs.
+Converted content-script worlds resolve detached timer calls with a null or
+undefined receiver to their Window. Other receivers retain native validation;
+the page and other extensions keep their original timer methods.
 
 The marker and packaged report are selectors and diagnostics, not proof of
 Store provenance. A protected per-profile registry separately enrolls the
@@ -144,6 +147,14 @@ cleanup and regressions. The media gate provisions real OS audio facilities and
 requires native speech voices/controls, fonts, capture and playable media.
 Environment setup belongs to CI/test profiles, not to the distributed product.
 
+Each operating system also runs `test-native-messaging-candidate.py` against its
+authenticated package. It registers an owned host in the actual platform search
+location, exercises public one-shot and persistent messaging from document and
+Worker contexts, checks original-ID authorization and denied callers, and
+removes its registration. Nested UTF-8 payloads, launch arguments and host exit
+records are retained. This authored host gate does not count as a real-extension
+primary operation.
+
 ## Chrome comparison and frozen real-extension corpus
 
 `corpus-lock.json` fixes 50 selected IDs, primary operations, versions and signed
@@ -163,7 +174,8 @@ retain the exact candidate/build identity and the selected background context.
 ```sh
 python3 tools/chrome-extension-runtime/fetch-chrome-reference.py
 node tools/chrome-extension-runtime/test-corpus-browser-tools.mjs --id chphlpgkkbolifaimnlloiipkdnihall --headed
-python3 tools/chrome-extension-runtime/run-browser-tests.py --browser /path/to/native/floorp \
+python3 tools/chrome-extension-runtime/run-browser-tests.py --browser /path/to/native/floorp --headed \
+  --actor-module browser-features/modules/modules/chrome-web-store/test/helpers/UserScriptsConsentUIChild.sys.mjs \
   --test browser-features/modules/modules/chrome-web-store/test/workers/WorkerNative.test.mts
 ```
 

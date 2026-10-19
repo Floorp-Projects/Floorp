@@ -17,6 +17,7 @@ export class CorpusDevtoolsChild extends JSWindowActorChild {
         text: doc.body?.innerText,
         reactCount: doc.getElementById("react-count")?.textContent,
         reduxCount: doc.getElementById("redux-count")?.textContent,
+        vueCount: doc.getElementById("vue-count")?.textContent,
         props: props
           ? {
             text: props.innerText,

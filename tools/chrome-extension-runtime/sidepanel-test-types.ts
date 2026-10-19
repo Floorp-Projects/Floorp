@@ -76,6 +76,13 @@ export interface SidePanelReport {
   output: string;
   [key: string]: unknown;
 }
+export interface SidePanelChromeTrust {
+  wrapper: string;
+  publicRootsRetained: string[];
+  authoredCaImported: false;
+  hostTrustModified: false;
+  certificateValidationDisabled: false;
+}
 export interface ProbeCommand {
   op: string;
   selector?: string;

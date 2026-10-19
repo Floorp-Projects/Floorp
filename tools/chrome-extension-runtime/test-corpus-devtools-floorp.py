@@ -20,9 +20,15 @@ def main():
     parser.add_argument('--ids', default='fmkadmapgofadopljbjfkapdkoienihi,lmhkpmbekcpmknklioeibfkpmmfibljd')
     parser.add_argument('--timeout', type=int, default=240)
     args = parser.parse_args()
-    output = Path(tempfile.mkdtemp(prefix='corpus-devtools-floorp-', dir=ROOT / '_dist/chrome-runtime-tests'))
+    output_root = ROOT / '_dist/chrome-runtime-tests'
+    output_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix='corpus-devtools-floorp-', dir=output_root))
     fixture = output / 'fixture'
-    subprocess.run(['node', str(TOOLS / 'build-devtools-fixture.mjs'), str(fixture)], check=True)
+    vue_fixture = 'nhdogjmejiglipccpnnnanhbledajbpd' in args.ids.split(',')
+    if vue_fixture and args.ids != 'nhdogjmejiglipccpnnnanhbledajbpd':
+        parser.error('Run Vue with its separate genuine authored framework fixture')
+    builder = 'build-vue-fixture.mjs' if vue_fixture else 'build-devtools-fixture.mjs'
+    subprocess.run(['node', str(TOOLS / builder), str(fixture)], check=True)
     metadata = json.loads((fixture / 'frameworks.json').read_text())
 
     class Handler(BaseHTTPRequestHandler):

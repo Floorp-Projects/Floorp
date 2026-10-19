@@ -6,6 +6,7 @@ import {
   assertEquals,
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
+import type { CaptureNativeWindow } from "../../helpers/capture-native-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -75,7 +76,10 @@ async function testCapture(): Promise<void> {
   );
   const originalId = "abcdabcdabcdabcdabcdabcdabcdabcd";
   const id = `${originalId}@chromium-extension`;
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const win = Services.wm.getMostRecentWindow("navigator:browser") as
+    | CaptureNativeWindow
+    | null;
+  assert(win, "a real browser window exists for native tab capture");
   const tab = win.gBrowser.addTab("about:blank", {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
@@ -202,6 +206,18 @@ async function testCapture(): Promise<void> {
   );
   let addon: { uninstall(): Promise<void> } | undefined;
   let sourceTabClosed = false;
+  const cleanupErrors: string[] = [];
+  const cleanupListener = {
+    observe(message: nsIConsoleMessage) {
+      if (message instanceof Ci.nsIScriptError) {
+        if (
+          message.sourceName ===
+            "resource://gre/modules/ChromeExtensionCaptureChild.sys.mjs"
+        ) cleanupErrors.push(message.errorMessage);
+      }
+    },
+  };
+  Services.console.registerListener(cleanupListener);
   try {
     addon = await AddonManager.installTemporaryAddon(new FileUtils.File(path));
     const extension = await waitFor<Extension>(
@@ -456,10 +472,21 @@ async function testCapture(): Promise<void> {
       "closing source tab ends actual MediaStream tracks",
     );
   } finally {
-    await addon?.uninstall();
-    if (!sourceTabClosed) win.gBrowser.removeTab(tab);
-    await IOUtils.remove(path, { ignoreAbsent: true });
+    try {
+      await addon?.uninstall();
+      if (!sourceTabClosed) win.gBrowser.removeTab(tab);
+      await IOUtils.remove(path, { ignoreAbsent: true });
+      // Native context destruction and console delivery can follow uninstall.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    } finally {
+      Services.console.unregisterListener(cleanupListener);
+    }
   }
+  assertEquals(
+    cleanupErrors,
+    [],
+    "Offscreen destruction, target closure and uninstall finish capture cleanup without script errors",
+  );
 }
 async function testNamespaceIsolation(): Promise<void> {
   const { AddonManager } = ChromeUtils.importESModule(

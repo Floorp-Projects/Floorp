@@ -48,7 +48,12 @@ export async function runWebScraper() {
   const corpus =
     /** @type {import("./corpus-types.ts").FrozenCorpus} */ (await IOUtils
       .readJSON(
-        PathUtils.join(root, "tools/chrome-extension-runtime/corpus-lock.json"),
+        PathUtils.join(
+          root,
+          "tools",
+          "chrome-extension-runtime",
+          "corpus-lock.json",
+        ),
       ));
   const record = corpus.extensions.find((record) => record.id === webscraperId);
   if (!record) throw Error("Frozen automation record missing");
@@ -174,11 +179,27 @@ export async function runWebScraper() {
     await control("import");
     await until(async () => {
       item.imported = await snapshot();
+      item.importedControlState = await boundedAutomationQuery(
+        actor().sendQuery("WebScraperControlState", { control: "sitemapMenu" }),
+        "WebScraperControlState",
+      );
+      const state = item.importedControlState;
       return item.imported?.url.includes(
         "/sitemap/" + sitemap._id + "/selectors/",
-      );
-    }, "genuine imported sitemap");
+      ) && state.url === item.imported.url && state.ready === "complete" &&
+        state.selectorViewReady && state.activeSitemapId === sitemap._id &&
+        state.visible && state.enabled && state.unobstructed;
+    }, "genuine imported sitemap view and available menu");
     await control("sitemapMenu");
+    await until(async () => {
+      item.scrapeMenuControlState = await boundedAutomationQuery(
+        actor().sendQuery("WebScraperControlState", { control: "scrapeForm" }),
+        "WebScraperControlState",
+      );
+      const state = item.scrapeMenuControlState;
+      return state.activeSitemapId === sitemap._id && state.visible &&
+        state.enabled && state.unobstructed;
+    }, "genuine visible scrape menu control");
     await control("scrapeForm");
     await until(async () => {
       const state = await snapshot();

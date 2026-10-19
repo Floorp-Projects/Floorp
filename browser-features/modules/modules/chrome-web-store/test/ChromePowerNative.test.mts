@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 import { zipSync } from "fflate/browser";
+import type {
+  ChromePowerManagerService,
+  InitializedPowerFixture,
+  PowerAddonManagerModule,
+  PowerBrowser,
+  PowerCommand,
+  PowerDocumentReport,
+  PowerExtensionParentModule,
+  PowerFixture,
+  PowerInstallOptions,
+  PowerLockState,
+  PowerPermissionsModule,
+  PowerTab,
+  PowerWindow,
+} from "./helpers/power-test-types.ts";
 import {
   assert,
   assertEquals,
@@ -9,7 +24,15 @@ import {
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-async function until(read, label) {
+async function until<T>(
+  read: () =>
+    | T
+    | false
+    | null
+    | undefined
+    | Promise<T | false | null | undefined>,
+  label: string,
+): Promise<T> {
   const end = Date.now() + 20000;
   while (Date.now() < end) {
     const value = await read();
@@ -18,10 +41,10 @@ async function until(read, label) {
   }
   throw Error("Timed out waiting for " + label);
 }
-async function power() {
+async function power(): Promise<void> {
   const service = Cc["@mozilla.org/power/powermanagerservice;1"].getService(
     Ci.nsIPowerManagerService,
-  );
+  ) as ChromePowerManagerService;
   assert(
     typeof service.newWakeLockForChromeExtension === "function",
     "compiled native Chrome power backend is required",
@@ -37,32 +60,34 @@ async function power() {
   );
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as PowerAddonManagerModule;
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as PowerExtensionParentModule;
   const { ExtensionPermissions } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionPermissions.sys.mjs",
-  );
+  ) as PowerPermissionsModule;
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const fixtures = [],
-    tabs = [],
-    window = Services.wm.getMostRecentWindow("navigator:browser");
+  const fixtures: PowerFixture[] = [],
+    tabs: PowerTab[] = [],
+    window = Services.wm.getMostRecentWindow(
+      "navigator:browser",
+    ) as PowerWindow;
   const permission = { permissions: ["power"], origins: [] };
   const program =
-    `const ready=()=>document.title=JSON.stringify({phase:'ready',namespace:typeof chrome.power,keys:chrome.power?Object.keys(chrome.power).sort():[],level:chrome.power?.Level});window.addEventListener('message',event=>{try{const command=event.data;if(!['system','display','release','invalid'].includes(command))return;let result,invalid=false,validation=[];if(command==='invalid'){for(const call of [()=>chrome.power.requestKeepAwake('none'),()=>chrome.power.requestKeepAwake(),()=>chrome.power.requestKeepAwake('system',1),()=>chrome.power.releaseKeepAwake(1)]){try{call();validation.push({returned:true});}catch(error){validation.push({name:error.name,typeError:error instanceof TypeError});}}invalid=validation.every(error=>error.name==='TypeError'&&error.typeError);}else if(command==='release')result=chrome.power.releaseKeepAwake();else result=chrome.power.requestKeepAwake(command);document.title=JSON.stringify({phase:command,returns:typeof result,invalid,validation});}catch(error){document.title='FAIL:'+error;}});ready();`;
+    `const ready=()=>document.title=JSON.stringify({phase:'ready',namespace:typeof chrome.power,keys:chrome.power?Object.keys(chrome.power).sort():[],level:chrome.power?.Level});window.addEventListener('message',event=>{try{const command=event.data.command;if(!['system','display','release','invalid'].includes(command))return;let result,invalid=false,validation=[];if(command==='invalid'){for(const call of [()=>chrome.power.requestKeepAwake('none'),()=>chrome.power.requestKeepAwake(),()=>chrome.power.requestKeepAwake('system',1),()=>chrome.power.releaseKeepAwake(1)]){try{call();validation.push({returned:true});}catch(error){validation.push({name:error.name,typeError:error instanceof TypeError});}}invalid=validation.every(error=>error.name==='TypeError'&&error.typeError);}else if(command==='release')result=chrome.power.releaseKeepAwake();else result=chrome.power.requestKeepAwake(command);document.title=JSON.stringify({phase:command,commandId:event.data.commandId,returns:typeof result,invalid,validation});}catch(error){document.title='FAIL:'+error;}});ready();`;
   async function install(
-    original,
+    original: string,
     {
       ordinary = false,
       mismatch = false,
       optional = false,
       grant = true,
       withoutPermission = false,
-    } = {},
-  ) {
+    }: PowerInstallOptions = {},
+  ): Promise<InitializedPowerFixture> {
     const id = ordinary
         ? "ordinary-power@example.test"
         : original + "@chromium-extension",
@@ -92,7 +117,7 @@ async function power() {
         },
       },
     };
-    const encode = (value) => new TextEncoder().encode(value);
+    const encode = (value: string) => new TextEncoder().encode(value);
     await IOUtils.write(
       path,
       zipSync({
@@ -104,7 +129,7 @@ async function power() {
     const addon = await AddonManager.installTemporaryAddon(
       new FileUtils.File(path),
     );
-    const fixture = {
+    const fixture: PowerFixture = {
       addon,
       path,
       id,
@@ -120,28 +145,32 @@ async function power() {
       "power background",
     );
     await until(
-      () => fixture.background.xulBrowser.contentTitle.startsWith("{"),
+      () => fixture.background!.xulBrowser.contentTitle.startsWith("{"),
       "initial native namespace",
     );
-    return fixture;
+    return fixture as InitializedPowerFixture;
   }
-  const read = (browser) =>
+  const read = (browser: PowerBrowser, commandId = 0) =>
     until(() => {
       const title = browser.contentTitle;
       if (title.startsWith("FAIL:")) throw Error(title);
-      return title.startsWith("{") && JSON.parse(title);
+      const result = title.startsWith("{") &&
+        JSON.parse(title) as PowerDocumentReport;
+      return result && (!commandId || result.commandId === commandId) && result;
     }, "native power command");
-  const command = async (browser, value) => {
+  let commandSequence = 0;
+  const command = async (browser: PowerBrowser, value: PowerCommand) => {
+    const commandId = ++commandSequence;
     browser.messageManager.loadFrameScript(
       "data:application/javascript," +
         encodeURIComponent(
           'content.document.title="WAIT";content.postMessage(' +
-            JSON.stringify(value) +
+            JSON.stringify({ command: value, commandId }) +
             ',"*");',
         ),
       false,
     );
-    const result = await read(browser);
+    const result = await read(browser, commandId);
     assertEquals(
       result.returns,
       "undefined",
@@ -149,7 +178,11 @@ async function power() {
     );
     return result;
   };
-  async function expect(cpu, screen, label) {
+  async function expect(
+    cpu: PowerLockState,
+    screen: PowerLockState,
+    label: string,
+  ): Promise<void> {
     await until(() => {
       const actual = state();
       return actual.cpu === cpu && actual.screen === screen;
@@ -255,7 +288,7 @@ async function power() {
       "permission revocation releases native locks",
     );
     await command(tab.linkedBrowser, "display");
-    await first.addon.uninstall();
+    await first.addon!.uninstall();
     first.addon = null;
     await expect(
       "unlocked",
@@ -282,7 +315,7 @@ async function power() {
     }
   }
 }
-export async function runAllTests() {
+export async function runAllTests(): Promise<void> {
   await runTests("ChromePowerNative.test.mts", [
     {
       name:

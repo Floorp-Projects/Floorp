@@ -1,5 +1,66 @@
+diff --git a/dom/media/webspeech/synth/SpeechSynthesisUtterance.h b/dom/media/webspeech/synth/SpeechSynthesisUtterance.h
+index 1fe3288..b642fb8 100644
+--- a/dom/media/webspeech/synth/SpeechSynthesisUtterance.h
++++ b/dom/media/webspeech/synth/SpeechSynthesisUtterance.h
+@@ -68,6 +68,10 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
+ 
+   bool IsPaused() const { return mPaused; }
+ 
++  bool MozFloorpChromeTts() const { return mFloorpChromeTts; }
++
++  void SetMozFloorpChromeTts(bool aValue) { mFloorpChromeTts = aValue; }
++
+   bool ShouldResistFingerprinting() const {
+     return mShouldResistFingerprinting;
+   }
+@@ -102,6 +106,8 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
+ 
+   bool mPaused;
+ 
++  bool mFloorpChromeTts = false;
++
+   RefPtr<SpeechSynthesisVoice> mVoice;
+ 
+   bool mShouldResistFingerprinting;
+diff --git a/dom/media/webspeech/synth/nsISpeechService.idl b/dom/media/webspeech/synth/nsISpeechService.idl
+index 03d0726..fc99c8d 100644
+--- a/dom/media/webspeech/synth/nsISpeechService.idl
++++ b/dom/media/webspeech/synth/nsISpeechService.idl
+@@ -36,9 +36,12 @@ interface nsISpeechTaskCallback : nsISupports
+  * A task is associated with a single utterance. It is provided by the browser
+  * to the service in the speak() method.
+  */
+-[scriptable, builtinclass, uuid(ad59949c-2437-4b35-8eeb-d760caab75c5)]
++[scriptable, builtinclass, uuid(b9d85d38-a899-4ee7-8a90-47dc11d6beb7)]
+ interface nsISpeechTask : nsISupports
+ {
++  // Internal parent-host opt-in; never populated by remote speech IPC.
++  readonly attribute boolean floorpChromeTts;
++
+   /**
+    * Prepare browser for speech.
+    *
+diff --git a/dom/media/webspeech/synth/nsSpeechTask.cpp b/dom/media/webspeech/synth/nsSpeechTask.cpp
+index 6b9c5cb..0568e61 100644
+--- a/dom/media/webspeech/synth/nsSpeechTask.cpp
++++ b/dom/media/webspeech/synth/nsSpeechTask.cpp
+@@ -70,6 +70,14 @@ void nsSpeechTask::SetChosenVoiceURI(const nsAString& aUri) {
+   mChosenVoiceURI = aUri;
+ }
+ 
++NS_IMETHODIMP
++nsSpeechTask::GetFloorpChromeTts(bool* aResult) {
++  // Parent-only host utterances can opt in. Remote/content tasks carry no
++  // corresponding IPC field and therefore have no local utterance flag.
++  *aResult = mUtterance && mUtterance->MozFloorpChromeTts();
++  return NS_OK;
++}
++
+ NS_IMETHODIMP
+ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback) {
+   MOZ_ASSERT(XRE_IsParentProcess());
 diff --git a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
-index a3e964b..ab051b3 100644
+index a3e964b..cd8f61c 100644
 --- a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
 +++ b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
 @@ -5,6 +5,7 @@
@@ -30,7 +91,23 @@ index a3e964b..ab051b3 100644
  #define spd_cancel _spd_cancel
  #define spd_set_volume _spd_set_volume
  #define spd_set_voice_rate _spd_set_voice_rate
-@@ -153,6 +160,9 @@ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
+@@ -143,8 +150,13 @@ class SpeechDispatcherVoice {
+ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
+  public:
+   SpeechDispatcherCallback(nsISpeechTask* aTask,
+-                           SpeechDispatcherService* aService)
+-      : mTask(aTask), mService(aService) {}
++                           SpeechDispatcherService* aService,
++                           const nsAString& aText, bool aChromeTts)
++      : mTextLength(aText.Length()),
++        mTask(aTask),
++        mService(aService),
++        mText(aText),
++        mChromeTts(aChromeTts) {}
+ 
+   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
+   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SpeechDispatcherCallback,
+@@ -153,8 +165,13 @@ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
    NS_DECL_NSISPEECHTASKCALLBACK
  
    bool OnSpeechEvent(SPDNotificationType state);
@@ -39,9 +116,56 @@ index a3e964b..ab051b3 100644
 +  uint32_t mTextLength = 0;
  
   private:
++  friend class SpeechDispatcherService;
++
    ~SpeechDispatcherCallback() = default;
-@@ -179,22 +189,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechDispatcherCallback)
  
+   // This pointer is used to dispatch events
+@@ -164,7 +181,27 @@ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
+   // destroyed before this runnable.
+   RefPtr<SpeechDispatcherService> mService;
+ 
++  float ElapsedTime() const {
++    return mStartTime.IsNull() ? 0.0f
++                               : (TimeStamp::Now() - mStartTime).ToSeconds();
++  }
++
+   TimeStamp mStartTime;
++  nsString mText;
++  uint32_t mChunkEnd = 0;
++  bool mStarted = false;
++  bool mFinalized = false;
++  uint32_t mChunkStart = 0;
++  bool mCancelled = false;
++  bool mMessageActive = false;
++  bool mPauseRequested = false;
++  bool mPausedAtBoundary = false;
++  bool mPauseDispatched = false;
++  bool mResumeOnBegin = false;
++  bool mNextStartsSentence = true;
++  const bool mChromeTts;
++  bool OnLegacySpeechEvent(SPDNotificationType state);
++  void Finish(bool aError);
+ };
+ 
+ NS_IMPL_CYCLE_COLLECTION(SpeechDispatcherCallback, mTask);
+@@ -177,33 +214,70 @@ NS_INTERFACE_MAP_END
+ NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechDispatcherCallback)
+ NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechDispatcherCallback)
+ 
++void SpeechDispatcherCallback::Finish(bool aError) {
++  RefPtr<SpeechDispatcherCallback> self(this);
++  if (mFinalized) return;
++  mFinalized = true;
++  mCancelled = true;
++  mMessageActive = false;
++  mService->ForgetCallback(this);
++  if (aError)
++    mTask->DispatchError(ElapsedTime(), mCharIndex);
++  else
++    mTask->DispatchEnd(ElapsedTime(), mCharIndex);
++}
++
  NS_IMETHODIMP
  SpeechDispatcherCallback::OnPause() {
 -  // XXX: Speech dispatcher does not pause immediately, but waits for the speech
@@ -53,19 +177,127 @@ index a3e964b..ab051b3 100644
 -  // in a 'paused' state. Since it is after the utterance ended, we don't get
 -  // that state change, and our speech api is in an unrecoverable state.
 -  // So, since it is useless anyway, I am not implementing pause.
--  return NS_OK;
-+  return spd_pause(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  if (!mChromeTts)
++    return spd_pause(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  if (mFinalized || mCancelled || mPauseRequested) return NS_OK;
++  mPauseRequested = true;
++  if (spd_pause(mService->mSpeechdClient) < 0) {
++    mPauseRequested = false;
++    Finish(true);
++    return NS_ERROR_FAILURE;
++  }
+   return NS_OK;
  }
  
  NS_IMETHODIMP
  SpeechDispatcherCallback::OnResume() {
 -  // XXX: Unsupported, see OnPause().
--  return NS_OK;
-+  return spd_resume(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  if (!mChromeTts)
++    return spd_resume(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  if (mFinalized || mCancelled) return NS_OK;
++  mPauseRequested = false;
++  if (spd_resume(mService->mSpeechdClient) < 0) {
++    Finish(true);
++    return NS_ERROR_FAILURE;
++  }
++  if (mPausedAtBoundary) {
++    mPausedAtBoundary = false;
++    mPauseDispatched = false;
++    mResumeOnBegin = true;
++    nsresult rv = mService->SpeakNextChunk(this);
++    if (NS_FAILED(rv)) Finish(true);
++    return rv;
++  }
+   return NS_OK;
  }
  
  NS_IMETHODIMP
-@@ -229,16 +229,19 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
+ SpeechDispatcherCallback::OnCancel() {
+-  if (spd_cancel(mService->mSpeechdClient) < 0) {
+-    return NS_ERROR_FAILURE;
++  if (mFinalized) return NS_OK;
++  mCancelled = true;
++  if (!mChromeTts)
++    return spd_cancel(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  nsresult rv =
++      spd_cancel(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
++  if ((mPauseRequested || mPauseDispatched) &&
++      spd_resume(mService->mSpeechdClient) < 0) {
++    rv = NS_ERROR_FAILURE;
+   }
+-
+-  return NS_OK;
++  mPauseRequested = false;
++  mPauseDispatched = false;
++  if (!mMessageActive || NS_FAILED(rv)) Finish(NS_FAILED(rv));
++  return rv;
+ }
+ 
+ NS_IMETHODIMP
+@@ -220,6 +294,62 @@ SpeechDispatcherCallback::OnVolumeChanged(float aVolume) {
+ }
+ 
+ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
++  if (mFinalized) return true;
++  if (!mChromeTts) return OnLegacySpeechEvent(state);
++  switch (state) {
++    case SPD_EVENT_BEGIN:
++      if (mCancelled) return false;
++      if (!mStarted) {
++        mStarted = true;
++        mStartTime = TimeStamp::Now();
++        mTask->DispatchStart();
++      } else if (mResumeOnBegin && !mCancelled) {
++        mResumeOnBegin = false;
++        mTask->DispatchResume(ElapsedTime(), mCharIndex);
++      }
++      break;
++    case SPD_EVENT_PAUSE:
++      if (!mCancelled && !mPauseDispatched) {
++        mPauseDispatched = true;
++        mTask->DispatchPause(ElapsedTime(), mCharIndex);
++      }
++      break;
++    case SPD_EVENT_RESUME:
++      if (!mCancelled) {
++        mPauseDispatched = false;
++        mTask->DispatchResume(ElapsedTime(), mCharIndex);
++      }
++      break;
++    case SPD_EVENT_END:
++      mMessageActive = false;
++      if (!mCancelled) {
++        mCharIndex = mChunkEnd;
++        if (mChunkEnd < mTextLength) {
++          if (mPauseRequested) {
++            // A genuine native fragment has finished; retain this one task
++            // until the caller resumes rather than starting more audio.
++            mPausedAtBoundary = true;
++            if (!mPauseDispatched) {
++              mPauseDispatched = true;
++              mTask->DispatchPause(ElapsedTime(), mCharIndex);
++            }
++          } else if (NS_FAILED(mService->SpeakNextChunk(this))) {
++            Finish(true);
++          }
++          return true;
++        }
++      }
++      [[fallthrough]];
++    case SPD_EVENT_CANCEL:
++      Finish(false);
++      return true;
++    default:
++      break;
++  }
++  return false;
++}
++
++bool SpeechDispatcherCallback::OnLegacySpeechEvent(SPDNotificationType state) {
+   bool remove = false;
+ 
+   switch (state) {
+@@ -229,16 +359,19 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
        break;
  
      case SPD_EVENT_PAUSE:
@@ -83,25 +315,28 @@ index a3e964b..ab051b3 100644
      case SPD_EVENT_CANCEL:
      case SPD_EVENT_END:
 -      mTask->DispatchEnd((TimeStamp::Now() - mStartTime).ToSeconds(), 0);
-+      mTask->DispatchEnd((TimeStamp::Now() - mStartTime).ToSeconds(),
-+                         state == SPD_EVENT_END ? mTextLength : mCharIndex);
++      mCharIndex = state == SPD_EVENT_END ? mTextLength : mCharIndex;
++      Finish(false);
        remove = true;
        break;
  
-@@ -253,6 +256,31 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
+@@ -253,6 +386,34 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
    return remove;
  }
  
 +void SpeechDispatcherCallback::OnMark(const nsCString& aMark) {
++  if (mCancelled || mFinalized) return;
 +  uint32_t index, length, sentence;
 +  if (sscanf(aMark.get(), "floorp:%u:%u:%u", &index, &length, &sentence) != 3 ||
-+      index > mTextLength || length > mTextLength - index) {
++      index > mTextLength || length > mTextLength - index ||
++      (mChromeTts && (index < mChunkStart || index >= mChunkEnd))) {
 +    return;
 +  }
 +  mCharIndex = index;
-+  float elapsed = (TimeStamp::Now() - mStartTime).ToSeconds();
++  float elapsed = ElapsedTime();
 +  if (sentence) {
 +    mTask->DispatchBoundary(u"sentence"_ns, elapsed, index, length, 1);
++    if (mCancelled || mFinalized) return;
 +  }
 +  mTask->DispatchBoundary(u"word"_ns, elapsed, index, length, 1);
 +}
@@ -120,7 +355,7 @@ index a3e964b..ab051b3 100644
  static void speechd_cb(size_t msg_id, size_t client_id,
                         SPDNotificationType state) {
    SpeechDispatcherService* service =
-@@ -360,10 +388,15 @@ void SpeechDispatcherService::Setup() {
+@@ -360,10 +521,15 @@ void SpeechDispatcherService::Setup() {
    mSpeechdClient->callback_cancel = speechd_cb;
    mSpeechdClient->callback_pause = speechd_cb;
    mSpeechdClient->callback_resume = speechd_cb;
@@ -136,7 +371,7 @@ index a3e964b..ab051b3 100644
  
    if (list != nullptr) {
      for (int i = 0; list[i]; i++) {
-@@ -445,7 +478,52 @@ SpeechDispatcherService::Observe(nsISupports* aSubject, const char* aTopic,
+@@ -445,7 +611,107 @@ SpeechDispatcherService::Observe(nsISupports* aSubject, const char* aTopic,
  
  // nsISpeechService
  
@@ -187,38 +422,171 @@ index a3e964b..ab051b3 100644
 +  return NS_ConvertUTF16toUTF8(markup);
 +}
 +
++static bool SentencePunctuation(char16_t aChar) {
++  return aChar == '.' || aChar == '!' || aChar == '?' || aChar == 0x3002 ||
++         aChar == 0xff01 || aChar == 0xff1f;
++}
++
++static bool SentenceBoundaryAt(const nsAString& aText, uint32_t aIndex) {
++  const char16_t ch = aText[aIndex];
++  return ch == 0x3002 || ch == 0xff01 || ch == 0xff1f ||
++         (SentencePunctuation(ch) &&
++          (aIndex + 1 == aText.Length() || aText[aIndex + 1] <= ' '));
++}
++
++static nsCString ChromeSpeechTextWithMarks(const nsAString& aText,
++                                           uint32_t aStart, uint32_t aEnd,
++                                           bool& aSentence) {
++  nsAutoString markup(u"<speak>");
++  for (uint32_t i = aStart; i < aEnd; ++i) {
++    const char16_t ch = aText[i];
++    // A split inside a long unbroken token must not invent a word boundary.
++    if (ch > ' ' && !SentencePunctuation(ch) &&
++        (i == 0 || aText[i - 1] <= ' ' || aSentence)) {
++      uint32_t end = i + 1;
++      while (end < aText.Length() && aText[end] > ' ' &&
++             !SentenceBoundaryAt(aText, end - 1))
++        ++end;
++      markup.AppendLiteral("<mark name=\"floorp:");
++      markup.AppendInt(i);
++      markup.Append(':');
++      markup.AppendInt(end - i);
++      markup.Append(':');
++      markup.AppendInt(aSentence ? 1 : 0);
++      markup.AppendLiteral("\"/>");
++      aSentence = false;
++    }
++    switch (ch) {
++      case '&':
++        markup.AppendLiteral("&amp;");
++        break;
++      case '<':
++        markup.AppendLiteral("&lt;");
++        break;
++      case '>':
++        markup.AppendLiteral("&gt;");
++        break;
++      default:
++        if (ch >= 0x20 || ch == '\t' || ch == '\n' || ch == '\r')
++          markup.Append(ch);
++        break;
++    }
++    if (SentenceBoundaryAt(aText, i)) aSentence = true;
++  }
++  markup.AppendLiteral("</speak>");
++  return NS_ConvertUTF16toUTF8(markup);
++}
++
  NS_IMETHODIMP
  SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
                                 float aVolume, float aRate, float aPitch,
-@@ -493,9 +571,10 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
-     return rv;
+@@ -454,8 +720,10 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
+     return NS_ERROR_NOT_AVAILABLE;
    }
  
-+  callback->mTextLength = aText.Length();
++  bool chromeTts = false;
++  if (NS_FAILED(aTask->GetFloorpChromeTts(&chromeTts))) chromeTts = false;
+   RefPtr<SpeechDispatcherCallback> callback =
+-      new SpeechDispatcherCallback(aTask, this);
++      new SpeechDispatcherCallback(aTask, this, aText, chromeTts);
+ 
+   bool found = false;
+   SpeechDispatcherVoice* voice = mVoices.GetWeak(aUri, &found);
+@@ -494,14 +762,7 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
+   }
+ 
    if (aText.Length()) {
 -    int msg_id = spd_say(mSpeechdClient, SPD_MESSAGE,
 -                         NS_ConvertUTF16toUTF8(aText).get());
-+    int msg_id =
-+        spd_say(mSpeechdClient, SPD_MESSAGE, SpeechTextWithMarks(aText).get());
+-
+-    if (msg_id < 0) {
+-      return NS_ERROR_FAILURE;
+-    }
+-
+-    mCallbacks.InsertOrUpdate(msg_id, std::move(callback));
++    return SpeakNextChunk(callback);
+   } else {
+     // Speech dispatcher does not work well with empty strings.
+     // In that case, don't send empty string to speechd,
+@@ -518,6 +779,59 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
+   return NS_OK;
+ }
  
-     if (msg_id < 0) {
-       return NS_ERROR_FAILURE;
-@@ -542,6 +621,13 @@ SpeechDispatcherService::GetInstanceForService() {
++void SpeechDispatcherService::ForgetCallback(
++    SpeechDispatcherCallback* aCallback) {
++  for (auto iter = mCallbacks.Iter(); !iter.Done(); iter.Next()) {
++    if (iter.Data() == aCallback) iter.Remove();
++  }
++}
++
++nsresult SpeechDispatcherService::SpeakNextChunk(
++    SpeechDispatcherCallback* aCallback) {
++  MOZ_ASSERT(NS_IsMainThread());
++  MOZ_ASSERT(!aCallback->mMessageActive);
++  if (aCallback->mFinalized || aCallback->mCancelled ||
++      aCallback->mChunkEnd >= aCallback->mTextLength)
++    return NS_ERROR_UNEXPECTED;
++  const uint32_t start = aCallback->mChunkEnd;
++  uint32_t end = aCallback->mTextLength;
++  if (aCallback->mChromeTts) {
++    const uint32_t limit = std::min(start + 256, aCallback->mTextLength);
++    end = limit;
++    uint32_t whitespace = start;
++    for (uint32_t i = start; i < limit; ++i) {
++      const char16_t ch = aCallback->mText[i];
++      if (ch <= ' ') whitespace = i + 1;
++      if (SentenceBoundaryAt(aCallback->mText, i)) {
++        end = i + 1;
++        break;
++      }
++    }
++    if (end == limit && limit < aCallback->mTextLength && whitespace > start)
++      end = whitespace;
++    // A pathological token still has bounded native input. Preserve UTF-16
++    // scalar boundaries, and the markup helper does not invent a new word.
++    if (end < aCallback->mTextLength && end > start &&
++        aCallback->mText[end - 1] >= 0xd800 &&
++        aCallback->mText[end - 1] <= 0xdbff &&
++        aCallback->mText[end] >= 0xdc00 && aCallback->mText[end] <= 0xdfff)
++      --end;
++  }
++  const nsCString markup =
++      aCallback->mChromeTts
++          ? ChromeSpeechTextWithMarks(aCallback->mText, start, end,
++                                      aCallback->mNextStartsSentence)
++          : SpeechTextWithMarks(aCallback->mText);
++  const int messageId = spd_say(mSpeechdClient, SPD_MESSAGE, markup.get());
++  if (messageId < 0) return NS_ERROR_FAILURE;
++  aCallback->mChunkStart = start;
++  aCallback->mChunkEnd = end;
++  aCallback->mMessageActive = true;
++  mCallbacks.InsertOrUpdate(messageId,
++                            RefPtr<SpeechDispatcherCallback>(aCallback));
++  return NS_OK;
++}
++
+ SpeechDispatcherService* SpeechDispatcherService::GetInstance(bool create) {
+   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+     MOZ_ASSERT(
+@@ -542,8 +856,15 @@ SpeechDispatcherService::GetInstanceForService() {
    return sapiService.forget();
  }
  
 +void SpeechDispatcherService::MarkNotify(uint32_t aMsgId,
 +                                         const nsCString& aMark) {
-+  if (auto* callback = mCallbacks.GetWeak(aMsgId)) {
++  if (RefPtr<SpeechDispatcherCallback> callback = mCallbacks.GetWeak(aMsgId)) {
 +    callback->OnMark(aMark);
 +  }
 +}
 +
  void SpeechDispatcherService::EventNotify(uint32_t aMsgId, uint32_t aState) {
-   SpeechDispatcherCallback* callback = mCallbacks.GetWeak(aMsgId);
+-  SpeechDispatcherCallback* callback = mCallbacks.GetWeak(aMsgId);
++  RefPtr<SpeechDispatcherCallback> callback = mCallbacks.GetWeak(aMsgId);
  
+   if (callback) {
+     if (callback->OnSpeechEvent((SPDNotificationType)aState)) {
 diff --git a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
-index bdb6e27..4d2acda 100644
+index bdb6e27..1cecec1 100644
 --- a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
 +++ b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
 @@ -36,6 +36,7 @@ class SpeechDispatcherService final : public nsIObserver,
@@ -229,8 +597,31 @@ index bdb6e27..4d2acda 100644
  
    static SpeechDispatcherService* GetInstance(bool create = true);
    static already_AddRefed<SpeechDispatcherService> GetInstanceForService();
+@@ -45,6 +46,9 @@ class SpeechDispatcherService final : public nsIObserver,
+  private:
+   virtual ~SpeechDispatcherService();
+ 
++  nsresult SpeakNextChunk(SpeechDispatcherCallback* aCallback);
++  void ForgetCallback(SpeechDispatcherCallback* aCallback);
++
+   void NotifyError(const nsString& aError);
+ 
+   void RegisterVoices();
+diff --git a/dom/webidl/SpeechSynthesisUtterance.webidl b/dom/webidl/SpeechSynthesisUtterance.webidl
+index 93d0ea7..b6f0da8 100644
+--- a/dom/webidl/SpeechSynthesisUtterance.webidl
++++ b/dom/webidl/SpeechSynthesisUtterance.webidl
+@@ -34,4 +34,8 @@ interface SpeechSynthesisUtterance : EventTarget {
+ 
+   [ChromeOnly]
+   readonly attribute DOMString chosenVoiceURI;
++
++  // Privileged parent Chrome-TTS host only; never transported from content.
++  [ChromeOnly]
++  attribute boolean mozFloorpChromeTts;
+ };
 diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
-index d740a89..53520a4 100644
+index c31bb3d..82980f9 100644
 --- a/modules/libpref/init/all.js
 +++ b/modules/libpref/init/all.js
 @@ -192,6 +192,7 @@ pref("mathml.disabled",    false);

@@ -172,6 +172,7 @@ Deno.test("frozen archive rejects duplicate ZIP entry names", async () => {
 
 function native(): NativeCorpusBackgroundSnapshot {
   return {
+    runId: "f".repeat(32),
     strictNative: true,
     version: "158.0.1",
     buildId: "20261019010000",
@@ -197,6 +198,24 @@ function native(): NativeCorpusBackgroundSnapshot {
 }
 Deno.test("strict native guard accepts matching compiled candidate and actual Worker", () => {
   assertEquals(validateNativeCorpusBackground(native()), undefined);
+});
+Deno.test("strict native guard rejects missing or malformed invocation identity", () => {
+  for (
+    const runId of [
+      null,
+      "",
+      "a".repeat(31),
+      "A".repeat(32),
+      "z".repeat(32),
+      "a".repeat(33),
+    ]
+  ) {
+    assertThrows(
+      () => validateNativeCorpusBackground({ ...native(), runId }),
+      Error,
+      "actual host invocation run ID",
+    );
+  }
 });
 Deno.test("strict native guard rejects absent candidate identity and mismatched running build", () => {
   assertThrows(
@@ -302,6 +321,7 @@ Deno.test("historical mode remains observable without qualifying as native", () 
     validateNativeCorpusBackground({
       ...native(),
       strictNative: false,
+      runId: null,
       version: "157.0",
       workerWebIDLCompiled: false,
       candidateIdentity: undefined,

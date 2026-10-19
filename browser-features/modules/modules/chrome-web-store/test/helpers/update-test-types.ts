@@ -36,14 +36,21 @@ export interface NativeManager {
 }
 
 export interface Background {
-  xulBrowser: {
-    contentTitle: string;
-    messageManager: { loadFrameScript(script: string, delayed: boolean): void };
-  };
+  viewType: string;
+  unloaded: boolean;
+  xulBrowser?: object;
 }
 
 export interface NativeExtension {
+  baseURI: nsIURI;
   backgroundContext?: Background;
+  views: Set<Background>;
+}
+
+export interface UpdateWorkerSnapshot {
+  extension: NativeExtension;
+  context: Background;
+  contextId: string;
 }
 
 export interface Reply {
@@ -53,6 +60,9 @@ export interface Reply {
   id?: string;
   version?: string;
   pending?: string;
+  contextId?: string;
+  noDocument?: boolean;
+  noWindow?: boolean;
   error?: string;
 }
 

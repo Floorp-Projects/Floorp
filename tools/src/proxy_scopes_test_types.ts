@@ -33,6 +33,17 @@ export type ProxyNativeSet = (
   details: { value: ProxyNativeConfiguration },
 ) => Promise<void>;
 export type ProxyNativeClear = (details: object) => Promise<void>;
+export interface ProxyNativeScopeConfiguration {
+  key: string;
+  type: number;
+  PACURI: string;
+  mandatory: boolean;
+  allowLoopback: boolean;
+}
+export interface ProxyTestChannel {
+  loadInfo: { originAttributes: { privateBrowsingId: number } };
+  QueryInterface(interfaceId: unknown): { isChannelPrivate: boolean };
+}
 export interface ProxyScopeEngine {
   state: {
     regular: ProxyScopeRecord | null;
@@ -40,8 +51,17 @@ export interface ProxyScopeEngine {
   };
   startupManifests: Map<string, unknown>;
   refresh(): Promise<void>;
-  configuration(record: ProxyScopeRecord, privateContext: boolean): {
-    key: string;
+  configuration(
+    record: ProxyScopeRecord,
+    privateContext: boolean,
+  ): ProxyNativeScopeConfiguration;
+  provider: {
+    getConfiguration(
+      channel: ProxyTestChannel,
+      callback: {
+        onConfiguration(config: ProxyNativeScopeConfiguration | null): void;
+      },
+    ): boolean;
   };
   handles(record: ProxyScopeRecord | null, privateContext: boolean): boolean;
   selected(privateContext: boolean): ProxyScopeRecord | null;

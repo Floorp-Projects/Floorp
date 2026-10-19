@@ -9,6 +9,7 @@ import {
   waitForNativeUI,
 } from "./chrome-devtools-panel.mjs";
 import { buildDevtoolsFixture } from "./build-devtools-fixture.mjs";
+import { buildVueFixture } from "./build-vue-fixture.mjs";
 import { verifyCorpusScripts } from "./corpus-script-integrity.mjs";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
@@ -46,7 +47,13 @@ const chrome = join(
 if (digest(readFileSync(chrome)) !== reference.binary.sha256) {
   throw Error("Reference binary digest mismatch");
 }
-const frameworkMetadata = buildDevtoolsFixture(output);
+const isVueFixture = ids.includes("nhdogjmejiglipccpnnnanhbledajbpd");
+if (isVueFixture && ids.length !== 1) {
+  throw Error("Run Vue with its separate genuine authored framework fixture");
+}
+const frameworkMetadata = isVueFixture
+  ? buildVueFixture(output)
+  : buildDevtoolsFixture(output);
 const app = readFileSync(join(output, "app.js"));
 const html = readFileSync(join(output, "index.html"));
 const server = createServer((request, response) => {
@@ -143,24 +150,31 @@ try {
       /** @template T @param {string} expression @returns {Promise<T>} */
       const evaluate = (expression) =>
         evaluateNativeUI(browser, sessionId, expression);
+      const isVue = id === "nhdogjmejiglipccpnnnanhbledajbpd";
       await waitForNativeUI(
         () =>
           evaluate(
-            "document.querySelector('#react-count')?.textContent==='React count: 0'",
+            isVue
+              ? "document.querySelector('#vue-count')?.textContent==='Vue count: 0'"
+              : "document.querySelector('#react-count')?.textContent==='React count: 0'",
           ),
-        "actual React initial rendering",
+        "actual framework initial rendering",
       );
       native = await attachNativeDevtools(browser, item.fixtureURL);
       const activeNative = native;
       item.nativeDevtools = activeNative.target;
       const title = id === "fmkadmapgofadopljbjfkapdkoienihi"
         ? "Components ⚛"
+        : isVue
+        ? "Vue"
         : "Redux";
       item.selectedTabs = await activeNative.selectPanel(title);
       panel = await activeNative.attachPanel(
         id,
         id === "fmkadmapgofadopljbjfkapdkoienihi"
           ? "panel.html"
+          : isVue
+          ? "pages/devtools-panel.html"
           : "devpanel.html",
       );
       const activePanel = panel;
@@ -170,6 +184,8 @@ try {
         return item.initialPanel.text.includes(
           id === "fmkadmapgofadopljbjfkapdkoienihi"
             ? "FloorpCounter"
+            : isVue
+            ? "FloorpVueCounterLabel"
             : "Floorp authored Redux store",
         );
       }, "actual framework component or store in native panel");
@@ -256,6 +272,29 @@ try {
             item.stateAfter.text.includes("AUTHORED_INCREMENT");
         }, "actual native Redux action and state count1");
       }
+      if (isVue) {
+        await activePanel.clickExpression(
+          `[...document.querySelectorAll('*')].find(e=>!e.children.length&&e.textContent.includes('FloorpVueCounterLabel'))`,
+        );
+        item.selectedComponent = await waitForNativeUI(async () => {
+          const value = await activePanel.snapshot();
+          return value.text.includes("FloorpVueCounterLabel") &&
+            /\bcount\b\s*:?\s*0\b/.test(value.text) && value;
+        }, "actual Vue native component prop count0");
+        await nativeAppClick("#vue-increment");
+        await waitForNativeUI(
+          () =>
+            evaluate(
+              "document.querySelector('#vue-count')?.textContent==='Vue count: 1'",
+            ),
+          "actual Vue rendered native-button update",
+        );
+        item.updatedComponent = await waitForNativeUI(async () => {
+          const value = await activePanel.snapshot();
+          return value.text.includes("FloorpVueCounterLabel") &&
+            /\bcount\b\s*:?\s*1\b/.test(value.text) && value;
+        }, "actual Vue native component prop count1");
+      }
       await browser.call("Extensions.uninstall", { id });
       await waitForNativeUI(
         async () =>
@@ -267,7 +306,15 @@ try {
             ),
         "real extension panel removed on uninstall",
       );
-      item.checks = id === "lmhkpmbekcpmknklioeibfkpmmfibljd"
+      item.checks = isVue
+        ? [
+          "Signed Vue DevTools scripts unchanged through frozen archive verification",
+          "Official frozen Vue development build exposes its genuine component tree",
+          "Native Vue component selection exposes authored prop count0",
+          "Actual native app button changes real Vue state and native component prop count1",
+          "Actual uninstall removes the native extension panel",
+        ]
+        : id === "lmhkpmbekcpmknklioeibfkpmmfibljd"
         ? [
           "Actual frozen Redux native panel exposes authored Redux store",
           "Native State view shows count0",
@@ -283,6 +330,7 @@ try {
       item.result = item.primaryOperationResult = "passed";
     } catch (error) {
       failed = true;
+      item.primaryOperationResult = "failed";
       item.error = String(
         error instanceof Error ? error.stack || error.message : error,
       );

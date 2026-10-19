@@ -1,10 +1,19 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: MPL-2.0
 import { ChromePipe } from "./chrome-cdp-pipe.mjs";
+import { verifyCorpusScripts } from "./corpus-script-integrity.mjs";
 import { snapshotUI } from "./corpus-sidepanel-ui.sys.mjs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,6 +47,7 @@ const corpus = JSON.parse(
 const ids = option("--ids", "").split(",").filter(Boolean);
 const guest = process.argv.includes("--guest");
 const heapProof = process.argv.includes("--heap-proof");
+const environmentProxy = process.argv.includes("--environment-proxy");
 const selected = corpus.extensions.filter(
   (e) => e.area === "sidePanel" && (!ids.length || ids.includes(e.id)),
 );
@@ -86,13 +96,63 @@ report.authoredFixture = {
     .digest("hex"),
 };
 const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+/** @type {import("./sidepanel-test-types.ts").SidePanelChromeTrust | undefined} */
+let privateTrust;
+let proxyArguments = proxy
+  ? [`--proxy-server=${proxy}`]
+  : ["--no-proxy-server"];
+let bypass = ["corpus.floorp.test", "127.0.0.1", "localhost"];
+if (environmentProxy) {
+  privateTrust = JSON.parse(execFileSync("python3", [
+    join(tools, "private-browser-trust.py"),
+    "--output",
+    output,
+    "--browser",
+    chrome,
+  ], { encoding: "utf8" }));
+  /** @type {Record<string, string>} */
+  const proxies = {};
+  for (const scheme of ["http", "https"]) {
+    const value = process.env[scheme + "_proxy"] ||
+      process.env[scheme.toUpperCase() + "_PROXY"] || process.env.all_proxy ||
+      process.env.ALL_PROXY;
+    if (!value) continue;
+    const parsed = new URL(value);
+    if (parsed.username || parsed.password || parsed.protocol !== "http:") {
+      throw Error("Expected credential-free HTTP environment proxy transport");
+    }
+    proxies[scheme] = parsed.origin;
+  }
+  proxyArguments = Object.keys(proxies).length
+    ? [
+      `--proxy-server=${
+        Object.entries(proxies).map(([scheme, url]) => scheme + "=" + url).join(
+          ";",
+        )
+      }`,
+    ]
+    : ["--no-proxy-server"];
+  bypass = [
+    ...bypass,
+    "[::1]",
+    ...(process.env.no_proxy || process.env.NO_PROXY || "").split(",")
+      .map((entry) => entry.trim()).filter(Boolean).flatMap((entry) =>
+        entry.startsWith(".") ? [entry.slice(1), "*" + entry] : [entry]
+      ),
+  ];
+  report.networkEnvironment = {
+    normalEnvironmentProxy: true,
+    noProxyHonored: true,
+    privateTrust,
+  };
+}
 const browser = new ChromePipe(
-  chrome,
+  privateTrust?.wrapper || chrome,
   output,
   [
     "--host-resolver-rules=MAP corpus.floorp.test 127.0.0.1",
-    "--proxy-bypass-list=corpus.floorp.test;127.0.0.1;localhost",
-    ...(proxy ? [`--proxy-server=${proxy}`] : ["--no-proxy-server"]),
+    "--proxy-bypass-list=" + [...new Set(bypass)].join(";"),
+    ...proxyArguments,
   ],
   { headed: process.argv.includes("--headed") },
 );
@@ -264,11 +324,29 @@ try {
       ) {
         throw Error("Frozen package digest mismatch");
       }
-      const { id } = await browser.call("Extensions.loadUnpacked", {
-        path: join(
+      const packageDirectory = join(output, "packages", extension.id);
+      cpSync(
+        join(
           root,
-          `_dist/chrome-extension-corpus/chrome-unpacked/${extension.id}`,
+          "_dist/chrome-extension-corpus/chrome-unpacked",
+          extension.id,
         ),
+        packageDirectory,
+        { recursive: true },
+      );
+      // Store metadata is reserved for packed installs. The private unpacked
+      // copy retains the signed manifest and every original vendor script.
+      rmSync(join(packageDirectory, "_metadata"), {
+        recursive: true,
+        force: true,
+      });
+      item.sourceIntegrity = verifyCorpusScripts(
+        root,
+        extension,
+        packageDirectory,
+      );
+      const { id } = await browser.call("Extensions.loadUnpacked", {
+        path: packageDirectory,
       });
       loaded = true;
       if (id !== extension.id) throw Error("Original Chrome identity changed");

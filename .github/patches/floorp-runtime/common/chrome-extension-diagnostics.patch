@@ -71,7 +71,7 @@ new file mode 100644
 index 0000000..49000b7
 --- /dev/null
 +++ b/toolkit/mozapps/extensions/content/components/floorp-chrome-extension-diagnostics.mjs
-@@ -0,0 +1,646 @@
+@@ -0,0 +1,690 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,6 +80,7 @@ index 0000000..49000b7
 +  AboutAddonsHTMLElement,
 +  getBrowserElement,
 +} from "../aboutaddons-utils.mjs";
++import { gViewController } from "../view-controller.mjs";
 +
 +const { AddonManager } = ChromeUtils.importESModule(
 +  "resource://gre/modules/AddonManager.sys.mjs",
@@ -104,6 +105,9 @@ index 0000000..49000b7
 +  refresh: "Refresh",
 +  reload: "Reload extension",
 +  export: "Save diagnostics…",
++  sidebarSettings: "Manage sidebar pins",
++  extensionShortcuts: "Extension shortcuts",
++  floorpShortcuts: "Floorp shortcuts",
 +  unavailable: "Unavailable",
 +  reportUnavailable: "The conversion report is unavailable.",
 +  contextUnavailable: "Running contexts could not be read.",
@@ -221,6 +225,9 @@ index 0000000..49000b7
 +      installedVersion: addon.version,
 +      runtimeSchemaVersion: current ? marker.schema_version : null,
 +      active: addon.isActive,
++      hasSidePanel: current && (!!manifest.side_panel ||
++        Array.isArray(manifest.permissions) &&
++          manifest.permissions.includes("sidePanel")),
 +    },
 +    conversion: null,
 +    conversionError: null,
@@ -313,6 +320,9 @@ index 0000000..49000b7
 +            <button data-chrome-action="refresh" data-chrome-string="refresh"></button>
 +            <button data-chrome-action="reload" data-chrome-string="reload"></button>
 +            <button data-chrome-action="export" data-chrome-string="export"></button>
++            <button data-chrome-action="sidebar-settings" data-chrome-string="sidebarSettings" hidden></button>
++            <button data-chrome-action="extension-shortcuts" data-chrome-string="extensionShortcuts"></button>
++            <button data-chrome-action="floorp-shortcuts" data-chrome-string="floorpShortcuts"></button>
 +          </div>
 +          <p class="floorp-chrome-diagnostics-status" role="status"></p>
 +          <h4 data-chrome-string="updateHeading"></h4>
@@ -444,6 +454,8 @@ index 0000000..49000b7
 +    for (const element of this.querySelectorAll("[data-chrome-string]")) {
 +      element.textContent = translate(element.dataset.chromeString);
 +    }
++    this.querySelector('[data-chrome-action="sidebar-settings"]').hidden =
++      !diagnostics.extension.hasSidePanel;
 +    const legacy = diagnostics.extension.provenance === "legacy-unverified";
 +    this.querySelector(".floorp-chrome-diagnostics-legacy").hidden = !legacy;
 +    this.querySelector('[data-chrome-value="chromeId"]').previousElementSibling
@@ -638,6 +650,26 @@ index 0000000..49000b7
 +        : translate("updatePostponed");
 +  }
 +
++  openFloorpSettings(action) {
++    // Use the browser that owns this Add-ons Manager, including private windows.
++    // These are existing Hub routes backed by Floorp's normal settings actors.
++    const routes = {
++      "sidebar-settings": "about:hub#/features/sidebar",
++      "floorp-shortcuts": "about:hub#/features/shortcuts",
++    };
++    const url = Object.hasOwn(routes, action) ? routes[action] : null;
++    const win = getBrowserElement()?.ownerDocument?.defaultView;
++    if (
++      !url || !win || win.closed || typeof win.openTrustedLinkIn !== "function"
++    ) {
++      throw new Error("The owning browser cannot open Floorp settings");
++    }
++    win.openTrustedLinkIn(url, "tab", {
++      relatedToCurrent: true,
++      allowInheritPrincipal: false,
++    });
++  }
++
 +  async handleEvent(event) {
 +    const action = event.target.closest("[data-chrome-action]")?.dataset
 +      .chromeAction;
@@ -648,7 +680,19 @@ index 0000000..49000b7
 +    const status = this.querySelector(".floorp-chrome-diagnostics-status");
 +    status.textContent = "";
 +    try {
-+      if (action === "automatic-updates") {
++      if (action === "sidebar-settings" || action === "floorp-shortcuts") {
++        if (
++          action === "sidebar-settings" &&
++          !this.diagnostics.extension.hasSidePanel
++        ) {
++          return;
++        }
++        this.openFloorpSettings(action);
++      } else if (action === "extension-shortcuts") {
++        await gViewController.loadView(
++          `shortcuts/${encodeURIComponent(this.addon.id)}`,
++        );
++      } else if (action === "automatic-updates") {
 +        const enabled = event.target.checked;
 +        try {
 +          await this.getUpdateScheduler().setAutomaticUpdates(

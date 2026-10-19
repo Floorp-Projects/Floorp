@@ -152,21 +152,30 @@ export async function runAllTests() {
           triggeringPrincipal: principal,
         });
         win.gBrowser.selectedTab = tab;
+        const isVue = record.id === "nhdogjmejiglipccpnnnanhbledajbpd";
         item.appBefore = await until(async () => {
           const value = await query(tab.linkedBrowser, "Snapshot").catch(() =>
             null
           );
-          return value?.reactCount === "React count: 0" && value;
+          return (isVue
+            ? value?.vueCount === "Vue count: 0"
+            : value?.reactCount === "React count: 0") && value;
         }, "actual framework rendering");
         const isReact = record.id === "fmkadmapgofadopljbjfkapdkoienihi";
-        if (!isReact && record.id !== "lmhkpmbekcpmknklioeibfkpmmfibljd") {
+        if (
+          !isReact && !isVue && record.id !== "lmhkpmbekcpmknklioeibfkpmmfibljd"
+        ) {
           throw Error("Unsupported authored DevTools corpus recipe");
         }
         native = await attachNativeFloorpDevtools(tab, extension);
         const activeNative = native;
         const panel = await activeNative.selectPanel(
-          isReact ? "Components ⚛" : "Redux",
-          isReact ? "panel.html" : "devpanel.html",
+          isReact ? "Components ⚛" : isVue ? "Vue" : "Redux",
+          isReact
+            ? "panel.html"
+            : isVue
+            ? "pages/devtools-panel.html"
+            : "devpanel.html",
         );
         item.nativePanel = {
           id: panel.definition.id,
@@ -177,7 +186,11 @@ export async function runAllTests() {
         item.initialPanel = await until(async () => {
           const value = await query(panel.browser, "Snapshot");
           return value?.text?.includes(
-            isReact ? "FloorpCounterLabel" : "Floorp authored Redux store",
+            isReact
+              ? "FloorpCounterLabel"
+              : isVue
+              ? "FloorpVueCounterLabel"
+              : "Floorp authored Redux store",
           ) && value;
         }, "actual registered native component or store panel");
         if (isReact) {
@@ -203,6 +216,29 @@ export async function runAllTests() {
             return value?.props?.inputs[0]?.value === "count" &&
               value.props.inputs[1]?.value === "1" && value;
           }, "actual native component props count1");
+        } else if (isVue) {
+          await query(panel.browser, "Click", {
+            selector: "*",
+            text: "FloorpVueCounterLabel",
+          });
+          item.selectedComponent = await until(async () => {
+            const value = await query(panel.browser, "Snapshot");
+            return value.text.includes("FloorpVueCounterLabel") &&
+              /\bcount\b\s*:?\s*0\b/.test(value.text) && value;
+          }, "actual native Vue component prop count0");
+          win.gBrowser.selectedTab = tab;
+          await query(tab.linkedBrowser, "Click", {
+            selector: "#vue-increment",
+          });
+          item.appAfter = await until(async () => {
+            const value = await query(tab.linkedBrowser, "Snapshot");
+            return value.vueCount === "Vue count: 1" && value;
+          }, "real authored Vue state update");
+          item.updatedComponent = await until(async () => {
+            const value = await query(panel.browser, "Snapshot");
+            return value.text.includes("FloorpVueCounterLabel") &&
+              /\bcount\b\s*:?\s*1\b/.test(value.text) && value;
+          }, "actual native Vue component prop count1");
         } else {
           await query(panel.browser, "Click", { selector: "*", text: "State" });
           item.stateBefore = await until(async () => {
@@ -233,6 +269,8 @@ export async function runAllTests() {
           "Signed product scripts unchanged through production converter",
           isReact
             ? "Native component tree and actual prop count0→1 after genuine native app input"
+            : isVue
+            ? "Native Vue component tree and actual prop count0→1 after genuine native app input"
             : "Native Redux action history and State count0→1 after genuine native app input",
           "Actual uninstall removes registered native extension panels",
         ];

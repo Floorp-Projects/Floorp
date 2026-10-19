@@ -6,6 +6,7 @@ export type DesktopSourceKind = "screen" | "window";
 export interface CaptureBrowser {
   contentTitle: string;
   browsingContext: {
+    browserId: number;
     currentWindowGlobal: {
       osPid: number;
       documentURI?: nsIURI;
@@ -71,6 +72,7 @@ export interface NativeDialogList extends XULElement {
 
 export interface NativeDialog extends XULElement {
   acceptDialog(): void;
+  cancelDialog(): void;
 }
 
 export interface DesktopSourceChoice extends XULElement {
@@ -101,6 +103,7 @@ export interface CaptureView {
 }
 
 export interface DesktopExtension {
+  principal: nsIPrincipal;
   backgroundContext?: CaptureView;
   views: Set<CaptureView>;
 }
@@ -138,13 +141,19 @@ export interface AudioNativeModules {
   };
 }
 
-export interface DesktopSelectionStatus {
-  phase: "requested" | "selected" | "denied";
-  requestId?: number;
+export interface DesktopResponseIdentity {
+  commandId: string;
+  requestId: number;
+  phase: string;
+  error?: string;
+}
+
+export interface DesktopSelectionStatus extends DesktopResponseIdentity {
+  phase: "requested" | "selected" | "denied" | "error";
   options?: { canRequestAudioTrack: boolean };
 }
 
-export interface DesktopRecording {
+export interface DesktopRecording extends DesktopResponseIdentity {
   kind: DesktopSourceKind;
   liveGreen: number;
   replayGreen: number;
@@ -156,8 +165,47 @@ export interface DesktopRecording {
   base64: string;
 }
 
+export type DesktopScreenCase =
+  | "block-denial"
+  | "kind-cancel"
+  | "record-screen"
+  | "record-window";
+
+export interface DesktopScreenPermission {
+  state: number;
+  scope: string;
+}
+
+export interface DesktopSitePermissions {
+  UNKNOWN: number;
+  BLOCK: number;
+  SCOPE_TEMPORARY: string;
+  getForPrincipal(
+    principal: nsIPrincipal,
+    permission: string,
+    browser: CaptureBrowser,
+  ): DesktopScreenPermission;
+}
+
 export interface DesktopScreenReport {
   os: string;
+  case: DesktopScreenCase;
+  initialScreenPermission?: DesktopScreenPermission;
+  requests: DesktopSelectionStatus[];
+  denial?: {
+    commandId: string;
+    requestId: number;
+    callbackEmpty: boolean;
+    permission: DesktopScreenPermission;
+    repeatedRequestDenied: boolean;
+  };
+  kindCancellation?: {
+    commandId: string;
+    requestId: number;
+    callbackEmpty: boolean;
+    permission: DesktopScreenPermission;
+    freshPermissionPrompt: boolean;
+  };
   selections: {
     kind: DesktopSourceKind;
     label: string;

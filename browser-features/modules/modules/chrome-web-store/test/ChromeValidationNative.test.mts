@@ -6,6 +6,10 @@ import {
   assertEquals,
   runTests,
 } from "../../../../chrome/test/utils/test_harness.ts";
+import type {
+  ValidationExtensionPolicy,
+  ValidationNativeWindow,
+} from "./helpers/validation-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -17,7 +21,9 @@ async function validationErrors() {
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
+  const window = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as unknown as ValidationNativeWindow;
   const fixtures = [],
     tabs = [];
   const program =
@@ -51,7 +57,7 @@ async function validationErrors() {
           PathUtils.tempDir,
           "floorp-validation-" + Services.uuid.generateUUID() + ".xpi",
         );
-        const encode = (value) => new TextEncoder().encode(value);
+        const encode = (value: string) => new TextEncoder().encode(value);
         await IOUtils.write(
           path,
           zipSync({
@@ -64,7 +70,9 @@ async function validationErrors() {
           new FileUtils.File(path),
         );
         fixtures.push({ addon, path });
-        const policy = WebExtensionPolicy.getByID(id);
+        const policy = WebExtensionPolicy.getByID(id) as
+          | ValidationExtensionPolicy
+          | undefined;
         assert(policy, "installed native extension policy");
         const tab = window.gBrowser.addTab(policy.getURL("control.html"), {
           triggeringPrincipal: policy.extension.principal,

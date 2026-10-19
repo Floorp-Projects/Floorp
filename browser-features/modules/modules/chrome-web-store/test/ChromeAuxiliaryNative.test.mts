@@ -27,7 +27,9 @@ async function waitFor<T>(
   throw new Error(`Timed out waiting for ${description}`);
 }
 
-async function testNativeNotificationButtons(): Promise<void> {
+async function testNativeNotificationButtons(
+  chromeCompatible = true,
+): Promise<void> {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
   );
@@ -37,7 +39,10 @@ async function testNativeNotificationButtons(): Promise<void> {
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const id = "cd".repeat(16), geckoId = `${id}@chromium-extension`;
+  const id = "cd".repeat(16),
+    geckoId = chromeCompatible
+      ? `${id}@chromium-extension`
+      : "ordinary-notification-controls@floorp.test";
   const path = PathUtils.join(
     PathUtils.tempDir,
     `floorp-notifications-${Services.uuid.generateUUID()}.xpi`,
@@ -58,7 +63,11 @@ async function testNativeNotificationButtons(): Promise<void> {
         browser_specific_settings: {
           gecko: {
             id: geckoId,
-            floorp_chrome_extension: { schema_version: 1, original_id: id },
+            ...(chromeCompatible
+              ? {
+                floorp_chrome_extension: { schema_version: 1, original_id: id },
+              }
+              : {}),
           },
         },
       })),
@@ -128,10 +137,14 @@ async function testNativeNotificationButtons(): Promise<void> {
         title: "Floorp authored notification controls",
         message: "Before actual update",
         iconUrl: icon,
-        requireInteraction: true,
-        buttons: [{ title: "First native action" }, {
-          title: "Second native action",
-        }],
+        ...(chromeCompatible
+          ? {
+            requireInteraction: true,
+            buttons: [{ title: "First native action" }, {
+              title: "Second native action",
+            }],
+          }
+          : {}),
       }),
       "actual-buttons",
       "native notification is created with its public id",
@@ -145,6 +158,37 @@ async function testNativeNotificationButtons(): Promise<void> {
         ),
       "native browser alert window",
     );
+    if (!chromeCompatible) {
+      assertEquals(
+        alert.document.querySelectorAll("#alertActions button").length,
+        0,
+        "ordinary Firefox notification has no Chrome action controls",
+      );
+      assertEquals(
+        await invoke("clear", "actual-buttons"),
+        true,
+        "ordinary Firefox notification create and clear remain available",
+      );
+      let rejected = false;
+      try {
+        await invoke("create", "unsupported-buttons", {
+          type: "basic",
+          title: "Unsupported ordinary notification controls",
+          message: "Firefox keeps its existing API contract",
+          iconUrl: icon,
+          buttons: [{ title: "Unsupported action" }],
+        });
+      } catch (error) {
+        rejected = /Property buttons is unsupported by Firefox/.test(
+          String(error),
+        );
+      }
+      assert(
+        rejected,
+        "ordinary Firefox still rejects explicit Chrome buttons",
+      );
+      return;
+    }
     assert(
       alert.gRequireInteraction,
       "requireInteraction reaches the native alert",
@@ -173,6 +217,20 @@ async function testNativeNotificationButtons(): Promise<void> {
             "After actual update" && win.gIsActive
         ),
       "replacement native alert text",
+    );
+    assertEquals(
+      alert.arguments[1],
+      "Floorp authored notification controls",
+      "message-only update preserves the native title",
+    );
+    assert(
+      alert.gRequireInteraction,
+      "message-only update preserves requireInteraction",
+    );
+    assertEquals(
+      alert.document.querySelectorAll("#alertActions button").length,
+      2,
+      "message-only update preserves both real native action controls",
     );
     assertEquals(
       state()?.closed.length,
@@ -209,6 +267,47 @@ async function testNativeNotificationButtons(): Promise<void> {
       "{}",
       "native closed notification is removed",
     );
+    await invoke("create", "explicit-values", {
+      type: "basic",
+      title: "Floorp explicit notification update values",
+      message: "Before clearing the native body and actions",
+      iconUrl: icon,
+      requireInteraction: true,
+      buttons: [{ title: "Action to clear" }],
+    });
+    await invoke("update", "explicit-values", {
+      message: "",
+      priority: 0,
+      requireInteraction: false,
+      isClickable: false,
+      buttons: [],
+    });
+    const cleared = await waitFor(
+      () =>
+        alerts().find((win) =>
+          win.document.querySelector("#alertTitleLabel")?.getAttribute(
+              "value",
+            ) ===
+            "Floorp explicit notification update values" &&
+          win.gIsActive &&
+          win.arguments[2] === ""
+        ),
+      "explicit empty body reaches replacement native alert",
+    );
+    assert(
+      !cleared.gRequireInteraction,
+      "explicit false disables requireInteraction",
+    );
+    assertEquals(
+      cleared.document.querySelectorAll("#alertActions button").length,
+      0,
+      "explicit empty buttons clears native actions",
+    );
+    assertEquals(
+      await invoke("clear", "explicit-values"),
+      true,
+      "explicit update notification clears",
+    );
   } finally {
     await addon?.uninstall();
     for (const alert of alerts()) {
@@ -228,6 +327,9 @@ export async function runAllTests(): Promise<void> {
   await runTests("Chrome auxiliary native alert controls", [{
     name:
       "Compiled native alert controls, replacement and stopped-background events",
-    fn: testNativeNotificationButtons,
+    fn: () => testNativeNotificationButtons(),
+  }, {
+    name: "Ordinary Firefox notifications preserve native create and clear",
+    fn: () => testNativeNotificationButtons(false),
   }]);
 }

@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 import { zipSync } from "fflate/browser";
+import type {
+  WorkerNativeWindow,
+  WorkerRuntimeContext,
+} from "../helpers/worker-native-test-types.ts";
+import { setUserScriptsConsentUsingUI } from "../helpers/user-scripts-consent-ui.mts";
+import type { UserScriptsUIWindow } from "../helpers/user-scripts-consent-test-types.ts";
 import {
   assert,
   assertEquals,
@@ -49,7 +55,9 @@ const workerBody = `
           imported,starts,isWorker:self instanceof ServiceWorkerGlobalScope,
           hasDocument:typeof document!=="undefined",sameAlias:browser===chrome,
           contextTypes:(await browser.runtime.getContexts({})).map(c=>c.contextType),
+          contexts:await browser.runtime.getContexts({}),
         };
+        case "contexts": return browser.runtime.getContexts({contextIds:message.contextIds});
         case "storage": {
           await browser.storage.local.set({value:{nested:[1,"two",true]}});
           const local=await browser.storage.local.get("value");
@@ -232,7 +240,9 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const win = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as WorkerNativeWindow;
   const fixtureURL = win.wrappedJSObject.__floorpRuntimeFixtureURL;
   assert(typeof fixtureURL === "string", "runner provides local HTTP fixtures");
   const originalId = type === "classic"
@@ -369,6 +379,16 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       type === "module",
       "native Worker type follows manifest",
     );
+    const consent = await setUserScriptsConsentUsingUI(
+      id,
+      true,
+      win as unknown as UserScriptsUIWindow,
+    );
+    assert(
+      consent.statusAfter.allowed && consent.statusAfter.permissionGranted,
+      "genuine Add-ons UI consent and the required public permission enable userScripts",
+    );
+    console.log("[WorkerNative] userScripts consent", JSON.stringify(consent));
     control = win.gBrowser.addTab(extension.baseURI.resolve("control.html"), {
       triggeringPrincipal: systemPrincipal,
     });
@@ -469,6 +489,40 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
     assert(
       probe.contextTypes.includes("BACKGROUND"),
       "runtime.getContexts includes Worker context",
+    );
+    assert(Array.isArray(probe.contexts), "native contexts are returned");
+    const contexts: WorkerRuntimeContext[] = probe.contexts;
+    const workerContext = contexts.find((context) =>
+      context.contextType === "BACKGROUND"
+    );
+    assert(workerContext, "the actual Worker has a public context record");
+    assert(
+      /^[0-9a-f-]{36}$/i.test(workerContext.contextId),
+      "the actual Worker context has a UUID",
+    );
+    for (const key of ["documentId", "documentOrigin", "documentUrl"]) {
+      assert(!(key in workerContext), "the documentless Worker omits " + key);
+    }
+    assertEquals(workerContext.frameId, -1, "the Worker has no frame");
+    assertEquals(workerContext.tabId, -1, "the Worker has no tab");
+    assertEquals(workerContext.windowId, -1, "the Worker has no window");
+    assertEquals(
+      workerContext.incognito,
+      false,
+      "the authored Worker uses its actual normal principal",
+    );
+    const filtered =
+      (await command("contexts", { contextIds: [workerContext.contextId] }))
+        .result;
+    assertEquals(
+      filtered.length,
+      1,
+      "the real public Worker context UUID filters exactly one context",
+    );
+    assertEquals(
+      filtered[0].contextId,
+      workerContext.contextId,
+      "the native public UUID stays stable between calls",
     );
     const storage = (await command("storage")).result;
     assertEquals(
@@ -668,8 +722,8 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
     );
     assertEquals(
       additional.self.id,
-      id,
-      "management.getSelf returns installed extension",
+      originalId,
+      "management.getSelf returns the original Chrome extension ID",
     );
     assertEquals(
       additional.redirect,
@@ -771,11 +825,28 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       () => extension.backgroundState === "stopped",
       "Worker terminated",
     );
+    await waitFor(
+      () => extension.backgroundContext === undefined,
+      "the stopped native Worker context is actually unloaded",
+    );
     const restarted = (await command("probe")).result;
     assertEquals(
       restarted.starts,
       probe.starts + 1,
       "runtime message wakes stopped Worker and retains local storage",
+    );
+    const restartedContexts: WorkerRuntimeContext[] = restarted.contexts;
+    const restartedContext = restartedContexts.find((context) =>
+      context.contextType === "BACKGROUND"
+    );
+    assert(
+      restartedContext &&
+        restartedContext.contextId !== workerContext.contextId,
+      "the genuine restarted Worker has a new public context UUID",
+    );
+    assert(
+      extension.backgroundContext && !extension.backgroundContext.unloaded,
+      "the current background view is the live Worker",
     );
     assertEquals(
       swm.getRegistrationForAddonPrincipal(extension.principal).activeWorker.id,
@@ -810,7 +881,9 @@ async function testWorkerPermissions(): Promise<void> {
     false,
     "normal Firefox Worker preference remains disabled",
   );
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  const win = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as WorkerNativeWindow;
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
   const target = win.gBrowser.addTab(
     win.wrappedJSObject.__floorpRuntimeFixtureURL + "worker-target.html",
@@ -839,10 +912,11 @@ async function testWorkerPermissions(): Promise<void> {
     "manifest.json": JSON.stringify(manifest),
     "worker.js": `
       browser.runtime.onMessage.addListener(async message=>{
-        let storageError,hostError;
-        try {await browser.storage.local.get(null);}catch(error){storageError=error.message;}
+        const storageNamespaceType=typeof browser.storage;
+        let storageError,storageErrorName,hostError;
+        try {await browser.storage.local.get(null);}catch(error){storageError=error.message;storageErrorName=error.name;}
         try {await browser.scripting.executeScript({target:{tabId:message.tabId},func:()=>1});}catch(error){hostError=error.message;}
-        return {storageError,hostError};
+        return {storageNamespaceType,storageError,storageErrorName,hostError};
       });
     `,
     "control.html": '<script src="control.js"></script>',
@@ -890,9 +964,19 @@ async function testWorkerPermissions(): Promise<void> {
       if (title?.startsWith("FAIL:")) throw new Error(title);
       return title?.startsWith("{") ? JSON.parse(title) : false;
     }, "native permission rejection results");
+    assertEquals(
+      result.storageNamespaceType,
+      "undefined",
+      "storage is absent without the required permission",
+    );
+    assertEquals(
+      result.storageErrorName,
+      "TypeError",
+      "an attempted dotted storage read is rejected by the real Worker",
+    );
     assert(
-      /Not enough privileges.*storage/i.test(result.storageError),
-      "dotted storage namespace cannot bypass storage permission",
+      typeof result.storageError === "string" && result.storageError.length > 0,
+      "the forbidden storage read supplies an actual error",
     );
     assert(
       /permission|cannot access|denied|not allowed/i.test(result.hostError),

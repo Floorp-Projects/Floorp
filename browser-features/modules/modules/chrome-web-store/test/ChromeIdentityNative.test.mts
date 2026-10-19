@@ -7,6 +7,13 @@ import {
   assertEquals as harnessAssertEquals,
   runTests,
 } from "../../../../chrome/test/utils/test_harness.ts";
+import type {
+  AuthWindow,
+  AuthWindowPhase,
+  Extension,
+  Fixture,
+  Reply,
+} from "./helpers/identity-test-types.ts";
 
 function assertEquals<T>(
   actual: T,
@@ -27,13 +34,6 @@ const { setTimeout } = ChromeUtils.importESModule(
 );
 const CHROME_ID = "d".repeat(32);
 const CLIENT_ID = "floorp-loopback-transport-test.apps.googleusercontent.com";
-type Background = {
-  contentTitle: string;
-  messageManager: { loadFrameScript(script: string, delayed: boolean): void };
-};
-type Extension = { backgroundContext?: { xulBrowser: Background } };
-type Fixture = { id: string; extension: Extension };
-type Reply = { requestId: number; result?: unknown; error?: string };
 
 async function waitFor<T>(
   read: () => T | false | undefined,
@@ -379,6 +379,57 @@ export async function runAllTests(): Promise<void> {
     },
     {
       name:
+        "closing the real authentication window before its browser document commits rejects",
+      fn: () =>
+        fixture(async (extension) => {
+          let authWindow: AuthWindow | undefined;
+          let phase: AuthWindowPhase | undefined;
+          let observedClosed = false;
+          const observer = {
+            observe(subject: nsISupports, topic: string) {
+              const window = subject as unknown as AuthWindow;
+              if (topic === "domwindowopened" && !authWindow) {
+                authWindow = window;
+                phase = {
+                  uri: window.document.documentURI,
+                  readyState: window.document.readyState,
+                  initial: window.document.isUncommittedInitialDocument,
+                };
+                window.close();
+              } else if (
+                topic === "domwindowclosed" && window === authWindow
+              ) {
+                observedClosed = true;
+              }
+            },
+          };
+          Services.ww.registerNotification(observer);
+          try {
+            const request = command(extension, "launch", {
+              details: { url: fixtureURL("identity-idle"), interactive: true },
+            });
+            const initial = await waitFor(
+              () => phase,
+              "real authentication window initial document",
+            );
+            assertEquals(initial.uri, "about:blank");
+            assertEquals(initial.readyState, "complete");
+            assert(
+              initial.initial,
+              "Close occurs before browser document commit",
+            );
+            await waitFor(
+              () => observedClosed && authWindow?.closed,
+              "actual authentication window closure",
+            );
+            denied(await request, "User cancelled");
+          } finally {
+            Services.ww.unregisterNotification(observer);
+          }
+        }),
+    },
+    {
+      name:
         "closing an authentication window rejects and releases the actual pending flow",
       fn: () =>
         fixture(async (extension) => {
@@ -393,8 +444,11 @@ export async function runAllTests(): Promise<void> {
             "interactive authentication window",
           );
           await waitFor(
-            () => authWindow.document.readyState === "complete",
-            "authentication window loaded",
+            () =>
+              authWindow.document.documentURI ===
+                "chrome://browser/content/browser.xhtml" &&
+              authWindow.document.readyState === "complete",
+            "committed authentication browser document loaded",
           );
           authWindow.close();
           denied(await request, "User cancelled");

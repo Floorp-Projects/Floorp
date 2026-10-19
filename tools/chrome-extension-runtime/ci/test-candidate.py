@@ -3,6 +3,7 @@
 """Authenticate, extract and exercise this run's freshly compiled Floorp package."""
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -13,19 +14,30 @@ import tarfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[3]
+_selection_spec = importlib.util.spec_from_file_location(
+    "candidate_package_selection", ROOT / "tools/chrome-extension-runtime/candidate-package-selection.py")
+_selection = importlib.util.module_from_spec(_selection_spec)
+_selection_spec.loader.exec_module(_selection)
 TESTS = "browser-features/modules/modules/chrome-web-store/test/"
 CORE = [
     "CRXParser.test.mts", "CRXVerifier.test.mts", "CRXConverter.test.mts",
     "Constants.test.mts", "CodeValidator.test.mts", "ManifestTransformer.test.mts",
     "NativeBackgroundSelection.test.mts",
     "ChromeValidationNative.test.mts",
+    "ChromeContentTimersNative.test.mts",
+    "ChromeUserScriptsPermissionsNative.test.mts",
+    "ChromeManagementIDsNative.test.mts",
     "DNRTransformer.test.mts", "ChromeVersionTarget.test.mts", "ChromeExtensionDownload.test.mts",
     "ChromeExtensionUpdater.test.mts", "ChromeExtensionUpdateScheduler.test.mts",
     "ChromeMessagingNative.test.mts", "ChromeIdentityNative.test.mts",
     "ChromeWebPageMessagingNative.test.mts", "ChromeExtensionURLNative.test.mts",
     "polyfills/documentId/DocumentIdPolyfill.test.mts", "polyfills/offscreen/OffscreenNative.test.mts",
-    "workers/WorkerNative.test.mts", "ChromeDebuggerNative.test.mts",
+    "workers/WorkerScriptCacheNative.test.mts",
+    "workers/WorkerRootGCLifetimeNative.test.mts",
+    "workers/WorkerMessagingNative.test.mts",
+    "ChromeDebuggerNative.test.mts",
     "ChromeDebuggerPrincipalNative.test.mts", "ChromeAuxiliaryNative.test.mts",
+    "auxiliary/ChromeTtsValidationNative.test.mts",
     "ChromeNotificationsCloseNative.test.mts",
     "ChromeDeclarativeContentNative.test.mts", "windows/WindowsNative.test.mts",
     "ChromePowerNative.test.mts", "polyfills/capture/FileSystemNative.test.mts",
@@ -36,8 +48,16 @@ CORE = [
 MEDIA = ["polyfills/capture/" + name + ".test.mts" for name in (
     "CaptureAudioNative", "DesktopSourceNative", "DesktopCaptureNative")]
 MEDIA.append("auxiliary/AuxiliaryNative.test.mts")
-PERMISSIONS = ["workers/WorkerPermissionsNative.test.mts"]
-DESKTOP = ["polyfills/capture/DesktopScreenNative.test.mts"]
+PERMISSIONS = [
+    "ChromeUserScriptsConsentNative.test.mts",
+    "workers/WorkerPermissionsNative.test.mts",
+    "workers/WorkerMemberPermissionsNative.test.mts",
+    "workers/WorkerNative.test.mts",
+]
+DESKTOP = [
+    "polyfills/capture/DesktopScreenNative.test.mts",
+    "windows/WindowUpdateNative.test.mts",
+]
 
 
 def run(args, *, cwd=ROOT):
@@ -97,7 +117,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", choices=["linux", "windows", "mac"], required=True)
     parser.add_argument("--artifact", type=Path, required=True)
-    parser.add_argument("--group", choices=["core", "media", "permissions", "desktop"], default="core")
+    parser.add_argument("--group", choices=["core", "media", "permissions", "desktop", "tts"], default="core")
     args = parser.parse_args()
     expected_host = {"linux": "linux", "windows": "win32", "mac": "darwin"}[args.platform]
     if sys.platform != expected_host:
@@ -119,11 +139,7 @@ def main():
     for patch in (ROOT / ".github/patches/floorp-runtime/common").glob("chrome*.patch"):
         if manifest.get("patches", {}).get(patch.name) != sha256(patch):
             raise RuntimeError(f"Candidate omitted or changed maintained source: {patch.name}")
-    suffixes = {"linux": (".tar.xz", ".tar.gz"), "windows": (".zip",), "mac": (".dmg",)}[args.platform]
-    packages = [item for item in manifest["packages"] if item["name"].endswith(suffixes)]
-    if len(packages) != 1:
-        raise RuntimeError("Expected exactly one package for native execution")
-    expected = packages[0]
+    expected = _selection.select_native_package(manifest["packages"], args.platform)
     if Path(expected["name"]).name != expected["name"]:
         raise ValueError("Candidate package name must be a single filename")
     matches = list(artifact.rglob(expected["name"]))
@@ -139,19 +155,47 @@ def main():
     result = {"passed": False, "platform": args.platform, "group": args.group,
               "candidate": manifest, "packageSha256": expected["sha256"], "commands": [],
               "headed": args.group in ("permissions", "desktop")}
-    suites = {"core": CORE, "media": MEDIA, "permissions": PERMISSIONS, "desktop": DESKTOP}[args.group]
+    suites = list({"core": CORE, "media": MEDIA, "permissions": PERMISSIONS, "desktop": DESKTOP, "tts": []}[args.group])
+    if args.platform == "linux" and args.group == "media":
+        # Exact fragment marks belong to the Linux SpeechDispatcher backend.
+        # Auxiliary speech and native loopback tests still run on every OS.
+        suites.append("auxiliary/SpeechFragmentsNative.test.mts")
     command = [sys.executable, "tools/chrome-extension-runtime/run-browser-tests.py", "--browser", binary,
                "--output", output, "--timeout", "300"]
     if args.group in ("permissions", "desktop"):
         command.append("--headed")
-        if sys.platform == "linux" and not os.environ.get("DISPLAY"):
-            command = ["xvfb-run", "--auto-servernum", "--server-args=-screen 0 1600x1200x24", *command]
+        if sys.platform == "linux":
+            command = [
+                "xvfb-run", "--auto-servernum", "--server-args=-screen 0 1600x1200x24",
+                sys.executable, ROOT / "tools/chrome-extension-runtime/ci/run-with-linux-window-manager.py",
+                "--output", output / "window-manager", "--", *command,
+            ]
     if args.group == "core":
         command += ["--test", "tools/chrome-extension-runtime/ci/ProductionOverlay.test.mts"]
         command += ["--test", "tools/chrome-extension-runtime/WorkerCanvasNative.test.mts"]
+        command += ["--test", "tools/chrome-extension-runtime/NativePortErrorsCandidate.test.mts"]
+    if args.group == "permissions":
+        command += ["--actor-module", TESTS + "helpers/UserScriptsConsentUIChild.sys.mjs"]
     for suite in suites:
         command += ["--test", TESTS + suite]
     commands = [command]
+    if args.group == "tts":
+        waveform = output / "waveform"
+        command = [sys.executable, "tools/chrome-extension-runtime/test-browser-tts-waveform.py",
+                   "--browser", binary, "--candidate-manifest", manifests[0], "--output", waveform]
+        commands = []
+        if args.platform == "mac":
+            recorder = output / "tts-macos-recorder"
+            commands.append([
+                "xcrun", "clang", "-fobjc-arc", "-O2",
+                ROOT / "tools/chrome-extension-runtime/tts-macos-recorder.m", "-o", recorder,
+                "-framework", "Foundation", "-framework", "AVFoundation",
+                "-framework", "CoreMedia", "-framework", "AudioToolbox", "-framework", "CoreAudio",
+            ])
+            command += ["--native-recorder", recorder]
+        elif args.platform == "windows":
+            command += ["--native-recorder", ROOT / "tools/chrome-extension-runtime/tts-windows-recorder.ps1"]
+        commands.append(command)
     if args.group == "core":
         commands.extend([
             [sys.executable, "tools/chrome-extension-runtime/test-network.py", "--browser", binary],
@@ -159,6 +203,9 @@ def main():
             [sys.executable, "tools/chrome-extension-runtime/test-proxy.py", "--browser", binary, "--native-bypass"],
             [sys.executable, "tools/chrome-extension-runtime/test-proxy-scopes.py", "--browser", binary],
             [sys.executable, "tools/chrome-extension-runtime/ci/test-proxy-native.py", "--browser", binary],
+            [sys.executable, "tools/chrome-extension-runtime/test-native-messaging-candidate.py",
+             "--browser", binary, "--candidate-manifest", manifests[0],
+             "--output", output / "native-messaging"],
             [sys.executable, "tools/chrome-extension-runtime/test-side-panel.py", "--browser", binary, "--floorp-ui"],
             [sys.executable, "tools/chrome-extension-runtime/test-diagnostics-ui.py", "--browser", binary],
         ])
@@ -172,7 +219,7 @@ def main():
         code = subprocess.run([str(value) for value in command], cwd=ROOT,
                               env=command_env).returncode
         result["commands"].append({"args": [str(value) for value in command], "exitCode": code})
-    reports = list(output.glob("run-*/report.json"))
+    reports = list(output.glob("waveform/browser/run-*/report.json" if args.group == "tts" else "run-*/report.json"))
     if len(reports) != 1:
         raise RuntimeError("Expected one actual native browser suite report")
     report = json.loads(reports[0].read_text())

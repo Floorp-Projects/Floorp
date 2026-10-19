@@ -88,6 +88,7 @@ export async function assertNativeCorpusBackground(extension, input) {
   }
   const snapshot = {
     ...input,
+    runId: Services.env.get("FLOORP_TEST_RUN_ID") || null,
     strictNative,
     version: Services.appinfo.version,
     buildId: Services.appinfo.appBuildID,
@@ -136,7 +137,7 @@ export async function installFrozenCorpus(root, record, output, options = {}) {
     record.id,
     { id: record.id, name: record.name, version: record.version },
   );
-  if (!result.success || !result.xpiData) {
+  if (!result.success || !result.xpiData || !result.originalManifest) {
     throw Error(result.error?.message || "Production conversion failed");
   }
   const sourceIntegrity = await verifyFrozenCorpusScripts(
@@ -173,6 +174,7 @@ export async function installFrozenCorpus(root, record, output, options = {}) {
       warnings: result.warnings,
       background: result.report?.background,
       conversion: result.report,
+      originalManifest: result.originalManifest,
       sourceIntegrity,
       nativeEvidence,
       extension,

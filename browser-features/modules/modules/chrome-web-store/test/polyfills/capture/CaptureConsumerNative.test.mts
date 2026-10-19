@@ -6,10 +6,27 @@ import {
   assertEquals,
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
+import type {
+  ActivationError,
+  ComponentAddon,
+  ComponentAddonManager,
+  ComponentExtensionParent,
+  ComponentNativeWindow,
+  ComponentTab,
+  ConsumerRecording,
+} from "../../helpers/capture-component-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-async function waitFor(read, description) {
+async function waitFor<T>(
+  read: () =>
+    | T
+    | false
+    | undefined
+    | null
+    | Promise<T | false | undefined | null>,
+  description: string,
+): Promise<T> {
   const until = Date.now() + 20000;
   while (Date.now() < until) {
     const value = await read();
@@ -21,16 +38,18 @@ async function waitFor(read, description) {
 async function consumerTab() {
   const { AddonManager } = ChromeUtils.importESModule(
     "resource://gre/modules/AddonManager.sys.mjs",
-  );
+  ) as unknown as { AddonManager: ComponentAddonManager };
   const { ExtensionParent } = ChromeUtils.importESModule(
     "resource://gre/modules/ExtensionParent.sys.mjs",
-  );
+  ) as unknown as { ExtensionParent: ComponentExtensionParent };
   const { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs",
   );
-  const window = Services.wm.getMostRecentWindow("navigator:browser");
+  const window = Services.wm.getMostRecentWindow(
+    "navigator:browser",
+  ) as unknown as ComponentNativeWindow;
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
-  const tabs = [];
+  const tabs: ComponentTab[] = [];
   const target = window.gBrowser.addTab("about:blank", {
     triggeringPrincipal: principal,
   });
@@ -50,8 +69,8 @@ async function consumerTab() {
     PathUtils.tempDir,
     "floorp-consumer-" + Services.uuid.generateUUID() + ".xpi",
   );
-  let addon;
-  const post = (tab, data) =>
+  let addon: ComponentAddon | undefined;
+  const post = (tab: ComponentTab, data: unknown) =>
     tab.linkedBrowser.messageManager.loadFrameScript(
       "data:application/javascript," +
         encodeURIComponent(`content.postMessage(${JSON.stringify(data)},"*")`),
@@ -146,7 +165,7 @@ async function consumerTab() {
       extension,
       "addon_parent",
     );
-    const issue = async (tab) => {
+    const issue = async (tab: ComponentTab): Promise<string> => {
       await waitFor(
         async () =>
           !(await captureModule.getAPI(background).tabCapture.getCapturedTabs())
@@ -206,7 +225,9 @@ async function consumerTab() {
       if (title.startsWith("DENIED:")) throw new Error(title);
       return title.startsWith("{");
     }, "site actual native stream");
-    const result = JSON.parse(consumer.linkedBrowser.contentTitle);
+    const result = JSON.parse(
+      consumer.linkedBrowser.contentTitle,
+    ) as ConsumerRecording;
     assert(result.bytes > 0, "real site-consumer WebM");
     assert(
       result.pixel[0] > 200 && result.pixel[1] < 20,
@@ -236,7 +257,9 @@ async function consumerTab() {
       () => consumer.linkedBrowser.contentTitle.includes('"errors"'),
       "ordinary-site principal probe with pending backend permit",
     );
-    const errors = JSON.parse(consumer.linkedBrowser.contentTitle).errors;
+    const errors = (JSON.parse(consumer.linkedBrowser.contentTitle) as {
+      errors: ActivationError[];
+    }).errors;
     assert(
       errors.every((error) =>
         error.name === "InvalidStateError" &&

@@ -99,10 +99,10 @@ index 38a435e..f1c2f79 100644
      "schema": "chrome://extensions/content/schemas/i18n.json",
 diff --git a/chrome/toolkit/content/extensions/parent/ext-fontSettings.js b/chrome/toolkit/content/extensions/parent/ext-fontSettings.js
 new file mode 100644
-index 0000000..6bc95bd
+index 0000000..a4bc09d
 --- /dev/null
 +++ b/chrome/toolkit/content/extensions/parent/ext-fontSettings.js
-@@ -0,0 +1,366 @@
+@@ -0,0 +1,371 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -410,14 +410,18 @@ index 0000000..6bc95bd
 +          !["serif", "sans-serif", "monospace", "math"].includes(font)
 +        )
 +        .map((font) => ({ fontId: font, displayName: font }));
-+    api.getFont = async ({ script = "Zyyy", genericFamily }) => ({
-+      fontId: fontValue(script, genericFamily),
-+      levelOfControl: await ExtensionPreferencesManager.getLevelOfControl(
-+        id,
-+        settingName(script, genericFamily),
-+      ),
-+    });
-+    api.setFont = async ({ script = "Zyyy", genericFamily, fontId }) => {
++    api.getFont = async ({ script, genericFamily }) => {
++      script ??= "Zyyy";
++      return {
++        fontId: fontValue(script, genericFamily),
++        levelOfControl: await ExtensionPreferencesManager.getLevelOfControl(
++          id,
++          settingName(script, genericFamily),
++        ),
++      };
++    };
++    api.setFont = async ({ script, genericFamily, fontId }) => {
++      script ??= "Zyyy";
 +      if (
 +        !Services.prefs.getBoolPref("floorp.chrome.fontSettings.native", false)
 +      ) {
@@ -429,7 +433,8 @@ index 0000000..6bc95bd
 +      await assertWritable(name);
 +      await ExtensionPreferencesManager.setSetting(id, name, fontId);
 +    };
-+    api.clearFont = async ({ script = "Zyyy", genericFamily }) => {
++    api.clearFont = async ({ script, genericFamily }) => {
++      script ??= "Zyyy";
 +      await ExtensionPreferencesManager.removeSetting(
 +        id,
 +        settingName(script, genericFamily),
@@ -471,10 +476,10 @@ index 0000000..6bc95bd
 +};
 diff --git a/chrome/toolkit/content/extensions/parent/ext-tts.js b/chrome/toolkit/content/extensions/parent/ext-tts.js
 new file mode 100644
-index 0000000..e1d8a91
+index 0000000..4857044
 --- /dev/null
 +++ b/chrome/toolkit/content/extensions/parent/ext-tts.js
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,346 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -559,6 +564,22 @@ index 0000000..e1d8a91
 +    if (text.length > 32768) {
 +      throw new ExtensionError("Utterance exceeds 32768 characters.");
 +    }
++    // Gecko's DOM setters clamp these values. Chrome rejects them before
++    // changing speech, and accepts finite rates below the documented minimum.
++    for (const [name, minimum, maximum] of [
++      ["rate", null, 10],
++      ["pitch", 0, 2],
++      ["volume", 0, 1],
++    ]) {
++      const value = options[name];
++      if (
++        value != null &&
++        (!Number.isFinite(value) || value > maximum ||
++          (minimum !== null && value < minimum))
++      ) {
++        throw new ExtensionError(`Invalid speech ${name}.`);
++      }
++    }
 +    if (options.extensionId) {
 +      throw new ExtensionError(
 +        "Extension-provided speech engines are not installed.",
@@ -585,6 +606,14 @@ index 0000000..e1d8a91
 +        voices.find((v) =>
 +          v.lang.split("-")[0].toLowerCase() ===
 +            options.lang.split("-")[0].toLowerCase()
++        );
++    }
++    if (!voice && !options.lang) {
++      const locale = Services.locale.appLocaleAsBCP47.toLowerCase();
++      voice = voices.find((v) => v.default) ||
++        voices.find((v) => v.lang.toLowerCase() === locale) ||
++        voices.find((v) =>
++          v.lang.split("-")[0].toLowerCase() === locale.split("-")[0]
 +        );
 +    }
 +    voice ||= voices.find((v) => v.default) || voices[0];
@@ -638,9 +667,10 @@ index 0000000..e1d8a91
 +    const utterance = job.utterance = new this.window.SpeechSynthesisUtterance(
 +      job.text,
 +    );
++    if ("mozFloorpChromeTts" in utterance) utterance.mozFloorpChromeTts = true;
 +    utterance.voice = job.voice;
 +    for (const key of ["lang", "rate", "pitch", "volume"]) {
-+      if (job.options[key] !== undefined) utterance[key] = job.options[key];
++      if (job.options[key] != null) utterance[key] = job.options[key];
 +    }
 +    utterance.addEventListener("start", () => {
 +      job.started = true;
@@ -798,10 +828,10 @@ index 0000000..e1d8a91
 +};
 diff --git a/chrome/toolkit/content/extensions/schemas/font_settings.json b/chrome/toolkit/content/extensions/schemas/font_settings.json
 new file mode 100644
-index 0000000..5c16f09
+index 0000000..1f8edbf
 --- /dev/null
 +++ b/chrome/toolkit/content/extensions/schemas/font_settings.json
-@@ -0,0 +1,694 @@
+@@ -0,0 +1,697 @@
 +[
 +  {
 +    "namespace": "manifest",
@@ -1035,7 +1065,8 @@ index 0000000..5c16f09
 +              "script": {
 +                "$ref": "ScriptCode",
 +                "description": "The script for which the font should be cleared. If omitted, the global script font setting is cleared.",
-+                "optional": true
++                "optional": true,
++                "default": "Zyyy"
 +              },
 +              "genericFamily": {
 +                "$ref": "GenericFamily",
@@ -1064,7 +1095,8 @@ index 0000000..5c16f09
 +              "script": {
 +                "$ref": "ScriptCode",
 +                "description": "The script for which the font should be retrieved. If omitted, the font setting for the global script (script code \"Zyyy\") is retrieved.",
-+                "optional": true
++                "optional": true,
++                "default": "Zyyy"
 +              },
 +              "genericFamily": {
 +                "$ref": "GenericFamily",
@@ -1108,7 +1140,8 @@ index 0000000..5c16f09
 +              "script": {
 +                "$ref": "ScriptCode",
 +                "description": "The script code which the font should be set. If omitted, the font setting for the global script (script code \"Zyyy\") is set.",
-+                "optional": true
++                "optional": true,
++                "default": "Zyyy"
 +              },
 +              "genericFamily": {
 +                "$ref": "GenericFamily",

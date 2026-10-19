@@ -3,7 +3,7 @@
   "referenceChromeVersion": "155.0.8059.84",
   "runtimeSourceCommit": "1553b7b550dfe555684628d175e0c1701a785d0b",
   "corpusFrozenAtUTC": "2026-10-19T00:54:21.244Z",
-  "scope": "Frozen signed-package member references selected for auxiliary API work. References include feature detection and are not primary-operation passes.",
+  "scope": "Historical signed-package source inventory captured against runtimeSourceCommit for auxiliary API work. References include feature detection and are not execution evidence for the current native candidate or primary-operation passes.",
   "extensions": [
     {
       "id": "hnmpcagpplmpfojmgmnngilcnanddlhb",

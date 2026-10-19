@@ -60,6 +60,7 @@ def main():
             "--test", str(ROOT / "tools/chrome-extension-runtime/test-corpus-sidepanel-floorp.mjs"),
             "--timeout", str(args.timeout),
             "--actor-module", str(ROOT / "tools/chrome-extension-runtime/CorpusSidePanelChild.sys.mjs"),
+            "--actor-module", str(ROOT / "tools/chrome-extension-runtime/corpus-sidepanel-ui.sys.mjs"),
         ], env={**os.environ, "FLOORP_CORPUS_ROOT": str(ROOT), "FLOORP_CORPUS_FIXTURE": fixture,
                 "FLOORP_CORPUS_FIXTURE_METADATA": json.dumps(metadata), "FLOORP_CORPUS_IDS": args.ids,
                 "FLOORP_CORPUS_OUTPUT": str(output)})
