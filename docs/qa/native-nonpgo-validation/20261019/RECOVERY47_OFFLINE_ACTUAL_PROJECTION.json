@@ -1,0 +1,13 @@
+{
+  "scope": "OFFLINE_ACTUAL_RECEIPT_DATA_SHAPE_CONTROL_ONLY",
+  "sourceRun": 39209226199,
+  "inputCheckpointRestoreSHA256": "69b5119a0ee70de2c35b6d00136e5627030a6214fd2bd9458ea46a03d0cf1347",
+  "passed": true,
+  "boundaryStageCount": 48,
+  "privatePathsAndRawStageDetailsCopied": false,
+  "inputUnchanged": true,
+  "actualProcessEnvironmentUnchanged": true,
+  "testOnlyModuleLocalEnvironmentSubstitute": true,
+  "actualCIExecutionOrIdentityQualified": false,
+  "newFull47StillRequiresActualCurrentEnvironmentValidation": true
+}

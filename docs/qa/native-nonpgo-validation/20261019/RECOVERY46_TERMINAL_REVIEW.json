@@ -1,0 +1,237 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY46_TERMINAL_AND_REVIEWED_CONSUMER47_CONTINUATION",
+  "reviewedAtUTC": "2026-10-19T06:55:15Z",
+  "decision": {
+    "short46": "PASS",
+    "full47": "GO_WITH_FIXED_ROUTE_AND_FRESH_ACQUISITION_GUARDS",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "newMacJobSolelyForPublicProjectionRequired": false,
+    "fullHostXULAndNativeQualified": false
+  },
+  "run": {
+    "id": 39209226199,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39209226199",
+    "status": "completed",
+    "conclusion": "success",
+    "caller": "74f408af098528dd07d6e0ff68900945671757db",
+    "fixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+    "attempt": 1,
+    "event": "push"
+  },
+  "job": {
+    "id": 117918669280,
+    "name": "checkpoint-consumer",
+    "label": [
+      "macos-15-intel"
+    ],
+    "status": "completed",
+    "conclusion": "success",
+    "completedAt": "2026-10-19T06:47:30Z"
+  },
+  "providerVerification": {
+    "runStatus": "completed",
+    "runConclusion": "success",
+    "event": "push",
+    "attempt": 1,
+    "runHeadMatchesReviewedCaller": true,
+    "jobs": 1,
+    "jobID": 117918669280,
+    "jobRunnerLabels": [
+      "macos-15-intel"
+    ],
+    "jobCompletedAt": "2026-10-19T06:47:30Z",
+    "artifacts": 0,
+    "allJobStepsSucceeded": true,
+    "decodedProviderLogMatchesSavedRawExactly": true,
+    "uniqueFinalPipelineReportMatchesSavedParsedReport": true
+  },
+  "bindings": {
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_TERMINAL_RESULT.json",
+      "bytes": 36661,
+      "sha256": "261a465f53494ba36b1714f5acf838a73f6356c828e0d35fa23addce675f5888"
+    },
+    "decodedProviderLog": {
+      "bytes": 238467,
+      "sha256": "bbebeaef191b71379a5edd68fa8280c04f626f026b08dc50f95a43e8d88fc4cf",
+      "rawPublished": false
+    },
+    "parsedPipelineObject": {
+      "bytes": 196663,
+      "sha256": "ee290763c33c01a1cd7985cf88c41061c0f6c6ffe794eb494ecbc9cdc3509432",
+      "rawPublished": false
+    },
+    "savedTerminalAPI": {
+      "bytes": 17220,
+      "sha256": "e1bee2b5137e74600a448fd5ef235a21c928b6cfe6a1b302af3c8fe19a5256cf"
+    },
+    "sourcePrelaunchReview": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_PRELAUNCH_REVIEW.json",
+      "bytes": 14291,
+      "sha256": "c1f0cc562f848cc36227286b8bf2bc9691a72b627856cdf5d9b5d4770843011e"
+    },
+    "privacyDeltaReview": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_PUBLIC_PROJECTION_REVIEW.json",
+      "bytes": 5367,
+      "sha256": "847780301decd201af6ca0e21d567d04f8f973b25175ff1b42f313bbfc6f4649"
+    },
+    "conditionalRouteReview": {
+      "bytes": 6866,
+      "sha256": "1e0fb2710ca960a29b48aab7833059fdf0585307cefc2f24b68a3eee8da5942b",
+      "publicRole": "previous conditional route verification; short46 condition is cleared by this terminal review"
+    }
+  },
+  "actualMacTests": {
+    "QA": 285,
+    "QASeconds": 60.883,
+    "recording": 14,
+    "recordingSeconds": 0.392,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "complete": true,
+    "knownKernelLifecycleEvidence": "Source-bound inclusion in the fixed zero-skip QA suite; individual query traces are not claimed.",
+    "finiteWorkerControl": "Two fixed-iteration workers completed, exact reaped and temporary state removed; this is not a duration-pressure qualification."
+  },
+  "actualRestore": {
+    "status": "restore-ready",
+    "role": "consumer",
+    "existingArtifact": 12164479528,
+    "originRun": 39197008470,
+    "originProducerJob": 117881829274,
+    "archiveBytes": 2213942620,
+    "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "normalSDKFetchAndArtifactDownloadSucceeded": true,
+    "checkpointRestoreStageNaturalZero": true,
+    "sourceBoundFullPayloadReferenceLinkModeMtimeAndBoundaryChecksPassed": true,
+    "contextKeysMatch": true,
+    "contextEqualityChecks": 11,
+    "allExpectedContextChecksTrue": true,
+    "contextInterpretation": "The four historic run/attempt/head/fixture fields match the locked origin; every nonhistoric context value matches actual current context. This is not equality of the two execution identities.",
+    "actualMachEnvironmentNaturalZero": true,
+    "restoredConfigAndNormalConfigVerified": true,
+    "debug": true,
+    "testsEnabled": true,
+    "pgo": false,
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "version": "158.0.1",
+    "restoreOnly": true,
+    "freshObjdir": false,
+    "sameJob": false,
+    "strictSameRun": false,
+    "contract": "verified-origin-cross-run-checkpoint-replay-v1"
+  },
+  "historicalProducerProof": {
+    "stages": 48,
+    "allNaturalZeroExactReapedAndGroupGone": true,
+    "knownSampledBuildBirths": 943,
+    "remainingKnownLive": 0,
+    "remainingKnownZombies": 0,
+    "scope": "Historical sampled-owned-stage proof retained from the immutable producer manifest; not complete ancestry or all-UID resource coverage."
+  },
+  "cleanupAndMonitoring": {
+    "currentPipelineStages": 45,
+    "currentPreflightStages": 5,
+    "allCurrentStagesNaturalZero": true,
+    "allCurrentExactLeadersReapedZero": true,
+    "allCurrentStageGroupsVerifiedGone": true,
+    "cleanupFailures": 0,
+    "firstFailure": null,
+    "pipelineMonitorFailure": null,
+    "pipelineMonitorDiagnostics": 0,
+    "preflightMonitorFailure": null,
+    "preflightRecoveredDiagnostics": 1,
+    "recoveredDiagnostic": {
+      "originalStage": "checkpoint-tests",
+      "elapsedSeconds": 19.41,
+      "attempts": 2,
+      "partialAttempts": 1,
+      "partialUnknownKind": "permission",
+      "finalSampleComplete": true
+    },
+    "interpretation": "A recovered preflight partial is retained separately from an empty pipeline diagnostic list. No fatal monitor failure does not mean that every sample was complete or that no query race occurred."
+  },
+  "privacyAndProjection": {
+    "curatedReceiptMatchesCheckedSourceFields": true,
+    "curatedReceiptExcludesRawTaskPathsStageDetailsAndOpaqueTags": true,
+    "providerJobLogAndCuratedEvidenceDistinct": true,
+    "preexistingSuccessfulRestoreProjection": "The old source returned raw producer boundary paths/stage details into its public job stdout. Known standard paths are not evidence of secret disclosure. The reviewed pure projection delta prevents this future redundant publication.",
+    "offlineActualObjectControl": {
+      "passed": true,
+      "projectedActualPrivateRestoreEqualsCuratedReceiptExactly": true,
+      "privateInputUnchanged": true,
+      "globalEnvironmentUnchanged": true,
+      "method": "Module-local public.os substitute containing the five already recorded current execution fields; no real environment or manifest rewrite.",
+      "qualification": "Data-shape control only; not an actual-current-execution qualification."
+    },
+    "sentinelsInCuratedReceipt": false,
+    "signedURLsOrRawTracebackTextInReview": false
+  },
+  "full47Route": {
+    "fixture": "d3aeed32c8adabc88267e46cfbbd020f799adecb",
+    "fixtureTree": "f382943ec2d5bcc79d1e00bf558c2fcb3bbbac3d",
+    "fixtureParent": "4052e5434c83d012995a777baf3d00b6bf9e7e50",
+    "sourceAndDocumentReadbacksExact": 8,
+    "caller": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "callerTree": "e3d85aa3120525478f88b461c1deae1f060b420f",
+    "callerParent": "74f408af098528dd07d6e0ff68900945671757db",
+    "onlyChangedCallerPath": ".github/workflows/mac-native-checkpoint.yml",
+    "workflowBytes": 10473,
+    "workflowSHA256": "866b925e96f50bcf080e362ca4bb7782450d9e23b00ad006da6b9a1456927e4a",
+    "exactTemplateFixtureRender": true,
+    "branch": "codex/mac-native-checkpoint-consumer-recovery47-20261019",
+    "jobCount": 1,
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 360,
+    "expectedQA": 305,
+    "expectedRecording": 14,
+    "requiredSkips": 0,
+    "contentsAndActionsReadOnly": true,
+    "initialCreatedPushBeforeZeroAttempt1Guards": true,
+    "newProducer": false,
+    "newArtifactUpload": false,
+    "existingArtifact": 12164479528,
+    "retentionDays": 1,
+    "maxStoredBytes": 10737418240
+  },
+  "freshAcquisitionMetadata": {
+    "observedAtUTC": "2026-10-19T06:55:15Z",
+    "checkpointSoleArtifact": 12164479528,
+    "checkpointExpired": false,
+    "checkpointBytes": 2213942620,
+    "checkpointDigestMatches": true,
+    "checkpointExpiresAt": "2026-10-20T05:19:56Z",
+    "SDKArtifact": 12133086104,
+    "SDKExpired": false,
+    "SDKBytes": 105082683,
+    "SDKZIPDigestMatches": true,
+    "SDKExpiresAt": "2026-10-19T10:00:38Z",
+    "normalRunnerAPIAcquisitionAndAllContentChecksStillRequired": true
+  },
+  "continuationConditions": [
+    "Use only the reviewed immutable full47 caller/fixture and existing verified checkpoint; recheck unused branch and no overlapping owned runs immediately before activation.",
+    "Keep fresh normal acquisition checks, all original content/context/ownership/resource/cleanup limits and the 305+14 zero-skip Mac preflight.",
+    "Preserve first failure, stopping monitor detail and before/after-cleanup evidence through full host/XUL/package/native completion.",
+    "Do not describe the resumed cross-run result as fresh same-job or same-fixture completion."
+  ],
+  "qualificationLimits": {
+    "fullHostXUL": "NOT_TESTED",
+    "package": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "specificOriginalRun45FailedLink": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN",
+    "productQualification": false
+  },
+  "reviewActions": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "largePayloadAcquired": false,
+    "artifactUploaded": false,
+    "remoteWritten": false
+  }
+}
