@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 name: Chrome extension native runtime candidate
 on:
-  push:
-    branches: ["codex/chrome-extension-runtime-v2"]
   workflow_dispatch:
   pull_request:
     paths:

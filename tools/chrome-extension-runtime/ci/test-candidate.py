@@ -22,6 +22,8 @@ CORE = [
     "ChromeWebPageMessagingNative.test.mts", "ChromeExtensionURLNative.test.mts",
     "polyfills/documentId/DocumentIdPolyfill.test.mts", "polyfills/offscreen/OffscreenNative.test.mts",
     "workers/WorkerNative.test.mts", "ChromeDebuggerNative.test.mts",
+    "ChromeDebuggerPrincipalNative.test.mts", "ChromeAuxiliaryNative.test.mts",
+    "ChromeDeclarativeContentNative.test.mts", "windows/WindowsNative.test.mts",
     "auxiliary/AuxiliaryNative.test.mts", "polyfills/capture/CaptureNative.test.mts",
     "polyfills/capture/CaptureConsumerNative.test.mts", "polyfills/capture/CapturePermissionNative.test.mts",
 ]

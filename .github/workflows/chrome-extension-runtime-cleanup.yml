@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MPL-2.0
+# One-time cleanup of authenticated obsolete candidate runs. Remove after use.
+name: Retire obsolete Chrome runtime candidate runs
+on:
+  push:
+    branches: ["codex/chrome-extension-runtime-v2"]
+    paths: [".github/workflows/chrome-extension-runtime-cleanup.yml"]
+permissions: {}
+jobs:
+  retire-obsolete-runs:
+    if: ${{ github.repository == 'Floorp-Projects/Floorp' && github.ref == 'refs/heads/codex/chrome-extension-runtime-v2' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      actions: write
+    steps:
+      - name: Cancel only the two approved obsolete push runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import datetime,json,os,urllib.error,urllib.request
+          repository='Floorp-Projects/Floorp'
+          branch='codex/chrome-extension-runtime-v2'
+          protected_pr_run=39185906107
+          approved={
+              39184899005:'5c6c9f417051d387cf4fe5d3b0d38e286fc5edca',
+              39185906242:'e202ede07ddc1d56d1b557481c18898c542292ea',
+          }
+          if datetime.datetime.now(datetime.timezone.utc)>=datetime.datetime(2026,10,20,tzinfo=datetime.timezone.utc):
+              print('The one-time cleanup authorization has expired; no runs changed.')
+              raise SystemExit(0)
+          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],
+                   'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+          def read(run_id):
+              request=urllib.request.Request(f'https://api.github.com/repos/{repository}/actions/runs/{run_id}',headers=headers)
+              with urllib.request.urlopen(request,timeout=20) as response:return json.load(response)
+          for run_id,sha in approved.items():
+              run=read(run_id)
+              if (run_id in (protected_pr_run,int(os.environ['GITHUB_RUN_ID'])) or
+                  run['id']!=run_id or run['repository']['full_name']!=repository or
+                  run['head_branch']!=branch or run['head_sha']!=sha or run['event']!='push' or
+                  run['path']!='.github/workflows/chrome-extension-runtime.yml'):
+                  raise RuntimeError(f'Run identity does not match the approved cleanup: {run_id}')
+              if run['status']=='completed':
+                  print(f'Run {run_id} already completed; unchanged.')
+                  continue
+              request=urllib.request.Request(f'https://api.github.com/repos/{repository}/actions/runs/{run_id}/cancel',
+                                             headers=headers,data=b'',method='POST')
+              try:
+                  with urllib.request.urlopen(request,timeout=20) as response:
+                      if response.status!=202:raise RuntimeError(f'Unexpected cancellation status: {response.status}')
+              except urllib.error.HTTPError as error:
+                  if error.code!=409 or read(run_id)['status']!='completed':raise
+              print(f'Cancellation requested for approved obsolete push run {run_id}.')
+          PY
