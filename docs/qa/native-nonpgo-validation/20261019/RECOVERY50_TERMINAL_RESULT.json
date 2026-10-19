@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY50_SDKLESS_MAC_STREAMING_TERMINAL",
+  "status": "failed",
+  "run": {
+    "id": 39312246063,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39312246063",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "caller": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "fixture": "de18c22f3a7e79eb2890f5e63ee6f466f574af98"
+  },
+  "job": {
+    "id": 118264555663,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T19:35:28Z",
+    "completedAt": "2026-10-19T19:37:55Z",
+    "conclusion": "failure"
+  },
+  "decodedProviderLog": {
+    "bytes": 48765,
+    "sha256": "4cb6b71967bf10c4a2bed95cf2c255aa8606e2ff5a5b39a0607de387be25e5d8",
+    "rawPublished": false
+  },
+  "preflight": {
+    "status": "failed",
+    "failurePhase": "checkpoint-tests",
+    "selfStatus": "measured",
+    "QA": {
+      "status": "failed",
+      "complete": true,
+      "total": 514,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 120.225,
+      "bytes": 99092,
+      "sha256": "e8eda5fb7a055ed06cca34a7eb38b2686a900003ea39a6e0590ba1b8cdb826e7",
+      "cases": [
+        {
+          "outcome": "FAIL",
+          "test": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+          "phase": "test_whole_one_million_small_resource_rows_remain_processable",
+          "frames": [
+            {
+              "file": "test_build_completion.py",
+              "line": 437
+            }
+          ],
+          "exceptionType": "AssertionError"
+        }
+      ],
+      "passed": 513
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 143.17
+    },
+    "monitorFailure": null,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 21,
+        "minimumFreeGiB": 107.23,
+        "logBytes": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 107.16,
+        "logBytes": 377
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 441,
+        "minimumFreeGiB": 106.94,
+        "logBytes": 99092
+      }
+    ]
+  },
+  "notExecuted": {
+    "recordingTests": 14,
+    "ownedMonitorWorkload": true,
+    "officialPinnedSerializerAcquisition": true,
+    "serializerContractCases": 9,
+    "largeSerializerContractCases": 3
+  },
+  "finalImmutableRuntimeGate": {
+    "status": "failed",
+    "monitorPreflightVerified": false,
+    "officialPinnedSerializerSourceVerified": false,
+    "bothSerializerFormatsAndNegativesVerified": false,
+    "ownedStageReapedAndGroupGone": false,
+    "qualification": "synthetic-serializer-contract-actual-source",
+    "realBuildPerformed": false,
+    "mozillaQualification": false,
+    "resourceQualification": false,
+    "sdkAcquired": false,
+    "checkpointDownloaded": false,
+    "newArtifacts": 0,
+    "largeWholeProfilesAndNegativesVerified": false,
+    "serializerCases": []
+  },
+  "densityEvidencePrecision": {
+    "sourceBoundMillionResourceRowTestExecuted": true,
+    "assertion": "collector status equals observed",
+    "assertionSatisfied": false,
+    "actualResultJSONRecovered": false,
+    "actualReasonCodeRecovered": false,
+    "actualDensityInputBytesRecovered": false,
+    "actualDensityElapsedSecondsRecovered": false,
+    "processingLimitCauseEstablished": false,
+    "grammarOrOwnershipCauseEstablished": false,
+    "noEndOrTruncationCauseEstablished": false,
+    "wholeQASuiteSecondsAreNotDensitySeconds": true,
+    "actualRecovery48ProfileReproduced": false,
+    "LinuxDensityTimingIsNotMacEvidence": true
+  },
+  "assessment": {
+    "allThreeRecordedStagesExactReapedAndGroupsVerifiedGone": true,
+    "ABIStagesNaturalZero": true,
+    "QANaturalExitCode": 1,
+    "cleanupFailures": 0,
+    "monitorFailureObserved": false,
+    "streamingParserActualMacQualification": "NOT_PASSED",
+    "nineCaseMacContract": "NOT_TESTED",
+    "fullHostXUL": "NOT_TESTED",
+    "actualMozillaCases": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeCause": "UNKNOWN",
+    "SDKAcquired": false,
+    "checkpointDownloaded": false,
+    "artifacts": 0,
+    "productSigningOrPublicationOrPermissionsChanged": false,
+    "newLongRunStarted": false,
+    "shortRunActivations": 1
+  },
+  "remaining": [
+    "The dense-profile test did not confirm observed aggregation on the actual Intel Mac. The unretained collector reason prevents choosing between the processing deadline and another fail-closed guard.",
+    "The only authorized short run is complete. No repeated diagnostic or long build has been started.",
+    "Any follow-up should retain a bounded collector reason and elapsed time on the controlled input before interpreting performance, while preserving the same 30-second limit and unknown semantics.",
+    "The prior shared345 full build is still incomplete, and Mozilla/native qualification is still untested."
+  ]
+}

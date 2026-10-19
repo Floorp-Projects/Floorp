@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "review": "Recovery50 actual Mac short diagnostic terminal evidence",
+  "decision": "CLEAR_FOR_PUBLICATION_FAILURE_RECORDED",
+  "terminalOutcome": "FAILED_DENSE_PROFILE_OBSERVATION_ASSERTION",
+  "openPublicationFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY50_TERMINAL_RESULT.json",
+    "bytes": 5639,
+    "sha256": "ad759220dc3df8c3e861aeb56bbb541e751444bb5770cbf7352748ea8750124e"
+  },
+  "bindings": {
+    "run": 39312246063,
+    "job": 118264555663,
+    "attempt": 1,
+    "event": "push",
+    "branch": "codex/mac-native-streaming-recovery50-20261019",
+    "caller": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "callerTree": "86f50290862f7ed5518a942a6a30c2a38dd80a1f",
+    "fixture": "de18c22f3a7e79eb2890f5e63ee6f466f574af98",
+    "fixtureTree": "80956d060245590d257a9599ea4b4e423d52b073",
+    "workflow": {
+      "bytes": 30916,
+      "sha256": "24121225c329f6f0b94054a4e998f0af3ffcf4e882135a724115ebc8ef0076d9"
+    },
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24354,
+        "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 29902,
+        "sha256": "dc062f4f04d6ef63ebf887738cf49c40f5e4e8b954274f01860a2a0cd90dc773"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+        "bytes": 14964,
+        "sha256": "9c373c4101d466965ce68662140a1a2f84271c54ae3c069a69c357d37f5c899f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+        "bytes": 14500,
+        "sha256": "5fd3f6eaad306737cf6dea1383865ba8f6e38df5594c99a49e56e9ae167870a5"
+      }
+    ],
+    "prelaunchReview": {
+      "name": "floorp-recovery50-prelaunch-review.json",
+      "bytes": 10882,
+      "sha256": "434f22b09ff1f4cc1df323f68977489dd09104eec030c6aa0cae9cc82a0f856a"
+    }
+  },
+  "independentEvidence": {
+    "providerAPIReadAfterTerminal": true,
+    "soleJob": true,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T19:35:28Z",
+    "completedAt": "2026-10-19T19:37:55Z",
+    "runAndJobConclusion": "failure",
+    "artifactCount": 0,
+    "providerDecodedLog": {
+      "bytes": 48765,
+      "sha256": "4cb6b71967bf10c4a2bed95cf2c255aa8606e2ff5a5b39a0607de387be25e5d8"
+    },
+    "providerDecodedLogEqualsPrivateFile": true,
+    "independentlyParsedJSONObjects": 10,
+    "parsedObjectsEqualPrivateSavedObjects": true,
+    "providerProof": {
+      "name": "floorp-recovery50-independent-provider-proof.json",
+      "bytes": 2518,
+      "sha256": "0f32d6146a21e2d49d91ae15c9749f3029c40f3cc684bee02c6f7fe02587afbc"
+    },
+    "privateAPI": {
+      "name": "terminal-api.private.json",
+      "bytes": 16308,
+      "sha256": "7fcfa5cd575de0be1ed88af53315b9c9f7f86995f408e1b04b2fb9a6eeaf12c2"
+    },
+    "privateParsedObjects": {
+      "name": "objects.private.json",
+      "bytes": 14177,
+      "sha256": "68e2f08e687d7f60183b8554d5df51727a0062d40bf19dcba4feff4285e4c675"
+    }
+  },
+  "actualResult": {
+    "QA": {
+      "total": 514,
+      "passed": 513,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "suiteSeconds": 120.225,
+      "case": {
+        "outcome": "FAIL",
+        "test": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+        "phase": "test_whole_one_million_small_resource_rows_remain_processable",
+        "frames": [
+          {
+            "file": "test_build_completion.py",
+            "line": 437
+          }
+        ],
+        "exceptionType": "AssertionError"
+      }
+    },
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 143.17
+    },
+    "monitorFailure": null,
+    "retainedMonitorDiagnostics": 0,
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      }
+    ],
+    "notExecuted": {
+      "recordingTests": 14,
+      "ownedMonitorWorkload": true,
+      "officialPinnedSerializerAcquisition": true,
+      "serializerContractCases": 9,
+      "largeSerializerContractCases": 3
+    },
+    "finalGateStatus": "failed",
+    "serializerCaseProjectionsRecovered": 0
+  },
+  "precisionAssessment": [
+    "The retained public unittest receipt identifies AssertionError at source line 437: the controlled one-million-resource-row collector status was required to equal observed. That assertion failed.",
+    "The actual returned result JSON, reason code, density input bytes, individual density processing time and comparison operands were not retained. No processing-limit, JSON grammar, ownership, freshness, mutation or other guard cause is established.",
+    "The immutable collector has observed and unconfirmed outcomes; this permits a source-bound inference of a fail-closed observation, but not recovery of the actual missing reason or counters.",
+    "The 120.225 seconds measure the entire QA suite. The outer resource monitor did not stop the job and retained no diagnostics; this does not identify the collector failure reason.",
+    "All three actual owned stages were exactly reaped and their groups verified gone. The two ABI stages naturally returned zero and the QA stage naturally returned one; its failure is not a cleanup failure.",
+    "The recording suite, subsequent owned monitor control, official serializer acquisition and nine-case actual serializer stage were not executed. No individual Mac serializer values may be substituted from Linux controls.",
+    "The fresh-source Linux implementation, grammar, bounds and density checks remain valid local evidence. They did not qualify actual Mac performance or resolve this failed Mac assertion.",
+    "This short diagnostic neither reproduced the missing Recovery48 production profile nor reached full host/XUL, real Mozilla cases, packaging or native authentication. Recovery48 stopped at its shared345 full-build deadline; unfinished compiler subphase and remaining work are unknown, and the original native exit cause remains unknown."
+  ],
+  "curationValidation": {
+    "rawAPIPreflightAndFinalGateComparedIndependently": true,
+    "allRetainedClaimsConsistent": true,
+    "nineInvariantNegativeControlsRejected": true,
+    "controls": {
+      "name": "floorp-recovery50-independent-terminal-controls.json",
+      "bytes": 526,
+      "sha256": "5386ab64a86b54c82908704874a7c0306bb19fdc680331b69bc8a1b2acfe253f"
+    },
+    "publicPrivacy": "No private paths, raw process identifiers, command text, environment values, secret URLs or conversation details were found in the curated receipt."
+  },
+  "remainingBlocker": "The actual Mac streaming parser qualification did not pass, and the decisive collector reason was not retained.",
+  "minimalNextDiagnostic": [
+    "Retain only a bounded fixed collector status, allowlisted reason and monotonic elapsed value for the same controlled input. The evidence must reach the structured public receipt even when the assertion fails; extra unittest text alone remains private.",
+    "Use the reason to distinguish budget exhaustion from another fail-closed guard before choosing an optimization or fix. Keep the 30-second processing limit, strict JSON checks and null unknown semantics.",
+    "Do not reduce the density assertion, relabel the failure as a pass, skip it, raise the processing budget, or start another hours-long build on this evidence."
+  ],
+  "executionScope": {
+    "shortActivationsObserved": 1,
+    "additionalCIStartedByReviewer": false,
+    "sourceOrRefChangesByReviewer": false,
+    "additionalPayloadDownloadsByReviewer": false,
+    "newMacOrLongRunAuthorizedByThisReview": false
+  },
+  "priorValidEvidence": {
+    "implementationReview": {
+      "name": "floorp-recovery50-streaming-implementation-review.json",
+      "bytes": 12616,
+      "sha256": "15ca10eecba73d44221371efc60da46ea31aa5113ad1faf5fbe0aaee25299a8d"
+    },
+    "independentLinuxFullQA": {
+      "total": 729,
+      "passed": 712,
+      "DarwinSkipped": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    "LinuxControlledObservationsAreNotMacMeasurements": true
+  }
+}
