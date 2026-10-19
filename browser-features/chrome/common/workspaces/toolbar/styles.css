@@ -91,20 +91,21 @@
 #workspaces-toolbar-button[data-workspace-sync],
 .workspace-panel[data-workspace-sync] {
   position: relative;
+}
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: 3px;
-    inset-block-end: 3px;
-    width: 11px;
-    height: 11px;
-    background-color: currentColor;
-    mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
-    -moz-context-properties: fill;
-    fill: currentColor;
-    pointer-events: none;
-  }
+#workspaces-toolbar-button[data-workspace-sync]::after,
+.workspace-panel[data-workspace-sync]::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 3px;
+  inset-block-end: 3px;
+  width: 11px;
+  height: 11px;
+  background-color: currentColor;
+  mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  pointer-events: none;
 }
 
 #workspaces-toolbar-button[data-workspace-sync][label] {
@@ -179,7 +180,7 @@
   text-align: start;
   pointer-events: none;
 
-  & > label {
+  & label {
     display: block;
     margin: 0;
     min-inline-size: 0;
@@ -197,36 +198,42 @@
   line-height: 1.3;
 }
 
-.workspaceButton .workspace-sync-status {
+.workspaceButton .workspace-sync-status-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-inline-size: 0;
+  overflow: hidden;
   font-size: 11px;
   line-height: 1.3;
   opacity: 0.75;
 }
 
-.workspaceButton[data-workspace-sync] .workspace-sync-status {
-  padding-inline-start: 16px;
-  position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    inset-block-start: calc(50% - 6px);
-    inline-size: 12px;
-    block-size: 12px;
-    background-color: currentColor;
-    mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
-    pointer-events: none;
-  }
+.workspaceButton .workspace-sync-status {
+  flex: 1;
 }
 
-.workspaceButton[data-workspace-sync="attention"] .workspace-sync-status {
+.workspaceButton .workspace-sync-status-icon {
+  display: none;
+  inline-size: 12px;
+  block-size: 12px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.workspaceButton[data-workspace-sync] .workspace-sync-status-icon {
+  display: block;
+}
+
+.workspaceButton[data-workspace-sync="attention"] .workspace-sync-status-line {
   color: var(--text-color-error, currentColor);
   opacity: 1;
+}
 
-  &::before {
-    mask-image: url("chrome://global/skin/icons/warning.svg");
-  }
+.workspaceButton[data-workspace-sync="attention"] .workspace-sync-status-icon {
+  mask-image: url("chrome://global/skin/icons/warning.svg");
 }
 
 #workspacesCreateNewWorkspaceButton > .toolbarbutton-icon {

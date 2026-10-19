@@ -12,6 +12,7 @@ import {
 } from "../toolbar/workspace-sync-indicator.ts";
 import { PopupToolbarElement } from "../toolbar/popup-block-element.tsx";
 import { WorkspacePanelButton } from "../toolbar/workspaces-panels.tsx";
+import workspacesStyles from "../toolbar/styles.css?inline";
 import { WorkspaceIcons } from "../utils/workspace-icons.ts";
 import { setWorkspacesDataStore, workspacesDataStore } from "../data/data.ts";
 import { WORKSPACE_DATA_PREF_NAME } from "../utils/workspaces-static-names.ts";
@@ -126,10 +127,22 @@ function assertPopupText(
   status: string,
 ): void {
   const nameLabel = node.querySelector(".workspace-name");
+  const statusLine = node.querySelector(".workspace-sync-status-line");
+  const statusIcon = statusLine?.querySelector(".workspace-sync-status-icon");
   const statusLabel = node.querySelector(".workspace-sync-status");
   assert(
-    nameLabel && statusLabel,
-    "popup must render separate name and status",
+    nameLabel && statusLine && statusIcon && statusLabel,
+    "popup must render a name and a status row with separate icon and text",
+  );
+  assertEquals(
+    statusLine.firstElementChild,
+    statusIcon,
+    "status icon precedes its text",
+  );
+  assertEquals(
+    statusIcon.nextElementSibling,
+    statusLabel,
+    "status text is the icon's separate sibling",
   );
   assertEquals(
     nameLabel.getAttribute("value"),
@@ -147,6 +160,65 @@ function assertPopupText(
     Node.DOCUMENT_POSITION_FOLLOWING,
     "the name precedes its status in reading order",
   );
+}
+
+function assertStatusRendering(
+  popup: Element,
+  sidebar: Element,
+  state: "selected" | "attention" | undefined,
+): void {
+  const status = popup.querySelector(".workspace-sync-status");
+  const icon = popup.querySelector(".workspace-sync-status-icon");
+  assert(
+    status && icon,
+    "status text and icon must be actual sibling elements",
+  );
+  const textStyle = getComputedStyle(status);
+  assert(textStyle, "the mounted status text must have computed styles");
+  const textBounds = status.getBoundingClientRect();
+  assert(
+    textBounds.width > 0 && textBounds.height > 0 &&
+      textStyle.display !== "none" && textStyle.visibility === "visible",
+    "each localized status must have a visible text box with production styles",
+  );
+  const iconStyle = getComputedStyle(icon);
+  const sidebarStyle = getComputedStyle(sidebar, "::after");
+  assert(
+    iconStyle && sidebarStyle,
+    "both mounted status icons must have computed styles",
+  );
+  if (state === undefined) {
+    assertEquals(
+      iconStyle.display,
+      "none",
+      "local status has no cloud or warning icon",
+    );
+    assertEquals(
+      sidebarStyle.maskImage,
+      "none",
+      "a local sidebar entry has no status mask",
+    );
+    return;
+  }
+  const iconBounds = icon.getBoundingClientRect();
+  assert(
+    iconStyle.display !== "none" && iconBounds.width > 0 &&
+      iconBounds.height > 0,
+    "selected and error statuses display their separate icon box",
+  );
+  for (
+    const [surface, mask] of [
+      ["popup", iconStyle.maskImage],
+      ["sidebar", sidebarStyle.maskImage],
+    ]
+  ) {
+    assert(mask !== "none", `${surface} must have a real status mask`);
+    assertEquals(
+      mask.includes("chrome://global/skin/icons/warning.svg"),
+      state === "attention",
+      `${surface} must use the warning mask only for an error`,
+    );
+  }
 }
 
 async function testToolbarUpdatesForSameWorkspaceAndPreservesContent(): Promise<
@@ -274,7 +346,17 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
     );
     const popupHost = document.createXULElement("vbox");
     const sidebarHost = document.createElement("div");
-    document.documentElement.append(popupHost, sidebarHost);
+    popupHost.setAttribute(
+      "style",
+      "position: fixed; top: 80px; left: 80px; width: 300px;",
+    );
+    sidebarHost.setAttribute(
+      "style",
+      "position: fixed; top: 200px; left: 80px; width: 80px;",
+    );
+    const productionStyles = document.createElement("style");
+    productionStyles.textContent = workspacesStyles;
+    document.documentElement.append(productionStyles, popupHost, sidebarHost);
     const [workspaceId, setWorkspaceId] = createSignal(boundary.firstId);
     let disposeComponents = () => {};
     try {
@@ -323,6 +405,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
         assertIndicator(popup, state, tooltip);
         assertIndicator(sidebar, state, tooltip, "title");
         assertPopupText(popup, name, status);
+        assertStatusRendering(popup, sidebar, state);
       };
       assertBoth(
         undefined,
@@ -458,6 +541,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       disposeComponents();
       popupHost.remove();
       sidebarHost.remove();
+      productionStyles.remove();
       setWorkspacesDataStore("data", originalData);
       await settle();
       if (hadPreference) {
