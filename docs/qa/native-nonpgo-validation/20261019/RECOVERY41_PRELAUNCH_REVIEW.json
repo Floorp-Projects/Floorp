@@ -1,0 +1,410 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY41_TRUSTED_COMPLETION_AND_SHIM_FAILURE_RECORDING_SOURCE_AND_PRELAUNCH_REVIEW",
+  "boundaryContract": "trusted-single-purpose-runner-v1",
+  "sourceFreezeManifest": {
+    "bytes": 5173,
+    "sha256": "3b50f68b2cca95ce354fccf75aaaa09a0bfa762179d51ed271a0c8c5e714ba71",
+    "files": 29,
+    "allLocalBytesMatched": true
+  },
+  "decision": {
+    "staticReady": true,
+    "shortDiagnostic": "GO",
+    "longValidationCandidate": "TECHNICALLY_SUITABLE_AFTER_CLEAR_REAL_MAC_SHORT_TERMINAL_REVIEW_AND_FRESH_ROUTE_CHECKS",
+    "activeLongRouteReviewed": false,
+    "productQualification": false
+  },
+  "openBlockingFindings": 0,
+  "openP1": 0,
+  "openP2": 0,
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 35186,
+      "sha256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 38473,
+      "sha256": "b2d4afdbf59771ef1090f8c7470dae99b198fd4eab1b1df4810e05e8e9bbfe6a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 10804,
+      "sha256": "d150348dc76e454227108354e9b49c38675b694ce078bb598564c44bceed22b4"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "bytes": 11562,
+      "sha256": "c4270e18440e9c4079347cc9a67f58e399cca9913bc11b7eed8fe034db6f5499"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/monitor_native_preflight.py",
+      "bytes": 7565,
+      "sha256": "873ccd2ee7458c796d5517e28f020d6f53b6902ba3123c211049c01cb5f25731"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/completion_preflight.py",
+      "bytes": 5567,
+      "sha256": "1313296dd1645ed2201c1a3bb3976d534ce9b84602728bda37d874648a54bd66"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "bytes": 34204,
+      "sha256": "94d0af617c1142df439b9654666a26b112ec79da657b92ca7bb1ca049c8e899b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_process_census.py",
+      "bytes": 9576,
+      "sha256": "b785634ae2ef674bef0af993ba43472a90c818f0018eb21f38c83c133106278b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_guards.py",
+      "bytes": 85486,
+      "sha256": "894c25af906b0923d294d8c4234fe8514883c5ca817125b7bbd61e94895a7231"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_shim_failure_patch.py",
+      "bytes": 13890,
+      "sha256": "e273d0cd0919241a4e18069c22baa3f4347bc3e65ca045f00f59ec42814a2d0d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_completion_preflight.py",
+      "bytes": 4981,
+      "sha256": "bb9211286187390f5fc3f59a27bdc83604c3ff66aebed872cb67819f0cb00235"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/shim-failure-recording.patch",
+      "bytes": 12717,
+      "sha256": "367f7095a17602fc986f90c344d44098366124e66384d1e2e8d3ba92f34ff3ad"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-test-runtime.py",
+      "bytes": 47527,
+      "sha256": "39af468b4331fdff4ee3c21ad3665c883348a5990db2fb3364a181d587b62f5b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-test-context-menu.py",
+      "bytes": 18363,
+      "sha256": "2863ce8f453a9a1b20a491887398c003b5523ed0bdbf7bd23fe4210249bef911"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fixtures/harness-shim_diagnostics.py",
+      "bytes": 5731,
+      "sha256": "4607da57c3ae874952f26b8926ec2bbe16e5ccdb86374b2a8a261c5f7be95a18"
+    },
+    {
+      "path": "tools/app-shim/test-runtime.py",
+      "bytes": 48679,
+      "sha256": "601341a644d89382dd8f30b6025146b87407fb7c8a52260efff9f8ecccfdce76"
+    },
+    {
+      "path": "tools/app-shim/test-context-menu.py",
+      "bytes": 11394,
+      "sha256": "f3cc372b9e07d47e5865f9d9dfbfbe981d662848fc8e87b32e01806cfe195400"
+    },
+    {
+      "path": "tools/app-shim/shim_failure_diagnostics.py",
+      "bytes": 19910,
+      "sha256": "9c9dd722725577dd31b4389e3244c4199e124c3dee468e91458e01c059e6976d"
+    },
+    {
+      "path": "tools/app-shim/test_shim_failure_diagnostics.py",
+      "bytes": 18620,
+      "sha256": "bc8259f2124d12d2f63fe8ccb90be98dedd7a7da14819297ae4564706bb9c5f0"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_TRUSTED_RUNNER_CONTRACT.md",
+      "bytes": 6495,
+      "sha256": "047e264cd5d2efee629efbfaff91ee5044183b2b17dba912321ed1d19ef9fcd8"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_SHIM_FAILURE_RECORDING.md",
+      "bytes": 2967,
+      "sha256": "e694c9c186dcf6dd24cd34bf7743dac320169f2da946378ac5c3bf56f5481732"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_COMPLETION_WORKFLOW.yml.disabled",
+      "bytes": 3129,
+      "sha256": "9abb17564f548663cae72282aba4ed9883bf03a09f6f0663d4d1eb17ea75ac1e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 17454,
+      "sha256": "048e0318543519af7eca67db44faa28c3a97b6d336828b16078c4fb10ee4d746"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 14596,
+      "sha256": "4564a491de8fea6cce5a1b4a02ddcf3de060f270d622379f993753a427f86292"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 19587,
+      "sha256": "bd8a7fb51713dacdf9477f6e6df701a2260eab65c4fa222198e6ba8d1b76a94e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_VALIDATION_HYPOTHESES.md",
+      "bytes": 2573,
+      "sha256": "bd65085eced3e9c0ee6fda3c9b14a1b75c949db342bf504ded11b9848c6f22b6"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_LOCAL_RESULT.json",
+      "bytes": 7512,
+      "sha256": "daccac42df43bd816b1960cc2ed217cf59b6c61b472a014b0997698f9d5a49dd"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_HARNESS_PATCH_RESULT.json",
+      "bytes": 1058,
+      "sha256": "bc8d6ad3d80b9ba1eb7303aafbc4da0b6bbb8d8d9d034166217d415313a34236"
+    }
+  ],
+  "unchangedCriticalSourceBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34591,
+      "sha256": "6dc4a5241578b54c5ff954a88cd78191250c629cec5fbb4d43b157d71fa343bc"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "bytes": 13139,
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "bytes": 11237,
+      "sha256": "e288841181a9240a9a45cb7fe65885e6eb04a696ea770162d4b94271a68c429f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_convergence.py",
+      "bytes": 18238,
+      "sha256": "908d85e630b086db053d20f30379a11dc67f498760ef8eab5af80ded47b9e594"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 7491,
+      "sha256": "a35803793f7cbcfa1f0601fcffc14f1e2f277d709d074fb1797631914bd71395"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4204,
+      "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_processes.py",
+      "bytes": 6111,
+      "sha256": "c944d1d86724e57d79affc11d77791f7bc0c066c3651430d9b0b21d71e00d92b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_cause.py",
+      "bytes": 15294,
+      "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300"
+    }
+  ],
+  "checks": [
+    "Natural code-zero completion is required for every preceding owned stage, with no stop reason, failure phase, first failure, monitor failure, active group, unreaped leader or unverified cleanup. Required configure/configuration/export/Rust/archive stages each occur once.",
+    "Available untruncated sampled birth history is required. A fresh self-bound full kernel snapshot checks known births independently of current UID/RUID and process group; live and unreaped zombie matches both reject. Invalid known identities and unavailable snapshots remain failures.",
+    "The prior global new-UID zero wait and ambient task-counter accounting are explicitly replaced. Unmeasured ambient usage is NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE, never a zero-resource or nonwriter assertion. Active owned-group sampling, resource limits and unknown-sample stopping remain unchanged.",
+    "Producer and consumer require the versioned completion contract. Successful libgkrust archive and dependency-info hashes are tied to captured object manifest rows. Exact descriptor-stream hashing, pre/post metadata, archive readback, complete selected-root rescan and restore/content/configuration checks remain required.",
+    "Pinned harness recording patch applies after the existing startup patch with base/result/helper hashes checked. Independent execution reproduced patch application, reversed only the recording patch to prove the entire HostProcess class AST unchanged, reapplied it, and verified prepared final files.",
+    "Daily and fixed QA context/GUI paths preserve separate first functional failure, first reported disconnect cause, pre-cleanup and post-cleanup host/launcher/child observations, and independent cleanup outcomes. Existing context counts, first-failure evidence, streams and lifecycle records remain present.",
+    "New public diagnostics reproject fixed enums, booleans and bounded numeric facts; process identities, argv, paths, app IDs, nonces and arbitrary exception text are discarded. Durable exclusive mode-0600/fsync pre-cleanup records precede cleanup requests. A reported reason is not established root cause.",
+    "Recording unittest failures use an explicit fixed-source opt-in, retain exact static test identities and exception types, and expose only verified canonical source basenames and in-range lines. Unknown identities and private aliases do not become public facts."
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "Ambient measurement wording previously implied unproven nonwriter ownership; interrupted completion was asserted before validation.",
+      "resolution": "Declared measurement scope is explicit and interrupted remains unknown until completion checks pass."
+    },
+    {
+      "severity": "P2",
+      "issue": "New child-control cleanup could replace the primary test failure or omit timeout kill/reap.",
+      "resolution": "Bounded exact-child cleanup is registered independently through unittest cleanup; negative test retains both primary and cleanup failures."
+    },
+    {
+      "severity": "P2",
+      "issue": "Recording test failures were outside the QA-only static identity allowlist and lost their identifiers.",
+      "resolution": "Fixed recording-source opt-in preserves failed test ID, type and verified frames, with default unknown behavior retained."
+    },
+    {
+      "severity": "P2",
+      "issue": "Canonical frame verification could still publish a private symlink alias basename.",
+      "resolution": "Output uses the verified canonical file basename; a private alias negative test proves no arbitrary name or path is emitted."
+    }
+  ],
+  "testsExecuted": [
+    {
+      "label": "full QA regression",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "cwd": "tools/qa/native-nonpgo",
+      "platform": "Linux",
+      "total": 401,
+      "passed": 384,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 19.934,
+      "exitCode": 0,
+      "resourceWarnings": "error",
+      "privateLogBytes": 9156,
+      "privateLogSHA256": "60aa7bc5794a94bc92fa558a6889500637ad5d2b2b7cdf998ab100ba7acd88aa",
+      "rawLogPublished": false
+    },
+    {
+      "label": "exact short QA selection",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest -v test_checkpoint test_process_census test_guards test_shim_failure_patch test_completion_preflight test_unittest_receipt",
+      "cwd": "tools/qa/native-nonpgo",
+      "platform": "Linux",
+      "total": 151,
+      "passed": 148,
+      "skipped": 3,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 12.952,
+      "exitCode": 0,
+      "resourceWarnings": "error",
+      "privateLogBytes": 30379,
+      "privateLogSHA256": "b46ad9b90d42b3f61f81448e228d721ec4153333a610bcfc083005e6772485c2",
+      "rawLogPublished": false
+    },
+    {
+      "label": "recording controls",
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -v -s tools/app-shim -p test_shim_failure_diagnostics.py",
+      "cwd": ".",
+      "platform": "Linux",
+      "total": 14,
+      "passed": 14,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.037,
+      "exitCode": 0,
+      "resourceWarnings": "error",
+      "privateLogBytes": 2757,
+      "privateLogSHA256": "b9c35443899dae03c923581cc17354dcb6d24766d872582700a893fdd49c5868",
+      "rawLogPublished": false
+    }
+  ],
+  "additionalValidation": {
+    "recordingSuccessReceiptProjection": "complete/passed/14/skip0",
+    "actualJavaScriptObserverControl": "executed by recording tests",
+    "workflowYAML": "parsed both templates",
+    "workflowShell": "19 scripts passed bash -n",
+    "inlinePython": "6 heredocs passed AST parsing"
+  },
+  "shortRoute": {
+    "template": "docs/qa/native-nonpgo-validation/20261019/RECOVERY41_COMPLETION_WORKFLOW.yml.disabled",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobMinutes": 20,
+    "internalPhaseMinutes": 15,
+    "expectedQATests": 151,
+    "expectedRecordingTests": 14,
+    "requiredSkips": 0,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "initialCreatedPushOnly": true,
+    "attempt": 1,
+    "sdk": false,
+    "build": false,
+    "artifactUpload": false,
+    "browserOrGUIAuthentication": false,
+    "immutableFixtureAndCaller": "INDEPENDENT_PROVIDER_READBACK_MATCHED"
+  },
+  "longCandidate": {
+    "template": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+    "inactiveTemplate": true,
+    "jobs": 2,
+    "serializedBy": "consumer needs producer",
+    "runner": "macos-15-intel",
+    "jobMinutesEach": 360,
+    "checkpointFiles": 1,
+    "maxStoredBytes": 10737418240,
+    "retentionDays": 1,
+    "uploadMode": "pinned action, archive false, one raw file after verified readiness",
+    "sdk": "ordinary unexpired acquisition and fixed content validation in each job",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "rawHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "qualification": "verified resumed build across two standard Intel jobs; freshObjdir false; sameJob false",
+    "requiredBeforeActivation": [
+      "Real Mac short result has 151 QA and 14 recording passes, skip0, no first/monitor failure, and verified owned cleanup.",
+      "Reviewed immutable source and rendered caller bytes match provider readback; initial-created-push/attempt1 route and no overlapping owned run are checked.",
+      "Fresh official SDK metadata and ordinary acquisition remain valid; no expired retrieval is used."
+    ],
+    "hypotheses": [
+      "Trusted build completion can reach archive capture without the unrelated global UID-zero predicate. Earlier candidate harmlessness and kernel failure cause remain unproven.",
+      "Completed-state archive/restore/reference/configuration checks can pass.",
+      "Consumer can finish host TU, XUL, package and native authentication within unchanged limits.",
+      "If native authentication fails, pre-cleanup diagnostics can distinguish observed failure from later cleanup effects without asserting root cause."
+    ],
+    "renderedCandidate": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY42_TRUSTED_CHECKPOINT_WORKFLOW.rendered.yml.disabled",
+      "bytes": 19605,
+      "sha256": "adcaa98d9b91ecf51dcc3c30107405dbaaaf68d05291eab9baa7016e86b85f63",
+      "fixture": "e473170251a03285727571657394ce05f2f4f2be",
+      "templateRenderExact": true,
+      "notAnActiveRuntimeCaller": true
+    }
+  },
+  "remainingLimits": [
+    "Sampled birth history is not exhaustive process ancestry. Trusted recipe/no deliberate detached writer/no concurrent user build assumptions are required.",
+    "Stream hashing and complete rescans detect ordinary persistent mutations but are not an atomic filesystem snapshot or hostile same-UID immutability guarantee. Those stronger properties are outside this versioned contract.",
+    "The full snapshot may reject unavailable required identity evidence; required unknown states are never converted to zero or gone.",
+    "The new real Mac known-child live/zombie/reap control and all selected actual-platform gates have not been executed in these Linux results.",
+    "No completed Floorp checkpoint, host/XUL/package, or native authentication result is established by this source review. Earlier native failure causes remain unknown."
+  ],
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "ciExecutions": 0,
+    "remoteWrites": 0,
+    "artifactOperations": 0,
+    "largeDownloads": 0,
+    "permissionChanges": 0,
+    "localTestExecutions": true
+  },
+  "immutableRoute": {
+    "fixture": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "e473170251a03285727571657394ce05f2f4f2be",
+      "tree": "c3b9317a04a987b91f58b57b7508a9fec18a9eeb",
+      "parent": "06d1890562680d5908822bec3744bacd900b581f",
+      "independentFileReadback": {
+        "files": 29,
+        "matched": 29,
+        "mismatched": 0
+      }
+    },
+    "caller": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "1930f0e677ec55be0d747c76f981b9022b779901",
+      "tree": "1efbf082afe66e32947bf099b1d5ef4e1804e93e",
+      "parent": "51d05dfe8a838a188fe64ae8bd42295f83da03dc",
+      "changedFiles": [
+        ".github/workflows/mac-native-checkpoint.yml"
+      ],
+      "commitsAheadOfParent": 1,
+      "workflowBytes": 3147,
+      "workflowSHA256": "2318d58e4be0645240dd7da8c551b7fd731f7564c620f11e27e563f8d548295c",
+      "templateRenderExact": true
+    },
+    "activationSnapshot": {
+      "branch": "codex/mac-native-completion-recovery41-20261019",
+      "branchLookupHTTP": 404,
+      "branchRunCount": 0,
+      "ownedNativeInProgressRuns": 0,
+      "ownedNativeQueuedRuns": 0,
+      "unrelatedQueuedRuns": 1,
+      "snapshotNotFutureExclusivityGuarantee": true
+    },
+    "inheritedWorkflowTriggers": "Caller differs from the already reviewed parent in only the exact-branch diagnostic workflow; inherited workflow contents are unchanged."
+  }
+}
