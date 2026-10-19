@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "record": "recovery48-mozilla-first-consumer-live-status",
+  "observedAtUTC": "2026-10-19T13:56:47.510Z",
+  "run": {
+    "id": 39258232399,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39258232399",
+    "caller": "aa2cf04c0e5331a33181413f50b4b9530d7ba525",
+    "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "event": "push",
+    "attempt": 1,
+    "status": "in_progress",
+    "conclusion": null,
+    "createdAt": "2026-10-19T13:12:50Z"
+  },
+  "job": {
+    "id": 118078849382,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "status": "in_progress",
+    "conclusion": null,
+    "startedAt": "2026-10-19T13:12:55Z",
+    "currentStep": [
+      {
+        "name": "Restore verified state then build XUL and run Firefox smoke before native authentication",
+        "startedAt": "2026-10-19T13:24:04Z"
+      }
+    ],
+    "completedSteps": [
+      {
+        "name": "Set up job",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:12:56Z",
+        "completedAt": "2026-10-19T13:12:58Z"
+      },
+      {
+        "name": "Bound the initial authorized execution",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:12:58Z",
+        "completedAt": "2026-10-19T13:12:58Z"
+      },
+      {
+        "name": "Checkout immutable reviewed fixture",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:12:58Z",
+        "completedAt": "2026-10-19T13:13:04Z"
+      },
+      {
+        "name": "Establish this job's fresh clock and task root",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:13:04Z",
+        "completedAt": "2026-10-19T13:13:06Z"
+      },
+      {
+        "name": "Verify actual native process monitor before acquisition",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:13:06Z",
+        "completedAt": "2026-10-19T13:14:55Z"
+      },
+      {
+        "name": "Acquire the official unexpired content-matched SDK",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:14:55Z",
+        "completedAt": "2026-10-19T13:15:09Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:15:09Z",
+        "completedAt": "2026-10-19T13:20:41Z"
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:20:41Z",
+        "completedAt": "2026-10-19T13:20:44Z"
+      },
+      {
+        "name": "Download only the verified successful producer checkpoint",
+        "conclusion": "success",
+        "startedAt": "2026-10-19T13:20:44Z",
+        "completedAt": "2026-10-19T13:24:04Z"
+      }
+    ]
+  },
+  "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+  "workflow": {
+    "bytes": 26737,
+    "sha256": "8aaa15ce104b4495b6d31ecc6fb8c86809bac8cfd6a8a2987afa5d4d372d900e"
+  },
+  "activationAndIndependentReviewCommit": "c5f0f128fffa1e5a94a673c3306e2f445f94ffdf",
+  "results": {
+    "fullHostXUL": "NOT_YET_OBSERVED",
+    "currentMozilla": "NOT_YET_OBSERVED",
+    "nativeAuthentication": "NOT_YET_OBSERVED",
+    "runnerMonitorFailure": "NOT_YET_OBSERVED",
+    "originalNativeExitCause": "unknown"
+  },
+  "evidenceLimits": [
+    "The Actions API exposes the combined step; the internal restore/build/test phase is not established by this status record.",
+    "Completed acquisition/preflight steps are step-level evidence. Detailed typed receipts will be assessed after terminal logs become available.",
+    "A live status is not full-build, Mozilla or native product qualification."
+  ],
+  "execution": {
+    "sharedAbsoluteWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "oneExistingCheckpointConsumer": true,
+    "newArtifactUploads": 0,
+    "humanCancellation": false,
+    "additionalAuthorizationPending": false
+  }
+}
