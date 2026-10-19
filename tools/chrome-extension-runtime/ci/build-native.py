@@ -102,7 +102,7 @@ def main():
               "ac_add_options --enable-extensions-webidl-bindings", "ac_add_options --disable-debug",
               "ac_add_options --disable-debug-symbols", "ac_add_options --enable-optimize=-O1",
               "ac_add_options --disable-crashreporter", "ac_add_options --with-app-name=floorp",
-              "ac_add_options --with-app-basename=Floorp", "ac_add_options --enable-chrome-format=flat",
+              "ac_add_options --with-app-basename=Floorp",
               "ac_add_options --with-branding=browser/branding/floorp-daylight",
               "ac_add_options --enable-update-channel=chrome-extension-candidate",
               f"ac_add_options --target={target}"]
