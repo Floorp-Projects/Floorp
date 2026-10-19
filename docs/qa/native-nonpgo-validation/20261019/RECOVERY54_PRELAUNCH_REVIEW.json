@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "review": "Recovery54 immutable SDKless fixed-boundary phase diagnostic route",
+  "decision": "GO_ONE_SDK_FREE_SHORT_PHASE_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "caller": {
+    "sha": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+    "tree": "c02bef2b2eb89dd6d476d4a19011ae32cddfb7ff",
+    "parents": [
+      "66d415f479d6cf87b9a5ca61baecace27a476fff"
+    ],
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 47930,
+    "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c",
+    "providerReadbackExactlyMatchesReviewedCandidate": true
+  },
+  "source": {
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "tree": "de348633b4a2cf827fe31ef5ab54d145eb60fcf2",
+    "parser": {
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    "test": {
+      "bytes": 32864,
+      "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+    },
+    "newSourceMutation": false,
+    "basis": "The same immutable fixture and files were independently read back for Recovery53 and remain byte-identical. The phase observer also verifies the parser SHA256 at execution."
+  },
+  "technicalBindings": {
+    "implementationReview": {
+      "name": "floorp-recovery54-implementation-review.json",
+      "bytes": 9245,
+      "sha256": "efde8764beb07dfd523c9757fb105420caf3a9f33301691e0baf29a00e656089"
+    },
+    "preparation": {
+      "name": "floorp-recovery54-preparation.json",
+      "bytes": 6661,
+      "sha256": "f8fdeb4f2edc100307757607f8033a8308d811b9a4c7bcdf0a943321266e6b44"
+    },
+    "phaseProbe": {
+      "name": "floorp-recovery54-phase-probe.py",
+      "bytes": 3626,
+      "sha256": "c07be533faf8989711fbd41700af1d8cf983b1c3f5ecee2d2e3951c4aa3b6af6"
+    },
+    "phaseValidator": {
+      "name": "floorp-recovery54-phase-validator.py",
+      "bytes": 2322,
+      "sha256": "03f8a235b09f21772a713940e46fbf8fe14a0c52e8d9947afd5f65d1b0205a67"
+    },
+    "phaseOwnedValidator": {
+      "name": "floorp-recovery54-phase-owned.py",
+      "bytes": 1104,
+      "sha256": "e43f6002e81e92e40d1ac64aa1bac5c13f839650a13b3f5af2925e44a2fafa14"
+    },
+    "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5"
+  },
+  "scope": {
+    "branch": "codex/mac-native-streaming-recovery54-20261019",
+    "trigger": "initial created push, zero before SHA, attempt 1, exact repository and branch",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "checkoutPersistsCredentials": false,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "preflightOwnedStages": 6,
+    "separateSerializerOwnedStages": 1,
+    "jobPlatformMinutes": 360,
+    "existingPhaseMinutes": 15,
+    "existingPreflightStepMinutes": 10,
+    "processingSeconds": 30,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "realBuild": false,
+    "artifactUpload": false
+  },
+  "reviewAssessment": [
+    "The immutable caller changes only the dedicated workflow against the reviewed Recovery53 caller. Its full provider bytes match the reviewed phase candidate exactly.",
+    "Four constant boundary callbacks are the only additions to the exact copied whole-profile function; stripping them reproduces the original AST. No parser optimization, validation, cap or deadline change is introduced.",
+    "The phase child uses the existing Runner, job clock, clean environment and resource/unknown/cleanup contract. Strict public shape and exact six-stage ownership checks are present, and independent negative controls reject malformed evidence and incomplete cleanup.",
+    "Original isolated QA failure may continue only through the inherited safety predicate and remains the first failure and final failed result. A valid processing-limit phase observation is diagnostic evidence, not a replacement for original dense QA qualification.",
+    "The public last reached boundary is not a claim of CPU-time attribution or a stuck subroutine. Second-pass rows entered are distinct from total input rows or first-pass progress."
+  ],
+  "validation": {
+    "independentASTAndShapeProof": {
+      "name": "floorp-recovery54-independent-controls.json",
+      "bytes": 817,
+      "sha256": "eca0098cfb73bf80f653ab0acd40c4228656208629a0ae90cfa6e2f5c7bc2270"
+    },
+    "phaseAndOwnedNegativeControls": 29,
+    "smallProfileExactParity": true,
+    "independentlyReexecutedCandidateNegativeControls": 1099,
+    "guardProof": {
+      "name": "floorp-recovery54-independent-guarded-controls-result.json",
+      "bytes": 878,
+      "sha256": "77597b9d8c5710a6236d190a69922e9d14b74fe9a8fc8babeac30cc2762a110e"
+    },
+    "independentlyReexecutedInlineMockFlows": 11,
+    "flowProof": {
+      "name": "floorp-recovery54-independent-flow-controls-result.json",
+      "bytes": 2604,
+      "sha256": "4144815be3cf1bc9dda179c46d9dcf06f86c05852abce2dc7e3aaecfdfac35da"
+    },
+    "newHeavyDensityOrFullQAExecutionByReviewer": false,
+    "actualMacForThisDiagnostic": "NOT_YET_RUN"
+  },
+  "freshAdmission": {
+    "observedAt": "2026-10-19T20:46:30Z",
+    "branchMatches": 0,
+    "priorCallerRuns": 0,
+    "activeGlobal": 0,
+    "queuedGlobal": 1,
+    "ownedActive": 0,
+    "ownedQueued": 0,
+    "unrelatedQueuedRunLeftUntouched": true,
+    "matchingPushWorkflows": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "triggerBasis": "The inherited 26 workflow trigger configurations remain unchanged outside the dedicated workflow; all other push branch filters reject this dedicated branch.",
+    "repeatImmediatelyBeforeActivation": true,
+    "proof": {
+      "name": "floorp-recovery54-independent-route-proof.json",
+      "bytes": 576,
+      "sha256": "21a287194755f5fd452233c56d6f7ba002c483769d46e651abe65cdb875ac8c2"
+    }
+  },
+  "remainingConditions": [
+    "The launching owner repeats fresh unused-branch, prior-caller-run and owned-overlap checks, then activates the exact dedicated caller once.",
+    "Review actual terminal API and raw evidence for the original density result, fixed phase marks and row semantics, QA522/record14/serializer9, all seven stage reaping/group cleanup, monitor state, first-failure preservation and artifact0.",
+    "This is a short diagnostic GO. Mac dense qualification remains NOT_PASSED until established by actual evidence; no long build, Mozilla or native qualification follows from valid diagnostic-only phase evidence."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutated": false,
+    "newPayloadAcquisition": false,
+    "largeDensityOrFullQARerun": false
+  }
+}

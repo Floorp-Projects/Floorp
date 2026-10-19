@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY54_SDK_FREE_SHORT_PHASE_DIAGNOSTIC_EXECUTION",
+  "status": "execution-started",
+  "prelaunchReview": "RECOVERY54_PRELAUNCH_REVIEW.json",
+  "activation": {
+    "at": "2026-10-19 20:47:17 UTC",
+    "branch": "codex/mac-native-streaming-recovery54-20261019",
+    "caller": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "freshGate": {
+      "at": "2026-10-19 20:47:11 UTC",
+      "caller": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+      "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+      "branchMatches": 0,
+      "priorCallerRuns": 0,
+      "globalActive": 0,
+      "globalQueued": 1,
+      "activeOwned": 0,
+      "queuedOwned": 0,
+      "callerReadback": true,
+      "independentGO": "2026-10-19T20:46:30Z"
+    },
+    "activationCalls": 1
+  },
+  "run": {
+    "id": 39322232985,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39322232985",
+    "head": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+    "event": "push",
+    "attempt": 1
+  },
+  "scopeLimits": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "parserSourceUnchanged": true,
+    "SDK": false,
+    "checkpoint": false,
+    "artifacts": 0,
+    "newLongBuild": false,
+    "processingSeconds": 30,
+    "additionalOwnedPhaseStages": 1
+  },
+  "qualification": "Execution-started evidence only. Original QA and separate fixed-boundary probe must be evaluated independently at terminal."
+}
