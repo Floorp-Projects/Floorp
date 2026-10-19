@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "review": "Recovery52 actual Mac reason diagnostic terminal evidence",
+  "decision": "CLEAR_FOR_PUBLICATION_OVERALL_FAILURE_PRESERVED",
+  "openPublicationFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY52_TERMINAL_RESULT.json",
+    "bytes": 17980,
+    "sha256": "a43ea54d56051431bbd052d7a86f29aa6da1e138d29576143afce58e1c12ed9b"
+  },
+  "bindings": {
+    "run": 39317742303,
+    "job": 118283502051,
+    "attempt": 1,
+    "event": "push",
+    "branch": "codex/mac-native-streaming-recovery52-20261019",
+    "caller": "4a744679264b59c24219693581f2b129e4dd9865",
+    "callerTree": "c55e55f06529c84bd6204868b6df110762862ce3",
+    "fixture": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+    "fixtureTree": "6319ff2fe03838627af626928987d372d8a5eb52",
+    "workflow": {
+      "bytes": 36489,
+      "sha256": "86f08c862368df6047cfc8be65c9eae7ee1efbce574558b03c1445f28cd90a28"
+    },
+    "parser": {
+      "bytes": 24498,
+      "sha256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9"
+    },
+    "immutableSourceFiles": {
+      "test_build_completion.py": {
+        "bytes": 31356,
+        "sha256": "6a8e19ff79bc2352a3e320c7d7575bdce5afc9a07cf21074418902899f4083a6"
+      }
+    },
+    "prelaunchReview": {
+      "name": "floorp-recovery52-prelaunch-review.json",
+      "bytes": 7598,
+      "sha256": "62470957f9421e9e3fe9b25a352b509f16e8ed6b9eca543495f5f1f60b02ddfa"
+    }
+  },
+  "independentProviderEvidence": {
+    "APIAndLogReadAfterTerminal": true,
+    "soleJob": true,
+    "runner": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T20:15:11Z",
+    "completedAt": "2026-10-19T20:17:58Z",
+    "runAndJobConclusion": "failure",
+    "artifacts": 0,
+    "decodedLog": {
+      "bytes": 86414,
+      "sha256": "428594931c05911c0c386f3c9bb8eeac4f3dc71c04b50b2018f9bbcdefc4d37d"
+    },
+    "decodedLogEqualsPrivateSavedFile": true,
+    "independentlyParsedObjects": 16,
+    "objectsEqualPrivateSavedObjects": true,
+    "privateAPI": {
+      "name": "terminal-api.private.json",
+      "bytes": 16317,
+      "sha256": "dd314665bf7fd3423e895b9fc0dda448bbc73b3b029b8578bdf117242083920f"
+    },
+    "privateParsedObjects": {
+      "name": "objects.private.json",
+      "bytes": 21513,
+      "sha256": "f7b64466d2ed2c2de938d57d5dbe93fa1030533c67ab814cac9b237d429aea0d"
+    },
+    "providerProof": {
+      "name": "floorp-recovery52-independent-terminal-provider-proof.json",
+      "bytes": 1460,
+      "sha256": "c75331590ad5bb156c7d9fbe56cf0e988145ab69929eb7f64458381fbba52e62"
+    }
+  },
+  "actualDensityResult": {
+    "schema": 1,
+    "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.004407363999974,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "completeCoverage": false,
+    "objectCount": null,
+    "compileCount": null
+  },
+  "actualQA": {
+    "total": 522,
+    "passed": 521,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "suiteSeconds": 136.593,
+    "failedCase": {
+      "outcome": "FAIL",
+      "test": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "phase": "test_whole_one_million_small_resource_rows_remain_processable",
+      "frames": [
+        {
+          "file": "test_build_completion.py",
+          "line": 450
+        }
+      ],
+      "exceptionType": "AssertionError"
+    }
+  },
+  "separateActualControls": {
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "seconds": 0.374
+    },
+    "ordinaryPinnedSerializerAcquisition": {
+      "schema": 1,
+      "status": "passed",
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "officialContentsAPI": true,
+      "tokenPublished": false
+    },
+    "serializerCases": 9,
+    "caseValuesRecoveredFromActualFinalOutput": true,
+    "largeWholeInputBytes": [
+      17845903,
+      17845498,
+      17845901
+    ],
+    "allNineExpectationsSatisfied": true,
+    "positiveCases": "observed complete coverage with the expected finished targets",
+    "noEndCases": "observed complete coverage with zero finished targets",
+    "truncatedCases": "unconfirmed coverage with null counts",
+    "allSerializerHandlesClosedAndWorkerNeverStarted": true
+  },
+  "failureAndCleanup": {
+    "preflightStatus": "failed",
+    "diagnosticContinuation": true,
+    "firstFailure": {
+      "stage": "checkpoint-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 154.84
+    },
+    "finalStatus": "failed",
+    "firstFailureFilePreserved": "true by the executed immutable final equality predicate",
+    "preflightMonitorFailure": null,
+    "driverMonitorFailure": null,
+    "retainedPreflightDiagnostics": 0,
+    "retainedDriverDiagnostics": 0,
+    "actualStages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "checkpoint-tests",
+        "exitCode": 1,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 1,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "failure-recording-tests",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "monitor-preflight",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      },
+      {
+        "stage": "build-completion-contract",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderStatus": "reaped",
+        "leaderExitCode": 0,
+        "cleanupFailure": null
+      }
+    ],
+    "allSixExactlyReapedAndGroupsVerifiedGone": true
+  },
+  "precisionAssessment": [
+    "The controlled one-million-resource-row input reached the unchanged cooperative 30-second processing guard on this actual Mac run. Its measured collector elapsed was 30.004407363999974 seconds and its reason was build-completion-processing-limit.",
+    "The density result remains unconfirmed, with false coverage and null object and compile counts. The 136.593 seconds are the whole QA suite, not the density collection duration.",
+    "The three-line primitive-column prefix change did not satisfy the actual Mac processing budget for this fixed input. The exact parse pass and performance bottleneck were not observed; no measured speedup or failure of every optimization is inferred from two budget-limited outcomes.",
+    "The narrowly recognized density failure allowed independent diagnostic stages to execute. QA, preflight and the final job remained failed; successful recording and serializer cases do not qualify the dense Mac path.",
+    "All nine individual case values were recovered from actual final output. Private child-contract top-level flags and first-failure-file preservation were validated by executed immutable predicates; they are not represented as separately downloaded private files. No local case values were substituted.",
+    "The continuation used an executed immutable check of the live Runner group set. No independently downloaded group-set file is available; the offline control supplies its successful false argument and separately rejects a true argument, while actual six-stage reaping and group cleanup are directly retained.",
+    "The projected driver leader record includes placeholder error metadata. The public receipt correctly retains the actual reaped status and typed exit code rather than interpreting that placeholder as a failure.",
+    "This result does not retrospectively establish Recovery50's unretained reason. It is not a reproduction of the missing Recovery48 production profile, whose exact format, size and compiler subphase were not recovered.",
+    "Recovery48 stopped at its known shared345 full-build deadline. Unfinished compiler subphase and remaining work remain unknown; full host/XUL, current Mozilla cases and native authentication were not tested here, and the original native exit cause remains unknown."
+  ],
+  "publicationValidation": {
+    "curatedFieldsComparedToIndependentRawAndAPI": true,
+    "nineNegativeInvariantControlsRejected": true,
+    "controls": {
+      "name": "floorp-recovery52-independent-terminal-controls.json",
+      "bytes": 453,
+      "sha256": "37eb221d5ba8ec8ba2236fbc1569bd0eb2c9857c5b9c227b080517d107b50799"
+    },
+    "publicPrivacy": "No private paths, raw process identifiers, arbitrary command text, environment values, secret URLs or conversation details were found.",
+    "additionalImmutableGateControls": {
+      "name": "floorp-recovery52-independent-gate-controls.json",
+      "bytes": 549,
+      "sha256": "08c74149132f3f6efeb2624078708542a8c83b6d1c7a5de9847d66fdfe48000e",
+      "negativeControlsRejected": 10,
+      "actualNineCaseShapesChecked": true,
+      "allSixLastSamplesComplete": true
+    }
+  },
+  "remainingValidationBlocker": "The same controlled dense input still fails to complete observation within the existing processing budget on the actual Intel Mac.",
+  "nextReviewBoundary": [
+    "Prefer fixed bounded phase observations or a separately reviewed minimal reuse of the completed strict validation pass to test remaining overhead. Preserve the same input, processing limit, strict complete JSON validation, ownership and stability checks, unknown semantics and resource limits.",
+    "Use local grammar, bound and timing controls followed by actual Mac evidence to evaluate the new implementation; do not relabel this failed dense qualification as a pass.",
+    "No new long build or product qualification is authorized by this evidence review."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutations": false,
+    "additionalPayloadDownloads": false,
+    "heavyFullQAOrDensityReexecutionDuringTerminalReview": false,
+    "publicTerminalDocumentsWritten": 2
+  }
+}
