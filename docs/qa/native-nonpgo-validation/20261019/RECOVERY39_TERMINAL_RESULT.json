@@ -1,0 +1,5438 @@
+{
+  "schema": 1,
+  "scope": "Recovery39 actual Intel Mac short terminal result",
+  "run": {
+    "id": 39180177043,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39180177043",
+    "status": "completed",
+    "conclusion": "failure",
+    "attempt": 1,
+    "head": "ef198f5c88e9a2a30101821f480fcd46632326cb",
+    "branch": "codex/mac-native-boundary-recovery39-20261019"
+  },
+  "job": {
+    "id": 117831060588,
+    "name": "checkpoint-producer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T00:18:24Z",
+    "completedAt": "2026-10-19T00:18:52Z",
+    "conclusion": "failure"
+  },
+  "fixture": "9b6b8bae8cdfb72690312a87e4f65d75af63498d",
+  "fixtureTree": "67df8eac82b80f3514e1ef3afa967270e336f0f0",
+  "caller": "ef198f5c88e9a2a30101821f480fcd46632326cb",
+  "callerTree": "74d5f3fb8e177756c3f4d8be4a38a1c69cb27638",
+  "prelaunchReview": {
+    "bytes": 14363,
+    "sha256": "f2e90cdc9818700c9bd0cae3cc20c48eb38ed43f0827e1caa146cc758fcace06"
+  },
+  "decodedProviderLog": {
+    "bytes": 116735,
+    "sha256": "21fc17b3762b8cdd8c32e79de32653ac38372a462347c02f7c8d083d3d48ecd3",
+    "rawPublished": false
+  },
+  "artifactCount": 0,
+  "assessment": {
+    "actualMacTests": {
+      "total": 77,
+      "passed": 77,
+      "skipped": 0,
+      "seconds": 1.953
+    },
+    "API": {
+      "status": "completed",
+      "children": 32,
+      "samples": 128,
+      "heldLive": 32,
+      "zombies": 32,
+      "naturalExit0": 32,
+      "exactReaps": 32,
+      "anySignals": false,
+      "sameBirthLiveTaskESRCHSamples": 9,
+      "execBoundLiveTaskESRCHSamples": 0,
+      "firstExitWindow": {
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "uniqueBeforeAvailable": true,
+        "uniqueAfterAvailable": false,
+        "uniqueExecBeforeAfterMatches": null,
+        "task": {
+          "bytes": 0,
+          "errno": 3,
+          "expectedBytes": 232
+        },
+        "internalRecheck": {
+          "bsdQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "firstBSDQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "firstTaskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          },
+          "outcome": "unavailable",
+          "reason": "short-task-info",
+          "sameGeneration": true,
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          }
+        },
+        "taskInfoComparison": {
+          "fullRecord": false,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 96
+          }
+        }
+      },
+      "counts": {
+        "bsd-info": {
+          "calls": 402,
+          "errnoCounts": {
+            "0": 402
+          },
+          "exceptions": 0,
+          "full": 402,
+          "other": 0,
+          "short": 0,
+          "zero": 0
+        },
+        "task-all-info": {
+          "calls": 137,
+          "errnoCounts": {
+            "0": 55,
+            "3": 82
+          },
+          "exceptions": 0,
+          "full": 55,
+          "other": 0,
+          "short": 0,
+          "zero": 82
+        },
+        "task-info-comparison": {
+          "calls": 128,
+          "errnoCounts": {
+            "0": 35,
+            "3": 93
+          },
+          "exceptions": 0,
+          "full": 35,
+          "other": 0,
+          "short": 0,
+          "zero": 93
+        },
+        "unique-info": {
+          "calls": 320,
+          "errnoCounts": {
+            "0": 162,
+            "3": 158
+          },
+          "exceptions": 0,
+          "full": 162,
+          "other": 0,
+          "short": 0,
+          "zero": 158
+        }
+      },
+      "run35NaturalCauseEstablished": false,
+      "fullFourQueryOrDelayedRepairEstablished": false
+    },
+    "RO": {
+      "firstFailure": {
+        "code": "disk-readonly-unavailable",
+        "errno": null,
+        "kind": "ExperimentFailure",
+        "stage": "create-attach"
+      },
+      "imageCreationAndRWAttach": "commands exited0",
+      "readOnlyProperties": "one or both required diskutil properties absent/nonbool; which property not recorded",
+      "controlsReached": false,
+      "imageCleanup": {
+        "attachmentState": "unknown",
+        "cleanupVerified": false,
+        "failure": {
+          "code": "owned-image-cleanup-unverified",
+          "errno": null,
+          "kind": "ExperimentFailure"
+        },
+        "normalDetach": null,
+        "privateDirectoryRetained": true
+      },
+      "ordinaryFSProtection": "NOT_TESTED",
+      "productionEligibility": false
+    },
+    "cleanup": {
+      "stages": 6,
+      "allLeadersReaped": true,
+      "allStageGroupsGone": true,
+      "allStageCleanupFailureNull": true,
+      "imageDetachConfirmed": false
+    },
+    "limits": [
+      "Stage group cleanup is separate from attached-image cleanup. The image detach state is unknown.",
+      "No old candidate provenance or non-writer status was established.",
+      "Controlled Python exit-window API patterns are evidence of an API transition, not proof of the natural Recovery35 cause.",
+      "No long Floorp build, checkpoint upload, consumer or native browser authentication was performed."
+    ]
+  },
+  "boundaryDiagnostic": {
+    "status": "failed",
+    "observationOnly": true,
+    "productionGateChanged": false,
+    "resourceContractChanged": false,
+    "checkpointEligibilityEstablished": false,
+    "newArtifacts": 0,
+    "sdkAcquired": false,
+    "floorpBuildPerformed": false,
+    "productQualification": false,
+    "longExecution": "ON_HOLD",
+    "tests": {
+      "complete": true,
+      "rawContentPublished": false,
+      "exceptionTextPublished": false,
+      "total": 77,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "status": "passed",
+      "seconds": 1.953,
+      "bytes": 13127,
+      "sha256": "ca82919f60bcc6e07e1d0429c1312f8ebf4671a62a1e7c89b0da182e904ed9da",
+      "cases": [],
+      "nativeSelectionDiagnostics": [],
+      "heldChildBoundaryDiagnostics": []
+    },
+    "taskAPI": {
+      "actualDarwinExecution": true,
+      "checkpointEligibilityNotEvaluated": true,
+      "childGroupScope": "inherited-outer-monitored-stage",
+      "children": [
+        {
+          "childIndex": 0,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 1,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 2,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 3,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 4,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 5,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 6,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 7,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 8,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 9,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 10,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 11,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 12,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 13,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 14,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 15,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 16,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 17,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 18,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 19,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 20,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 21,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 22,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 23,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 24,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 25,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 26,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 27,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 28,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 29,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 30,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        },
+        {
+          "childIndex": 31,
+          "cleanup": {
+            "cleanupFailures": [],
+            "controlPipeClosed": true,
+            "descriptorsClosed": true,
+            "exitCode": 0,
+            "groupCleanupScope": "outer-monitored-stage",
+            "groupGone": null,
+            "leaderReaped": true,
+            "outerGroupCompletionRequired": true,
+            "signalsSent": []
+          },
+          "eofReleased": true,
+          "heldLiveMeasured": true,
+          "naturalExit": 0,
+          "ready": true,
+          "spawnBindingVerified": true,
+          "status": "completed",
+          "unreapedZombieVerified": true
+        }
+      ],
+      "comparisonFallbackAuthority": false,
+      "execBoundSameGenerationLiveTaskAllESRCHSamples": 0,
+      "experimentCompleted": true,
+      "firstFailure": null,
+      "firstHeldLive": {
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "childIndex": 0,
+        "completed": true,
+        "elapsedSeconds": 0.032973,
+        "execBoundSameGenerationLiveTaskAllESRCH": false,
+        "fiveTupleBeforeAfterMatches": true,
+        "phase": "held-live",
+        "production": {
+          "bsdQuery": null,
+          "esrchRecheck": null,
+          "fallbackReason": null,
+          "reason": null,
+          "sameSpawnBirth": true,
+          "status": "measured",
+          "taskQuery": {
+            "bytes": 232,
+            "errno": 0,
+            "expectedBytes": 232
+          }
+        },
+        "queryTrace": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032806,
+            "flavor": 3,
+            "order": 5,
+            "phase": "held-live",
+            "returnBytes": 136,
+            "sampleIndex": 0,
+            "startedSeconds": 0.032795
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032829,
+            "flavor": 17,
+            "order": 6,
+            "phase": "held-live",
+            "returnBytes": 56,
+            "sampleIndex": 0,
+            "startedSeconds": 0.032821
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032879,
+            "flavor": 2,
+            "order": 7,
+            "phase": "held-live",
+            "returnBytes": 232,
+            "sampleIndex": 0,
+            "startedSeconds": 0.03287
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032933,
+            "flavor": 4,
+            "order": 8,
+            "phase": "held-live",
+            "returnBytes": 96,
+            "sampleIndex": 0,
+            "startedSeconds": 0.032922
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032945,
+            "flavor": 17,
+            "order": 9,
+            "phase": "held-live",
+            "returnBytes": 56,
+            "sampleIndex": 0,
+            "startedSeconds": 0.032939
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.032957,
+            "flavor": 3,
+            "order": 10,
+            "phase": "held-live",
+            "returnBytes": 136,
+            "sampleIndex": 0,
+            "startedSeconds": 0.032951
+          }
+        ],
+        "sameGenerationLiveTaskAllESRCH": false,
+        "sampleIndex": 0,
+        "startedSeconds": 0.032787,
+        "taskInfoComparison": {
+          "fullRecord": true,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 96,
+            "errno": 0,
+            "expectedBytes": 96
+          }
+        },
+        "uniqueAfterAvailable": true,
+        "uniqueBeforeAvailable": true,
+        "uniqueExecBeforeAfterMatches": true,
+        "uniqueExecMatchesSpawnAnchor": true
+      },
+      "firstInternalESRCHRecheck": {
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "childIndex": 0,
+        "completed": true,
+        "elapsedSeconds": 0.033229,
+        "execBoundSameGenerationLiveTaskAllESRCH": false,
+        "fiveTupleBeforeAfterMatches": true,
+        "phase": "exit-window",
+        "production": {
+          "bsdQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "esrchRecheck": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstBSDQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstTaskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            },
+            "outcome": "unavailable",
+            "reason": "short-task-info",
+            "sameGeneration": true,
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "fallbackReason": "measured",
+          "reason": "short-task-info",
+          "sameSpawnBirth": true,
+          "status": "unavailable",
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          }
+        },
+        "queryTrace": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033047,
+            "flavor": 3,
+            "order": 11,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033029
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033074,
+            "flavor": 17,
+            "order": 12,
+            "phase": "exit-window",
+            "returnBytes": 56,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033065
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033093,
+            "flavor": 2,
+            "order": 13,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033087
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033113,
+            "flavor": 3,
+            "order": 14,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033105
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033138,
+            "flavor": 2,
+            "order": 15,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033131
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033153,
+            "flavor": 3,
+            "order": 16,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033146
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033194,
+            "flavor": 4,
+            "order": 17,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033186
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033208,
+            "flavor": 17,
+            "order": 18,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033201
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033219,
+            "flavor": 3,
+            "order": 19,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033212
+          }
+        ],
+        "sameGenerationLiveTaskAllESRCH": true,
+        "sampleIndex": 1,
+        "startedSeconds": 0.033022,
+        "taskInfoComparison": {
+          "fullRecord": false,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 96
+          }
+        },
+        "uniqueAfterAvailable": false,
+        "uniqueBeforeAvailable": true,
+        "uniqueExecBeforeAfterMatches": null,
+        "uniqueExecMatchesSpawnAnchor": null
+      },
+      "firstProductionUnavailable": {
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "childIndex": 0,
+        "completed": true,
+        "elapsedSeconds": 0.033229,
+        "execBoundSameGenerationLiveTaskAllESRCH": false,
+        "fiveTupleBeforeAfterMatches": true,
+        "phase": "exit-window",
+        "production": {
+          "bsdQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "esrchRecheck": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstBSDQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstTaskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            },
+            "outcome": "unavailable",
+            "reason": "short-task-info",
+            "sameGeneration": true,
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "fallbackReason": "measured",
+          "reason": "short-task-info",
+          "sameSpawnBirth": true,
+          "status": "unavailable",
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          }
+        },
+        "queryTrace": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033047,
+            "flavor": 3,
+            "order": 11,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033029
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033074,
+            "flavor": 17,
+            "order": 12,
+            "phase": "exit-window",
+            "returnBytes": 56,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033065
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033093,
+            "flavor": 2,
+            "order": 13,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033087
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033113,
+            "flavor": 3,
+            "order": 14,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033105
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033138,
+            "flavor": 2,
+            "order": 15,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033131
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033153,
+            "flavor": 3,
+            "order": 16,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033146
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033194,
+            "flavor": 4,
+            "order": 17,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033186
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033208,
+            "flavor": 17,
+            "order": 18,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033201
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033219,
+            "flavor": 3,
+            "order": 19,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033212
+          }
+        ],
+        "sameGenerationLiveTaskAllESRCH": true,
+        "sampleIndex": 1,
+        "startedSeconds": 0.033022,
+        "taskInfoComparison": {
+          "fullRecord": false,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 96
+          }
+        },
+        "uniqueAfterAvailable": false,
+        "uniqueBeforeAvailable": true,
+        "uniqueExecBeforeAfterMatches": null,
+        "uniqueExecMatchesSpawnAnchor": null
+      },
+      "firstSameGenerationLiveTaskAllESRCH": {
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": false,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 2
+        },
+        "childIndex": 0,
+        "completed": true,
+        "elapsedSeconds": 0.033229,
+        "execBoundSameGenerationLiveTaskAllESRCH": false,
+        "fiveTupleBeforeAfterMatches": true,
+        "phase": "exit-window",
+        "production": {
+          "bsdQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "esrchRecheck": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstBSDQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "firstTaskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            },
+            "outcome": "unavailable",
+            "reason": "short-task-info",
+            "sameGeneration": true,
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "fallbackReason": "measured",
+          "reason": "short-task-info",
+          "sameSpawnBirth": true,
+          "status": "unavailable",
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          }
+        },
+        "queryTrace": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033047,
+            "flavor": 3,
+            "order": 11,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033029
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033074,
+            "flavor": 17,
+            "order": 12,
+            "phase": "exit-window",
+            "returnBytes": 56,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033065
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033093,
+            "flavor": 2,
+            "order": 13,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033087
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033113,
+            "flavor": 3,
+            "order": 14,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033105
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033138,
+            "flavor": 2,
+            "order": 15,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033131
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033153,
+            "flavor": 3,
+            "order": 16,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033146
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033194,
+            "flavor": 4,
+            "order": 17,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033186
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033208,
+            "flavor": 17,
+            "order": 18,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033201
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.033219,
+            "flavor": 3,
+            "order": 19,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 1,
+            "startedSeconds": 0.033212
+          }
+        ],
+        "sameGenerationLiveTaskAllESRCH": true,
+        "sampleIndex": 1,
+        "startedSeconds": 0.033022,
+        "taskInfoComparison": {
+          "fullRecord": false,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 96
+          }
+        },
+        "uniqueAfterAvailable": false,
+        "uniqueBeforeAvailable": true,
+        "uniqueExecBeforeAfterMatches": null,
+        "uniqueExecMatchesSpawnAnchor": null
+      },
+      "firstUnreapedZombie": {
+        "afterBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 5
+        },
+        "beforeBSD": {
+          "directChildParent": true,
+          "inExit": true,
+          "sameMonitoredGroup": true,
+          "sameOwner": true,
+          "sameSpawnFiveTuple": true,
+          "status": 5
+        },
+        "childIndex": 0,
+        "completed": true,
+        "elapsedSeconds": 0.040425,
+        "execBoundSameGenerationLiveTaskAllESRCH": false,
+        "fiveTupleBeforeAfterMatches": true,
+        "phase": "unreaped-zombie",
+        "production": {
+          "bsdQuery": {
+            "bytes": 136,
+            "errno": 0,
+            "expectedBytes": 136
+          },
+          "esrchRecheck": null,
+          "fallbackReason": "bsd-zombie",
+          "reason": "bsd-zombie",
+          "sameSpawnBirth": true,
+          "status": "gone",
+          "taskQuery": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 232
+          }
+        },
+        "queryTrace": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040312,
+            "flavor": 3,
+            "order": 27,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040304
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040328,
+            "flavor": 17,
+            "order": 28,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040322
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040342,
+            "flavor": 2,
+            "order": 29,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040335
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040353,
+            "flavor": 3,
+            "order": 30,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040347
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040379,
+            "flavor": 4,
+            "order": 31,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 3,
+            "startedSeconds": 0.04037
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 0,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040394,
+            "flavor": 17,
+            "order": 32,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040388
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 0,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 0.040411,
+            "flavor": 3,
+            "order": 33,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 3,
+            "startedSeconds": 0.040401
+          }
+        ],
+        "sameGenerationLiveTaskAllESRCH": false,
+        "sampleIndex": 3,
+        "startedSeconds": 0.0403,
+        "taskInfoComparison": {
+          "fullRecord": false,
+          "measurementAuthority": false,
+          "query": {
+            "bytes": 0,
+            "errno": 3,
+            "expectedBytes": 96
+          }
+        },
+        "uniqueAfterAvailable": false,
+        "uniqueBeforeAvailable": false,
+        "uniqueExecBeforeAfterMatches": null,
+        "uniqueExecMatchesSpawnAnchor": null
+      },
+      "internalESRCHRecheckSamples": 9,
+      "observationLimit": [
+        "Controlled exact Python children only; no Floorp/Rust workload.",
+        "A short run cannot establish absence of rare exit races.",
+        "No reproduction does not prove a repair of run 35.",
+        "The production outer 0.25-second census recheck is not exercised.",
+        "Synchronous libproc calls are bounded by the outer Runner, not interrupted here.",
+        "Run this CLI under Runner; resource monitoring and final group-gone proof are external.",
+        "Task-info flavor 4 never authorizes measurement fallback.",
+        "No writer, checkpoint, or long-build qualification is evaluated."
+      ],
+      "observationOnly": true,
+      "outerGroupGoneVerifiedHere": false,
+      "outerRunnerGroupCleanupRequired": true,
+      "outerRunnerResourceMonitoringRequired": true,
+      "productionGateChanged": false,
+      "productionUnavailableSamples": 9,
+      "queryTrace": {
+        "countsByFlavor": {
+          "bsd-info": {
+            "calls": 402,
+            "errnoCounts": {
+              "0": 402
+            },
+            "exceptions": 0,
+            "full": 402,
+            "other": 0,
+            "short": 0,
+            "zero": 0
+          },
+          "task-all-info": {
+            "calls": 137,
+            "errnoCounts": {
+              "0": 55,
+              "3": 82
+            },
+            "exceptions": 0,
+            "full": 55,
+            "other": 0,
+            "short": 0,
+            "zero": 82
+          },
+          "task-info-comparison": {
+            "calls": 128,
+            "errnoCounts": {
+              "0": 35,
+              "3": 93
+            },
+            "exceptions": 0,
+            "full": 35,
+            "other": 0,
+            "short": 0,
+            "zero": 93
+          },
+          "unique-info": {
+            "calls": 320,
+            "errnoCounts": {
+              "0": 162,
+              "3": 158
+            },
+            "exceptions": 0,
+            "full": 162,
+            "other": 0,
+            "short": 0,
+            "zero": 158
+          }
+        },
+        "elapsedSeconds": 1.325881,
+        "queryCap": 4096,
+        "recent16": [
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.318586,
+            "flavor": 17,
+            "order": 972,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 125,
+            "startedSeconds": 1.31858
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.318598,
+            "flavor": 3,
+            "order": 973,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 125,
+            "startedSeconds": 1.318591
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325591,
+            "flavor": 3,
+            "order": 974,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325578
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.32561,
+            "flavor": 17,
+            "order": 975,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325603
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325625,
+            "flavor": 2,
+            "order": 976,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325619
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325637,
+            "flavor": 3,
+            "order": 977,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 126,
+            "startedSeconds": 1.32563
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325661,
+            "flavor": 4,
+            "order": 978,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325655
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325672,
+            "flavor": 17,
+            "order": 979,
+            "phase": "exit-window",
+            "returnBytes": 0,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325666
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325683,
+            "flavor": 3,
+            "order": 980,
+            "phase": "exit-window",
+            "returnBytes": 136,
+            "sampleIndex": 126,
+            "startedSeconds": 1.325676
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325719,
+            "flavor": 3,
+            "order": 981,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325712
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325734,
+            "flavor": 17,
+            "order": 982,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325728
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 232,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325747,
+            "flavor": 2,
+            "order": 983,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325741
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325758,
+            "flavor": 3,
+            "order": 984,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325752
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 96,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325779,
+            "flavor": 4,
+            "order": 985,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325773
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 0,
+            "bufferSize": 56,
+            "childIndex": 31,
+            "errno": 3,
+            "exceptionKind": null,
+            "finishedSeconds": 1.325789,
+            "flavor": 17,
+            "order": 986,
+            "phase": "unreaped-zombie",
+            "returnBytes": 0,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325784
+          },
+          {
+            "api": "proc_pidinfo",
+            "arg": 1,
+            "bufferSize": 136,
+            "childIndex": 31,
+            "errno": 0,
+            "exceptionKind": null,
+            "finishedSeconds": 1.3258,
+            "flavor": 3,
+            "order": 987,
+            "phase": "unreaped-zombie",
+            "returnBytes": 136,
+            "sampleIndex": 127,
+            "startedSeconds": 1.325794
+          }
+        ],
+        "stoppingQuery": null,
+        "totalQueries": 987
+      },
+      "rawProcessMetadataPublished": false,
+      "recent16Samples": [
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 28,
+          "completed": true,
+          "elapsedSeconds": 1.206117,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "held-live",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.205894,
+              "flavor": 3,
+              "order": 866,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 112,
+              "startedSeconds": 1.205884
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.205935,
+              "flavor": 17,
+              "order": 867,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 112,
+              "startedSeconds": 1.205908
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.205979,
+              "flavor": 2,
+              "order": 868,
+              "phase": "held-live",
+              "returnBytes": 232,
+              "sampleIndex": 112,
+              "startedSeconds": 1.205971
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206045,
+              "flavor": 4,
+              "order": 869,
+              "phase": "held-live",
+              "returnBytes": 96,
+              "sampleIndex": 112,
+              "startedSeconds": 1.206035
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206058,
+              "flavor": 17,
+              "order": 870,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 112,
+              "startedSeconds": 1.206052
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206104,
+              "flavor": 3,
+              "order": 871,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 112,
+              "startedSeconds": 1.206078
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 112,
+          "startedSeconds": 1.205877,
+          "taskInfoComparison": {
+            "fullRecord": true,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 96,
+              "errno": 0,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": true,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": true,
+          "uniqueExecMatchesSpawnAnchor": true
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 28,
+          "completed": true,
+          "elapsedSeconds": 1.206499,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "firstBSDQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "firstTaskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              },
+              "outcome": "unavailable",
+              "reason": "short-task-info",
+              "sameGeneration": true,
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            },
+            "fallbackReason": "measured",
+            "reason": "short-task-info",
+            "sameSpawnBirth": true,
+            "status": "unavailable",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206255,
+              "flavor": 3,
+              "order": 872,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206225
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206287,
+              "flavor": 17,
+              "order": 873,
+              "phase": "exit-window",
+              "returnBytes": 56,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206266
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206324,
+              "flavor": 2,
+              "order": 874,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206297
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206367,
+              "flavor": 3,
+              "order": 875,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206336
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206406,
+              "flavor": 2,
+              "order": 876,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206385
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206433,
+              "flavor": 3,
+              "order": 877,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206411
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206468,
+              "flavor": 4,
+              "order": 878,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206461
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.206479,
+              "flavor": 17,
+              "order": 879,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206473
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.20649,
+              "flavor": 3,
+              "order": 880,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 113,
+              "startedSeconds": 1.206483
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": true,
+          "sampleIndex": 113,
+          "startedSeconds": 1.206219,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 28,
+          "completed": true,
+          "elapsedSeconds": 1.213645,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213529,
+              "flavor": 3,
+              "order": 881,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213513
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213553,
+              "flavor": 17,
+              "order": 882,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213545
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213571,
+              "flavor": 2,
+              "order": 883,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213564
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213583,
+              "flavor": 3,
+              "order": 884,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213577
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.21361,
+              "flavor": 4,
+              "order": 885,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213603
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213621,
+              "flavor": 17,
+              "order": 886,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213616
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213632,
+              "flavor": 3,
+              "order": 887,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 114,
+              "startedSeconds": 1.213626
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 114,
+          "startedSeconds": 1.213502,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 28,
+          "completed": true,
+          "elapsedSeconds": 1.213764,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "unreaped-zombie",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213672,
+              "flavor": 3,
+              "order": 888,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213665
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213688,
+              "flavor": 17,
+              "order": 889,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213682
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213701,
+              "flavor": 2,
+              "order": 890,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213695
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213713,
+              "flavor": 3,
+              "order": 891,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213706
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213734,
+              "flavor": 4,
+              "order": 892,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213728
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 28,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213745,
+              "flavor": 17,
+              "order": 893,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213739
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 28,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.213755,
+              "flavor": 3,
+              "order": 894,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 115,
+              "startedSeconds": 1.213749
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 115,
+          "startedSeconds": 1.213662,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 29,
+          "completed": true,
+          "elapsedSeconds": 1.243347,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "held-live",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243165,
+              "flavor": 3,
+              "order": 899,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 116,
+              "startedSeconds": 1.243133
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243201,
+              "flavor": 17,
+              "order": 900,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 116,
+              "startedSeconds": 1.243194
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243231,
+              "flavor": 2,
+              "order": 901,
+              "phase": "held-live",
+              "returnBytes": 232,
+              "sampleIndex": 116,
+              "startedSeconds": 1.243222
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243308,
+              "flavor": 4,
+              "order": 902,
+              "phase": "held-live",
+              "returnBytes": 96,
+              "sampleIndex": 116,
+              "startedSeconds": 1.2433
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243323,
+              "flavor": 17,
+              "order": 903,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 116,
+              "startedSeconds": 1.243315
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243334,
+              "flavor": 3,
+              "order": 904,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 116,
+              "startedSeconds": 1.243328
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 116,
+          "startedSeconds": 1.243126,
+          "taskInfoComparison": {
+            "fullRecord": true,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 96,
+              "errno": 0,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": true,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": true,
+          "uniqueExecMatchesSpawnAnchor": true
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 29,
+          "completed": true,
+          "elapsedSeconds": 1.243675,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243471,
+              "flavor": 3,
+              "order": 905,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243459
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243524,
+              "flavor": 17,
+              "order": 906,
+              "phase": "exit-window",
+              "returnBytes": 56,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243498
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243542,
+              "flavor": 2,
+              "order": 907,
+              "phase": "exit-window",
+              "returnBytes": 232,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243534
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243633,
+              "flavor": 4,
+              "order": 908,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243596
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243651,
+              "flavor": 17,
+              "order": 909,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243641
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.243664,
+              "flavor": 3,
+              "order": 910,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 117,
+              "startedSeconds": 1.243655
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 117,
+          "startedSeconds": 1.243453,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 29,
+          "completed": true,
+          "elapsedSeconds": 1.250832,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250717,
+              "flavor": 3,
+              "order": 911,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 118,
+              "startedSeconds": 1.2507
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250739,
+              "flavor": 17,
+              "order": 912,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 118,
+              "startedSeconds": 1.250732
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250757,
+              "flavor": 2,
+              "order": 913,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 118,
+              "startedSeconds": 1.25075
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250774,
+              "flavor": 3,
+              "order": 914,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 118,
+              "startedSeconds": 1.250767
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250801,
+              "flavor": 4,
+              "order": 915,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 118,
+              "startedSeconds": 1.250794
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250812,
+              "flavor": 17,
+              "order": 916,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 118,
+              "startedSeconds": 1.250807
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250823,
+              "flavor": 3,
+              "order": 917,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 118,
+              "startedSeconds": 1.250817
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 118,
+          "startedSeconds": 1.25069,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 29,
+          "completed": true,
+          "elapsedSeconds": 1.250959,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "unreaped-zombie",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250867,
+              "flavor": 3,
+              "order": 918,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 119,
+              "startedSeconds": 1.25086
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250882,
+              "flavor": 17,
+              "order": 919,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 119,
+              "startedSeconds": 1.250876
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250896,
+              "flavor": 2,
+              "order": 920,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 119,
+              "startedSeconds": 1.25089
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250907,
+              "flavor": 3,
+              "order": 921,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 119,
+              "startedSeconds": 1.250901
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250929,
+              "flavor": 4,
+              "order": 922,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 119,
+              "startedSeconds": 1.250923
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 29,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.25094,
+              "flavor": 17,
+              "order": 923,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 119,
+              "startedSeconds": 1.250934
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 29,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.250951,
+              "flavor": 3,
+              "order": 924,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 119,
+              "startedSeconds": 1.250945
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 119,
+          "startedSeconds": 1.250856,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 30,
+          "completed": true,
+          "elapsedSeconds": 1.280783,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "held-live",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280608,
+              "flavor": 3,
+              "order": 929,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 120,
+              "startedSeconds": 1.280599
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280652,
+              "flavor": 17,
+              "order": 930,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 120,
+              "startedSeconds": 1.280645
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280699,
+              "flavor": 2,
+              "order": 931,
+              "phase": "held-live",
+              "returnBytes": 232,
+              "sampleIndex": 120,
+              "startedSeconds": 1.28069
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280745,
+              "flavor": 4,
+              "order": 932,
+              "phase": "held-live",
+              "returnBytes": 96,
+              "sampleIndex": 120,
+              "startedSeconds": 1.280737
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280758,
+              "flavor": 17,
+              "order": 933,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 120,
+              "startedSeconds": 1.28075
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.28077,
+              "flavor": 3,
+              "order": 934,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 120,
+              "startedSeconds": 1.280763
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 120,
+          "startedSeconds": 1.280592,
+          "taskInfoComparison": {
+            "fullRecord": true,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 96,
+              "errno": 0,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": true,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": true,
+          "uniqueExecMatchesSpawnAnchor": true
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 30,
+          "completed": true,
+          "elapsedSeconds": 1.281078,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280911,
+              "flavor": 3,
+              "order": 935,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 121,
+              "startedSeconds": 1.280901
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280945,
+              "flavor": 17,
+              "order": 936,
+              "phase": "exit-window",
+              "returnBytes": 56,
+              "sampleIndex": 121,
+              "startedSeconds": 1.280938
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.280962,
+              "flavor": 2,
+              "order": 937,
+              "phase": "exit-window",
+              "returnBytes": 232,
+              "sampleIndex": 121,
+              "startedSeconds": 1.280954
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.28104,
+              "flavor": 4,
+              "order": 938,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 121,
+              "startedSeconds": 1.281001
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.281056,
+              "flavor": 17,
+              "order": 939,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 121,
+              "startedSeconds": 1.281048
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.281068,
+              "flavor": 3,
+              "order": 940,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 121,
+              "startedSeconds": 1.28106
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 121,
+          "startedSeconds": 1.280895,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 30,
+          "completed": true,
+          "elapsedSeconds": 1.288221,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288107,
+              "flavor": 3,
+              "order": 941,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288092
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288128,
+              "flavor": 17,
+              "order": 942,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288121
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288145,
+              "flavor": 2,
+              "order": 943,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288139
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288163,
+              "flavor": 3,
+              "order": 944,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288155
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288189,
+              "flavor": 4,
+              "order": 945,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288183
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.2882,
+              "flavor": 17,
+              "order": 946,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288195
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288212,
+              "flavor": 3,
+              "order": 947,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 122,
+              "startedSeconds": 1.288205
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 122,
+          "startedSeconds": 1.288083,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 30,
+          "completed": true,
+          "elapsedSeconds": 1.288342,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "unreaped-zombie",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.28825,
+              "flavor": 3,
+              "order": 948,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288243
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288265,
+              "flavor": 17,
+              "order": 949,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288259
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288279,
+              "flavor": 2,
+              "order": 950,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288273
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.28829,
+              "flavor": 3,
+              "order": 951,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288284
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288312,
+              "flavor": 4,
+              "order": 952,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288306
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 30,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288323,
+              "flavor": 17,
+              "order": 953,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288317
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 30,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.288333,
+              "flavor": 3,
+              "order": 954,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 123,
+              "startedSeconds": 1.288327
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 123,
+          "startedSeconds": 1.288239,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 31,
+          "completed": true,
+          "elapsedSeconds": 1.318351,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "held-live",
+          "production": {
+            "bsdQuery": null,
+            "esrchRecheck": null,
+            "fallbackReason": null,
+            "reason": null,
+            "sameSpawnBirth": true,
+            "status": "measured",
+            "taskQuery": {
+              "bytes": 232,
+              "errno": 0,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318099,
+              "flavor": 3,
+              "order": 959,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 124,
+              "startedSeconds": 1.31807
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318136,
+              "flavor": 17,
+              "order": 960,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 124,
+              "startedSeconds": 1.318115
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318203,
+              "flavor": 2,
+              "order": 961,
+              "phase": "held-live",
+              "returnBytes": 232,
+              "sampleIndex": 124,
+              "startedSeconds": 1.318178
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.31831,
+              "flavor": 4,
+              "order": 962,
+              "phase": "held-live",
+              "returnBytes": 96,
+              "sampleIndex": 124,
+              "startedSeconds": 1.31828
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318323,
+              "flavor": 17,
+              "order": 963,
+              "phase": "held-live",
+              "returnBytes": 56,
+              "sampleIndex": 124,
+              "startedSeconds": 1.318317
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318337,
+              "flavor": 3,
+              "order": 964,
+              "phase": "held-live",
+              "returnBytes": 136,
+              "sampleIndex": 124,
+              "startedSeconds": 1.318329
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 124,
+          "startedSeconds": 1.318062,
+          "taskInfoComparison": {
+            "fullRecord": true,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 96,
+              "errno": 0,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": true,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": true,
+          "uniqueExecMatchesSpawnAnchor": true
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": false,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 2
+          },
+          "childIndex": 31,
+          "completed": true,
+          "elapsedSeconds": 1.318607,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": {
+              "bsdQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "firstBSDQuery": {
+                "bytes": 136,
+                "errno": 0,
+                "expectedBytes": 136
+              },
+              "firstTaskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              },
+              "outcome": "unavailable",
+              "reason": "short-task-info",
+              "sameGeneration": true,
+              "taskQuery": {
+                "bytes": 0,
+                "errno": 3,
+                "expectedBytes": 232
+              }
+            },
+            "fallbackReason": "measured",
+            "reason": "short-task-info",
+            "sameSpawnBirth": true,
+            "status": "unavailable",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318423,
+              "flavor": 3,
+              "order": 965,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318413
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318441,
+              "flavor": 17,
+              "order": 966,
+              "phase": "exit-window",
+              "returnBytes": 56,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318434
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318481,
+              "flavor": 2,
+              "order": 967,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318451
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318502,
+              "flavor": 3,
+              "order": 968,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318492
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318526,
+              "flavor": 2,
+              "order": 969,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318519
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318538,
+              "flavor": 3,
+              "order": 970,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318531
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318575,
+              "flavor": 4,
+              "order": 971,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318568
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318586,
+              "flavor": 17,
+              "order": 972,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 125,
+              "startedSeconds": 1.31858
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.318598,
+              "flavor": 3,
+              "order": 973,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 125,
+              "startedSeconds": 1.318591
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": true,
+          "sampleIndex": 125,
+          "startedSeconds": 1.318407,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": true,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 31,
+          "completed": true,
+          "elapsedSeconds": 1.325691,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "exit-window",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325591,
+              "flavor": 3,
+              "order": 974,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325578
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.32561,
+              "flavor": 17,
+              "order": 975,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325603
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325625,
+              "flavor": 2,
+              "order": 976,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325619
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325637,
+              "flavor": 3,
+              "order": 977,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 126,
+              "startedSeconds": 1.32563
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325661,
+              "flavor": 4,
+              "order": 978,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325655
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325672,
+              "flavor": 17,
+              "order": 979,
+              "phase": "exit-window",
+              "returnBytes": 0,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325666
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325683,
+              "flavor": 3,
+              "order": 980,
+              "phase": "exit-window",
+              "returnBytes": 136,
+              "sampleIndex": 126,
+              "startedSeconds": 1.325676
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 126,
+          "startedSeconds": 1.32557,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        },
+        {
+          "afterBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "beforeBSD": {
+            "directChildParent": true,
+            "inExit": true,
+            "sameMonitoredGroup": true,
+            "sameOwner": true,
+            "sameSpawnFiveTuple": true,
+            "status": 5
+          },
+          "childIndex": 31,
+          "completed": true,
+          "elapsedSeconds": 1.325808,
+          "execBoundSameGenerationLiveTaskAllESRCH": false,
+          "fiveTupleBeforeAfterMatches": true,
+          "phase": "unreaped-zombie",
+          "production": {
+            "bsdQuery": {
+              "bytes": 136,
+              "errno": 0,
+              "expectedBytes": 136
+            },
+            "esrchRecheck": null,
+            "fallbackReason": "bsd-zombie",
+            "reason": "bsd-zombie",
+            "sameSpawnBirth": true,
+            "status": "gone",
+            "taskQuery": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 232
+            }
+          },
+          "queryTrace": [
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325719,
+              "flavor": 3,
+              "order": 981,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325712
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325734,
+              "flavor": 17,
+              "order": 982,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325728
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 232,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325747,
+              "flavor": 2,
+              "order": 983,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325741
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325758,
+              "flavor": 3,
+              "order": 984,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325752
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 96,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325779,
+              "flavor": 4,
+              "order": 985,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325773
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 0,
+              "bufferSize": 56,
+              "childIndex": 31,
+              "errno": 3,
+              "exceptionKind": null,
+              "finishedSeconds": 1.325789,
+              "flavor": 17,
+              "order": 986,
+              "phase": "unreaped-zombie",
+              "returnBytes": 0,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325784
+            },
+            {
+              "api": "proc_pidinfo",
+              "arg": 1,
+              "bufferSize": 136,
+              "childIndex": 31,
+              "errno": 0,
+              "exceptionKind": null,
+              "finishedSeconds": 1.3258,
+              "flavor": 3,
+              "order": 987,
+              "phase": "unreaped-zombie",
+              "returnBytes": 136,
+              "sampleIndex": 127,
+              "startedSeconds": 1.325794
+            }
+          ],
+          "sameGenerationLiveTaskAllESRCH": false,
+          "sampleIndex": 127,
+          "startedSeconds": 1.325709,
+          "taskInfoComparison": {
+            "fullRecord": false,
+            "measurementAuthority": false,
+            "query": {
+              "bytes": 0,
+              "errno": 3,
+              "expectedBytes": 96
+            }
+          },
+          "uniqueAfterAvailable": false,
+          "uniqueBeforeAvailable": false,
+          "uniqueExecBeforeAfterMatches": null,
+          "uniqueExecMatchesSpawnAnchor": null
+        }
+      ],
+      "repairEstablished": false,
+      "requestedChildren": 32,
+      "resourceLimitsChanged": false,
+      "run35FailureReproduction": "not-established",
+      "sameGenerationLiveTaskAllESRCHObserved": false,
+      "sameGenerationLiveTaskAllESRCHSamples": 9,
+      "sampleCap": 256,
+      "sampleCount": 128,
+      "sampleCountsByPhase": {
+        "exit-window": 64,
+        "held-live": 32,
+        "unreaped-zombie": 32
+      },
+      "status": "completed",
+      "stoppingSample": null,
+      "unrelatedProcessesQueried": false,
+      "workDeadlineSeconds": 48
+    },
+    "readonlyBoundary": {
+      "allPayloadAndRefsSingleFreezeRequired": true,
+      "backingOpenControl": null,
+      "bindings": [],
+      "checkpointEligibilityEstablished": false,
+      "childCleanup": [],
+      "commands": [
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 1.069446,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 106,
+          "outputSHA256": "59b67252f0c9a2290efa1118533d94daa45de51deb57dea1c80f1abb3de26453",
+          "stage": "image-create"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.0296,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 1610,
+          "outputSHA256": "149fccbf9ce0370b888df90ab38f1c5c32f5a1c5703e69dad820aee71200d9f8",
+          "stage": "image-info"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 1.068928,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 1558,
+          "outputSHA256": "88e05f2d4ca0e0847a26d58f4b73bf3e1f859143e90fd3b2b75262786e27cb81",
+          "stage": "image-attach-rw"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.051653,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 3208,
+          "outputSHA256": "de9a0aa03d52bffd2e233d1e48f807b1a846995908dc6d6cde4e21fd7d073155",
+          "stage": "image-info"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.173014,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 3115,
+          "outputSHA256": "53d03e950190264f884f5a69d11cf5f8dfd15c559334479f46a3c582b6a580bf",
+          "stage": "disk-info"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.028049,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 3208,
+          "outputSHA256": "de9a0aa03d52bffd2e233d1e48f807b1a846995908dc6d6cde4e21fd7d073155",
+          "stage": "image-info"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.023036,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 3208,
+          "outputSHA256": "de9a0aa03d52bffd2e233d1e48f807b1a846995908dc6d6cde4e21fd7d073155",
+          "stage": "image-info"
+        },
+        {
+          "busyErrnoEstablished": false,
+          "busyTextSeen": false,
+          "cleanup": {
+            "exitCode": 0,
+            "failure": null,
+            "groupGone": null,
+            "groupScope": "inherited-outer-monitored-stage",
+            "leaderReaped": true,
+            "naturalRelease": false,
+            "signalsSent": []
+          },
+          "elapsedSeconds": 0.129903,
+          "exitCode": 0,
+          "failure": null,
+          "outputBytes": 3115,
+          "outputSHA256": "53d03e950190264f884f5a69d11cf5f8dfd15c559334479f46a3c582b6a580bf",
+          "stage": "disk-info"
+        }
+      ],
+      "diagnosticProcedure": "failed",
+      "elapsedSeconds": 2.584646,
+      "firstFailure": {
+        "code": "disk-readonly-unavailable",
+        "errno": null,
+        "kind": "ExperimentFailure",
+        "stage": "create-attach"
+      },
+      "floorpBuildPerformed": false,
+      "heldDetachProvesSafeFreeze": false,
+      "imageCleanup": {
+        "attachmentState": "unknown",
+        "cleanupVerified": false,
+        "failure": {
+          "code": "owned-image-cleanup-unverified",
+          "errno": null,
+          "kind": "ExperimentFailure"
+        },
+        "normalDetach": null,
+        "privateDirectoryRetained": true
+      },
+      "imageCreated": true,
+      "newArtifactsStored": 0,
+      "privateTaskPathsPublished": false,
+      "processGroupScope": "inherited-outer-monitored-stage",
+      "productionGateChanged": false,
+      "productionGateReplacement": false,
+      "qualification": "NO_GO",
+      "qualificationLimits": [
+        "same-UID backing mutation is not excluded",
+        "all checkpoint payload and references are not atomically frozen",
+        "reopen or remount capability is not excluded",
+        "the production checkpoint route is not exercised"
+      ],
+      "rawProcessIdentitiesPublished": false,
+      "rawUtilityOutputPublished": false,
+      "readOnlyControl": null,
+      "sameUIDImmutabilityEstablished": false,
+      "schema": 1,
+      "sdkUsed": false,
+      "stageGroupCleanupAuthority": "outer-runner",
+      "stageGroupGone": null,
+      "status": "failed",
+      "utilityOutputBytes": 19128,
+      "writerControls": []
+    },
+    "firstFailure": {
+      "stage": "readonly-boundary-observation",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 25.05
+    },
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "stages": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 0,
+        "peakRSSMiB": 57,
+        "minimumFreeGiB": 108.05,
+        "lastActivity": {
+          "rssMiB": 22.53125,
+          "cpuSeconds": 0.62,
+          "rssLowerBoundMiB": 22.53125,
+          "cpuLowerBoundSeconds": 0.62,
+          "processes": 2,
+          "states": [
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 7.21484375,
+              "cpuSeconds": 0.36630344,
+              "state": "S",
+              "pidTag": "ebb562b2f4a83bd2",
+              "identityTag": "42f1969aa5d3bcae"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 2,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 2
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 377,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 108.04,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 1,
+            "differentOwner": 0,
+            "metadataUnavailable": 0,
+            "roles": {
+              "other": 1
+            }
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryBackend": "bootstrap-ps",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 7,
+        "peakRSSMiB": 0,
+        "minimumFreeGiB": 108.04,
+        "lastActivity": {
+          "rssMiB": 0,
+          "cpuSeconds": 0,
+          "rssLowerBoundMiB": 0,
+          "cpuLowerBoundSeconds": 0,
+          "processes": 0,
+          "states": [],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [],
+          "confirmedGone": 1,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "diagnostic-tests",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 13127,
+        "peakRSSMiB": 28,
+        "minimumFreeGiB": 108.04,
+        "lastActivity": {
+          "rssMiB": 28.37109375,
+          "cpuSeconds": 0.454,
+          "rssLowerBoundMiB": 28.37109375,
+          "cpuLowerBoundSeconds": 0.454,
+          "processes": 1,
+          "states": [
+            "R"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 28.37109375,
+              "cpuSeconds": 0.454050971,
+              "state": "R",
+              "pidTag": "1b4bf9d93c51b8bf",
+              "identityTag": "9d3fbea2f08c9627"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 1,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 648,
+            "snapshotEntries": 1,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "task-api-observation",
+        "exitCode": 0,
+        "failureEvidence": null,
+        "reason": null,
+        "failurePhase": null,
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "logBytes": 82888,
+        "peakRSSMiB": 25,
+        "minimumFreeGiB": 108.04,
+        "lastActivity": {
+          "rssMiB": 24.55859375,
+          "cpuSeconds": 0.24,
+          "rssLowerBoundMiB": 24.55859375,
+          "cpuLowerBoundSeconds": 0.24,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 18.67578125,
+              "cpuSeconds": 0.215325554,
+              "state": "S",
+              "pidTag": "04476cb42c74af13",
+              "identityTag": "4c5d8fbdc84e02db"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 2,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      },
+      {
+        "stage": "readonly-boundary-observation",
+        "exitCode": 1,
+        "failureEvidence": {
+          "beforeCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 4854,
+            "tailBytesRead": 4854,
+            "tailTruncated": false,
+            "matchingRecords": 0,
+            "recordsTruncated": false,
+            "records": []
+          },
+          "leaderExitAlreadyObserved": 1,
+          "afterCleanup": {
+            "rawContentPublished": false,
+            "freeTextPublished": false,
+            "readLimitBytes": 131072,
+            "recordLimit": 16,
+            "available": true,
+            "fileBytes": 4854,
+            "tailBytesRead": 4854,
+            "tailTruncated": false,
+            "matchingRecords": 0,
+            "recordsTruncated": false,
+            "records": []
+          }
+        },
+        "reason": "nonzero-exit",
+        "failurePhase": "wait",
+        "cleanupFailure": null,
+        "cleanupDiagnostics": [],
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "logBytes": 4854,
+        "peakRSSMiB": 29,
+        "minimumFreeGiB": 108.04,
+        "lastActivity": {
+          "rssMiB": 20.71875,
+          "cpuSeconds": 0.165,
+          "rssLowerBoundMiB": 20.71875,
+          "cpuLowerBoundSeconds": 0.165,
+          "processes": 2,
+          "states": [
+            "R",
+            "S"
+          ],
+          "sampleComplete": true,
+          "unknownKinds": {},
+          "formatExamples": [
+            {
+              "kind": "measured",
+              "source": "libproc-taskallinfo",
+              "rssMiB": 15.21875,
+              "cpuSeconds": 0.109831439,
+              "state": "S",
+              "pidTag": "a57011afc0c78d2c",
+              "identityTag": "49d51d99abac256f"
+            }
+          ],
+          "confirmedGone": 0,
+          "counterSource": "libproc-taskallinfo",
+          "inventorySummary": {
+            "identityBound": false,
+            "sameOwner": 0,
+            "differentOwner": 0,
+            "metadataUnavailable": 2,
+            "roles": {}
+          },
+          "esrchRechecks": 0,
+          "esrchExamples": [],
+          "statesSource": "libproc-runnable-summary",
+          "timebaseNumer": 1,
+          "timebaseDenom": 1,
+          "inventoryMeasurement": {
+            "api": "sysctl-kern-proc-pgrp",
+            "snapshotBytes": 1296,
+            "snapshotEntries": 2,
+            "selfBindingVerified": true,
+            "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+          },
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "sampleAttempts": 1,
+          "partialSamples": []
+        },
+        "quietSeconds": 0
+      }
+    ],
+    "elapsedMinutes": 0.418
+  },
+  "remainingDecision": {
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "longExecution": "NO_GO_ON_HOLD",
+    "next": "Correct only diagnostic schema/owned-image cleanup separation, then short fixture validation before any long decision."
+  }
+}

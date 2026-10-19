@@ -1,0 +1,273 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY39_ACTUAL_INTEL_MAC_SHORT_TERMINAL_INDEPENDENT_REVIEW",
+  "decision": {
+    "terminal": "FAILURE_CONFIRMED",
+    "actualMacTests": "PASS_77_OF_77_ZERO_SKIPS",
+    "controlledTaskAPI": "COMPLETED",
+    "readonlyImageProcedure": "FAILED_BEFORE_WRITER_AND_RO_CONTROLS",
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "bindings": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39180177043,
+    "job": 117831060588,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39180177043",
+    "callerCommit": "ef198f5c88e9a2a30101821f480fcd46632326cb",
+    "callerTree": "74d5f3fb8e177756c3f4d8be4a38a1c69cb27638",
+    "fixtureCommit": "9b6b8bae8cdfb72690312a87e4f65d75af63498d",
+    "fixtureTree": "67df8eac82b80f3514e1ef3afa967270e336f0f0",
+    "runner": "macos-15-intel",
+    "event": "push",
+    "attempt": 1,
+    "jobs": 1,
+    "jobStartedAt": "2026-10-19T00:18:24Z",
+    "jobCompletedAt": "2026-10-19T00:18:52Z",
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY39_TERMINAL_RESULT.json",
+      "bytes": 164889,
+      "sha256": "9114a4802fc3626a8c41fbc92b5cb8adf7e8a23bc7404bc7a88b99ae0277b260"
+    },
+    "prelaunchReview": {
+      "bytes": 14363,
+      "sha256": "f2e90cdc9818700c9bd0cae3cc20c48eb38ed43f0827e1caa146cc758fcace06"
+    },
+    "decodedProviderLog": {
+      "bytes": 116735,
+      "sha256": "21fc17b3762b8cdd8c32e79de32653ac38372a462347c02f7c8d083d3d48ecd3",
+      "rawPublished": false
+    }
+  },
+  "independentVerification": [
+    "Official run and jobs metadata confirm terminal failure, a single macos-15-intel job, push event, attempt one and the reviewed caller SHA.",
+    "Terminal log was fetched only after the job completed. Local private decoded log bytes exactly match the independent provider fetch.",
+    "Exactly one boundaryDiagnostic JSON object was parsed from the provider log. The entire object equals the frozen terminal receipt projection.",
+    "The executed fixture SHA appears in the checkout log; immutable source/caller bytes and trees were independently verified during prelaunch review.",
+    "Official artifacts collection is empty. No SDK acquisition, Floorp build, checkpoint transfer or native authentication step ran.",
+    "Frozen receipt content and privacy were checked without changing execution source or the prelaunch review."
+  ],
+  "firstFailure": {
+    "outerStage": "readonly-boundary-observation",
+    "outerCode": "nonzero-exit",
+    "outerElapsedSeconds": 25.05,
+    "childStage": "create-attach",
+    "childCode": "disk-readonly-unavailable",
+    "childKind": "ExperimentFailure",
+    "childErrno": null,
+    "interpretation": "The probe required both ReadOnlyVolume and ReadOnlyMedia to be Python bool values. One or both did not satisfy that schema. Which field was absent or had another type was not recorded."
+  },
+  "actualMacTests": {
+    "total": 77,
+    "passed": 77,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 1.953,
+    "privateTestLogBytes": 13127,
+    "privateTestLogSHA256": "ca82919f60bcc6e07e1d0429c1312f8ebf4671a62a1e7c89b0da182e904ed9da"
+  },
+  "taskAPIObservation": {
+    "status": "completed",
+    "controlledChildren": 32,
+    "samples": 128,
+    "heldLiveMeasured": 32,
+    "sameBirthUnreapedZombiesVerified": 32,
+    "naturalExitZero": 32,
+    "exactChildReaps": 32,
+    "allControlDescriptorsClosed": true,
+    "signalsSent": 0,
+    "firstFailure": null,
+    "sameFiveTupleLiveBSDTaskESRCHSamples": 9,
+    "internalTwoTaskESRCHRecheckSamples": 9,
+    "execBoundLiveTaskESRCHSamples": 0,
+    "firstExitWindow": {
+      "beforeAfterFiveTupleMatches": true,
+      "beforeBSDStatus": 2,
+      "afterBSDStatus": 2,
+      "beforeInExit": false,
+      "afterInExit": true,
+      "taskAllInitial": {
+        "flavor": 2,
+        "arg": 0,
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "taskAllInternalRecheck": {
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3
+      },
+      "bothFallbackBSD": {
+        "flavor": 3,
+        "arg": 1,
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0,
+        "sameGeneration": true
+      },
+      "productionResult": "unavailable",
+      "productionReason": "short-task-info",
+      "taskInfoComparison": {
+        "flavor": 4,
+        "arg": 0,
+        "bytes": 0,
+        "expectedBytes": 96,
+        "errno": 3,
+        "measurementAuthority": false
+      },
+      "uniqueBefore": {
+        "flavor": 17,
+        "arg": 0,
+        "bytes": 56,
+        "errno": 0
+      },
+      "uniqueAfter": {
+        "bytes": 0,
+        "expectedBytes": 56,
+        "errno": 3
+      },
+      "uniqueExecBeforeAfterMatches": null
+    },
+    "aggregateQueriesByFlavor": {
+      "bsd-info": {
+        "calls": 402,
+        "errnoCounts": {
+          "0": 402
+        },
+        "exceptions": 0,
+        "full": 402,
+        "other": 0,
+        "short": 0,
+        "zero": 0
+      },
+      "task-all-info": {
+        "calls": 137,
+        "errnoCounts": {
+          "0": 55,
+          "3": 82
+        },
+        "exceptions": 0,
+        "full": 55,
+        "other": 0,
+        "short": 0,
+        "zero": 82
+      },
+      "task-info-comparison": {
+        "calls": 128,
+        "errnoCounts": {
+          "0": 35,
+          "3": 93
+        },
+        "exceptions": 0,
+        "full": 35,
+        "other": 0,
+        "short": 0,
+        "zero": 93
+      },
+      "unique-info": {
+        "calls": 320,
+        "errnoCounts": {
+          "0": 162,
+          "3": 158
+        },
+        "exceptions": 0,
+        "full": 162,
+        "other": 0,
+        "short": 0,
+        "zero": 158
+      }
+    },
+    "totalQueries": 987,
+    "interpretation": [
+      "Controlled children can retain a complete same-birth BSD record in a non-zombie state while task lookup already returns ESRCH during a known exit window.",
+      "The first such sample changed its diagnostic INEXIT bit while retaining BSD state2; INEXIT is not a gone or exclusion criterion.",
+      "Full per-exec UUID/unique-info comparison was unavailable across those transition samples. Nine BSD-bound samples are not nine fully exec-bound reproductions.",
+      "Stable held children were measured; authoritative same-birth full BSD zombies were classified gone before exact reaping.",
+      "Comparison flavor4 also returned ESRCH in the first transition example and never authorizes fallback measurement.",
+      "Recovery35 involved a different natural cohort and four unavailable task calls. This diagnostic used the unchanged production reader and its internal two-call recheck; the outer delayed census retry was not exercised. Original cause and repair effectiveness remain unproven."
+    ]
+  },
+  "readonlyImageObservation": {
+    "imageCreated": true,
+    "createAndRWAttachCommandExitCodes": [
+      0,
+      0
+    ],
+    "successfulBindingReceipts": 0,
+    "baselineWriter": "NOT_REACHED",
+    "heldWritableFD": "NOT_REACHED",
+    "sharedMmapWithOriginalFDClosed": "NOT_REACHED",
+    "ordinaryHeldDetach": "NOT_ATTEMPTED",
+    "readOnlyReattach": "NOT_ATTEMPTED",
+    "EROFSWriteControls": "NOT_TESTED",
+    "rawBackingReadWriteOpen": "NOT_ATTEMPTED",
+    "imageCleanup": {
+      "attachmentState": "unknown",
+      "cleanupVerified": false,
+      "failure": {
+        "code": "owned-image-cleanup-unverified",
+        "errno": null,
+        "kind": "ExperimentFailure"
+      },
+      "normalDetach": null,
+      "privateDirectoryRetained": true
+    },
+    "imageDetachCommandRecorded": false,
+    "classification": "Probe metadata compatibility and cleanup dependency failure; no evidence that the intended filesystem write protection failed.",
+    "limits": "The raw diskutil plist is not retained. Do not guess an alternate field, assert which required property was missing, or claim filesystem/media readonly status. The attached-image cleanup state is unknown."
+  },
+  "resourceAndProcessCleanup": {
+    "stages": 6,
+    "allExactLeadersReaped": true,
+    "allStageGroupsVerifiedGone": true,
+    "allStageCleanupFailuresNull": true,
+    "allFinalResourceSamplesComplete": true,
+    "peakObservedRSSMiB": 57,
+    "minimumObservedFreeGiB": 108.04,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "meaning": "No fatal outer resource-monitor failure or resource-limit breach was recorded. Deliberate task API unavailable observations are separate diagnostic results. Group-gone proof does not establish image detach."
+  },
+  "observedBlockers": [
+    {
+      "priority": "P2",
+      "issue": "The expected diskutil readonly-property schema was not established on the actual runner.",
+      "minimumCorrection": "Retain presence/type/boolean observations for only fixed known keys, with unavailable preserved. Do not choose a guessed alternate schema."
+    },
+    {
+      "priority": "P2",
+      "issue": "Owned-image cleanup reused readonly-property validation, preventing even a normal detach when those attributes were unavailable.",
+      "minimumCorrection": "Separate exact backing/device/mount/UUID ownership binding from readonly metadata. Permit non-force cleanup only after full independent ownership binding; keep cleanup unknown when identity is incomplete."
+    }
+  ],
+  "nextShortProbeContract": {
+    "status": "PROPOSED_ONLY_REQUIRES_SOURCE_AND_EXECUTION_REVIEW",
+    "conditions": [
+      "Preserve the failed run and its immutable input/result evidence.",
+      "Keep production census, resource limits, unknown-query behavior, signing/authentication settings and checkpoint eligibility unchanged.",
+      "For this small fixture only, a completely bound mount with positive statvfs ST_RDONLY plus observed operation-specific write rejection and unchanged hashes can establish ordinary filesystem write protection.",
+      "Diskutil metadata may remain diagnostic null or observed booleans; writable media/backing can coexist with a read-only filesystem mount. No field meaning is inferred from its name alone.",
+      "Reconfirm binding and readonly mount state before and after controls, and separately prove normal owned-image detach and exact child cleanup.",
+      "Do not infer same-UID backing immutability, atomic snapshot completeness or production readiness from a successful fixture."
+    ],
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "rawPlistsPublished": false,
+    "signedURLsPublished": false,
+    "processIdentitiesPublished": false,
+    "privatePathsPublished": false,
+    "rawArgvOrEnvironmentPublished": false,
+    "internalConversationPublished": false
+  },
+  "reviewerActions": {
+    "newCI": 0,
+    "sourceEdits": 0,
+    "externalWrites": 0,
+    "artifactDownloadsOrUploads": 0,
+    "permissionChanges": 0
+  }
+}
