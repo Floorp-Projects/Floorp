@@ -65,11 +65,11 @@
       "new-workspace": "Nieuwe Workspace ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
+      "help": "Synchroniseer deze werkruimte en de bijbehorende webtabbladen met je Mozilla-account.",
+      "error-title": "Werkruimte synchroniseren",
       "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "invalid-workspace": "Deze werkruimte kon niet worden gesynchroniseerd. Gebruik een naam en een pictogram van maximaal 256 tekens en probeer het vervolgens opnieuw. De andere werkruimten worden gewoon verder gesynchroniseerd.",
+      "deleted-workspace": "Deze werkruimte is uit Sync verwijderd. Herstel deze vanuit een archief of maak een nieuwe werkruimte aan om deze opnieuw te synchroniseren."
     },
     "context-menu": {
       "move-up": "Deze workspace naar boven verplaatsen",
@@ -77,8 +77,8 @@
       "delete": "Workspace verwijderen",
       "manage": "Workspace beheren",
       "archive": "Archiveer Werkruimte",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "Deze werkruimte en de bijbehorende tabbladen synchroniseren",
+      "sync-paused": "Werkruimte synchronisatie vereist aandacht"
     },
     "popup": {
       "create-new": "Nieuwe workspace maken...",
