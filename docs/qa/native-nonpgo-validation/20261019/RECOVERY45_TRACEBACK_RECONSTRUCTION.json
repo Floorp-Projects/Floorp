@@ -1,0 +1,349 @@
+{
+  "candidateCount": 10,
+  "cases": [
+    {
+      "bytes": 911,
+      "candidateRawMode": "0600",
+      "control": "object-chain",
+      "exactTargetMatch": true,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-link-mismatch",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 614
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94"
+    },
+    {
+      "bytes": 911,
+      "candidateRawMode": "0600",
+      "control": "venv-python-chain",
+      "exactTargetMatch": true,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-link-mismatch",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 614
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94"
+    },
+    {
+      "bytes": 926,
+      "candidateRawMode": "0600",
+      "control": "context-mismatch",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-context-mismatch",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 580
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "51ead457e4224f1d7a96ae90ca7f69b8188583c37c240ddf69ef63951fb8617a"
+    },
+    {
+      "bytes": 934,
+      "candidateRawMode": "0600",
+      "control": "reference-content",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-reference-content",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 589
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "783f0a78752b85893d51f4053148bc8eddd9c98b11d198c6f887d7c622dc2041"
+    },
+    {
+      "bytes": 919,
+      "candidateRawMode": "0600",
+      "control": "state-not-empty",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-state-not-empty",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 593
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "47ac0ea77b07b9762206b615073ce4ceb6a0d8b8942d3641774006517da3efae"
+    },
+    {
+      "bytes": 903,
+      "candidateRawMode": "0600",
+      "control": "download-integrity",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-download-integrity",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 577
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "c476822c6bf89da80d71c7a66f6f7329104419d833f6016df1dfdc87cc096a68"
+    },
+    {
+      "bytes": 925,
+      "candidateRawMode": "0600",
+      "control": "build-date",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-producer-completion",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 581
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "191a90a34dc0ef488a0be4d19ae2bfa0ed9444b11aa1761301cf599141512ee2"
+    },
+    {
+      "bytes": 893,
+      "candidateRawMode": "0600",
+      "control": "restore-disk",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-restore-disk",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 591
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "dafdd33bb8f698924fca91bfd5c878d2a8b6ad09eecafa7be5a22162067905ab"
+    },
+    {
+      "bytes": 910,
+      "candidateRawMode": "0600",
+      "control": "reference-roots",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-reference-roots",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 585
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "9ad844c6df3cfebf3c94562fa5eb5073ba7e55fae6bc24cb9f9931fad04a4a01"
+    },
+    {
+      "bytes": 897,
+      "candidateRawMode": "0600",
+      "control": "link-reference",
+      "exactTargetMatch": false,
+      "exceptionKind": "Failure",
+      "fixedFailureCode": "checkpoint-link-reference",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 610
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "lines": 11,
+      "outerControlFramesRemoved": 1,
+      "sha256": "26464ab0ec948987dfd721a30142feb4fdac7952d73ee65661debb1f111c51c2"
+    }
+  ],
+  "ciActivated": false,
+  "inferredFailureCode": "checkpoint-link-mismatch",
+  "knownPathVariantsTried": 1,
+  "knownWorkflowCheckoutPathOnly": true,
+  "largeArtifactAcquired": false,
+  "legacyCoreSHA256": "13441551e1bfc96aed10fba97f16844b5a8cddbbf5685c72f4c07a7fc578e49a",
+  "legacySourceSHA256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a",
+  "productionSourceEdited": false,
+  "pythonUsed": "3.12.14",
+  "qualification": "fixed code/frame recovered only by full byte hash match; no private values inferred",
+  "status": "exact-match",
+  "targetBytes": 911,
+  "targetLines": 11,
+  "targetSHA256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94"
+}

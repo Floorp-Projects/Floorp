@@ -1,0 +1,367 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY45_CONSUMER_TERMINAL_FAILURE_AND_RESTORE_EVIDENCE_GAP_REVIEW",
+  "decision": {
+    "overallRun": "FAILED_AT_CHECKPOINT_RESTORE",
+    "producer": "PREVIOUSLY_PASSED_CHECKPOINT_READY_AND_SERVICE_VERIFICATION",
+    "consumer": "FAILED_RESTORE_NONZERO_EXIT",
+    "fullHostXUL": "NOT_REACHED",
+    "nativeAuthentication": "NOT_REACHED",
+    "rootCause": "SPECIFIC_LINK_AND_UNDERLYING_STATE_UNKNOWN",
+    "next": "REVIEW_MINIMAL_RESTORE_ORDER_AND_EXCEPTION_EVIDENCE_PATCH_AND_EXPLICIT_REPLAY_CONTRACT_BEFORE_SHORT_VALIDATION",
+    "executionGOForNewRun": false,
+    "stoppingGuard": "checkpoint-link-mismatch",
+    "exceptionType": "qa_core.Failure"
+  },
+  "bindings": {
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_TERMINAL_RESULT.json",
+      "bytes": 23578,
+      "sha256": "319ff50ae7c0ab0bff0688e990bfa241ea61c0005e8d2386255b93fc4d61a5e7"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": 39197008470,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39197008470",
+      "status": "completed",
+      "conclusion": "failure",
+      "event": "push",
+      "attempt": 1,
+      "branch": "codex/mac-native-checkpoint-recovery45-20261019"
+    },
+    "caller": {
+      "commit": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+      "tree": "58fdc3c87276ee28b6e7e3461ce3a3920a2ec779",
+      "workflowSHA256": "9a672056971fa4c0f457fa56e596194eafbd6f234f3dd3dfe1b1e11f3048b2b4"
+    },
+    "fixture": {
+      "commit": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "tree": "292123aeadd93176414b9276bd79718c1540d85a"
+    },
+    "consumer": {
+      "job": 117903013507,
+      "runner": "macos-15-intel",
+      "startedAt": "2026-10-19T05:21:03Z",
+      "completedAt": "2026-10-19T05:45:50Z",
+      "reportedObservedAt": "2026-10-19T05:49:20Z"
+    },
+    "producer": {
+      "job": 117881829274,
+      "conclusion": "success",
+      "independentlyReviewedPreviously": true,
+      "producerReceipt": {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_PRODUCER_RESULT.json",
+        "bytes": 40745,
+        "sha256": "1db0bb56a162738842d3d0b712a69ac053986af1b6a3723757357493622d60a9"
+      }
+    },
+    "decodedConsumerProviderLog": {
+      "bytes": 156463,
+      "sha256": "974af9dc4ff59ce6ee83a073c53261cec4d27993f4262be8ab296f716800514a",
+      "rawPublished": false,
+      "retainedFileMode": "0600"
+    },
+    "parsedConsumerReport": {
+      "bytes": 88332,
+      "sha256": "3c6258cfa1b680fa3c34b9c98b0778fb410b0f6bebec42bbfad49a0696b60d86",
+      "semanticEqualityToRawProviderObjectVerified": true,
+      "rawPublished": false
+    },
+    "originalCode": [
+      {
+        "path": "tools/qa/native-nonpgo/checkpoint.py",
+        "bytes": 35186,
+        "sha256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+        "bytes": 7491,
+        "sha256": "a35803793f7cbcfa1f0601fcffc14f1e2f277d709d074fb1797631914bd71395"
+      }
+    ]
+  },
+  "independentVerification": {
+    "terminalRunAndBothJobAPIRead": true,
+    "consumerLogsReadOnlyAfterCompleted": true,
+    "soleArtifactMetadataRechecked": true,
+    "curatedStageFailureEvidenceSourceSDKAndFullScanFieldsMatchProvider": true,
+    "consumerCensusOnlyPreflightAndProducerTestDistinctionVerified": true,
+    "wholePublicReceiptPrivacyChecked": true,
+    "rawIdentityTagsPrivatePathsCredentialsOrSignedURLsDetected": 0,
+    "artifactDownloadedByReviewer": false,
+    "newCIStarted": false,
+    "sourceEdited": false,
+    "testsRerunForThisTerminalReview": "Ten small local reconstruction controls; no CI, SDK or artifact payload acquisition",
+    "privateTracebackReconstructionRerun": true
+  },
+  "observations": {
+    "firstFailure": {
+      "stage": "checkpoint-restore",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 1461.65
+    },
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "download": {
+      "artifact": 12164479528,
+      "bytes": 2213942620,
+      "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "workflowStep": "success",
+      "providerObjectCount": 1,
+      "signedURLPublished": false,
+      "sourceBoundIntegrity": "The fixed fetch code prints checkpointDownload only after expected size, SHA256 and raw gzip magic checks pass."
+    },
+    "preflight": {
+      "status": "passed",
+      "scope": "Consumer census/self monitor gate only",
+      "QASuitesExecuted": false,
+      "recordingSuiteExecuted": false,
+      "producerQASuites": {
+        "QA": 226,
+        "recording": 14,
+        "skipped": 0
+      }
+    },
+    "stages": {
+      "count": 44,
+      "precedingNaturalZero": 43,
+      "restoreExitCode": 1,
+      "restoreReason": "nonzero-exit",
+      "restoreFailurePhase": "wait",
+      "exactLeadersReaped": 44,
+      "verifiedGoneGroups": 44,
+      "cleanupFailures": 0
+    },
+    "failedStage": {
+      "stage": "checkpoint-restore",
+      "exitCode": 1,
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 1
+      },
+      "groupCleanup": "verified-gone",
+      "cleanupFailure": null,
+      "firstFailureElapsedSeconds": 1461.65,
+      "leaderExitAlreadyObservedBeforeCleanup": 1
+    },
+    "failureEvidence": {
+      "beforeCleanup": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 911,
+        "tailBytesRead": 911,
+        "tailTruncated": false,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      },
+      "leaderExitAlreadyObserved": 1,
+      "afterCleanup": {
+        "rawContentPublished": false,
+        "freeTextPublished": false,
+        "readLimitBytes": 131072,
+        "recordLimit": 16,
+        "available": true,
+        "fileBytes": 911,
+        "tailBytesRead": 911,
+        "tailTruncated": false,
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "records": []
+      }
+    },
+    "restoreFullStreamScan": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 911,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94",
+      "lines": 11,
+      "diagnosticCounts": {},
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": [],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    },
+    "partialRestoreExtent": "The restore link construction/validation path at line614 was reached; exact offending link and completed state extent remain UNKNOWN.",
+    "restoreReturnedVerifiedReceipt": false,
+    "resumedEffectiveConfigVerified": "NOT_ESTABLISHED",
+    "configureOrFullBuildAfterRestore": "NOT_REACHED",
+    "hostXULPackageNative": "NOT_REACHED",
+    "soleServiceArtifact": {
+      "id": 12164479528,
+      "count": 1,
+      "bytes": 2213942620,
+      "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+      "expiresAt": "2026-10-20T05:19:56Z",
+      "expiredAtAPIRead": false,
+      "retentionDays": 1,
+      "newConsumerUpload": false
+    },
+    "stoppingGuard": {
+      "code": "checkpoint-link-mismatch",
+      "exceptionType": "qa_core.Failure",
+      "provenance": "Exact complete traceback digest reconstruction against immutable original source; not a newly obtained original inner log"
+    }
+  },
+  "interpretation": [
+    "Consumer transport succeeded before the restore command failed. The failure is not an observed download-integrity, resource-monitor or cleanup stop.",
+    "The restore leader had already exited with status1 when failure evidence was collected. Cleanup verified its group gone and reaped it; this is not a cancellation-induced restore exit.",
+    "The direct before/after tails and complete stream scan preserved no classified exception. Their zero matches do not imply an error-free execution.",
+    "The subsequent independently rerun reconstruction produces a 911-byte, eleven-line traceback whose entire SHA256 equals the original retained inner-stream digest. It identifies qa_core.Failure/checkpoint-link-mismatch at immutable restore line614, main651/module657 and require14.",
+    "Distinct object and virtualenv forward-link controls produce the same complete traceback. The fixed stopping guard is identified; the actual offending link, chain, target and underlying state remain UNKNOWN.",
+    "Reaching immutable restore line614 is source-bound evidence that the link construction/validation path was entered. It is not proof of a fully restored tree or restored effective configuration.",
+    "Producer stream/readback/storage success remains valid for that milestone; it does not establish cross-job restoration or full/native qualification.",
+    "Local source counterexamples justify reviewing restore-order corrections, while their precise correspondence to the remote offending link remains unproven.",
+    "Recovery42 helper-timeout cause, Recovery43 inner-unit cause and the original native-exit cause remain UNKNOWN."
+  ],
+  "findings": [
+    {
+      "priority": "P2",
+      "subject": "Restore failure identity and stopping subphase were not retained",
+      "status": "HISTORICAL_FIXED_CODE_AND_FRAMES_RECOVERED_BY_DIGEST; GENERAL_DIAGNOSTIC_PRESERVATION_GAP_REMAINS",
+      "evidence": "The initial direct projection lost exception details. Exact local traceback reconstruction subsequently recovered checkpoint-link-mismatch and fixed frames; this does not replace general safe structured exception retention for future failures.",
+      "minimumCorrection": "Emit one bounded structured exception record containing fixed operation phase, exact allowlisted source-defined Failure or fixed RuntimeError code, exception-type enum, optional numeric errno and exact known source frames. Keep arbitrary message, path, argv, environment, raw values and URLs private.",
+      "requiredNegatives": [
+        "unknown exception text and private paths",
+        "unrecognized or dynamic code",
+        "foreign frame or symlink alias name",
+        "duplicate/malformed/missing marker",
+        "evidence writer or cleanup exception replacing the original primary",
+        "non-Failure OSError and interruption remain unknown unless safely classified"
+      ],
+      "scope": "Diagnostic preservation only; do not reinterpret the outer first failure or relax restore/resource checks."
+    }
+  ],
+  "replayDesignReview": {
+    "status": "CONCEPT_ACCEPTABLE_PENDING_IMMUTABLE_PATCH_AND_TEST_REVIEW",
+    "newConceptualP1OrP2": 0,
+    "contract": "verified-origin-cross-run-replay-v1",
+    "reasonExplicitContractIsNecessary": "Original fetch requires same-run artifact ownership and a successful producer in that run. Original context compares current run/attempt/head/fixture plus all nonhistoric environment fields. Blind cross-run reuse would introduce a provenance/context rejection different from the now-identified checkpoint-link-mismatch stopping guard.",
+    "requirements": [
+      "Keep the default same-run fetch and complete context equality behavior unchanged when explicit replay opt-in is absent.",
+      "Bind a fixed immutable origin lock to run39197008470, headfdc6722b6ac5467f7baf6c0fa6a3537ee0a51860, fixture4337d51a228834f4b2cbee1f4ef0771eb45737a8, successful producer117881829274, artifact12164479528, exact bytes/archive+manifest digests, expiry and producer build date.",
+      "Verify actual current run/head/attempt/current job through real environment and ordinary API independently of origin. Do not overwrite GITHUB metadata.",
+      "Verify the original completed run, attempt1 and exact locked head; require the exact original producer job completed successfully and the sole unexpired artifact's run, name, size, digest and retention. The original run's overall failure is compatible with a successful producer and must not be represented as run success.",
+      "Require identical complete context key sets. Compare only the four declared historical run/attempt/head/fixture keys against locked origin; compare every other field and nested roots against actual current context without silently dropping unknown fields.",
+      "Keep plan SHA, absolute canonical roots, runtime/harness/repository/image/Python SHA, source/reference content/modes, all payload hashes/links/mtime and trusted completion checks unchanged.",
+      "Explicitly bind the code-only restore-order/evidence compatibility delta from capture fixture4337 to the new diagnostic fixture; do not call it same-fixture or same-run qualification.",
+      "Bind producer build date and retain both origin and current execution receipts. Do not modify the archive or its manifest/context to make a mismatch disappear.",
+      "Short restore-only mode must stop after actual restored effective-config verification with no full build, native claim or new artifact upload.",
+      "Require frozen code/negative tests and successful real Mac short restore review before consumer-only full continuation."
+    ],
+    "minimumNegativeCases": [
+      "opt-in absent preserves old same-run rejection",
+      "wrong origin run/head/attempt/producer/fixture",
+      "expired or extra artifact",
+      "size/archive/manifest digest mismatch",
+      "extra or missing context key",
+      "any nonhistoric context mismatch",
+      "current environment versus API mismatch",
+      "finite or local fixture controls cannot grant actual restore qualification",
+      "restore-only accidentally reaches full/native or upload",
+      "projection/persistence failure cannot replace primary"
+    ],
+    "executionGO": false
+  },
+  "sourceFixReviewStatus": {
+    "reportedLocalCounterexamples": "Four old-pack-to-restore regressions and corrected all-state link/reference/mode/timestamp ordering",
+    "independentPatchTestsExecutedHere": "Only the unchanged-old-source reconstruction controls were independently rerun; final repair patch tests are a separate upcoming review.",
+    "remoteOriginalFailureAttributedToThoseDefects": "The fixed remote stopping guard matches the forward-link counterexamples; exact actual link and chain identity are not established.",
+    "finalSourceReviewRequired": true
+  },
+  "limits": {
+    "overallRunConclusion": "failure",
+    "producerConclusion": "success",
+    "restoredEffectiveConfig": "NOT_VERIFIED",
+    "fullHostXUL": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "productSigning": false,
+    "permissionsOrRetentionChanged": false,
+    "newLargeArtifactStoredByThisReview": false
+  },
+  "revision": {
+    "supersedesReviewSHA256": "df73c53e7439112cc1e9219b3f4c4c1ed440703feddda73daac91abe4876d8cd",
+    "supersedesReceiptSHA256": "9fd1e84d8a89f54bbea69239da8245fc1ce06729ae83d59bc116368b791c05ed",
+    "reason": "An exact digest-matched reconstruction identifies the previously unprojected fixed exception code and frames. All original run/monitor/cleanup evidence is unchanged."
+  },
+  "tracebackReconstruction": {
+    "method": "Execute the unchanged original checkpoint source on tiny valid fixture controls, catch its actual exception, remove only the external control frame, and render the remaining traceback using the original source and known public workflow checkout filename.",
+    "independentlyRerun": true,
+    "executedPython": "3.12.14",
+    "candidateControls": 10,
+    "knownPublicCheckoutPathVariants": 1,
+    "outerControlFramesRemoved": 1,
+    "matchingControls": [
+      "object-forward-chain",
+      "virtualenv-python-forward-chain"
+    ],
+    "exactMatchCount": 2,
+    "matchingStream": {
+      "bytes": 911,
+      "lines": 11,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94"
+    },
+    "matchedFixedCode": "checkpoint-link-mismatch",
+    "matchedExceptionType": "qa_core.Failure",
+    "frames": [
+      {
+        "file": "checkpoint.py",
+        "function": "<module>",
+        "line": 657
+      },
+      {
+        "file": "checkpoint.py",
+        "function": "main",
+        "line": 651
+      },
+      {
+        "file": "checkpoint.py",
+        "function": "restore",
+        "line": 614
+      },
+      {
+        "file": "qa_core.py",
+        "function": "require",
+        "line": 14
+      }
+    ],
+    "originalCheckpointSourceSHA256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a",
+    "originalCoreSourceSHA256": "13441551e1bfc96aed10fba97f16844b5a8cddbbf5685c72f4c07a7fc578e49a",
+    "privateControlScript": {
+      "bytes": 8637,
+      "sha256": "eb6ae12d39ae9beda24c8e0c053482cab6c61611bac6d452faeda2f7d3510b7f",
+      "contentPublished": false
+    },
+    "safeResult": {
+      "bytes": 9029,
+      "sha256": "f037ce67dd8fe1ae1363d42b56dc2ce56ce35df29a9738552952b92df3d25327"
+    },
+    "negativeControls": [
+      "context-mismatch",
+      "reference-content",
+      "state-not-empty",
+      "download-integrity",
+      "build-date",
+      "restore-disk",
+      "reference-roots",
+      "link-reference"
+    ],
+    "allEightNegativeControlStreamsDiffer": true,
+    "rawCandidateStreamModes": "0600",
+    "rawCandidateTracebacksPublished": false,
+    "originalArtifactAcquired": false,
+    "inference": "Full bytes/length/line count and SHA256 equality support the fixed guard, exception identity and frames. Length alone is not evidence. Two different fixture chains yield the same full stream, so no unique actual link, path, target or chain can be inferred.",
+    "remainingUnknown": [
+      "specific original link",
+      "original link target and chain",
+      "which valid link-order counterexample matches the original state",
+      "full partial-restoration extent",
+      "original native failure cause"
+    ]
+  }
+}

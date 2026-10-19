@@ -1,0 +1,907 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY45_TERMINAL_CONSUMER_RESTORE_FAILURE",
+  "run": {
+    "id": 39197008470,
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39197008470",
+    "status": "completed",
+    "conclusion": "failure",
+    "caller": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "fixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+    "event": "push",
+    "attempt": 1
+  },
+  "producer": {
+    "job": 117881829274,
+    "conclusion": "success",
+    "evidenceCommit": "b12a661c98498a5cde74b2b268dd66802aabf05f",
+    "checkpointReady": true
+  },
+  "consumer": {
+    "job": 117903013507,
+    "conclusion": "failure",
+    "completedAt": "2026-10-19T05:45:50Z",
+    "observedAt": "2026-10-19T05:49:20Z"
+  },
+  "decodedProviderLog": {
+    "bytes": 156463,
+    "sha256": "974af9dc4ff59ce6ee83a073c53261cec4d27993f4262be8ab296f716800514a",
+    "rawPublished": false
+  },
+  "firstFailure": {
+    "stage": "checkpoint-restore",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 1461.65
+  },
+  "monitorFailure": null,
+  "monitorDiagnostics": [],
+  "preflight": {
+    "status": "passed",
+    "census": {
+      "api": "sysctl-kern-proc-all",
+      "attempts": 1,
+      "candidateIdentities": 234,
+      "candidateZombies": 0,
+      "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed",
+      "mixedCandidateIdentities": 2,
+      "rawProcessMetadataPublished": false,
+      "retryErrnos": [],
+      "selfBindingVerified": true,
+      "snapshotBytes": 291600,
+      "snapshotEntries": 450
+    },
+    "firstFailure": null,
+    "monitorFailure": null
+  },
+  "consumerQASuitesExecuted": false,
+  "producerQASuites": {
+    "qa": 226,
+    "recording": 14,
+    "skipped": 0
+  },
+  "sdk": {
+    "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "logicalBytes": 704719765,
+    "members": 49701,
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4"
+  },
+  "source": {
+    "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+    "baselineProvenanceVerified": true,
+    "bootstrapLoaderChangedToFixedPaths": true,
+    "hostChangedFromOriginal": true,
+    "mozconfigSHA256": "0014b477c9307e5d8961fa21c2e69206cf7d91fbf777aa3fb8c87797d773a33f",
+    "originalPatchCount": 30,
+    "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+    "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+    "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+    "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+  },
+  "stages": [
+    {
+      "stage": "harness-startup-check",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 52,
+      "minimumFreeGiB": 99.57
+    },
+    {
+      "stage": "harness-startup-apply",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 99.57
+    },
+    {
+      "stage": "harness-recording-check",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 99.57
+    },
+    {
+      "stage": "harness-recording-apply",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 99.57
+    },
+    {
+      "stage": "sdk-materialize",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 81,
+      "minimumFreeGiB": 98.82
+    },
+    {
+      "stage": "tools-materialize",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 581,
+      "peakRSSMiB": 195,
+      "minimumFreeGiB": 95.71
+    },
+    {
+      "stage": "version-clang",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 192,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.6
+    },
+    {
+      "stage": "version-rust",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 36,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.6
+    },
+    {
+      "stage": "version-node",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 9,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.6
+    },
+    {
+      "stage": "version-nasm",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 42,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.6
+    },
+    {
+      "stage": "patch-0",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-1",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-2",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-3",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-4",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-5",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-6",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-7",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.59
+    },
+    {
+      "stage": "patch-8",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.58
+    },
+    {
+      "stage": "patch-9",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-10",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-11",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-12",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 2,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-13",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-14",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-15",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-16",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-17",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-18",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-19",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-20",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-21",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-22",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-23",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-24",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-25",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-26",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-27",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-28",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "patch-29",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "baseline-provenance",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 107,
+      "peakRSSMiB": 15,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "first-cause-patch",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "apply-first-cause",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 96.55
+    },
+    {
+      "stage": "checkpoint-restore",
+      "exitCode": 1,
+      "reason": "nonzero-exit",
+      "failurePhase": "wait",
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 1
+      },
+      "logBytes": 911,
+      "peakRSSMiB": 1081,
+      "minimumFreeGiB": 89.55
+    }
+  ],
+  "failureEvidence": {
+    "beforeCleanup": {
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "readLimitBytes": 131072,
+      "recordLimit": 16,
+      "available": true,
+      "fileBytes": 911,
+      "tailBytesRead": 911,
+      "tailTruncated": false,
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": []
+    },
+    "leaderExitAlreadyObserved": 1,
+    "afterCleanup": {
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "readLimitBytes": 131072,
+      "recordLimit": 16,
+      "available": true,
+      "fileBytes": 911,
+      "tailBytesRead": 911,
+      "tailTruncated": false,
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": []
+    }
+  },
+  "checkpointStageLogs": {
+    "checkpoint-restore": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 911,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94",
+      "lines": 11,
+      "diagnosticCounts": {},
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "records": [],
+      "scope": "complete stream scan; marker classes do not replace the actual command exit"
+    }
+  },
+  "artifact": {
+    "id": 12164479528,
+    "artifactCount": 1,
+    "bytes": 2213942620,
+    "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "expiresAt": "2026-10-20T05:19:56Z",
+    "retentionDays": 1,
+    "consumerFetchStepPassed": true,
+    "downloadedBytesAndSHA256Verified": true,
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644"
+  },
+  "assessment": {
+    "firstFailingStage": "checkpoint-restore",
+    "firstFailingGuard": "checkpoint-link-mismatch",
+    "exceptionType": "qa_core.Failure",
+    "codeAndFrame": "Recovered by exact full traceback hash equality against immutable old source.",
+    "innerLog": {
+      "bytes": 911,
+      "lines": 11,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94",
+      "fullScanComplete": true,
+      "matchingRecords": 0
+    },
+    "zeroMatchingRecordsMeaning": "The parser did not recognize the private traceback; zero matches does not establish absence of an error.",
+    "all44ExactLeadersReapedAndGroupsGone": true,
+    "cleanupFailures": 0,
+    "prior43StagesNaturalZero": true,
+    "partialRestoreExtent": "Link construction/validation in restore was reached; exact link and completed state extent remain UNKNOWN.",
+    "restoredEffectiveConfigVerified": false,
+    "fullHostXULQualification": "NOT_TESTED",
+    "nativeAuthenticationQualification": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN",
+    "next": "Preserve the verified existing artifact; minimally repair proven restore source defects and bounded exception evidence, validate an explicit origin-versus-current replay contract, then run a short restore check before resuming full consumer validation.",
+    "additionalArtifactUpload": false,
+    "reconstruction": {
+      "method": "Actual traceback from immutable original source and a tiny valid forward-link fixture; complete reconstructed stream equals original private log by byte length, line count and SHA256. This recovers the fixed failure code and frames, not the actual link target.",
+      "bytes": 911,
+      "lines": 11,
+      "sha256": "6474e6cacf592db30c5b4378d278ce7b287c0c08671e5365463cfa7a6983dd94",
+      "frames": [
+        {
+          "file": "checkpoint.py",
+          "function": "<module>",
+          "line": 657
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "main",
+          "line": 651
+        },
+        {
+          "file": "checkpoint.py",
+          "function": "restore",
+          "line": 614
+        },
+        {
+          "file": "qa_core.py",
+          "function": "require",
+          "line": 14
+        }
+      ],
+      "matchingControls": [
+        "object-forward-chain",
+        "virtualenv-python-forward-chain"
+      ],
+      "specificLink": "UNKNOWN",
+      "originalCheckpointSourceSHA256": "8a43f7aa366cc5bb07955c14fe0902603be007ac1c32eefcba4a28fc4f93083a",
+      "safeResultSHA256": "f037ce67dd8fe1ae1363d42b56dc2ce56ce35df29a9738552952b92df3d25327",
+      "rawPublished": false
+    }
+  }
+}
