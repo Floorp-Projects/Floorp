@@ -57,3 +57,16 @@ diff --git a/toolkit/components/extensions/ExtensionContent.sys.mjs b/toolkit/co
  
      Object.defineProperty(this, "principal", {
        value: Cu.getObjectPrincipal(this.sandbox),
+diff --git a/toolkit/components/extensions/Extension.sys.mjs b/toolkit/components/extensions/Extension.sys.mjs
+--- a/toolkit/components/extensions/Extension.sys.mjs
++++ b/toolkit/components/extensions/Extension.sys.mjs
+@@ -3888,6 +3888,9 @@
+       ignoreQuarantine: this.ignoreQuarantine,
+       hasRecommendedState: this.hasRecommendedState,
+       temporarilyInstalled: this.temporarilyInstalled,
++      // Native content-script world checks need the same authenticated Chrome
++      // identity as the extension process, independent of the global Worker pref.
++      backgroundServiceWorkerCompatibility: this.backgroundServiceWorkerCompatibility,
+     };
+   }
+ 

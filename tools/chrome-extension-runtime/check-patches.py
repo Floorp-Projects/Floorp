@@ -41,6 +41,7 @@ PATCH_NAMES = (
     "chrome-management-identity.patch",
 )
 NATIVE_ONLY_PATCH_NAMES = (
+    "chrome-extension-custom-event-native.patch",
     "chrome-extension-debugger-native.patch",
     "chrome-extension-media-native.patch",
     "chrome-extension-network-native.patch",

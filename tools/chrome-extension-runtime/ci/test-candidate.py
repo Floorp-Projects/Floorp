@@ -34,6 +34,7 @@ CORE = [
     "ChromeDevtoolsSidebarHeightNative.test.mts",
     "ChromePublicExtensionURLNative.test.mts",
     "ChromeContentWorldsNative.test.mts",
+    "ChromeCustomEventDetailNative.test.mts",
     "ChromeUserScriptsPermissionsNative.test.mts",
     "ChromeManagementIDsNative.test.mts",
     "DNRTransformer.test.mts", "ChromeVersionTarget.test.mts", "ChromeExtensionDownload.test.mts",

@@ -28,3 +28,6 @@ browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/si
 
 # Shared isolated-world fixture bytes match the measured Chrome reference.
 tools/chrome-extension-runtime/fixtures/content-worlds/* text eol=lf
+
+# Shared CustomEvent contract fixture bytes match the measured Chrome reference.
+tools/chrome-extension-runtime/fixtures/custom-event-detail/* text eol=lf

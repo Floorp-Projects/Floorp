@@ -1,0 +1,145 @@
+diff --git a/dom/events/CustomEvent.cpp b/dom/events/CustomEvent.cpp
+--- a/dom/events/CustomEvent.cpp
++++ b/dom/events/CustomEvent.cpp
+@@ -4,10 +4,16 @@
+ 
+ #include "CustomEvent.h"
+ 
++#include "js/Realm.h"
++#include "jsapi.h"
++#include "mozilla/BasePrincipal.h"
+ #include "mozilla/HoldDropJSObjects.h"
+ #include "mozilla/dom/BindingUtils.h"
+ #include "mozilla/dom/CustomEventBinding.h"
++#include "mozilla/dom/StructuredCloneHolder.h"
++#include "mozilla/extensions/WebExtensionPolicy.h"
+ #include "nsContentUtils.h"
++#include "xpcpublic.h"
+ 
+ using namespace mozilla;
+ using namespace mozilla::dom;
+@@ -15,7 +21,9 @@
+ CustomEvent::CustomEvent(mozilla::dom::EventTarget* aOwner,
+                          nsPresContext* aPresContext,
+                          mozilla::WidgetEvent* aEvent)
+-    : Event(aOwner, aPresContext, aEvent), mDetail(JS::NullValue()) {
++    : Event(aOwner, aPresContext, aEvent),
++      mDetail(JS::NullValue()),
++      mDetailSourceGlobal(nullptr) {
+   mozilla::HoldJSObjects(this);
+ }
+ 
+@@ -31,6 +39,7 @@
+ 
+ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CustomEvent, Event)
+   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDetail)
++  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDetailSourceGlobal)
+ NS_IMPL_CYCLE_COLLECTION_TRACE_END
+ 
+ NS_IMPL_ADDREF_INHERITED(CustomEvent, Event)
+@@ -59,6 +68,20 @@
+   return mozilla::dom::CustomEvent_Binding::Wrap(aCx, this, aGivenProto);
+ }
+ 
++// Content-script principals are expanded principals; their direct AddonPolicy
++// is null. Resolve the actual addon principal rather than metadata or an ID
++// suffix. The ordinary serialized policy carries this validated Chrome bit.
++static bool IsChromeDetailSourceGlobal(JSObject* aGlobal) {
++  if (!aGlobal || !xpc::IsWebExtensionContentScriptSandbox(aGlobal)) {
++    return false;
++  }
++  auto* principal =
++      BasePrincipal::Cast(nsContentUtils::ObjectPrincipal(aGlobal));
++  RefPtr<extensions::WebExtensionPolicy> policy =
++      principal->ContentScriptAddonPolicy();
++  return policy && policy->Active() && policy->ChromeCompatibilityEnabled();
++}
++
+ void CustomEvent::InitCustomEvent(JSContext* aCx, const nsAString& aType,
+                                   bool aCanBubble, bool aCancelable,
+                                   JS::Handle<JS::Value> aDetail) {
+@@ -66,11 +89,71 @@
+ 
+   Event::InitEvent(aType, aCanBubble, aCancelable);
+   mDetail = aDetail;
++  mDetailSourceGlobal = nullptr;
++  if (aDetail.isObject()) {
++    // Xray constructor bindings enter the underlying Window realm before this
++    // call. The actual scripted caller identifies the isolated source world.
++    JSObject* caller = JS::GetScriptedCallerGlobal(aCx);
++    if (IsChromeDetailSourceGlobal(caller)) {
++      mDetailSourceGlobal = caller;
++    }
++  }
+ }
+ 
+ void CustomEvent::GetDetail(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aRetval) {
+   aRetval.set(mDetail);
++  JS::Rooted<JSObject*> source(aCx, mDetailSourceGlobal);
++  if (!source || !mDetail.isObject()) {
++    return;
++  }
++  JS::Rooted<JSObject*> target(aCx, JS::GetScriptedCallerGlobal(aCx));
++  if (!target || target == source || !IsChromeDetailSourceGlobal(source)) {
++    return;
++  }
++  auto* sourcePrincipal =
++      BasePrincipal::Cast(nsContentUtils::ObjectPrincipal(source));
++  auto* targetPrincipal =
++      BasePrincipal::Cast(nsContentUtils::ObjectPrincipal(target));
++  if (targetPrincipal->Kind() != BasePrincipal::eContentPrincipal ||
++      targetPrincipal->AddonPolicy() ||
++      !sourcePrincipal->Subsumes(targetPrincipal,
++                                 BasePrincipal::DontConsiderDocumentDomain)) {
++    return;
++  }
++
++  // Match Chrome's world-safe detail: clone for every cross-world read, never
++  // cache or export live objects/functions. Snapshot before getters can reenter
++  // and reinitialize this event. Source-world reads keep the original value.
++  JS::Rooted<JS::Value> detail(aCx, mDetail);
++  aRetval.setNull();
++  StructuredCloneHolder holder(StructuredCloneHolder::CloningSupported,
++                               StructuredCloneHolder::TransferringNotSupported,
++                               JS::StructuredCloneScope::SameProcess);
++  ErrorResult error;
++  error.MightThrowJSException();
++  {
++    JSAutoRealm sourceRealm(aCx, source);
++    if (!JS_WrapValue(aCx, &detail)) {
++      error.StealExceptionFromJSContext(aCx);
++    } else {
++      holder.Write(aCx, detail, error);
++    }
++  }
++  if (error.Failed()) {
++    error.SuppressException();
++    return;
++  }
++  {
++    JSAutoRealm targetRealm(aCx, target);
++    holder.Read(aCx, aRetval, error);
++  }
++  if (error.Failed()) {
++    aRetval.setNull();
++  }
++  // SerializeAndSwallowExceptions in Chrome returns null for unclonable detail
++  // or a throwing accessor. The normal binding must see no pending exception.
++  error.SuppressException();
+ }
+ 
+ already_AddRefed<CustomEvent> NS_NewDOMCustomEvent(
+diff --git a/dom/events/CustomEvent.h b/dom/events/CustomEvent.h
+--- a/dom/events/CustomEvent.h
++++ b/dom/events/CustomEvent.h
+@@ -17,6 +17,9 @@
+   virtual ~CustomEvent();
+ 
+   JS::Heap<JS::Value> mDetail;
++  // Only populated for object detail initialized by a validated Chrome content
++  // script. Its scripted world can differ from the Xray constructor realm.
++  JS::Heap<JSObject*> mDetailSourceGlobal;
+ 
+  public:
+   explicit CustomEvent(mozilla::dom::EventTarget* aOwner,
