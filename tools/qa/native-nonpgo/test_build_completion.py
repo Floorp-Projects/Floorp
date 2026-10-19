@@ -463,6 +463,15 @@ class CompletionTests(unittest.TestCase):
                     mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
                 self.assertEqual(fast, bc.collect(self.task, self.snapshot))
         self.assertEqual(fast['status'], 'observed')
+        for tail in ('], comma,', {'nested': [1, 2]}, [1, 2], None):
+            data = whole([marker()]);data['ignored'] = [1] * 20000 + [tail]
+            data['following'] = {'array': [1, 2], 'text': '] ,'}
+            self.write(json.dumps(data).encode())
+            fast = bc.collect(self.task, self.snapshot)
+            with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                    mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                self.assertEqual(fast, bc.collect(self.task, self.snapshot))
+            self.assertEqual(fast['status'], 'observed')
         base = json.dumps(whole([marker()])).encode()[:-1]
         for suffix in (b',"ignored":[{"a":"},","b":[1,2]},]}',
                        b',"ignored":[1,,2]}', b',"ignored":[,1]}', b',"ignored":[1,2 3]}'):

@@ -365,7 +365,9 @@ class _JSONStream:
             return _UNDECODED
         start = self.pos - self.base
         ending = {123: b'},', 91: b'],'}.get(self.buffer[start])
-        cut = self.buffer.rfind(ending if ending else b',', start)
+        stop = self.buffer.find(b']', start) if ending is None else -1
+        cut = self.buffer.rfind(ending if ending else b',', start,
+                                stop if stop >= 0 else len(self.buffer))
         if ending and cut >= 0:
             cut += 1
         if cut <= start:

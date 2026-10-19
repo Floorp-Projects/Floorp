@@ -1,0 +1,179 @@
+{
+  "schema": 1,
+  "review": "Recovery52 primitive-column tail optimization and short candidate",
+  "decision": "CODE_AND_SHORT_DIAGNOSTIC_CANDIDATE_CLEAR_PENDING_IMMUTABLE_BINDINGS",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "bindings": {
+    "baselineFixture": "6996647e3fe717522a6288d6554209f0a387121e",
+    "baselineParserSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24498,
+        "sha256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 31356,
+        "sha256": "6a8e19ff79bc2352a3e320c7d7575bdce5afc9a07cf21074418902899f4083a6"
+      }
+    ],
+    "freeze": {
+      "name": "floorp-recovery52-source-freeze.json",
+      "bytes": 775,
+      "sha256": "050112568d7f992bc152d51f59602a27b3696602ddba58d8f5e3c0edd24b4b68"
+    },
+    "candidate": {
+      "bytes": 36460,
+      "sha256": "ce4dd65e8ec45fb359333923bde7209abe1dcfe0f8c5461412c11de9dc905099"
+    },
+    "candidateFixture": "PLACEHOLDER",
+    "unchangedPlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+  },
+  "changeAssessment": [
+    "The parser diff is confined to three lines selecting the bounded array-batch prefix. For a value without an object/list ending selector, the last comma search is bounded by the first closing square bracket in the current chunk, when present.",
+    "This avoids considering bytes from a following column in a primitive prefix. It is a candidate-bound optimization, not a replacement JSON parser: quoted or nested content may cause conservative fallback, and the existing strict decoder remains authoritative.",
+    "The complete document, remaining array values, column lengths and original final file/directory stability checks still run. An early bracket or rejected prefix cannot publish partial counts.",
+    "The only test diff adds four tails after 20,000 primitive values: quoted bracket/comma text, a nested object, a nested list and null, followed by another JSON member. Fast and fully structural results must agree.",
+    "The controlled input, one-million row assertion, failure frame 450, reason instrumentation, cooperative 30-second budget, memory/value/row bounds, duplicate and finite-number checks, unknown semantics, compilation inputs and resource limits are unchanged."
+  ],
+  "independentValidation": {
+    "immutableBaselineDiffInspected": true,
+    "strictGrammarDifferential": {
+      "checks": 15480,
+      "payloads": 516,
+      "chunkBytes": [
+        1,
+        2,
+        7,
+        31,
+        65536
+      ],
+      "modes": [
+        "all-fast",
+        "batch-only",
+        "structural"
+      ],
+      "trackedAndUntrackedRoot": true,
+      "mismatches": 0,
+      "evidence": {
+        "name": "floorp-recovery52-independent-differential.json",
+        "bytes": 420,
+        "sha256": "02e73a38bb644b0ff3a49b17a298d5fa13671458fbfd99b1bdd82a2e715be508"
+      }
+    },
+    "boundsDifferential": {
+      "checks": 777,
+      "cases": 259,
+      "mismatches": 0,
+      "evidence": {
+        "name": "floorp-recovery52-independent-bounds-control.json",
+        "bytes": 224,
+        "sha256": "52b396fbde819bb61a8bc1b24e161333fd32a53e2f55573c36cbc55709cd6670"
+      }
+    },
+    "targetedTests": {
+      "total": 4,
+      "passed": 4,
+      "skipped": 0,
+      "seconds": 1.211,
+      "resourceWarningsAreErrors": true,
+      "coverage": [
+        "quoted and nested array tails with following JSON",
+        "batch row cap",
+        "numeric and literal chunk prefixes",
+        "decoded key and depth bounds"
+      ],
+      "log": {
+        "name": "floorp-recovery52-independent-focused.private.log",
+        "bytes": 868,
+        "sha256": "70b127392a7f031d86071521490090173c95679c41a7cd47d55804c031bcefce"
+      }
+    },
+    "providedFullQA": {
+      "total": 737,
+      "passed": 720,
+      "DarwinSkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 62.142,
+      "resourceWarningsAreErrors": true,
+      "independentlyReexecutedHeavyFullSuite": false,
+      "log": {
+        "name": "floorp-recovery52-linux-full.private.log",
+        "bytes": 141884,
+        "sha256": "770b27fdc53e7ebdff9c6f6029b979b69f8c9a0e7f9c8cd1af5595288894e53f"
+      }
+    },
+    "providedLinuxDensity": {
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 11.325008494997746,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "actualMacMeasurement": false,
+      "independentlyReexecutedDenseCollector": false
+    },
+    "independentlyReexecutedCandidateControls": {
+      "negativeRejected": 1032,
+      "sourceAPIMocks": 5,
+      "actualInlineMockFlows": 7,
+      "allPassed": true,
+      "controls": {
+        "name": "floorp-recovery52-independent-guarded-controls-result.json",
+        "bytes": 849,
+        "sha256": "03d1ec0b98199002a89bef31d70a40020ac43ea26679756562e72fe5e5a43ecd"
+      },
+      "sourceAPI": {
+        "name": "floorp-recovery52-independent-source-api-controls-result.json",
+        "bytes": 666,
+        "sha256": "d9c1f6af3378c3fff95e49aab7b3cd226bf082b9b79baca56702c41d9e82eb44"
+      },
+      "flows": {
+        "name": "floorp-recovery52-independent-flow-controls-result.json",
+        "bytes": 1704,
+        "sha256": "7e1d6684dd9c9b75df9ef9b863db470afbb72d18ed14f69ccb4175d997c57ddb"
+      }
+    }
+  },
+  "candidateAssessment": {
+    "semanticChangesFromReviewed51": "workflow name, dedicated branch and fixture placeholder only",
+    "continuationAndFinalGateCodeUnchanged": true,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "RuntimeOrHarnessCheckout": false,
+    "build": false,
+    "artifactUpload": false,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "ownedStagePhaseMinutes": 15,
+    "isolatedDensityFailureRemainsOverallFailure": true,
+    "originalFirstFailurePreserved": true
+  },
+  "hypothesisAndLimits": [
+    "Recovery51 directly established processing-limit on the controlled dense input. Its exact parse pass and dominant performance costs were not retained; this source-level tail hypothesis is not retrospectively proved by the terminal reason.",
+    "The Linux observation supports local feasibility only. The actual Intel Mac margin below the unchanged 30-second budget remains unproved and must be measured by the same short input.",
+    "A continued density failure must still report null counts, retain the original first failure and leave the final job failed. Passing the separate nine serializer controls does not qualify the dense path.",
+    "Neither this local change nor the short candidate reconstructs the lost Recovery48 profile or qualifies a full build, Mozilla cases or native authentication."
+  ],
+  "beforeActivation": [
+    "Bind the final immutable source and rendered caller through ordinary provider readback and ancestry comparison.",
+    "Verify dedicated trigger uniqueness, unused branch, zero prior caller runs and no active or queued owned validation immediately before activation.",
+    "Preserve the same bounded actual density evidence and separate recording, serializer and cleanup outcomes for terminal review."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "CIOrRefMutation": false,
+    "newPayloadAcquisition": false,
+    "actualMacExecuted": false,
+    "additionalHeavyFullQAOrDensityRun": false
+  }
+}

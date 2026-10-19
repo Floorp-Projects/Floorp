@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY52_MINIMAL_PRIMITIVE_PREFIX_BOUNDS",
+  "sourceFreeze": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24498,
+        "sha256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 31356,
+        "sha256": "6a8e19ff79bc2352a3e320c7d7575bdce5afc9a07cf21074418902899f4083a6"
+      }
+    ],
+    "baselineFixture": "6996647e3fe717522a6288d6554209f0a387121e",
+    "baselineParserSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+    "processingSeconds": 30,
+    "fullQA": 737,
+    "MacQA": 522,
+    "recording": 14,
+    "sameInputBytes": 195000385,
+    "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "denseFailureAssertionLine": 450
+  },
+  "previousActualMac": {
+    "run": 39315456303,
+    "sameInputBytes": 195000385,
+    "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.01288323999995,
+    "processingSeconds": 30,
+    "recordingPassed": 14,
+    "serializerCasesPassed": 9,
+    "overall": "failed",
+    "evidenceCommit": "df086f1ffa44e3f7f6a829fc9674028c3ee01f98"
+  },
+  "change": "Limit a primitive batch candidate to commas before the first closing array bracket in the current bounded chunk. Strict JSON decoding, complete structural validation and final file identity checks remain. A bracket within a quoted or nested value can only shorten the candidate or trigger the existing strict fallback.",
+  "performanceHypothesis": "Avoid repeatedly attempting a prefix spanning the current primitive column and a following column, reducing scalar fallback near a column tail. This source-level hypothesis is not a measured Mac bottleneck attribution.",
+  "unchanged": {
+    "processingSeconds": 30,
+    "maxInputBytes": 2147483648,
+    "sameControlledInput": true,
+    "unknownCountsAreNull": true,
+    "strictJSONAndFiniteNumbers": true,
+    "ownershipAndCleanup": true,
+    "sourceToolchainsConfigAndBuildArguments": true
+  },
+  "localQA": {
+    "total": 737,
+    "passed": 720,
+    "skipped": 17,
+    "errors": 0,
+    "failures": 0,
+    "seconds": 62.142,
+    "resourceWarningsAreErrors": true,
+    "sameInputObservation": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 11.325008494997746,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    }
+  },
+  "grammarDifferential": {
+    "schema": 1,
+    "sourceSHA256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9",
+    "payloads": 516,
+    "checks": 15480,
+    "chunks": [
+      1,
+      2,
+      7,
+      31,
+      65536
+    ],
+    "modes": [
+      "all-fast",
+      "batch-only",
+      "structural"
+    ],
+    "trackedAndUntrackedRoot": true,
+    "mismatches": [],
+    "strictDecoderAcceptanceAgrees": true,
+    "sourceEdited": false,
+    "actualMacExecuted": false
+  },
+  "boundDifferential": {
+    "sourceSHA256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9",
+    "cases": 259,
+    "checks": 777,
+    "acceptanceParity": true,
+    "mismatches": [],
+    "sourceEdits": false,
+    "actualMacExecuted": false
+  },
+  "callerControls": {
+    "schema": 1,
+    "status": "passed",
+    "yamlBashInlinePythonSyntax": "passed",
+    "positiveActualContractAccepted": true,
+    "negativeFaultsRejected": 1032,
+    "selectedQATests": 522,
+    "selectedQAResolved": true,
+    "recordingTests": 14,
+    "preflightSafetyRunPreserved": true,
+    "singleConsumerJob": true,
+    "platformMinutes": 360,
+    "phaseDeadlineMinutes": 15,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "sourceContentsAPIFiles": 1,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "sourceCapBytes": 1048576,
+    "artifactUploads": 0,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "fixture": "PLACEHOLDER",
+    "candidate": {
+      "bytes": 36460,
+      "sha256": "ce4dd65e8ec45fb359333923bde7209abe1dcfe0f8c5461412c11de9dc905099"
+    }
+  },
+  "sourceAPIControls": 5,
+  "flowControls": 7,
+  "shortMac": {
+    "branch": "codex/mac-native-streaming-recovery52-20261019",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "requiredQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "longBuild": false,
+    "actualStatus": "NOT_RUN"
+  },
+  "qualification": "Local evidence only; actual Mac performance and full build/Mozilla/native qualification remain unproven."
+}
