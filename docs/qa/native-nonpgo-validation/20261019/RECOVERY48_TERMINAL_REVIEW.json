@@ -1,0 +1,291 @@
+{
+  "schema": 1,
+  "review": "Recovery48 Mozilla-first consumer terminal evidence",
+  "terminalEvidenceDecision": "CLEAR_FOR_PUBLICATION",
+  "validationResult": "FAILURE_FULL_BUILD_NOT_COMPLETED",
+  "sourceChangesOrNewExecutionApprovedByThisReview": false,
+  "openCodeFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "receipt": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY48_TERMINAL_RESULT.json",
+    "bytes": 41624,
+    "sha256": "f71de3e5bfe40a7286831133af94ea8658562532f2f52be04418ef31b8e6afcf"
+  },
+  "immutablePrelaunchReview": {
+    "path": "Recovery48 immutable prelaunch review",
+    "bytes": 10288,
+    "sha256": "590b5be4f5f4fd89275412f07a5b51e5668119558597586566fd1fe2272d4dfa"
+  },
+  "collectorSource": {
+    "path": "tools/qa/native-nonpgo/build_completion.py",
+    "bytes": 14088,
+    "sha256": "e574108d5651a07fa5499122584b029c648dc67d8ba87d73b1535c6f5bd5d5cb"
+  },
+  "route": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39258232399,
+    "job": 118078849382,
+    "caller": "aa2cf04c0e5331a33181413f50b4b9530d7ba525",
+    "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+    "attempt": 1,
+    "event": "push",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "jobStartedAt": "2026-10-19T13:12:55Z",
+    "jobCompletedAt": "2026-10-19T18:59:24Z"
+  },
+  "independentProviderChecks": {
+    "terminalRunJobArtifactAPI": true,
+    "terminalJobLogFetchedOnlyAfterCompletion": true,
+    "providerLog": {
+      "bytes": 386490,
+      "sha256": "293e7f3f8c7c12a2d68454d8d2122317237d944c7115d1d1d0408e58494aa123"
+    },
+    "savedRawExactlyMatchesProvider": true,
+    "rawReportObjects": 1,
+    "rawReportSemanticExact": true,
+    "progressRowsSemanticExact": 704,
+    "responseDigests": {
+      "run": {
+        "bytes": 13408,
+        "sha256": "8b91a902bde98b2e79d74311a5cb216cce9ba7aeaabc858e6f2de1579822877f"
+      },
+      "jobs": {
+        "bytes": 3813,
+        "sha256": "5013f2c6f56b364216f8c33b49d4ed2105fd36cf6786c65130f0fb83b2d870ac"
+      },
+      "artifacts": {
+        "bytes": 32,
+        "sha256": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c"
+      }
+    },
+    "artifactCount": 0
+  },
+  "primaryStop": {
+    "stage": "full-build",
+    "code": "phase-deadline",
+    "elapsedSeconds": 20700.05,
+    "absoluteSharedWorkDeadlineMinutes": 345,
+    "platformLimitMinutes": 360,
+    "clockReset": false,
+    "configuredWorkGuardIsDirectStopEvidence": true,
+    "platformTimeoutOrManualCancellationEstablished": false,
+    "monitorFailure": null,
+    "commandReturnedZero": false,
+    "exitCode": 254,
+    "exactLeaderReapedExitCode": 254,
+    "ownedGroupCleanup": "verified-gone",
+    "cleanupFailure": null
+  },
+  "completedPrerequisites": {
+    "actualMacQA": {
+      "total": 491,
+      "passed": 491,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 83.533
+    },
+    "recording": {
+      "total": 14,
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 0.789
+    },
+    "preflightStages": 5,
+    "allPreflightNaturalZeroReapedGoneClean": true,
+    "preflightMonitorFailure": null,
+    "preflightRetainedDiagnostics": 0,
+    "mainStages": 46,
+    "naturalZeroMainStagesBeforeFullStop": 45,
+    "allMainLeadersExactReapedGroupsGoneClean": true,
+    "restoreAndActualEffectiveConfigPassed": true,
+    "replayOriginAndActualCurrentExecutionExact": true,
+    "all11ContextKeyMatches": true,
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "SDKArtifact": 12149860607,
+    "SDKSourceRun": 39162639256,
+    "SDKProducerJob": 117779018335,
+    "SDKZipSHA256": "2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+    "SDKTarSHA256": "f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328",
+    "SDKUncompressedTarAnchorSHA256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3",
+    "SDKCanonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "existingCheckpointArtifact": 12164479528,
+    "checkpointArchiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "checkpointManifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "configurationOnly": {
+      "debug": true,
+      "testsEnabled": true,
+      "pgo": false,
+      "target": "x86_64-Darwin",
+      "version": "158.0.1"
+    },
+    "compiledProductQualificationEstablished": false
+  },
+  "lastObservedProgress": {
+    "totalRows": 704,
+    "fullBuildRows": 618,
+    "firstFullBuild": {
+      "timestamp": "2026-10-19T13:42:40.2936490Z",
+      "stage": "full-build",
+      "elapsedMinutes": 29.8,
+      "freeGiB": 89.5,
+      "logBytes": 0,
+      "ownedGroupRSSMiB": 14,
+      "ownedGroupCPUSeconds": 0.095,
+      "processes": 1,
+      "states": [
+        "R"
+      ],
+      "quietSeconds": 0
+    },
+    "lastFullBuild": {
+      "timestamp": "2026-10-19T18:57:32.3875660Z",
+      "stage": "full-build",
+      "elapsedMinutes": 344.6,
+      "freeGiB": 73.7,
+      "logBytes": 19034111,
+      "ownedGroupRSSMiB": 323,
+      "ownedGroupCPUSeconds": 196.147,
+      "processes": 10,
+      "states": [
+        "R",
+        "S"
+      ],
+      "quietSeconds": 0
+    },
+    "finalFullLogBytes": 19101165,
+    "peakFullBuildRSSMiB": 6148,
+    "minimumFreeGiB": 73.7,
+    "logGrowthNearStop": true,
+    "quietSecondsAtLastSample": 0,
+    "CPUValueScope": "sampled group CPU counter at that observation; not a whole-build sum or remaining-work estimate",
+    "compilerSubphaseCompletionPercentageOrRemainingDuration": "UNKNOWN"
+  },
+  "monitorDiagnostics": {
+    "stoppingMonitorFailure": null,
+    "retainedRecentSamples": 16,
+    "retainedAreTotalEverCount": false,
+    "allRetainedCompleteAfterAttempt2": true,
+    "retainedPartialKinds": {
+      "short-task-info": 15,
+      "inventory-timeout": 1
+    },
+    "noFatalMonitorStopDoesNotMeanNoRecoveredQueryFailures": true
+  },
+  "profileObservation": {
+    "status": "unconfirmed",
+    "reason": "build-completion-whole-size-limit",
+    "wholeCandidateCapBytes": 16777216,
+    "profileBytes": null,
+    "validatedProfileFormat": null,
+    "completedTierCounts": null,
+    "completedTargetCounts": null,
+    "currentBuildPhase": "UNKNOWN",
+    "durationToCompletion": "UNKNOWN",
+    "provesBuildCompletion": false,
+    "provesCacheHit": false,
+    "preciseInference": "A fresh regular candidate passed the outer size guard and was not recognized as a valid leading JSONL meta record; the whole-candidate size guard rejected it before whole JSON parsing. A valid whole-profile format and exact candidate size were not retained.",
+    "measuredSizeAtGuardLogicallyGreaterThanCap": true,
+    "stableFinalFileOrValidWholeFormatProved": false,
+    "localReasonPrecisionControl": {
+      "testOnlyWholeCapBytes": 32,
+      "fixtureBytes": 64,
+      "validWholeJSON": false,
+      "observedReason": "build-completion-whole-size-limit",
+      "profileFormat": null,
+      "profileBytes": null,
+      "countsRemainNull": true,
+      "productionBoundsChanged": false
+    },
+    "missingCountersWereNotReplacedByZero": true
+  },
+  "failureExcerptLimits": {
+    "beforeCleanupTailMatchingRecords": 0,
+    "afterCleanupTailMatchingRecords": 8,
+    "fullLogClassifiedMarkers": {
+      "termination": 7,
+      "unclassified-error-marker": 47
+    },
+    "rawCompilerLogRecovered": false,
+    "classifiedMarkersEstablishCompilerCause": false,
+    "absenceFromBoundedTailDoesNotProveNoEarlierCompilerError": true
+  },
+  "gateReevaluation": {
+    "exactRenderedPredicatesAppliedToActualReport": true,
+    "results": {
+      "sdk": true,
+      "preflight": true,
+      "time_budget": true,
+      "mozilla": false,
+      "native": false,
+      "stages": false,
+      "build_diagnostic": false,
+      "final": false
+    },
+    "actualFinalPublicProjectionMatchesFailure": true,
+    "MozillaNativeOrPackageNeverPromotedToPassed": true,
+    "unknownDiagnosticRemainsUnconfirmed": true
+  },
+  "productCoverage": {
+    "fullBuild": "NOT_COMPLETED",
+    "hostXULQualification": "NOT_ESTABLISHED",
+    "currentMozillaThreeCases": "NOT_TESTED",
+    "package": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "MozillaFirstRequested": true,
+    "MozillaFailureEstablished": false,
+    "originalNativeCause": "UNKNOWN"
+  },
+  "curationValidation": {
+    "curatedStageTestSDKSourceBudgetProfileFieldsMatchRetainedRaw": true,
+    "originReplayAndAllContextGuardsMatch": true,
+    "retainedDiagnosticProjectionExact": true,
+    "negativeTypedCleanupControlsRejected": 7,
+    "injectedPrivateExtraDropped": true,
+    "result": {
+      "path": "independent curation controls",
+      "bytes": 429,
+      "sha256": "c0381949c6fce4d4d757aebda5ccdcd73e65821ce6802b4b6a6a454769059559"
+    },
+    "rawReportAndGateControl": {
+      "path": "independent terminal predicate and profile-reason controls",
+      "bytes": 3002,
+      "sha256": "35c0334a74695108884a44b879573414bd3b4aa48c303750ac64a4dd6f68c77a"
+    }
+  },
+  "privacy": {
+    "receiptPublicSafe": true,
+    "rawPathsPIDsArgumentsEnvironmentOrFreeTextCopied": false,
+    "signedURLsOrCredentialsCopied": false,
+    "internalConversationMetadataCopied": false,
+    "rawLogsPublished": false
+  },
+  "remainingBlockers": [
+    "The consumer did not complete the full build within the shared345 work deadline.",
+    "The bounded collector did not recover validated completion tiers or targets from the size-rejected profile candidate.",
+    "Actual current Mozilla/package/native validation remains unexecuted; checkpoint acceleration and completion duration remain unknown."
+  ],
+  "minimalNextAction": {
+    "status": "SEPARATE_DESIGN_AND_IMPLEMENTATION_REVIEW_REQUIRED",
+    "existingEvidenceCannotRecoverLostProfileOrExactCompilerSubphase": true,
+    "focus": "Address the demonstrated whole-candidate parsing blind spot with minimal bounded streaming aggregate collection, preserving strict whole JSON validation, privacy, null-on-unknown, firstFailure and all existing resource/clock/cleanup guards.",
+    "capExpansionOrBlindSameLongRetryRecommended": false,
+    "sourceImplementationOrNewCIRunPerformedHere": false
+  },
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "largePayloadAcquisitions": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}
