@@ -93,7 +93,7 @@ diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/comp
 +         apiNamespace === "runtime" && name === "getBackgroundPage")) {
 +      return false;
 +    }
-+    if (apiNamespace === "offscreen" || apiNamespace === "sidePanel" || apiNamespace === "tabCapture" || apiNamespace === "desktopCapture" || apiNamespace === "fontSettings" || apiNamespace === "tts") {
++    if (apiNamespace === "offscreen" || apiNamespace === "sidePanel" || apiNamespace === "tabCapture" || apiNamespace === "desktopCapture" || apiNamespace === "fontSettings" || apiNamespace === "tts" || apiNamespace === "power") {
 +      const { extension } = this.context;
 +      const marker = extension.manifest.browser_specific_settings?.gecko
 +        ?.floorp_chrome_extension;

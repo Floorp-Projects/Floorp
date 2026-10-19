@@ -10,19 +10,30 @@ export class CorpusOperationsChild extends JSWindowActorChild {
         cookie: this.document.cookie,
       };
     }
-    const element = [...this.document.querySelectorAll(data.selector)].find(
-      (element) => (!data.text || element.textContent.includes(data.text)) &&
-        element.getBoundingClientRect().width &&
-        element.getBoundingClientRect().height,
-    );
+    const element = [...this.document.querySelectorAll(data.selector)].reverse()
+      .find(
+        (element) =>
+          (!data.text ||
+            (data.exact
+              ? element.textContent.trim() === data.text
+              : element.textContent.includes(data.text))) &&
+          element.getBoundingClientRect().width &&
+          element.getBoundingClientRect().height,
+      );
     if (!element) throw Error("Visible corpus operation control missing");
     element.scrollIntoView({ block: "center" });
     const window = this.contentWindow;
     if (name === "Click") {
       const rect = element.getBoundingClientRect();
       const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
-      window.synthesizeMouseEvent("mousedown", x, y, { button: 0, clickCount: 1 });
-      window.synthesizeMouseEvent("mouseup", x, y, { button: 0, clickCount: 1 });
+      window.synthesizeMouseEvent("mousedown", x, y, {
+        button: 0,
+        clickCount: 1,
+      });
+      window.synthesizeMouseEvent("mouseup", x, y, {
+        button: 0,
+        clickCount: 1,
+      });
       return { clicked: true };
     }
     if (name === "Type") {

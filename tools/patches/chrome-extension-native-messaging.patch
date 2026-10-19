@@ -1,91 +1,11 @@
 diff --git a/modules/NativeManifests.sys.mjs b/modules/NativeManifests.sys.mjs
-index 48d7d50..870ff06 100644
+index 48d7d50..db3fc22 100644
 --- a/modules/NativeManifests.sys.mjs
 +++ b/modules/NativeManifests.sys.mjs
-@@ -24,6 +24,10 @@ const NATIVE_MANIFEST_SCHEMA =
- 
- const REGPATH = "Software\\Mozilla";
- 
-+// Distinguish an absent host from an installed host that refused this caller.
-+// Compatibility lookup must never bypass the latter using another browser's host.
-+const INVALID_MANIFEST = Symbol("invalid native manifest");
-+
- export var NativeManifests = {
-   _initializePromise: null,
-   _lookup: null,
-@@ -52,6 +56,10 @@ export var NativeManifests = {
- 
-   async _winLookup(type, name, context) {
-     const REGISTRY = Ci.nsIWindowsRegKey;
-+    const chromeCompatible =
-+      type === "stdio" && this.getChromeExtensionOrigin(context);
-+    const missingPath = value =>
-+      chromeCompatible ? value === undefined || value === null : !value;
-     let regPath = `${REGPATH}\\${TYPES[type]}\\${name}`;
-     let path = lazy.WindowsRegistry.readRegKey(
-       REGISTRY.ROOT_KEY_CURRENT_USER,
-@@ -59,7 +67,7 @@ export var NativeManifests = {
-       "",
-       REGISTRY.WOW64_64
-     );
--    if (!path) {
-+    if (missingPath(path)) {
-       path = lazy.WindowsRegistry.readRegKey(
-         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
-         regPath,
-@@ -67,7 +75,7 @@ export var NativeManifests = {
-         REGISTRY.WOW64_32
-       );
-     }
--    if (!path) {
-+    if (missingPath(path)) {
-       path = lazy.WindowsRegistry.readRegKey(
-         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
-         regPath,
-@@ -75,21 +83,25 @@ export var NativeManifests = {
-         REGISTRY.WOW64_64
-       );
-     }
--    if (!path) {
-+    if (missingPath(path)) {
-       return null;
-     }
-     if (typeof path !== "string") {
-       Cu.reportError(
-         `Native manifest registry entry ${regPath} must be a string path`
-       );
--      return null;
-+      return chromeCompatible ? INVALID_MANIFEST : null;
-     }
- 
-     // Normalize in case the extension used / instead of \.
-     path = path.replaceAll("/", "\\");
- 
-     let manifest = await this._tryPath(type, path, name, context, true);
--    return manifest ? { path, manifest } : null;
-+    return manifest
-+      ? { path, manifest }
-+      : chromeCompatible
-+        ? INVALID_MANIFEST
-+        : null;
+@@ -190,6 +190,146 @@ export var NativeManifests = {
+     return null;
    },
  
-   /**
-@@ -186,6 +198,153 @@ export var NativeManifests = {
-       if (manifest) {
-         return { path, manifest };
-       }
-+      if (
-+        type === "stdio" &&
-+        this.getChromeExtensionOrigin(context) &&
-+        (await IOUtils.exists(path))
-+      ) {
-+        return INVALID_MANIFEST;
-+      }
-+    }
-+    return null;
-+  },
-+
 +  /**
 +   * Opt in per extension. The original ID is never a replacement for the Gecko
 +   * addon ID used for permissions, storage, or the Firefox native host protocol.
@@ -222,10 +142,14 @@ index 48d7d50..870ff06 100644
 +        manifestData
 +      );
 +      return manifest ? { path, manifest, chromeOrigin } : null;
-     }
-     return null;
-   },
-@@ -201,7 +360,16 @@ export var NativeManifests = {
++    }
++    return null;
++  },
++
+   /**
+    * Search for a valid native manifest of the given type and name.
+    * The directories searched and rules for manifest validation are all
+@@ -201,7 +341,14 @@ export var NativeManifests = {
     * @returns {object} The contents of the validated manifest, or null if
     *                   no valid manifest can be found for this type and name.
     */
@@ -233,15 +157,13 @@ index 48d7d50..870ff06 100644
 -    return this.init().then(() => this._lookup(type, name, context));
 +  async lookupManifest(type, name, context) {
 +    await this.init();
-+    const hostInfo = await this._lookup(type, name, context);
-+    if (hostInfo === INVALID_MANIFEST) {
-+      return null;
-+    }
 +    const origin = type === "stdio" && this.getChromeExtensionOrigin(context);
-+    if (hostInfo || !origin) {
-+      return hostInfo;
-+    }
-+    return this._lookupChromeManifest(name, context, origin);
++    // Browser registrations are independent authorization namespaces. A vendor
++    // may register one executable for both browsers with different allowlists.
++    // Never let a denied host in either namespace choose another namespace.
++    return origin
++      ? this._lookupChromeManifest(name, context, origin)
++      : this._lookup(type, name, context);
    },
  };
 diff --git a/modules/NativeMessaging.sys.mjs b/modules/NativeMessaging.sys.mjs

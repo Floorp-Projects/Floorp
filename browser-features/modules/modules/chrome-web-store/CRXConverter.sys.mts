@@ -296,8 +296,11 @@ export class CRXConverterClass {
 
     // Transform manifest for Firefox
     log("Transforming manifest for Firefox...");
+    const { AppConstants } = ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
+    const nativeWorker = AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === true;
     const transformed = transformManifestFull(parsedManifest, {
       extensionId,
+      nativeWorker,
       minGeckoVersion: this.options.minGeckoVersion,
     });
     const firefoxManifest = transformed.manifest;
@@ -396,6 +399,12 @@ export class CRXConverterClass {
       addonId: generateFirefoxId(extensionId),
       originalVersion: parsedManifest.version,
       originalManifestPath: ORIGINAL_MANIFEST_PATH,
+      background: {
+        nativeWorkerCompiled: nativeWorker,
+        selected: firefoxManifest.background?.service_worker ? "service_worker" :
+          firefoxManifest.background?.page || firefoxManifest.background?.scripts?.length ? "document" : "none",
+        serviceWorkerFallback: !!parsedManifest.background?.service_worker && !firefoxManifest.background?.service_worker,
+      },
       signature,
       warnings: [...warnings],
       removedPermissions: [...transformed.removedPermissions],

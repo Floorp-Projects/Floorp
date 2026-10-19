@@ -49,7 +49,8 @@ def main():
     warning = "Service worker converted to an event page for this runtime."
     conversion = {"schemaVersion": 1, "chromeId": chrome_id, "addonId": addon_id,
                   "originalVersion": "2.4.1", "warnings": [warning], "removedPermissions": ["tabCapture"],
-                  "signature": {"format": 3, "algorithm": "rsa-sha256", "publicKeySha256": "f" * 64, "unknown": "not exported"}}
+                  "signature": {"format": 3, "algorithm": "rsa-sha256", "publicKeySha256": "f" * 64, "unknown": "not exported"},
+                  "background": {"nativeWorkerCompiled": False, "selected": "document", "serviceWorkerFallback": True, "unknown": "not exported"}}
     with zipfile.ZipFile(fixture, "w") as archive:
         archive.writestr("manifest.json", json.dumps(manifest))
         archive.writestr("__floorp_chrome__/conversion-report.json", json.dumps(conversion))
@@ -269,6 +270,7 @@ export const ChromeExtensionUpdateScheduler={
                 return client.script("return !document.querySelector('[data-chrome-action=apply-update]').hidden;")
 
             check(exported["conversion"].get("signature") == {"format": 3, "algorithm": "rsa-sha256", "publicKeySha256": "f" * 64}, "Saved diagnostics preserve only recognized recorded CRX signature fields")
+            check(exported["conversion"].get("background") == {"nativeWorkerCompiled": False, "selected": "document", "serviceWorkerFallback": True}, "Saved diagnostics preserve normalized recorded background selection independently of running contexts")
             click("check-update")
             calls = update_service()
             check(len(calls) == 1 and calls[0]["method"] == "check" and not calls[0]["reconvert"] and apply_visible(), "Checking prepares a candidate and does not install it")

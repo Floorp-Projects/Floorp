@@ -46,7 +46,7 @@ def main():
         "manifest_version": 3, "name": "Floorp Side Panel Fixture", "version": "1.0",
         "permissions": ["sidePanel", "tabs", "activeTab", "tabCapture", "storage"],
         "background": {"scripts": ["background.js"]}, "action": {},
-        "side_panel": {"default_path": "global.html"},
+        "side_panel": {"default_path": "global.html", "default_title": "Ignored Chrome extra title", "default_icon": {"128": "icon.png"}},
         "sidebar_action": {"default_panel": "ignored.html", "open_at_install": False},
         "browser_specific_settings": {"gecko": {
             "id": addon_id, "floorp_chrome_extension": {

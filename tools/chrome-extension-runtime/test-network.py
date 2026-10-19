@@ -51,7 +51,8 @@ def main():
     addon_id = 'dddddddddddddddddddddddddddddddd@chromium-extension'
     background = r'''
 const d=chrome.declarativeNetRequest;
-const checks=[];const debug=[];const rawHeaders=[];
+const checks=[];const debug=[];const rawHeaders=[];const sentHeaders=[];
+chrome.webRequest.onSendHeaders.addListener(info=>sentHeaders.push(info),{urls:['http://127.0.0.1/*']},['requestHeaders','extraHeaders']);
 chrome.webRequest.onHeadersReceived.addListener(info=>rawHeaders.push(info),{urls:['http://127.0.0.1/*']},['responseHeaders','extraHeaders']);
 chrome.webRequest.onErrorOccurred.addListener(()=>{},{urls:['http://127.0.0.1/*']},['extraHeaders']);
 const check=(value,message)=>{if(!value)throw Error(message);checks.push(message);document.title=JSON.stringify({type:'progress',checks});};
@@ -94,6 +95,7 @@ async function rejects(fn,pattern){try{await fn();}catch(error){check(pattern.te
  check(response.headers.get('x-origin')==='rewritten','Native response header modification reaches extension');
  await new Promise(resolve=>setTimeout(resolve,100));
  check(rawHeaders.some(info=>info.responseHeaders.some(header=>header.name.toLowerCase()==='set-cookie'&&header.value.includes('floorp-network-test'))),'Chrome extraHeaders listener receives actual protected response header');
+ check(sentHeaders.some(info=>info.url.endsWith('/headers')&&info.requestHeaders.some(header=>header.name.toLowerCase()==='x-floorp-dnr'&&header.value==='native')),'Chrome onSendHeaders extraHeaders registers and observes the real final request headers');
  check(debug.some(info=>info.rule.ruleId===1&&info.request.url.endsWith('/blocked')),'Debug event reports actual blocked request');
  const history=await d.getMatchedRules({minTimeStamp:Date.now()-10000});
  check(history.rulesMatchedInfo.some(info=>info.rule.ruleId===2&&typeof info.tabId==='number'&&typeof info.timeStamp==='number'),'getMatchedRules returns actual native match history: '+JSON.stringify(history));

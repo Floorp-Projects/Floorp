@@ -26,6 +26,11 @@ async function waitFor<T>(
 
 const workerBody = `
   let offscreenMessages=0;
+  browser.omnibox.onInputChanged.addListener((text,suggest)=>{
+    suggest([{content:text+"-first",description:"First native Worker suggestion"}]);
+    suggest([{content:text+"-second",description:"Second native Worker suggestion"}]);
+    setTimeout(()=>suggest([{content:text+"-async",description:"Asynchronous native Worker suggestion"}]),20);
+  });
   const ready=(async()=>{
     const {starts=0}=await browser.storage.local.get("starts");
     await browser.storage.local.set({starts:starts+1});
@@ -72,6 +77,53 @@ const workerBody = `
           await browser.userScripts.register([{id:"worker-native",matches:["http://127.0.0.1/*"],js:[{code:'document.documentElement.setAttribute("data-worker-user-script","native");'}],runAt:"document_idle"}]);
           const scripts=await browser.userScripts.getScripts();
           return {tabs:tabs.length,title,rules,sidePanel,contexts,offscreen,scripts};
+        }
+        case "core": {
+          const extensionInfo={
+            incognito:browser.extension.inIncognitoContext,
+            fileAllowed:await browser.extension.isAllowedFileSchemeAccess(),
+            privateAllowed:await browser.extension.isAllowedIncognitoAccess(),
+            viewType:browser.extension.ViewType,
+            getViews:typeof browser.extension.getViews,
+            getBackgroundPage:typeof browser.extension.getBackgroundPage,
+            getURL:typeof browser.extension.getURL,
+            updateDataUndefined:browser.extension.setUpdateUrlData("ignored-for-authenticated-CWS-install")===undefined,
+          };
+          let invalidUpdateCalls=0;
+          for(const args of [[],[3],["x".repeat(1025)],["one","extra"]]) {
+            try {Reflect.apply(browser.extension.setUpdateUrlData,browser.extension,args);}catch {invalidUpdateCalls++;}
+          }
+          const power={
+            level:browser.power.Level,
+            requestUndefined:browser.power.requestKeepAwake(browser.power.Level.SYSTEM)===undefined,
+            releaseUndefined:browser.power.releaseKeepAwake()===undefined,
+          };
+          const translated=browser.i18n.getMessage("worker_message",["native"]);
+          const language=browser.i18n.getUILanguage();
+          const languages=await browser.i18n.getAcceptLanguages();
+          browser.idle.setDetectionInterval(15);
+          const idle=await browser.idle.queryState(15);
+          browser.idle.setDetectionInterval(60);
+          const bookmarkEvents=[];
+          const onCreated=(id,node)=>bookmarkEvents.push({id,title:node.title});
+          browser.bookmarks.onCreated.addListener(onCreated);
+          let bookmark,readBookmark;
+          try {
+            bookmark=await browser.bookmarks.create({title:"Actual Worker bookmark",url:message.url});
+            readBookmark=await browser.bookmarks.get(bookmark.id);
+          } finally {
+            if(bookmark)await browser.bookmarks.remove(bookmark.id);
+            browser.bookmarks.onCreated.removeListener(onCreated);
+          }
+          await browser.history.addUrl({url:message.url,title:"Actual Worker history"});
+          const visits=await browser.history.getVisits({url:message.url});
+          await browser.history.deleteUrl({url:message.url});
+          const closed=await browser.sessions.getRecentlyClosed({maxResults:3});
+          const topSites=await browser.topSites.get();
+          const commands=await browser.commands.getAll();
+          const windows=await browser.windows.getAll();
+          const current=await browser.windows.getCurrent();
+          return {extensionInfo,invalidUpdateCalls,power,translated,language,languages,idle,bookmark,readBookmark,bookmarkEvents,visits,closed,topSites,commands,windows,current};
         }
         case "additional": {
           const permissions=await browser.permissions.getAll();
@@ -220,9 +272,18 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       "fontSettings",
       "tts",
       "declarativeContent",
+      "bookmarks",
+      "history",
+      "idle",
+      "sessions",
+      "topSites",
+      "power",
     ],
     host_permissions: ["http://127.0.0.1/*"],
     action: {},
+    default_locale: "en",
+    commands: { "worker-command": { description: "Actual native Worker command" } },
+    omnibox: { keyword: `floorp-${type}-worker` },
     background: {
       service_worker: "worker.js",
       ...(type === "module" ? { type: "module" } : {}),
@@ -242,12 +303,21 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
         : 'import { imported } from "./helper.mjs";') + workerBody,
     "helper.js": 'self.imported="classic-importScripts";',
     "helper.mjs": 'export const imported="module-static-import";',
+    "_locales/en/messages.json": JSON.stringify({ worker_message: { message: "Hello $1" } }),
     "control.html": '<!doctype html><script src="control.js"></script>',
     "control.js": `
       document.title="control-ready";
       window.addEventListener("message",async event=>{
         if(event.data.workerTarget!==true) return;
-        try {document.title=JSON.stringify({requestId:event.data.requestId,result:await browser.runtime.sendMessage(event.data)});}
+        try {
+          let result;
+          if(event.data.command==="container") {
+            const ready=await navigator.serviceWorker.ready;
+            const registration=await navigator.serviceWorker.getRegistration();
+            result={native:navigator.serviceWorker instanceof ServiceWorkerContainer,scope:ready.scope,scriptURL:ready.active?.scriptURL,sameRegistration:registration===ready};
+          } else result=await browser.runtime.sendMessage(event.data);
+          document.title=JSON.stringify({requestId:event.data.requestId,result});
+        }
         catch(error) {document.title=JSON.stringify({requestId:event.data.requestId,error:error.message});}
       });
     `,
@@ -329,6 +399,22 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
         return result;
       }, `Worker ${name} response`);
     }
+    const container = (await command("container")).result;
+    assert(container.native, "extension page exposes actual native ServiceWorkerContainer");
+    assertEquals(container.scope, extension.baseURI.spec, "page ready resolves native extension registration");
+    assertEquals(container.scriptURL, extension.baseURI.resolve("worker.js"), "page sees actual background worker script");
+    assert(container.sameRegistration, "getRegistration and ready return same native registration");
+    const { ExtensionSearchHandler } = ChromeUtils.importESModule("resource://gre/modules/ExtensionSearchHandler.sys.mjs");
+    const suggestions: { content: string }[][] = [];
+    const search = ExtensionSearchHandler.handleSearch({
+      keyword: `floorp-${type}-worker`, text: `floorp-${type}-worker query`, inPrivateWindow: false,
+    }, (items: { content: string }[]) => suggestions.push(items));
+    try {
+      await waitFor(() => suggestions.length >= 3, "repeatable native omnibox callback suggestions");
+      assertEquals(suggestions[0][0].content, "query-first", "first suggestion reaches actual omnibox handler");
+      assertEquals(suggestions[1][0].content, "query-second", "same native suggestion callback remains callable");
+      assertEquals(suggestions[2][0].content, "query-async", "asynchronous suggestion callback reaches native search");
+    } finally { ExtensionSearchHandler.handleInputCancelled(); await search; }
     const probe = (await command("probe")).result;
     assert(
       probe.isWorker && !probe.hasDocument && probe.sameAlias,
@@ -364,6 +450,24 @@ async function testWorker(type: "classic" | "module"): Promise<void> {
       0,
       "storage.local.remove updates backend",
     );
+    const core = (await command("core", { url: fixtureURL + "worker-core-history.html" })).result;
+    assertEquals(core.extensionInfo.incognito, false, "extension namespace returns actual regular Worker context state");
+    assert(typeof core.extensionInfo.fileAllowed === "boolean" && typeof core.extensionInfo.privateAllowed === "boolean", "extension access checks use native permission state");
+    assertEquals(core.extensionInfo.viewType.TAB, "tab", "extension.ViewType matches measured Chrome enum");
+    assertEquals(core.extensionInfo.viewType.POPUP, "popup", "extension.ViewType popup constant");
+    assert([core.extensionInfo.getViews,core.extensionInfo.getBackgroundPage,core.extensionInfo.getURL].every(value=>value==="undefined"), "DOM/MV2 extension aliases remain absent as in actual Chrome Worker");
+    assert(core.extensionInfo.updateDataUndefined && core.invalidUpdateCalls === 4, "Store-only update data has exact sync return and strict arguments");
+    assert(core.power.level.SYSTEM === "system" && core.power.level.DISPLAY === "display", "power.Level matches actual Chrome enum");
+    assert(core.power.requestUndefined && core.power.releaseUndefined, "power native WakeLock APIs return synchronously");
+    assertEquals(core.translated, "Hello native", "Worker i18n synchronously uses actual catalog substitutions");
+    assert(typeof core.language === "string" && core.languages.length > 0, "Worker locale APIs return actual browser locale data");
+    assert(["active", "idle", "locked"].includes(core.idle), "Worker idle queries native user idle service");
+    assertEquals(core.readBookmark[0].id, core.bookmark.id, "Worker bookmarks create/get uses actual Places record");
+    assert(core.bookmarkEvents.some((event: { id: string }) => event.id === core.bookmark.id), "native bookmark created event reaches Worker");
+    assert(core.visits.length > 0, "Worker history stores and reads real Places visit");
+    assert(Array.isArray(core.closed) && Array.isArray(core.topSites), "Worker sessions/topSites query native backends");
+    assert(core.commands.some((command: { name: string }) => command.name === "worker-command"), "Worker commands sees manifest command");
+    assert(core.windows.some((window: { id: number }) => window.id === core.current.id), "Worker windows returns actual current native window");
     const apis = (await command("apis")).result;
     assert(apis.tabs > 0, "tabs.query returns actual browser tabs");
     assertEquals(

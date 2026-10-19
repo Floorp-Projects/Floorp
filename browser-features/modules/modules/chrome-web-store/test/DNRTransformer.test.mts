@@ -225,7 +225,7 @@ function testSanitizeRejectsConflictingAliases(): void {
 
 function testSanitizeRejectsUnsupportedConditions(): void {
   const result = sanitizeDNRRulesFull([makeRule(1, {
-    responseHeaders: [{ header: "content-type", values: ["image/*"] }],
+    unknownHeaderCondition: [{ header: "content-type", values: ["image/*"] }],
   })]);
   assertEquals(
     result.rejectedRules,
@@ -234,11 +234,54 @@ function testSanitizeRejectsUnsupportedConditions(): void {
   );
   assert(
     result.warnings.some((warning) =>
-      warning.includes("Unsupported condition: responseHeaders")
+      warning.includes("Unsupported condition: unknownHeaderCondition")
     ),
     "unsupported condition name must be reported",
   );
 }
+
+function testPreservesResponseHeaderConditions(): void {
+  const rules = [
+    makeRule(1, {
+      responseHeaders: [
+        {
+          header: "content-type",
+          values: ["text/*"],
+          excludedValues: ["text/html*"],
+        },
+      ],
+      excludedResponseHeaders: [{ header: "x-excluded" }],
+    }),
+  ];
+  const result = sanitizeDNRRulesFull(rules);
+  assertEquals(
+    result.rejectedRules,
+    0,
+    "native response header constraints remain supported",
+  );
+  assertEquals(
+    JSON.stringify(result.rules),
+    JSON.stringify(rules),
+    "response header constraints must remain byte-for-byte equivalent",
+  );
+  for (
+    const condition of [
+      { responseHeaders: [] },
+      { excludedResponseHeaders: [] },
+      { responseHeaders: [{ header: "invalid name" }] },
+    { responseHeaders: [{ header: "x-test" }], excludedResponseHeaders: [{ header: "x-test" }] },
+      { responseHeaders: [{ header: "x-test", values: ["bad\r\nvalue"] }] },
+      { responseHeaders: [{ header: "x-test", unknownConstraint: true }] },
+    ]
+  ) {
+    assertEquals(
+      sanitizeDNRRulesFull([makeRule(1, condition)]).rejectedRules,
+      1,
+      "invalid header matching constraints must reject rather than broaden rules",
+    );
+  }
+}
+
 
 function testSanitizeRejectsDuplicateIds(): void {
   const result = sanitizeDNRRulesFull([makeRule(1), makeRule(1)]);
@@ -416,6 +459,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "sanitize rejects conflicting aliases",
       fn: testSanitizeRejectsConflictingAliases,
+    },
+    {
+      name: "sanitize preserves supported response header constraints",
+      fn: testPreservesResponseHeaderConditions,
     },
     {
       name: "sanitize rejects unsupported constraints",

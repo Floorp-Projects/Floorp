@@ -23,6 +23,11 @@ interface Diagnostics {
     originalVersion: string;
     warnings: string[];
     signature?: { format: number; algorithm: string; publicKeySha256: string };
+    background?: {
+      nativeWorkerCompiled: boolean;
+      selected: string;
+      serviceWorkerFallback: boolean;
+    };
   } | null;
   conversionError: string | null;
   contexts: unknown[];
@@ -34,6 +39,7 @@ function harness(
     mismatchedMarker = false,
     mismatchedReport = false,
     signature = undefined as unknown,
+    background = undefined as unknown,
   } = {},
 ) {
   const chromeId = "c".repeat(32);
@@ -61,6 +67,7 @@ function harness(
     warnings: ["Warning"],
     removedPermissions: ["tabCapture"],
     ...(signature === undefined ? {} : { signature }),
+    ...(background === undefined ? {} : { background }),
   };
   const resources: Record<string, string> = {
     "manifest.json": JSON.stringify(manifest),
@@ -208,5 +215,37 @@ Deno.test("diagnostics export only normalized recognized signature metadata", as
     const { collect, addon } = harness({ signature: invalid });
     const result = await collect(addon);
     assertEquals(result?.conversion?.signature, undefined);
+  }
+});
+
+Deno.test("diagnostics normalize optional background metadata without trusting running state", async () => {
+  const background = {
+    nativeWorkerCompiled: true,
+    selected: "service_worker",
+    serviceWorkerFallback: false,
+    unknown: "drop",
+  };
+  const { collect, addon } = harness({ background });
+  const data = await collect(addon);
+  assertEquals(
+    JSON.stringify(data?.conversion?.background),
+    JSON.stringify({
+      nativeWorkerCompiled: true,
+      selected: "service_worker",
+      serviceWorkerFallback: false,
+    }),
+  );
+  assertEquals(data?.contexts.length, 0);
+  for (
+    const invalid of [{ ...background, nativeWorkerCompiled: 1 }, {
+      ...background,
+      selected: "worker",
+    }, { ...background, serviceWorkerFallback: "false" }]
+  ) {
+    const { collect, addon } = harness({ background: invalid });
+    const data = await collect(addon);
+    assert(data?.conversion);
+    assertEquals(data.conversion.background, undefined);
+    assertEquals(data.conversionError, null);
   }
 });

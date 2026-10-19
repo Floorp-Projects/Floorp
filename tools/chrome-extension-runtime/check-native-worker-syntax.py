@@ -34,7 +34,14 @@ def main():
     parser.add_argument("--source-overlay", type=Path,
                         help="Isolated patched source; defaults to candidate source")
     parser.add_argument("--binding-declarations", type=Path,
-                        help="Additional genuine Gecko-generated Binding.h declarations")
+                        help="Genuine Gecko-generated Binding.h declarations overriding candidate headers")
+    parser.add_argument("--binding-sources", type=Path,
+                        help="Genuine Gecko-generated Binding.cpp sources overriding candidate bindings")
+    parser.add_argument("--extra-include", type=Path, action="append", default=[],
+                        help="Isolated generated headers, such as an updated XPIDL header directory")
+    parser.add_argument("--include-header", type=Path, action="append", default=[],
+                        help="Force an isolated regenerated header before candidate headers")
+    parser.add_argument("--match", help="Only translation units whose filenames match this regular expression")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--jobs", type=int, default=1)
     arguments = parser.parse_args()
@@ -59,8 +66,6 @@ def main():
             target.symlink_to(header)
     if arguments.binding_declarations:
         for header in arguments.binding_declarations.resolve().glob("*Binding.h"):
-            if (obj / "dist/include/mozilla/dom" / header.name).exists():
-                continue
             target = overlay / "mozilla/dom" / header.name
             if not target.is_symlink() and not target.exists():
                 target.symlink_to(header)
@@ -83,10 +88,12 @@ def main():
             flags.extend(shlex.split(expand(local.get(name, ""))))
         command = shlex.split(common["CXX"]) + [
             "-fsyntax-only", "-I" + str(overlay), "-I" + str(path.parent),
+        ] + ["-I" + str(path.resolve()) for path in arguments.extra_include] + [
             "-DMOZILLA_INTERNAL_API", "-include", str(obj / "mozilla-config.h"),
             "-I" + str(source / directory), "-I" + str(obj / directory),
             "-I" + str(obj / "dist/include"), "-I" + str(obj / "dist/include/nspr"),
-        ] + flags + [str(path)]
+        ] + [part for header in arguments.include_header
+             for part in ("-include", str(header.resolve()))] + flags + [str(path)]
         log = output / (kind + "-" + path.stem + ".log")
         with log.open("w") as stream:
             result = subprocess.run(command, cwd=source / directory,
@@ -98,8 +105,15 @@ def main():
 
     jobs = [(path, "toolkit/components/extensions/webidl-api", "native")
             for path in sorted((own / "toolkit/components/extensions/webidl-api").glob("*.cpp"))]
-    jobs.extend((path, "dom/bindings", "binding")
-                for path in sorted((obj / "dom/bindings").glob("Extension*Binding.cpp")))
+    bindings = {path.name: path for path in (obj / "dom/bindings").glob("Extension*Binding.cpp")}
+    if arguments.binding_sources:
+        bindings.update({path.name: path for path in arguments.binding_sources.resolve().glob("Extension*Binding.cpp")})
+    jobs.extend((path, "dom/bindings", "binding") for path in sorted(bindings.values()))
+    if arguments.match:
+        selected = re.compile(arguments.match)
+        jobs = [job for job in jobs if selected.search(job[0].name)]
+    if not jobs:
+        parser.error("No matching native or generated binding translation units")
     records = []
     with ThreadPoolExecutor(max_workers=arguments.jobs) as pool:
         pending = [pool.submit(check, *job) for job in jobs]

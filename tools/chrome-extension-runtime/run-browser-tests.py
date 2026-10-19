@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import plistlib
 import signal
+import shutil
 import socket
 import subprocess
 import sys
@@ -117,6 +118,8 @@ def main():
                         default=ROOT / "_dist/chrome-runtime-tests")
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--headed", action="store_true")
+    parser.add_argument("--actor-module", action="append", type=Path, default=[],
+                        help="Private test actor module copied into the profile before launch (repeatable)")
     args = parser.parse_args()
     binary = browser_binary(args.browser.resolve(strict=True))
     tests = args.test or [ROOT / "browser-features/modules/modules/chrome-web-store/test/polyfills/documentId/DocumentIdPolyfill.test.mts"]
@@ -155,6 +158,15 @@ def main():
     spec.loader.exec_module(smoke)
     profile = output / "profile"
     profile.mkdir(mode=0o700)
+    actor_directory = profile / "chrome/runtime-actors"
+    actor_names = set()
+    for module in args.actor_module:
+        module = module.resolve(strict=True)
+        if not module.is_file() or module.name in actor_names:
+            parser.error("Actor modules must be distinct files with unique names")
+        actor_names.add(module.name)
+        actor_directory.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(module, actor_directory / module.name)
     port = smoke.unused_port()
     prefs = {
         "marionette.port": port,
@@ -184,7 +196,8 @@ def main():
                 command.append("--headless")
             command.append("about:blank")
             host = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-                                    env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1"})
+                                    env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
+                                         "FLOORP_TEST_ACTOR_DIRECTORY": str(actor_directory) if args.actor_module else ""})
 
             def connect():
                 if host.poll() is not None:

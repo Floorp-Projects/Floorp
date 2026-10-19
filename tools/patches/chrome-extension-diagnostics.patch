@@ -68,10 +68,10 @@ index 416c534..5d65d56 100644
  
 diff --git a/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs
 new file mode 100644
-index 0000000..4b513db
+index 0000000..49000b7
 --- /dev/null
 +++ b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs
-@@ -0,0 +1,634 @@
+@@ -0,0 +1,646 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -250,6 +250,18 @@ index 0000000..4b513db
 +      warnings: report.warnings,
 +      removedPermissions: report.removedPermissions,
 +    };
++    const background = report.background;
++    if (
++      background && typeof background.nativeWorkerCompiled === "boolean" &&
++      ["service_worker", "document", "none"].includes(background.selected) &&
++      typeof background.serviceWorkerFallback === "boolean"
++    ) {
++      diagnostics.conversion.background = {
++        nativeWorkerCompiled: background.nativeWorkerCompiled,
++        selected: background.selected,
++        serviceWorkerFallback: background.serviceWorkerFallback,
++      };
++    }
 +    const signature = report.signature;
 +    if (
 +      signature && [2, 3].includes(signature.format) &&

@@ -22,6 +22,9 @@ import {
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
 
+const { AppConstants } = ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
+const nativeWorkerCompiled = AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === true;
+
 const chromeId = CRX_TEST_ID;
 const metadata = {
   id: chromeId,
@@ -47,6 +50,7 @@ const originalManifest: ChromeManifest = {
     "sidePanel",
     "tabCapture",
     "desktopCapture",
+    "processes",
   ],
   background: { service_worker: "worker.js" },
   side_panel: { default_path: "panel.html" },
@@ -104,7 +108,7 @@ const tests: TestCase[] = [
     },
   },
   {
-    name: "conversion retains source compatibility warnings in its report",
+    name: "conversion omits retired source compatibility warnings",
     async fn() {
       const result = await new CRXConverterClass().convert(
         await makeCRX({
@@ -118,7 +122,7 @@ const tests: TestCase[] = [
       );
       assert(
         result.success && result.xpiData,
-        "partial APIs remain installable",
+        "implemented APIs remain installable",
       );
       const output = unzipSync(new Uint8Array(result.xpiData));
       const report = JSON.parse(
@@ -126,10 +130,10 @@ const tests: TestCase[] = [
       ) as ChromeConversionReport;
       for (const issue of ["chrome.sidePanel", "Dynamic rules limit"]) {
         assert(
-          report.warnings.some((warning) =>
+          !report.warnings.some((warning) =>
             warning.includes("worker.js:") && warning.includes(issue)
           ),
-          `source warning retained: ${issue}`,
+          `implemented capability has no obsolete source warning: ${issue}`,
         );
       }
       assertEquals(
@@ -306,10 +310,19 @@ const tests: TestCase[] = [
         "classic worker retains default script type",
       );
       assertEquals(
-        manifest.background?.scripts?.join(","),
-        "worker.js",
-        "native APIs need no injected scripts",
+        manifest.background?.service_worker,
+        nativeWorkerCompiled ? "worker.js" : undefined,
+        "production selection follows actual compiled worker capability",
       );
+      assertEquals(
+        manifest.background?.scripts?.join(","),
+        nativeWorkerCompiled ? undefined : "worker.js",
+        "native worker needs no document fallback or injected scripts",
+      );
+      assertEquals(report.background?.nativeWorkerCompiled, nativeWorkerCompiled, "report records actual native capability");
+      assertEquals(report.background?.selected, nativeWorkerCompiled ? "service_worker" : "document", "report records manifest background selection");
+      assertEquals(report.background?.serviceWorkerFallback, !nativeWorkerCompiled, "report identifies only actual worker fallbacks");
+      assert(manifest.permissions?.includes("desktopCapture"), "native desktop capture permission retained");
       assertEquals(
         Object.keys(output).some((name) =>
           name.startsWith("__floorp_polyfills__/")
@@ -343,16 +356,17 @@ const tests: TestCase[] = [
         "report records source version",
       );
       assert(
-        report.removedPermissions.includes("desktopCapture"),
-        "capture limitation reported",
+        report.removedPermissions.includes("processes"),
+        "unsupported process permission reported",
       );
       assert(
-        report.warnings.some((warning) => warning.includes("desktopCapture")),
+        report.warnings.some((warning) => warning.includes("processes")),
         "permission loss surfaced to caller",
       );
-      assert(
+      assertEquals(
         report.warnings.some((warning) => warning.includes("ervice worker")),
-        "worker fallback surfaced to caller",
+        !nativeWorkerCompiled,
+        "worker fallback warning follows actual compiled capability",
       );
       assertEquals(
         JSON.stringify(report.warnings),

@@ -1,8 +1,8 @@
 diff --git a/dom/bindings/Bindings.conf b/dom/bindings/Bindings.conf
-index a09818a..0b91faf 100644
+index a09818a..cfc32f9 100644
 --- a/dom/bindings/Bindings.conf
 +++ b/dom/bindings/Bindings.conf
-@@ -1610,6 +1610,36 @@ DOMInterfaces = {
+@@ -1610,6 +1610,86 @@ DOMInterfaces = {
      'nativeType': 'mozilla::extensions::ExtensionBrowserSettingsColorManagement',
  },
  
@@ -36,10 +36,60 @@ index a09818a..0b91faf 100644
 +    'nativeType': 'mozilla::extensions::ExtensionWindows',
 +},
 +
++'ExtensionBookmarks': {
++    'headerFile': 'mozilla/extensions/ExtensionBookmarks.h',
++    'nativeType': 'mozilla::extensions::ExtensionBookmarks',
++},
++
++'ExtensionCommands': {
++    'headerFile': 'mozilla/extensions/ExtensionCommands.h',
++    'nativeType': 'mozilla::extensions::ExtensionCommands',
++},
++
++'ExtensionHistory': {
++    'headerFile': 'mozilla/extensions/ExtensionHistory.h',
++    'nativeType': 'mozilla::extensions::ExtensionHistory',
++},
++
++'ExtensionI18n': {
++    'headerFile': 'mozilla/extensions/ExtensionI18n.h',
++    'nativeType': 'mozilla::extensions::ExtensionI18n',
++},
++
++'ExtensionIdle': {
++    'headerFile': 'mozilla/extensions/ExtensionIdle.h',
++    'nativeType': 'mozilla::extensions::ExtensionIdle',
++},
++
++'ExtensionSessions': {
++    'headerFile': 'mozilla/extensions/ExtensionSessions.h',
++    'nativeType': 'mozilla::extensions::ExtensionSessions',
++},
++
++'ExtensionTopSites': {
++    'headerFile': 'mozilla/extensions/ExtensionTopSites.h',
++    'nativeType': 'mozilla::extensions::ExtensionTopSites',
++},
++
++'ExtensionOmnibox': {
++    'headerFile': 'mozilla/extensions/ExtensionOmnibox.h',
++    'nativeType': 'mozilla::extensions::ExtensionOmnibox',
++},
++
++'ExtensionPower': {
++    'headerFile': 'mozilla/extensions/ExtensionPower.h',
++    'nativeType': 'mozilla::extensions::ExtensionPower',
++},
++
++'ExtensionExtension': {
++    'headerFile': 'mozilla/extensions/ExtensionExtension.h',
++    'nativeType': 'mozilla::extensions::ExtensionExtension',
++},
++
  'ExtensionDns': {
      'headerFile': 'mozilla/extensions/ExtensionDns.h',
      'nativeType': 'mozilla::extensions::ExtensionDns',
-@@ -1660,6 +1690,126 @@ DOMInterfaces = {
+@@ -1660,6 +1740,126 @@ DOMInterfaces = {
      'nativeType': 'mozilla::extensions::ExtensionTest',
  },
  
@@ -315,7 +365,7 @@ index 475fe3f..5e10d00 100644
      // but the feature isn't enabled by prefs.
      return NS_ERROR_FAILURE;
 diff --git a/dom/serviceworkers/ServiceWorkerUtils.cpp b/dom/serviceworkers/ServiceWorkerUtils.cpp
-index 18e846f..e0266d5 100644
+index 18e846f..8ac5259 100644
 --- a/dom/serviceworkers/ServiceWorkerUtils.cpp
 +++ b/dom/serviceworkers/ServiceWorkerUtils.cpp
 @@ -19,6 +19,7 @@
@@ -326,7 +376,26 @@ index 18e846f..e0266d5 100644
  #include "nsCOMPtr.h"
  #include "nsContentPolicyUtils.h"
  #include "nsIContentSecurityPolicy.h"
-@@ -262,9 +263,9 @@ static bool hasValidURISchemes(nsIURI* aURI, bool isExtension) {
+@@ -88,11 +89,13 @@ bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
+       return false;
+     }
+ 
+-    // Allow a webextension principal to register a service worker script with
+-    // a moz-extension url only if 'extensions.service_worker_register.allowed'
+-    // is true.
+-    if (!StaticPrefs::extensions_serviceWorkerRegister_allowed()) {
+-      if (principal->GetIsAddonPrincipal()) {
++    // Converted Chrome extensions need the actual navigator.serviceWorker
++    // container to communicate with their registered background worker. Keep
++    // the existing registration pref for ordinary Firefox extensions.
++    if (!StaticPrefs::extensions_serviceWorkerRegister_allowed() &&
++        principal->GetIsAddonPrincipal()) {
++      auto* addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
++      if (!addonPolicy || !addonPolicy->BackgroundServiceWorkerAllowed()) {
+         return false;
+       }
+     }
+@@ -262,9 +265,9 @@ static bool hasValidURISchemes(nsIURI* aURI, bool isExtension) {
  
  void ServiceWorkerScopeIsValid(nsIPrincipal* aPrincipal, nsIURI* aScopeURI,
                                 ErrorResult& aRv) {
@@ -338,7 +407,7 @@ index 18e846f..e0266d5 100644
  
    // https://w3c.github.io/ServiceWorker/#start-register-algorithm
    // Step 8: If scopeURL’s scheme is not one of "http" and "https", reject
-@@ -321,9 +322,9 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
+@@ -321,9 +324,9 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
  
    nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
  
@@ -448,14 +517,155 @@ index 0000000..027f7f4
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onUserSettingsChanged;
 +};
+diff --git a/dom/webidl/ExtensionBookmarks.webidl b/dom/webidl/ExtensionBookmarks.webidl
+new file mode 100644
+index 0000000..5f78a05
+--- /dev/null
++++ b/dom/webidl/ExtensionBookmarks.webidl
+@@ -0,0 +1,94 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "bookmarks" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionBookmarks {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any get(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getChildren(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getRecent(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getTree(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getSubTree(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any search(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any create(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any move(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any update(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any remove(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any removeTree(any... args);
++#endif
++
++  // API events.
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onCreated;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onRemoved;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onChanged;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onMoved;
++#endif
++  [Replaceable]
++  readonly attribute any BookmarkTreeNodeUnmodifiable;
++  [Replaceable]
++  readonly attribute any BookmarkTreeNodeType;
++};
 diff --git a/dom/webidl/ExtensionBrowser.webidl b/dom/webidl/ExtensionBrowser.webidl
-index 39ed714..8ad95d0 100644
+index 39ed714..493c2ba 100644
 --- a/dom/webidl/ExtensionBrowser.webidl
 +++ b/dom/webidl/ExtensionBrowser.webidl
-@@ -30,6 +30,109 @@ interface mixin ExtensionGlobalsMixin {
+@@ -30,6 +30,150 @@ interface mixin ExtensionGlobalsMixin {
  
  [Exposed=(ServiceWorker), LegacyNoInterfaceObject]
  interface ExtensionBrowser {
++  [Replaceable, SameObject, BinaryName="GetExtensionExtension",
++   Func="mozilla::extensions::ExtensionExtension::IsAllowed"]
++  readonly attribute ExtensionExtension extension;
++
++
++  [Replaceable, SameObject, BinaryName="GetExtensionPower",
++   Func="mozilla::extensions::ExtensionPower::IsAllowed"]
++  readonly attribute ExtensionPower power;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionOmnibox",
++   Func="mozilla::extensions::ExtensionOmnibox::IsAllowed"]
++  readonly attribute ExtensionOmnibox omnibox;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionTopSites",
++   Func="mozilla::extensions::ExtensionTopSites::IsAllowed"]
++  readonly attribute ExtensionTopSites topSites;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionSessions",
++   Func="mozilla::extensions::ExtensionSessions::IsAllowed"]
++  readonly attribute ExtensionSessions sessions;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionIdle",
++   Func="mozilla::extensions::ExtensionIdle::IsAllowed"]
++  readonly attribute ExtensionIdle idle;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionI18n",
++   Func="mozilla::extensions::ExtensionI18n::IsAllowed"]
++  readonly attribute ExtensionI18n i18n;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionHistory",
++   Func="mozilla::extensions::ExtensionHistory::IsAllowed"]
++  readonly attribute ExtensionHistory history;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionCommands",
++   Func="mozilla::extensions::ExtensionCommands::IsAllowed"]
++  readonly attribute ExtensionCommands commands;
++
++  [Replaceable, SameObject, BinaryName="GetExtensionBookmarks",
++   Func="mozilla::extensions::ExtensionBookmarks::IsAllowed"]
++  readonly attribute ExtensionBookmarks bookmarks;
++
 +  [Replaceable, SameObject, BinaryName="GetExtensionWindows",
 +   Func="mozilla::extensions::ExtensionWindows::IsAllowed"]
 +  readonly attribute ExtensionWindows windows;
@@ -562,12 +772,63 @@ index 39ed714..8ad95d0 100644
    // A mock API only exposed in tests to unit test the internals
    // meant to be reused by the real WebExtensions API bindings
    // in xpcshell tests.
+diff --git a/dom/webidl/ExtensionCommands.webidl b/dom/webidl/ExtensionCommands.webidl
+new file mode 100644
+index 0000000..b691c96
+--- /dev/null
++++ b/dom/webidl/ExtensionCommands.webidl
+@@ -0,0 +1,45 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "commands" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionCommands {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any update(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any reset(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getAll(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any openShortcutSettings(any... args);
++#endif
++
++  // API events.
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onCommand;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onChanged;
++#endif
++};
 diff --git a/dom/webidl/ExtensionCookies.webidl b/dom/webidl/ExtensionCookies.webidl
 new file mode 100644
-index 0000000..b44ad46
+index 0000000..b205876
 --- /dev/null
 +++ b/dom/webidl/ExtensionCookies.webidl
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,37 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -600,13 +861,17 @@ index 0000000..b44ad46
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onChanged;
++  [Replaceable]
++  readonly attribute any SameSiteStatus;
++  [Replaceable]
++  readonly attribute any OnChangedCause;
 +};
 diff --git a/dom/webidl/ExtensionDebugger.webidl b/dom/webidl/ExtensionDebugger.webidl
 new file mode 100644
-index 0000000..8b90900
+index 0000000..ed64a09
 --- /dev/null
 +++ b/dom/webidl/ExtensionDebugger.webidl
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,54 @@
 +/*
 + *  THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT
 + *
@@ -658,6 +923,8 @@ index 0000000..8b90900
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onDetach;
++  [Replaceable]
++  readonly attribute any DetachReason;
 +};
 diff --git a/dom/webidl/ExtensionDeclarativeContent.webidl b/dom/webidl/ExtensionDeclarativeContent.webidl
 new file mode 100644
@@ -705,10 +972,10 @@ index 0000000..590592f
 +};
 diff --git a/dom/webidl/ExtensionDeclarativeNetRequest.webidl b/dom/webidl/ExtensionDeclarativeNetRequest.webidl
 new file mode 100644
-index 0000000..58f7896
+index 0000000..b636345
 --- /dev/null
 +++ b/dom/webidl/ExtensionDeclarativeNetRequest.webidl
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,102 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -806,6 +1073,10 @@ index 0000000..58f7896
 +
 +  [Replaceable]
 +  readonly attribute any MAX_GETMATCHEDRULES_CALLS_PER_INTERVAL;
++  [Replaceable]
++  readonly attribute any ResourceType;
++  [Replaceable]
++  readonly attribute any UnsupportedRegexReason;
 +};
 diff --git a/dom/webidl/ExtensionDesktopCapture.webidl b/dom/webidl/ExtensionDesktopCapture.webidl
 new file mode 100644
@@ -826,10 +1097,10 @@ index 0000000..c09d869
 +};
 diff --git a/dom/webidl/ExtensionDownloads.webidl b/dom/webidl/ExtensionDownloads.webidl
 new file mode 100644
-index 0000000..752347c
+index 0000000..f550759
 --- /dev/null
 +++ b/dom/webidl/ExtensionDownloads.webidl
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,65 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -886,6 +1157,14 @@ index 0000000..752347c
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onChanged;
++  [Replaceable]
++  readonly attribute any FilenameConflictAction;
++  [Replaceable]
++  readonly attribute any InterruptReason;
++  [Replaceable]
++  readonly attribute any DangerType;
++  [Replaceable]
++  readonly attribute any State;
 +};
 diff --git a/dom/webidl/ExtensionEventManager.webidl b/dom/webidl/ExtensionEventManager.webidl
 index d1f11ff..43142e5 100644
@@ -900,12 +1179,48 @@ index d1f11ff..43142e5 100644
  
    [Throws]
    undefined removeListener(Function callback);
+diff --git a/dom/webidl/ExtensionExtension.webidl b/dom/webidl/ExtensionExtension.webidl
+new file mode 100644
+index 0000000..27d12c9
+--- /dev/null
++++ b/dom/webidl/ExtensionExtension.webidl
+@@ -0,0 +1,30 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "extension" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionExtension {
++  // API methods.
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any isAllowedIncognitoAccess(any... args);
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any isAllowedFileSchemeAccess(any... args);
++
++  [Throws, WebExtensionStub="NoReturn",
++   Func="mozilla::extensions::ExtensionExtension::IsChromeCompatible"]
++  undefined setUpdateUrlData(any... args);
++
++  // API properties.
++
++  [Replaceable]
++  readonly attribute any inIncognitoContext;
++  [Replaceable]
++  readonly attribute any ViewType;
++};
 diff --git a/dom/webidl/ExtensionFontSettings.webidl b/dom/webidl/ExtensionFontSettings.webidl
 new file mode 100644
-index 0000000..9379f55
+index 0000000..e0382a5
 --- /dev/null
 +++ b/dom/webidl/ExtensionFontSettings.webidl
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,72 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -971,6 +1286,116 @@ index 0000000..9379f55
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onMinimumFontSizeChanged;
++  [Replaceable]
++  readonly attribute any ScriptCode;
++  [Replaceable]
++  readonly attribute any GenericFamily;
++  [Replaceable]
++  readonly attribute any LevelOfControl;
++};
+diff --git a/dom/webidl/ExtensionHistory.webidl b/dom/webidl/ExtensionHistory.webidl
+new file mode 100644
+index 0000000..db24a54
+--- /dev/null
++++ b/dom/webidl/ExtensionHistory.webidl
+@@ -0,0 +1,62 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "history" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionHistory {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any search(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getVisits(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any addUrl(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any deleteUrl(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any deleteRange(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any deleteAll(any... args);
++#endif
++
++  // API events.
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onVisited;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onVisitRemoved;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onTitleChanged;
++#endif
++  [Replaceable]
++  readonly attribute any TransitionType;
++};
+diff --git a/dom/webidl/ExtensionI18n.webidl b/dom/webidl/ExtensionI18n.webidl
+new file mode 100644
+index 0000000..1ba44d9
+--- /dev/null
++++ b/dom/webidl/ExtensionI18n.webidl
+@@ -0,0 +1,30 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "i18n" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionI18n {
++  // API methods.
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getAcceptLanguages(any... args);
++
++  [Throws, WebExtensionStub]
++  DOMString getMessage(DOMString messageName, any substitutions);
++  [Throws, WebExtensionStub]
++  DOMString getMessage(DOMString messageName);
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getPreferredSystemLanguages(any... args);
++
++  [Throws, WebExtensionStub]
++  DOMString getUILanguage();
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any detectLanguage(any... args);
 +};
 diff --git a/dom/webidl/ExtensionIdentity.webidl b/dom/webidl/ExtensionIdentity.webidl
 new file mode 100644
@@ -1019,12 +1444,44 @@ index 0000000..ae042a9
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onSignInChanged;
 +};
+diff --git a/dom/webidl/ExtensionIdle.webidl b/dom/webidl/ExtensionIdle.webidl
+new file mode 100644
+index 0000000..96c9e7a
+--- /dev/null
++++ b/dom/webidl/ExtensionIdle.webidl
+@@ -0,0 +1,26 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "idle" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionIdle {
++  // API methods.
++
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any queryState(any... args);
++
++  [Throws, WebExtensionStub="NoReturn"]
++  undefined setDetectionInterval(long intervalInSeconds);
++
++  // API events.
++
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onStateChanged;
++  [Replaceable]
++  readonly attribute any IdleState;
++};
 diff --git a/dom/webidl/ExtensionManagement.webidl b/dom/webidl/ExtensionManagement.webidl
 new file mode 100644
-index 0000000..1e918fd
+index 0000000..2a8e7ee
 --- /dev/null
 +++ b/dom/webidl/ExtensionManagement.webidl
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,51 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1069,13 +1526,19 @@ index 0000000..1e918fd
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onUninstalled;
++  [Replaceable]
++  readonly attribute any ExtensionDisabledReason;
++  [Replaceable]
++  readonly attribute any ExtensionType;
++  [Replaceable]
++  readonly attribute any ExtensionInstallType;
 +};
 diff --git a/dom/webidl/ExtensionMenus.webidl b/dom/webidl/ExtensionMenus.webidl
 new file mode 100644
-index 0000000..5f3808f
+index 0000000..2eb2c12
 --- /dev/null
 +++ b/dom/webidl/ExtensionMenus.webidl
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,62 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1135,13 +1598,15 @@ index 0000000..5f3808f
 +
 +  [Replaceable]
 +  readonly attribute any ACTION_MENU_TOP_LEVEL_LIMIT;
++  [Replaceable]
++  readonly attribute any ItemType;
 +};
 diff --git a/dom/webidl/ExtensionNotifications.webidl b/dom/webidl/ExtensionNotifications.webidl
 new file mode 100644
-index 0000000..aa0aaaf
+index 0000000..d5b97c7
 --- /dev/null
 +++ b/dom/webidl/ExtensionNotifications.webidl
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,46 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1183,13 +1648,17 @@ index 0000000..aa0aaaf
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onShown;
++  [Replaceable]
++  readonly attribute any TemplateType;
++  [Replaceable]
++  readonly attribute any PermissionLevel;
 +};
 diff --git a/dom/webidl/ExtensionOffscreen.webidl b/dom/webidl/ExtensionOffscreen.webidl
 new file mode 100644
-index 0000000..c9d8b82
+index 0000000..b46ac90
 --- /dev/null
 +++ b/dom/webidl/ExtensionOffscreen.webidl
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,43 @@
 +/*
 + *  THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT
 + *
@@ -1230,6 +1699,63 @@ index 0000000..c9d8b82
 +
 +  [Throws, WebExtensionStub="Async"]
 +  any hasDocument(optional Function callback);
++  [Replaceable]
++  readonly attribute any Reason;
++};
+diff --git a/dom/webidl/ExtensionOmnibox.webidl b/dom/webidl/ExtensionOmnibox.webidl
+new file mode 100644
+index 0000000..5901a45
+--- /dev/null
++++ b/dom/webidl/ExtensionOmnibox.webidl
+@@ -0,0 +1,49 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "omnibox" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionOmnibox {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="NoReturn"]
++  undefined setDefaultSuggestion(any suggestion);
++#endif
++
++  // API events.
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onInputStarted;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onInputChanged;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onInputEntered;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onInputCancelled;
++#endif
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onDeleteSuggestion;
++#endif
++  [Replaceable]
++  readonly attribute any DescriptionStyleType;
++  [Replaceable]
++  readonly attribute any OnInputEnteredDisposition;
 +};
 diff --git a/dom/webidl/ExtensionPermissions.webidl b/dom/webidl/ExtensionPermissions.webidl
 new file mode 100644
@@ -1270,6 +1796,33 @@ index 0000000..f08322c
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onRemoved;
 +};
+diff --git a/dom/webidl/ExtensionPower.webidl b/dom/webidl/ExtensionPower.webidl
+new file mode 100644
+index 0000000..b8dffbd
+--- /dev/null
++++ b/dom/webidl/ExtensionPower.webidl
+@@ -0,0 +1,21 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "power" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionPower {
++  // API methods.
++
++  [Throws, WebExtensionStub="NoReturn"]
++  undefined requestKeepAwake(any... args);
++
++  [Throws, WebExtensionStub="NoReturn"]
++  undefined releaseKeepAwake(any... args);
++  [Replaceable]
++  readonly attribute any Level;
++};
 diff --git a/dom/webidl/ExtensionPrivacy.webidl b/dom/webidl/ExtensionPrivacy.webidl
 new file mode 100644
 index 0000000..4b15b27
@@ -1300,10 +1853,10 @@ index 0000000..4b15b27
 +};
 diff --git a/dom/webidl/ExtensionPrivacyNetwork.webidl b/dom/webidl/ExtensionPrivacyNetwork.webidl
 new file mode 100644
-index 0000000..51e3a7e
+index 0000000..7951b58
 --- /dev/null
 +++ b/dom/webidl/ExtensionPrivacyNetwork.webidl
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,35 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1334,6 +1887,10 @@ index 0000000..51e3a7e
 +
 +  [Replaceable]
 +  readonly attribute ExtensionSetting globalPrivacyControl;
++  [Replaceable]
++  readonly attribute any IPHandlingPolicy;
++  [Replaceable]
++  readonly attribute any HTTPSOnlyModeOption;
 +};
 diff --git a/dom/webidl/ExtensionPrivacyServices.webidl b/dom/webidl/ExtensionPrivacyServices.webidl
 new file mode 100644
@@ -1359,10 +1916,10 @@ index 0000000..fdf6877
 +};
 diff --git a/dom/webidl/ExtensionPrivacyWebsites.webidl b/dom/webidl/ExtensionPrivacyWebsites.webidl
 new file mode 100644
-index 0000000..ea80ca5
+index 0000000..d47c4ab
 --- /dev/null
 +++ b/dom/webidl/ExtensionPrivacyWebsites.webidl
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,33 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1393,9 +1950,11 @@ index 0000000..ea80ca5
 +
 +  [Replaceable]
 +  readonly attribute ExtensionSetting cookieConfig;
++  [Replaceable]
++  readonly attribute any TrackingProtectionModeOption;
 +};
 diff --git a/dom/webidl/ExtensionRuntime.webidl b/dom/webidl/ExtensionRuntime.webidl
-index c60f45c..f77fd74 100644
+index c60f45c..49404a5 100644
 --- a/dom/webidl/ExtensionRuntime.webidl
 +++ b/dom/webidl/ExtensionRuntime.webidl
 @@ -30,6 +30,9 @@
@@ -1443,8 +2002,29 @@ index c60f45c..f77fd74 100644
    // API properties.
  
    [Replaceable]
+@@ -99,4 +117,20 @@ interface ExtensionRuntime {
+ 
+   [Replaceable]
+   readonly attribute DOMString id;
++  [Replaceable]
++  readonly attribute any ContextType;
++  [Replaceable]
++  readonly attribute any PlatformOs;
++  [Replaceable]
++  readonly attribute any PlatformArch;
++  [Replaceable]
++  readonly attribute any RequestUpdateCheckStatus;
++  [Replaceable]
++  readonly attribute any OnInstalledReason;
++  [Replaceable]
++  readonly attribute any OnRestartRequiredReason;
++  [Replaceable]
++  readonly attribute any OnPerformanceWarningCategory;
++  [Replaceable]
++  readonly attribute any OnPerformanceWarningSeverity;
+ };
 diff --git a/dom/webidl/ExtensionScripting.webidl b/dom/webidl/ExtensionScripting.webidl
-index 0bd4ed8..2f2846a 100644
+index 0bd4ed8..8899455 100644
 --- a/dom/webidl/ExtensionScripting.webidl
 +++ b/dom/webidl/ExtensionScripting.webidl
 @@ -30,7 +30,7 @@
@@ -1456,6 +2036,94 @@ index 0bd4ed8..2f2846a 100644
    any executeScript(any injection, optional Function callback);
  
    [Throws, WebExtensionStub="Async"]
+@@ -50,4 +50,6 @@ interface ExtensionScripting {
+ 
+   [Throws, WebExtensionStub="Async"]
+   any updateContentScripts(any scripts, optional Function callback);
++  [Replaceable]
++  readonly attribute any ExecutionWorld;
+ };
+diff --git a/dom/webidl/ExtensionSessions.webidl b/dom/webidl/ExtensionSessions.webidl
+new file mode 100644
+index 0000000..2e01d16
+--- /dev/null
++++ b/dom/webidl/ExtensionSessions.webidl
+@@ -0,0 +1,75 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "sessions" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionSessions {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any forgetClosedTab(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any forgetClosedWindow(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getRecentlyClosed(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any restore(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any setTabValue(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getTabValue(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any removeTabValue(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any setWindowValue(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any getWindowValue(any... args);
++#endif
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any removeWindowValue(any... args);
++#endif
++
++  // API events.
++
++#if !defined(ANDROID)
++  [Replaceable, SameObject]
++  readonly attribute ExtensionEventManager onChanged;
++#endif
++
++  // API properties.
++
++  [Replaceable]
++  readonly attribute any MAX_SESSION_RESULTS;
++};
 diff --git a/dom/webidl/ExtensionSidePanel.webidl b/dom/webidl/ExtensionSidePanel.webidl
 new file mode 100644
 index 0000000..b6caeb0
@@ -1693,10 +2361,10 @@ index 0000000..cb17785
 +};
 diff --git a/dom/webidl/ExtensionTabGroups.webidl b/dom/webidl/ExtensionTabGroups.webidl
 new file mode 100644
-index 0000000..1ed9c52
+index 0000000..78aa046
 --- /dev/null
 +++ b/dom/webidl/ExtensionTabGroups.webidl
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,62 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -1756,13 +2424,15 @@ index 0000000..1ed9c52
 +
 +  [Replaceable]
 +  readonly attribute any TAB_GROUP_ID_NONE;
++  [Replaceable]
++  readonly attribute any Color;
 +};
 diff --git a/dom/webidl/ExtensionTabs.webidl b/dom/webidl/ExtensionTabs.webidl
 new file mode 100644
-index 0000000..d8a6590
+index 0000000..cc145c0
 --- /dev/null
 +++ b/dom/webidl/ExtensionTabs.webidl
-@@ -0,0 +1,220 @@
+@@ -0,0 +1,232 @@
 +/*
 + *  THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT
 + *
@@ -1982,13 +2652,49 @@ index 0000000..d8a6590
 +
 +  [Replaceable]
 +  readonly attribute any SPLIT_VIEW_ID_NONE;
++  [Replaceable]
++  readonly attribute any MutedInfoReason;
++  [Replaceable]
++  readonly attribute any ZoomSettingsMode;
++  [Replaceable]
++  readonly attribute any ZoomSettingsScope;
++  [Replaceable]
++  readonly attribute any TabStatus;
++  [Replaceable]
++  readonly attribute any WindowType;
++  [Replaceable]
++  readonly attribute any UpdatePropertyName;
++};
+diff --git a/dom/webidl/ExtensionTopSites.webidl b/dom/webidl/ExtensionTopSites.webidl
+new file mode 100644
+index 0000000..5d3657e
+--- /dev/null
++++ b/dom/webidl/ExtensionTopSites.webidl
+@@ -0,0 +1,18 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * You are granted a license to use, reproduce and create derivative works of
++ * this document.
++ */
++
++// WebIDL definition for the "topSites" WebExtensions API
++[Exposed=(ServiceWorker), LegacyNoInterfaceObject]
++interface ExtensionTopSites {
++  // API methods.
++
++#if !defined(ANDROID)
++  [Throws, WebExtensionStub="AsyncAmbiguous"]
++  any get(any... args);
++#endif
 +};
 diff --git a/dom/webidl/ExtensionTts.webidl b/dom/webidl/ExtensionTts.webidl
 new file mode 100644
-index 0000000..cc39757
+index 0000000..80b584f
 --- /dev/null
 +++ b/dom/webidl/ExtensionTts.webidl
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,43 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -2027,13 +2733,17 @@ index 0000000..cc39757
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onVoicesChanged;
++  [Replaceable]
++  readonly attribute any EventType;
++  [Replaceable]
++  readonly attribute any VoiceGender;
 +};
 diff --git a/dom/webidl/ExtensionUserScripts.webidl b/dom/webidl/ExtensionUserScripts.webidl
 new file mode 100644
-index 0000000..0f22246
+index 0000000..8a61b40
 --- /dev/null
 +++ b/dom/webidl/ExtensionUserScripts.webidl
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,60 @@
 +/*
 + *  THIS IS AN AUTOGENERATED FILE.  DO NOT EDIT
 + *
@@ -2091,13 +2801,15 @@ index 0000000..0f22246
 +
 +  [Throws, WebExtensionStub="Async"]
 +  any execute(any injection, optional Function callback);
++  [Replaceable]
++  readonly attribute any ExecutionWorld;
 +};
 diff --git a/dom/webidl/ExtensionWebNavigation.webidl b/dom/webidl/ExtensionWebNavigation.webidl
 new file mode 100644
-index 0000000..f5dfec3
+index 0000000..3c32a4a
 --- /dev/null
 +++ b/dom/webidl/ExtensionWebNavigation.webidl
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,52 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -2145,13 +2857,17 @@ index 0000000..f5dfec3
 +
 +  [Replaceable, SameObject]
 +  readonly attribute ExtensionEventManager onHistoryStateUpdated;
++  [Replaceable]
++  readonly attribute any TransitionType;
++  [Replaceable]
++  readonly attribute any TransitionQualifier;
 +};
 diff --git a/dom/webidl/ExtensionWebRequest.webidl b/dom/webidl/ExtensionWebRequest.webidl
 new file mode 100644
-index 0000000..0668e85
+index 0000000..dbc18fc
 --- /dev/null
 +++ b/dom/webidl/ExtensionWebRequest.webidl
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,77 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -2204,13 +2920,37 @@ index 0000000..0668e85
 +
 +  [Replaceable]
 +  readonly attribute any MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES;
++  [Replaceable]
++  readonly attribute any ResourceType;
++  [Replaceable]
++  readonly attribute any OnBeforeRequestOptions;
++  [Replaceable]
++  readonly attribute any OnBeforeSendHeadersOptions;
++  [Replaceable]
++  readonly attribute any OnSendHeadersOptions;
++  [Replaceable]
++  readonly attribute any OnHeadersReceivedOptions;
++  [Replaceable]
++  readonly attribute any OnAuthRequiredOptions;
++  [Replaceable]
++  readonly attribute any OnResponseStartedOptions;
++  [Replaceable]
++  readonly attribute any OnBeforeRedirectOptions;
++  [Replaceable]
++  readonly attribute any OnCompletedOptions;
++  [Replaceable]
++  readonly attribute any CertificateTransparencyStatus;
++  [Replaceable]
++  readonly attribute any TransportWeaknessReasons;
++  [Replaceable]
++  readonly attribute any UrlClassificationFlags;
 +};
 diff --git a/dom/webidl/ExtensionWindows.webidl b/dom/webidl/ExtensionWindows.webidl
 new file mode 100644
-index 0000000..f8d1983
+index 0000000..a4ad2c4
 --- /dev/null
 +++ b/dom/webidl/ExtensionWindows.webidl
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,82 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 + * You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -2286,24 +3026,36 @@ index 0000000..f8d1983
 +
 +  [Replaceable]
 +  readonly attribute any WINDOW_ID_CURRENT;
++  [Replaceable]
++  readonly attribute any WindowType;
++  [Replaceable]
++  readonly attribute any WindowState;
++  [Replaceable]
++  readonly attribute any CreateType;
 +};
 diff --git a/dom/webidl/moz.build b/dom/webidl/moz.build
-index 02797ef..1784f3e 100644
+index 02797ef..2b5947b 100644
 --- a/dom/webidl/moz.build
 +++ b/dom/webidl/moz.build
-@@ -419,6 +419,11 @@ GENERATED_WEBIDL_FILES = [
+@@ -419,6 +419,17 @@ GENERATED_WEBIDL_FILES = [
  ]
  
  PREPROCESSED_WEBIDL_FILES = [
++    "ExtensionBookmarks.webidl",
++    "ExtensionCommands.webidl",
++    "ExtensionHistory.webidl",
 +    "ExtensionMenus.webidl",
++    "ExtensionOmnibox.webidl",
++    "ExtensionSessions.webidl",
 +    "ExtensionSidePanel.webidl",
 +    "ExtensionTabGroups.webidl",
 +    "ExtensionTabs.webidl",
++    "ExtensionTopSites.webidl",
 +    "ExtensionWindows.webidl",
      "Node.webidl",
      "Window.webidl",
  ]
-@@ -1219,21 +1224,46 @@ WEBIDL_FILES += [
+@@ -1219,21 +1230,50 @@ WEBIDL_FILES += [
  
  # WebExtensions API.
  WEBIDL_FILES += [
@@ -2321,8 +3073,11 @@ index 02797ef..1784f3e 100644
      "ExtensionDns.webidl",
 +    "ExtensionDownloads.webidl",
      "ExtensionEventManager.webidl",
++    "ExtensionExtension.webidl",
 +    "ExtensionFontSettings.webidl",
++    "ExtensionI18n.webidl",
 +    "ExtensionIdentity.webidl",
++    "ExtensionIdle.webidl",
 +    "ExtensionManagement.webidl",
      # ExtensionMockAPI is not a real WebExtensions API, and it is only enabled in tests.
      "ExtensionMockAPI.webidl",
@@ -2330,6 +3085,7 @@ index 02797ef..1784f3e 100644
 +    "ExtensionOffscreen.webidl",
 +    "ExtensionPermissions.webidl",
      "ExtensionPort.webidl",
++    "ExtensionPower.webidl",
 +    "ExtensionPrivacy.webidl",
 +    "ExtensionPrivacyNetwork.webidl",
 +    "ExtensionPrivacyServices.webidl",
@@ -2499,7 +3255,7 @@ index f0c8b87..0ea9706 100644
 +      context.isHandlingUserInput ??
        context.contentWindow?.windowUtils?.isHandlingUserInput;
 diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
-index bc64f8f..30ddd53 100644
+index bc64f8f..be23d40 100644
 --- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
 @@ -141,6 +141,11 @@ ExtensionManager = {
@@ -2522,7 +3278,7 @@ index bc64f8f..30ddd53 100644
  
          contentScripts: extension.contentScripts,
        });
-@@ -483,6 +489,13 @@ export var ExtensionAPIRequestHandler = {
+@@ -483,6 +489,24 @@ export var ExtensionAPIRequestHandler = {
          request,
        });
  
@@ -2531,12 +3287,23 @@ index bc64f8f..30ddd53 100644
 +        if (property && Object.hasOwn(property, "value")) {
 +          return { type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE, value: property.value };
 +        }
++        if (Array.isArray(property?.enumeration)) {
++          const enumName = context.extension.backgroundServiceWorkerCompatibility
++            ? value => value.replace(/([a-z])([A-Z])/g, "$1_$2")
++                .replace(/-/g, "_").replace(/^[0-9]/, digit => "_" + digit)
++                .replace(/[a-z]/g, character => character.toUpperCase())
++            : value => value.toUpperCase();
++          return {
++            type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE,
++            value: Object.fromEntries(property.enumeration.map(value => [enumName(value), value])),
++          };
++        }
 +      }
 +
        return context.childManager.handleWebIDLAPIRequest(request);
      } catch (error) {
        // Propagate errors related to parameter validation when the error object
-@@ -517,7 +530,10 @@ export var ExtensionAPIRequestHandler = {
+@@ -517,7 +541,10 @@ export var ExtensionAPIRequestHandler = {
  
    validateAndNormalizeRequestArgs({ context, request }) {
      if (
@@ -2548,7 +3315,49 @@ index bc64f8f..30ddd53 100644
      ) {
        throw new context.Error(
          `Not enough privileges to access ${request.apiNamespace}`
-@@ -538,12 +554,49 @@ export var ExtensionAPIRequestHandler = {
+@@ -527,6 +554,41 @@ export var ExtensionAPIRequestHandler = {
+       return [];
+     }
+ 
++    // Chrome explicitly ignores this value for Chrome Web Store installs.
++    // The converted updater accepts only authenticated Store packages; it does
++    // not implement arbitrary Chrome update_url feeds. Keep the ordinary
++    // Firefox API and schema unchanged.
++    if (request.apiNamespace === "extension" &&
++        request.apiName === "setUpdateUrlData" &&
++        request.requestType === "callFunctionNoReturn") {
++      if (!context.extension.backgroundServiceWorkerCompatibility ||
++          request.args.length !== 1 || typeof request.args[0] !== "string" ||
++          request.args[0].length > 1024) {
++        throw new context.Error("Invalid extension.setUpdateUrlData invocation");
++      }
++      return request.args;
++    }
++
++    // This entry is reachable only through the native callback handed to a
++    // Worker omnibox event. Validate every call, including repeated updates,
++    // against the real suggestion schema before forwarding to the child API.
++    if (request.apiNamespace === "omnibox" &&
++        request.apiName === "__submitSuggestions" &&
++        request.requestType === "callFunctionNoReturn") {
++      const [callbackId, suggestions] = request.args;
++      if (request.args.length !== 2 || !Number.isInteger(callbackId) ||
++          callbackId < 1 || callbackId > 0x7fffffff || !Array.isArray(suggestions)) {
++        throw new context.Error("Invalid omnibox suggestion callback arguments");
++      }
++      return [callbackId, suggestions.map(suggestion => {
++        const normalized = lazy.Schemas.normalize(suggestion, "omnibox.SuggestResult", context);
++        if (normalized.error) {
++          throw new context.Error(normalized.error);
++        }
++        return normalized.value;
++      })];
++    }
++
+     if (request.apiObjectType) {
+       // skip parameter validation on request targeting an api object,
+       // even the JS-based implementation of the API objects are not
+@@ -538,12 +600,49 @@ export var ExtensionAPIRequestHandler = {
        return request.args;
      }
  
@@ -2600,7 +3409,7 @@ index bc64f8f..30ddd53 100644
  };
  
 diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
-index c1847ca..1a19c3e 100644
+index c1847ca..4883173 100644
 --- a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs
 @@ -73,7 +73,7 @@ class WorkerMessageEvent extends MessageEvent {
@@ -2649,11 +3458,13 @@ index c1847ca..1a19c3e 100644
      if (this.context.active && event.fires.size) {
        let port = new WorkerPort(this.context, portId, name, false, sender);
        this.portsById.set(`${port.portId}`, port);
-@@ -310,6 +330,17 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -310,6 +330,19 @@ class WebIDLChildAPIManager extends ChildAPIManager {
      // apiPathToEventString is a string that represents the full API path
      // related to the event name (e.g. "runtime.onConnect", or "runtime.Port.onMessage")
      this.eventListenerWrappers = new DefaultMap(() => new WeakMap());
 +    this.ttsUtteranceListeners = new Map();
++    this.omniboxSuggestCallbacks = new Map();
++    this.nextOmniboxCallbackId = 0;
 +  }
 +
 +  recvRunListener(data) {
@@ -2667,12 +3478,38 @@ index c1847ca..1a19c3e 100644
    }
  
    getImplementation(namespace, name) {
-@@ -349,7 +380,33 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -346,10 +379,59 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+    */
+   handleWebIDLAPIRequest(request) {
+     try {
++      if (request.apiNamespace === "extension" &&
++          request.apiName === "setUpdateUrlData" &&
++          request.requestType === "callFunctionNoReturn" &&
++          this.context.extension.backgroundServiceWorkerCompatibility) {
++        // This supported updater source is Chrome Web Store, where Chrome
++        // deliberately ignores the ap data and returns synchronously.
++        return { type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE, value: undefined };
++      }
++      if (request.apiNamespace === "omnibox" &&
++          request.apiName === "__submitSuggestions" &&
++          request.requestType === "callFunctionNoReturn") {
++        const [callbackId, suggestions] = request.normalizedArgs;
++        this.omniboxSuggestCallbacks.get(callbackId)?.(suggestions);
++        return { type: Ci.mozIExtensionAPIRequestResult.RETURN_VALUE, value: undefined };
++      }
        const impl = this.getImplementationForRequest(request);
        let result;
        this.context.withAPIRequest(request, () => {
 -        if (impl instanceof ProxyAPIImplementation) {
-+        if (request.apiNamespace === "declarativeContent" &&
++        if (request.apiNamespace === "i18n" && request.requestType === "callFunction" &&
++            request.apiName === "getMessage") {
++          const [messageName, substitutions] = request.normalizedArgs;
++          result = this.context.extension.localizeMessage(messageName, substitutions,
++            { cloneScope: this.context.cloneScope });
++        } else if (request.apiNamespace === "i18n" && request.requestType === "callFunction" &&
++            request.apiName === "getUILanguage") {
++          result = this.context.extension.localeData.uiLocale;
++        } else if (request.apiNamespace === "declarativeContent" &&
 +            request.requestType === "callFunction" &&
 +            ["PageStateMatcher", "ShowAction", "ShowPageAction", "SetIcon", "RequestContentScript"].includes(request.apiName)) {
 +          if (!(impl instanceof ChildLocalWebIDLAPIImplementation)) {
@@ -2702,11 +3539,30 @@ index c1847ca..1a19c3e 100644
            result = this.handleForProxyAPIImplementation(request, impl);
          } else {
            result = this.callAPIImplementation(request, impl);
-@@ -494,13 +551,50 @@ class WebIDLChildAPIManager extends ChildAPIManager {
+@@ -494,16 +576,73 @@ class WebIDLChildAPIManager extends ChildAPIManager {
      }
  
      const { eventListener } = request;
 +    const context = this.context;
++    if (request.apiNamespace === "omnibox" && request.apiName === "onInputChanged") {
++      let callbackId;
++      listener = (text, suggest) => {
++        this.omniboxSuggestCallbacks.delete(callbackId);
++        if (typeof suggest !== "function") {
++          throw new context.Error("Native omnibox child suggestion callback is unavailable");
++        }
++        do {
++          this.nextOmniboxCallbackId = this.nextOmniboxCallbackId % 0x7fffffff + 1;
++        } while (this.omniboxSuggestCallbacks.has(this.nextOmniboxCallbackId));
++        callbackId = this.nextOmniboxCallbackId;
++        this.omniboxSuggestCallbacks.set(callbackId, suggest);
++        return eventListener.callListener([text], {
++          apiObjectType: Ci.mozIExtensionListenerCallOptions.OMNIBOX_SUGGEST,
++          apiObjectDescriptor: callbackId,
++        });
++      };
++      listener.forgetOmniboxCallback = () => this.omniboxSuggestCallbacks.delete(callbackId);
++    }
 +    if (request.apiNamespace === "webRequest" && request.apiName === "onAuthRequired") {
 +      listener = function (details, asyncCallback) {
 +        if (typeof asyncCallback !== "function") {
@@ -2754,7 +3610,11 @@ index c1847ca..1a19c3e 100644
        };
      listener._callOnClose = {
        close: () => {
-@@ -521,6 +615,16 @@ class WebIDLChildAPIManager extends ChildAPIManager {
++        listener.forgetOmniboxCallback?.();
+         this.eventListenerWrappers.delete(eventListener);
+         // Failing to send the request to remove the listener in the parent
+         // process shouldn't prevent the extension or context shutdown,
+@@ -521,6 +660,16 @@ class WebIDLChildAPIManager extends ChildAPIManager {
          }
        },
      };
@@ -2771,7 +3631,7 @@ index c1847ca..1a19c3e 100644
      this.storeListenerWrapper(request, listener);
      this.context.callOnClose(listener._callOnClose);
      return listener;
-@@ -598,12 +702,33 @@ class WorkerContextChild extends BaseContext {
+@@ -598,12 +747,33 @@ class WorkerContextChild extends BaseContext {
      // internals to not use the context.cloneScope).
      this.workerCloneScope = {
        Promise,
@@ -2805,7 +3665,7 @@ index c1847ca..1a19c3e 100644
    }
  
    getCreateProxyContextData() {
-@@ -650,6 +775,10 @@ class WorkerContextChild extends BaseContext {
+@@ -650,6 +820,10 @@ class WorkerContextChild extends BaseContext {
      return this.webidlAPIRequest;
    }
  
@@ -2934,10 +3794,20 @@ index 7e1eca8..bb71f32 100644
      MARIONETTE_MANIFESTS += ["test/marionette/manifest-serviceworker.toml"]
      XPCSHELL_TESTS_MANIFESTS += [
 diff --git a/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl b/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
-index d7eb403..d7d968d 100644
+index d7eb403..b19742b 100644
 --- a/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
 +++ b/toolkit/components/extensions/mozIExtensionAPIRequestHandling.idl
-@@ -37,6 +37,9 @@ interface mozIExtensionListenerCallOptions : nsISupports
+@@ -24,6 +24,9 @@ interface mozIExtensionListenerCallOptions : nsISupports
+ 
+     // A runtime.Port instance is prepended to the event listener call arguments.
+     RUNTIME_PORT,
++
++    // A native repeatable suggestion callback for the current omnibox input.
++    OMNIBOX_SUGGEST,
+   };
+ 
+   readonly attribute mozIExtensionListenerCallOptions_APIObjectType apiObjectType;
+@@ -37,6 +40,9 @@ interface mozIExtensionListenerCallOptions : nsISupports
    // prepended to the rest of the call arguments (by default it is appended).
    readonly attribute boolean apiObjectPrepended;
  
@@ -2947,7 +3817,7 @@ index d7eb403..d7d968d 100644
    cenum CallbackType: 8 {
      // Default: no callback argument is passed to the call to the event listener.
      CALLBACK_NONE,
-@@ -51,6 +54,10 @@ interface mozIExtensionListenerCallOptions : nsISupports
+@@ -51,6 +57,10 @@ interface mozIExtensionListenerCallOptions : nsISupports
      // - if the event listener already returned a Promise, sendResponse calls
      //   are ignored
      CALLBACK_SEND_RESPONSE,
@@ -2958,7 +3828,7 @@ index d7eb403..d7d968d 100644
    };
  
    attribute mozIExtensionListenerCallOptions_CallbackType callbackType;
-@@ -112,6 +119,8 @@ interface mozIExtensionAPIRequest : nsISupports
+@@ -112,6 +122,8 @@ interface mozIExtensionAPIRequest : nsISupports
    // Set for requests coming from an extension service worker.
    readonly attribute mozIExtensionServiceWorkerInfo serviceWorkerInfo;
  
@@ -3663,11 +4533,148 @@ index 0000000..e7ce07c
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionAction_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionBookmarks.cpp b/toolkit/components/extensions/webidl-api/ExtensionBookmarks.cpp
+new file mode 100644
+index 0000000..0baf959
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionBookmarks.cpp
+@@ -0,0 +1,61 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionBookmarks.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionBookmarksBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionBookmarks)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionBookmarks)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionBookmarks, mGlobal,
++                                      mExtensionBrowser, mOnCreatedEventMgr,
++                                      mOnRemovedEventMgr, mOnChangedEventMgr,
++                                      mOnMovedEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionBookmarks)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionBookmarks::ExtensionBookmarks(nsIGlobalObject* aGlobal,
++                                       ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionBookmarks::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionBookmarks::WrapObject(JSContext* aCx,
++                                         JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionBookmarks_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionBookmarks::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionBookmarks, u"onCreated"_ns, OnCreated)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionBookmarks, u"onRemoved"_ns, OnRemoved)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionBookmarks, u"onChanged"_ns, OnChanged)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionBookmarks, u"onMoved"_ns, OnMoved)
++
++void ExtensionBookmarks::GetBookmarkTreeNodeUnmodifiable(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"BookmarkTreeNodeUnmodifiable"_ns, aRetval);
++}
++
++void ExtensionBookmarks::GetBookmarkTreeNodeType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"BookmarkTreeNodeType"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionBookmarks.h b/toolkit/components/extensions/webidl-api/ExtensionBookmarks.h
+new file mode 100644
+index 0000000..e239440
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionBookmarks.h
+@@ -0,0 +1,64 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionBookmarks_h
++#define mozilla_extensions_ExtensionBookmarks_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionBookmarks final : public nsISupports,
++                                 public nsWrapperCache,
++                                 public ExtensionAPINamespace {
++ public:
++  ExtensionBookmarks(nsIGlobalObject* aGlobal,
++                     ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"bookmarks"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetBookmarkTreeNodeType(JSContext* aCx,
++                               JS::MutableHandle<JS::Value> aRetval);
++  void GetBookmarkTreeNodeUnmodifiable(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval);
++
++  ExtensionEventManager* OnCreated();
++  ExtensionEventManager* OnRemoved();
++  ExtensionEventManager* OnChanged();
++  ExtensionEventManager* OnMoved();
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionBookmarks)
++
++ private:
++  ~ExtensionBookmarks() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnCreatedEventMgr;
++  RefPtr<ExtensionEventManager> mOnRemovedEventMgr;
++  RefPtr<ExtensionEventManager> mOnChangedEventMgr;
++  RefPtr<ExtensionEventManager> mOnMovedEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionBookmarks_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-index a4e2836..672e73c 100644
+index a4e2836..3709305 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp
-@@ -8,16 +8,41 @@
+@@ -8,16 +8,51 @@
  #include "mozilla/dom/ExtensionBrowserBinding.h"
  #include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
  #include "mozilla/dom/WorkerScope.h"           // GetWorkerPrivateFromContext
@@ -3682,6 +4689,16 @@ index a4e2836..672e73c 100644
 +#include "mozilla/extensions/ExtensionTts.h"
 +#include "mozilla/extensions/ExtensionDeclarativeContent.h"
 +#include "mozilla/extensions/ExtensionWindows.h"
++#include "mozilla/extensions/ExtensionBookmarks.h"
++#include "mozilla/extensions/ExtensionCommands.h"
++#include "mozilla/extensions/ExtensionHistory.h"
++#include "mozilla/extensions/ExtensionI18n.h"
++#include "mozilla/extensions/ExtensionIdle.h"
++#include "mozilla/extensions/ExtensionSessions.h"
++#include "mozilla/extensions/ExtensionTopSites.h"
++#include "mozilla/extensions/ExtensionOmnibox.h"
++#include "mozilla/extensions/ExtensionPower.h"
++#include "mozilla/extensions/ExtensionExtension.h"
  #include "mozilla/extensions/ExtensionDns.h"
 +#include "mozilla/extensions/ExtensionDownloads.h"
 +#include "mozilla/extensions/ExtensionIdentity.h"
@@ -3709,7 +4726,7 @@ index a4e2836..672e73c 100644
  #include "mozilla/extensions/WebExtensionPolicy.h"
  
  namespace mozilla {
-@@ -34,8 +59,34 @@ NS_INTERFACE_MAP_END
+@@ -34,8 +69,44 @@ NS_INTERFACE_MAP_END
  
  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
@@ -3741,10 +4758,20 @@ index a4e2836..672e73c 100644
 +  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTts)
 +  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionDeclarativeContent)
 +  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionWindows)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionBookmarks)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionCommands)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionHistory)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionI18n)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionIdle)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionSessions)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionTopSites)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionOmnibox)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionPower)
++  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionExtension)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_UNLINK(mExtensionProxy)
-@@ -50,8 +101,34 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+@@ -50,8 +121,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionBrowser)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
@@ -3776,10 +4803,20 @@ index a4e2836..672e73c 100644
 +  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionTts)
 +  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionDeclarativeContent)
 +  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionWindows)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionBookmarks)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionCommands)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionHistory)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionI18n)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionIdle)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionSessions)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionTopSites)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionOmnibox)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionPower)
++  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionExtension)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionDns)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionMockAPI)
    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionRuntime)
-@@ -94,11 +171,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
+@@ -94,11 +201,6 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
        !NS_IsMainThread(),
        "ExtensionAPI webidl bindings does not yet support main thread globals");
  
@@ -3791,7 +4828,7 @@ index a4e2836..672e73c 100644
    auto* workerPrivate = mozilla::dom::GetWorkerPrivateFromContext(aCx);
    MOZ_ASSERT(workerPrivate);
    MOZ_ASSERT(workerPrivate->IsServiceWorker());
-@@ -201,6 +273,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
+@@ -201,6 +303,156 @@ void ExtensionBrowser::ForgetReleasedPort(const nsAString& aPortId) {
    mPortsLookup.Remove(aPortId);
  }
  
@@ -3948,7 +4985,7 @@ index a4e2836..672e73c 100644
  ExtensionAlarms* ExtensionBrowser::GetExtensionAlarms() {
    if (!mExtensionAlarms) {
      mExtensionAlarms = new ExtensionAlarms(mGlobal, this);
-@@ -217,6 +439,43 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
+@@ -217,6 +469,113 @@ ExtensionBrowserSettings* ExtensionBrowser::GetExtensionBrowserSettings() {
    return mExtensionBrowserSettings;
  }
  
@@ -3989,14 +5026,84 @@ index a4e2836..672e73c 100644
 +  return mExtensionWindows;
 +}
 +
++ExtensionBookmarks* ExtensionBrowser::GetExtensionBookmarks() {
++  if (!mExtensionBookmarks) {
++    mExtensionBookmarks = new ExtensionBookmarks(mGlobal, this);
++  }
++  return mExtensionBookmarks;
++}
++
++ExtensionCommands* ExtensionBrowser::GetExtensionCommands() {
++  if (!mExtensionCommands) {
++    mExtensionCommands = new ExtensionCommands(mGlobal, this);
++  }
++  return mExtensionCommands;
++}
++
++ExtensionHistory* ExtensionBrowser::GetExtensionHistory() {
++  if (!mExtensionHistory) {
++    mExtensionHistory = new ExtensionHistory(mGlobal, this);
++  }
++  return mExtensionHistory;
++}
++
++ExtensionI18n* ExtensionBrowser::GetExtensionI18n() {
++  if (!mExtensionI18n) {
++    mExtensionI18n = new ExtensionI18n(mGlobal, this);
++  }
++  return mExtensionI18n;
++}
++
++ExtensionIdle* ExtensionBrowser::GetExtensionIdle() {
++  if (!mExtensionIdle) {
++    mExtensionIdle = new ExtensionIdle(mGlobal, this);
++  }
++  return mExtensionIdle;
++}
++
++ExtensionSessions* ExtensionBrowser::GetExtensionSessions() {
++  if (!mExtensionSessions) {
++    mExtensionSessions = new ExtensionSessions(mGlobal, this);
++  }
++  return mExtensionSessions;
++}
++
++ExtensionTopSites* ExtensionBrowser::GetExtensionTopSites() {
++  if (!mExtensionTopSites) {
++    mExtensionTopSites = new ExtensionTopSites(mGlobal, this);
++  }
++  return mExtensionTopSites;
++}
++
++ExtensionOmnibox* ExtensionBrowser::GetExtensionOmnibox() {
++  if (!mExtensionOmnibox) {
++    mExtensionOmnibox = new ExtensionOmnibox(mGlobal, this);
++  }
++  return mExtensionOmnibox;
++}
++
++ExtensionPower* ExtensionBrowser::GetExtensionPower() {
++  if (!mExtensionPower) {
++    mExtensionPower = new ExtensionPower(mGlobal, this);
++  }
++  return mExtensionPower;
++}
++
++ExtensionExtension* ExtensionBrowser::GetExtensionExtension() {
++  if (!mExtensionExtension) {
++    mExtensionExtension = new ExtensionExtension(mGlobal, this);
++  }
++  return mExtensionExtension;
++}
++
  ExtensionDns* ExtensionBrowser::GetExtensionDns() {
    if (!mExtensionDns) {
      mExtensionDns = new ExtensionDns(mGlobal, this);
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
-index 840a550..e222c99 100644
+index 840a550..b429dfc 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionBrowser.h
-@@ -21,8 +21,33 @@ class ErrorResult;
+@@ -21,8 +21,43 @@ class ErrorResult;
  
  namespace extensions {
  
@@ -4027,10 +5134,20 @@ index 840a550..e222c99 100644
 +class ExtensionTts;
 +class ExtensionDeclarativeContent;
 +class ExtensionWindows;
++class ExtensionBookmarks;
++class ExtensionCommands;
++class ExtensionHistory;
++class ExtensionI18n;
++class ExtensionIdle;
++class ExtensionSessions;
++class ExtensionTopSites;
++class ExtensionOmnibox;
++class ExtensionPower;
++class ExtensionExtension;
  class ExtensionDns;
  class ExtensionMockAPI;
  class ExtensionPort;
-@@ -107,8 +132,34 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -107,8 +142,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
  
    nsIGlobalObject* GetParentObject() const;
  
@@ -4062,10 +5179,20 @@ index 840a550..e222c99 100644
 +  ExtensionTts* GetExtensionTts();
 +  ExtensionDeclarativeContent* GetExtensionDeclarativeContent();
 +  ExtensionWindows* GetExtensionWindows();
++  ExtensionBookmarks* GetExtensionBookmarks();
++  ExtensionCommands* GetExtensionCommands();
++  ExtensionHistory* GetExtensionHistory();
++  ExtensionI18n* GetExtensionI18n();
++  ExtensionIdle* GetExtensionIdle();
++  ExtensionSessions* GetExtensionSessions();
++  ExtensionTopSites* GetExtensionTopSites();
++  ExtensionOmnibox* GetExtensionOmnibox();
++  ExtensionPower* GetExtensionPower();
++  ExtensionExtension* GetExtensionExtension();
    ExtensionDns* GetExtensionDns();
    ExtensionMockAPI* GetExtensionMockAPI();
    ExtensionProxy* GetExtensionProxy();
-@@ -138,8 +189,34 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
+@@ -138,8 +209,44 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
    // assertion `MOZ_ASSERT(!globalScopeAlive)`, after that
    // `nsCycleCollector_shutdown()` has been called and we don't expect anything
    // to be keeping the service worker global scope alive).
@@ -4097,15 +5224,139 @@ index 840a550..e222c99 100644
 +  RefPtr<ExtensionTts> mExtensionTts;
 +  RefPtr<ExtensionDeclarativeContent> mExtensionDeclarativeContent;
 +  RefPtr<ExtensionWindows> mExtensionWindows;
++  RefPtr<ExtensionBookmarks> mExtensionBookmarks;
++  RefPtr<ExtensionCommands> mExtensionCommands;
++  RefPtr<ExtensionHistory> mExtensionHistory;
++  RefPtr<ExtensionI18n> mExtensionI18n;
++  RefPtr<ExtensionIdle> mExtensionIdle;
++  RefPtr<ExtensionSessions> mExtensionSessions;
++  RefPtr<ExtensionTopSites> mExtensionTopSites;
++  RefPtr<ExtensionOmnibox> mExtensionOmnibox;
++  RefPtr<ExtensionPower> mExtensionPower;
++  RefPtr<ExtensionExtension> mExtensionExtension;
    RefPtr<ExtensionDns> mExtensionDns;
    RefPtr<ExtensionMockAPI> mExtensionMockAPI;
    RefPtr<ExtensionProxy> mExtensionProxy;
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionCommands.cpp b/toolkit/components/extensions/webidl-api/ExtensionCommands.cpp
+new file mode 100644
+index 0000000..0fefd78
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionCommands.cpp
+@@ -0,0 +1,46 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionCommands.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionCommandsBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionCommands)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionCommands)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionCommands, mGlobal,
++                                      mExtensionBrowser, mOnCommandEventMgr,
++                                      mOnChangedEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionCommands)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionCommands::ExtensionCommands(nsIGlobalObject* aGlobal,
++                                     ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionCommands::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionCommands::WrapObject(JSContext* aCx,
++                                        JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionCommands_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionCommands::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionCommands, u"onCommand"_ns, OnCommand)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionCommands, u"onChanged"_ns, OnChanged)
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionCommands.h b/toolkit/components/extensions/webidl-api/ExtensionCommands.h
+new file mode 100644
+index 0000000..c5291bb
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionCommands.h
+@@ -0,0 +1,56 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionCommands_h
++#define mozilla_extensions_ExtensionCommands_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionCommands final : public nsISupports,
++                                public nsWrapperCache,
++                                public ExtensionAPINamespace {
++ public:
++  ExtensionCommands(nsIGlobalObject* aGlobal,
++                    ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"commands"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++
++  ExtensionEventManager* OnCommand();
++  ExtensionEventManager* OnChanged();
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionCommands)
++
++ private:
++  ~ExtensionCommands() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnCommandEventMgr;
++  RefPtr<ExtensionEventManager> mOnChangedEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionCommands_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionCookies.cpp b/toolkit/components/extensions/webidl-api/ExtensionCookies.cpp
 new file mode 100644
-index 0000000..36f9ad3
+index 0000000..0081f5b
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionCookies.cpp
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,53 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4148,13 +5399,23 @@ index 0000000..36f9ad3
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionCookies, u"onChanged"_ns, OnChanged)
 +
++void ExtensionCookies::GetSameSiteStatus(JSContext* aCx,
++                                         JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"SameSiteStatus"_ns, aRetval);
++}
++
++void ExtensionCookies::GetOnChangedCause(JSContext* aCx,
++                                         JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnChangedCause"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionCookies.h b/toolkit/components/extensions/webidl-api/ExtensionCookies.h
 new file mode 100644
-index 0000000..ff00b72
+index 0000000..542ea8e
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionCookies.h
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,56 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4192,6 +5453,8 @@ index 0000000..ff00b72
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetOnChangedCause(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetSameSiteStatus(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnChanged();
 +
@@ -4211,10 +5474,10 @@ index 0000000..ff00b72
 +#endif  // mozilla_extensions_ExtensionCookies_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDebugger.cpp b/toolkit/components/extensions/webidl-api/ExtensionDebugger.cpp
 new file mode 100644
-index 0000000..2017223
+index 0000000..af9b414
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDebugger.cpp
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,54 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4263,13 +5526,18 @@ index 0000000..2017223
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionDebugger, u"onDetach"_ns, OnDetach)
 +
++void ExtensionDebugger::GetDetachReason(JSContext* aCx,
++                                        JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"DetachReason"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDebugger.h b/toolkit/components/extensions/webidl-api/ExtensionDebugger.h
 new file mode 100644
-index 0000000..2b69238
+index 0000000..50e7d9c
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDebugger.h
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,57 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4307,6 +5575,7 @@ index 0000000..2b69238
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetDetachReason(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnEvent();
 +  ExtensionEventManager* OnDetach();
@@ -4646,10 +5915,10 @@ index 0000000..d4f0347
 +#endif
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.cpp b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.cpp
 new file mode 100644
-index 0000000..b9aec88
+index 0000000..098b0fb
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.cpp
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,137 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4776,13 +6045,23 @@ index 0000000..b9aec88
 +                             aRetval);
 +}
 +
++void ExtensionDeclarativeNetRequest::GetResourceType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ResourceType"_ns, aRetval);
++}
++
++void ExtensionDeclarativeNetRequest::GetUnsupportedRegexReason(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"UnsupportedRegexReason"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.h b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.h
 new file mode 100644
-index 0000000..ff30d35
+index 0000000..ef5dd87
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDeclarativeNetRequest.h
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,87 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4822,6 +6101,9 @@ index 0000000..ff30d35
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetUnsupportedRegexReason(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval);
++  void GetResourceType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnRuleMatchedDebug();
 +  void GetDYNAMIC_RULESET_ID(JSContext* aCx,
@@ -5055,10 +6337,10 @@ index 0000000..7d98503
 +#endif
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDownloads.cpp b/toolkit/components/extensions/webidl-api/ExtensionDownloads.cpp
 new file mode 100644
-index 0000000..ad21969
+index 0000000..07bc994
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDownloads.cpp
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,68 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5106,13 +6388,33 @@ index 0000000..ad21969
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionDownloads, u"onChanged"_ns, OnChanged)
 +
++void ExtensionDownloads::GetFilenameConflictAction(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"FilenameConflictAction"_ns, aRetval);
++}
++
++void ExtensionDownloads::GetInterruptReason(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"InterruptReason"_ns, aRetval);
++}
++
++void ExtensionDownloads::GetDangerType(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"DangerType"_ns, aRetval);
++}
++
++void ExtensionDownloads::GetState(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"State"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionDownloads.h b/toolkit/components/extensions/webidl-api/ExtensionDownloads.h
 new file mode 100644
-index 0000000..bb7ff39
+index 0000000..fdc03e3
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionDownloads.h
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,63 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5150,6 +6452,11 @@ index 0000000..bb7ff39
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetDangerType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetInterruptReason(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetFilenameConflictAction(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnCreated();
 +  ExtensionEventManager* OnErased();
@@ -5172,12 +6479,14 @@ index 0000000..bb7ff39
 +
 +#endif  // mozilla_extensions_ExtensionDownloads_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp b/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
-index e857984..1303aaf 100644
+index e857984..2757e0a 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
-@@ -6,7 +6,9 @@
+@@ -5,8 +5,11 @@
+ #include "ExtensionEventListener.h"
  #include "ExtensionAPIRequestForwarder.h"
  #include "ExtensionPort.h"
++#include "ExtensionOmnibox.h"
  
 +#include "mozilla/ScopeExit.h"
  #include "mozilla/dom/ClonedErrorHolder.h"
@@ -5185,7 +6494,7 @@ index e857984..1303aaf 100644
  #include "mozilla/dom/FunctionBinding.h"
  #include "mozilla/dom/Promise.h"
  #include "mozilla/dom/Promise-inl.h"
-@@ -168,7 +170,11 @@ already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
+@@ -168,7 +171,11 @@ already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
    MOZ_ASSERT(workerPrivate);
    workerPrivate->AssertIsOnWorkerThread();
    RefPtr<dom::StrongWorkerRef> workerRef = dom::StrongWorkerRef::Create(
@@ -5198,7 +6507,7 @@ index e857984..1303aaf 100644
    if (!workerRef) {
      aRv.Throw(NS_ERROR_UNEXPECTED);
      return nullptr;
-@@ -210,10 +216,15 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+@@ -210,10 +217,15 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
    MOZ_ASSERT(NS_IsMainThread());
    NS_ENSURE_ARG_POINTER(aPromiseResult);
  
@@ -5214,7 +6523,15 @@ index e857984..1303aaf 100644
      aCallOptions->GetApiObjectType(&apiObjectType);
      aCallOptions->GetApiObjectDescriptor(&apiObjectDescriptor);
  
-@@ -298,7 +309,8 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+@@ -232,6 +244,7 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
+         }
+         break;
+       case APIObjectType::RUNTIME_PORT:
++      case APIObjectType::OMNIBOX_SUGGEST:
+         if (NS_WARN_IF(apiObjectDescriptor.isNullOrUndefined())) {
+           JS_ReportErrorASCII(aCx,
+                               "Unexpected null apiObjectDescriptor on "
+@@ -298,7 +311,8 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
  
    RefPtr<ExtensionListenerCallWorkerRunnable> runnable =
        new ExtensionListenerCallWorkerRunnable(this, std::move(argsHolder),
@@ -5224,7 +6541,7 @@ index e857984..1303aaf 100644
    runnable->Dispatch(GetWorkerPrivate());
    retPromise.forget(aPromiseResult);
  
-@@ -330,6 +342,12 @@ void ExtensionListenerCallWorkerRunnable::DeserializeCallArguments(
+@@ -330,6 +344,12 @@ void ExtensionListenerCallWorkerRunnable::DeserializeCallArguments(
  
  bool ExtensionListenerCallWorkerRunnable::WorkerRun(
      JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) {
@@ -5237,7 +6554,48 @@ index e857984..1303aaf 100644
    MOZ_ASSERT(aWorkerPrivate);
    aWorkerPrivate->AssertIsOnWorkerThread();
    auto global = mListener->GetGlobalObject();
-@@ -427,7 +445,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -402,20 +422,26 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+         aCx, argsSequence.ElementAt(apiObjectIdx));
+     JS::Rooted<JS::Value> apiObjectValue(aCx);
+ 
+-    // We only expect the object type to be RUNTIME_PORT at the moment,
+-    // until we will need to expect it to support other object types that
+-    // some specific API may need.
+-    MOZ_ASSERT(mAPIObjectType == APIObjectType::RUNTIME_PORT);
+-    RefPtr<ExtensionPort> port =
+-        extensionBrowser->GetPort(apiObjectDescriptor, rv);
+-    if (NS_WARN_IF(rv.Failed())) {
+-      retPromise->MaybeReject(rv.StealNSResult());
+-      return true;
+-    }
+-
+-    if (NS_WARN_IF(!dom::ToJSValue(aCx, port, &apiObjectValue))) {
+-      retPromise->MaybeReject(NS_ERROR_UNEXPECTED);
+-      return true;
++    if (mAPIObjectType == APIObjectType::RUNTIME_PORT) {
++      RefPtr<ExtensionPort> port =
++          extensionBrowser->GetPort(apiObjectDescriptor, rv);
++      if (NS_WARN_IF(rv.Failed())) {
++        retPromise->MaybeReject(rv.StealNSResult());
++        return true;
++      }
++      if (NS_WARN_IF(!dom::ToJSValue(aCx, port, &apiObjectValue))) {
++        retPromise->MaybeReject(NS_ERROR_UNEXPECTED);
++        return true;
++      }
++    } else if (mAPIObjectType == APIObjectType::OMNIBOX_SUGGEST) {
++      ExtensionOmnibox::CreateSuggestCallback(aCx, apiObjectDescriptor,
++                                              &apiObjectValue, rv);
++      if (NS_WARN_IF(rv.Failed())) {
++        retPromise->MaybeReject(rv.StealNSResult());
++        return true;
++      }
++    } else {
++      MOZ_CRASH("Unexpected extension listener API object type");
+     }
+ 
+     argsSequence.ReplaceElementAt(apiObjectIdx, apiObjectValue);
+@@ -427,7 +453,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
    switch (mCallbackArgType) {
      case CallbackType::CALLBACK_NONE:
        break;
@@ -5247,7 +6605,7 @@ index e857984..1303aaf 100644
        JS::Rooted<JSFunction*> sendResponseFn(
            aCx, js::NewFunctionWithReserved(aCx, SendResponseCallback::Call,
                                             /* nargs */ 1, 0, "sendResponse"));
-@@ -476,6 +495,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -476,6 +503,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
    JS::Rooted<JS::Value> retval(aCx);
    ErrorResult erv;
    erv.MightThrowJSException();
@@ -5259,7 +6617,7 @@ index e857984..1303aaf 100644
    MOZ_KnownLive(fn)->Call(argsSequence, &retval, erv, "WebExtensionAPIEvent",
                            dom::Function::eRethrowExceptions);
  
-@@ -544,6 +568,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
+@@ -544,6 +576,11 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
      }
    }
  
@@ -5361,12 +6719,138 @@ index 6c2fe2c..9b52e43 100644
    void RemoveListener(dom::Function& aCallback, ErrorResult& aRv);
  
    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionExtension.cpp b/toolkit/components/extensions/webidl-api/ExtensionExtension.cpp
+new file mode 100644
+index 0000000..147d776
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionExtension.cpp
+@@ -0,0 +1,58 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionExtension.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionExtensionBinding.h"
++#include "nsIGlobalObject.h"
++#include "mozilla/dom/WorkerPrivate.h"
++#include "mozilla/dom/WorkerScope.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionExtension)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionExtension)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionExtension, mGlobal,
++                                      mExtensionBrowser)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionExtension)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionExtension::ExtensionExtension(nsIGlobalObject* aGlobal,
++                                       ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionExtension::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++bool ExtensionExtension::IsChromeCompatible(JSContext* aCx, JSObject* aGlobal) {
++  auto* worker = dom::GetWorkerPrivateFromContext(aCx);
++  return worker && worker->ExtensionChromeCompatibilityEnabled();
++}
++
++JSObject* ExtensionExtension::WrapObject(JSContext* aCx,
++                                         JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionExtension_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionExtension::GetParentObject() const { return mGlobal; }
++
++void ExtensionExtension::GetInIncognitoContext(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"inIncognitoContext"_ns, aRetval);
++}
++
++void ExtensionExtension::GetViewType(JSContext* aCx,
++                                     JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ViewType"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionExtension.h b/toolkit/components/extensions/webidl-api/ExtensionExtension.h
+new file mode 100644
+index 0000000..4019d31
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionExtension.h
+@@ -0,0 +1,56 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionExtension_h
++#define mozilla_extensions_ExtensionExtension_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionExtension final : public nsISupports,
++                                 public nsWrapperCache,
++                                 public ExtensionAPINamespace {
++ public:
++  ExtensionExtension(nsIGlobalObject* aGlobal,
++                     ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"extension"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  static bool IsChromeCompatible(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetViewType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
++  void GetInIncognitoContext(JSContext* aCx,
++                             JS::MutableHandle<JS::Value> aRetval);
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionExtension)
++
++ private:
++  ~ExtensionExtension() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionExtension_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionFontSettings.cpp b/toolkit/components/extensions/webidl-api/ExtensionFontSettings.cpp
 new file mode 100644
-index 0000000..354c9f1
+index 0000000..2b7a9e3
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionFontSettings.cpp
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,77 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5428,13 +6912,28 @@ index 0000000..354c9f1
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionFontSettings, u"onMinimumFontSizeChanged"_ns,
 +                        OnMinimumFontSizeChanged)
 +
++void ExtensionFontSettings::GetScriptCode(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ScriptCode"_ns, aRetval);
++}
++
++void ExtensionFontSettings::GetGenericFamily(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"GenericFamily"_ns, aRetval);
++}
++
++void ExtensionFontSettings::GetLevelOfControl(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"LevelOfControl"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionFontSettings.h b/toolkit/components/extensions/webidl-api/ExtensionFontSettings.h
 new file mode 100644
-index 0000000..dda70ea
+index 0000000..c71980e
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionFontSettings.h
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,63 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5472,6 +6971,9 @@ index 0000000..dda70ea
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetLevelOfControl(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetGenericFamily(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetScriptCode(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnFontChanged();
 +  ExtensionEventManager* OnDefaultFontSizeChanged();
@@ -5495,6 +6997,233 @@ index 0000000..dda70ea
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionFontSettings_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionHistory.cpp b/toolkit/components/extensions/webidl-api/ExtensionHistory.cpp
+new file mode 100644
+index 0000000..e95aa7c
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionHistory.cpp
+@@ -0,0 +1,54 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionHistory.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionHistoryBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionHistory)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionHistory)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionHistory, mGlobal,
++                                      mExtensionBrowser, mOnVisitedEventMgr,
++                                      mOnVisitRemovedEventMgr,
++                                      mOnTitleChangedEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionHistory)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionHistory::ExtensionHistory(nsIGlobalObject* aGlobal,
++                                   ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionHistory::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionHistory::WrapObject(JSContext* aCx,
++                                       JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionHistory_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionHistory::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionHistory, u"onVisited"_ns, OnVisited)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionHistory, u"onVisitRemoved"_ns, OnVisitRemoved)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionHistory, u"onTitleChanged"_ns, OnTitleChanged)
++
++void ExtensionHistory::GetTransitionType(JSContext* aCx,
++                                         JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TransitionType"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionHistory.h b/toolkit/components/extensions/webidl-api/ExtensionHistory.h
+new file mode 100644
+index 0000000..54fb1c6
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionHistory.h
+@@ -0,0 +1,59 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionHistory_h
++#define mozilla_extensions_ExtensionHistory_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionHistory final : public nsISupports,
++                               public nsWrapperCache,
++                               public ExtensionAPINamespace {
++ public:
++  ExtensionHistory(nsIGlobalObject* aGlobal,
++                   ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"history"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetTransitionType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
++  ExtensionEventManager* OnVisited();
++  ExtensionEventManager* OnVisitRemoved();
++  ExtensionEventManager* OnTitleChanged();
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionHistory)
++
++ private:
++  ~ExtensionHistory() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnVisitedEventMgr;
++  RefPtr<ExtensionEventManager> mOnVisitRemovedEventMgr;
++  RefPtr<ExtensionEventManager> mOnTitleChangedEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionHistory_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionI18n.cpp b/toolkit/components/extensions/webidl-api/ExtensionI18n.cpp
+new file mode 100644
+index 0000000..9d21af4
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionI18n.cpp
+@@ -0,0 +1,40 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionI18n.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionI18nBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionI18n)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionI18n)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionI18n, mGlobal, mExtensionBrowser)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionI18n)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionI18n::ExtensionI18n(nsIGlobalObject* aGlobal,
++                             ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionI18n::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionI18n::WrapObject(JSContext* aCx,
++                                    JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionI18n_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionI18n::GetParentObject() const { return mGlobal; }
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionI18n.h b/toolkit/components/extensions/webidl-api/ExtensionI18n.h
+new file mode 100644
+index 0000000..19c39f0
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionI18n.h
+@@ -0,0 +1,50 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionI18n_h
++#define mozilla_extensions_ExtensionI18n_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionI18n final : public nsISupports,
++                            public nsWrapperCache,
++                            public ExtensionAPINamespace {
++ public:
++  ExtensionI18n(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"i18n"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionI18n)
++
++ private:
++  ~ExtensionI18n() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionI18n_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionIdentity.cpp b/toolkit/components/extensions/webidl-api/ExtensionIdentity.cpp
 new file mode 100644
 index 0000000..add01dd
@@ -5606,12 +7335,126 @@ index 0000000..ace42af
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionIdentity_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionIdle.cpp b/toolkit/components/extensions/webidl-api/ExtensionIdle.cpp
+new file mode 100644
+index 0000000..045bec5
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionIdle.cpp
+@@ -0,0 +1,48 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionIdle.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionIdleBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionIdle)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionIdle)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionIdle, mGlobal, mExtensionBrowser,
++                                      mOnStateChangedEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionIdle)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionIdle::ExtensionIdle(nsIGlobalObject* aGlobal,
++                             ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionIdle::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionIdle::WrapObject(JSContext* aCx,
++                                    JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionIdle_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionIdle::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionIdle, u"onStateChanged"_ns, OnStateChanged)
++
++void ExtensionIdle::GetIdleState(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"IdleState"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionIdle.h b/toolkit/components/extensions/webidl-api/ExtensionIdle.h
+new file mode 100644
+index 0000000..ace480a
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionIdle.h
+@@ -0,0 +1,54 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionIdle_h
++#define mozilla_extensions_ExtensionIdle_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionIdle final : public nsISupports,
++                            public nsWrapperCache,
++                            public ExtensionAPINamespace {
++ public:
++  ExtensionIdle(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"idle"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetIdleState(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
++  ExtensionEventManager* OnStateChanged();
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionIdle)
++
++ private:
++  ~ExtensionIdle() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnStateChangedEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionIdle_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionManagement.cpp b/toolkit/components/extensions/webidl-api/ExtensionManagement.cpp
 new file mode 100644
-index 0000000..f23c907
+index 0000000..a4b25f8
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionManagement.cpp
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,68 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5664,13 +7507,28 @@ index 0000000..f23c907
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionManagement, u"onUninstalled"_ns, OnUninstalled)
 +
++void ExtensionManagement::GetExtensionDisabledReason(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ExtensionDisabledReason"_ns, aRetval);
++}
++
++void ExtensionManagement::GetExtensionType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ExtensionType"_ns, aRetval);
++}
++
++void ExtensionManagement::GetExtensionInstallType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ExtensionInstallType"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionManagement.h b/toolkit/components/extensions/webidl-api/ExtensionManagement.h
 new file mode 100644
-index 0000000..f18e37d
+index 0000000..eb47c90
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionManagement.h
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,65 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5708,6 +7566,11 @@ index 0000000..f18e37d
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetExtensionInstallType(JSContext* aCx,
++                               JS::MutableHandle<JS::Value> aRetval);
++  void GetExtensionType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetExtensionDisabledReason(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnDisabled();
 +  ExtensionEventManager* OnEnabled();
@@ -5733,10 +7596,10 @@ index 0000000..f18e37d
 +#endif  // mozilla_extensions_ExtensionManagement_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionMenus.cpp b/toolkit/components/extensions/webidl-api/ExtensionMenus.cpp
 new file mode 100644
-index 0000000..fa7b29a
+index 0000000..5dd6312
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionMenus.cpp
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,86 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5817,13 +7680,18 @@ index 0000000..fa7b29a
 +  GetWebExtPropertyAsJSValue(aCx, u"ACTION_MENU_TOP_LEVEL_LIMIT"_ns, aRetval);
 +}
 +
++void ExtensionMenus::GetItemType(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ItemType"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionMenus.h b/toolkit/components/extensions/webidl-api/ExtensionMenus.h
 new file mode 100644
-index 0000000..214762d
+index 0000000..98773bd
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionMenus.h
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,68 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5861,6 +7729,7 @@ index 0000000..214762d
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetItemType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  void CallWebExtMethodMenuCreate(
 +      JSContext* aCx, const nsAString& aApiMethod,
@@ -5893,10 +7762,10 @@ index 0000000..214762d
 +#endif  // mozilla_extensions_ExtensionMenus_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionNotifications.cpp b/toolkit/components/extensions/webidl-api/ExtensionNotifications.cpp
 new file mode 100644
-index 0000000..44cc5ed
+index 0000000..ce6173a
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionNotifications.cpp
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,65 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5951,13 +7820,23 @@ index 0000000..44cc5ed
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionNotifications, u"onShown"_ns, OnShown)
 +
++void ExtensionNotifications::GetTemplateType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TemplateType"_ns, aRetval);
++}
++
++void ExtensionNotifications::GetPermissionLevel(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"PermissionLevel"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionNotifications.h b/toolkit/components/extensions/webidl-api/ExtensionNotifications.h
 new file mode 100644
-index 0000000..5367ba6
+index 0000000..a05a742
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionNotifications.h
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,62 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5995,6 +7874,8 @@ index 0000000..5367ba6
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetPermissionLevel(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetTemplateType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnClosed();
 +  ExtensionEventManager* OnClicked();
@@ -6020,10 +7901,10 @@ index 0000000..5367ba6
 +#endif  // mozilla_extensions_ExtensionNotifications_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionOffscreen.cpp b/toolkit/components/extensions/webidl-api/ExtensionOffscreen.cpp
 new file mode 100644
-index 0000000..76acb41
+index 0000000..2b134bd
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionOffscreen.cpp
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,49 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6067,13 +7948,18 @@ index 0000000..76acb41
 +
 +nsIGlobalObject* ExtensionOffscreen::GetParentObject() const { return mGlobal; }
 +
++void ExtensionOffscreen::GetReason(JSContext* aCx,
++                                   JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"Reason"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionOffscreen.h b/toolkit/components/extensions/webidl-api/ExtensionOffscreen.h
 new file mode 100644
-index 0000000..8d43150
+index 0000000..63d73c4
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionOffscreen.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,52 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6111,6 +7997,7 @@ index 0000000..8d43150
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetReason(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 +  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionOffscreen)
@@ -6125,6 +8012,204 @@ index 0000000..8d43150
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionOffscreen_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionOmnibox.cpp b/toolkit/components/extensions/webidl-api/ExtensionOmnibox.cpp
+new file mode 100644
+index 0000000..6a81c56
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionOmnibox.cpp
+@@ -0,0 +1,115 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionOmnibox.h"
++#include "ExtensionEventManager.h"
++#include "ExtensionAPICallFunctionNoReturn.h"
++#include "jsapi.h"
++#include "jsfriendapi.h"
++#include "js/CallArgs.h"
++#include "mozilla/dom/WorkerPrivate.h"
++#include "mozilla/dom/WorkerScope.h"
++
++#include "mozilla/dom/ExtensionOmniboxBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++namespace {
++bool SubmitOmniboxSuggestions(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
++  JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
++  dom::Sequence<JS::Value> callArgs;
++  dom::SequenceRooter<JS::Value> argsRooter(aCx, &callArgs);
++  if (!callArgs.AppendElement(js::GetFunctionNativeReserved(&args.callee(), 0),
++                              fallible) ||
++      !callArgs.AppendElement(args.get(0), fallible)) {
++    JS_ReportOutOfMemory(aCx);
++    return false;
++  }
++  auto* worker = dom::GetCurrentThreadWorkerPrivate();
++  auto request = MakeRefPtr<ExtensionAPICallFunctionNoReturn>(
++      u"omnibox"_ns, u"__submitSuggestions"_ns);
++  ErrorResult rv;
++  request->Run(worker->GlobalScope(), aCx, callArgs, rv);
++  if (rv.MaybeSetPendingException(aCx, "omnibox suggestion callback")) {
++    return false;
++  }
++  args.rval().setUndefined();
++  return true;
++}
++}  // namespace
++
++void ExtensionOmnibox::CreateSuggestCallback(
++    JSContext* aCx, JS::Handle<JS::Value> aDescriptor,
++    JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv) {
++  if (!aDescriptor.isInt32() || aDescriptor.toInt32() <= 0) {
++    aRv.Throw(NS_ERROR_UNEXPECTED);
++    return;
++  }
++  JS::Rooted<JSFunction*> function(
++      aCx, js::NewFunctionWithReserved(aCx, SubmitOmniboxSuggestions, 1, 0,
++                                       "suggest"));
++  if (!function) {
++    aRv.MightThrowJSException();
++    aRv.StealExceptionFromJSContext(aCx);
++    return;
++  }
++  JS::Rooted<JSObject*> object(aCx, JS_GetFunctionObject(function));
++  js::SetFunctionNativeReserved(object, 0, aDescriptor);
++  aRetval.setObject(*object);
++}
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionOmnibox)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionOmnibox)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(
++    ExtensionOmnibox, mGlobal, mExtensionBrowser, mOnInputStartedEventMgr,
++    mOnInputChangedEventMgr, mOnInputEnteredEventMgr, mOnInputCancelledEventMgr,
++    mOnDeleteSuggestionEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionOmnibox)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionOmnibox::ExtensionOmnibox(nsIGlobalObject* aGlobal,
++                                   ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionOmnibox::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionOmnibox::WrapObject(JSContext* aCx,
++                                       JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionOmnibox_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionOmnibox::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionOmnibox, u"onInputStarted"_ns, OnInputStarted)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionOmnibox, u"onInputChanged"_ns, OnInputChanged)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionOmnibox, u"onInputEntered"_ns, OnInputEntered)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionOmnibox, u"onInputCancelled"_ns,
++                        OnInputCancelled)
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionOmnibox, u"onDeleteSuggestion"_ns,
++                        OnDeleteSuggestion)
++
++void ExtensionOmnibox::GetDescriptionStyleType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"DescriptionStyleType"_ns, aRetval);
++}
++
++void ExtensionOmnibox::GetOnInputEnteredDisposition(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnInputEnteredDisposition"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionOmnibox.h b/toolkit/components/extensions/webidl-api/ExtensionOmnibox.h
+new file mode 100644
+index 0000000..2750dcc
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionOmnibox.h
+@@ -0,0 +1,71 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionOmnibox_h
++#define mozilla_extensions_ExtensionOmnibox_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionOmnibox final : public nsISupports,
++                               public nsWrapperCache,
++                               public ExtensionAPINamespace {
++ public:
++  ExtensionOmnibox(nsIGlobalObject* aGlobal,
++                   ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"omnibox"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetOnInputEnteredDisposition(JSContext* aCx,
++                                    JS::MutableHandle<JS::Value> aRetval);
++  void GetDescriptionStyleType(JSContext* aCx,
++                               JS::MutableHandle<JS::Value> aRetval);
++
++  static void CreateSuggestCallback(JSContext* aCx,
++                                    JS::Handle<JS::Value> aDescriptor,
++                                    JS::MutableHandle<JS::Value> aRetval,
++                                    ErrorResult& aRv);
++
++  ExtensionEventManager* OnInputStarted();
++  ExtensionEventManager* OnInputChanged();
++  ExtensionEventManager* OnInputEntered();
++  ExtensionEventManager* OnInputCancelled();
++  ExtensionEventManager* OnDeleteSuggestion();
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionOmnibox)
++
++ private:
++  ~ExtensionOmnibox() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnInputStartedEventMgr;
++  RefPtr<ExtensionEventManager> mOnInputChangedEventMgr;
++  RefPtr<ExtensionEventManager> mOnInputEnteredEventMgr;
++  RefPtr<ExtensionEventManager> mOnInputCancelledEventMgr;
++  RefPtr<ExtensionEventManager> mOnDeleteSuggestionEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionOmnibox_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPermissions.cpp b/toolkit/components/extensions/webidl-api/ExtensionPermissions.cpp
 new file mode 100644
 index 0000000..98177a1
@@ -6241,6 +8326,118 @@ index 0000000..e980f08
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionPermissions_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionPower.cpp b/toolkit/components/extensions/webidl-api/ExtensionPower.cpp
+new file mode 100644
+index 0000000..f02763f
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionPower.cpp
+@@ -0,0 +1,49 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionPower.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionPowerBinding.h"
++#include "nsIGlobalObject.h"
++#include "mozilla/dom/WorkerPrivate.h"
++#include "mozilla/dom/WorkerScope.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionPower)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionPower)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionPower, mGlobal,
++                                      mExtensionBrowser)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPower)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionPower::ExtensionPower(nsIGlobalObject* aGlobal,
++                               ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionPower::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  auto* worker = dom::GetWorkerPrivateFromContext(aCx);
++  return worker && worker->ExtensionChromeCompatibilityEnabled();
++}
++
++JSObject* ExtensionPower::WrapObject(JSContext* aCx,
++                                     JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionPower_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionPower::GetParentObject() const { return mGlobal; }
++
++void ExtensionPower::GetLevel(JSContext* aCx,
++                              JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"Level"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionPower.h b/toolkit/components/extensions/webidl-api/ExtensionPower.h
+new file mode 100644
+index 0000000..9ef178c
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionPower.h
+@@ -0,0 +1,51 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionPower_h
++#define mozilla_extensions_ExtensionPower_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionPower final : public nsISupports,
++                             public nsWrapperCache,
++                             public ExtensionAPINamespace {
++ public:
++  ExtensionPower(nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"power"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++  void GetLevel(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionPower)
++
++ private:
++  ~ExtensionPower() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionPower_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPrivacy.cpp b/toolkit/components/extensions/webidl-api/ExtensionPrivacy.cpp
 new file mode 100644
 index 0000000..7147fc9
@@ -6387,10 +8584,10 @@ index 0000000..9152db8
 +#endif  // mozilla_extensions_ExtensionPrivacy_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.cpp b/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.cpp
 new file mode 100644
-index 0000000..73c547b
+index 0000000..5ef7384
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.cpp
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,75 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6455,13 +8652,23 @@ index 0000000..73c547b
 +NS_IMPL_WEBEXT_SETTING(ExtensionPrivacyNetwork, u"globalPrivacyControl"_ns,
 +                       GlobalPrivacyControl)
 +
++void ExtensionPrivacyNetwork::GetIPHandlingPolicy(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"IPHandlingPolicy"_ns, aRetval);
++}
++
++void ExtensionPrivacyNetwork::GetHTTPSOnlyModeOption(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"HTTPSOnlyModeOption"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.h b/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.h
 new file mode 100644
-index 0000000..8def0bb
+index 0000000..c66eaa4
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPrivacyNetwork.h
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,69 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6500,6 +8707,10 @@ index 0000000..8def0bb
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetHTTPSOnlyModeOption(JSContext* aCx,
++                              JS::MutableHandle<JS::Value> aRetval);
++  void GetIPHandlingPolicy(JSContext* aCx,
++                           JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionSetting* NetworkPredictionEnabled();
 +  ExtensionSetting* PeerConnectionEnabled();
@@ -6644,10 +8855,10 @@ index 0000000..9d8ffdd
 +#endif  // mozilla_extensions_ExtensionPrivacyServices_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.cpp b/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.cpp
 new file mode 100644
-index 0000000..c1bc3cb
+index 0000000..af79b4a
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.cpp
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,70 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6712,13 +8923,18 @@ index 0000000..c1bc3cb
 +NS_IMPL_WEBEXT_SETTING(ExtensionPrivacyWebsites, u"cookieConfig"_ns,
 +                       CookieConfig)
 +
++void ExtensionPrivacyWebsites::GetTrackingProtectionModeOption(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TrackingProtectionModeOption"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.h b/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.h
 new file mode 100644
-index 0000000..b0fd894
+index 0000000..aa77ed2
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionPrivacyWebsites.h
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,67 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6757,6 +8973,8 @@ index 0000000..b0fd894
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetTrackingProtectionModeOption(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionSetting* HyperlinkAuditingEnabled();
 +  ExtensionSetting* ReferrersEnabled();
@@ -6785,7 +9003,7 @@ index 0000000..b0fd894
 +
 +#endif  // mozilla_extensions_ExtensionPrivacyWebsites_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp b/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
-index a4c0cda..5e932ca 100644
+index a4c0cda..a93f808 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionRuntime.cpp
 @@ -14,15 +14,27 @@ namespace extensions {
@@ -6819,14 +9037,74 @@ index a4c0cda..5e932ca 100644
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onStartup"_ns, OnStartup)
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onInstalled"_ns, OnInstalled)
  NS_IMPL_WEBEXT_EVENTMGR(ExtensionRuntime, u"onUpdateAvailable"_ns,
+@@ -63,4 +75,44 @@ void ExtensionRuntime::GetId(dom::DOMString& aRetval) {
+ }
+ 
+ }  // namespace extensions
++void ExtensionRuntime::GetContextType(JSContext* aCx,
++                                      JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ContextType"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetPlatformOs(JSContext* aCx,
++                                     JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"PlatformOs"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetPlatformArch(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"PlatformArch"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetRequestUpdateCheckStatus(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"RequestUpdateCheckStatus"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetOnInstalledReason(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnInstalledReason"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetOnRestartRequiredReason(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnRestartRequiredReason"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetOnPerformanceWarningCategory(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnPerformanceWarningCategory"_ns, aRetval);
++}
++
++void ExtensionRuntime::GetOnPerformanceWarningSeverity(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnPerformanceWarningSeverity"_ns, aRetval);
++}
++
+ }  // namespace mozilla
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionRuntime.h b/toolkit/components/extensions/webidl-api/ExtensionRuntime.h
-index 1d1d1f8..7ced002 100644
+index 1d1d1f8..aedebd9 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionRuntime.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionRuntime.h
-@@ -48,6 +48,11 @@ class ExtensionRuntime final : public nsISupports,
+@@ -47,7 +47,25 @@ class ExtensionRuntime final : public nsISupports,
+   static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
  
    nsIGlobalObject* GetParentObject() const;
- 
+-
++  void GetOnPerformanceWarningSeverity(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval);
++  void GetOnPerformanceWarningCategory(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval);
++  void GetOnRestartRequiredReason(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval);
++  void GetOnInstalledReason(JSContext* aCx,
++                            JS::MutableHandle<JS::Value> aRetval);
++  void GetRequestUpdateCheckStatus(JSContext* aCx,
++                                   JS::MutableHandle<JS::Value> aRetval);
++  void GetPlatformArch(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetPlatformOs(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetContextType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
 +  ExtensionEventManager* OnSuspend();
 +  ExtensionEventManager* OnSuspendCanceled();
 +  ExtensionEventManager* OnUserScriptConnect();
@@ -6835,7 +9113,7 @@ index 1d1d1f8..7ced002 100644
    ExtensionEventManager* OnStartup();
    ExtensionEventManager* OnInstalled();
    ExtensionEventManager* OnUpdateAvailable();
-@@ -67,6 +72,11 @@ class ExtensionRuntime final : public nsISupports,
+@@ -67,6 +85,11 @@ class ExtensionRuntime final : public nsISupports,
  
    nsCOMPtr<nsIGlobalObject> mGlobal;
    RefPtr<ExtensionBrowser> mExtensionBrowser;
@@ -6848,7 +9126,7 @@ index 1d1d1f8..7ced002 100644
    RefPtr<ExtensionEventManager> mOnInstalledEventMgr;
    RefPtr<ExtensionEventManager> mOnUpdateAvailableEventMgr;
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionScripting.cpp b/toolkit/components/extensions/webidl-api/ExtensionScripting.cpp
-index 3a3f8f4..7a85c52 100644
+index 3a3f8f4..000b802 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionScripting.cpp
 +++ b/toolkit/components/extensions/webidl-api/ExtensionScripting.cpp
 @@ -5,11 +5,143 @@
@@ -6995,7 +9273,7 @@ index 3a3f8f4..7a85c52 100644
  NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionScripting);
  NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionScripting)
  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionScripting, mGlobal,
-@@ -37,6 +169,25 @@ JSObject* ExtensionScripting::WrapObject(JSContext* aCx,
+@@ -37,6 +169,30 @@ JSObject* ExtensionScripting::WrapObject(JSContext* aCx,
    return dom::ExtensionScripting_Binding::Wrap(aCx, this, aGivenProto);
  }
  
@@ -7020,24 +9298,146 @@ index 3a3f8f4..7a85c52 100644
 +
  nsIGlobalObject* ExtensionScripting::GetParentObject() const { return mGlobal; }
  
++void ExtensionScripting::GetExecutionWorld(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ExecutionWorld"_ns, aRetval);
++}
++
  }  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionScripting.h b/toolkit/components/extensions/webidl-api/ExtensionScripting.h
-index 65680cd..475c4b4 100644
+index 65680cd..5d34fe5 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionScripting.h
 +++ b/toolkit/components/extensions/webidl-api/ExtensionScripting.h
-@@ -48,6 +48,12 @@ class ExtensionScripting final : public nsISupports,
+@@ -47,6 +47,13 @@ class ExtensionScripting final : public nsISupports,
+   static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
  
    nsIGlobalObject* GetParentObject() const;
- 
++  void GetExecutionWorld(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++
 +  void CallWebExtMethodExecuteScript(
 +      JSContext* aCx, const nsAString& aApiMethod,
 +      const dom::Sequence<JS::Value>& aArgs,
 +      const dom::Optional<OwningNonNull<dom::Function>>& aCallback,
 +      JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv);
-+
+ 
    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
    NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionScripting)
- 
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionSessions.cpp b/toolkit/components/extensions/webidl-api/ExtensionSessions.cpp
+new file mode 100644
+index 0000000..6ebf2a0
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionSessions.cpp
+@@ -0,0 +1,48 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionSessions.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionSessionsBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionSessions)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionSessions)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionSessions, mGlobal,
++                                      mExtensionBrowser, mOnChangedEventMgr)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionSessions)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionSessions::ExtensionSessions(nsIGlobalObject* aGlobal,
++                                     ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionSessions::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionSessions::WrapObject(JSContext* aCx,
++                                        JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionSessions_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionSessions::GetParentObject() const { return mGlobal; }
++
++NS_IMPL_WEBEXT_EVENTMGR(ExtensionSessions, u"onChanged"_ns, OnChanged)
++
++void ExtensionSessions::GetMAX_SESSION_RESULTS(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"MAX_SESSION_RESULTS"_ns, aRetval);
++}
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionSessions.h b/toolkit/components/extensions/webidl-api/ExtensionSessions.h
+new file mode 100644
+index 0000000..9a7988b
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionSessions.h
+@@ -0,0 +1,56 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionSessions_h
++#define mozilla_extensions_ExtensionSessions_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionSessions final : public nsISupports,
++                                public nsWrapperCache,
++                                public ExtensionAPINamespace {
++ public:
++  ExtensionSessions(nsIGlobalObject* aGlobal,
++                    ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"sessions"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++
++  ExtensionEventManager* OnChanged();
++  void GetMAX_SESSION_RESULTS(JSContext* aCx,
++                              JS::MutableHandle<JS::Value> aRetval);
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionSessions)
++
++ private:
++  ~ExtensionSessions() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++  RefPtr<ExtensionEventManager> mOnChangedEventMgr;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionSessions_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionSidePanel.cpp b/toolkit/components/extensions/webidl-api/ExtensionSidePanel.cpp
 new file mode 100644
 index 0000000..b91b262
@@ -7583,10 +9983,10 @@ index 0000000..703a7d4
 +#endif  // mozilla_extensions_ExtensionTabCapture_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTabGroups.cpp b/toolkit/components/extensions/webidl-api/ExtensionTabGroups.cpp
 new file mode 100644
-index 0000000..c246e61
+index 0000000..0f02aaa
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTabGroups.cpp
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,61 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7642,13 +10042,18 @@ index 0000000..c246e61
 +  GetWebExtPropertyAsJSValue(aCx, u"TAB_GROUP_ID_NONE"_ns, aRetval);
 +}
 +
++void ExtensionTabGroups::GetColor(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"Color"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTabGroups.h b/toolkit/components/extensions/webidl-api/ExtensionTabGroups.h
 new file mode 100644
-index 0000000..9bec98e
+index 0000000..65fbd95
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTabGroups.h
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,63 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7686,6 +10091,7 @@ index 0000000..9bec98e
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetColor(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnCreated();
 +  ExtensionEventManager* OnMoved();
@@ -7713,10 +10119,10 @@ index 0000000..9bec98e
 +#endif  // mozilla_extensions_ExtensionTabGroups_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTabs.cpp b/toolkit/components/extensions/webidl-api/ExtensionTabs.cpp
 new file mode 100644
-index 0000000..84877a2
+index 0000000..7926a15
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTabs.cpp
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,106 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7792,13 +10198,43 @@ index 0000000..84877a2
 +  GetWebExtPropertyAsJSValue(aCx, u"SPLIT_VIEW_ID_NONE"_ns, aRetval);
 +}
 +
++void ExtensionTabs::GetMutedInfoReason(JSContext* aCx,
++                                       JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"MutedInfoReason"_ns, aRetval);
++}
++
++void ExtensionTabs::GetZoomSettingsMode(JSContext* aCx,
++                                        JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ZoomSettingsMode"_ns, aRetval);
++}
++
++void ExtensionTabs::GetZoomSettingsScope(JSContext* aCx,
++                                         JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ZoomSettingsScope"_ns, aRetval);
++}
++
++void ExtensionTabs::GetTabStatus(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TabStatus"_ns, aRetval);
++}
++
++void ExtensionTabs::GetWindowType(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"WindowType"_ns, aRetval);
++}
++
++void ExtensionTabs::GetUpdatePropertyName(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"UpdatePropertyName"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTabs.h b/toolkit/components/extensions/webidl-api/ExtensionTabs.h
 new file mode 100644
-index 0000000..41e14e0
+index 0000000..d27c128
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTabs.h
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,83 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7835,6 +10271,15 @@ index 0000000..41e14e0
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetUpdatePropertyName(JSContext* aCx,
++                             JS::MutableHandle<JS::Value> aRetval);
++  void GetWindowType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetTabStatus(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetZoomSettingsScope(JSContext* aCx,
++                            JS::MutableHandle<JS::Value> aRetval);
++  void GetZoomSettingsMode(JSContext* aCx,
++                           JS::MutableHandle<JS::Value> aRetval);
++  void GetMutedInfoReason(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnCreated();
 +  ExtensionEventManager* OnUpdated();
@@ -7873,12 +10318,116 @@ index 0000000..41e14e0
 +}  // namespace mozilla::extensions
 +
 +#endif  // mozilla_extensions_ExtensionTabs_h
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionTopSites.cpp b/toolkit/components/extensions/webidl-api/ExtensionTopSites.cpp
+new file mode 100644
+index 0000000..4d90e7a
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionTopSites.cpp
+@@ -0,0 +1,41 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include "ExtensionTopSites.h"
++#include "ExtensionEventManager.h"
++
++#include "mozilla/dom/ExtensionTopSitesBinding.h"
++#include "nsIGlobalObject.h"
++
++namespace mozilla::extensions {
++
++NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionTopSites)
++NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionTopSites)
++NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ExtensionTopSites, mGlobal,
++                                      mExtensionBrowser)
++
++NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionTopSites)
++  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
++  NS_INTERFACE_MAP_ENTRY(nsISupports)
++NS_INTERFACE_MAP_END
++
++ExtensionTopSites::ExtensionTopSites(nsIGlobalObject* aGlobal,
++                                     ExtensionBrowser* aExtensionBrowser)
++    : mGlobal(aGlobal), mExtensionBrowser(aExtensionBrowser) {
++  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
++  MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
++}
++
++bool ExtensionTopSites::IsAllowed(JSContext* aCx, JSObject* aGlobal) {
++  return true;
++}
++
++JSObject* ExtensionTopSites::WrapObject(JSContext* aCx,
++                                        JS::Handle<JSObject*> aGivenProto) {
++  return dom::ExtensionTopSites_Binding::Wrap(aCx, this, aGivenProto);
++}
++
++nsIGlobalObject* ExtensionTopSites::GetParentObject() const { return mGlobal; }
++
++}  // namespace mozilla::extensions
+diff --git a/toolkit/components/extensions/webidl-api/ExtensionTopSites.h b/toolkit/components/extensions/webidl-api/ExtensionTopSites.h
+new file mode 100644
+index 0000000..c8f63bb
+--- /dev/null
++++ b/toolkit/components/extensions/webidl-api/ExtensionTopSites.h
+@@ -0,0 +1,51 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_extensions_ExtensionTopSites_h
++#define mozilla_extensions_ExtensionTopSites_h
++
++#include "ExtensionAPIBase.h"
++#include "ExtensionBrowser.h"
++#include "nsCOMPtr.h"
++#include "nsCycleCollectionParticipant.h"
++#include "nsISupports.h"
++#include "nsWrapperCache.h"
++
++class nsIGlobalObject;
++
++namespace mozilla::extensions {
++
++class ExtensionEventManager;
++
++class ExtensionTopSites final : public nsISupports,
++                                public nsWrapperCache,
++                                public ExtensionAPINamespace {
++ public:
++  ExtensionTopSites(nsIGlobalObject* aGlobal,
++                    ExtensionBrowser* aExtensionBrowser);
++
++  nsIGlobalObject* GetGlobalObject() const override { return mGlobal; }
++  ExtensionBrowser* GetExtensionBrowser() const override {
++    return mExtensionBrowser;
++  }
++  nsString GetAPINamespace() const override { return u"topSites"_ns; }
++
++  JSObject* WrapObject(JSContext* aCx,
++                       JS::Handle<JSObject*> aGivenProto) override;
++  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
++  nsIGlobalObject* GetParentObject() const;
++
++  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
++  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionTopSites)
++
++ private:
++  ~ExtensionTopSites() = default;
++
++  nsCOMPtr<nsIGlobalObject> mGlobal;
++  RefPtr<ExtensionBrowser> mExtensionBrowser;
++};
++
++}  // namespace mozilla::extensions
++
++#endif  // mozilla_extensions_ExtensionTopSites_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTts.cpp b/toolkit/components/extensions/webidl-api/ExtensionTts.cpp
 new file mode 100644
-index 0000000..786263c
+index 0000000..bc26e7d
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTts.cpp
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,209 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8077,13 +10626,23 @@ index 0000000..786263c
 +
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionTts, u"onVoicesChanged"_ns, OnVoicesChanged)
 +
++void ExtensionTts::GetEventType(JSContext* aCx,
++                                JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"EventType"_ns, aRetval);
++}
++
++void ExtensionTts::GetVoiceGender(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"VoiceGender"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionTts.h b/toolkit/components/extensions/webidl-api/ExtensionTts.h
 new file mode 100644
-index 0000000..e719942
+index 0000000..066fca9
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionTts.h
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,63 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8120,6 +10679,8 @@ index 0000000..e719942
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetVoiceGender(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetEventType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  void CallWebExtMethodSpeak(JSContext* aCx, const nsAString& aApiMethod,
 +                             const dom::Sequence<JS::Value>& aArgs,
@@ -8147,10 +10708,10 @@ index 0000000..e719942
 +#endif  // mozilla_extensions_ExtensionTts_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionUserScripts.cpp b/toolkit/components/extensions/webidl-api/ExtensionUserScripts.cpp
 new file mode 100644
-index 0000000..df6e02f
+index 0000000..f8c0ae6
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionUserScripts.cpp
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,48 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8193,13 +10754,18 @@ index 0000000..df6e02f
 +  return mGlobal;
 +}
 +
++void ExtensionUserScripts::GetExecutionWorld(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ExecutionWorld"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionUserScripts.h b/toolkit/components/extensions/webidl-api/ExtensionUserScripts.h
 new file mode 100644
-index 0000000..d7cd73e
+index 0000000..c302ff0
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionUserScripts.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,52 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8237,6 +10803,7 @@ index 0000000..d7cd73e
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetExecutionWorld(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 +  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionUserScripts)
@@ -8252,7 +10819,7 @@ index 0000000..d7cd73e
 +
 +#endif  // mozilla_extensions_ExtensionUserScripts_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
-index 5a817b1..5171990 100644
+index 5a817b1..4ca853a 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 @@ -18,21 +18,21 @@
@@ -8301,7 +10868,7 @@ index 5a817b1..5171990 100644
      "long",
  ])
  
-@@ -57,27 +57,147 @@ WEBIDL_PRIMITIVE_TYPES = set([
+@@ -57,27 +57,187 @@ WEBIDL_PRIMITIVE_TYPES = set([
  #     "namespace.methodName": "WebExtensionStubName",
  #
  # NOTE: Please keep this table in alphabetic order.
@@ -8332,6 +10899,21 @@ index 5a817b1..5171990 100644
 + 'action.setPopup': 'AsyncAmbiguous',
 + 'action.setTitle': 'AsyncAmbiguous',
 + 'alarms.create': 'AsyncAmbiguous',
++ 'bookmarks.create': 'AsyncAmbiguous',
++ 'bookmarks.get': 'AsyncAmbiguous',
++ 'bookmarks.getChildren': 'AsyncAmbiguous',
++ 'bookmarks.getRecent': 'AsyncAmbiguous',
++ 'bookmarks.getSubTree': 'AsyncAmbiguous',
++ 'bookmarks.getTree': 'AsyncAmbiguous',
++ 'bookmarks.move': 'AsyncAmbiguous',
++ 'bookmarks.remove': 'AsyncAmbiguous',
++ 'bookmarks.removeTree': 'AsyncAmbiguous',
++ 'bookmarks.search': 'AsyncAmbiguous',
++ 'bookmarks.update': 'AsyncAmbiguous',
++ 'commands.getAll': 'AsyncAmbiguous',
++ 'commands.openShortcutSettings': 'AsyncAmbiguous',
++ 'commands.reset': 'AsyncAmbiguous',
++ 'commands.update': 'AsyncAmbiguous',
 + 'cookies.get': 'AsyncAmbiguous',
 + 'cookies.getAll': 'AsyncAmbiguous',
 + 'cookies.getAllCookieStores': 'AsyncAmbiguous',
@@ -8366,6 +10948,8 @@ index 5a817b1..5171990 100644
 + 'downloads.resume': 'AsyncAmbiguous',
 + 'downloads.search': 'AsyncAmbiguous',
 + 'downloads.show': 'AsyncAmbiguous',
++ 'extension.isAllowedFileSchemeAccess': 'AsyncAmbiguous',
++ 'extension.isAllowedIncognitoAccess': 'AsyncAmbiguous',
 + 'fontSettings.clearDefaultFixedFontSize': 'AsyncAmbiguous',
 + 'fontSettings.clearDefaultFontSize': 'AsyncAmbiguous',
 + 'fontSettings.clearFont': 'AsyncAmbiguous',
@@ -8379,6 +10963,15 @@ index 5a817b1..5171990 100644
 + 'fontSettings.setDefaultFontSize': 'AsyncAmbiguous',
 + 'fontSettings.setFont': 'AsyncAmbiguous',
 + 'fontSettings.setMinimumFontSize': 'AsyncAmbiguous',
++ 'history.addUrl': 'AsyncAmbiguous',
++ 'history.deleteAll': 'AsyncAmbiguous',
++ 'history.deleteRange': 'AsyncAmbiguous',
++ 'history.deleteUrl': 'AsyncAmbiguous',
++ 'history.getVisits': 'AsyncAmbiguous',
++ 'history.search': 'AsyncAmbiguous',
++ 'i18n.detectLanguage': 'AsyncAmbiguous',
++ 'i18n.getAcceptLanguages': 'AsyncAmbiguous',
++ 'i18n.getPreferredSystemLanguages': 'AsyncAmbiguous',
 + 'identity.clearAllCachedAuthTokens': 'AsyncAmbiguous',
 + 'identity.getAccounts': 'AsyncAmbiguous',
 + 'identity.getAuthToken': 'AsyncAmbiguous',
@@ -8386,6 +10979,7 @@ index 5a817b1..5171990 100644
 + 'identity.getRedirectURL': 'ReturnsString',
 + 'identity.launchWebAuthFlow': 'AsyncAmbiguous',
 + 'identity.removeCachedAuthToken': 'AsyncAmbiguous',
++ 'idle.queryState': 'AsyncAmbiguous',
 + 'management.get': 'AsyncAmbiguous',
 + 'management.getAll': 'AsyncAmbiguous',
 + 'management.getSelf': 'AsyncAmbiguous',
@@ -8415,6 +11009,16 @@ index 5a817b1..5171990 100644
 + 'scripting.executeScript': 'ExecuteScript',
 + 'scripting.getRegisteredContentScripts': 'AsyncAmbiguous',
 + 'scripting.unregisterContentScripts': 'AsyncAmbiguous',
++ 'sessions.forgetClosedTab': 'AsyncAmbiguous',
++ 'sessions.forgetClosedWindow': 'AsyncAmbiguous',
++ 'sessions.getRecentlyClosed': 'AsyncAmbiguous',
++ 'sessions.getTabValue': 'AsyncAmbiguous',
++ 'sessions.getWindowValue': 'AsyncAmbiguous',
++ 'sessions.removeTabValue': 'AsyncAmbiguous',
++ 'sessions.removeWindowValue': 'AsyncAmbiguous',
++ 'sessions.restore': 'AsyncAmbiguous',
++ 'sessions.setTabValue': 'AsyncAmbiguous',
++ 'sessions.setWindowValue': 'AsyncAmbiguous',
 + 'storage.StorageArea.setAccessLevel': 'AsyncAmbiguous',
 + 'tabCapture.capture': 'AsyncAmbiguous',
 + 'tabCapture.getCapturedTabs': 'AsyncAmbiguous',
@@ -8443,6 +11047,7 @@ index 5a817b1..5171990 100644
 + 'test.assertRejects': False,
 + 'test.assertThrows': False,
 + 'test.withHandlingUserInput': 'NotImplementedNoReturn',
++ 'topSites.get': 'AsyncAmbiguous',
 + 'tts.getVoices': 'AsyncAmbiguous',
 + 'tts.isSpeaking': 'AsyncAmbiguous',
 + 'tts.speak': 'Speak',
@@ -8461,6 +11066,8 @@ index 5a817b1..5171990 100644
 + 'windows.update': 'AsyncAmbiguous'}
  
  WEBEXT_WORKER_HIDDEN_SET = set([
++    "extension.getViews",
++    "extension.getBackgroundPage",
 +    "menus.getTargetElement",
 +    "menus.overrideContext",
 +    "tabCapture.capture",
@@ -8468,7 +11075,7 @@ index 5a817b1..5171990 100644
      "runtime.getDocumentId",
      "runtime.getFrameId",
      "runtime.getBackgroundPage",
-@@ -104,11 +224,26 @@ WEBEXT_ANDROID_EXCLUDED = [
+@@ -104,11 +264,29 @@ WEBEXT_ANDROID_EXCLUDED = [
  ]
  
  WEBEXT_IGNORED_SCHEMA_FILES = [
@@ -8496,17 +11103,20 @@ index 5a817b1..5171990 100644
 + 'declarativeNetRequest.MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES': 'any',
 + 'declarativeNetRequest.MAX_NUMBER_OF_UNSAFE_SESSION_RULES': 'any',
 + 'declarativeNetRequest.SESSION_RULESET_ID': 'any',
++ 'extension.inIncognitoContext': 'any',
++ 'extension.lastError': 'any',
 + 'menus.ACTION_MENU_TOP_LEVEL_LIMIT': 'any',
++ 'sessions.MAX_SESSION_RESULTS': 'any',
 + 'tabGroups.TAB_GROUP_ID_NONE': 'any',
 + 'webRequest.MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES': 'any',
 + 'windows.WINDOW_ID_CURRENT': 'any',
 + 'windows.WINDOW_ID_NONE': 'any'}
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.cpp b/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.cpp
 new file mode 100644
-index 0000000..5bf9cce
+index 0000000..bbc14cc
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.cpp
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,83 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8579,13 +11189,23 @@ index 0000000..5bf9cce
 +NS_IMPL_WEBEXT_EVENTMGR(ExtensionWebNavigation, u"onHistoryStateUpdated"_ns,
 +                        OnHistoryStateUpdated)
 +
++void ExtensionWebNavigation::GetTransitionType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TransitionType"_ns, aRetval);
++}
++
++void ExtensionWebNavigation::GetTransitionQualifier(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TransitionQualifier"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.h b/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.h
 new file mode 100644
-index 0000000..f1f5cee
+index 0000000..43b6f5c
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebNavigation.h
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,73 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8623,6 +11243,9 @@ index 0000000..f1f5cee
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetTransitionQualifier(JSContext* aCx,
++                              JS::MutableHandle<JS::Value> aRetval);
++  void GetTransitionType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnBeforeNavigate();
 +  ExtensionEventManager* OnCommitted();
@@ -8658,10 +11281,10 @@ index 0000000..f1f5cee
 +#endif  // mozilla_extensions_ExtensionWebNavigation_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebRequest.cpp b/toolkit/components/extensions/webidl-api/ExtensionWebRequest.cpp
 new file mode 100644
-index 0000000..513a13d
+index 0000000..aa935cd
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebRequest.cpp
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,138 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8739,13 +11362,73 @@ index 0000000..513a13d
 +      aCx, u"MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES"_ns, aRetval);
 +}
 +
++void ExtensionWebRequest::GetResourceType(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"ResourceType"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnBeforeRequestOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnBeforeRequestOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnBeforeSendHeadersOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnBeforeSendHeadersOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnSendHeadersOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnSendHeadersOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnHeadersReceivedOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnHeadersReceivedOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnAuthRequiredOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnAuthRequiredOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnResponseStartedOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnResponseStartedOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnBeforeRedirectOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnBeforeRedirectOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetOnCompletedOptions(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"OnCompletedOptions"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetCertificateTransparencyStatus(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"CertificateTransparencyStatus"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetTransportWeaknessReasons(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"TransportWeaknessReasons"_ns, aRetval);
++}
++
++void ExtensionWebRequest::GetUrlClassificationFlags(
++    JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"UrlClassificationFlags"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebRequest.h b/toolkit/components/extensions/webidl-api/ExtensionWebRequest.h
 new file mode 100644
-index 0000000..d428eeb
+index 0000000..c43074c
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebRequest.h
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,95 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8783,6 +11466,29 @@ index 0000000..d428eeb
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetUrlClassificationFlags(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval);
++  void GetTransportWeaknessReasons(JSContext* aCx,
++                                   JS::MutableHandle<JS::Value> aRetval);
++  void GetCertificateTransparencyStatus(JSContext* aCx,
++                                        JS::MutableHandle<JS::Value> aRetval);
++  void GetOnCompletedOptions(JSContext* aCx,
++                             JS::MutableHandle<JS::Value> aRetval);
++  void GetOnBeforeRedirectOptions(JSContext* aCx,
++                                  JS::MutableHandle<JS::Value> aRetval);
++  void GetOnResponseStartedOptions(JSContext* aCx,
++                                   JS::MutableHandle<JS::Value> aRetval);
++  void GetOnAuthRequiredOptions(JSContext* aCx,
++                                JS::MutableHandle<JS::Value> aRetval);
++  void GetOnHeadersReceivedOptions(JSContext* aCx,
++                                   JS::MutableHandle<JS::Value> aRetval);
++  void GetOnSendHeadersOptions(JSContext* aCx,
++                               JS::MutableHandle<JS::Value> aRetval);
++  void GetOnBeforeSendHeadersOptions(JSContext* aCx,
++                                     JS::MutableHandle<JS::Value> aRetval);
++  void GetOnBeforeRequestOptions(JSContext* aCx,
++                                 JS::MutableHandle<JS::Value> aRetval);
++  void GetResourceType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnBeforeRequest();
 +  ExtensionEventManager* OnBeforeSendHeaders();
@@ -8820,10 +11526,10 @@ index 0000000..d428eeb
 +#endif  // mozilla_extensions_ExtensionWebRequest_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWindows.cpp b/toolkit/components/extensions/webidl-api/ExtensionWindows.cpp
 new file mode 100644
-index 0000000..1a1878a
+index 0000000..ac9792a
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWindows.cpp
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,78 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8886,13 +11592,28 @@ index 0000000..1a1878a
 +  GetWebExtPropertyAsJSValue(aCx, u"WINDOW_ID_CURRENT"_ns, aRetval);
 +}
 +
++void ExtensionWindows::GetWindowType(JSContext* aCx,
++                                     JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"WindowType"_ns, aRetval);
++}
++
++void ExtensionWindows::GetWindowState(JSContext* aCx,
++                                      JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"WindowState"_ns, aRetval);
++}
++
++void ExtensionWindows::GetCreateType(JSContext* aCx,
++                                     JS::MutableHandle<JS::Value> aRetval) {
++  GetWebExtPropertyAsJSValue(aCx, u"CreateType"_ns, aRetval);
++}
++
 +}  // namespace mozilla::extensions
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWindows.h b/toolkit/components/extensions/webidl-api/ExtensionWindows.h
 new file mode 100644
-index 0000000..9306acd
+index 0000000..5027ff3
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWindows.h
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,66 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8930,6 +11651,9 @@ index 0000000..9306acd
 +                       JS::Handle<JSObject*> aGivenProto) override;
 +  static bool IsAllowed(JSContext* aCx, JSObject* aGlobal);
 +  nsIGlobalObject* GetParentObject() const;
++  void GetCreateType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetWindowState(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
++  void GetWindowType(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
 +
 +  ExtensionEventManager* OnBoundsChanged();
 +  ExtensionEventManager* OnCreated();
@@ -8957,7 +11681,7 @@ index 0000000..9306acd
 +
 +#endif  // mozilla_extensions_ExtensionWindows_h
 diff --git a/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py b/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
-index 92fb39f..1fbf25b 100644
+index 92fb39f..3229374 100644
 --- a/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
 +++ b/toolkit/components/extensions/webidl-api/GenerateWebIDLBindings.py
 @@ -47,6 +47,7 @@ with open(mozpath.join(BASE_DIR, "ExtensionWebIDL.conf")) as f:
@@ -8968,7 +11692,44 @@ index 92fb39f..1fbf25b 100644
  
  # Special mapping for the `WebExtensionStub` to be used for API methods that
  # require special handling.
-@@ -404,7 +405,7 @@ class WebIDLHelpers:
+@@ -348,6 +349,15 @@ class WebIDLHelpers:
+             for v in api_ns.functions.values()
+             if should_include(v)
+         ]
++        if api_ns.name == "extension":
++            # The source updater handles only Chrome Web Store packages, for
++            # which Chrome ignores this legacy data. The request adapter
++            # validates raw argument count/type/length and converted identity.
++            webidl_functions.append(
++                '  [Throws, WebExtensionStub="NoReturn",\n'
++                '   Func="mozilla::extensions::ExtensionExtension::IsChromeCompatible"]\n'
++                '  undefined setUpdateUrlData(any... args);'
++            )
+         if len(webidl_functions) > 0:
+             body = body + ["\n  // API methods.\n", "\n\n".join(webidl_functions)]
+ 
+@@ -367,6 +377,20 @@ class WebIDLHelpers:
+         if len(webidl_props) > 0:
+             body = body + ["\n  // API properties.\n", "\n\n".join(webidl_props)]
+ 
++        # Schema string enums are namespace objects in the ordinary JS
++        # bindings (for example power.Level.DISPLAY). Expose the same real
++        # schema values through the native Worker bindings.
++        enum_properties = [
++            "  [Replaceable]\n  readonly attribute any %s;" % entry.name
++            for entry in api_ns.types.values()
++            if should_include(entry)
++            and entry.name not in api_ns.properties
++            and entry.get_schema_data().get("type") == "string"
++            and isinstance(entry.get_schema_data().get("enum"), list)
++        ]
++        if enum_properties:
++            body += ["\n  // Schema enum constants.\n", "\n\n".join(enum_properties)]
++
+         webidl_child_ns = [
+             cls.to_webidl_namespace_property(v)
+             for v in api_ns.get_child_namespaces()
+@@ -404,7 +428,7 @@ class WebIDLHelpers:
              "Replaceable",
              "SameObject",
              'BinaryName="Get%s"' % prop_type,
@@ -8977,7 +11738,7 @@ index 92fb39f..1fbf25b 100644
          ]
  
          lines = [
-@@ -455,9 +456,11 @@ class WebIDLHelpers:
+@@ -455,9 +479,11 @@ class WebIDLHelpers:
          attrs = ["Replaceable"]
  
          schema_data = api_property.get_schema_data(schema_group)
@@ -8992,7 +11753,7 @@ index 92fb39f..1fbf25b 100644
  
          lines = [
              "  [%s]" % ", ".join(attrs),
-@@ -500,6 +503,8 @@ class WebIDLHelpers:
+@@ -500,6 +526,8 @@ class WebIDLHelpers:
          cls.expect_instance(api_fun, APIFunction)
  
          def generate_webidl(group):
@@ -9001,7 +11762,16 @@ index 92fb39f..1fbf25b 100644
              attrs = ["Throws"]
              stub_attr = cls.webext_method_stub(api_fun, group)
              if stub_attr:
-@@ -1056,7 +1061,7 @@ class APIFunction(APIEntry):
+@@ -686,6 +714,8 @@ class WebIDLHelpers:
+         #   `any filter, optional Function` and `optional Function`
+         #   are not distinguishable when called with a single
+         #   parameter set to an undefined value).
++        if api_fun.api_path_string in ("power.requestKeepAwake", "power.releaseKeepAwake"):
++            return ["any... args"]
+         if api_fun.has_ambiguous_stub_mapping(schema_group):
+             return ["any... args"]
+ 
+@@ -1056,7 +1086,7 @@ class APIFunction(APIEntry):
              # stub method per configuration set from ExtensionWebIDL.conf.
              api_path = ".".join([*self.path])
              if api_path in WEBEXT_STUBS_MAPPING:
@@ -9010,7 +11780,7 @@ index 92fb39f..1fbf25b 100644
  
          return is_ambiguous
  
-@@ -1076,6 +1081,10 @@ class APIFunction(APIEntry):
+@@ -1076,6 +1106,10 @@ class APIFunction(APIEntry):
  
          schema_data = self.get_schema_data(schema_group)
          params = schema_data["parameters"] or []
@@ -9021,7 +11791,7 @@ index 92fb39f..1fbf25b 100644
  
          return not all(not self.is_optional_param(param) for param in params)
  
-@@ -1278,6 +1287,8 @@ class APINamespace:
+@@ -1278,6 +1312,8 @@ class APINamespace:
              if "functions" in data:
                  for func_data in data["functions"]:
                      func_name = func_data["name"]
@@ -9031,10 +11801,45 @@ index 92fb39f..1fbf25b 100644
                      if "unsupported" in func_data:
                          logging.debug(
 diff --git a/toolkit/components/extensions/webidl-api/moz.build b/toolkit/components/extensions/webidl-api/moz.build
-index ab4d488..4a8a7a0 100644
+index ab4d488..240a428 100644
 --- a/toolkit/components/extensions/webidl-api/moz.build
 +++ b/toolkit/components/extensions/webidl-api/moz.build
-@@ -25,29 +25,89 @@ EXPORTS.mozilla.extensions += [
+@@ -10,44 +10,124 @@ UNIFIED_SOURCES += [
+     "ExtensionAPIBase.cpp",
+     "ExtensionAPIRequest.cpp",
+     "ExtensionAPIRequestForwarder.cpp",
++    "ExtensionBookmarks.cpp",
+     "ExtensionBrowser.cpp",
++    "ExtensionCommands.cpp",
+     "ExtensionEventListener.cpp",
+     "ExtensionEventManager.cpp",
++    "ExtensionExtension.cpp",
++    "ExtensionHistory.cpp",
++    "ExtensionI18n.cpp",
++    "ExtensionIdle.cpp",
++    "ExtensionOmnibox.cpp",
+     "ExtensionPort.cpp",
++    "ExtensionPower.cpp",
++    "ExtensionSessions.cpp",
++    "ExtensionTopSites.cpp",
+ ]
+ 
+ EXPORTS.mozilla.extensions += [
+     "ExtensionAPIBase.h",
++    "ExtensionBookmarks.h",
+     "ExtensionBrowser.h",
++    "ExtensionCommands.h",
+     "ExtensionEventManager.h",
++    "ExtensionExtension.h",
++    "ExtensionHistory.h",
++    "ExtensionI18n.h",
++    "ExtensionIdle.h",
++    "ExtensionOmnibox.h",
+     "ExtensionPort.h",
++    "ExtensionPower.h",
++    "ExtensionSessions.h",
++    "ExtensionTopSites.h",
+ ]
  
  # WebExtensions API namespaces.
  UNIFIED_SOURCES += [
@@ -9136,10 +11941,10 @@ index b46d5aa..49beb5e 100644
 +["test_worker_namespaces.py"]
 diff --git a/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py b/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py
 new file mode 100644
-index 0000000..1bc6344
+index 0000000..c62a67d
 --- /dev/null
 +++ b/toolkit/components/extensions/webidl-api/test/test_worker_namespaces.py
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,137 @@
 +# This Source Code Form is subject to the terms of the Mozilla Public
 +# License, v. 2.0. If a copy of the MPL was not distributed with this
 +# file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9220,35 +12025,45 @@ index 0000000..1bc6344
 +        "worker-global.webidl",
 +    )
 +    namespaces = [
-+        "action",
-+        "debugger",
-+        "declarativeNetRequest",
-+        "offscreen",
-+        "runtime",
-+        "sidePanel",
-+        "storage",
-+        "tabs",
-+        "userScripts",
-+        "identity",
-+        "notifications",
-+        "tabGroups",
-+        "permissions",
-+        "cookies",
-+        "webRequest",
-+        "management",
-+        "privacy",
-+        "privacy.network",
-+        "privacy.services",
-+        "privacy.websites",
-+        "menus",
-+        "downloads",
-+        "webNavigation",
-+        "tabCapture",
-+        "desktopCapture",
-+        "fontSettings",
-+        "tts",
-+        "declarativeContent",
-+        "windows",
++        'action',
++        'debugger',
++        'declarativeNetRequest',
++        'offscreen',
++        'runtime',
++        'sidePanel',
++        'storage',
++        'tabs',
++        'userScripts',
++        'identity',
++        'notifications',
++        'tabGroups',
++        'permissions',
++        'cookies',
++        'webRequest',
++        'management',
++        'privacy',
++        'privacy.network',
++        'privacy.services',
++        'privacy.websites',
++        'menus',
++        'downloads',
++        'webNavigation',
++        'tabCapture',
++        'desktopCapture',
++        'fontSettings',
++        'tts',
++        'declarativeContent',
++        'windows',
++        'extension',
++        'power',
++        'omnibox',
++        'bookmarks',
++        'commands',
++        'history',
++        'i18n',
++        'idle',
++        'sessions',
++        'topSites',
 +    ]
 +    for name in namespaces:
 +        generated = WebIDLHelpers.to_webidl_definition(

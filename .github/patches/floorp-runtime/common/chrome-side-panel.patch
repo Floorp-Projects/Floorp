@@ -904,10 +904,10 @@ index 0b9ba96..15cd3d4 100644
      content/browser/schemas/tabs.json
 diff --git a/browser/components/extensions/schemas/side_panel.json b/browser/components/extensions/schemas/side_panel.json
 new file mode 100644
-index 0000000..ee9c3fd
+index 0000000..84e7b13
 --- /dev/null
 +++ b/browser/components/extensions/schemas/side_panel.json
-@@ -0,0 +1,230 @@
+@@ -0,0 +1,233 @@
 +[
 +  {
 +    "namespace": "manifest",
@@ -934,6 +934,9 @@ index 0000000..ee9c3fd
 +                "type": "string",
 +                "preprocess": "localize"
 +              }
++            },
++            "additionalProperties": {
++              "$ref": "UnrecognizedProperty"
 +            }
 +          }
 +        }

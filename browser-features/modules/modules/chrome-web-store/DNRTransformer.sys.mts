@@ -34,6 +34,8 @@ const CONDITION_FIELDS = new Set([
   "domainType",
   "tabIds",
   "excludedTabIds",
+  "responseHeaders",
+  "excludedResponseHeaders",
 ]);
 
 export interface DNRSanitizationResult {
@@ -169,6 +171,56 @@ export function validateDNRRule(rule: unknown): string[] {
       }
     }
   }
+
+  for (const field of ["responseHeaders", "excludedResponseHeaders"]) {
+    if (!(field in condition)) continue;
+    const headers = condition[field];
+    if (!Array.isArray(headers) || headers.length === 0) {
+      errors.push(`${field} must be a non-empty array`);
+      continue;
+    }
+    for (const info of headers) {
+      if (
+        !isRecord(info) ||
+        typeof info.header !== "string" ||
+        !/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(info.header)
+      ) {
+        errors.push(`Invalid header in ${field}`);
+        continue;
+      }
+      for (const key of Object.keys(info)) {
+        if (!["header", "values", "excludedValues"].includes(key)) {
+          errors.push(`Unsupported HeaderInfo field: ${key}`);
+        }
+      }
+      for (const key of ["values", "excludedValues"]) {
+        if (!(key in info)) continue;
+        const values = info[key];
+        if (
+          !Array.isArray(values) ||
+          values.some(
+            (value) => typeof value !== "string" || /[\r\n\0]/.test(value),
+          )
+        ) {
+          errors.push(`Invalid ${key} in ${field}`);
+        }
+      }
+    }
+  }
+  if (Array.isArray(condition.responseHeaders) && Array.isArray(condition.excludedResponseHeaders)) {
+    const names = new Set(condition.responseHeaders.filter(isRecord).map(info => info.header));
+    if (condition.excludedResponseHeaders.some(info => isRecord(info) && !("values" in info) && !("excludedValues" in info) && names.has(info.header))) {
+      errors.push("A response header cannot be required and excluded by name");
+    }
+  }
+  if (
+    (condition.responseHeaders || condition.excludedResponseHeaders) &&
+    isRecord(rule.action) &&
+    "requestHeaders" in rule.action
+  ) {
+    errors.push("Response header conditions cannot modify request headers");
+  }
+
 
   return errors;
 }

@@ -43,6 +43,9 @@ export class ChromePipe {
           if (message.error) {
             pending.reject(new Error(JSON.stringify(message.error)));
           } else pending.resolve(message.result);
+        } else if (message.method && this.events) {
+          this.events.push(message);
+          if (this.events.length > 2000) this.events.shift();
         }
       }
     });

@@ -69,7 +69,7 @@ export function transformManifestFull(
 
   // Handle Manifest V3 specific transformations
   if (manifest.manifest_version === 3) {
-    const bgWarning = transformMV3Background(transformed);
+    const bgWarning = transformMV3Background(transformed, options.nativeWorker === true);
     if (bgWarning) warnings.push(bgWarning);
 
     transformMV3WebAccessibleResources(transformed);
@@ -139,7 +139,10 @@ export function validateManifest(
  * @param manifest - Manifest to check
  * @returns Array of compatibility issues (empty if compatible)
  */
-export function checkCompatibility(manifest: ChromeManifest): string[] {
+export function checkCompatibility(
+  manifest: ChromeManifest,
+  options: Pick<TransformOptions, "nativeWorker"> = {},
+): string[] {
   const issues: string[] = [];
   const chromeVersionIssue = checkChromeVersionRequirement(manifest);
   if (chromeVersionIssue) issues.push(chromeVersionIssue);
@@ -149,7 +152,7 @@ export function checkCompatibility(manifest: ChromeManifest): string[] {
     issues.push("MV2 does not support service workers");
   }
 
-  if (manifest.manifest_version === 3 && manifest.background?.service_worker) {
+  if (manifest.manifest_version === 3 && manifest.background?.service_worker && !options.nativeWorker) {
     issues.push(
       "MV3 service workers use a background event-page fallback; service-worker lifecycle and worker-only APIs are unavailable",
     );
@@ -233,12 +236,13 @@ function addGeckoSettings(
 }
 
 /**
- * Select a document background for MV3 until native worker compatibility is
- * available. Preserve the script kind: Chrome's default is classic, not module.
+ * Preserve the native MV3 worker when the running browser compiled its API
+ * bindings. Otherwise select an honest document fallback. Chrome defaults to
+ * classic scripts; the original type and every packaged source stay unchanged.
  * @returns Warning message if conversion was performed
  */
-function transformMV3Background(manifest: ChromeManifest): string | null {
-  if (!manifest.background?.service_worker) {
+function transformMV3Background(manifest: ChromeManifest, nativeWorker: boolean): string | null {
+  if (!manifest.background?.service_worker || nativeWorker) {
     return null;
   }
 

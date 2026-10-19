@@ -76,8 +76,8 @@ export async function runTests(directory, python) {
     preprocessors: {},
   };
   class NativeContext extends ExtensionCommon.BaseContext {
-    constructor() {
-      super("addon_parent", extension);
+    constructor(ownedExtension = extension) {
+      super("addon_parent", ownedExtension);
       this.sandbox = Cu.Sandbox(globalThis);
     }
     get cloneScope() {
@@ -247,25 +247,42 @@ while True:
     delete firefoxHost.allowed_origins;
     await writeHost(firefoxPath, firefoxHost);
     equal(
-      await NativeManifests.lookupManifest("stdio", name, context),
-      null,
-      "A denied Firefox host prevents Chrome fallback"
+      (await NativeManifests.lookupManifest("stdio", name, context)).chromeOrigin,
+      origin,
+      "An unrelated Firefox allowlist does not deny an authorized Chrome host"
     );
+    const geckoExtension = { ...extension, id: "firefox@tests.mozilla.org", manifest: {} };
+    const geckoContext = { ...context, extension: geckoExtension };
     await writeHost(firefoxPath, {
       ...firefoxHost,
-      allowed_extensions: [addonId],
+      allowed_extensions: [geckoExtension.id],
     });
+    await writeHost(hostPath, { ...host, allowed_origins: [] });
+    equal(
+      await NativeManifests.lookupManifest("stdio", name, context),
+      null,
+      "A denied Chrome host never selects an authorized Firefox registration"
+    );
+    await writeHost(hostPath, host);
+    equal(
+      await NativeManifests.lookupManifest("stdio", name, {
+        ...context,
+        extension: { ...geckoExtension, id: "denied@tests.mozilla.org" },
+      }),
+      null,
+      "An ordinary Firefox caller never selects the authorized Chrome namespace"
+    );
     const firefoxFound = await NativeManifests.lookupManifest(
       "stdio",
       name,
-      context
+      geckoContext
     );
     assert(
       !firefoxFound.chromeOrigin,
       "Firefox host keeps the Firefox launch protocol"
     );
-    equal(firefoxFound.path, firefoxPath, "Firefox host has precedence");
-    const firefoxContext = new NativeContext();
+    equal(firefoxFound.path, firefoxPath, "Gecko mode selects the Firefox registration");
+    const firefoxContext = new NativeContext(geckoExtension);
     app = new NativeApp(firefoxContext, name);
     const firefoxReply = new Promise((resolve, reject) => {
       app.on("message", (event, value) => resolve(value));
@@ -285,7 +302,7 @@ while True:
     equal(
       await firefoxReply,
       {
-        args: [firefoxPath, addonId],
+        args: [firefoxPath, geckoExtension.id],
         message: "Firefox",
       },
       "Firefox executable receives its original manifest-path and Gecko-ID argv"
@@ -293,7 +310,7 @@ while True:
     await app._cleanup();
     app = null;
     completed.push(
-      "Firefox host priority and unchanged launch protocol selection"
+      "Independent authorization namespaces and unchanged Firefox launch protocol"
     );
     return { passed: true, completed };
   } finally {

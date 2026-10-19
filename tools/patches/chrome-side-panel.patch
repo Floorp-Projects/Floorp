@@ -684,10 +684,10 @@ index ec06766..a7775e5 100644
      let target = null;
 diff --git a/browser/chrome/browser/content/browser/schemas/side_panel.json b/browser/chrome/browser/content/browser/schemas/side_panel.json
 new file mode 100644
-index 0000000..ee9c3fd
+index 0000000..84e7b13
 --- /dev/null
 +++ b/browser/chrome/browser/content/browser/schemas/side_panel.json
-@@ -0,0 +1,230 @@
+@@ -0,0 +1,233 @@
 +[
 +  {
 +    "namespace": "manifest",
@@ -714,6 +714,9 @@ index 0000000..ee9c3fd
 +                "type": "string",
 +                "preprocess": "localize"
 +              }
++            },
++            "additionalProperties": {
++              "$ref": "UnrecognizedProperty"
 +            }
 +          }
 +        }

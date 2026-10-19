@@ -1,0 +1,1257 @@
+diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
+--- a/modules/ExtensionParent.sys.mjs
++++ b/modules/ExtensionParent.sys.mjs
+@@ -11,6 +11,10 @@
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
++
++ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs"
++).registerParent();
+ 
+ const lazy = XPCOMUtils.declareLazy({
+   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+diff --git a/modules/ExtensionCommon.sys.mjs b/modules/ExtensionCommon.sys.mjs
+--- a/modules/ExtensionCommon.sys.mjs
++++ b/modules/ExtensionCommon.sys.mjs
+@@ -13,6 +13,8 @@
+ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  ChromeExtensionFileSystem:
++    "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs",
+   ConsoleAPI: "resource://gre/modules/Console.sys.mjs",
+   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+   SchemaRoot: "resource://gre/modules/Schemas.sys.mjs",
+@@ -722,6 +724,12 @@
+   }
+ 
+   checkLoadURL(url, options = {}) {
++    if (
++      url.startsWith("filesystem:") &&
++      lazy.ChromeExtensionFileSystem.compatible(this.extension)
++    ) {
++      return lazy.ChromeExtensionFileSystem.canLoadURL(url, this.principal);
++    }
+     // As an optimization, f the URL starts with the extension's base URL,
+     // don't do any further checks. It's always allowed to load it.
+     if (url.startsWith(this.extension.baseURL)) {
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -992,6 +992,23 @@
+     return this.context.cloneScope;
+   }
+ 
++  checkLoadURL(url) {
++    if (url.startsWith("filesystem:")) {
++      return this.context.checkLoadURL(url);
++    }
++    const ssm = Services.scriptSecurityManager;
++    try {
++      ssm.checkLoadURIWithPrincipal(
++        this.context.principal,
++        Services.io.newURI(url),
++        ssm.DISALLOW_INHERIT_PRINCIPAL
++      );
++      return true;
++    } catch {
++      return false;
++    }
++  }
++
+   get principal() {
+     return this.context.principal;
+   }
+diff --git a/chrome/toolkit/content/extensions/parent/ext-downloads.js b/chrome/toolkit/content/extensions/parent/ext-downloads.js
+--- a/chrome/toolkit/content/extensions/parent/ext-downloads.js
++++ b/chrome/toolkit/content/extensions/parent/ext-downloads.js
+@@ -831,6 +831,21 @@
+           }
+ 
+           async function createTarget() {
++            // filesystem: uses an opaque URI, so nsIURL cannot supply a name.
++            // Preserve the owning converted extension's actual file name.
++            if (!filename && options.url.startsWith("filesystem:")) {
++              const fs = ChromeUtils.importESModule(
++                "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs"
++              );
++              if (
++                fs.compatible(extension) &&
++                fs.canLoadURL(options.url, context.principal)
++              ) {
++                filename = DownloadPaths.sanitize(
++                  fs.fileNameForURL(options.url, context.principal)
++                );
++              }
++            }
+             if (!filename) {
+               let uri = Services.io.newURI(options.url);
+               if (uri instanceof Ci.nsIURL) {
+diff --git a/modules/ExtensionPageChild.sys.mjs b/modules/ExtensionPageChild.sys.mjs
+--- a/modules/ExtensionPageChild.sys.mjs
++++ b/modules/ExtensionPageChild.sys.mjs
+@@ -20,6 +20,8 @@
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  ChromeExtensionFileSystemChild:
++    "resource://gre/modules/ChromeExtensionFileSystemChild.sys.mjs",
+   ChromeExtensionCaptureChild:
+     "resource://gre/modules/ChromeExtensionCaptureChild.sys.mjs",
+   ExtensionChildDevToolsUtils:
+@@ -240,6 +242,7 @@
+     super(extension, Object.assign(params, { envType: "addon_child" }));
+     this.extension.views.add(this);
+     lazy.ChromeExtensionCaptureChild.install(this);
++    lazy.ChromeExtensionFileSystemChild.install(this);
+   }
+ 
+   unload() {
+diff --git a/modules/ChromeExtensionFileSystem.sys.mjs b/modules/ChromeExtensionFileSystem.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/modules/ChromeExtensionFileSystem.sys.mjs
+@@ -0,0 +1,927 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++const LIMIT = 2 * 1024 ** 3;
++const CHUNK = 16 * 1024 ** 2;
++function entryLimit() {
++  return Math.min(
++    10000,
++    Math.max(
++      1,
++      Services.prefs.getIntPref(
++        "extensions.floorpChromeFileSystem.maxEntries",
++        10000
++      )
++    )
++  );
++}
++const queues = new Map();
++const jobs = new Map();
++const readers = new Map();
++const queueOwners = new Map();
++const queuePrivate = new Map();
++let privateGeneration = 0,
++  privateCleaning = false;
++let privateCleanup = Promise.resolve();
++const readJobs = new Map();
++const knownOwners = new Map();
++const retired = new WeakSet();
++const cleanup = new Map();
++export function registerReader(context) {
++  const id = context.contentWindow.windowGlobalChild.innerWindowId;
++  readers.set(id, context);
++  return () => readers.delete(id);
++}
++const privateRoot = PathUtils.join(
++  PathUtils.tempDir,
++  "floorp-chrome-filesystem-" + Services.uuid.generateUUID()
++);
++const failure = (code, message) =>
++  Object.assign(new Error(message), { fileErrorCode: code });
++export function compatible(extension) {
++  const marker =
++    extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++  return (
++    marker?.schema_version === 1 &&
++    /^[a-p]{32}$/.test(marker.original_id) &&
++    extension.id === `${marker.original_id}@chromium-extension`
++  );
++}
++function extensionFor(principal) {
++  const { ExtensionParent } = ChromeUtils.importESModule(
++    "resource://gre/modules/ExtensionParent.sys.mjs"
++  );
++  const policy = principal?.addonPolicy;
++  const extension = ExtensionParent.GlobalManager.extensionMap.get(policy?.id);
++  if (
++    !extension ||
++    !compatible(extension) ||
++    !policy.active ||
++    extension.policy !== policy ||
++    !Services.scriptSecurityManager
++      .createContentPrincipal(principal.URI, {
++        ...principal.originAttributes,
++        privateBrowsingId:
++          extension.principal.originAttributes.privateBrowsingId,
++      })
++      .equals(extension.principal) ||
++    (principal.originAttributes.privateBrowsingId &&
++      !extension.privateBrowsingAllowed)
++  )
++    throw failure(
++      2,
++      "File system requires the current owning Chrome extension."
++    );
++  if (retired.has(extension))
++    throw failure(2, "File system owner was uninstalled.");
++  knownOwners.set(extension.id, extension);
++  return extension;
++}
++function normalized(path) {
++  if (typeof path !== "string" || path.length > 4096 || /[\\\0]/.test(path))
++    throw failure(5, "Invalid file system path.");
++  const parts = [];
++  for (const part of path.split("/")) {
++    if (!part || part === ".") continue;
++    if (part === "..") {
++      if (!parts.length)
++        throw failure(2, "Path escapes the extension file system.");
++      parts.pop();
++      continue;
++    }
++    if (
++      /[.: ]$/.test(part) ||
++      part.includes(":") ||
++      /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)
++    )
++      throw failure(5, "Invalid portable file name.");
++    if (new TextEncoder().encode(part).length > 255)
++      throw failure(5, "File name is too long.");
++    parts.push(part);
++  }
++  if (parts.length > 128) throw failure(5, "File path is too deep.");
++  return parts.join("/");
++}
++function location(extension, principal, kind, path) {
++  if (kind !== 0 && kind !== 1) throw failure(8, "Unknown file system type.");
++  const original =
++    extension.manifest.browser_specific_settings.gecko.floorp_chrome_extension
++      .original_id;
++  const root = PathUtils.join(
++    principal.originAttributes.privateBrowsingId
++      ? privateRoot
++      : PathUtils.join(PathUtils.profileDir, "floorp-chrome-filesystem"),
++    original,
++    kind ? "persistent" : "temporary"
++  );
++  const relative = normalized(path);
++  return {
++    root,
++    data: PathUtils.join(root, "data"),
++    path: PathUtils.join(root, "data", ...relative.split("/").filter(Boolean)),
++    relative,
++  };
++}
++function nativeFile(path) {
++  const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
++  file.initWithPath(path);
++  return file;
++}
++function noLinks(path) {
++  const base = path.startsWith(privateRoot)
++    ? privateRoot
++    : PathUtils.join(PathUtils.profileDir, "floorp-chrome-filesystem");
++  let file = nativeFile(path);
++  for (;;) {
++    try {
++      if (file.isSymlink())
++        throw failure(
++          2,
++          "Symbolic links are not allowed in extension storage."
++        );
++    } catch (error) {
++      if (error.result !== Cr.NS_ERROR_FILE_NOT_FOUND) throw error;
++    }
++    if (file.path === base) break;
++    file = file.parent;
++    if (!file) throw failure(2, "Path escapes the extension storage root.");
++  }
++}
++async function init(location) {
++  noLinks(location.root);
++  await IOUtils.makeDirectory(location.data, {
++    createAncestors: true,
++    permissions: 0o700,
++  });
++  noLinks(location.data);
++}
++async function information(location) {
++  noLinks(location.path);
++  const info = await IOUtils.stat(location.path);
++  return {
++    path: "/" + location.relative,
++    name: PathUtils.filename(location.path),
++    directory: info.type === "directory",
++    size: info.type === "regular" ? info.size : 0,
++    modified: info.lastModified,
++  };
++}
++async function measure(path, state = { entries: 0, bytes: 0 }, isRoot = false) {
++  if (!isRoot && ++state.entries > entryLimit())
++    throw failure(10, "Extension file system entry quota exceeded.");
++  noLinks(path);
++  const info = await IOUtils.stat(path);
++  if (info.type === "regular") state.bytes += info.size;
++  else if (info.type === "directory")
++    for (const child of await IOUtils.getChildren(path))
++      await measure(child, state);
++  else throw failure(2, "Unsupported storage entry.");
++  return state;
++}
++async function usage(path) {
++  return (await measure(path, { entries: 0, bytes: 0 }, true)).bytes;
++}
++async function quota(extension, location) {
++  const max = extension.hasPermission("unlimitedStorage")
++    ? LIMIT
++    : 50 * 1024 ** 2;
++  let stored;
++  try {
++    stored = await IOUtils.readJSON(
++      PathUtils.join(location.root, "quota.json")
++    );
++  } catch (error) {
++    if (error.name === "NotFoundError") return max;
++    throw failure(10, "Extension quota metadata is invalid.");
++  }
++  if (!Number.isSafeInteger(stored) || stored < 0)
++    throw failure(10, "Extension quota metadata is invalid.");
++  return Math.min(max, stored);
++}
++
++function mime(path, bytes) {
++  if (
++    bytes?.length >= 8 &&
++    bytes[0] === 137 &&
++    bytes[1] === 80 &&
++    bytes[2] === 78 &&
++    bytes[3] === 71
++  )
++    return "image/png";
++  if (bytes?.[0] === 255 && bytes[1] === 216) return "image/jpeg";
++  if (bytes?.[0] === 71 && bytes[1] === 73 && bytes[2] === 70)
++    return "image/gif";
++  try {
++    return Cc["@mozilla.org/mime;1"]
++      .getService(Ci.nsIMIMEService)
++      .getTypeFromExtension(path.split(".").pop());
++  } catch {
++    return "application/octet-stream";
++  }
++}
++function errorRecord(error) {
++  return {
++    code:
++      error.fileErrorCode ||
++      {
++        NotFoundError: 1,
++        NotReadableError: 4,
++        NoModificationAllowedError: 6,
++        InvalidStateError: 7,
++        NotAllowedError: 2,
++        QuotaExceededError: 10,
++        TypeMismatchError: 11,
++      }[error.name] ||
++      6,
++    message: error.message || String(error),
++  };
++}
++async function operation(actor, request, generation) {
++  const global = actor.manager;
++  if (!global.isCurrentGlobal || request.innerWindowId !== global.innerWindowId)
++    throw failure(2, "File system document is no longer current.");
++  const principal = global.documentPrincipal;
++  if (
++    principal.originAttributes.privateBrowsingId &&
++    generation !== privateGeneration
++  )
++    throw failure(3, "Private file system session was closed.");
++  const extension = extensionFor(principal);
++  if (actor.owner !== extension)
++    throw failure(2, "File system extension instance was unloaded.");
++  const loc = location(extension, principal, request.kind, request.path || "");
++  const current = () => {
++    if (
++      !global.isCurrentGlobal ||
++      !ExtensionValid() ||
++      (principal.originAttributes.privateBrowsingId &&
++        generation !== privateGeneration)
++    )
++      throw failure(2, "File system owner was closed.");
++  };
++  const ExtensionValid = () => {
++    try {
++      return extensionFor(principal) === extension;
++    } catch {
++      return false;
++    }
++  };
++  await init(loc);
++  current();
++  const op = request.op;
++  if (op === "init") return { quota: await quota(extension, loc) };
++  if (op === "quota") {
++    let amount = await quota(extension, loc);
++    if (request.size !== undefined) {
++      if (!Number.isSafeInteger(request.size) || request.size < 0)
++        throw failure(8, "Invalid quota request.");
++      amount = Math.min(
++        request.size,
++        extension.hasPermission("unlimitedStorage") ? LIMIT : 50 * 1024 ** 2
++      );
++      await IOUtils.writeJSON(PathUtils.join(loc.root, "quota.json"), amount, {
++        tmpPath: PathUtils.join(loc.root, "quota.json.tmp"),
++      });
++    }
++    return { quota: amount, usage: await usage(loc.data) };
++  }
++  if (op === "get") {
++    if (
++      typeof request.directory !== "boolean" ||
++      typeof request.create !== "boolean" ||
++      typeof request.exclusive !== "boolean"
++    )
++      throw failure(8, "Invalid entry options.");
++    noLinks(loc.path);
++    const exists = await IOUtils.exists(loc.path);
++    current();
++    if (exists) {
++      if (request.create && request.exclusive)
++        throw failure(12, "File system entry already exists.");
++      const info = await information(loc);
++      if (info.directory !== request.directory)
++        throw failure(11, "Entry has a different type.");
++      return info;
++    }
++    if (!request.create) throw failure(1, "File system entry does not exist.");
++    if (
++      (await measure(loc.data, { entries: 0, bytes: 0 }, true)).entries >=
++      entryLimit()
++    )
++      throw failure(10, "Extension file system entry quota exceeded.");
++    const parent = PathUtils.parent(loc.path);
++    noLinks(parent);
++    if ((await IOUtils.stat(parent)).type !== "directory")
++      throw failure(11, "Parent is not a directory.");
++    current();
++    if (request.directory)
++      await IOUtils.makeDirectory(loc.path, {
++        permissions: 0o700,
++        ignoreExisting: false,
++      });
++    else await IOUtils.write(loc.path, new Uint8Array(), { mode: "create" });
++    return information(loc);
++  }
++  if (op === "stat") return information(loc);
++  if (op === "list") {
++    if ((await information(loc)).directory !== true)
++      throw failure(11, "Entry is not a directory.");
++    const entries = await IOUtils.getChildren(loc.path);
++    if (entries.length > 100000)
++      throw failure(10, "Directory exceeds supported entry count.");
++    const result = [];
++    for (const path of entries.sort()) {
++      current();
++      const relative = normalized(
++        (loc.relative ? loc.relative + "/" : "") + PathUtils.filename(path)
++      );
++      result.push(await information({ ...loc, path, relative }));
++    }
++    return result;
++  }
++  if (op === "remove") {
++    if (!loc.relative)
++      throw failure(9, "The file system root cannot be removed.");
++    noLinks(loc.path);
++    if (
++      !request.recursive &&
++      (await information(loc)).directory &&
++      (await IOUtils.getChildren(loc.path)).length
++    )
++      throw failure(9, "Directory is not empty.");
++    current();
++    await IOUtils.remove(loc.path, { recursive: !!request.recursive });
++    return;
++  }
++  if (op === "copy" || op === "move") {
++    const dest = location(
++      extension,
++      principal,
++      request.kind,
++      request.destination
++    );
++    noLinks(loc.path);
++    noLinks(dest.path);
++    noLinks(PathUtils.parent(dest.path));
++    if (
++      !loc.relative ||
++      !dest.relative ||
++      dest.relative === loc.relative ||
++      dest.relative.startsWith(loc.relative + "/")
++    )
++      throw failure(9, "Invalid destination.");
++    const sourceMeasure = await measure(loc.path);
++    if (
++      op === "copy" &&
++      (await measure(loc.data, { entries: 0, bytes: 0 }, true)).entries +
++        sourceMeasure.entries >
++        entryLimit()
++    )
++      throw failure(10, "Extension file system entry quota exceeded.");
++    const needed = op === "copy" ? sourceMeasure.bytes : 0;
++    if ((await usage(loc.data)) + needed > (await quota(extension, loc)))
++      throw failure(10, "Extension storage quota exceeded.");
++    current();
++    if (op === "copy")
++      await IOUtils.copy(loc.path, dest.path, {
++        recursive: true,
++        noOverwrite: true,
++      });
++    else await IOUtils.move(loc.path, dest.path, { noOverwrite: true });
++    return information(dest);
++  }
++  if (op === "read") {
++    if (
++      !Number.isSafeInteger(request.offset) ||
++      request.offset < 0 ||
++      !Number.isSafeInteger(request.length) ||
++      request.length < 0 ||
++      request.length > CHUNK
++    )
++      throw failure(8, "Invalid file read range.");
++    const info = await information(loc);
++    if (info.directory) throw failure(11, "Entry is a directory.");
++    const bytes = await IOUtils.read(loc.path, {
++      offset: request.offset,
++      maxBytes: request.length,
++    });
++    current();
++    return { bytes: bytes.buffer, type: mime(loc.path, bytes) };
++  }
++  if (op === "write" || op === "truncate") {
++    const info = await information(loc);
++    if (info.directory) throw failure(11, "Entry is a directory.");
++    if (
++      !Number.isSafeInteger(request.position) ||
++      request.position < 0 ||
++      request.position > LIMIT ||
++      typeof request.job !== "string" ||
++      request.job.length > 128
++    )
++      throw failure(8, "Invalid file write request.");
++    if (
++      op === "write" &&
++      (!(request.bytes instanceof ArrayBuffer) ||
++        request.bytes.byteLength > CHUNK)
++    )
++      throw failure(8, "Invalid file write buffer.");
++    const bytes = op === "write" ? new Uint8Array(request.bytes) : null;
++    const size =
++      op === "truncate"
++        ? request.position
++        : Math.max(info.size, request.position + bytes.length);
++    if (
++      size > LIMIT ||
++      (await usage(loc.data)) - info.size + size > (await quota(extension, loc))
++    )
++      throw failure(10, "Extension storage quota exceeded.");
++    current();
++    noLinks(loc.path);
++    const output = Cc[
++      "@mozilla.org/network/file-output-stream;1"
++    ].createInstance(Ci.nsIFileOutputStream);
++    output.init(nativeFile(loc.path), 0x02, 0o600, 0);
++    const seek = output.QueryInterface(Ci.nsISeekableStream);
++    seek.seek(Ci.nsISeekableStream.NS_SEEK_SET, request.position);
++    if (op === "truncate") {
++      seek.setEOF();
++      output.close();
++      return { length: size, position: Math.min(info.size, size) };
++    }
++    const input = Cc[
++      "@mozilla.org/io/arraybuffer-input-stream;1"
++    ].createInstance(Ci.nsIArrayBufferInputStream);
++    input.setData(request.bytes, 0, bytes.length);
++    const { NetUtil } = ChromeUtils.importESModule(
++      "resource://gre/modules/NetUtil.sys.mjs"
++    );
++    await new Promise((resolve, reject) => {
++      const copy = NetUtil.asyncCopy(input, output, status => {
++        jobs.delete(global.innerWindowId + ":" + request.job);
++        if (Components.isSuccessCode(status)) resolve();
++        else
++          reject(
++            failure(
++              status === Cr.NS_BINDING_ABORTED ? 3 : 6,
++              "File write did not complete."
++            )
++          );
++      });
++      jobs.set(global.innerWindowId + ":" + request.job, {
++        actor,
++        copy,
++        extensionId: extension.id,
++        private: !!principal.originAttributes.privateBrowsingId,
++      });
++    });
++    current();
++    return { length: size, position: request.position + bytes.length };
++  }
++  throw failure(8, "Unknown file system operation.");
++}
++export class ChromeExtensionFileSystemParent extends JSWindowActorParent {
++  actorCreated() {
++    this.owner = extensionFor(this.manager.documentPrincipal);
++  }
++  async receiveMessage({ name, data }) {
++    if (name !== "Operation" || !data || typeof data.op !== "string")
++      return {
++        ok: false,
++        error: { code: 8, message: "Invalid file system request." },
++      };
++    try {
++      if (data.op === "cancel") {
++        const job = jobs.get(this.manager.innerWindowId + ":" + data.job);
++        if (job?.actor === this) job.copy.cancel(Cr.NS_BINDING_ABORTED);
++        return { ok: true };
++      }
++      const key = this.manager.documentPrincipal.origin;
++      const isPrivate =
++          !!this.manager.documentPrincipal.originAttributes.privateBrowsingId,
++        generation = privateGeneration;
++      const pending = Promise.allSettled([
++        queues.get(key),
++        cleanup.get(this.owner.id),
++        isPrivate ? privateCleanup : undefined,
++      ]).then(() => operation(this, data, generation));
++      queues.set(key, pending);
++      queueOwners.set(key, this.owner.id);
++      queuePrivate.set(key, isPrivate);
++      try {
++        return { ok: true, value: await pending };
++      } finally {
++        if (queues.get(key) === pending) {
++          queues.delete(key);
++          queueOwners.delete(key);
++          queuePrivate.delete(key);
++        }
++      }
++    } catch (error) {
++      return { ok: false, error: errorRecord(error) };
++    }
++  }
++  didDestroy() {
++    for (const [id, job] of jobs)
++      if (job.actor === this) {
++        job.copy.cancel(Cr.NS_BINDING_ABORTED);
++        jobs.delete(id);
++      }
++  }
++}
++export class ChromeExtensionFileSystemChild extends JSWindowActorChild {}
++
++function parseURL(spec, attributes = {}) {
++  const match =
++    /^filesystem:(moz-extension:\/\/[^/?#]+)\/(temporary|persistent)\/([^?#]*)$/.exec(
++      spec
++    );
++  if (!match) throw failure(5, "Invalid extension file system URL.");
++  const origin = Services.io.newURI(match[1]);
++  const policy = WebExtensionPolicy.getByURI(origin);
++  if (!policy) throw failure(2, "File system owner is unavailable.");
++  const principal = Services.scriptSecurityManager.createContentPrincipal(
++    origin,
++    attributes
++  );
++  const path = match[3]
++    .split("/")
++    .map(part => {
++      const decoded = decodeURIComponent(part);
++      if (/[\\/\0]/.test(decoded))
++        throw failure(5, "Invalid encoded file name.");
++      return decoded;
++    })
++    .join("/");
++  return {
++    principal,
++    kind: match[2] === "persistent" ? 1 : 0,
++    path: normalized(path),
++  };
++}
++function authorizeURL(uri, loadInfo, parent) {
++  const principals = [
++    loadInfo.loadingPrincipal,
++    loadInfo.triggeringPrincipal,
++  ].filter(Boolean);
++  const authenticated = principals.find(
++    principal => !principal.isSystemPrincipal
++  );
++  const parsed = parseURL(
++    uri.spec,
++    authenticated?.originAttributes || loadInfo.originAttributes || {}
++  );
++  if (
++    !principals.length ||
++    principals.some(
++      principal =>
++        !principal.isSystemPrincipal && !principal.equals(parsed.principal)
++    )
++  )
++    throw failure(2, "Another origin cannot read extension files.");
++  if (parent) extensionFor(parsed.principal);
++  if (
++    [
++      Ci.nsIContentPolicy.TYPE_DOCUMENT,
++      Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
++      Ci.nsIContentPolicy.TYPE_SCRIPT,
++      Ci.nsIContentPolicy.TYPE_STYLESHEET,
++      Ci.nsIContentPolicy.TYPE_OBJECT,
++      Ci.nsIContentPolicy.TYPE_XSLT,
++    ].includes(loadInfo.externalContentPolicyType)
++  )
++    throw failure(
++      2,
++      "Stored extension files cannot load executable documents or scripts."
++    );
++  // This custom local protocol is otherwise exempted by CSPService. Ask the
++  // document's native policy explicitly, preserving both explicit filesystem:
++  // sources and the embedded extension origin for 'self'. Never parse CSP in JS.
++  if (
++    !loadInfo.loadingDocument &&
++    (!parent ||
++      loadInfo.externalContentPolicyType !==
++        Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD)
++  )
++    throw failure(
++      2,
++      "Stored files require an owning document or an authorized download."
++    );
++  const csp = loadInfo.loadingDocument?.policyContainer?.csp;
++  if (
++    csp &&
++    csp.shouldLoad(
++      loadInfo.externalContentPolicyType,
++      loadInfo.cspEventListener,
++      loadInfo,
++      uri,
++      null,
++      false
++    ) <= 0 &&
++    csp.shouldLoad(
++      loadInfo.externalContentPolicyType,
++      loadInfo.cspEventListener,
++      loadInfo,
++      channelURI(parsed),
++      null,
++      true
++    ) <= 0
++  )
++    throw failure(
++      2,
++      "Document content security policy blocked the stored file."
++    );
++  return parsed;
++}
++export function canLoadURL(url, principal) {
++  try {
++    const parsed = parseURL(url, principal.originAttributes);
++    return principal.equals(parsed.principal);
++  } catch {
++    return false;
++  }
++}
++async function pipeBytes(output, bytes) {
++  const ready = () =>
++    new Promise(resolve =>
++      output.asyncWait(
++        { onOutputStreamReady: resolve },
++        0,
++        0,
++        Services.tm.currentThread
++      )
++    );
++  for (let offset = 0; offset < bytes.length; ) {
++    let text = String.fromCharCode(...bytes.subarray(offset, offset + 32768));
++    while (text.length) {
++      try {
++        const written = output.write(text, text.length);
++        if (!written) {
++          await ready();
++          continue;
++        }
++        offset += written;
++        text = text.slice(written);
++      } catch (error) {
++        if (error.result === Cr.NS_BASE_STREAM_WOULD_BLOCK) await ready();
++        else throw error;
++      }
++    }
++  }
++}
++function channelURI(parsed) {
++  return Services.io.newURI(
++    parsed.principal.URI.prePath +
++      "/_floorp_filesystem/" +
++      Services.uuid.generateUUID() +
++      "/" +
++      (parsed.kind ? "persistent/" : "temporary/") +
++      parsed.path.split("/").map(encodeURIComponent).join("/")
++  );
++}
++function ownedChannel(channel, uri, parsed, loadInfo) {
++  channel.loadInfo = loadInfo;
++  channel.originalURI = uri;
++  channel.owner = parsed.principal;
++  channel.loadFlags |=
++    Ci.nsIChannel.LOAD_REPLACE |
++    Ci.nsIRequest.LOAD_BYPASS_CACHE |
++    Ci.nsIRequest.INHIBIT_CACHING;
++  loadInfo.resultPrincipalURI = parsed.principal.URI;
++  return channel;
++}
++
++let registered = false;
++export function registerParent() {
++  if (registered) return;
++  registered = true;
++  ChromeUtils.registerWindowActor("ChromeExtensionFileSystem", {
++    parent: {
++      esModuleURI: "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs",
++    },
++    child: {
++      esModuleURI: "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs",
++    },
++    allFrames: true,
++    remoteTypes: ["extension", "parent"],
++  });
++  registerProtocol(true);
++  const { AddonManager } = ChromeUtils.importESModule(
++    "resource://gre/modules/AddonManager.sys.mjs"
++  );
++  AddonManager.addAddonListener({
++    onUninstalled(addon) {
++      const match = /^([a-p]{32})@chromium-extension$/.exec(addon.id);
++      if (!match) return;
++      const owner = knownOwners.get(addon.id);
++      if (owner) retired.add(owner);
++      knownOwners.delete(addon.id);
++      for (const job of jobs.values())
++        if (job.extensionId === addon.id)
++          job.copy.cancel(Cr.NS_BINDING_ABORTED);
++      const writes = [...queues]
++        .filter(([key]) => queueOwners.get(key) === addon.id)
++        .map(([, pending]) => pending);
++      const reads = [...readJobs.values()].filter(
++        job => job.extensionId === addon.id
++      );
++      for (const job of reads) job.copy.cancel(Cr.NS_BINDING_ABORTED);
++      const previous = cleanup.get(addon.id);
++      const pending = Promise.allSettled([
++        ...writes,
++        ...reads.map(job => job.done),
++        previous,
++      ]).then(async () => {
++        for (const base of [
++          PathUtils.join(PathUtils.profileDir, "floorp-chrome-filesystem"),
++          privateRoot,
++        ])
++          await IOUtils.remove(PathUtils.join(base, match[1]), {
++            recursive: true,
++            ignoreAbsent: true,
++          });
++      });
++      cleanup.set(addon.id, pending);
++      pending.catch(Cu.reportError).finally(() => {
++        if (cleanup.get(addon.id) === pending) cleanup.delete(addon.id);
++      });
++    },
++  });
++  const clearPrivate = () => {
++    const generation = ++privateGeneration;
++    privateCleaning = true;
++    const queued = [...queues]
++      .filter(([key]) => queuePrivate.get(key))
++      .map(([, pending]) => pending);
++    for (const job of jobs.values())
++      if (job.private) job.copy.cancel(Cr.NS_BINDING_ABORTED);
++    const reads = [...readJobs.values()].filter(job => job.private);
++    for (const job of reads) job.copy.cancel(Cr.NS_BINDING_ABORTED);
++    const pending = Promise.allSettled([
++      privateCleanup,
++      ...queued,
++      ...reads.map(job => job.done),
++    ])
++      .then(() =>
++        IOUtils.remove(privateRoot, { recursive: true, ignoreAbsent: true })
++      )
++      .finally(() => {
++        if (privateGeneration === generation) privateCleaning = false;
++      });
++    privateCleanup = pending;
++    return pending;
++  };
++  Services.obs.addObserver(
++    () => clearPrivate().catch(Cu.reportError),
++    "last-pb-context-exited"
++  );
++  const { AsyncShutdown } = ChromeUtils.importESModule(
++    "resource://gre/modules/AsyncShutdown.sys.mjs"
++  );
++  AsyncShutdown.profileBeforeChange.addBlocker(
++    "Chrome extension private file system cleanup",
++    clearPrivate
++  );
++}
++let protocolRegistered = false;
++export function registerProtocol(parent = false) {
++  if (protocolRegistered) return;
++  protocolRegistered = true;
++  Services.io.registerProtocolHandler(
++    "filesystem",
++    {
++      scheme: "filesystem",
++      QueryInterface: ChromeUtils.generateQI(["nsIProtocolHandler"]),
++      allowPort: () => false,
++      newChannel(uri, loadInfo) {
++        const parsed = authorizeURL(uri, loadInfo, parent);
++        if (parent) {
++          const extension = extensionFor(parsed.principal),
++            loc = location(
++              extension,
++              parsed.principal,
++              parsed.kind,
++              parsed.path
++            );
++          noLinks(loc.path);
++          if (
++            parsed.principal.originAttributes.privateBrowsingId &&
++            privateCleaning
++          )
++            throw failure(3, "Private file system cleanup is pending.");
++          if (cleanup.has(extension.id))
++            throw failure(2, "File system owner is being removed.");
++          const input = Cc[
++            "@mozilla.org/network/file-input-stream;1"
++          ].createInstance(Ci.nsIFileInputStream);
++          input.init(nativeFile(loc.path), 0x01, 0, 0);
++          const pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
++          pipe.init(true, true, 64 * 1024, 4, null);
++          const stream = Cc[
++            "@mozilla.org/network/input-stream-channel;1"
++          ].createInstance(Ci.nsIInputStreamChannel);
++          stream.setURI(channelURI(parsed));
++          stream.contentStream = pipe.inputStream;
++          const { NetUtil } = ChromeUtils.importESModule(
++            "resource://gre/modules/NetUtil.sys.mjs"
++          );
++          const id = String(Services.uuid.generateUUID());
++          let doneResolve;
++          const done = new Promise(resolve => (doneResolve = resolve));
++          const copy = NetUtil.asyncCopy(input, pipe.outputStream, () => {
++            readJobs.delete(id);
++            doneResolve();
++          });
++          readJobs.set(id, {
++            extensionId: extension.id,
++            copy,
++            done,
++            private: !!parsed.principal.originAttributes.privateBrowsingId,
++          });
++          return ownedChannel(
++            stream.QueryInterface(Ci.nsIChannel),
++            uri,
++            parsed,
++            loadInfo
++          );
++        }
++        const inner = loadInfo.innerWindowID || loadInfo.frameInnerWindowID;
++        const reader =
++          readers.get(inner) ||
++          [...readers.values()].find(
++            context =>
++              !context.unloaded && context.principal.equals(parsed.principal)
++          );
++        const global = reader?.contentWindow.windowGlobalChild;
++        if (
++          !global?.isCurrentGlobal ||
++          !reader.principal.equals(parsed.principal)
++        )
++          throw failure(
++            2,
++            "File system request has no current owning document."
++          );
++        const actor = global.getActor("ChromeExtensionFileSystem");
++        const pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
++        pipe.init(true, true, 64 * 1024, 4, null);
++        const channel = Cc[
++          "@mozilla.org/network/input-stream-channel;1"
++        ].createInstance(Ci.nsIInputStreamChannel);
++        channel.setURI(channelURI(parsed));
++        channel.contentStream = pipe.inputStream;
++        const requestChannel = channel.QueryInterface(Ci.nsIChannel);
++        ownedChannel(requestChannel, uri, parsed, loadInfo);
++        requestChannel.contentType = "application/octet-stream";
++        const output = pipe.outputStream;
++        (async () => {
++          try {
++            let offset = 0;
++            for (;;) {
++              if (
++                reader.unloaded ||
++                !global.isCurrentGlobal ||
++                !Components.isSuccessCode(requestChannel.status)
++              )
++                throw failure(3, "File read was cancelled.");
++              const result = await actor.sendQuery("Operation", {
++                op: "read",
++                kind: parsed.kind,
++                path: parsed.path,
++                offset,
++                length: CHUNK,
++                innerWindowId: global.innerWindowId,
++              });
++              if (!result.ok) throw result.error;
++              const bytes = new Uint8Array(result.value.bytes);
++              if (!offset) requestChannel.contentType = result.value.type;
++              if (!bytes.length) break;
++              await pipeBytes(output, bytes);
++              offset += bytes.length;
++              if (bytes.length < CHUNK) break;
++            }
++            output.close();
++          } catch (error) {
++            pipe.outputStream.closeWithStatus(Cr.NS_ERROR_FILE_ACCESS_DENIED);
++            requestChannel.cancel(Cr.NS_ERROR_FILE_ACCESS_DENIED);
++          }
++        })();
++        return requestChannel;
++      },
++    },
++    Ci.nsIProtocolHandler.URI_NORELATIVE |
++      Ci.nsIProtocolHandler.URI_NOAUTH |
++      Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
++      Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT |
++      Ci.nsIProtocolHandler.URI_LOADABLE_BY_EXTENSIONS |
++      Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
++    -1
++  );
++}
++
++export function fileNameForURL(url, principal) {
++  const parsed = parseURL(url, principal.originAttributes);
++  if (!principal.equals(parsed.principal))
++    throw failure(2, "Another origin cannot name extension files.");
++  return parsed.path.split("/").pop() || "download";
++}
++export const ChromeExtensionFileSystem = { compatible, canLoadURL };
+diff --git a/modules/ChromeExtensionFileSystemChild.sys.mjs b/modules/ChromeExtensionFileSystemChild.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/modules/ChromeExtensionFileSystemChild.sys.mjs
+@@ -0,0 +1,209 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++import {
++  compatible,
++  registerProtocol,
++  registerReader,
++} from "resource://gre/modules/ChromeExtensionFileSystem.sys.mjs";
++// These objects are created in the extension principal's realm. Native Blob,
++// File, Promise, Event and EventTarget keep their ordinary content principal.
++const source = String.raw`(function(bridge,origin){
++  const CHUNK=16*1024*1024;
++  const names=["","NotFoundError","SecurityError","AbortError","NotReadableError","EncodingError","NoModificationAllowedError","InvalidStateError","SyntaxError","InvalidModificationError","QuotaExceededError","TypeMismatchError","PathExistsError"];
++  class FileError extends Error{constructor(record){super(record.message);this.code=record.code;this.name=names[this.code]||"InvalidStateError";}}
++  for(const[name,value]of Object.entries({NOT_FOUND_ERR:1,SECURITY_ERR:2,ABORT_ERR:3,NOT_READABLE_ERR:4,ENCODING_ERR:5,NO_MODIFICATION_ALLOWED_ERR:6,INVALID_STATE_ERR:7,SYNTAX_ERR:8,INVALID_MODIFICATION_ERR:9,QUOTA_EXCEEDED_ERR:10,TYPE_MISMATCH_ERR:11,PATH_EXISTS_ERR:12})){Object.defineProperty(FileError,name,{value});Object.defineProperty(FileError.prototype,name,{value});}
++  const error=value=>value instanceof FileError?value:new FileError({code:value?.code||6,message:value?.message||String(value)});
++  const call=request=>bridge(request).catch(value=>{throw error(value);});
++  const callback=(promise,success,failed)=>{promise.then(value=>success?.(value),reason=>failed?.(error(reason)));};
++  const fixed=(object,properties)=>Object.defineProperties(object,Object.fromEntries(Object.entries(properties).map(([key,value])=>[key,{value,enumerable:true}])));
++  const path=(base,value)=>{if(typeof value!=="string")throw new TypeError("Path must be a string");return value.startsWith("/")?value:base.replace(/\/$/,"")+"/"+value;};
++  class FileSystem{constructor(kind){fixed(this,{name:new URL(origin).host+(kind?":Persistent":":Temporary"),kind});this.root=new DirectoryEntry(this,{name:"",path:"/",directory:true});}}
++  class Entry{constructor(filesystem,info){fixed(this,{filesystem,name:info.path==="/"?"":info.name,fullPath:info.path,isFile:!info.directory,isDirectory:info.directory});}
++    _request(op,extra={}){return call({op,kind:this.filesystem.kind,path:this.fullPath,...extra});}
++    toURL(){return "filesystem:"+origin+"/"+(this.filesystem.kind?"persistent":"temporary")+this.fullPath.split("/").map(encodeURIComponent).join("/");}
++    toURI(){return this.toURL();}
++    getMetadata(success,failed){callback(this._request("stat").then(info=>({size:info.size,modificationTime:new Date(info.modified)})),success,failed);}
++    getParent(success,failed){callback(this._request("get",{path:this.fullPath.slice(0,this.fullPath.lastIndexOf("/"))||"/",directory:true,create:false,exclusive:false}).then(info=>entry(this.filesystem,info)),success,failed);}
++    remove(success,failed){callback(this._request("remove",{recursive:false}),success,failed);}
++    copyTo(parent,name,success,failed){this._transfer("copy",parent,name,success,failed);}
++    moveTo(parent,name,success,failed){this._transfer("move",parent,name,success,failed);}
++    _transfer(op,parent,name,success,failed){if(typeof name==="function"){failed=success;success=name;name=this.name;}if(!parent?.isDirectory||parent.filesystem.kind!==this.filesystem.kind)throw new TypeError("Destination must be a directory in this file system");name=name||this.name;if(/[\\/]/.test(name)||name==="."||name==="..")return callback(Promise.reject(new FileError({code:5,message:"Invalid destination name"})),success,failed);callback(this._request(op,{destination:path(parent.fullPath,name)}).then(info=>entry(parent.filesystem,info)),success,failed);}
++  }
++  class DirectoryEntry extends Entry{
++    getFile(name,options,success,failed){this._get(false,name,options,success,failed);}
++    getDirectory(name,options,success,failed){this._get(true,name,options,success,failed);}
++    _get(directory,name,options,success,failed){if(typeof options==="function"){failed=success;success=options;options={};}options=options||{};callback(this._request("get",{path:path(this.fullPath,name),directory,create:!!options.create,exclusive:!!options.exclusive}).then(info=>entry(this.filesystem,info)),success,failed);}
++    createReader(){const self=this;let index=0,pending=false,list;return{readEntries(success,failed){if(pending)return callback(Promise.reject(new FileError({code:7,message:"Directory read is already pending"})),success,failed);pending=true;callback((list?Promise.resolve(list):self._request("list").then(value=>list=value)).then(values=>{const result=values.slice(index,index+100).map(info=>entry(self.filesystem,info));index+=result.length;return result;}).finally(()=>pending=false),success,failed);}};}
++    removeRecursively(success,failed){callback(this._request("remove",{recursive:true}),success,failed);}
++  }
++  class FileEntry extends Entry{
++    file(success,failed){callback((async()=>{const info=await this._request("stat");const parts=[];let type="";for(let offset=0;offset<info.size;offset+=CHUNK){const value=await this._request("read",{offset,length:Math.min(CHUNK,info.size-offset)});parts.push(value.bytes);type=value.type;}return new File(parts,this.name,{type,lastModified:info.modified});})(),success,failed);}
++    createWriter(success,failed){callback(this._request("stat").then(info=>new FileWriter(this,info.size)),success,failed);}
++  }
++  class FileWriter extends EventTarget{
++    constructor(entry,length){super();this._entry=entry;this._position=0;this._length=length;this._readyState=0;this._error=null;this._generation=0;for(const name of["writestart","progress","write","abort","error","writeend"])this["on"+name]=null;}
++    get position(){return this._position;}get length(){return this._length;}get readyState(){return this._readyState;}get error(){return this._error;}
++    _event(name,loaded=0,total=0){const event=name==="progress"?new ProgressEvent(name,{lengthComputable:true,loaded,total}):new Event(name);this.dispatchEvent(event);const handler=this["on"+name];if(typeof handler==="function")handler.call(this,event);}
++    seek(offset){if(this._readyState===1)throw new DOMException("A write is in progress","InvalidStateError");if(!Number.isFinite(offset))throw new TypeError("Invalid seek offset");this._position=Math.max(0,Math.min(this._length,offset<0?this._length+Math.trunc(offset):Math.trunc(offset)));}
++    write(blob){if(!(blob instanceof Blob))throw new TypeError("FileWriter.write requires a Blob");this._run(async generation=>{let loaded=0;for(let offset=0;offset<blob.size;offset+=CHUNK){const bytes=await blob.slice(offset,offset+CHUNK).arrayBuffer();if(generation!==this._generation)return;const result=await this._entry._request("write",{bytes,position:this._position,job:this._job});if(generation!==this._generation)return;this._length=result.length;this._position=result.position;loaded+=bytes.byteLength;this._event("progress",loaded,blob.size);}if(blob.size===0){await this._entry._request("write",{bytes:new ArrayBuffer(0),position:this._position,job:this._job});}},blob.size);}
++    truncate(size){if(!Number.isSafeInteger(size)||size<0)throw new TypeError("Invalid truncate length");this._run(async generation=>{await this._entry._request("truncate",{position:size,job:this._job});if(generation!==this._generation)return;this._length=size;this._position=Math.min(this._position,size);});}
++    _run(operation){if(this._readyState===1)throw new DOMException("A write is in progress","InvalidStateError");this._readyState=1;this._error=null;this._job=crypto.randomUUID();const generation=++this._generation;queueMicrotask(()=>{if(generation!==this._generation)return;this._event("writestart");Promise.resolve().then(()=>operation(generation)).then(()=>{if(generation!==this._generation)return;this._readyState=2;this._event("write");this._event("writeend");},reason=>{if(generation!==this._generation)return;this._readyState=2;this._error=error(reason);this._event("error");this._event("writeend");});});}
++    abort(){if(this._readyState!==1)throw new DOMException("No write is in progress","InvalidStateError");this._generation++;bridge({op:"cancel",job:this._job}).catch(()=>{});this._readyState=2;this._error=new FileError({code:3,message:"File write was aborted"});queueMicrotask(()=>{this._event("abort");this._event("writeend");});}
++  }
++  for(const[name,value]of Object.entries({INIT:0,WRITING:1,DONE:2})){fixed(FileWriter,{[name]:value});fixed(FileWriter.prototype,{[name]:value});}
++  const entry=(filesystem,info)=>info.directory?new DirectoryEntry(filesystem,info):new FileEntry(filesystem,info);
++  function requestFileSystem(kind,size,success,failed){if(kind!==0&&kind!==1)return callback(Promise.reject(new FileError({code:8,message:"Invalid file system type"})),success,failed);if(!Number.isSafeInteger(size)||size<0)throw new TypeError("Invalid requested size");callback(call({op:"init",kind,path:"/"}).then(result=>{if(size>result.quota)throw new FileError({code:10,message:"Requested size exceeds storage quota"});return new FileSystem(kind);}),success,failed);}
++  function resolveLocalFileSystemURL(url,success,failed){callback(Promise.resolve().then(()=>{const prefix="filesystem:"+origin+"/";if(typeof url!=="string"||!url.startsWith(prefix))throw new FileError({code:2,message:"File system URL belongs to another origin"});const parts=url.slice(prefix.length).split("/");const type=parts.shift();if(type!=="persistent"&&type!=="temporary")throw new FileError({code:5,message:"Invalid file system URL"});const path=parts.map(part=>{const value=decodeURIComponent(part);if(/[\\/\0]/.test(value))throw new FileError({code:5,message:"Invalid encoded file name"});return value;}).join("/");const fs=new FileSystem(type==="persistent"?1:0);return call({op:"stat",kind:fs.kind,path}).then(info=>entry(fs,info));}),success,failed);}
++  const storage=kind=>({requestQuota(size,success,failed){callback(call({op:"quota",kind,path:"/",size}).then(result=>result.quota),success,failed);},queryUsageAndQuota(success,failed){call({op:"quota",kind,path:"/"}).then(result=>success?.(result.usage,result.quota),reason=>failed?.(error(reason)));}});
++  return {requestFileSystem,resolveLocalFileSystemURL,persistent:storage(1),temporary:storage(0),FileError,FileWriter};
++})`;
++export const ChromeExtensionFileSystemChild = {
++  install(context) {
++    if (!compatible(context.extension)) return;
++    registerProtocol();
++    const unregisterReader = registerReader(context);
++    const sandbox = Cu.Sandbox(context.principal, {
++      sandboxPrototype: context.contentWindow,
++      wantXrays: false,
++    });
++    const actor = context.contentWindow.windowGlobalChild.getActor(
++      "ChromeExtensionFileSystem"
++    );
++    let pendingWrites = 0;
++    const call = Cu.exportFunction(
++      request =>
++        new context.cloneScope.Promise(
++          Cu.exportFunction((resolve, reject) => {
++            if (context.unloaded) {
++              reject(
++                Cu.cloneInto(
++                  { code: 2, message: "File system document was closed" },
++                  context.cloneScope
++                )
++              );
++              return;
++            }
++            let data,
++              writing = false;
++            try {
++              const value = Cu.waiveXrays(request);
++              data = {};
++              for (const key of ["op", "path", "destination", "job"]) {
++                const item = value[key];
++                if (item !== undefined) {
++                  if (typeof item !== "string" || item.length > 4096)
++                    throw Error("Invalid file system string.");
++                  data[key] = item;
++                }
++              }
++              for (const key of [
++                "kind",
++                "size",
++                "offset",
++                "length",
++                "position",
++              ]) {
++                const item = value[key];
++                if (item !== undefined) {
++                  if (!Number.isSafeInteger(item) || item < 0)
++                    throw Error("Invalid file system number.");
++                  data[key] = item;
++                }
++              }
++              for (const key of [
++                "directory",
++                "create",
++                "exclusive",
++                "recursive",
++              ]) {
++                const item = value[key];
++                if (item !== undefined) {
++                  if (typeof item !== "boolean")
++                    throw Error("Invalid file system flag.");
++                  data[key] = item;
++                }
++              }
++              if (data.op === "write") {
++                const bytes = Cu.waiveXrays(value.bytes);
++                const length = Object.getOwnPropertyDescriptor(
++                  ArrayBuffer.prototype,
++                  "byteLength"
++                ).get.call(bytes);
++                if (length > 16 * 1024 ** 2 || pendingWrites >= 4)
++                  throw Error("File write exceeds the in-flight buffer limit.");
++                data.bytes = Cu.cloneInto(bytes, globalThis);
++                pendingWrites++;
++                writing = true;
++              }
++            } catch (reason) {
++              reject(
++                Cu.cloneInto(
++                  { code: 8, message: String(reason) },
++                  context.cloneScope
++                )
++              );
++              return;
++            }
++            data.innerWindowId =
++              context.contentWindow.windowGlobalChild.innerWindowId;
++            actor
++              .sendQuery("Operation", data)
++              .finally(() => {
++                if (writing) pendingWrites--;
++              })
++              .then(
++                result => {
++                  if (context.unloaded) return;
++                  if (result.ok)
++                    resolve(Cu.cloneInto(result.value, context.cloneScope));
++                  else reject(Cu.cloneInto(result.error, context.cloneScope));
++                },
++                () =>
++                  reject(
++                    Cu.cloneInto(
++                      { code: 2, message: "File system owner was closed" },
++                      context.cloneScope
++                    )
++                  )
++              );
++          }, context.cloneScope)
++        ),
++      sandbox
++    );
++    const api = Cu.waiveXrays(
++      Cu.evalInSandbox(source, sandbox)(call, context.extension.baseURI.prePath)
++    );
++    const window = Cu.waiveXrays(context.contentWindow),
++      navigator = window.navigator;
++    for (const [name, value] of Object.entries({
++      TEMPORARY: 0,
++      PERSISTENT: 1,
++      webkitRequestFileSystem: api.requestFileSystem,
++      requestFileSystem: api.requestFileSystem,
++      webkitResolveLocalFileSystemURL: api.resolveLocalFileSystemURL,
++      resolveLocalFileSystemURL: api.resolveLocalFileSystemURL,
++      FileError: api.FileError,
++      FileWriter: api.FileWriter,
++    }))
++      Object.defineProperty(window, name, {
++        value,
++        configurable: true,
++        writable: true,
++      });
++    Object.defineProperty(navigator, "webkitPersistentStorage", {
++      value: api.persistent,
++      configurable: true,
++    });
++    Object.defineProperty(navigator, "webkitTemporaryStorage", {
++      value: api.temporary,
++      configurable: true,
++    });
++    context.callOnClose({
++      close() {
++        unregisterReader();
++        Cu.nukeSandbox(sandbox);
++      },
++    });
++  },
++};

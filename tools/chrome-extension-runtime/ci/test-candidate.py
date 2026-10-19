@@ -16,6 +16,7 @@ TESTS = "browser-features/modules/modules/chrome-web-store/test/"
 CORE = [
     "CRXParser.test.mts", "CRXVerifier.test.mts", "CRXConverter.test.mts",
     "Constants.test.mts", "CodeValidator.test.mts", "ManifestTransformer.test.mts",
+    "NativeBackgroundSelection.test.mts",
     "DNRTransformer.test.mts", "ChromeVersionTarget.test.mts", "ChromeExtensionDownload.test.mts",
     "ChromeExtensionUpdater.test.mts", "ChromeExtensionUpdateScheduler.test.mts",
     "ChromeMessagingNative.test.mts", "ChromeIdentityNative.test.mts",
@@ -24,11 +25,14 @@ CORE = [
     "workers/WorkerNative.test.mts", "ChromeDebuggerNative.test.mts",
     "ChromeDebuggerPrincipalNative.test.mts", "ChromeAuxiliaryNative.test.mts",
     "ChromeDeclarativeContentNative.test.mts", "windows/WindowsNative.test.mts",
-    "auxiliary/AuxiliaryNative.test.mts", "polyfills/capture/CaptureNative.test.mts",
+    "ChromePowerNative.test.mts", "polyfills/capture/FileSystemNative.test.mts",
+    "polyfills/capture/FileSystemPrivateNative.test.mts",
+    "polyfills/capture/CaptureNative.test.mts",
     "polyfills/capture/CaptureConsumerNative.test.mts", "polyfills/capture/CapturePermissionNative.test.mts",
 ]
 MEDIA = ["polyfills/capture/" + name + ".test.mts" for name in (
     "CaptureAudioNative", "DesktopSourceNative", "DesktopCaptureNative")]
+MEDIA.append("auxiliary/AuxiliaryNative.test.mts")
 
 
 def run(args, *, cwd=ROOT):
@@ -141,8 +145,10 @@ def main():
     if args.group == "core":
         commands.extend([
             [sys.executable, "tools/chrome-extension-runtime/test-network.py", "--browser", binary],
+            [sys.executable, "tools/chrome-extension-runtime/test-response-headers.py", "--browser", binary],
             [sys.executable, "tools/chrome-extension-runtime/test-proxy.py", "--browser", binary, "--native-bypass"],
             [sys.executable, "tools/chrome-extension-runtime/test-proxy-scopes.py", "--browser", binary],
+            [sys.executable, "tools/chrome-extension-runtime/ci/test-proxy-native.py", "--browser", binary],
             [sys.executable, "tools/chrome-extension-runtime/test-side-panel.py", "--browser", binary, "--floorp-ui"],
             [sys.executable, "tools/chrome-extension-runtime/test-diagnostics-ui.py", "--browser", binary],
         ])

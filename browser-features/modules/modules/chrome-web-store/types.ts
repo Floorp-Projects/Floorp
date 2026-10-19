@@ -235,6 +235,12 @@ export interface HeaderOperation {
   value?: string;
 }
 
+export interface DNRHeaderInfo {
+  header: string;
+  values?: string[];
+  excludedValues?: string[];
+}
+
 export interface DNRRuleCondition {
   urlFilter?: string;
   regexFilter?: string;
@@ -251,6 +257,8 @@ export interface DNRRuleCondition {
   excludedResourceTypes?: ResourceType[];
   tabIds?: number[];
   excludedTabIds?: number[];
+  responseHeaders?: DNRHeaderInfo[];
+  excludedResponseHeaders?: DNRHeaderInfo[];
 }
 
 export type RequestMethod =
@@ -305,6 +313,11 @@ export interface ChromeConversionReport {
   addonId: string;
   originalVersion: string;
   originalManifestPath: string;
+  background?: {
+    nativeWorkerCompiled: boolean;
+    selected: "service_worker" | "document" | "none";
+    serviceWorkerFallback: boolean;
+  };
   signature?: {
     format: 2 | 3;
     algorithm: "rsa-sha1" | "rsa-sha256" | "ecdsa-sha256";
@@ -398,6 +411,8 @@ export interface TransformOptions {
   readonly extensionId: string;
   /** Minimum Gecko version */
   readonly minGeckoVersion?: string;
+  /** Actual compiled worker capability, supplied by the production converter. */
+  readonly nativeWorker?: boolean;
   /** Whether to keep unsupported permissions (for logging) */
   readonly keepUnsupportedPermissions?: boolean;
 }
