@@ -5,6 +5,7 @@ The snapshot is private. The public result proves neither build success nor
 cache hits, an active phase, remaining work, or a duration to completion.
 """
 from contextlib import ExitStack
+from functools import lru_cache
 import json
 import math
 import os
@@ -124,10 +125,8 @@ def _budget(deadline):
 
 
 def _pairs(pairs):
-    result = {}
-    for key, value in pairs:
-        _need(key not in result, 'json')
-        result[key] = value
+    result = dict(pairs)
+    _need(len(result) == len(pairs), 'json')
     return result
 
 
@@ -152,7 +151,8 @@ def _decode(raw, validated=False):
 
 
 def _time(value):
-    _need(type(value) in (int, float) and math.isfinite(value) and value >= 0, 'marker-time')
+    value_type = type(value)
+    _need((value_type is int or value_type is float) and math.isfinite(value) and value >= 0, 'marker-time')
     return value
 
 
@@ -188,6 +188,8 @@ class _Completed:
             return
         end = _time(end)
         _need(end >= start, 'marker-time')
+        if not phase and name not in KINDS:
+            return
         times = {'startTimeMs': start, 'endTimeMs': end}
         if (phase and data['phase'] in TIERS) or name in KINDS:
             self.markers += 1
@@ -225,34 +227,74 @@ _TRACK = frozenset(((), ('meta',), ('threads',), _THREAD, (*_THREAD, 'stringArra
 _NONSPACE = re.compile(rb'[^ \t\r\n]')
 _SPECIAL = re.compile(rb'["\\\x00-\x1f]')
 _DELIMITER = re.compile(rb'[ \t\r\n,\]}]')
-_DECODER = json.JSONDecoder(object_pairs_hook=_pairs, parse_float=_float, parse_constant=_constant)
+_DECODER = json.JSONDecoder(object_pairs_hook=_pairs, parse_constant=_constant)
 _VALIDATED_DECODER = json.JSONDecoder()
 _UNDECODED = object()
 
 
-def _key_size(key):
+_DATA_PATH = (*_MARKERS, 'data')
+_DATA_PHASES = (*TIERS, 'teardown')
+_DATA_TARGETS = tuple(TARGETS)
+_DATA_STUBS = (None, {'type': 'Other'}, {'type': 'Text'}, {'type': 'Text', 'text': ''},
+               *({'type': 'Text', 'text': name} for name in _DATA_TARGETS),
+               {'type': 'Phase', 'phase': None},
+               *({'type': 'Phase', 'phase': name} for name in _DATA_PHASES))
+
+
+def _data_code(value):
+    if type(value) is not dict or type(value.get('type')) is not str:
+        return 0
+    kind = value['type']
+    if kind == 'Phase':
+        phase = value.get('phase')
+        return 8 + _DATA_PHASES.index(phase) if type(phase) is str and phase in _DATA_PHASES else 7
+    if kind == 'Text':
+        text = value.get('text')
+        if type(text) is not str:
+            return 2
+        return 4 + _DATA_TARGETS.index(text) if text in _DATA_TARGETS else 3
+    return 1
+
+
+def _key_size(key, limit=None):
     try:
-        _need(len(key.encode('utf-8')) <= MAX_KEY_BYTES, 'key-limit')
+        _need(len(key.encode('utf-8')) <= (MAX_KEY_BYTES if limit is None else limit), 'key-limit')
     except UnicodeError:
         raise _Unknown('json') from None
+
+
+@lru_cache(maxsize=512)
+def _short_keys(keys, limit):
+    for key in keys:
+        _key_size(key, limit)
 
 
 def _bounded_decoded(value, depth):
     """Bound a decoder's small value, including ignored nested containers."""
     _need(depth <= MAX_DEPTH, 'depth-limit')
-    if type(value) is dict:
+    value_type = type(value)
+    if value_type is dict:
         _need(len(value) <= MAX_OBJECT_KEYS, 'key-limit')
-        for key in value:
-            _key_size(key)
+        if len(value) <= 16 and MAX_KEY_BYTES <= 256:
+            _short_keys(tuple(value), MAX_KEY_BYTES)
+        else:
+            for key in value:
+                _key_size(key)
         children = value.values()
-    elif type(value) is list:
+    elif value_type is list:
         _need(len(value) <= MAX_ROWS, 'row-limit')
         children = value
     else:
+        if value_type is float and not math.isfinite(value):
+            raise _Unknown('json')
         return
     _need(not value or depth < MAX_DEPTH, 'depth-limit')
     for child in children:
-        if type(child) in (dict, list):
+        child_type = type(child)
+        if child_type is float:
+            if not math.isfinite(child):
+                raise _Unknown('json')
+        elif child_type is dict or child_type is list:
             _bounded_decoded(child, depth + 1)
 
 
@@ -379,8 +421,8 @@ class _JSONStream:
         if cut <= start:
             return _UNDECODED
         try:
-            values = _decode(b'[' + self.buffer[start:cut] + b']', self.validated)
-        except _Unknown:
+            values = self.decoder.decode((b'[' + self.buffer[start:cut] + b']').decode('utf-8'))
+        except (_Unknown, ValueError, UnicodeError, RecursionError):
             self.failed_batch_base = self.base
             return _UNDECODED
         if not values:
@@ -395,6 +437,7 @@ class _JSONStream:
         _need(depth <= MAX_DEPTH, 'depth-limit')
         self.whitespace()
         start, byte, count, keys, scalar = self.pos, self.peek(), 0, None, None
+        data_codes = None
         if path is None:
             decoded = self.small_value(depth)
             if decoded is not _UNDECODED:
@@ -421,6 +464,7 @@ class _JSONStream:
             self.take(125)
             kind = 'object'
         elif byte == 91:
+            data_codes = bytearray() if path == _DATA_PATH else None
             self.pos += 1
             self.whitespace()
             if self.peek() != 93:
@@ -431,9 +475,16 @@ class _JSONStream:
                         if batch is not _UNDECODED:
                             count += len(batch)
                             _need(count <= MAX_ROWS, 'row-limit')
+                            if data_codes is not None:
+                                data_codes.extend(_data_code(value) for value in batch)
                             self.whitespace()
                             continue
-                    self.value(self.child(path, count), depth + 1)
+                    element_start = self.pos
+                    decoded = self.value(self.child(path, count), depth + 1)
+                    if data_codes is not None:
+                        if decoded is _UNDECODED:
+                            decoded = _decode(self.raw(element_start))
+                        data_codes.append(_data_code(decoded))
                     count += 1
                     self.whitespace()
                     if self.peek() != 44:
@@ -447,6 +498,8 @@ class _JSONStream:
         if path is not None:
             self.index[path] = {'kind': kind, 'start': start, 'end': self.pos,
                                 'count': count, 'keys': keys, 'value': scalar}
+            if data_codes is not None:
+                self.index[path]['dataCodes'] = data_codes
         return scalar if kind == 'scalar' else _UNDECODED
 
     def finish(self):
@@ -508,8 +561,11 @@ def _whole_stream(stream, size, completed, deadline):
     for value in _array_values(reader.fd, strings, deadline):
         _need(type(value) is str, 'profile-schema')
         codes.append(names.index(value) if value in names else 0)
-    values = [_array_values(reader.fd, columns[key], deadline)
-              for key in ('data', 'name', 'startTime', 'endTime', 'phase')]
+    data_codes = columns['data'].get('dataCodes')
+    _need(type(data_codes) is bytearray and len(data_codes) == length, 'profile-schema')
+    values = [(_DATA_STUBS[code] for code in data_codes)]
+    values.extend(_array_values(reader.fd, columns[key], deadline)
+                  for key in ('name', 'startTime', 'endTime', 'phase'))
     for data, name, start, end, phase in zip(*values):
         _budget(deadline)
         _need(type(name) is int and 0 <= name < len(codes) and type(phase) is int and

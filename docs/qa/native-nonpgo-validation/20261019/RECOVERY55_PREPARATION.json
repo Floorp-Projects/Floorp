@@ -1,0 +1,346 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY55_BOUNDED_STRICT_VALIDATION_AND_COMPACT_DATA_COLUMN",
+  "sourceFreeze": {
+    "schema": 1,
+    "scope": "RECOVERY55_BOUNDED_STRICT_VALIDATION_AND_COMPACT_DATA_COLUMN",
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 27426,
+        "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 36824,
+        "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+      }
+    ],
+    "baselineFixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "baselineParserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+    "processingSeconds": 30,
+    "fullQA": 740,
+    "MacQA": 525,
+    "recording": 14,
+    "denseFailureAssertionLine": 450,
+    "sameInputBytes": 195000385,
+    "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7"
+  },
+  "previousActualMac": {
+    "run": 39322232985,
+    "overall": "failed",
+    "originalQA": {
+      "total": 522,
+      "failures": 1,
+      "errors": 0,
+      "skips": 0,
+      "reason": "build-completion-processing-limit",
+      "elapsedSeconds": 30.07684249299996,
+      "internalPhase": "UNKNOWN"
+    },
+    "separateSameInputPhaseAttempt": {
+      "elapsedSeconds": 30.011218015999987,
+      "lastReachedBoundary": "whole-document-validation",
+      "secondPassRowsEntered": 0,
+      "laterProfileSchemaBoundaryReached": false
+    },
+    "qualification": "The separate instrumented attempt did not complete whole-document validation. It does not establish the internal phase of the original QA attempt or reconstruct an unavailable production profile.",
+    "recordingPassed": 14,
+    "serializerCasesPassed": 9,
+    "fatalMonitorFailure": null,
+    "retainedRecoveredMonitorDiagnostics": 1,
+    "terminalEvidenceCommit": "5b40e3f108f162e53c73e5258ee7b312898dd08d"
+  },
+  "changes": [
+    "Use the C dict constructor and decoded pair count to reject all duplicate semantic keys. Keep strict constants; validate every finite float leaf in the bounded whole-document walk. JSONL and scalar fallback retain their strict decoder.",
+    "Reuse successful UTF-8 key validation for at most 512 key shapes of at most 16 keys each, each at most 256 UTF-8 bytes. The active key-byte limit participates in the cache key. Container, depth, row and finite-value checks still run on every value; failed validation is never cached.",
+    "Record one byte for every marker data row during the complete strict pass. Fixed private stubs preserve all type, Phase, Text, target-name and invalid-schema distinctions consumed by the existing marker reducer. Require code count and every column length to match before folding. Structural fallback retains the per-element 1 MiB bound.",
+    "Avoid repeated scalar type tuple construction and allocations for irrelevant resources after their schema, phase and start/end time validation."
+  ],
+  "performanceHypothesis": "Reduce callbacks and repeated key encoding in the first complete JSON validation, and avoid decoding resource data a second time. The first-pass hypothesis is tested by separate fixed-boundary timing on the same controlled input; actual Mac QA remains the qualification gate.",
+  "boundedMemory": {
+    "dataCodeBytesPerRow": 1,
+    "maximumDataRows": 4000000,
+    "keyShapeCacheEntries": 512,
+    "maximumCachedShapeKeys": 16,
+    "maximumCachedKeyUTF8Bytes": 256,
+    "exactPythonObjectRSSClaimed": false
+  },
+  "preserved": {
+    "processingSeconds": 30,
+    "maximumInputBytes": 2147483648,
+    "sameControlledInput": true,
+    "strictWholeDocumentBeforeAggregation": true,
+    "duplicateKeysNonfiniteUTF8DepthKeysRowsAndValueBounds": true,
+    "unknownCountsRemainNull": true,
+    "sameFDOnlyAndFinalPathDirectoryCTimeSizeBinding": true,
+    "resourceLimitsOwnershipAndCleanup": true,
+    "noGCDisable": true,
+    "sourceToolchainsConfigBuildArgsAndSDKUnchanged": true
+  },
+  "localQA": {
+    "total": 740,
+    "passed": 723,
+    "failures": 0,
+    "errors": 0,
+    "skippedDarwinOnly": 17,
+    "seconds": 55.32,
+    "resourceWarningsAreErrors": true,
+    "densityObservation": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 4.509578973025782,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    }
+  },
+  "implementationReview": {
+    "bytes": 10094,
+    "sha256": "11792f5e16fc6f081ffafe3f9fe603f6531aad9539268c8fde1ed32c9b29adef"
+  },
+  "callerPreparation": {
+    "schema": 1,
+    "scope": "RECOVERY55_COMPACT_DATA_SDKLESS_CALLER_PREPARATION",
+    "baseCaller": {
+      "bytes": 47930,
+      "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c"
+    },
+    "fixture": {
+      "sha": "__FLOORP55_FIXTURE__",
+      "parserSHA256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83",
+      "QA": 525,
+      "recording": 14,
+      "parserAndTestSourceEditsByThisPreparation": false,
+      "rootParserChangeFromRecovery54": true,
+      "newParserTests": 3
+    },
+    "change": "Bind the reviewed compact-data parser, move the fourth fixed callback before data_codes, and include bounded runtime context. All unrelated preflight/continuation/first-failure/ownership/acquisition/serializer/final logic is preserved.",
+    "instrumentation": {
+      "instrumentedFunctionSHA256": "db374c6398ee0bbf4dc6a7459442a274aef95fa8006d68591b700bdb7b403041",
+      "ASTEquivalentAfterRemovingFourCallbacks": true,
+      "callbackCount": 4,
+      "perRowCallbacks": false,
+      "resourceProfiler": false,
+      "inputUnchanged": true,
+      "processingSeconds": 30,
+      "fourthBoundary": "Immediately before reading cached data_codes in the original whole-profile function"
+    },
+    "unchangedFlowAST": {
+      "preflightExceptPhaseValidatorProbeAnd525Counter": true,
+      "finalExceptPhaseValidatorAnd525Counter": true,
+      "officialContentsFetchAndSerializerDriverBytes": true,
+      "checkpointTransferInitStepBytes": true
+    },
+    "publicProjection": {
+      "fixedPhaseKeys": 10,
+      "maximumBoundaryMarks": 4,
+      "runtimeContextFields": [
+        "pythonVersion",
+        "jsonScanner"
+      ],
+      "pythonVersion": "exact list of three exact integers from 0 through 999",
+      "jsonScanner": [
+        "c",
+        "other"
+      ],
+      "runtimeContextMeaning": "Bounded observational metadata only. No version or scanner backend qualifies the runtime or extends a clock.",
+      "strictExistingDensityProjection": true,
+      "bothPhasePublicFunctionsASTIdentical": true,
+      "pathsPIDsArbitraryTextOrSecretURLs": false,
+      "unknownIsNotZero": true
+    },
+    "semantics": {
+      "lastReachedBoundary": "Last reached fixed reader boundary; no claim about where CPU time was spent or that a subroutine stalled.",
+      "secondPassRowsEntered": "Entries into the second-pass marker function including two controlled phase/object rows; zero before this pass is not a zero-row profile.",
+      "unconfirmedTargetCountsRemainNull": true,
+      "phaseProcedureExitZeroDoesNotQualifyOriginalQA": true,
+      "originalQAFailureAndFirstFailureRemainPreserved": true,
+      "densityFailureSourceFrameLine": 450
+    },
+    "ownership": {
+      "oneExistingMacJob": true,
+      "sameRunnerAndCleanEnvironment": true,
+      "sameInitialJobClock": true,
+      "expectedPreflightStages": 6,
+      "existingPhaseMinutes": 15,
+      "originalProcessingBudgetSeconds": 30,
+      "platformMinutes": 360,
+      "newBuildClock": false,
+      "allStageExitReapGroupCleanupAndMonitorFieldsChecked": true
+    },
+    "localProbe": {
+      "qualification": "Linux controlled-input analysis only; not actual Mac performance or runtime qualification",
+      "observation": {
+        "densityObservation": {
+          "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+          "compileCount": 1,
+          "completeCoverage": true,
+          "elapsedSeconds": 4.392789151985198,
+          "inputBytes": 195000385,
+          "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+          "objectCount": 1,
+          "processingSeconds": 30,
+          "reason": "build-completion-profile-parsed",
+          "resourceRows": 1000000,
+          "schema": 1,
+          "status": "observed"
+        },
+        "instrumentedFunctionSHA256": "db374c6398ee0bbf4dc6a7459442a274aef95fa8006d68591b700bdb7b403041",
+        "lastReachedBoundary": "marker-columns",
+        "marks": [
+          {
+            "elapsedSeconds": 0.0015745999990031123,
+            "phase": "whole-document-validation"
+          },
+          {
+            "elapsedSeconds": 3.377282885980094,
+            "phase": "profile-schema"
+          },
+          {
+            "elapsedSeconds": 3.377327523980057,
+            "phase": "string-table"
+          },
+          {
+            "elapsedSeconds": 3.3773697470023762,
+            "phase": "marker-columns"
+          }
+        ],
+        "parserSHA256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83",
+        "realBuildPerformed": false,
+        "runtimeContext": {
+          "jsonScanner": "c",
+          "pythonVersion": [
+            3,
+            12,
+            14
+          ]
+        },
+        "schema": 1,
+        "scope": "same-controlled-input-phase-observation",
+        "secondPassRowsEntered": 1000002
+      }
+    },
+    "controls": {
+      "negativeCandidateFaultsRejected": 1151,
+      "runtimeContextNegativeControls": 46,
+      "actualInlinePreflightAndFinalMockFlows": 17,
+      "actualCompilerBuildsOrBackendProcessesInFlowControls": false,
+      "failedProbeNonzeroBadReceiptCleanupCannotReplaceFirstFailure": true,
+      "invalidRuntimeContextRejectsWithoutPrivateProjection": true,
+      "phaseBudgetObservationRetainedWithoutQualifyingQA": true,
+      "YAMLBashInlinePythonSyntax": "passed",
+      "ResourceWarningPolicy": "error"
+    },
+    "bindings": [
+      {
+        "name": "floorp-recovery55-caller.yml",
+        "bytes": 49262,
+        "sha256": "0f2a0437ed86576f09ff2a3ff23dc968e6eaad4857a68f4fe165e646c893c06a"
+      },
+      {
+        "name": "floorp-recovery55-phase-probe.py",
+        "bytes": 3922,
+        "sha256": "36ef43569648650329beeb1bc30715120643508b841c89de8a9ffe83933676c1"
+      },
+      {
+        "name": "floorp-recovery55-phase-validator.py",
+        "bytes": 2780,
+        "sha256": "90f7ea8f63c07c09438d57dd7edc132384dd2de455f14bf7f5c41e80cb739a46"
+      },
+      {
+        "name": "floorp-recovery55-phase-owned.py",
+        "bytes": 1104,
+        "sha256": "e43f6002e81e92e40d1ac64aa1bac5c13f839650a13b3f5af2925e44a2fafa14"
+      },
+      {
+        "name": "floorp-recovery55-prepare-caller.py",
+        "bytes": 5964,
+        "sha256": "dd921cb7ed6abed2f4523e3a5c1982732c44586f9a57fd2a4c736e88c03eaca7"
+      },
+      {
+        "name": "floorp-recovery55-adapt-controls.py",
+        "bytes": 4572,
+        "sha256": "69943ac828c810c000d5e1e13844ef71c63cfceca118047486fb1e9a1c078bc6"
+      },
+      {
+        "name": "floorp-recovery55-guarded-controls.py",
+        "bytes": 17106,
+        "sha256": "4069cce73afa935e1335af03f936f4d827a46df24fdb2ba2f94e7f4d373ea451"
+      },
+      {
+        "name": "floorp-recovery55-guarded-controls-result.json",
+        "bytes": 987,
+        "sha256": "d1a94fde4934201b87eea245df0081ac4374602c5f7ad48c3ab154d2529906ef"
+      },
+      {
+        "name": "floorp-recovery55-flow-controls.py",
+        "bytes": 10200,
+        "sha256": "c7cb310a9354888334b2345b86b8f49619a7b8aa67d230397a5437ddf557e38d"
+      },
+      {
+        "name": "floorp-recovery55-flow-controls-result.json",
+        "bytes": 3961,
+        "sha256": "f6a2ef06521d27d4f770ab4620d2f32d389facbe15024675983daa1c4f121a99"
+      },
+      {
+        "name": "floorp-recovery55-phase-local-run.py",
+        "bytes": 867,
+        "sha256": "ccc374bc182f19298af565cb84dca43e91e93261a416b4ccc5f525d3b2a7a698"
+      },
+      {
+        "name": "floorp-recovery55-freeze.py",
+        "bytes": 8057,
+        "sha256": "ab2df4c68f666fc8fdf050406dc7e62e72d5b7d32a165f42280fb29de3bb9453"
+      }
+    ],
+    "scopeLimits": {
+      "runner": "macos-15-intel",
+      "jobs": 1,
+      "branch": "codex/mac-native-streaming-recovery55-20261019",
+      "SDKAcquisition": false,
+      "checkpointDownload": false,
+      "newArtifacts": 0,
+      "fullRuntimeCheckout": false,
+      "realBuild": false,
+      "newLongRun": false,
+      "MacActual": "NOT_RUN",
+      "CIStarted": false,
+      "remoteRefsChanged": false,
+      "repositorySourceEdited": false
+    },
+    "remainingQualification": {
+      "MacDenseInput": "NOT_PASSED",
+      "missingRecovery48ProductionProfile": "NOT_RECONSTRUCTED",
+      "fullHostXUL": "NOT_TESTED",
+      "MozillaCases": "NOT_TESTED",
+      "nativeAuthentication": "NOT_TESTED",
+      "originalNativeExitCause": "UNKNOWN"
+    },
+    "remaining": [
+      "root parser implementation review and final immutable source fixture",
+      "independent caller prelaunch review",
+      "actual short Mac execution only by root after GO"
+    ]
+  },
+  "shortMac": {
+    "branch": "codex/mac-native-streaming-recovery55-20261019",
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "QA": 525,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "actualBuild": false,
+    "status": "NOT_RUN"
+  },
+  "qualification": "Local tests and review only. Actual Mac large-reader performance, the missing production profile, full host/XUL, current Mozilla native cases and native Shim authentication remain unqualified."
+}

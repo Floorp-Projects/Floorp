@@ -1,0 +1,213 @@
+{
+  "schema": 1,
+  "review": "Recovery55 bounded strict first-pass work and compact data-column representation",
+  "decision": "CODE_CLEAR_PENDING_ACTUAL_MAC_QUALIFICATION_AND_IMMUTABLE_ROUTE",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "sourceFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 27426,
+      "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 36824,
+      "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+    }
+  ],
+  "sourceFreeze": {
+    "name": "floorp-recovery55-source-freeze.json",
+    "bytes": 865,
+    "sha256": "a25fcca14a251f5865ea35b1b1197039c1efbe8a7f67cc8132358f46e9c473f8"
+  },
+  "baseline": {
+    "fixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "parser": {
+      "name": "floorp-recovery55-baseline53-build_completion.py",
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    "test": {
+      "name": "floorp-recovery55-baseline53-test_build_completion.py",
+      "bytes": 32864,
+      "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+    },
+    "normalProviderReadbackBound": true,
+    "experimentalCandidateNotUsedAsBaseline": true
+  },
+  "assessment": [
+    "The C dictionary construction followed by pair-count equality preserves duplicate string-key rejection, including equivalent escaped keys. JSON decoding supplies string keys; invalid objects never become successful observations.",
+    "The small first-pass decoder uses the ordinary C float conversion and checks every decoded float leaf for finiteness in the existing complete bounds walk. Strict scalar fallback and JSONL decoding still retain the original float and constant hooks; NaN, Infinity and overflow in ignored or tracked values remain rejected.",
+    "The successful short-key validation cache is bounded to 512 entries, each at most 16 keys with at most 256 UTF8 bytes per key. The actual key-byte limit is part of the cache key. Exceptions are not cached, and value finiteness, object count, row count and depth are checked for every value independently.",
+    "Only the selected data column receives a one-byte-per-row classification during the complete first validation pass. The fixed classifications retain every distinction consumed by the existing marker schema and aggregate logic: invalid data, other types, missing or invalid Text, unknown or fixed target Text, and invalid or fixed Phase.",
+    "The complete document and all ignored nested values are still validated before aggregation. Column lengths and indices remain exact. Incomplete or invalid data-code state stays private and cannot supply partial aggregates; every ordinary failure yields unconfirmed coverage and null target counts.",
+    "The second pass substitutes fixed private stubs, consumed without mutation by the marker logic, for the validated data classifications and continues to read names, times and phase from the same verified descriptor. This avoids rereading arbitrary resource payload without treating resource-name classification as an eligibility exemption.",
+    "The irrelevant-resource early return occurs only after the original row, data-schema and time checks. It avoids constructing unused result dictionaries; it does not relax unended or malformed marker handling.",
+    "The one-MiB per-element fallback remains fail-closed, including data objects that require structural parsing. The 64 KiB read chunks, 2 GiB file, 4 million rows, 250000 completed relevant markers, depth/key caps and 30-second cooperative budget remain unchanged.",
+    "Directory traversal, snapshot, file ownership/NOFOLLOW, descriptor/path/ctime/size stability, parse dispatch, array iteration and final collection functions are AST-identical to the fixed baseline. The representation is bounded cached validation state, not a filesystem snapshot or a new writer-safety claim."
+  ],
+  "independentValidation": {
+    "grammar": {
+      "name": "floorp-recovery55-independent-differential.json",
+      "bytes": 420,
+      "sha256": "d94267da45e5f21b087db790d70c53636dd9f5ff6e7a9e08d5cc456fd54d1c31",
+      "checks": 15480,
+      "mismatches": 0,
+      "chunks": [
+        1,
+        2,
+        7,
+        31,
+        65536
+      ],
+      "modes": [
+        "fast",
+        "batch-only",
+        "structural"
+      ]
+    },
+    "bounds": {
+      "name": "floorp-recovery55-independent-bounds-control.json",
+      "bytes": 224,
+      "sha256": "5ebb5b3702279b6eeacd337cf3f54e1e8a63683e2d2a714728faa79879302673",
+      "checks": 777,
+      "mismatches": 0
+    },
+    "finiteContexts": {
+      "name": "floorp-recovery55-independent-finite-contexts.json",
+      "bytes": 693,
+      "sha256": "ae3f23bc8a673fd75e602e97c9e641176822563f764feb30cbb9eb8166174f32",
+      "cases": 47,
+      "checks": 141,
+      "immutableBaselineSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+      "contexts": [
+        "whole root/nested/batched extras",
+        "tracked metadata",
+        "data payload",
+        "category/stack",
+        "JSONL meta/data"
+      ],
+      "quotedNonfiniteStringsRemainValid": true
+    },
+    "keyCache": {
+      "name": "floorp-recovery55-independent-cache-controls.json",
+      "bytes": 367,
+      "sha256": "a8fb33f091d19ad97d8999b7cf9dccca12e1a5b4842e9e21abe8d4d2248731bd",
+      "successfulShapesExercised": 600,
+      "maximumEntries": 512,
+      "badKeysNotCached": true,
+      "changedKeyLimitRechecked": true,
+      "cachedShapeDoesNotCacheValueValidity": true
+    },
+    "existingFocusedTests": {
+      "name": "floorp-recovery55-independent-focused.json",
+      "bytes": 271,
+      "sha256": "d2b66f5acc151840728f26e735e7570c53bd17a6865767975b03b304d1b1e9bd",
+      "passed": 8
+    },
+    "newFocusedTests": {
+      "name": "floorp-recovery55-independent-new-tests.json",
+      "bytes": 272,
+      "sha256": "cab004359c907abfbd4a40c116824dd67763db739063ae838b58cbeaad9c317f",
+      "passed": 3
+    },
+    "ResourceWarningsAreErrors": true,
+    "heavyDensityOrFullQAExecutedByReviewer": false
+  },
+  "separateDataControlsReadAndCrossChecked": {
+    "script": {
+      "name": "floorp-recovery55-data-controls.py",
+      "bytes": 13662,
+      "sha256": "772c133341a0a1407817d6e5ea6e9260e2c50f943e2542a20caff0e2e233de75"
+    },
+    "result": {
+      "name": "floorp-recovery55-data-controls-result.json",
+      "bytes": 18214,
+      "sha256": "2bbb0b8eebc61f55546f26b959c3515c528af370211bccba65076f379bc53a59"
+    },
+    "candidateAndImmutableBaselineHashesVerified": true,
+    "markerSemanticComparisons": 1624,
+    "dimensions": {
+      "names": 8,
+      "dataShapes": 29,
+      "timeShapes": 7
+    },
+    "fullParserComparisons": 37,
+    "maximumInputBytes": 1114526,
+    "coverage": [
+      "direct and projected marker semantic parity",
+      "batch and forced structural paths",
+      "complete column order/length validation",
+      "valid bounded and oversized data elements",
+      "ignored nested nonfinite values",
+      "unended invalid schema",
+      "exact descriptor close and no published private values"
+    ],
+    "newHeavyDensityOrActualMacExecution": false
+  },
+  "reportedFullRegressionIndependentlyRead": {
+    "platform": "Linux",
+    "total": 740,
+    "passed": 723,
+    "DarwinSkipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 55.32,
+    "log": {
+      "name": "floorp-recovery55-linux-full.private.log",
+      "bytes": 142446,
+      "sha256": "82c30ca0c1c52c28b8abb404e1ff28d782cc9d9aa2609375e9b38b89477d17d0"
+    },
+    "structuredReceipt": {
+      "name": "floorp-recovery55-linux-full-result.json",
+      "bytes": 3256,
+      "sha256": "1b9bab0ddfa9d4b9fc959e9fef3f088e2131d764bb89f2ff04c3bc45f9c416a2"
+    },
+    "actualSameInputLinuxDensity": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 4.509578973025782,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    },
+    "reexecutedByReviewer": false
+  },
+  "preservedQualificationBoundary": {
+    "sameInputBytes": 195000385,
+    "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "densityAssertionLine": 450,
+    "fullQA": 740,
+    "expectedMacQA": 525,
+    "recording": 14,
+    "planByteChanges": false,
+    "resourceOrMonitorLimitChanges": false,
+    "sourceAlgorithmTestedOnActualMac": "NOT_YET_RUN"
+  },
+  "precisionAndRemainingConditions": [
+    "Recovery54 localized only its additional instrumented controlled traversal to the initial whole-document-validation interval. It did not identify a particular CPU or kernel cause or assign that phase to the original QA attempt or Recovery48.",
+    "The reported Linux result is observed within the same budget and input, supporting a meaningful short test. It does not predict Mac headroom or qualify the dense path on Intel Mac.",
+    "Bind the reviewed source/test hashes into the immutable fixture and caller, preserve typed failure/monitor/cleanup gates and qualify the actual same input on Mac before any new long build.",
+    "Any runtime-context additions should remain bounded fixed version/backend fields and must not change interpreter, input, deadlines or parsing semantics.",
+    "This review does not qualify build completion, full host/XUL, Mozilla cases or native authentication."
+  ],
+  "reviewerActions": {
+    "repositorySourceEdited": false,
+    "CIOrRefMutated": false,
+    "SDKOrCheckpointAcquired": false,
+    "heavy195MBInputExecuted": false,
+    "fullQARerun": false
+  }
+}

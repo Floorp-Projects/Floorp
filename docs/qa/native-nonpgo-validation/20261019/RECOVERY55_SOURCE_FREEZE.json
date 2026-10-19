@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY55_BOUNDED_STRICT_VALIDATION_AND_COMPACT_DATA_COLUMN",
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 27426,
+      "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 36824,
+      "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+    }
+  ],
+  "baselineFixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+  "baselineParserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+  "processingSeconds": 30,
+  "fullQA": 740,
+  "MacQA": 525,
+  "recording": 14,
+  "denseFailureAssertionLine": 450,
+  "sameInputBytes": 195000385,
+  "sameInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7"
+}

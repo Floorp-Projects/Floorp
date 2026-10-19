@@ -492,6 +492,68 @@ class CompletionTests(unittest.TestCase):
         self.unknown(value)
         self.assertEqual(value['reason'], 'build-completion-row-limit')
 
+    def test_whole_data_projection_matches_jsonl_in_batch_and_structural_paths(self):
+        data_cases = [None, {}, {'type': False}, {'type': 'CPU'},
+                      {'type': 'CPU', 'text': 'XUL'}, {'type': 'Text'},
+                      {'type': 'Text', 'text': False}, {'type': 'Text', 'text': 'private-other'},
+                      *({'type': 'Text', 'text': text} for text in bc.TARGETS),
+                      {'type': 'Phase', 'phase': 'compile'}, {'type': 'Phase', 'phase': 'teardown'},
+                      {'type': 'Phase', 'phase': []}]
+        for name in ('CPU', 'Object', 'Phase'):
+            for payload in data_cases:
+                for end in (None, 2):
+                    with self.subTest(name=name, payload=payload, end=end):
+                        rows = [marker(), {**marker(name=name, end=end), 'data': payload}]
+                        self.write(jsonl(rows)); expected = bc.collect(self.task, self.snapshot)
+                        profile = whole(rows)
+                        columns = profile['threads'][0]['markers']
+                        profile['threads'][0]['markers'] = dict(reversed(tuple(columns.items())))
+                        self.write(json.dumps(profile, ensure_ascii=False).encode())
+                        actual = bc.collect(self.task, self.snapshot)
+                        with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                                mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                            structural = bc.collect(self.task, self.snapshot)
+                        for result in (actual, structural):
+                            for key in ('profileBytes', 'profileFormat'):
+                                result.pop(key); expected.pop(key, None)
+                            self.assertEqual(expected, result)
+
+    def test_whole_compact_data_does_not_skip_validation_or_column_lengths(self):
+        base = whole([phase(), marker()])
+        for suffix in (b'NaN', b'1e999', b'-1e999'):
+            data = copy.deepcopy(base)
+            data['threads'][0]['markers']['data'][0]['ignored'] = ['NUMBER_SENTINEL']
+            raw = json.dumps(data).encode().replace(b'"NUMBER_SENTINEL"', suffix)
+            self.write(raw)
+            with mock.patch.object(bc._Completed, 'marker') as aggregate:
+                self.unknown(bc.collect(self.task, self.snapshot))
+            aggregate.assert_not_called()
+        for column in bc._FIELDS:
+            data = copy.deepcopy(base);data['threads'][0]['markers'][column].pop()
+            self.write(json.dumps(data).encode())
+            with mock.patch.object(bc._Completed, 'marker') as aggregate:
+                self.unknown(bc.collect(self.task, self.snapshot))
+            aggregate.assert_not_called()
+
+    def test_whole_repeated_key_shapes_recheck_limits_depth_and_nonfinite_values(self):
+        bc._short_keys.cache_clear()
+        self.addCleanup(bc._short_keys.cache_clear)
+        for index in range(600):
+            bc._bounded_decoded({'k' + str(index): 1}, 0)
+        self.assertLessEqual(bc._short_keys.cache_info().currsize, 512)
+        bc._bounded_decoded({'abc': 1}, 0)
+        with mock.patch.object(bc, 'MAX_KEY_BYTES', 2):
+            with self.assertRaises(bc._Unknown):bc._bounded_decoded({'abc': 1}, 0)
+        for value in ({'abc': float('inf')}, {'abc': [float('-inf')]},
+                      {'abc': {'nested': float('nan')}}):
+            with self.assertRaises(bc._Unknown):bc._bounded_decoded(value, 0)
+        with mock.patch.object(bc, 'MAX_DEPTH', 1):
+            with self.assertRaises(bc._Unknown):bc._bounded_decoded({'abc': {'nested': []}}, 0)
+        for key in ('x' * 257, '\ud800'):
+            before = bc._short_keys.cache_info().currsize
+            with self.assertRaises(bc._Unknown):bc._bounded_decoded({key: 1}, 0)
+            self.assertEqual(bc._short_keys.cache_info().currsize, before)
+
     def test_processing_budget_returns_unknown_without_partial_counts(self):
         self.write(jsonl([marker()]))
         with mock.patch.object(bc.time, 'monotonic', side_effect=[0, 31]):
