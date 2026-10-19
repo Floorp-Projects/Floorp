@@ -4604,7 +4604,7 @@ index 093b045..464c89c 100644
      }
  
      if (!apiSchema) {
-@@ -4232,6 +4255,16 @@ export var Schemas = {
+@@ -4232,6 +4255,22 @@ export var Schemas = {
        );
      }
  
@@ -4616,6 +4616,12 @@ index 093b045..464c89c 100644
 +      throw new extContext.context.Error(
 +        `${schemaPath.join(".")} may only be called from a user input handler`
 +      );
++    }
++
++    // Event filters are addListener options. Native removeListener only
++    // transports its WebIDL-validated Function listener, never those options.
++    if (requestType === "removeListener" && apiSchema instanceof Event) {
++      return [];
 +    }
 +
      return apiSchema.checkParameters(
@@ -15239,3 +15245,22 @@ diff --git a/dom/serviceworkers/ServiceWorkerPrivate.h b/dom/serviceworkers/Serv
  
    // This will terminate the current running worker thread and drop the
    // workerPrivate reference.
+diff --git a/toolkit/components/extensions/ConduitsParent.sys.mjs b/toolkit/components/extensions/ConduitsParent.sys.mjs
+--- a/toolkit/components/extensions/ConduitsParent.sys.mjs
++++ b/toolkit/components/extensions/ConduitsParent.sys.mjs
+@@ -500,6 +500,15 @@
+  * Parent side of the Conduits process actor.  Same code as JSWindowActor.
+  */
+ export class ProcessConduitsParent extends JSProcessActorParent {
++  constructor() {
++    super();
++    this.batchData = [];
++    this.batchPromise = null;
++    this.batchResolve = null;
++    this.timerActive = false;
++  }
++
++  batch = ConduitsParent.prototype.batch;
+   receiveMessage = ConduitsParent.prototype.receiveMessage;
+   didDestroy = ConduitsParent.prototype.didDestroy;
+ }

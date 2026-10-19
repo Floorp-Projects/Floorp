@@ -219,6 +219,7 @@ jobs:
           browser-features/modules/modules/chrome-web-store/test
           tools/chrome-extension-runtime/NativeMessagingCandidate.test.mts
           tools/chrome-extension-runtime/NativePortErrorsCandidate.test.mts
+          tools/chrome-extension-runtime/NativeWebRequestBatch.test.mts
           tools/chrome-extension-runtime/NativePortStateCandidate.test.mts
           tools/chrome-extension-runtime/NativeMessageJSONCandidate.test.mts
           tools/chrome-extension-runtime/NativeMessageResponseRaceCandidate.test.mts

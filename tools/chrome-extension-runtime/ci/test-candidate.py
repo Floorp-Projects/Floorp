@@ -176,6 +176,7 @@ def main():
         command += ["--test", "tools/chrome-extension-runtime/ci/ProductionOverlay.test.mts"]
         command += ["--test", "tools/chrome-extension-runtime/WorkerCanvasNative.test.mts"]
         command += ["--test", "tools/chrome-extension-runtime/NativePortErrorsCandidate.test.mts"]
+        command += ["--test", "tools/chrome-extension-runtime/NativeWebRequestBatch.test.mts"]
     if args.group == "permissions":
         command += ["--actor-module", TESTS + "helpers/UserScriptsConsentUIChild.sys.mjs"]
         command += ["--test", "tools/chrome-extension-runtime/ci/ProductionWorkspaces.test.mts"]
