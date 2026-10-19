@@ -1,0 +1,594 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY56_EXISTING_CHECKPOINT_READ_ONLY_GENERATED_GRAPH_TERMINAL",
+  "status": "observed",
+  "fixture": "5be48e693474744f8f87ba31aff3c591bb182bec",
+  "caller": {
+    "sha": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "tree": "3f09bd693a0780d7e4fc3ac252d83e8f2d784dd6",
+    "workflowPath": ".github/workflows/mac-native-checkpoint.yml",
+    "workflowBytes": 57580,
+    "workflowSHA256": "8bac07811ed5b0e7a9a561d9aee1d73ac889abbe50b991cb2fda37e536e65836"
+  },
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39330430341,
+    "job": 118326931613,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39330430341",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-firefox-graph-recovery56-20261019",
+    "head": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-19T21:49:04Z",
+    "completedBy": "2026-10-19T22:18:47Z",
+    "workflowID": 388400441,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "headRunCount": 1,
+    "jobCount": 1,
+    "artifactCount": 0
+  },
+  "stepEvidence": [
+    {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:10Z",
+      "completedAt": "2026-10-19T21:49:11Z"
+    },
+    {
+      "number": 2,
+      "name": "Bound the initial authorized execution",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:11Z",
+      "completedAt": "2026-10-19T21:49:12Z"
+    },
+    {
+      "number": 3,
+      "name": "Checkout immutable reviewed fixture",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:12Z",
+      "completedAt": "2026-10-19T21:49:20Z"
+    },
+    {
+      "number": 4,
+      "name": "Establish this job's fresh clock and task root",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:20Z",
+      "completedAt": "2026-10-19T21:49:21Z"
+    },
+    {
+      "number": 5,
+      "name": "Verify actual native process monitor before acquisition",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:21Z",
+      "completedAt": "2026-10-19T21:52:27Z"
+    },
+    {
+      "number": 6,
+      "name": "Acquire the official unexpired renewed content-matched SDK",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:52:28Z",
+      "completedAt": "2026-10-19T21:52:35Z"
+    },
+    {
+      "number": 7,
+      "name": "Checkout immutable Runtime source",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:52:35Z",
+      "completedAt": "2026-10-19T21:57:44Z"
+    },
+    {
+      "number": 8,
+      "name": "Checkout immutable native harness",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:57:44Z",
+      "completedAt": "2026-10-19T21:57:48Z"
+    },
+    {
+      "number": 9,
+      "name": "Download only the verified successful producer checkpoint",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:57:48Z",
+      "completedAt": "2026-10-19T21:58:26Z"
+    },
+    {
+      "number": 10,
+      "name": "Restore only the verified original checkpoint with all existing guards",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:58:26Z",
+      "completedAt": "2026-10-19T22:18:26Z"
+    },
+    {
+      "number": 11,
+      "name": "Read the fixed generated graph in an owned monitored stage",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:27Z",
+      "completedAt": "2026-10-19T22:18:29Z"
+    },
+    {
+      "number": 12,
+      "name": "Verify guarded restore, graph-only observation and independent cleanup",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:29Z",
+      "completedAt": "2026-10-19T22:18:29Z"
+    },
+    {
+      "number": 22,
+      "name": "Post Checkout immutable native harness",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:29Z",
+      "completedAt": "2026-10-19T22:18:30Z"
+    },
+    {
+      "number": 23,
+      "name": "Post Checkout immutable Runtime source",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:30Z",
+      "completedAt": "2026-10-19T22:18:31Z"
+    },
+    {
+      "number": 24,
+      "name": "Post Checkout immutable reviewed fixture",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:31Z",
+      "completedAt": "2026-10-19T22:18:32Z"
+    },
+    {
+      "number": 25,
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T22:18:32Z",
+      "completedAt": "2026-10-19T22:18:32Z"
+    }
+  ],
+  "testEvidence": {
+    "linux": {
+      "total": 744,
+      "passed": 727,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 57.79
+    },
+    "macSelectedQA": {
+      "expectedTests": 529,
+      "expectedSkipped": 0,
+      "expectedFailures": 0,
+      "expectedErrors": 0,
+      "recordingExpectedTests": 14,
+      "verification": "Successful preflight step and true monitorPreflightVerified from the immutable caller's exact-count, natural-exit and cleanup gate. Detailed private suite timing and raw stage rows are not projected."
+    }
+  },
+  "checkpointDownload": {
+    "artifact": 12164479528,
+    "bytes": 2213942620,
+    "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "signedURLPublished": false
+  },
+  "finalReceipt": {
+    "status": "observed",
+    "monitorPreflightVerified": true,
+    "guardedRestoreVerified": true,
+    "fixedObserverHelpersVerified": true,
+    "graphObservationVerified": true,
+    "observationStatus": "observed",
+    "restoreSummaryAvailable": true,
+    "observerReceiptAvailable": true,
+    "restoreFirstFailure": null,
+    "restoreMonitorFailure": null,
+    "preflightFirstFailure": null,
+    "preflightMonitorFailure": null,
+    "observerFirstFailure": null,
+    "persistedFirstFailure": null,
+    "persistedFirstFailureStatus": "absent",
+    "observerMonitorFailure": null,
+    "restoreMonitorDiagnostics": [],
+    "observerMonitorDiagnostics": [],
+    "observerStages": [
+      {
+        "stage": "firefox-target-observer",
+        "exitCode": 0,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "cleanupFailurePresent": false,
+        "peakRSSMiB": 18,
+        "minimumFreeGiB": 89.48,
+        "lastActivity": {
+          "unknownKinds": {},
+          "rssMiB": 18.30859375,
+          "cpuSeconds": 0.147,
+          "rssLowerBoundMiB": 18.30859375,
+          "cpuLowerBoundSeconds": 0.147,
+          "stage": "other",
+          "sampleComplete": true,
+          "sampleAttempts": 1,
+          "processes": 1,
+          "inventoryBackend": "kern-proc-pgrp-helper",
+          "errorType": "unavailable",
+          "partialSamples": []
+        }
+      }
+    ],
+    "observerChildFailure": null,
+    "observation": {
+      "absoluteRestoreDeadlineMinutes": 60,
+      "bindingScope": "opened-fds-and-observed-fixed-entries-only",
+      "bindingsStable": true,
+      "bundleSpec": {
+        "binariesCount": 1,
+        "configuredBundleBinding": true,
+        "copiesCount": 0,
+        "extra_filesCount": 4,
+        "movesCount": 2,
+        "ownedStageBinding": true
+      },
+      "cleanupFailure": null,
+      "clockResetAllowed": false,
+      "configConsistency": "unconfirmed",
+      "durationToCompletion": "UNKNOWN",
+      "existingGuardsReexecuted": false,
+      "failurePhase": null,
+      "files": {
+        "HTTP3Backend": {
+          "bytes": 6454,
+          "lineCount": 16,
+          "reason": null,
+          "sha256": "8ccc41f475f81a64d55b206bb8d544dd11618d42f1143741fc26cdc02858076b",
+          "status": "observed"
+        },
+        "XULBackend": {
+          "bytes": 166238,
+          "lineCount": 2461,
+          "reason": null,
+          "sha256": "dd41a80c78aad8d13cb1c052a520b541c65a694900441c056cbf3f822228b27f",
+          "status": "observed"
+        },
+        "actualConfig": {
+          "bytes": 72633,
+          "lineCount": 1,
+          "reason": null,
+          "sha256": "270c6b97605887a00345a70b22c7843585cb4f72b893cd2270029dff00511336",
+          "status": "observed"
+        },
+        "appConstants": {
+          "bytes": null,
+          "lineCount": null,
+          "reason": "missing",
+          "sha256": null,
+          "status": "unconfirmed"
+        },
+        "applicationIni": {
+          "bytes": null,
+          "lineCount": null,
+          "reason": "missing",
+          "sha256": null,
+          "status": "unconfirmed"
+        },
+        "autoconf": {
+          "bytes": 30766,
+          "lineCount": 417,
+          "reason": null,
+          "sha256": "fb699c4d6620b7fb74854ecc1a329bd90f290c0765b5c6b129b768e97ea0ad3e",
+          "status": "observed"
+        },
+        "browserBackend": {
+          "bytes": 13621,
+          "lineCount": 42,
+          "reason": null,
+          "sha256": "31f43a9dc4b154bcd41b69b83b923b8b547db44c23ef4ac701a232e1338fcd07",
+          "status": "observed"
+        },
+        "bundleFileList": {
+          "bytes": null,
+          "lineCount": null,
+          "reason": "missing",
+          "sha256": null,
+          "status": "unconfirmed"
+        },
+        "bundleFileListBackend": {
+          "bytes": 170,
+          "lineCount": 4,
+          "reason": null,
+          "sha256": "f8701387321e5a8d5947783cbdf8b9d7886dfa83f4fb7e0f83577b502a419a21",
+          "status": "observed"
+        },
+        "bundleSpec": {
+          "bytes": 1776,
+          "lineCount": 46,
+          "reason": null,
+          "sha256": "93e6f01fc5249ea5062fe7b1f384787588d8abad4f4188d37f62247c921ad4c8",
+          "status": "observed"
+        },
+        "clock": {
+          "bytes": 17,
+          "lineCount": 1,
+          "reason": null,
+          "sha256": "a3a57f935852cd01e7240ae2065fd2a002398481ec2e972fb440d13abffd5c93",
+          "status": "observed"
+        },
+        "configStatus": {
+          "bytes": 49425,
+          "lineCount": 998,
+          "reason": null,
+          "sha256": "c8953bd03ed29fff5d8552693743dda5a48b00834d279a257d419c3e640eb1be",
+          "status": "observed"
+        },
+        "context": {
+          "bytes": 363,
+          "lineCount": 18,
+          "reason": null,
+          "sha256": "a568f149e9143bfd00bb956466dea153bc41374e86aca556eb2c268a9d06e16e",
+          "status": "observed"
+        },
+        "dependentLibs": {
+          "bytes": null,
+          "lineCount": null,
+          "reason": "missing",
+          "sha256": null,
+          "status": "unconfirmed"
+        },
+        "distBinManifest": {
+          "bytes": 582449,
+          "lineCount": 3295,
+          "reason": null,
+          "sha256": "9ecf11495740889798e4acc32d87cf327d45d457a4092272ef5e7d68737ee1b9",
+          "status": "observed"
+        },
+        "distIncludeManifest": {
+          "bytes": 765857,
+          "lineCount": 8596,
+          "reason": null,
+          "sha256": "0077aee24350980ce28daf01ccac4ad3551aef01db6d293a2c96050d3b2746e6",
+          "status": "observed"
+        },
+        "effectiveConfig": {
+          "bytes": 921,
+          "lineCount": 30,
+          "reason": null,
+          "sha256": "750e4a5a7978aaf7d6c2d5a9917d2715fea8d43b6e56fdb8eef510e6028ee63b",
+          "status": "observed"
+        },
+        "expectedConfig": {
+          "bytes": 2783,
+          "lineCount": 69,
+          "reason": null,
+          "sha256": "a7fe2a3ae38c7eefe77364cf109380cc4f9dc2bf748a204ea8c222085b18bb01",
+          "status": "observed"
+        },
+        "fasterDistBinManifest": {
+          "bytes": 283199,
+          "lineCount": 1733,
+          "reason": null,
+          "sha256": "b178b19578ae72a56762097d08f303bc92100fe2b8a92128ab8d711ba89b2ecd",
+          "status": "observed"
+        },
+        "fasterMakefile": {
+          "bytes": 1084288,
+          "lineCount": 5799,
+          "reason": null,
+          "sha256": "c211dbd23114188cf9913820555efdfaab453e2b42681ef9e3fc712c4e9edcb8",
+          "status": "observed"
+        },
+        "includeConfigHeader": {
+          "bytes": 6765,
+          "lineCount": 225,
+          "reason": null,
+          "sha256": "65602c3af2f32fd185f7e9c93d1921d00beda52218a214e6882c1e6c7534f0fd",
+          "status": "observed"
+        },
+        "modulesBackend": {
+          "bytes": 2669,
+          "lineCount": 14,
+          "reason": null,
+          "sha256": "1f39ac85ecadfd00f161d6bdad3c8465d6b20d1d07cab8f5ebc1e163287052d1",
+          "status": "observed"
+        },
+        "objConfigHeader": {
+          "bytes": 6765,
+          "lineCount": 225,
+          "reason": null,
+          "sha256": "65602c3af2f32fd185f7e9c93d1921d00beda52218a214e6882c1e6c7534f0fd",
+          "status": "observed"
+        },
+        "recursiveBackendInputs": {
+          "bytes": 310792,
+          "lineCount": 5990,
+          "reason": null,
+          "sha256": "4107bf26b8a8d9a6f4be4331938aedfa5f2d868efa0739130c0f3e2dd7716e3c",
+          "status": "observed"
+        },
+        "rootDepsMk": {
+          "bytes": 154914,
+          "lineCount": 484,
+          "reason": null,
+          "sha256": "b5c130fccb393e5caae95e84b1cc2fbbec7e252d94bc7a8078676b9fa7043ba5",
+          "status": "observed"
+        },
+        "rootMk": {
+          "bytes": 76674,
+          "lineCount": 13,
+          "reason": null,
+          "sha256": "95b1f67e60ee86a14aa42e46525a6cfc6832cef98a53be15540e937ec972c7d6",
+          "status": "observed"
+        },
+        "summary": {
+          "bytes": 101994,
+          "lineCount": 3373,
+          "reason": null,
+          "sha256": "cf5b231fd28610b47576e9cddd20eca4c5eacebc1839d462ddf23fc3edeafe93",
+          "status": "observed"
+        },
+        "testManifest": {
+          "bytes": 146242,
+          "lineCount": 944,
+          "reason": null,
+          "sha256": "d635e276fe8aff9b0143836052c1b0f868e52d1921b116fdb2766e829bdfe107",
+          "status": "observed"
+        },
+        "topMakefile": {
+          "bytes": 6717,
+          "lineCount": 189,
+          "reason": null,
+          "sha256": "ed9e53fd4f9fbe91b59fa620e9f5e19b0de802da8b916989b0c948461b666a11",
+          "status": "observed"
+        }
+      },
+      "fullHostQualification": false,
+      "graph": {
+        "declaredCompileNodeCount": 1215,
+        "declaredCompileNodesSHA256": "307820e3397dc732d9b4015e122e463a9952614585ddd09c339b8c3777e7c457",
+        "durationToCompletion": "UNKNOWN",
+        "files": {
+          "rootDepsMk": {
+            "bytes": 154914,
+            "sha256": "b5c130fccb393e5caae95e84b1cc2fbbec7e252d94bc7a8078676b9fa7043ba5"
+          },
+          "rootMk": {
+            "bytes": 76674,
+            "sha256": "95b1f67e60ee86a14aa42e46525a6cfc6832cef98a53be15540e937ec972c7d6"
+          }
+        },
+        "fixedNodesDeclared": {
+          "XUL": true,
+          "browser": true,
+          "cocoaObjects": true,
+          "gkrust": true,
+          "http3server": true,
+          "xpcshell": true
+        },
+        "fixedReachability": {
+          "XULToGkrust": true,
+          "xpcshellToCocoaObjects": true,
+          "xpcshellToGkrust": true,
+          "xpcshellToHttp3Server": false,
+          "xpcshellToXUL": true
+        },
+        "fullHostQualification": false,
+        "makeOrRecipeExecuted": false,
+        "minimalSufficientSuffixEstablished": false,
+        "realBuildPerformed": false,
+        "reason": "literal-graph-observed",
+        "schema": 1,
+        "scope": "root-deps-mk-literal-edges-only",
+        "status": "observed",
+        "stockSuffixTierDeclarations": {
+          "libs": {
+            "directoryCount": 17,
+            "sha256": "074e79c737770f0491f3f7ee0f9ba9446007feb59247805be37c62d138fb8a25"
+          },
+          "misc": {
+            "directoryCount": 208,
+            "sha256": "13e53c0904e6a0df24933050ac8463023643136515e41d24f84d6778d863a1ed"
+          },
+          "tools": {
+            "directoryCount": 10,
+            "sha256": "17c5d6a6bb46ff6ad04a4f6d22e9bf38f9d75b18c26a008c564c8cdf93277b42"
+          }
+        },
+        "suffixGraphFacts": {
+          "browserAppToolsReachesBrowserBinary": false,
+          "toolsTraversalReachesBrowserApp": true
+        },
+        "xpcshellLiteralClosure": {
+          "complete": true,
+          "observedEdgeCount": 1001,
+          "observedNodeCount": 983,
+          "sha256": "b5a0ad4030163ded02d70be6e81a17c66c2ccd7442d7d9436f04a6628d41100b"
+        }
+      },
+      "makeOrRecipeExecuted": false,
+      "minimalSufficientSuffixEstablished": false,
+      "processingLimitSeconds": 30,
+      "realBuildPerformed": false,
+      "reason": null,
+      "restoreReceiptConsistent": true,
+      "restoredConfigStillMatches": null,
+      "schema": 1,
+      "status": "observed"
+    },
+    "observerDriverFailureCode": null,
+    "checkpointArtifact": 12164479528,
+    "checkpointOriginRun": 39197008470,
+    "sdkSourceArtifact": 12182302735,
+    "sdkProducerJob": 118032017226,
+    "qualification": "literal-generated-build-order-graph-observation",
+    "absoluteRestoreDeadlineMinutes": 60,
+    "observerProcessingSeconds": 30,
+    "clockResetAllowed": false,
+    "realBuildPerformed": false,
+    "minimalSufficientSuffixEstablished": false,
+    "fullHostQualification": false,
+    "durationToCompletion": "UNKNOWN",
+    "newArtifactUploads": 0
+  },
+  "evidenceInterpretation": {
+    "directProjection": "The observer stage row directly records natural zero exit, reaped leader, verified-gone group and cleanupFailurePresent=false. Its observation cleanupFailure is explicitly null.",
+    "guardedRestore": "guardedRestoreVerified=true and restoreReceiptConsistent=true are gates over the original private restore summary, fixed archive/manifest/context/configuration and every recorded owned stage's natural exit and cleanup. Raw restore/preflight stage rows and counts are not projected here.",
+    "configuration": "The original resumed-effective-configuration gate passed. The additional read-only configuration comparison reports unconfirmed and restoredConfigStillMatches=null; this is preserved as unknown and does not establish complete optional configuration agreement.",
+    "graph": "Observed literal generated dependency relations only, bound to stable opened descriptors and fixed directory entries. The 983-node, 1001-edge xpcshell closure includes XUL, gkrust and Cocoa objects; it excludes the declared HTTP3 server target under these literal edges.",
+    "suffix": "Stock misc/libs/tools declarations and bundle-spec bindings are observed. Missing AppConstants, application.ini, dependentlibs and bundle file list remain unconfirmed/null. No sufficient runnable bundle or minimum suffix is established."
+  },
+  "limits": {
+    "makeOrRecipeExecuted": false,
+    "newLongBuild": false,
+    "newCheckpointProducer": false,
+    "newArtifactUploads": 0,
+    "clockResetAllowed": false,
+    "absoluteRestoreDeadlineMinutes": 60,
+    "observerProcessingSeconds": 30,
+    "fullHostQualification": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "minimalSufficientSuffixEstablished": false,
+    "cacheHitOrMiss": "UNKNOWN",
+    "automaticReconfigureOrBackendRegeneration": "UNKNOWN",
+    "durationToCompletion": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN"
+  },
+  "rawEvidence": {
+    "basename": "consumer.root.private.log",
+    "decodedUTF8Bytes": 149369,
+    "sha256": "ebe12c69c73c2809016128c19c7a894a6f805d49195a90339ab13fcb490c6868",
+    "rawContentPublished": false,
+    "extractedJSONObjectCount": 2
+  },
+  "rootChecks": {
+    "terminalNormalAPI": true,
+    "oneHeadRunAndAttempt": true,
+    "oneIntelJob": true,
+    "everyStepSuccess": true,
+    "noArtifacts": true,
+    "oneTypedFinalReceipt": true,
+    "immutableGateFlagsTrue": true,
+    "explicitFailuresNull": true,
+    "monitorDiagnosticCounts": {
+      "restore": 0,
+      "observer": 0
+    },
+    "unknownsPreserved": true
+  }
+}

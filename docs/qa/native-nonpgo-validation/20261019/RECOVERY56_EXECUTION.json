@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY56_ONE_EXISTING_CHECKPOINT_RESTORE_ONLY_GRAPH_ACTIVATION",
+  "fixture": "5be48e693474744f8f87ba31aff3c591bb182bec",
+  "caller": {
+    "sha": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "tree": "3f09bd693a0780d7e4fc3ac252d83e8f2d784dd6",
+    "workflowBytes": 57580,
+    "workflowSHA256": "8bac07811ed5b0e7a9a561d9aee1d73ac889abbe50b991cb2fda37e536e65836",
+    "branch": "codex/mac-native-firefox-graph-recovery56-20261019"
+  },
+  "prelaunchReviewCommit": "1d8665332c595e38f3afdae7a72436be9d85b762",
+  "activation": {
+    "requestedOnce": true,
+    "confirmedBranch": "codex/mac-native-firefox-graph-recovery56-20261019",
+    "at": "2026-10-19 21:49:02 UTC"
+  },
+  "freshAdmission": {
+    "at": "2026-10-19 21:48:51 UTC",
+    "branchMatches": 0,
+    "priorCallerRuns": 0,
+    "ownedNonterminalAllFiveStatuses": 0,
+    "previousRun": 39326868656,
+    "previousConclusion": "success",
+    "SDKUnexpired": true,
+    "checkpointUnexpired": true,
+    "SDKArtifact": 12182302735,
+    "checkpointArtifact": 12164479528
+  },
+  "run": {
+    "id": 39330430341,
+    "job": 118326931613,
+    "status": "completed",
+    "event": "push",
+    "attempt": 1,
+    "runner": "macos-15-intel",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39330430341",
+    "conclusion": "success",
+    "completedBy": "2026-10-19T22:18:47Z"
+  },
+  "scopeLimits": {
+    "jobs": 1,
+    "selectedQA": 529,
+    "recording": 14,
+    "existingCheckpointOnly": true,
+    "restoreOnly": true,
+    "newLongBuild": false,
+    "actualBuild": false,
+    "newArtifacts": 0,
+    "absoluteRestoreMinutesFromOriginalOrigin": 60,
+    "observerProcessingSeconds": 30,
+    "clockReset": false
+  },
+  "qualification": "One restore-only activation completed successfully. Literal generated graph observation is qualified; a runnable minimum suffix, build completion, cache hits, remaining time and native authentication remain unestablished."
+}

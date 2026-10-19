@@ -1,0 +1,238 @@
+{
+  "acquisitionAndBudget": {
+    "absoluteRestoreDeadlineMinutes": 60,
+    "budgetEvidence": "The fixed driver and child use the original fresh-job monotonic origin. Final binding/deadline evidence is gate-attested; no Linux clock was substituted for the terminated runner clock.",
+    "checkpointArchiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "checkpointArtifact": 12164479528,
+    "checkpointDownloadBytes": 2213942620,
+    "checkpointManifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "checkpointOriginRun": 39197008470,
+    "clockResetAllowed": false,
+    "observerProcessingSeconds": 30,
+    "sdkArtifact": 12182302735,
+    "sdkEvidence": "The frozen restore predicate verifies the exact source receipt and wire, raw TAR and canonical SDK anchors; acquisition step succeeded before the fixed expiry.",
+    "sdkProducerJob": 118032017226,
+    "sdkSourceRun": 39244172146
+  },
+  "decision": "CLEAR",
+  "evidenceScopes": {
+    "directObserverStage": {
+      "cleanupFailurePresent": false,
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReapExitCode": 0,
+      "leaderReapStatus": "reaped",
+      "minimumFreeGiB": 89.48,
+      "peakRSSMiB": 18,
+      "projectedRowCount": 1,
+      "rawCleanupFailureField": "NOT_PROJECTED",
+      "stage": "firefox-target-observer"
+    },
+    "driverBinding": "graphObservationVerified=true is gate-attested driver evidence for helper pins, summary/context/clock hash binding before and after observation, original deadline, no outstanding groups and no receipt-write failure. The full private driver receipt is not independently present in the final public projection.",
+    "failures": {
+      "allProjectedPrimaryAndMonitorFailuresPresentNull": true,
+      "diagnosticCountScope": "Lengths of the independently projected retained lists.",
+      "observerRetainedMonitorDiagnosticCount": 0,
+      "persistedFirstFailureStatus": "absent",
+      "restoreRetainedMonitorDiagnosticCount": 0
+    },
+    "guardedRestore": {
+      "evidence": "Gate-attested by the frozen restore predicate and successful restore step. The predicate requires original archive, manifest, replay context, effective configuration and natural zero/reaped-zero/verified-gone/explicit cleanup success for every recorded owned restore stage.",
+      "guardedRestoreVerified": true,
+      "rawStageCount": null,
+      "rawStageCountStatus": "NOT_PROJECTED",
+      "restoreReceiptConsistent": true
+    },
+    "observerFileCleanup": {
+      "cleanupFailure": null,
+      "evidence": "Explicitly present in the nested observation; separate from the projected stage row.",
+      "scope": "owned-observer-file-descriptors"
+    },
+    "preflight": {
+      "evidence": "Gate-attested by the exact frozen preflight predicate, final flag and successful preflight step. Detailed private suite receipts and raw preflight stage rows are not projected.",
+      "failureRecordingRequiredTests": 14,
+      "monitorPreflightVerified": true,
+      "rawStageCount": null,
+      "rawStageCountStatus": "NOT_PROJECTED",
+      "requiredErrors": 0,
+      "requiredFailures": 0,
+      "requiredSkipped": 0,
+      "selectedQARequiredTests": 529
+    }
+  },
+  "findings": [],
+  "immutableBindings": {
+    "caller": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "callerTree": "3f09bd693a0780d7e4fc3ac252d83e8f2d784dd6",
+    "callerWorkflow": {
+      "bytes": 57580,
+      "sha256": "8bac07811ed5b0e7a9a561d9aee1d73ac889abbe50b991cb2fda37e536e65836"
+    },
+    "fixture": "5be48e693474744f8f87ba31aff3c591bb182bec",
+    "fixtureTree": "de8ea211b5077b8f8befed610cd51c51ed47534d",
+    "graphSourceSHA256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "observerSourceSHA256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "provenance": "Immutable provider readbacks established in the bound prelaunch review; current local source hashes and the rendered caller still match.",
+    "readerSHA256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83",
+    "readerTestsSHA256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sdkSourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+  },
+  "observations": {
+    "bindingsStable": true,
+    "bundleSpecificationBindingsObserved": true,
+    "configConsistency": "unconfirmed",
+    "configurationScope": "The earlier resumed-effective-configuration restore gate passed. The additional optional-field comparison remains unknown; no complete optional configuration agreement is established.",
+    "declaredCompileNodeCount": 1215,
+    "declaredCompileNodesSHA256": "307820e3397dc732d9b4015e122e463a9952614585ddd09c339b8c3777e7c457",
+    "fixedReachability": {
+      "XULToGkrust": true,
+      "xpcshellToCocoaObjects": true,
+      "xpcshellToGkrust": true,
+      "xpcshellToHttp3Server": false,
+      "xpcshellToXUL": true
+    },
+    "graphScope": "root-deps-mk-literal-edges-only",
+    "http3Scope": "The server node is declared; the false reachability result is limited to the observed literal closure and does not establish a general absence or lack of runtime need.",
+    "optionalFiles": {
+      "appConstants": "unconfirmed-missing",
+      "applicationIni": "unconfirmed-missing",
+      "bundleFileList": "unconfirmed-missing",
+      "dependentLibs": "unconfirmed-missing",
+      "missingMeasurements": null
+    },
+    "optionalFilesScope": "Missing optional outputs do not establish completion, a runnable bundle, cache behavior or remaining build work.",
+    "qualification": "literal-generated-build-order-graph-observation",
+    "restoredConfigStillMatches": null,
+    "status": "observed",
+    "xpcshellLiteralClosure": {
+      "complete": true,
+      "observedEdgeCount": 1001,
+      "observedNodeCount": 983,
+      "sha256": "b5a0ad4030163ded02d70be6e81a17c66c2ccd7442d7d9436f04a6628d41100b"
+    }
+  },
+  "openP1": 0,
+  "openP2": 0,
+  "qualificationLimits": {
+    "cacheHitOrMiss": "UNKNOWN",
+    "durationToCompletion": "UNKNOWN",
+    "fullHostQualification": false,
+    "graphInterpretation": "Declared dependencies and stock tier directory counts do not prove executed recipes, completed targets, a sufficient Firefox suffix, full XUL completion or product qualification.",
+    "makeOrRecipeExecuted": false,
+    "minimalSufficientSuffixEstablished": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "newArtifactUploads": 0,
+    "originalNativeExitCause": "UNKNOWN",
+    "realBuildPerformed": false
+  },
+  "remainingBlockersForThisTerminalReview": [],
+  "review": "RECOVERY56_EXISTING_CHECKPOINT_READ_ONLY_GRAPH_TERMINAL",
+  "reviewedAtUTC": "2026-10-19T22:23:53Z",
+  "reviewerOperations": {
+    "CIOrRemoteRefsMutated": false,
+    "SDKOrCheckpointPayloadAcquired": false,
+    "existingLocalEvidenceRead": true,
+    "heavyDensityOrFullQARerun": false,
+    "normalTerminalMetadataRead": true,
+    "repositorySourceModified": false
+  },
+  "run": {
+    "allStepsSuccessful": true,
+    "artifactCount": 0,
+    "attempt": 1,
+    "branch": "codex/mac-native-firefox-graph-recovery56-20261019",
+    "conclusion": "success",
+    "event": "push",
+    "head": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+    "headRunCount": 1,
+    "id": 39330430341,
+    "job": 118326931613,
+    "jobCount": 1,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "status": "completed",
+    "stepCount": 16,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39330430341"
+  },
+  "schema": 1,
+  "scope": "Completed Recovery56 restore-only and fixed generated dependency graph observation, including the curated terminal result.",
+  "supportingEvidence": [
+    {
+      "basename": "floorp-recovery56-prelaunch-review.json",
+      "bytes": 17406,
+      "sha256": "a7dee2e96d4b5c3ea953069806bfe13cb8dde09bd402a94407fa7de02c629e34"
+    },
+    {
+      "basename": "floorp-recovery56-terminal-verification-checklist.json",
+      "bytes": 13938,
+      "sha256": "a07cf79ba6165f7bd987ec40481beae54c6af5e078f23bc5956c10dea49694dd"
+    },
+    {
+      "basename": "floorp-recovery56-terminal-api-independent.safe.json",
+      "bytes": 5884,
+      "sha256": "c61302d82821a338f9563639d9268f817194bf55db716f8764edf067ee4c2d2b"
+    },
+    {
+      "basename": "floorp-recovery56-terminal-controls.py",
+      "bytes": 11460,
+      "sha256": "7b0b4931f34d3b8d74115dc3530d544a9c7f1d632bb581776949bf964bf70a96"
+    },
+    {
+      "basename": "floorp-recovery56-terminal-controls-result.json",
+      "bytes": 1432,
+      "sha256": "00dd30295efb24e9f0f7567025f5fd31a5a8e3ba155f78a285ea29c9f682b0e9"
+    }
+  ],
+  "verification": {
+    "actualProjection": "The actual observation was accepted by the immutable caller observation_safe function and the pinned observer _graph_safe function.",
+    "curatedTerminalDraft": {
+      "basename": "floorp-recovery56-terminal-result.json",
+      "bytes": 20318,
+      "decision": "CLEAR",
+      "finalReceiptMatches": true,
+      "overclaimFindings": 0,
+      "privatePathOrSecretExposureFindings": 0,
+      "sha256": "8f213bc99d299a02512ba28f9332bd6436e95ade35f543c0650e047b4e55bbfd",
+      "stepEvidenceMatchesIndependentAPI": true
+    },
+    "freshNormalAPI": "Terminal run, complete jobs, complete artifacts and head-scoped run collection were read independently through the normal GitHub read-only API. Their curated fields agree with the saved provider records.",
+    "frozenGateASTBindingsVerified": 8,
+    "negativeControls": {
+      "cases": [
+        "bool-as-upload-zero",
+        "integer-as-gate-true",
+        "missing-null-primary",
+        "config-unknown-promoted-true",
+        "config-unknown-promoted-false",
+        "missing-file-promoted-zero",
+        "invented-stage-cleanup-null",
+        "bool-as-stage-exit-zero",
+        "unreaped-observer",
+        "extra-public-path"
+      ],
+      "rejected": 10
+    },
+    "rawLog": {
+      "basename": "consumer.root.private.log",
+      "bytes": 149369,
+      "completeJSONObjectCount": 2,
+      "matchingFinalReceiptCount": 1,
+      "rawContentPublished": false,
+      "sha256": "ebe12c69c73c2809016128c19c7a894a6f805d49195a90339ab13fcb490c6868"
+    },
+    "receipt": {
+      "basename": "receipt.root.private.json",
+      "bytes": 11226,
+      "exactlyMatchesRawObject": true,
+      "fieldCount": 35,
+      "sha256": "29beca2702ef129a0af73d85d1d68318880cf2d59cbd33b54c36151443ebd335"
+    },
+    "resourceWarningPolicy": "error",
+    "typedFinalFlags": "All six required true booleans, four required false booleans, seven integer constants, fixed strings, present null failure fields and absent persisted primary satisfy the frozen checklist. Bool-as-int and absent-as-null substitutions are rejected."
+  }
+}

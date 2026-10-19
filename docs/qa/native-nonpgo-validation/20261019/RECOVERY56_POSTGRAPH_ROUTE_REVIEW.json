@@ -1,0 +1,447 @@
+{
+  "schema": 1,
+  "scope": "actual-Recovery56-postgraph-next-route-and-rebuild-cause-assessment",
+  "status": "OBSERVED_GRAPH_SUPPORTS_PRIORITIZED_TARGET_CANDIDATE_WITH_UNPROVEN_RUNNABLE_SUFFIX",
+  "terminalVerification": {
+    "run": {
+      "id": 39330430341,
+      "head": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push"
+    },
+    "job": {
+      "id": 118326931613,
+      "name": "checkpoint-consumer",
+      "head": "e12ed72ccb006e3ed6f522f3ae1ee16594d0649d",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T21:49:08Z",
+      "completedAt": "2026-10-19T22:18:47Z"
+    },
+    "fixture": "5be48e693474744f8f87ba31aff3c591bb182bec",
+    "checkpointArtifact": 12164479528,
+    "checkpointOriginRun": 39197008470,
+    "sdkSourceArtifact": 12182302735,
+    "sdkProducerJob": 118032017226,
+    "actualArtifactCount": 0,
+    "ordinaryProviderMetadataIndependentlyRechecked": true,
+    "retainedDecodedLogContainsExactFinalReceipt": true,
+    "guardedRestoreVerified": true,
+    "monitorPreflightVerified": true,
+    "graphObservationVerified": true,
+    "observerNaturalZeroExactReapGroupGone": true,
+    "allProjectedFirstAndFatalMonitorFailuresAbsent": true,
+    "observerDiagnosticCount": 0,
+    "restoreDiagnosticCount": 0,
+    "qualifiedScope": "literal-generated-build-order-graph-observation",
+    "actualFirefoxBuildOrMakePerformed": false
+  },
+  "newObservedFacts": {
+    "scope": "root-deps-mk-literal-edges-only",
+    "declaredCompileNodeCount": 1215,
+    "declaredCompileNodesSHA256": "307820e3397dc732d9b4015e122e463a9952614585ddd09c339b8c3777e7c457",
+    "xpcshellLiteralClosure": {
+      "complete": true,
+      "observedEdgeCount": 1001,
+      "observedNodeCount": 983,
+      "sha256": "b5a0ad4030163ded02d70be6e81a17c66c2ccd7442d7d9436f04a6628d41100b"
+    },
+    "fixedNodesDeclared": {
+      "XUL": true,
+      "browser": true,
+      "cocoaObjects": true,
+      "gkrust": true,
+      "http3server": true,
+      "xpcshell": true
+    },
+    "fixedReachability": {
+      "XULToGkrust": true,
+      "xpcshellToCocoaObjects": true,
+      "xpcshellToGkrust": true,
+      "xpcshellToHttp3Server": false,
+      "xpcshellToXUL": true
+    },
+    "stockSuffixTierDeclarations": {
+      "libs": {
+        "directoryCount": 17,
+        "sha256": "074e79c737770f0491f3f7ee0f9ba9446007feb59247805be37c62d138fb8a25"
+      },
+      "misc": {
+        "directoryCount": 208,
+        "sha256": "13e53c0904e6a0df24933050ac8463023643136515e41d24f84d6778d863a1ed"
+      },
+      "tools": {
+        "directoryCount": 10,
+        "sha256": "17c5d6a6bb46ff6ad04a4f6d22e9bf38f9d75b18c26a008c564c8cdf93277b42"
+      }
+    },
+    "suffixGraphFacts": {
+      "browserAppToolsReachesBrowserBinary": false,
+      "toolsTraversalReachesBrowserApp": true
+    },
+    "rootGraphBindings": {
+      "rootDepsMk": {
+        "bytes": 154914,
+        "sha256": "b5c130fccb393e5caae95e84b1cc2fbbec7e252d94bc7a8078676b9fa7043ba5"
+      },
+      "rootMk": {
+        "bytes": 76674,
+        "sha256": "95b1f67e60ee86a14aa42e46525a6cfc6832cef98a53be15540e937ec972c7d6"
+      }
+    },
+    "missingFixedObservedEntries": {
+      "appConstants": {
+        "bytes": null,
+        "lineCount": null,
+        "reason": "missing",
+        "sha256": null,
+        "status": "unconfirmed"
+      },
+      "applicationIni": {
+        "bytes": null,
+        "lineCount": null,
+        "reason": "missing",
+        "sha256": null,
+        "status": "unconfirmed"
+      },
+      "dependentLibs": {
+        "bytes": null,
+        "lineCount": null,
+        "reason": "missing",
+        "sha256": null,
+        "status": "unconfirmed"
+      },
+      "bundleFileList": {
+        "bytes": null,
+        "lineCount": null,
+        "reason": "missing",
+        "sha256": null,
+        "status": "unconfirmed"
+      }
+    },
+    "bundleSpecSummary": {
+      "binariesCount": 1,
+      "configuredBundleBinding": true,
+      "copiesCount": 0,
+      "extra_filesCount": 4,
+      "movesCount": 2,
+      "ownedStageBinding": true
+    },
+    "bundleSpecBinding": {
+      "bytes": 1776,
+      "lineCount": 46,
+      "reason": null,
+      "sha256": "93e6f01fc5249ea5062fe7b1f384787588d8abad4f4188d37f62247c921ad4c8",
+      "status": "observed"
+    },
+    "restoreReceiptConsistent": true,
+    "additionalConfigConsistency": "unconfirmed",
+    "additionalRestoredConfigStillMatches": null,
+    "observerReexecutedExistingRestoreGuards": false,
+    "openedBindingsStable": true,
+    "bindingScope": "opened-fds-and-observed-fixed-entries-only"
+  },
+  "precisionAndInterpretation": [
+    "The1215 value counts declared compile nodes. The983/1001 values count literal closure nodes/edges, not object files, compiler invocations, completed outputs, elapsed work or a time-saving percentage.",
+    "Complete means complete traversal under the recognized root-deps literal grammar. It is not a complete model of per-directory Makefile recipes, file prerequisites, all generated assets or runtime harness requirements.",
+    "xpcshell-to-XUL-to-gkrust and Cocoa reachability are now actual restored-graph facts, upgrading the earlier source-only dependency inference. They still do not prove a subsequent target command has run or any saved archive will be skipped.",
+    "HTTP3 is declared but outside this literal xpcshell closure. Its binary presence was not observed by this fixed observer; absence from the closure is not a claim that the harness does not use it.",
+    "Tools traversal reaches browser/app/tools, while that literal closure has no browser/app/target node. This does not remove the per-directory bundle rule file prerequisites or prove the browser binary is unnecessary or automatically supplied.",
+    "The bundle spec has a bound configured bundle/stage and1binary,4extra-file entries,2moves. These are counts and binding facts, not proof that each input exists, is current, or has been copied into a runnable bundle.",
+    "AppConstants, application.ini, dependentlibs and the bundle file list are missing at the fixed observed paths. This is evidence of unfinished restore-boundary assets, not proof of corrupted cache state or of all possible alternate paths being absent.",
+    "Guarded restore and its configuration checks passed according to the bound successful restore receipt. The observer did not repeat those guards; its additional configuration comparison is unconfirmed/null, not mismatch and not a fresh equality proof."
+  ],
+  "narrowCandidate": {
+    "classification": "actual-generated-graph-supported-compile-milestone-not-yet-executed",
+    "command": [
+      "mach",
+      "build",
+      "-j3",
+      "-C",
+      ".",
+      "js/xpconnect/shell/target"
+    ],
+    "purpose": "Prioritize the actual xpcshell/XUL dependency closure before unrelated default compile roots while reusing the same guarded checkpoint and unchanged compilation configuration.",
+    "configurationChangeRequiredByObservedGraph": false,
+    "mustRetain": [
+      "fixed source and patches",
+      "debug/tests enabled and nonPGO/nonLTO",
+      "fixed toolchains and verified SDK content",
+      "absolute roots and producer build date",
+      "top-level -C . dependency traversal without RECURSE_BASE_DIR filtering",
+      "original job clock/resource/unknown/ownership/cleanup limits"
+    ],
+    "mustNotClaim": [
+      "full stock build completion",
+      "minimum usable suffix",
+      "actual make or Cargo cache hit",
+      "omitted-root critical-path saving",
+      "completion time",
+      "native authentication"
+    ],
+    "completionEvidence": {
+      "primary": "Distinct named Runner stage with natural integer0, no fatal monitor failure, exact reap and verified group cleanup, plus actual current output validation.",
+      "markerCaveat": "Pinned mach sets NO_BUILDSTATUS_MESSAGES=1 for explicit make_dir, including -C .; normal completion markers may be absent. Missing optional markers cannot negate an otherwise proved target-stage success or establish a missing target.",
+      "source": "python/mozbuild/mozbuild/controller/building.py:1510-1516"
+    }
+  },
+  "minimumAdditionalPrerequisitesForUnchangedSmoke": [
+    {
+      "id": "P1",
+      "item": "HTTP3 binary and harness inputs",
+      "observed": "HTTP3 node is declared but xpcshell literal closure does not reach it; binary presence is unknown.",
+      "sourceContract": "Stock runxpcshelltests calls startHttp3Server before test selection. Missing binary emits an ERROR even though stock comments call it nonfatal; the unchanged strict receipt requires errorLogs==0.",
+      "candidateActionNotExecuted": "Explicitly include the declared root netwerk/test/http3server/target, or prove the current expected binary and associated database/runtime inputs already exist before the tests. Preserve owned-group resource/cleanup handling and networkCoverage=false.",
+      "testOrBuildExecutionProven": false
+    },
+    {
+      "id": "P2",
+      "item": "Bundle binary, extra inputs, moves and file-list materialization",
+      "observed": "Bound bundle spec declares1binary4extra2moves; tools reaches browser/app, but no literal edge to browser binary; bundleFileList is missing at its fixed observed path.",
+      "sourceContract": "The app bundle copies a declared browser binary and staged assets; tools traversal alone is not proof of all copied inputs.",
+      "candidateActionNotExecuted": "Account for the declared browser/app/target and configured bundle inputs when deriving a runnable suffix, then execute the stock generated bundle/resource rules. Do not infer success from the spec or tools root alone.",
+      "minimalSufficientSuffixEstablished": false
+    },
+    {
+      "id": "P3",
+      "item": "Generated modules, application metadata and dependent library staging",
+      "observed": "Fixed AppConstants, application.ini and dependentlibs paths are missing; misc208dirs/libs17dirs/tools10dirs are declarations only.",
+      "candidateActionNotExecuted": "Use the unchanged stock generated-resource/install/bundle rules, with configured misc/libs/tools as a conservative suffix candidate, and verify the actual required assets after execution. Exact smaller suffix and ordering sufficiency remain unproved.",
+      "warning": "Do not silently substitute binaries/faster or a hand-written list for full-build equivalence. No recipe was run in56."
+    },
+    {
+      "id": "P4",
+      "item": "Actual stock harness selection and compiled output qualification",
+      "sourceContract": "The existing smoke uses the configured bundle xpcshell/XUL with executable x86_64 Mach-O/UUID/current-job freshness/hash checks; stock mach installs selected tests. The three existing explicit manifest/file controls and current-source bindings remain required.",
+      "candidateActionNotExecuted": "After the target and asset prerequisites pass, run the unchanged positive compiled-debug, deliberate failure and upstream version-comparator cases under the original global clock and owned resource/cleanup contract.",
+      "qualification": "Those three-case Mozilla results only; package/full-host/native remain separate."
+    }
+  ],
+  "rebuildCauseAssessmentUpdated": {
+    "preservedConclusions": [
+      "The sole checkpoint ends before completed browser C++/XUL. If later47/48 produced C++ outputs, those outputs are not retained in this earlier sole checkpoint; which objects actually completed remains UNKNOWN.",
+      "Retained45/46/47/48 source metadata, toolchain receipts and effective-config summaries compare equal.",
+      "Producer build date and captured source/tool/state mtimes are restored under the existing guard.",
+      "No specific redundant recompilation or changed configuration cause is established.",
+      "Recovery48 stopped at its shared absolute345minute deadline measured from the original job origin, not345minutes of compiler-only wall time; unfinished compiler subphase and remaining work are unknown."
+    ],
+    "newNarrowing": "The actual restored order graph supports prioritizing the large XUL-dependent shell closure and confirms that HTTP3 and the browser/bundle suffix need separate accounting.",
+    "doesNotEstablish": [
+      "mach automatic reconfigure or backend regeneration outcome",
+      "make archive-dependency freshness decision",
+      "Cargo invocation or cache hit/miss",
+      "which later C++ objects finished",
+      "old actual resource-profile contents",
+      "time remaining or performance acceleration",
+      "original native exit cause"
+    ],
+    "missingResourceAssetsAreRedundantRebuildCause": false,
+    "wholeCheckpointConfigurationChangeJustified": false,
+    "extraStalenessReadsetOrHelperAdded": false
+  },
+  "concreteNextDecisionForParent": {
+    "nextBuildRouteCandidate": "Same-job guarded checkpoint restore -> named root xpcshell/XUL compile milestone -> explicitly account for HTTP3, browser and generated bundle/resource inputs -> unchanged3case Mozilla smoke -> if required continue the stock full-build/package/native path on that same object tree.",
+    "whyDiscriminating": "It tests the actual shell/XUL closure first and exposes target-stage and asset failures separately, instead of spending the entire budget on the broad default compile before any Firefox test.",
+    "notAClaim": "The exact runnable suffix has not been executed or proved minimal, and the original full/native scope is not replaced by target-only success.",
+    "beforeAnyLongExecution": "Return these actual graph facts and explicit prerequisite/qualification boundaries; review concrete orchestration and final typed gates before activation.",
+    "forecastUnknownAloneRequiresIndefiniteHold": false,
+    "longExecutionStartedOrAuthorizedByThisReview": false
+  },
+  "bindings": {
+    "actualReceipt": {
+      "path": "receipt.root.private.json",
+      "bytes": 11226,
+      "sha256": "29beca2702ef129a0af73d85d1d68318880cf2d59cbd33b54c36151443ebd335"
+    },
+    "exactRetainedDecodedProviderLog": {
+      "path": "recovery56-decoded-private-log",
+      "bytes": 149369,
+      "sha256": "ebe12c69c73c2809016128c19c7a894a6f805d49195a90339ab13fcb490c6868"
+    },
+    "retainedTerminalAPI": {
+      "path": "terminal-api.root.private.json",
+      "bytes": 14741,
+      "sha256": "8c6d790b5c3b7b2444fbc8a9739894c5a22a6f85c66f0c86269e3c98aa756417"
+    },
+    "retainedJobsAPI": {
+      "path": "jobs.root.private.json",
+      "bytes": 5686,
+      "sha256": "bd14a96dcf5597d9c85e9fc6cc906e0bed53b7d0eee3fdb0bf5228a52cf21c27"
+    },
+    "retainedArtifactsAPI": {
+      "path": "artifacts.root.private.json",
+      "bytes": 42,
+      "sha256": "f7417e1fb877d3f5934f143cc38ad9e2905476e8f5ac6776507d09441efcd6f6"
+    },
+    "independentOrdinaryAPIProof": {
+      "path": "floorp-recovery56-postgraph-provider-proof.json",
+      "bytes": 658,
+      "sha256": "a2d242919db1deb54b4579a2950938cc67a0441267ce082a8638f75c9b98ddb8"
+    },
+    "prelaunchImmutableBindingReview": {
+      "path": "floorp-recovery56-prelaunch-review.json",
+      "bytes": 17406,
+      "sha256": "a7dee2e96d4b5c3ea953069806bfe13cb8dde09bd402a94407fa7de02c629e34"
+    },
+    "priorFrozenRebuildCauseReview": {
+      "path": "floorp-recovery56-rebuild-cause-review.json",
+      "bytes": 26489,
+      "sha256": "35f69bc1d50e9731a8c56a4294ba689b31647f0e3700907d1caab56e6f7da1ef"
+    },
+    "priorFrozenNextRouteDraftReview": {
+      "path": "floorp-recovery56-next-route-review.json",
+      "bytes": 5796,
+      "sha256": "1fe208283bd2da886e72ecf03e9b30fde097a62776faf9c56b8e54b4afd473f5"
+    },
+    "qaSource": [
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_graph.py",
+        "bytes": 10361,
+        "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_observer.py",
+        "bytes": 22432,
+        "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_harness_smoke.py",
+        "bytes": 16546,
+        "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_harness_receipt.py",
+        "bytes": 13639,
+        "sha256": "80fe26e0476de8cff4c2130aa1c17afb3a532a114b62ccb3694a882abcaf26d6"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla-smoke.json",
+        "bytes": 5021,
+        "sha256": "1d8687026469552c5e241404603453742a5ed4ccb8985892d4660872c2bb092c"
+      }
+    ],
+    "fixedRuntimeSource": [
+      {
+        "path": "python/mozbuild/mozbuild/controller/building.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 78700,
+        "sha256": "4f4a68682f15787066acd4577bab89cf90fa1442a85d2f006bc4ef016b25a640",
+        "reviewedLines": [
+          [
+            1357,
+            1393
+          ],
+          [
+            1433,
+            1465
+          ],
+          [
+            1508,
+            1533
+          ]
+        ]
+      },
+      {
+        "path": "testing/xpcshell/runxpcshelltests.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 114438,
+        "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad",
+        "reviewedLines": [
+          [
+            1815,
+            1864
+          ],
+          [
+            2316,
+            2324
+          ]
+        ]
+      },
+      {
+        "path": "testing/xpcshell/mach_commands.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 12047,
+        "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489",
+        "reviewedLines": [
+          [
+            221,
+            234
+          ]
+        ]
+      },
+      {
+        "path": "browser/app/moz.build",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8690,
+        "sha256": "a4c71c07a9ffe5e362432c11fff9f9ab5dbbff0cb5930f8263d469e4c5eab57c",
+        "reviewedLines": [
+          [
+            74,
+            108
+          ]
+        ]
+      },
+      {
+        "path": "python/mozbuild/mozbuild/action/assemble_macos_bundle.py",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 3390,
+        "sha256": "77dc8e1cb0f8d7bb81f177e694356c701118d69a564d61e805b74640a69cef0a",
+        "reviewedLines": [
+          [
+            55,
+            83
+          ]
+        ]
+      },
+      {
+        "path": "config/baseconfig.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 2424,
+        "sha256": "aa1e2c3c04de003506e35c28c6ed993a4f24395d95e42fd036d4ef72211a54a4",
+        "reviewedLines": [
+          [
+            41,
+            68
+          ]
+        ]
+      },
+      {
+        "path": "config/recurse.mk",
+        "ref": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "bytes": 8560,
+        "sha256": "3eb934988225cb3724676f437b3635813a223d7213f164d9a7e6be15755721ce",
+        "reviewedLines": [
+          [
+            25,
+            45
+          ],
+          [
+            69,
+            86
+          ]
+        ]
+      }
+    ]
+  },
+  "operations": {
+    "ordinaryTerminalMetadataRead": true,
+    "retainedTerminalLogRead": true,
+    "activeRunOrLogsPolled": false,
+    "newLargePayloadDownloaded": false,
+    "sourceEdited": false,
+    "newHelperOrReadsetAdded": false,
+    "buildOrTestExecuted": false,
+    "CIStarted": false,
+    "refChanged": false
+  },
+  "privacy": {
+    "rawMachinePathsPublished": false,
+    "rawProcessIdentitiesPublished": false,
+    "rawLogsOrArbitraryTextPublished": false,
+    "rawEnvironmentPublished": false,
+    "signedURLsPublished": false,
+    "internalConversationPublished": false
+  }
+}
