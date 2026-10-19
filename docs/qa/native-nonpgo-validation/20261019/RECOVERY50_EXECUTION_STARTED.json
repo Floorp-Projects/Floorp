@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY50_SDKLESS_MAC_STREAMING_EXECUTION",
+  "status": "queued",
+  "run": {
+    "id": 39312246063,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39312246063",
+    "caller": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-streaming-recovery50-20261019",
+    "createdAt": "2026-10-19T19:35:24Z"
+  },
+  "fixture": "de18c22f3a7e79eb2890f5e63ee6f466f574af98",
+  "prelaunchEvidenceCommit": "e147fd1c7c10780b606c019da57afec54294fd10",
+  "activation": {
+    "time": "2026-10-19 19:35:17 UTC",
+    "branchMatches": 0,
+    "priorCallerRuns": 0,
+    "ownedActive": 0,
+    "ownedQueued": 0
+  },
+  "oneActivation": true,
+  "SDKAcquisition": false,
+  "checkpointDownload": false,
+  "newArtifactUploads": 0,
+  "fullBuild": false,
+  "actualMacResults": "PENDING"
+}
