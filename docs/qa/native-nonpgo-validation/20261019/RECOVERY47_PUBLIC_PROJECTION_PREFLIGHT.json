@@ -1,0 +1,139 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY47_PUBLIC_RESTORE_EVIDENCE_DELTA_AND_CONDITIONAL_FULL_CONSUMER",
+  "baseFixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+  "baseQAReviewCommit": "4052e5434c83d012995a777baf3d00b6bf9e7e50",
+  "problem": "A successful restore returned the full captured producerBoundary and the public pipeline report copied it, including original task paths and old stage diagnostics.",
+  "behavior": "Retain the full private restore receipt and all original manifest, archive, reference, context, mode/time, ownership, resource and cleanup checks. Project only fixed typed public fields, pinned original/current replay metadata and aggregate producer completion proofs into the public report. Unknown optional fields are omitted, never assumed zero; invalid required completion evidence fails with a fixed code at checkpoint-restore-public-evidence. A preceding restore failure does not call the projection or replace its primary failure.",
+  "changes": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 40813,
+      "sha256": "d0fc9fc8183f98647669dd7a312cb7501dd5e3b96eb1ddb01475622e832792e8"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 7301,
+      "sha256": "666d5b53213ef64842b3cfd485197c4c52a2376b643f7f1b8005e2470b324401"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_restore_replay.py",
+      "bytes": 5218,
+      "sha256": "740c2ced586a0173ccd7c1de597a9f3add5094826a670f3377ced8d6c1c0438e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_public.py",
+      "bytes": 6953,
+      "sha256": "4c6715ed0cd4f76f592504279141ad52d525ee891ae923fa096dc2b312e49955"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_public.py",
+      "bytes": 13645,
+      "sha256": "b9d7858eedd1c02e0fd852128d77b5a9ac6e1aed13d60548be7019010349c67a"
+    }
+  ],
+  "unchangedProductionFiles": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+      "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/native_suite.py",
+      "sha256": "c4270e18440e9c4079347cc9a67f58e399cca9913bc11b7eed8fe034db6f5499"
+    }
+  ],
+  "validation": {
+    "total": 520,
+    "passed": 503,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 28.593,
+    "logBytes": 102611,
+    "logSHA256": "c29947dd22eefebbec2c0c0edc16ab9b02b73e560041ff209cc2b26ac8dc374e",
+    "resourceWarnings": "errors",
+    "cwd": "QA module directory",
+    "actualDarwinChecks": "SKIPPED on Linux; required skip0 in Mac consumer"
+  },
+  "independentDeltaReview": {
+    "bytes": 5367,
+    "sha256": "847780301decd201af6ca0e21d567d04f8f973b25175ff1b42f313bbfc6f4649",
+    "tests": 29,
+    "passed": 29,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "extraShortJobForPureProjectionDeltaRequired": false
+  },
+  "conditionalFullExecution": {
+    "shortGateRun": 39209226199,
+    "shortGateFixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+    "shortGateRequired": "285 actual Mac QA + 14 recording tests with zero skips; complete existing archive restore; complete context match; actual effective configuration; clean independent terminal review.",
+    "shortGateTerminalAtPreparation": "PENDING",
+    "fullBranch": "codex/mac-native-checkpoint-consumer-recovery47-20261019",
+    "fullActivatedAtPreparation": false,
+    "fullMacQARequired": 305,
+    "recordingRequired": 14,
+    "runner": "macos-15-intel",
+    "jobCount": 1,
+    "platformJobMinutes": 360,
+    "existingArtifact": 12164479528,
+    "originRun": 39197008470,
+    "newProducer": false,
+    "newArtifactUploads": 0,
+    "retentionDays": 1,
+    "archiveMaxStoredBytes": 10737418240,
+    "SDKNormalUnexpiredAcquisitionRequired": true
+  },
+  "workflowTemplate": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_CHECKPOINT_CONSUMER_WORKFLOW.yml.disabled",
+    "bytes": 10455,
+    "sha256": "41294e4534675bf3c5b7278f29c2ab4e9a48f7054df5cc39302c0a438178e6df"
+  },
+  "qualifications": {
+    "freshObjdir": false,
+    "sameJob": false,
+    "strictSameRun": false,
+    "currentFixtureEqualsCaptureFixture": false,
+    "fullHostXUL": "PENDING",
+    "package": "PENDING",
+    "nativeAuthentication": "PENDING",
+    "originalNativeExitCause": "UNKNOWN"
+  },
+  "publicPrivacy": {
+    "privateLogsPublished": false,
+    "privateBoundaryPathsOrProcessTagsCopied": false,
+    "freeFormBoundaryFieldsCopied": false,
+    "internalConversationPublished": false
+  }
+}

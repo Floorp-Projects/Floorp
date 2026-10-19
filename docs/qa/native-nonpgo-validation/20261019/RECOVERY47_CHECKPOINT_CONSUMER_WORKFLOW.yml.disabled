@@ -92,7 +92,7 @@ jobs:
                       'test_completion_preflight','test_unittest_receipt','test_qa_core',
                       'test_darwin_inventory','test_inventory_timeout','test_helper_import_preflight',
                       'test_checkpoint_transfer','test_checkpoint_replay','test_failure_excerpt',
-                      'test_pipeline_restore','test_checkpoint_restore_replay'],285,False),
+                      'test_pipeline_restore','test_checkpoint_restore_replay','test_checkpoint_public'],305,False),
                       ('failure-recording-tests',[sys.executable,'-m','unittest','discover','-v',
                       '-s',str(helper.parents[1]/'app-shim'),'-p','test_shim_failure_diagnostics.py'],14,True)]
                   for test_stage,command,expected,recording in suites:

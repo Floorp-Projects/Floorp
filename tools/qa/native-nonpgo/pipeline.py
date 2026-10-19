@@ -17,6 +17,7 @@ import time
 from support import (Failure, Runner, clean_environment, digest, download,
                      extract_tar, require, scan_tar, write_json)
 from owned_native import OwnedNative
+from checkpoint_public import public_restore
 
 
 HERE = Path(__file__).resolve().parent
@@ -397,7 +398,8 @@ def main():
                        '--source', str(args.source), '--task', str(task)] +
                        (['--replay-origin'] if args.replay_origin else []), task, checkpoint_env,
                        plan['limits']['jobMinutes'], phase_deadline_minutes=plan['checkpoint']['consumerRestoreDeadlineMinutes'])
-            report['checkpointRestore'] = json.loads((task / 'checkpoint-restore.json').read_text())
+            stage = 'checkpoint-restore-public-evidence'
+            report['checkpointRestore'] = public_restore(json.loads((task / 'checkpoint-restore.json').read_text()))
             if report['checkpointRestore'].get('replay') is not None:
                 report['checkpointReplay'] = report['checkpointRestore']['replay']
                 report['qualification'] = report['checkpointRestore']['qualification']

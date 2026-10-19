@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "scope": "RESTORE_PUBLIC_EVIDENCE_PROJECTION_DELTA",
+  "decision": {
+    "sourceDelta": "CLEAR",
+    "resolvedP2": "Unfiltered producer boundary in public restore report",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "additionalMacJobRequiredSolelyForThisPureProjectionDelta": false,
+    "fullConsumerExecution": "CONDITIONAL_ON_SHORT46_TERMINAL_REVIEW_AND_FINAL_ROUTE_BINDING"
+  },
+  "baselineFixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+  "findings": [],
+  "reviewedBehavior": {
+    "publicAllowlist": "Fixed typed hashes, date, two known qualification enums, false fresh/same-job flags, typed completion counts/booleans, and separately validated fixed-origin/current-execution replay metadata.",
+    "excluded": "Raw archive/dep-info paths, original stage arrays, lastActivity, opaque identities/tags, arbitrary features/logs/measurements and unknown fields are not copied.",
+    "unknown": "Optional unknown fields are omitted. Required status/count/completion data must be proven and typed; None/bool-as-zero/float-as-zero are rejected, not replaced by zero.",
+    "validation": "Projection follows successful original restore. It does not replace manifest/context/identity/payload/mode/mtime/effective-config validation or modify private inputs.",
+    "primaryFailure": "Projection failure gets checkpoint-restore-public-evidence attribution and blocks continuation; an original restore failure prevents invocation and remains first failure.",
+    "compatibility": "Pure Python return-value projection with no new native API, process, resource, archive or restore behavior; a further Mac run solely for projection is unnecessary after the already-required real restore gate succeeds."
+  },
+  "independentValidation": {
+    "command": "python -m unittest -v test_checkpoint_public test_pipeline_restore test_checkpoint_restore_replay",
+    "workingDirectory": "tools/qa/native-nonpgo",
+    "platform": "Linux x86_64",
+    "resourceWarnings": "errors",
+    "total": 29,
+    "passed": 29,
+    "skipped": 0,
+    "errors": 0,
+    "failures": 0,
+    "seconds": 0.27,
+    "exitCode": 0,
+    "logBytes": 5432,
+    "logSHA256": "17d9bd036cdbf5f0f9cf90d2e20f5b640c16ba3de52ad4b5ff5e298a75451b0c",
+    "negativeCoverage": [
+      "Nested private sentinels, stage names, measurements, paths and tags omitted",
+      "Every required stage field and single required stage occurrence",
+      "Unknown/false/float/string/nonzero completion rejected",
+      "Reap/group/cleanup and known-birth proof required",
+      "Exact replay schema/origin/real current environment binding",
+      "Input and environment mutation or aliasing prevented",
+      "Projection error stops pipeline with correct phase",
+      "Original restore error remains primary and never invokes projection",
+      "Full tiny archive restore feeds the actual projector with exact final state validation"
+    ]
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_public.py",
+      "bytes": 6953,
+      "sha256": "4c6715ed0cd4f76f592504279141ad52d525ee891ae923fa096dc2b312e49955"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_public.py",
+      "bytes": 13645,
+      "sha256": "b9d7858eedd1c02e0fd852128d77b5a9ac6e1aed13d60548be7019010349c67a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 40813,
+      "sha256": "d0fc9fc8183f98647669dd7a312cb7501dd5e3b96eb1ddb01475622e832792e8"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 7301,
+      "sha256": "666d5b53213ef64842b3cfd485197c4c52a2376b643f7f1b8005e2470b324401"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_restore_replay.py",
+      "bytes": 5218,
+      "sha256": "740c2ced586a0173ccd7c1de597a9f3add5094826a670f3377ced8d6c1c0438e"
+    }
+  ],
+  "unchangedValidationBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+      "bytes": 11556,
+      "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "bytes": 635,
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  ],
+  "limits": [
+    "Short46 actual stored-checkpoint restore and effective configuration must still pass terminal review.",
+    "This source-delta review does not certify a new caller or provider commit until separately read back.",
+    "Existing public CI log output and curated repository evidence are distinct. Standard Mac paths previously output are not evidence of a secret leak; this change prevents future redundant projection.",
+    "Full host/XUL and native authentication remain unverified."
+  ],
+  "reviewActions": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "largePayloadDownloaded": false,
+    "remoteWritten": false
+  },
+  "publicPrivacy": {
+    "rawPathsOrLogsIncluded": false,
+    "signedURLsIncluded": false,
+    "internalConversationIncluded": false
+  }
+}

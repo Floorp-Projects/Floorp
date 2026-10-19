@@ -38,6 +38,8 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.runner.fail.side_effect = self.fail
         self.runner.run.side_effect = self.run_stage
         self.verify_config = mock.Mock()
+        self.public_restore = mock.Mock(side_effect=lambda value: value)
+        self.restore_failure = False
 
     def fail(self, stage, code):
         if self.runner.failure is None:
@@ -50,6 +52,8 @@ class RestoreOnlyFlow(unittest.TestCase):
             (self.task / 'sdk-materialized.json').write_text(json.dumps({'path': str(self.task / 'sdk')}))
         if stage == 'checkpoint-restore':
             self.assertIn('--replay-origin', command)
+            if self.restore_failure:
+                raise Failure('test-original-restore-failure')
             value = {'qualification': 'verified-origin-cross-run-checkpoint-replay-v1',
                      'replay': {'contract': 'verified-origin-cross-run-checkpoint-replay-v1'}}
             (self.task / 'checkpoint-restore.json').write_text(json.dumps(value))
@@ -75,6 +79,7 @@ class RestoreOnlyFlow(unittest.TestCase):
                 mock.patch.object(pipeline, 'prepare_source'), \
                 mock.patch.object(pipeline, 'clean_environment', return_value={'PATH': '/usr/bin'}), \
                 mock.patch.object(pipeline, 'verify_config', self.verify_config), \
+                mock.patch.object(pipeline, 'public_restore', self.public_restore), \
                 mock.patch('checkpoint.verify_restored_config') as restored_config, \
                 contextlib.redirect_stdout(io.StringIO()):
             code = pipeline.main()
@@ -115,6 +120,22 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertEqual(report['status'], 'failed')
         self.assertEqual(report['firstFailure']['code'], 'checkpoint-restore-proof-incomplete')
+
+    def test_public_projection_failure_is_attributed_and_blocks_build(self):
+        self.public_restore.side_effect=Failure('checkpoint-public-stage-completion')
+        code,report,_=self.invoke()
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{'stage':'checkpoint-restore-public-evidence',
+                                               'code':'checkpoint-public-stage-completion'})
+        self.assertNotIn('full-build',[row['stage'] for row in self.runner.records])
+
+    def test_restore_failure_preserves_primary_and_never_invokes_projection(self):
+        self.restore_failure=True
+        code,report,_=self.invoke()
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{'stage':'checkpoint-restore',
+                                               'code':'test-original-restore-failure'})
+        self.public_restore.assert_not_called()
 
 
 if __name__ == '__main__':

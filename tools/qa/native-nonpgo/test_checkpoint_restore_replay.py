@@ -8,6 +8,7 @@ from unittest import mock
 
 import checkpoint as cp
 import checkpoint_replay as replay
+import checkpoint_public
 import test_checkpoint as fixture
 from support import Failure
 
@@ -50,6 +51,11 @@ class ReplayRestoreIntegration(unittest.TestCase):
         _,manifest=self.prepare_replay()
         before=dict(os.environ)
         result=self.restore_replay()
+        with mock.patch.object(checkpoint_public, 'load_config', return_value=self.config):
+            public_result=checkpoint_public.public_restore(result)
+        self.assertNotIn(str(self.root),json.dumps(public_result))
+        self.assertNotIn('stages',public_result['producerBoundary'])
+        self.assertEqual(public_result['producerBoundary']['stageCount'],5)
         self.assert_exact_restored_manifest(manifest)
         self.assertEqual(result['qualification'],replay.CONTRACT)
         self.assertEqual(result['replay']['origin']['run'],'39197008470')
