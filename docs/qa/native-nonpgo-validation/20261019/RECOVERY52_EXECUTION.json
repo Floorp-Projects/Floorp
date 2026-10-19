@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY52_SDK_FREE_SHORT_DIAGNOSTIC_EXECUTION",
+  "status": "completed",
+  "activation": {
+    "at": "2026-10-19T20:14:59Z",
+    "caller": "4a744679264b59c24219693581f2b129e4dd9865",
+    "fixture": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+    "branch": "codex/mac-native-streaming-recovery52-20261019"
+  },
+  "run": {
+    "id": 39317742303,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39317742303",
+    "job": 118283502051,
+    "attempt": 1,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "failure"
+  },
+  "limits": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "SDK": false,
+    "checkpoint": false,
+    "newArtifacts": 0,
+    "longBuild": false,
+    "parserProcessingSeconds": 30
+  },
+  "terminalDetails": "RECOVERY52_TERMINAL_RESULT.json"
+}

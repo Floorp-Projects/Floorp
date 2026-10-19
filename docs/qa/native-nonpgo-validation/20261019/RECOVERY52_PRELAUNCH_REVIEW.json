@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "review": "Recovery52 immutable short Mac primitive-tail diagnostic route",
+  "decision": "GO_ONE_SDK_FREE_SHORT_DIAGNOSTIC",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "fixture": {
+    "sha": "a893dc17186835f4eaa5d9a82b3d8b901a84519c",
+    "tree": "6319ff2fe03838627af626928987d372d8a5eb52",
+    "parents": [
+      "df086f1ffa44e3f7f6a829fc9674028c3ee01f98"
+    ],
+    "changedPaths": [
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY52_IMPLEMENTATION_REVIEW.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY52_PREPARATION.json",
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY52_SOURCE_FREEZE.json",
+      "tools/qa/native-nonpgo/build_completion.py",
+      "tools/qa/native-nonpgo/test_build_completion.py"
+    ],
+    "allFiveChangedFilesIndependentlyReadBack": true,
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24498,
+        "sha256": "539dc4f7b2d31ef1ed8e930ec2f7b04a19a85fd876628c52f4d30a15cf5948b9"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 31356,
+        "sha256": "6a8e19ff79bc2352a3e320c7d7575bdce5afc9a07cf21074418902899f4083a6"
+      }
+    ],
+    "documentBindings": {
+      "RECOVERY52_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 7703,
+        "sha256": "7c4507099169abf198a3a2f920f48b3bee3c2b93c2a25b80620d725a3178fdd2"
+      },
+      "RECOVERY52_PREPARATION.json": {
+        "bytes": 5175,
+        "sha256": "4c387c35b7367aaa9e1166084bb0023902687375034e3bf40a0783a582643351"
+      },
+      "RECOVERY52_SOURCE_FREEZE.json": {
+        "bytes": 775,
+        "sha256": "050112568d7f992bc152d51f59602a27b3696602ddba58d8f5e3c0edd24b4b68"
+      }
+    },
+    "unchangedPlan": {
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  },
+  "caller": {
+    "sha": "4a744679264b59c24219693581f2b129e4dd9865",
+    "tree": "c55e55f06529c84bd6204868b6df110762862ce3",
+    "parents": [
+      "d208fe93278d6c557f41df1946a5bd57be300541"
+    ],
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "bytes": 36489,
+    "sha256": "86f08c862368df6047cfc8be65c9eae7ee1efbce574558b03c1445f28cd90a28",
+    "providerReadbackMatchesReviewedRendering": true,
+    "reviewedTemplate": {
+      "bytes": 36460,
+      "sha256": "ce4dd65e8ec45fb359333923bde7209abe1dcfe0f8c5461412c11de9dc905099"
+    },
+    "onlyRenderChange": "single fixture placeholder replacement"
+  },
+  "scope": {
+    "activationBranch": "codex/mac-native-streaming-recovery52-20261019",
+    "trigger": "initial created push, zero before SHA, attempt 1, exact repository and branch",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "roleName": "checkpoint-consumer",
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "credentialsPersistedByCheckout": false,
+    "jobPlatformMinutes": 360,
+    "ownedStagePhaseMinutes": 15,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeOrHarnessCheckout": false,
+    "build": false,
+    "artifactUpload": false
+  },
+  "reviewAssessment": [
+    "The immutable parser and test hashes exactly match the reviewed two-file optimization. The source compare changes only those files and three technical documents.",
+    "The immutable caller changes only the dedicated workflow against the reviewed Recovery51 caller. Removing the single fixture SHA reproduces the reviewed candidate exactly.",
+    "The candidate differs semantically from Recovery51 only in workflow name, dedicated branch and fixture. The diagnostic continuation and final gate code are unchanged.",
+    "The same one-million-resource-row input, byte/hash anchors, assertion frame 450 and 30-second cooperative processing budget remain. No JSON validation, memory/value/row cap, unknown handling, ownership check, clock or resource limit is weakened.",
+    "Only the recognized isolated density failure may continue to independent recording, owned-monitor and nine serializer diagnostics after exact reaping and verified cleanup. The original first failure and overall failed result remain preserved.",
+    "A successful short qualification still requires the actual density observation and every independent gate. Linux timing and earlier nine-case values cannot substitute for this implementation on the Mac."
+  ],
+  "validationBindings": {
+    "implementationReview": {
+      "name": "floorp-recovery52-implementation-review.json",
+      "bytes": 7703,
+      "sha256": "7c4507099169abf198a3a2f920f48b3bee3c2b93c2a25b80620d725a3178fdd2"
+    },
+    "independentGrammarChecks": 15480,
+    "independentBoundsChecks": 777,
+    "independentTargetedTestsPassed": 4,
+    "independentlyReexecutedNegativeCandidateControls": 1032,
+    "independentlyReexecutedSourceAPIMocks": 5,
+    "independentlyReexecutedInlineMockFlows": 7,
+    "heavyFullQAOrDensityReexecutedForRouteReview": false,
+    "providedFullQA": {
+      "total": 737,
+      "passed": 720,
+      "DarwinSkipped": 17,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "triggerAssessment": {
+    "inheritedWorkflowYAMLFilesPreviouslyRead": 26,
+    "nonDedicatedWorkflowBodiesUnchangedByImmutableAncestryAndCompare": true,
+    "otherPushBranchFiltersDoNotMatchNewBranch": true,
+    "matchingWorkflows": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ]
+  },
+  "freshOrdinaryReadOnlyAPI": {
+    "observedAt": "2026-10-19T20:14:15Z",
+    "branchMatches": 0,
+    "callerRunCount": 0,
+    "activeTotal": 0,
+    "queuedTotal": 1,
+    "activeOwned": 0,
+    "queuedOwned": 0
+  },
+  "preActivationConditions": [
+    "Recheck the exact source/caller, unused dedicated branch, no prior caller runs and no active or queued owned validation immediately before the single activation.",
+    "Activate only the reviewed source and workflow bytes."
+  ],
+  "terminalReviewRequirements": [
+    "Read completed job logs only after terminal and bind run/job/source/caller/attempt.",
+    "Retain the actual same-input collector status, fixed reason and elapsed time. If unconfirmed, counts must remain null and the job must remain failed after diagnostic continuation.",
+    "Verify actual 522-test and 14-recording outcomes separately from all nine serializer cases; record any unexecuted stages without fabricating results.",
+    "Verify actual stage exit codes, exact leader reap, group cleanup, separate monitor failures, first-failure-file preservation and artifact count zero."
+  ],
+  "limits": [
+    "Recovery51 proved budget exhaustion on the controlled Mac input, not its precise parse-pass bottleneck. The primitive-tail optimization remains a hypothesis until actual Mac revalidation.",
+    "The current implementation has not yet established headroom below 30 seconds on the Intel Mac.",
+    "This short does not reconstruct the missing Recovery48 production profile or qualify a full build, current Mozilla cases, packaging or native authentication.",
+    "This review does not start or qualify a long build."
+  ],
+  "privacy": "The published technical documents were read and checked; no private paths, raw process identifiers, arbitrary command text, environment values, secret URLs or conversation details were found.",
+  "reviewerActions": {
+    "sourceEdits": false,
+    "CIOrRefMutations": false,
+    "additionalPayloadDownloads": false,
+    "actualMacAlreadyExecutedByReviewer": false
+  }
+}
