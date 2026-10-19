@@ -1,0 +1,77 @@
+{
+  "activationConditions": [
+    "Evaluate run 39212933648 terminal evidence and resolve relevant new blockers.",
+    "Recheck normal API metadata for the unexpired exact official SDK and sole existing checkpoint, including actual bytes, digests, producer identity and expiry.",
+    "Confirm no owned active or queued run and that the planned branch and caller run have not been used.",
+    "Create only the reviewed single-consumer branch at the exact immutable caller."
+  ],
+  "caller": {
+    "branchCreated": false,
+    "changedFiles": 1,
+    "commit": "9767bbee676de3e1b7144b8048f93d1a9aa72cde",
+    "plannedBranch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "tree": "0f8ac559a8531b4266a38b0eb6a6ccf077fc2c5a",
+    "workflow": ".github/workflows/mac-native-checkpoint.yml",
+    "workflowBytes": 16248,
+    "workflowSHA256": "53e1ad2d5df980bc67f15fff10c4e8b661ef628a4642f3cd352fdec9a6240f37"
+  },
+  "expectedPreflight": {
+    "qaTests": 359,
+    "recordingTests": 14,
+    "skipped": 0
+  },
+  "fixture": {
+    "commit": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+    "exactReadbackFiles": 14,
+    "repository": "Floorp-Projects/Floorp",
+    "tree": "4f7010a9715c5ea12cd57fbfb9e2590702ea7df1"
+  },
+  "hypotheses": [
+    {
+      "decisiveEvidence": "Three actual strict assertions, an active-test-bound fixed marker, exact binary hashes before and after, and clean natural exit 0.",
+      "id": "current-debug-runtime",
+      "question": "Does the freshly completed current-source xpcshell actually run a DEBUG engine and DEBUG AppConstants at version 158.0.1?"
+    },
+    {
+      "decisiveEvidence": "Two exact single-test suite lifecycles, no skipped or unexpected events, natural exit 0, exact reap, and owned groups gone.",
+      "id": "real-harness-positive-and-upstream",
+      "question": "Does the stock current Mozilla harness pass both the controlled current-runtime test and the original current-source version-comparator test with its original head?"
+    },
+    {
+      "decisiveEvidence": "Exactly one fixed named-task unexpected FAIL plus one unexpected FAIL test_end, actual failed status retained, exit 1, exact reap, no crash/timeout/other failure, and clean owned-group cleanup.",
+      "id": "real-harness-negative-detection",
+      "question": "Does one deliberate Assert failure remain a real unexpected FAIL in both subtest and test_end, with harness exit 1 and no automatic retry?"
+    }
+  ],
+  "independentReview": {
+    "bytes": 11046,
+    "faultsRejected": 130,
+    "normalGateControls": 1,
+    "openP1": 0,
+    "openP2": 0,
+    "sha256": "5961083b189460e3555791bcfae85c80115a9d170150fe3bce8357d86585f8b3"
+  },
+  "qualification": {
+    "actualMozillaHarness": "NOT_TESTED",
+    "broadFirefoxCoverage": false,
+    "freshObjdir": false,
+    "nativeAuthentication": "NOT_TESTED_BY_THIS_ROUTE",
+    "originalNativeExitCause": "UNKNOWN",
+    "package": "NOT_TESTED_BY_THIS_ROUTE",
+    "productQualification": false,
+    "sameJob": false
+  },
+  "restrictions": {
+    "blacksmithLogin": false,
+    "existingCheckpoint": 12164479528,
+    "merge": false,
+    "newArtifactUploads": 0,
+    "permissionOrAuthenticationChanges": false,
+    "productRelease": false,
+    "productSigning": false
+  },
+  "schema": 1,
+  "scope": "RECOVERY48_CURRENT_MOZILLA_IMMUTABLE_ROUTE",
+  "status": "PREPARED_NOT_ACTIVATED"
+}

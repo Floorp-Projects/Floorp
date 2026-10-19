@@ -1,0 +1,271 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_CURRENT_SOURCE_MOZILLA_CONSUMER_CONDITIONAL_PRELAUNCH",
+  "reviewedAtUTC": "2026-10-19T07:58:26Z",
+  "decision": {
+    "technicalRoute": "CLEAR",
+    "execution": "CONDITIONAL_GO_AFTER_RUN47_TERMINAL_REVIEW_AND_FRESH_LAUNCH_CHECKS",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "newCIStartedByReviewer": false,
+    "actualMozillaQualified": false
+  },
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+    "tree": "4f7010a9715c5ea12cd57fbfb9e2590702ea7df1",
+    "parent": "b217babbf012176c5612e475edc8fab8cf04ae78",
+    "changedFiles": 14,
+    "providerFullContentReadbacks": 14,
+    "exactMatches": 14,
+    "description": "Reviewed Mozilla reader, driver, fixed manifests and JavaScript tests, explicit pipeline mode, tests and public preparation/review documents."
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "9767bbee676de3e1b7144b8048f93d1a9aa72cde",
+    "tree": "0f8ac559a8531b4266a38b0eb6a6ccf077fc2c5a",
+    "parent": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "onlyChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+    "providerWorkflowEqualsReviewedLocalRender": true,
+    "workflowBytes": 16248,
+    "workflowSHA256": "53e1ad2d5df980bc67f15fff10c4e8b661ef628a4642f3cd352fdec9a6240f37",
+    "branch": "codex/mac-native-mozilla-smoke-recovery48-20261019",
+    "activationState": "Not created in the preparation evidence; must be rechecked before activation."
+  },
+  "workflowContract": {
+    "jobCount": 1,
+    "jobName": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "jobMinutes": 360,
+    "initialCreatedPushBeforeZeroAttempt1Guards": true,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "Python": "3.12.10 x64 from the existing runner tool cache",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "nativeHarness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "explicitReplayOrigin": true,
+    "mozillaOnly": true,
+    "QARequired": 359,
+    "recordingRequired": 14,
+    "requiredSkips": 0,
+    "preflightStepMinutes": 10,
+    "preflightPhaseMinutes": 15,
+    "SDKStepMinutes": 12,
+    "checkpointDownloadStepMinutes": 25,
+    "newProducer": false,
+    "newUpload": false,
+    "oldGuardsAndResourceLimitsPreserved": true
+  },
+  "existingCheckpoint": {
+    "originRun": 39197008470,
+    "originCaller": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "captureFixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+    "producerJob": 117881829274,
+    "artifact": 12164479528,
+    "bytes": 2213942620,
+    "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "retentionDays": 1,
+    "maxStoredBytes": 10737418240,
+    "qualification": "verified-origin-cross-run-checkpoint-replay-v1",
+    "freshObjdir": false,
+    "sameJob": false,
+    "strictSameRun": false
+  },
+  "finalEvidenceGate": {
+    "status": "mozilla-ready",
+    "qualification": "verified-origin-current-mozilla-xpcshell-smoke",
+    "resumedEffectiveConfigurationRequired": true,
+    "fullHostXUL": "passed required after actual full build",
+    "stagePackage": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "productQualification": false,
+    "cases": [
+      {
+        "case": "compiled-debug",
+        "mode": "positive",
+        "realExit": 0,
+        "harnessStatus": "passed",
+        "debugMarkerRequired": true,
+        "passAssertionsAtLeast": 3
+      },
+      {
+        "case": "failure-control",
+        "mode": "negative-control",
+        "realExit": 1,
+        "harnessStatus": "failed",
+        "failureMustRemainFailed": true,
+        "unexpectedSubtestAndEndRequired": 1
+      },
+      {
+        "case": "upstream-version-comparator",
+        "mode": "positive",
+        "realExit": 0,
+        "harnessStatus": "passed"
+      }
+    ],
+    "allCases": "Exact identities/order, complete selected mozlog lifecycle, real exit type, exact reap, group gone, clean cleanup, absent fatal monitor and absent collection/persistence errors.",
+    "scope": "Three fixed xpcshell cases; no broad Firefox, browser-chrome, network or native authentication qualification."
+  },
+  "independentValidation": {
+    "immutableSourceAndCaller": "Both commit parents/trees and changed-path comparisons verified through ordinary provider reads.",
+    "sourceReadbacks": 14,
+    "workflowSyntax": "YAML, every Bash block and both inline Python blocks passed parsing.",
+    "actualSelectedTestDiscovery": {
+      "modules": 18,
+      "QA": 359,
+      "recordingRequired": 14
+    },
+    "finalGateExtractedControls": {
+      "normalPass": 1,
+      "faultsRejected": 130,
+      "executedByReviewer": true,
+      "controlScope": "Executed only definitions and read-only controls extracted from the exact candidate; no renderer/result writes, CI, SDK or actual Mozilla process.",
+      "script": {
+        "bytes": 9656,
+        "sha256": "5301f02bb4e2b08b032d258072199f1080952f4bec6c88736e62fbdbc331c8ee"
+      },
+      "recordedResult": {
+        "bytes": 6728,
+        "sha256": "8c0fed25ad81a1ac35578d60ead4c451c7f6375f8092a48eaf9128cef05d597d"
+      }
+    },
+    "sourceFocused": {
+      "passed": 60,
+      "skipped": 0,
+      "seconds": 0.067,
+      "resourceWarnings": "errors",
+      "binding": "tools/qa/native-nonpgo/RECOVERY48_IMPLEMENTATION_REVIEW.json"
+    },
+    "completeRegression": {
+      "errors": 0,
+      "failures": 0,
+      "log": {
+        "bytes": 113233,
+        "elapsedSeconds": 30.278,
+        "sha256": "d213e4379f5ab6d177d9b34e39cb3ec7ad70b462d50f5d4bc7671f3ac2e96c5a"
+      },
+      "passed": 557,
+      "platform": "Linux",
+      "rawPublished": false,
+      "resourceWarnings": "errors",
+      "skipped": 17,
+      "total": 574
+    },
+    "completeRegressionProvenance": "Execution recorded in the immutable preparation document; not rerun by this route review.",
+    "fixedInputVerification": {
+      "RuntimeSourceFiles": 18,
+      "fixtures": 4,
+      "allHashesMatch": true
+    }
+  },
+  "resolvedP2": [
+    "DEBUG marker bound to a unique active selected test.",
+    "Per-case evidence attached before setup and retained through collection/persistence failure, including recent16 and separate stopping monitor detail.",
+    "Arbitrary Failure strings and unknown exception names stay private; public code uses fixed allowlists."
+  ],
+  "conditionsBeforeActivation": [
+    "Wait for run39212933648 to become terminal and review its actual failure/success evidence; assess and resolve any new build, restore, resource or permission blocker before this consumer route.",
+    "Recheck no owned active or queued execution and an unused recovery48 branch/run identity immediately before activation. No concurrent execution with run47.",
+    "Use the exact reviewed immutable caller and fixture, with ordinary current-run/job identity checks and separate fixed origin provenance.",
+    "Refresh official unexpired SDK and sole checkpoint metadata, then acquire normally with unchanged HTTP failure stops, deadlines and fixed ZIP/TAR/tree/version/archive/manifest integrity checks.",
+    "Keep actual 359 QA plus 14 recording tests zero-skip before acquisition, and preserve all per-case first failure, private original evidence, safe monitor projection and cleanup proof.",
+    "Do not call resumed cross-run success fresh same-job, native authentication or broad Firefox coverage."
+  ],
+  "notEstablished": [
+    "Actual Mac execution of the three Mozilla cases.",
+    "Full47 terminal result or original native exit cause.",
+    "Future metadata freshness, zero-overlap and unused branch state at activation."
+  ],
+  "preparationSnapshotNote": "The preparation document predates creation of the immutable caller object; this review binds the subsequently created caller while leaving activation conditional.",
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 43309,
+      "sha256": "fdf40e5b63bee0b457402ab8c8e884da91b295cc184a300479459afb6917a142"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 11218,
+      "sha256": "c4313a1664ba2e964299b09ba201871cc852c813dbb014ddb9201cdae9df825d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_harness_smoke.py",
+      "bytes": 16546,
+      "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_harness_smoke.py",
+      "bytes": 17491,
+      "sha256": "7f6062a2ceba0ef172b67c9125641da5132a6b96c7dda62d0b96673f324fdb3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_harness_receipt.py",
+      "bytes": 13639,
+      "sha256": "80fe26e0476de8cff4c2130aa1c17afb3a532a114b62ccb3694a882abcaf26d6"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_harness_receipt.py",
+      "bytes": 21309,
+      "sha256": "a5bae7b4f2445680a63ed31111ff5a89165c6da34eb2cefb451f8feb17c28b26"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke.json",
+      "bytes": 5021,
+      "sha256": "1d8687026469552c5e241404603453742a5ed4ccb8985892d4660872c2bb092c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/negative/test_expected_failure.js",
+      "bytes": 168,
+      "sha256": "4e860e91eb2ff3950ffbc6574829b95147802052fabdf3f154029e289b6466de"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/negative/xpcshell.toml",
+      "bytes": 50,
+      "sha256": "8704015158a335bd9931fbcdcc97529f317ebe8eecccf6b1f87dae25f45866d0"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/positive/test_current_debug.js",
+      "bytes": 645,
+      "sha256": "aecefb33e7768c489c5bf5a851c70d3df87dcb4f6986550108b49241fef0dff9"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/positive/xpcshell.toml",
+      "bytes": 47,
+      "sha256": "1ffa58e18b8cb51710d569aeceb56368ba9623cfeace6a99f69ade953f570943"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_IMPLEMENTATION_REVIEW.json",
+      "bytes": 10199,
+      "sha256": "25f94642a1e6a605ea57a1762c51a3d3dc789cfc87b5fc8ba047c90207eb194a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_PREPARATION.json",
+      "bytes": 4856,
+      "sha256": "e0e95e11041ab4ca7ec0e0de361097c8b4effbfb506d1707fade89b062629089"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY48_READER_REVIEW.json",
+      "bytes": 9059,
+      "sha256": "d2da7e8d608b787d1241b6fe1b6ba904215d766195b5fcceaf3118964e210990"
+    }
+  ],
+  "reviewActions": {
+    "codeOrRefMutation": false,
+    "newCI": false,
+    "run47StatusPolling": false,
+    "activeLogsRead": false,
+    "largePayloadAcquired": false,
+    "artifactUploaded": false,
+    "remoteWritten": false
+  },
+  "publicPrivacy": {
+    "repoRelativeFileBindings": true,
+    "rawLogsOrPrivatePathsIncluded": false,
+    "internalConversationIncluded": false,
+    "signedURLsIncluded": false
+  }
+}
