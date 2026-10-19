@@ -1,0 +1,341 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY40_SHORT_ACTUAL_MAC_TERMINAL_AND_LIMITED_FILESYSTEM_PROTECTION_REVIEW",
+  "decision": {
+    "terminal": "SUCCESS_CONFIRMED",
+    "actualMacTargetTests": "PASS_84_OF_84_ZERO_SKIPS",
+    "controlledTaskAPI": "COMPLETED",
+    "readonlyFixtureProcedure": "COMPLETED",
+    "openFixtureImplementationFindings": 0,
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "bindings": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "run": 39181139776,
+    "job": 117833939939,
+    "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39181139776",
+    "callerCommit": "51d05dfe8a838a188fe64ae8bd42295f83da03dc",
+    "callerTree": "195b925573c756431333b9ce10243cc435bb7f67",
+    "fixtureCommit": "361b16aec48366e17e752dc833c38341a901c596",
+    "fixtureTree": "30ed15a50d4aeed33a0b7a235850256c25e4cc4c",
+    "event": "push",
+    "attempt": 1,
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobStartedAt": "2026-10-19T00:31:19Z",
+    "jobCompletedAt": "2026-10-19T00:32:14Z",
+    "prelaunchReview": {
+      "bytes": 12585,
+      "sha256": "267a9ac778246504ece3b40e6c4fa33767d50a1f35e83cfc75dc992412293210"
+    },
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_TERMINAL_RESULT.json",
+      "bytes": 239737,
+      "sha256": "220da208c84bfa52e64a35fddea0ad10314bf25713b97e3fe29b9618c35efdce"
+    },
+    "decodedProviderLog": {
+      "bytes": 163946,
+      "sha256": "2d373e4be629ccca76362c6e2bc8d65a5ce4cc829e318a23210bf703156aefd6",
+      "rawPublished": false
+    }
+  },
+  "independentVerification": [
+    "Official run and single-job metadata confirm terminal success, macos-15-intel, push, attempt one and the reviewed caller.",
+    "Job log was fetched only after completion. The local private decoded log exactly matches independent provider bytes.",
+    "Exactly one boundaryDiagnostic object was parsed; the entire object equals the terminal receipt projection.",
+    "Executed fixture SHA appears in the immutable checkout log. Source/caller byte and ancestry bindings were independently checked before activation.",
+    "Official artifact collection is empty. No SDK acquisition, Floorp build, checkpoint upload/consumer or native browser authentication step ran.",
+    "Curated receipt interpretation and privacy were checked against the provider object and fixed source."
+  ],
+  "actualMacTests": {
+    "total": 84,
+    "passed": 84,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 2.784,
+    "privateLogBytes": 14456,
+    "privateLogSHA256": "1ea0f353f01fce9138f12bf9fa5e4c26c426163cd1d5ede7058e5cb2e224fa03",
+    "scope": "The four targeted modules, including32 RO probe tests. This is not an execution of all380 tests on Mac."
+  },
+  "taskAPIObservation": {
+    "children": 32,
+    "allHeldLiveMeasured": true,
+    "allSameBirthUnreapedZombiesVerified": true,
+    "allNaturalExitZeroAndExactReaped": true,
+    "allControlDescriptorsClosed": true,
+    "signalsSent": 0,
+    "samples": 126,
+    "sampleCountsByPhase": {
+      "exit-window": 62,
+      "held-live": 32,
+      "unreaped-zombie": 32
+    },
+    "productionUnavailableSamples": 21,
+    "sameFiveTupleLiveBSDTaskESRCHSamples": 20,
+    "execBoundLiveTaskESRCHSamples": 0,
+    "firstFailure": null,
+    "queryCountsByFlavor": {
+      "bsd-info": {
+        "calls": 422,
+        "errnoCounts": {
+          "0": 422
+        },
+        "exceptions": 0,
+        "full": 422,
+        "other": 0,
+        "short": 0,
+        "zero": 0
+      },
+      "task-all-info": {
+        "calls": 148,
+        "errnoCounts": {
+          "0": 42,
+          "3": 106
+        },
+        "exceptions": 0,
+        "full": 42,
+        "other": 0,
+        "short": 0,
+        "zero": 106
+      },
+      "task-info-comparison": {
+        "calls": 126,
+        "errnoCounts": {
+          "0": 38,
+          "3": 88
+        },
+        "exceptions": 0,
+        "full": 38,
+        "other": 0,
+        "short": 0,
+        "zero": 88
+      },
+      "unique-info": {
+        "calls": 316,
+        "errnoCounts": {
+          "0": 157,
+          "3": 159
+        },
+        "exceptions": 0,
+        "full": 157,
+        "other": 0,
+        "short": 0,
+        "zero": 159
+      }
+    },
+    "firstQualifyingExitWindow": {
+      "beforeBSDStatus": 2,
+      "afterBSDStatus": 2,
+      "beforeInExit": false,
+      "afterInExit": true,
+      "beforeAfterFiveTupleMatches": true,
+      "taskAllInfo": {
+        "flavor": 2,
+        "arg": 0,
+        "bytes": 0,
+        "expectedBytes": 232,
+        "errno": 3,
+        "internalSecondTaskReadSameResult": true
+      },
+      "fallbackBSD": {
+        "flavor": 3,
+        "arg": 1,
+        "bytes": 136,
+        "expectedBytes": 136,
+        "errno": 0,
+        "sameGeneration": true
+      },
+      "taskInfoComparison": {
+        "flavor": 4,
+        "arg": 0,
+        "bytes": 0,
+        "expectedBytes": 96,
+        "errno": 3,
+        "measurementAuthority": false
+      },
+      "uniqueBeforeAvailable": true,
+      "uniqueAfterAvailable": false,
+      "uniqueExecBeforeAfterMatches": null
+    },
+    "limits": [
+      "The known Python exit controls again show live same-birth BSD records while task lookup is unavailable. INEXIT is a diagnostic bit, never an acceptance or gone rule.",
+      "The trailing unique/exec observation was unavailable across qualifying transitions; count20 is not20 fully exec-bound reproductions.",
+      "Production unavailable results remain unavailable. Authoritative same-birth BSD zombies are separately classified gone, then exactly reaped.",
+      "Comparison flavor4 is not a measurement fallback. Natural Recovery35 cause and the complete outer four-query/delayed census retry effectiveness remain unproven."
+    ]
+  },
+  "controlledBaselineWriters": {
+    "fd": {
+      "baselineCandidateIdentities": 239,
+      "childInBaselineAndSameFiveTuple": true,
+      "childNewCandidate": false,
+      "targetChanged": true,
+      "heldDetachCommandExitCode": 16,
+      "busyTextSeen": true,
+      "busyErrnoEstablished": false,
+      "originalWritableMountContinued": true,
+      "naturalExitZeroExactReap": true,
+      "signalsSent": 0
+    },
+    "sharedMapping": {
+      "baselineCandidateIdentities": 225,
+      "childInBaselineAndSameFiveTuple": true,
+      "childNewCandidate": false,
+      "originalDescriptorClosedWhileMappingHeld": true,
+      "targetChanged": true,
+      "heldDetachCommandExitCode": 16,
+      "busyTextSeen": true,
+      "busyErrnoEstablished": false,
+      "originalWritableMountContinued": true,
+      "naturalExitZeroExactReap": true,
+      "signalsSent": 0
+    },
+    "meaning": "A controlled child already in its dedicated baseline can modify a target without becoming a new candidate. This supplies a concrete baseline-writer example.",
+    "limits": [
+      "The global all-candidate delta==0 predicate was neither asserted nor retained during these writes.",
+      "These dedicated control baselines are not a provenance reconstruction of the old production baseline or candidates.",
+      "A refused detach with busy text is not proof that the utility return code is kernel errno EBUSY."
+    ]
+  },
+  "readOnlyFixture": {
+    "status": "completed",
+    "elapsedSeconds": 11.070664,
+    "ownershipBindings": 22,
+    "allOwnershipVerified": true,
+    "kernelReadOnlyMeasurements": 8,
+    "kernelReadWriteMeasurements": 10,
+    "cleanupOwnershipOnlyWithoutKernelProbe": 4,
+    "firstFailure": null,
+    "observedPropertySchema": {
+      "Writable": "boolean true on RW observations and false on RO observations",
+      "absent": [
+        "ReadOnlyVolume",
+        "ReadOnlyMedia",
+        "MediaReadOnly",
+        "VolumeReadOnly",
+        "VolumeWritable",
+        "MediaWritable"
+      ],
+      "semanticConclusion": null,
+      "limit": "These observations establish this run's property presence/type/values, not undocumented alias semantics or the exact values on the ended Recovery39 worker."
+    },
+    "operations": {
+      "create": {
+        "denied": true,
+        "errno": 30
+      },
+      "readWriteOpen": {
+        "denied": true,
+        "errno": 30
+      },
+      "rename": {
+        "denied": true,
+        "errno": 30
+      },
+      "sharedWriteMapFromReadOnlyFD": {
+        "denied": true,
+        "errno": 13
+      }
+    },
+    "privateMapping": {
+      "fileUnchanged": true,
+      "memoryChanged": true
+    },
+    "beforeAfterReadOnlyBindingVerified": true,
+    "payloadAndManifestHashesMatch": true,
+    "writeDenialInterpretation": "Stable positive kernel ST_RDONLY on the bound image plus O_RDWR/create/rename EROFS and unchanged hashes establish ordinary filesystem write refusal for this small fixture. MAP_SHARED denial from a read-only descriptor can follow descriptor access rules alone and is not separate proof of filesystem readonly state.",
+    "backingOpenControl": {
+      "bytesWritten": 0,
+      "errno": null,
+      "openedReadWrite": true,
+      "reattachReadWriteAttempted": false,
+      "sameUIDImmutabilityEstablished": false
+    },
+    "maximumAllocatedBackingBytes": 4304896,
+    "imageCleanup": {
+      "attachmentState": "verified-not-attached",
+      "cleanupVerified": true,
+      "failure": null,
+      "normalDetach": "verified-not-attached",
+      "privateDirectoryRetained": true,
+      "readOnlyPropertiesRequired": false,
+      "statvfsRequired": false
+    },
+    "normalDetachCommandExitCodes": [
+      0,
+      0
+    ],
+    "allThreeImageControlChildrenNaturalExitZeroExactReaped": true,
+    "imageChildSignalsSent": 0,
+    "utilities": 58,
+    "allUtilitiesExactReapedWithoutCleanupFailure": true,
+    "qualification": "NO_GO",
+    "productionGateReplacement": false,
+    "checkpointEligibilityEstablished": false,
+    "sameUIDImmutabilityEstablished": false,
+    "limits": [
+      "O_RDWR backing open succeeded, but no raw backing write or second read-write attachment was attempted. Actual raw mutation success is not proven.",
+      "Readonly media, remount prevention and all-same-UID immutability are not established.",
+      "The tiny payload/manifest is not an atomic frozen production view of every state and source/tools/SDK reference.",
+      "Private backing directory retention is local fixture state, not a remote checkpoint artifact."
+    ]
+  },
+  "outerResourcesAndCleanup": {
+    "stages": 6,
+    "allStageExitCodesZero": true,
+    "allExactLeadersReaped": true,
+    "allStageGroupsVerifiedGone": true,
+    "allCleanupFailureNull": true,
+    "allFinalResourceSamplesComplete": true,
+    "peakObservedRSSMiB": 64,
+    "minimumObservedFreeGiB": 107.25,
+    "firstFailure": null,
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "separation": "Exact image-child reaps, own image detach, and outer monitored group disappearance are distinct claims, each recorded separately. Manual task API unavailable observations do not become resource zero or disappear into a monitor success claim."
+  },
+  "prior39": {
+    "run": 39180177043,
+    "conclusion": "failure",
+    "terminalReceiptSHA256": "9114a4802fc3626a8c41fbc92b5cb8adf7e8a23bc7404bc7a88b99ae0277b260",
+    "terminalReviewSHA256": "6116e33ad9a43ec0d49ed3e41674c8ec269fc485ade4755f79367e591ff26e87",
+    "imageCleanup": "UNKNOWN_NOT_CONFIRMED",
+    "meaning": "The corrected new-worker fixture passes; this does not change the old failure or reconstruct its attachment state or exact missing property."
+  },
+  "remainingProductionBarriers": [
+    "Baseline/new-candidate census is not a complete filesystem-writer proof. Known process names, PID1 lineage and no observed FD are not exclusion authority.",
+    "Production capture requires a coherent frozen payload and all references, safe absolute-path/link/config/build completion and archive provenance contracts; the small image procedure has not implemented that route.",
+    "Writer protection and resource accounting remain separate. No unknown counter becomes zero, and existing production limits, selection and eligibility remain unchanged.",
+    "Original natural task-query failure/candidate provenance and native browser/Shim authentication cause remain unknown."
+  ],
+  "effects": {
+    "productionGateChanged": false,
+    "resourceContractChanged": false,
+    "sdkContractChanged": false,
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "checkpointConsumer": false,
+    "nativeBrowserAuthenticationTested": false,
+    "remoteArtifacts": 0,
+    "permissionOrAuthenticationSettingsChanged": false,
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "rawPlistsPublished": false,
+    "signedURLsPublished": false,
+    "processIdentitiesPublished": false,
+    "privatePathsPublished": false,
+    "rawArgvOrEnvironmentPublished": false,
+    "internalConversationPublished": false
+  },
+  "reviewerActions": {
+    "newCI": 0,
+    "sourceEdits": 0,
+    "externalWrites": 0,
+    "artifactDownloadsOrUploads": 0,
+    "permissionChanges": 0
+  }
+}

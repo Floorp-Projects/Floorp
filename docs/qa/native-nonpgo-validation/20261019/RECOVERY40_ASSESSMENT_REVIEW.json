@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY40_FROZEN_COMPANION_ASSESSMENT_TEXT_REVIEW",
+  "decision": {
+    "assessment": "CLEAR",
+    "openFindings": 0,
+    "fixtureProcedure": "SUCCESS_CONFIRMED",
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "bindings": {
+    "assessment": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_BOUNDARY_ASSESSMENT.md",
+      "bytes": 6390,
+      "sha256": "958fd516f146e46d8406a26e9c779ebdbfd1d93b7f857a50c319dc24e969b496"
+    },
+    "terminalReceipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_TERMINAL_RESULT.json",
+      "bytes": 239737,
+      "sha256": "220da208c84bfa52e64a35fddea0ad10314bf25713b97e3fe29b9618c35efdce"
+    },
+    "terminalReview": {
+      "bytes": 13015,
+      "sha256": "f2ea06fa95cf045ee512b48c9098aad12a78fe1ccb445021cf41356a1b6850d2",
+      "unchanged": true
+    },
+    "run": 39181139776,
+    "job": 117833939939,
+    "fixture": "361b16aec48366e17e752dc833c38341a901c596",
+    "caller": "51d05dfe8a838a188fe64ae8bd42295f83da03dc"
+  },
+  "checks": [
+    "The assessment agrees with the independently fetched official run/job log and full safe terminal projection already bound by the terminal review.",
+    "Exact-descriptor archive hashing and final root rescans are correctly distinguished from an atomic filesystem snapshot.",
+    "Controlled same-identity baseline writers are established; global delta==0 during their writes and old candidate provenance are explicitly not established.",
+    "Held-detach utility exit16 is not claimed as a proven kernel errno. Ordinary filesystem RO evidence uses stable kernel state, EROFS operations and hash equality.",
+    "MAP_SHARED EACCES on a read-only descriptor is not standalone filesystem RO proof; private-map file stability is separate.",
+    "Successful backing O_RDWR open does not prove raw mutation success; no raw writes or second RW attachment occurred.",
+    "Image detach, exact children and outer group cleanup remain separate. Prior39 unknown attachment/property facts are not retroactively resolved.",
+    "The native daily comparison remains a source-bound recording proposal with unknown original authentication/exit cause.",
+    "No production gate, resource limit, SDK retrieval contract or long-run qualification is relaxed. Public text excludes private data and internal conversation."
+  ],
+  "execBindingPrecision": {
+    "confirmedCounters": {
+      "sameFiveTupleLiveBSDTaskESRCHSamples": 20,
+      "fullyExecBoundQualifyingSamples": 0
+    },
+    "retainedFirstExample": "The trailing unique query returned zero bytes/ESRCH; full before/after/spawn-anchor exec binding was not established.",
+    "limit": "Every individual transition trace is not retained. Zero exec-bound samples does not itself establish a particular failed-query reason for each of the twenty samples.",
+    "terminology": "Any unavailable-exec wording in the frozen terminal review denotes unestablished full exec binding; it is not an assertion that all twenty trailing queries share the retained first example's exact failure."
+  },
+  "revisionChecked": "The assessment now states zero full exec-bound qualifying samples and limits the trailing ESRCH observation to the retained first example.",
+  "actions": {
+    "newTests": 0,
+    "newCI": 0,
+    "sourceEdits": 0,
+    "artifactOperations": 0,
+    "externalWrites": 0
+  },
+  "limits": "This companion text review adds a binding; it does not modify the frozen terminal review or prove the unresolved production capture/resource contract."
+}
