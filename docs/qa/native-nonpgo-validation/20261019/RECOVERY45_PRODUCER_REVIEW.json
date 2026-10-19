@@ -1,0 +1,431 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY45_COMPLETED_PRODUCER_INDEPENDENT_REVIEW_CONSUMER_PENDING",
+  "decision": {
+    "producer": "PASSED_CHECKPOINT_READY_AND_SERVICE_VERIFICATION",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "consumer": "CONTINUE_EXISTING_BOUND_RUN; TERMINAL_REVIEW_REQUIRED",
+    "resumedBuildQualification": "PENDING_CONSUMER",
+    "fullHostXUL": "NOT_TESTED_BY_PRODUCER",
+    "nativeAuthentication": "NOT_TESTED_BY_PRODUCER",
+    "overallRun": "NO_FINAL_CONCLUSION_AT_THIS_PRODUCER_MILESTONE"
+  },
+  "bindings": {
+    "receipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY45_PRODUCER_RESULT.json",
+      "bytes": 40745,
+      "sha256": "1db0bb56a162738842d3d0b712a69ac053986af1b6a3723757357493622d60a9"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": 39197008470,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39197008470",
+      "event": "push",
+      "attempt": 1,
+      "branch": "codex/mac-native-checkpoint-recovery45-20261019"
+    },
+    "caller": {
+      "commit": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+      "tree": "58fdc3c87276ee28b6e7e3461ce3a3920a2ec779",
+      "workflowBytes": 21777,
+      "workflowSHA256": "9a672056971fa4c0f457fa56e596194eafbd6f234f3dd3dfe1b1e11f3048b2b4"
+    },
+    "fixture": {
+      "commit": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "tree": "292123aeadd93176414b9276bd79718c1540d85a"
+    },
+    "producer": {
+      "job": 117881829274,
+      "runner": "macos-15-intel",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T03:56:07Z",
+      "completedAt": "2026-10-19T05:20:58Z",
+      "pipelineElapsedMinutes": 83.56
+    },
+    "consumer": {
+      "job": 117903013507,
+      "runner": "macos-15-intel",
+      "observedAtUTC": "2026-10-19T05:29:21Z",
+      "statusAtObservation": "in_progress",
+      "stepAtObservation": "Download only the verified successful producer checkpoint",
+      "activeLogsRead": false
+    },
+    "rawDecodedProviderLog": {
+      "bytes": 297704,
+      "sha256": "8c412d8c9af531684a6f456100a9b599f1fb40a343500a3b8123d84f39367db1",
+      "retainedFileMode": "0600",
+      "rawPublished": false
+    },
+    "parsedProducerReport": {
+      "bytes": 215597,
+      "sha256": "b63edb5a4ecf953bf2d63866e191c785db15879b035d7a623eaa138e42a011d7",
+      "semanticEqualityToProviderRawObjectVerified": true,
+      "rawPublished": false
+    }
+  },
+  "independentVerification": {
+    "producerTerminalRunAndJobAPIRead": true,
+    "producerLogFetchedOnlyAfterJobCompleted": true,
+    "runHasTwoSerialJobs": true,
+    "serviceArtifactCollectionRead": true,
+    "soleRunArtifactMatchesProducerSizeAndDigest": true,
+    "artifactContentDownloadedByReviewer": false,
+    "allPublicSourceSDKConfigCheckpointAndStageLogLeavesMatchProvider": true,
+    "all49CuratedStageProjectionsMatchProvider": true,
+    "allSixRecoveredMonitorProjectionsAndRecheckQueriesMatchProvider": true,
+    "generatedProjectionErrorPlaceholder": "Fixed errorType=unavailable can mean no source errorType field; it is not an additional observed query failure",
+    "publicReceiptPrivacyChecked": true,
+    "rawPIDUIDGenerationTagsPrivatePathsCredentialsOrSignedURLsDetected": 0,
+    "testsOrCIStartedByReviewer": false,
+    "sourceEdited": false,
+    "SDKDownloadedByReviewer": false,
+    "artifactOrRetentionModified": false
+  },
+  "producerEvidence": {
+    "status": "checkpoint-ready",
+    "firstFailure": null,
+    "monitorFailure": null,
+    "preflight": {
+      "status": "passed",
+      "QA": {
+        "total": 226,
+        "passed": 226,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "recording": {
+        "total": 14,
+        "passed": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "trustedCompletion": {
+      "contract": "trusted-single-purpose-runner-v1",
+      "status": "passed",
+      "interrupted": false,
+      "naturallyCompletedPriorStages": 48,
+      "allPriorStagesNaturalZeroAndExactLeadersReapedGroupsGone": true,
+      "requiredStagesEachOnce": [
+        "configure",
+        "effective-config",
+        "checkpoint-exports",
+        "checkpoint-rust",
+        "checkpoint-rust-archive"
+      ],
+      "resourceScope": "active-owned-stage-process-group",
+      "backgroundResourceUsage": "NOT_MEASURED_OUTSIDE_DECLARED_OWNED_SCOPE",
+      "knownBuildIdentityCheck": {
+        "status": "passed",
+        "remainingLive": 0,
+        "remainingZombies": 0,
+        "scope": "sampled owned stage-group birth identities; no complete ancestry claim",
+        "observedBirths": 943,
+        "measurement": {
+          "api": "sysctl-kern-proc-all",
+          "snapshotBytes": 327240,
+          "snapshotEntries": 505,
+          "candidateIdentities": 275,
+          "candidateZombies": 0,
+          "mixedCandidateIdentities": 2,
+          "selfBindingVerified": true,
+          "rawProcessMetadataPublished": false,
+          "trackedBirths": 943,
+          "trackedLiveBirths": 0,
+          "trackedZombieBirths": 0,
+          "trackedScope": "known births independent of current credentials",
+          "attempts": 1,
+          "retryErrnos": [],
+          "layoutSHA256": "4a9ad62decb077f24d1c12a9591a4282550e37c5281858e484d9ca408dd8aaed"
+        }
+      },
+      "observationCoverage": "sampling",
+      "knownBuildSurvivors": 0
+    },
+    "allPipelineStages": {
+      "count": 49,
+      "naturalZero": 49,
+      "exactLeaderReapedZero": 49,
+      "verifiedGoneGroups": 49,
+      "cleanupFailures": 0,
+      "reasonsOrFailurePhases": 0,
+      "packIncluded": true
+    },
+    "requiredAndPackStages": [
+      {
+        "stage": "configure",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 611,
+        "minimumFreeGiB": 98.74
+      },
+      {
+        "stage": "effective-config",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 63,
+        "minimumFreeGiB": 98.74
+      },
+      {
+        "stage": "checkpoint-exports",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 1410,
+        "minimumFreeGiB": 98.53
+      },
+      {
+        "stage": "checkpoint-rust",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 7146,
+        "minimumFreeGiB": 90.51
+      },
+      {
+        "stage": "checkpoint-rust-archive",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 60,
+        "minimumFreeGiB": 90.51
+      },
+      {
+        "stage": "checkpoint-pack",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "cleanupFailure": null,
+        "peakRSSMiB": 1148,
+        "minimumFreeGiB": 88.6
+      }
+    ],
+    "resourceObservations": {
+      "maximumRetainedStageRSSMiB": 7146,
+      "minimumRetainedFreeGiB": 88.6,
+      "recordedLimitViolation": false,
+      "scope": "Owned stage-group sampled measurements, not ambient or continuous worst-case usage"
+    },
+    "recoveredMonitor": {
+      "retainedRecords": 6,
+      "byStage": {
+        "configure": 2,
+        "checkpoint-exports": 2,
+        "checkpoint-rust": 2
+      },
+      "allFinalSamplesComplete": true,
+      "attemptsPerRecoveredSample": 2,
+      "eachRetainedRace": {
+        "outcomeBeforeGlobalRetry": "unavailable",
+        "reason": "short-task-info",
+        "sameGeneration": true,
+        "firstTaskQuery": {
+          "bytes": 0,
+          "expectedBytes": 232,
+          "errno": 3
+        },
+        "firstBSDQuery": {
+          "bytes": 136,
+          "expectedBytes": 136,
+          "errno": 0
+        },
+        "secondTaskQuery": {
+          "bytes": 0,
+          "expectedBytes": 232,
+          "errno": 3
+        },
+        "secondBSDQuery": {
+          "bytes": 136,
+          "expectedBytes": 136,
+          "errno": 0
+        }
+      },
+      "inventoryTimeoutAttemptsInRetainedDiagnostics": 0,
+      "fatalMonitorFailure": null,
+      "interpretation": "Transient unknown task counters were retained and the next bounded sample completed; the unknown attempt was not treated as measured zero or gone."
+    },
+    "checkpoint": {
+      "atomicFilesystemSnapshot": false,
+      "buildDate": "20261019035607",
+      "bytes": 2213942620,
+      "entries": 40845,
+      "freshObjdir": false,
+      "liveTreeRecheckComplete": true,
+      "logicalBytes": 7320667685,
+      "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+      "packedStreamHashesVerified": true,
+      "qualification": "verified-resumed-build-across-two-standard-intel-jobs",
+      "rawSingleFile": true,
+      "sameJob": false,
+      "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15"
+    },
+    "checkpointEntriesMeaning": "40845 manifest state rows including directories and links; not an independently counted tar-header total",
+    "source": {
+      "baselineProvenanceSHA256": "9b04b524d47ed6d002be89a58dfecf46989f9c9b3e519faca02d5bce2ab921f6",
+      "baselineProvenanceVerified": true,
+      "bootstrapLoaderChangedToFixedPaths": true,
+      "hostChangedFromOriginal": true,
+      "mozconfigSHA256": "0014b477c9307e5d8961fa21c2e69206cf7d91fbf777aa3fb8c87797d773a33f",
+      "originalPatchCount": 30,
+      "patchSHA256": "53a02038aaa2c765da162d19daaaa98d149fc3b97767f8a313a8358febe428c2",
+      "patchSetSHA256": "25ca12421a0f4918191909f89e47f3a5725c7fb87fb6c91de1f42a71e468b247",
+      "patchedHostSHA256": "8f9a7909373d9985e91eaaa7a057f7acf8d04a400aadab660ce7affb6f3043c0",
+      "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "tree": "6478a96fe1c1eec9468dd9d631bd065d1128c123",
+      "upstreamCommit": "1a0cfe22a2d8ba77e77cc8f43eaa480e34eca181"
+    },
+    "sdk": {
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+      "logicalBytes": 704719765,
+      "members": 49701,
+      "artifact": 12133086104,
+      "sourceRun": 39117481043,
+      "zipSHA256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+      "tarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4"
+    },
+    "effectiveConfiguration": {
+      "debug": true,
+      "pgo": false,
+      "artifact": false,
+      "HOST_CPU_ARCH": "x86_64",
+      "TARGET_CPU": "x86_64",
+      "OS_TARGET": "Darwin",
+      "MOZ_DEBUG": "1",
+      "ENABLE_TESTS": "1",
+      "compiledSandbox": true,
+      "allFourCompilerPathsPinned": true,
+      "sdkPathPinned": true,
+      "macOSMinimum": "10.15",
+      "clang": "22.1.8",
+      "rust": "1.95.0"
+    },
+    "stageLogEvidence": {
+      "checkpoint-exports": {
+        "complete": true,
+        "bytes": 2778702,
+        "sha256": "c36555da3d95ebf7c2b79de807d641c3e7190d9fce49870352ace10eed0602e2",
+        "diagnosticCounts": {},
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "scope": "complete stream scan; marker classes do not replace the actual command exit"
+      },
+      "checkpoint-rust": {
+        "complete": true,
+        "bytes": 5487705,
+        "sha256": "47871da1f8a3f70f0d72f865566d18e4736bff2662ecae2dd8f847ad1052df5e",
+        "diagnosticCounts": {
+          "unclassified-error-marker": 53
+        },
+        "matchingRecords": 53,
+        "recordsTruncated": true,
+        "scope": "complete stream scan; marker classes do not replace the actual command exit"
+      },
+      "checkpoint-pack": {
+        "complete": true,
+        "bytes": 538,
+        "sha256": "72afce4e114cbdacc53b305a802b8256ee34960ca3a446e41efd3fb46f21f4e2",
+        "diagnosticCounts": {},
+        "matchingRecords": 0,
+        "recordsTruncated": false,
+        "scope": "complete stream scan; marker classes do not replace the actual command exit"
+      }
+    }
+  },
+  "archiveAndStorage": {
+    "serviceArtifactID": 12164479528,
+    "name": "checkpoint.tar.gz",
+    "artifactsInRun": 1,
+    "rawSingleFile": true,
+    "storedBytes": 2213942620,
+    "storedGiB": 2.061894740909338,
+    "storedSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "maximumStoredBytes": 10737418240,
+    "withinCap": true,
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "manifestHashProvenance": "Bound producer checkpoint/readiness and service-confirmation records; not a separate artifact metadata manifest field",
+    "createdAt": "2026-10-19T05:20:31Z",
+    "expiresAt": "2026-10-20T05:19:56Z",
+    "expiryMinusCreatedSeconds": 86365,
+    "retentionDays": 1,
+    "withinOneDay": true,
+    "expiredAtAPIObservation": false,
+    "serviceRunAndCallerMatch": true,
+    "serviceSizeAndDigestExactlyMatchReady": true,
+    "producerReportedChecks": {
+      "packedStreamHashesVerified": true,
+      "archiveReadbackCompleted": true,
+      "liveTreeRecheckComplete": true,
+      "atomicFilesystemSnapshot": false
+    },
+    "staticValidationOrder": "Pinned pack verifies completion and boundary payload, hashes the exact descriptor streams, finishes and fsyncs the archive, reads back all expected payload hashes, rescans selected live roots, then writes checkpoint-ready.",
+    "reviewerEvidenceLimit": "No 2.2 GB archive was downloaded or independently unpacked by this review. Content/readback proof is the successful pinned producer validation joined to matching service size/digest; consumer must independently validate received bytes and restore contents."
+  },
+  "interpretation": [
+    "The producer crossed the previously failing pack milestone successfully in this execution, with no first failure or fatal monitor failure.",
+    "Natural completion, exact owned-leader/group cleanup and fresh known-birth absence satisfy the declared trusted single-purpose contract. Sampling is not complete ancestry; no ambient UID-wide zero or resource claim is made.",
+    "The descriptor-stream hashes, full archive readback and post-capture selected-root recheck are reported as passed by the executed fixed code. This is not an atomic snapshot or a hostile same-UID immutability guarantee.",
+    "Six same-generation BSD/live observations with short ESRCH task reads recovered under the unchanged bounded monitor policy. They are retained evidence, not six product failures or proof of their underlying cause.",
+    "The Rust stream's 53 unclassified-error-marker matches are bounded text classifications. Its actual command and archive check exited zero; the markers are not compiler-failure verdicts.",
+    "Effective debug/non-PGO/x86_64 configuration and natural Rust boundary are producer results. Full host/XUL, package, copied-app validation and actual native authentication remain consumer work.",
+    "This successful production pack gives additional execution evidence for the reviewed import-isolation route; it does not identify the old helper timeout cause or establish universal future stability."
+  ],
+  "remainingConsumerGates": [
+    "Accept only this same-run successful producer artifact, verifying ordinary service metadata, raw gzip format, size and digest against the bound readiness outputs.",
+    "Verify manifest hash, fixed context/source/patch/toolchain/SDK identities, empty state roots, every restored payload/hash/mode/link/mtime and the declared boundary contract.",
+    "Verify restored effective configuration and record resumed provenance; freshObjdir=false and sameJob=false must remain explicit.",
+    "Complete full host/XUL/package/ad-hoc-copy validation and actual native cause/context/GUI suite under unchanged limits, retaining the first failure and pre-cleanup native evidence.",
+    "Keep complete exact owned cleanup, recovered latest-sixteen monitor diagnostics and separate stopping failure evidence; unknown measurements must remain unknown."
+  ],
+  "limits": {
+    "overallConsumerResult": "PENDING_AT_REVIEWED_MILESTONE",
+    "fullHostXUL": "NOT_TESTED_BY_PRODUCER",
+    "nativeAuthentication": "NOT_TESTED_BY_PRODUCER",
+    "originalNativeExitCause": "UNKNOWN",
+    "recovery42TimeoutCause": "UNKNOWN",
+    "recovery43InnerUnitCause": "UNKNOWN",
+    "productSigning": false,
+    "authenticationOrPermissionsChanged": false
+  }
+}
