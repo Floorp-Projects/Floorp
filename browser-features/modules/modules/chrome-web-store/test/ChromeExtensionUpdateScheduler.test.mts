@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
+import { unzipSync, zipSync } from "fflate/browser";
 import {
   ChromeExtensionUpdateRegistryClass,
   createVerifiedUpdateProof,
@@ -17,6 +18,7 @@ import {
   observePrompts,
   packageVersion,
   rejected,
+  waitFor,
   workerSnapshot,
 } from "./ChromeExtensionUpdater.test.mts";
 import {
@@ -176,8 +178,59 @@ const tests: TestCase[] = [
               Ci.nsIFileURL,
             ).file;
           const original = await IOUtils.read(file.path);
-          const tampered = original.slice();
-          tampered[tampered.length - 1] ^= 1;
+          const entries = unzipSync(original);
+          const tampered = zipSync({
+            ...entries,
+            "floorp-owned-tamper.txt": new TextEncoder().encode(
+              "Owned archive-integrity regression entry",
+            ),
+          });
+          const modifiedEntries = unzipSync(tampered);
+          for (const [name, bytes] of Object.entries(entries)) {
+            assertEquals(
+              JSON.stringify(Array.from(modifiedEntries[name])),
+              JSON.stringify(Array.from(bytes)),
+              `tampering preserves original archive entry ${name}`,
+            );
+          }
+          assert(
+            modifiedEntries["floorp-owned-tamper.txt"],
+            "modified archive contains the additional owned entry",
+          );
+          await command("set", "tamper-eligibility-state");
+          const replaceArchive = async (bytes: Uint8Array): Promise<void> => {
+            const before = await workerSnapshot();
+            await addon.disable();
+            await waitFor(
+              () => before.context.unloaded,
+              "disabled extension's actual old context shutdown",
+            );
+            assert(
+              !addon.isActive,
+              "native addon is disabled during archive mutation",
+            );
+            // Gecko's own generated-XPI cleanup awaits this cross-process flush
+            // after shutdown before replacing a mapped archive on Windows.
+            await before.extension.broadcast("Extension:FlushJarCache", {
+              path: file.path,
+            });
+            Services.obs.notifyObservers(file, "flush-cache-entry");
+            try {
+              await IOUtils.write(file.path, bytes);
+            } finally {
+              await addon.enable();
+            }
+            await assertWorkerReplaced(before, "1.0");
+            assert(
+              addon.isActive,
+              "native addon is active again before eligibility checks",
+            );
+            assertEquals(
+              (await command("get")).value,
+              "tamper-eligibility-state",
+              "native disable/enable preserves real extension storage",
+            );
+          };
           let downloads = 0;
           const scheduler = new ChromeExtensionUpdateSchedulerClass({
             registry,
@@ -186,8 +239,13 @@ const tests: TestCase[] = [
               return packageVersion("2.0");
             }, registry),
           });
+          assertEquals(
+            (await registry.getEligibility(ID)).eligibility,
+            "verified",
+            "original installed archive starts eligible",
+          );
           try {
-            await IOUtils.write(file.path, tampered);
+            await replaceArchive(tampered);
             assertEquals(
               (await scheduler.getStatus(ID)).eligibility,
               "migration-required",
@@ -200,8 +258,13 @@ const tests: TestCase[] = [
               "changed installed package cannot use protected authorization",
             );
           } finally {
-            await IOUtils.write(file.path, original);
+            await replaceArchive(original);
           }
+          assertEquals(
+            (await registry.getEligibility(ID)).eligibility,
+            "verified",
+            "restoring the exact original archive restores its protected hash binding",
+          );
         })
       );
     },
