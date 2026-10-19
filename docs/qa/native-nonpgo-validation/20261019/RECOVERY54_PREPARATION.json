@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY54_FIXED_SAME_INPUT_READER_BOUNDARY_OBSERVATION",
+  "fixture": {
+    "sha": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "parserBytes": 25024,
+    "parserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+    "parserAndTestSourceEdits": false,
+    "QA": 522,
+    "recording": 14
+  },
+  "previousActualMac": {
+    "run": 39319963643,
+    "caller": "66d415f479d6cf87b9a5ca61baecace27a476fff",
+    "status": "unconfirmed",
+    "reason": "build-completion-processing-limit",
+    "elapsedSeconds": 30.01289199200005,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "recordingPassed": 14,
+    "serializerCasesPassed": 9,
+    "overall": "failed",
+    "evidenceCommit": "40b465fe7d59ac64eebe7f95b0f8cc9ccf205474"
+  },
+  "change": "Append one owned boundary observation after the existing five preflight stages. Its copy of the exact whole-profile function adds four fixed boundary callbacks only; stripping those callbacks reproduces the original function AST. No parser optimization is made in this diagnostic.",
+  "question": "Which fixed reader boundary was last reached before the unchanged 30-second budget returned? This is a reader-stage observation, not an attribution to a specific subroutine or a compiler phase.",
+  "instrumentation": {
+    "ASTEquivalentAfterRemovingFourCallbacks": true,
+    "callbackCount": 4,
+    "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5",
+    "perRowCallbacks": false,
+    "resourceProfiler": false,
+    "inputUnchanged": true,
+    "processingSeconds": 30
+  },
+  "semantics": {
+    "lastReachedBoundary": "Last reached fixed reader boundary; not proof of where CPU time was spent or of a stalled function.",
+    "secondPassRowsEntered": "Number of entries into the second-pass marker function, including the two controlled phase/object rows. Zero during initial whole-document validation does not mean the profile contains no rows.",
+    "unconfirmedTargetCountsRemainNull": true,
+    "phaseProcedureExitZeroDoesNotQualifyTheOriginalQASuite": true,
+    "originalQAFailureAndFirstFailureRemainPreserved": true
+  },
+  "ownership": {
+    "oneExistingMacJob": true,
+    "addedStage": "density-phase-observation",
+    "expectedPreflightStages": 6,
+    "sameRunnerAndCleanEnvironment": true,
+    "sameInitialJobClock": true,
+    "existingPhaseMinutes": 15,
+    "originalProcessingBudgetSeconds": 30,
+    "newFullBuildClock": false,
+    "allStageExitReapGroupCleanupAndMonitorFieldsChecked": true
+  },
+  "publicProjection": {
+    "fixedKeys": 9,
+    "maximumBoundaryMarks": 4,
+    "strictExistingDensityProjection": true,
+    "pathsPIDsArbitraryTextOrSecretURLs": false,
+    "unknownIsNotZero": true
+  },
+  "localProbe": {
+    "qualification": "Linux analysis only, not Mac qualification",
+    "observation": {
+      "densityObservation": {
+        "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+        "compileCount": 1,
+        "completeCoverage": true,
+        "elapsedSeconds": 7.822039403996314,
+        "inputBytes": 195000385,
+        "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+        "objectCount": 1,
+        "processingSeconds": 30,
+        "reason": "build-completion-profile-parsed",
+        "resourceRows": 1000000,
+        "schema": 1,
+        "status": "observed"
+      },
+      "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5",
+      "lastReachedBoundary": "marker-columns",
+      "marks": [
+        {
+          "elapsedSeconds": 0.001487770990934223,
+          "phase": "whole-document-validation"
+        },
+        {
+          "elapsedSeconds": 5.107054000996868,
+          "phase": "profile-schema"
+        },
+        {
+          "elapsedSeconds": 5.1070990189909935,
+          "phase": "string-table"
+        },
+        {
+          "elapsedSeconds": 5.107129885000177,
+          "phase": "marker-columns"
+        }
+      ],
+      "parserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+      "realBuildPerformed": false,
+      "schema": 1,
+      "scope": "same-controlled-input-phase-observation",
+      "secondPassRowsEntered": 1000002
+    }
+  },
+  "controls": {
+    "negativeCandidateFaultsRejected": 1099,
+    "actualInlinePreflightAndFinalMockFlows": 11,
+    "failedProbeNonzeroBadReceiptCleanupCannotReplaceFirstFailure": true,
+    "phaseBudgetObservationRetainedWithoutQualifyingQA": true,
+    "YAMLBashInlinePythonSyntax": "passed"
+  },
+  "bindings": [
+    {
+      "name": "floorp-recovery54-caller.yml",
+      "bytes": 47930,
+      "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c"
+    },
+    {
+      "name": "floorp-recovery54-phase-probe.py",
+      "bytes": 3626,
+      "sha256": "c07be533faf8989711fbd41700af1d8cf983b1c3f5ecee2d2e3951c4aa3b6af6"
+    },
+    {
+      "name": "floorp-recovery54-phase-validator.py",
+      "bytes": 2322,
+      "sha256": "03f8a235b09f21772a713940e46fbf8fe14a0c52e8d9947afd5f65d1b0205a67"
+    },
+    {
+      "name": "floorp-recovery54-phase-owned.py",
+      "bytes": 1104,
+      "sha256": "e43f6002e81e92e40d1ac64aa1bac5c13f839650a13b3f5af2925e44a2fafa14"
+    },
+    {
+      "name": "floorp-recovery54-guarded-controls.py",
+      "bytes": 14735,
+      "sha256": "7206879ccf197a27b3e0105e6df5052a2b6491adf85a635573484c6e82155345"
+    },
+    {
+      "name": "floorp-recovery54-guarded-controls-result.json",
+      "bytes": 878,
+      "sha256": "77597b9d8c5710a6236d190a69922e9d14b74fe9a8fc8babeac30cc2762a110e"
+    },
+    {
+      "name": "floorp-recovery54-flow-controls.py",
+      "bytes": 9361,
+      "sha256": "98f9b8b8540ef4376a61e0f208440f3c06a6700f950c4c01f1048b3571f94a23"
+    },
+    {
+      "name": "floorp-recovery54-flow-controls-result.json",
+      "bytes": 2604,
+      "sha256": "4144815be3cf1bc9dda179c46d9dcf06f86c05852abce2dc7e3aaecfdfac35da"
+    }
+  ],
+  "scopeLimits": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "branch": "codex/mac-native-streaming-recovery54-20261019",
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "fullRuntimeCheckout": false,
+    "realBuild": false,
+    "newLongRun": false,
+    "MacActual": "NOT_RUN"
+  },
+  "remainingQualification": {
+    "MacDenseInput": "NOT_PASSED",
+    "missingRecovery48ProductionProfile": "NOT_RECONSTRUCTED",
+    "fullHostXUL": "NOT_TESTED",
+    "MozillaCases": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN"
+  }
+}

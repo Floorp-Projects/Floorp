@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "review": "Recovery54 fixed-boundary same-input phase diagnostic candidate",
+  "decision": "CODE_AND_SHORT_PHASE_DIAGNOSTIC_CANDIDATE_CLEAR_PENDING_IMMUTABLE_CALLER",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "bindings": {
+    "sourceFixture": "0c1537b862beab6cf4b10f29dd1956d540ab76ae",
+    "sourceFixtureTree": "de348633b4a2cf827fe31ef5ab54d145eb60fcf2",
+    "parser": {
+      "bytes": 25024,
+      "sha256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419"
+    },
+    "testSource": {
+      "bytes": 32864,
+      "sha256": "c27ed15f383cc93f792c3926deb2bf11e32797a7a43e08f402368fd465136f98"
+    },
+    "caller": {
+      "name": "floorp-recovery54-caller.yml",
+      "bytes": 47930,
+      "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c"
+    },
+    "phaseProbe": {
+      "name": "floorp-recovery54-phase-probe.py",
+      "bytes": 3626,
+      "sha256": "c07be533faf8989711fbd41700af1d8cf983b1c3f5ecee2d2e3951c4aa3b6af6"
+    },
+    "phaseValidator": {
+      "name": "floorp-recovery54-phase-validator.py",
+      "bytes": 2322,
+      "sha256": "03f8a235b09f21772a713940e46fbf8fe14a0c52e8d9947afd5f65d1b0205a67"
+    },
+    "phaseOwnedValidator": {
+      "name": "floorp-recovery54-phase-owned.py",
+      "bytes": 1104,
+      "sha256": "e43f6002e81e92e40d1ac64aa1bac5c13f839650a13b3f5af2925e44a2fafa14"
+    },
+    "preparation": {
+      "name": "floorp-recovery54-preparation.json",
+      "bytes": 6661,
+      "sha256": "f8fdeb4f2edc100307757607f8033a8308d811b9a4c7bcdf0a943321266e6b44"
+    },
+    "previousActualTerminalReview": {
+      "name": "floorp-recovery53-terminal-review.json",
+      "bytes": 10675,
+      "sha256": "b31cc7162ed420667148e21fbf7defaa3e3c33ea2b17b81cf6b48e20eb1d127a"
+    }
+  },
+  "assessment": [
+    "The source fixture, production parser and test source stay unchanged. The new child verifies the exact parser file SHA256 and processing constant before building and checking the identical 195000385-byte one-million-row input and SHA256.",
+    "The observed function is a private copy of the exact whole-profile reader. Independently removing its four top-level constant phase callbacks yields the original function AST exactly; no control-flow, algorithm, validation or deadline statement changes.",
+    "The only boundaries are whole-document-validation, profile-schema, string-table and marker-columns. There are at most four callback invocations, no per-row hook, CPU profiler, sampling loop or new dependency.",
+    "The added observation runs as one owned child stage using the existing Runner, clean environment, actual job origin, phase15 and platform360 budgets and resource/unknown/cleanup limits. The exact six preflight stage names and typed exit/reap/group/cleanup fields are checked; the separate serializer stage remains independently checked.",
+    "The public phase value has exactly nine fields, one strict existing twelve-field density value and at most four two-field marks. Exact hashes, phase order, finite nondecreasing elapsed values, counter types and bounds, input identity and valid observed or processing-limit semantics are enforced in identical preflight and final validators.",
+    "The rows counter is second-pass marker entries, including the two controlled markers. Zero at an earlier boundary is a known counter value and does not mean the input has no rows or that document validation has completed.",
+    "A phase observation may validly be unconfirmed with null target counts and exit zero as a diagnostic procedure. It cannot promote the original failed QA suite: narrowly continued QA remains failed, its first-failure file is preserved and the final job remains failed.",
+    "If the original QA independently passes with an observed dense result, the current final gate can accept a valid unconfirmed extra phase observation. This preserves the diagnostic role of the extra stage; a later reader/long-readiness review must evaluate both observations rather than relabel the unconfirmed measurement as a pass.",
+    "Unexpected phase failure, invalid or private-extra receipt, cleanup failure, missing evidence or monitor failure cannot qualify the new observation. The original first failure is retained rather than replaced by later diagnostic failure."
+  ],
+  "independentValidation": {
+    "ASTAndLocalControls": {
+      "name": "floorp-recovery54-independent-controls.json",
+      "bytes": 817,
+      "sha256": "eca0098cfb73bf80f653ab0acd40c4228656208629a0ae90cfa6e2f5c7bc2270"
+    },
+    "fourCallbacksOnlyAndASTEquivalent": true,
+    "embeddedProbeByteIdentical": true,
+    "preflightAndFinalPhaseValidatorASTIdentical": true,
+    "existingDensitySourceSerializerAndDriverGateASTUnchanged": true,
+    "observedAndUnconfirmedPositiveShapes": 2,
+    "phaseNegativeControls": 19,
+    "ownedNegativeControls": 10,
+    "smallProfileExactResultParity": true,
+    "candidateGuards": {
+      "name": "floorp-recovery54-independent-guarded-controls-result.json",
+      "bytes": 878,
+      "sha256": "77597b9d8c5710a6236d190a69922e9d14b74fe9a8fc8babeac30cc2762a110e"
+    },
+    "negativeCandidateFaultsRejected": 1099,
+    "actualInlineMockFlows": {
+      "name": "floorp-recovery54-independent-flow-controls-result.json",
+      "bytes": 2604,
+      "sha256": "4144815be3cf1bc9dda179c46d9dcf06f86c05852abce2dc7e3aaecfdfac35da"
+    },
+    "inlineMockFlowCount": 11,
+    "mockFailureCases": [
+      "original density-only failure",
+      "other QA case",
+      "monitor failure",
+      "cleanup failure",
+      "changed input",
+      "missing density evidence",
+      "phase child nonzero exit",
+      "invalid phase receipt",
+      "phase cleanup failure",
+      "valid phase processing limit"
+    ],
+    "ResourceWarningsAreErrors": true,
+    "guardInvocation": "The successful independent guard execution explicitly supplies the QA module path; the initial invocation without that path stopped at the positive phase-validator import control. No production change was made for this invocation correction.",
+    "newLargeInputExecutionByReviewer": false
+  },
+  "reportedLinuxProbe": {
+    "qualification": "Linux analysis only; not Mac qualification",
+    "observation": {
+      "densityObservation": {
+        "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+        "compileCount": 1,
+        "completeCoverage": true,
+        "elapsedSeconds": 7.822039403996314,
+        "inputBytes": 195000385,
+        "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+        "objectCount": 1,
+        "processingSeconds": 30,
+        "reason": "build-completion-profile-parsed",
+        "resourceRows": 1000000,
+        "schema": 1,
+        "status": "observed"
+      },
+      "instrumentedFunctionSHA256": "acd805bea94b200376dcc2255a7a388e937907f3b3d95ce456e49954c8eaf9f5",
+      "lastReachedBoundary": "marker-columns",
+      "marks": [
+        {
+          "elapsedSeconds": 0.001487770990934223,
+          "phase": "whole-document-validation"
+        },
+        {
+          "elapsedSeconds": 5.107054000996868,
+          "phase": "profile-schema"
+        },
+        {
+          "elapsedSeconds": 5.1070990189909935,
+          "phase": "string-table"
+        },
+        {
+          "elapsedSeconds": 5.107129885000177,
+          "phase": "marker-columns"
+        }
+      ],
+      "parserSHA256": "7df902533104dec3d290987ed4cfb8e1b81aa293b178b65ea1835e7443831419",
+      "realBuildPerformed": false,
+      "schema": 1,
+      "scope": "same-controlled-input-phase-observation",
+      "secondPassRowsEntered": 1000002
+    },
+    "reexecutedByReviewer": false
+  },
+  "scope": {
+    "branch": "codex/mac-native-streaming-recovery54-20261019",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "expectedQA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "preflightOwnedStages": 6,
+    "separateSerializerOwnedStages": 1,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "processingSeconds": 30,
+    "sourceChanges": false,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "realBuild": false,
+    "artifactUpload": false
+  },
+  "precisionAndRemainingConditions": [
+    "A mark identifies the last reached fixed boundary, not a proven stalled subroutine or CPU-time attribution. Mark differences are bounded elapsed observations on this controlled input.",
+    "The exact Recovery48 profile remains unavailable and is not reconstructed by this fixture. No compiler phase, cache-hit or remaining-time conclusion follows.",
+    "Actual Mac phase evidence is not yet available. Immutable caller readback, single-workflow ancestry, unused dedicated branch and fresh owned-overlap checks are required before one short activation.",
+    "Mac dense qualification remains NOT_PASSED until actual evidence establishes otherwise. This review does not authorize a new long build, Mozilla run or native qualification."
+  ],
+  "reviewerActions": {
+    "productionSourceEdited": false,
+    "CIOrRefMutated": false,
+    "newPayloadAcquisition": false,
+    "largeInputOrFullQARerun": false
+  }
+}
