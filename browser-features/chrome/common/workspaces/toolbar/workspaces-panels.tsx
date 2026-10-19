@@ -158,7 +158,7 @@ export const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
       data-workspace-id={props.workspaceId}
       data-workspace-sync={syncIndicator().state}
       role="button"
-      tabIndex={0}
+      tabindex={0}
       title={syncIndicator().tooltip}
       aria-label={syncIndicator().tooltip}
       draggable="true"

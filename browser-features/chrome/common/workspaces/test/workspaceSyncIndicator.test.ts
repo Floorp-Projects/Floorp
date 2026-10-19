@@ -356,6 +356,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
     );
     const productionStyles = document.createElement("style");
     productionStyles.textContent = workspacesStyles;
+    const previousFocus = document.activeElement;
     document.documentElement.append(productionStyles, popupHost, sidebarHost);
     const [workspaceId, setWorkspaceId] = createSignal(boundary.firstId);
     let disposeComponents = () => {};
@@ -389,6 +390,15 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       assert(
         popup && sidebar,
         "both production workspace entry components must render",
+      );
+      assert(
+        sidebar instanceof HTMLElement,
+        "the sidebar entry must be a real HTML button target",
+      );
+      assertEquals(
+        sidebar.tabIndex,
+        0,
+        "the production sidebar entry must be in the keyboard focus order",
       );
       const firstPopupIcon = popup.getAttribute("style");
       const firstSidebarIcon = sidebar.querySelector("img")?.getAttribute(
@@ -425,6 +435,42 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
         "attention",
         `Alpha — Workspace sync error: ${ERROR}`,
         "Sync error",
+      );
+      const sidebarTooltipId = sidebar.getAttribute(
+        "data-workspace-sync-tooltip",
+      );
+      assert(
+        sidebarTooltipId,
+        "the production sidebar must bind its focused error tooltip",
+      );
+      const sidebarTooltip = document.getElementById(sidebarTooltipId) as
+        | XULPopupElement
+        | null;
+      assert(
+        sidebarTooltip,
+        "the production sidebar's native tooltip must exist",
+      );
+      sidebar.focus();
+      await waitForUI(
+        () => document.activeElement === sidebar,
+        "the production sidebar entry must actually receive focus",
+      );
+      await waitForUI(
+        () => sidebarTooltip.state === "open",
+        "the focused production sidebar must display its actual native error popup",
+      );
+      assertEquals(
+        sidebarTooltip.querySelector(".workspace-sync-focus-reason")
+          ?.textContent,
+        ERROR,
+        "the production sidebar's focused popup preserves the full error reason",
+      );
+      sidebar.blur();
+      await waitForUI(
+        () =>
+          document.activeElement !== sidebar &&
+          sidebarTooltip.state === "closed",
+        "blurring the production sidebar must close its error popup",
       );
       boundary.setSelected(new Set<TWorkspaceID>());
       await settle();
@@ -542,6 +588,12 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       popupHost.remove();
       sidebarHost.remove();
       productionStyles.remove();
+      if (
+        previousFocus instanceof HTMLElement ||
+        previousFocus instanceof XULElement
+      ) {
+        previousFocus.focus();
+      }
       setWorkspacesDataStore("data", originalData);
       await settle();
       if (hadPreference) {
