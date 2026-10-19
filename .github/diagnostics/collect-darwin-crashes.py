@@ -37,14 +37,26 @@ def command(argv, output, timeout=30, cap=2 * 1024 * 1024):
                     break
     finally:
         selector.close()
+        cleanup_error = None
         try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        process.wait()
+            # Reap completed tools first. Never signal their former process group.
+            process.wait(timeout=0.2)
+        except subprocess.TimeoutExpired:
+            try:
+                if process.poll() is None and os.getpgid(process.pid) == process.pid:
+                    os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            except PermissionError as error:
+                cleanup_error = str(error)
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                cleanup_error = cleanup_error or "Owned native tool remains after bounded cleanup"
         process.stdout.close()
     return {"argv": argv, "exitCode": process.returncode, "boundedStop": bounded,
-            "retainedBytes": retained, "output": str(output)}
+            "retainedBytes": retained, "output": str(output), "cleanupError": cleanup_error,
+            "ownedPid": process.pid, "stillRunning": process.poll() is None}
 
 def collect(root, output, since, binaries, pids=()):
     root, output = pathlib.Path(root).resolve(), pathlib.Path(output).resolve()

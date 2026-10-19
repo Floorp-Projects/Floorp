@@ -169,7 +169,7 @@ def main():
                 sha(binary) != candidate.get("binarySha256") or candidate.get("manifest") != manifest):
             raise RuntimeError("App identity changed after original startup; no second launch permitted")
     collector = load("darwin_crash_collector", helper_path.with_name("collect-darwin-crashes.py"))
-    pids = [row["pid"] for row in first["observedOwnedProcesses"] if row["command"].lower().startswith("floorp") or str(app) in row["command"]]
+    pids = [row["pid"] for row in first["observedOwnedProcesses"] if row["command"].strip("()").lower().startswith("floorp") or str(app) in row["command"]]
     try:
         collector.collect(root, output / "after-original", started, [binary], pids)
     except Exception as error:
@@ -193,7 +193,10 @@ def main():
             (profile / "user.js").write_text(prefs)
             second_environment = {**environment, "MOZ_CRASHREPORTER_DISABLE": "1"}
             command = [lldb, "--no-lldbinit", "--batch", "-o", "settings set target.disable-aslr false",
-                       "-o", "run", "-o", "thread backtrace all", "-o", "process status", "--",
+                       "-o", "run", "-k", "thread backtrace all", "-k", "register read",
+                       "-k", "image list -o -f", "-k", "disassemble --frame --mixed --bytes",
+                       "-k", "image lookup -s gMozCrashReason", "-k", "p (const char*)gMozCrashReason",
+                       "-k", "target variable gMozCrashReason", "-o", "process status", "--",
                        binary, "--no-remote", "--profile", profile, "--marionette",
                        "--remote-allow-system-access", "--headless", "about:blank"]
             summary["lldbSecondStartup"] = bounded(command, root, output / "lldb-second", 180, second_environment)
