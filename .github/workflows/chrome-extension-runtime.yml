@@ -328,6 +328,11 @@ jobs:
           python tools/chrome-extension-runtime/ci/test-candidate.py
           --platform '${{ matrix.platform }}'
           --artifact _dist/downloaded-native-candidate --group tts
+      - name: Retain owned Darwin startup crash evidence
+        if: ${{ always() && runner.os == 'macOS' }}
+        run: >-
+          python .github/diagnostics/collect-darwin-crashes.py
+          --source-root . --output _dist/chrome-runtime-tests/darwin-crash-evidence
       - name: Preserve native execution evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
