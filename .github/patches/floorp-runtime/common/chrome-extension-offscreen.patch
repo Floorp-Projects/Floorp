@@ -81,7 +81,25 @@ diff --git a/toolkit/components/extensions/ExtensionPageChild.sys.mjs b/toolkit/
 diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/components/extensions/ExtensionChild.sys.mjs
 --- a/toolkit/components/extensions/ExtensionChild.sys.mjs
 +++ b/toolkit/components/extensions/ExtensionChild.sys.mjs
-@@ -1001,6 +1001,25 @@
+@@ -843,6 +843,17 @@
+ 
+   inject(obj) {
+     this.schema.inject(obj, this);
++    if (this.context.viewType === "offscreen" &&
++        ExtensionUtils.getChromeExtensionId(this.context.extension)) {
++      // Namespace getters are installed before shouldInject runs. Remove the
++      // forbidden roots before exposure so feature detection sees no API.
++      const root = ChromeUtils.waiveXrays(obj);
++      for (const namespace of Reflect.ownKeys(root)) {
++        if (namespace !== "runtime" && namespace !== "test") {
++          delete root[namespace];
++        }
++      }
++    }
+   }
+ 
+   recvCallResult(data) {
+@@ -1001,6 +1012,25 @@
    }
  
    shouldInject(namespace, name, allowedContexts) {

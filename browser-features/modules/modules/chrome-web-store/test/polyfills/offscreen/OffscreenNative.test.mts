@@ -9,6 +9,8 @@ import {
   runTests,
 } from "../../../../../../chrome/test/utils/test_harness.ts";
 
+import type { NativeOffscreenObservation } from "./native-offscreen-test-types.ts";
+
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -101,12 +103,32 @@ async function testNativeOffscreen(): Promise<void> {
     `floorp-offscreen-${Services.uuid.generateUUID()}.xpi`,
   );
   const encode = (text: string) => new TextEncoder().encode(text);
-  const pageScript = `
+  const observationScript = `
+    // Observe both root surfaces before any namespace getter can remove itself.
+    const namespaces = ["browser", "chrome"].map(api => {
+      const root = globalThis[api];
+      return {
+        api,
+        keys: Reflect.ownKeys(root).map(String),
+        entries: ["runtime", "tabs", "storage", "windows", "offscreen"].map(name => ({
+          name,
+          inRoot: name in root,
+          own: Object.hasOwn(root, name),
+          descriptor: Object.getOwnPropertyDescriptor(root, name) !== undefined
+        }))
+      };
+    });
     const exposed = () => ({
+      namespaces,
       storage: typeof browser.storage,
       runtime: typeof browser.runtime.sendMessage,
-      background: typeof browser.runtime.getBackgroundPage
+      background: typeof browser.runtime.getBackgroundPage,
+      chromeStorage: typeof chrome.storage,
+      chromeRuntime: typeof chrome.runtime.sendMessage,
+      chromeBackground: typeof chrome.runtime.getBackgroundPage
     });
+  `;
+  const pageScript = observationScript + `
     const iframe = document.createElement("iframe");
     iframe.src = "frame.html";
     iframe.onload = () => {
@@ -143,13 +165,11 @@ async function testNativeOffscreen(): Promise<void> {
     "frame.html": encode(
       '<!doctype html><script src="frame.js"></script>',
     ),
-    "frame.js": encode(`
-      document.title = JSON.stringify({
-        storage: typeof browser.storage,
-        runtime: typeof browser.runtime.sendMessage,
-        background: typeof browser.runtime.getBackgroundPage
-      });
-    `),
+    "frame.js": encode(
+      observationScript + `
+      document.title = JSON.stringify(exposed());
+    `,
+    ),
   });
   await IOUtils.write(path, xpi);
   let addon: { uninstall(): Promise<void> } | undefined;
@@ -194,10 +214,41 @@ async function testNativeOffscreen(): Promise<void> {
       "offscreen and iframe scripts",
     );
     const exposed = JSON.parse(page.xulBrowser.contentTitle) as {
-      main: Record<string, string>;
-      frame: Record<string, string>;
+      main: NativeOffscreenObservation;
+      frame: NativeOffscreenObservation;
     };
     for (const context of [exposed.main, exposed.frame]) {
+      assertEquals(
+        JSON.stringify(context.namespaces.map((root) => root.api)),
+        '["browser","chrome"]',
+        "Both real API root surfaces were observed before namespace reads",
+      );
+      for (const root of context.namespaces) {
+        assert(
+          root.keys.includes("runtime") &&
+            root.keys.every((name) => name === "runtime" || name === "test"),
+          root.api + " exposes only allowed offscreen root namespace keys",
+        );
+        for (const entry of root.entries) {
+          const allowed = entry.name === "runtime";
+          assertEquals(
+            entry.inRoot,
+            allowed,
+            root.api + "." + entry.name +
+              " namespace presence before first read",
+          );
+          assertEquals(
+            entry.own,
+            allowed,
+            root.api + "." + entry.name + " own property before first read",
+          );
+          assertEquals(
+            entry.descriptor,
+            allowed,
+            root.api + "." + entry.name + " own descriptor before first read",
+          );
+        }
+      }
       assertEquals(context.storage, "undefined", "storage API is unavailable");
       assertEquals(
         context.runtime,
@@ -208,6 +259,21 @@ async function testNativeOffscreen(): Promise<void> {
         context.background,
         "undefined",
         "background window is unavailable",
+      );
+      assertEquals(
+        context.chromeStorage,
+        "undefined",
+        "Chrome storage API is unavailable",
+      );
+      assertEquals(
+        context.chromeRuntime,
+        "function",
+        "Chrome runtime messaging is available",
+      );
+      assertEquals(
+        context.chromeBackground,
+        "undefined",
+        "Chrome background window is unavailable",
       );
     }
     const contexts = runtime.getContexts({
