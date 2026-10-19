@@ -1,0 +1,255 @@
+{
+  "schema": 1,
+  "review": "Recovery55 immutable SDKless short diagnostic prelaunch",
+  "decision": "GO",
+  "scope": "one-root-activated-dedicated-push-only-SDKless-Mac-diagnostic",
+  "observedAt": "2026-10-19 21:19:42 UTC",
+  "openP1": 0,
+  "openP2": 0,
+  "fixture": {
+    "sha": "26b3dba870b43327da6dfd261df61bc96deed402",
+    "tree": "e10359ee1b44f17032903f358b046f20bc67fed3",
+    "parents": [
+      "5b40e3f108f162e53c73e5258ee7b312898dd08d"
+    ],
+    "changedPaths": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_IMPLEMENTATION_REVIEW.json",
+        "status": "added",
+        "gitBlobSHA": "acaca4106f5c890ce114a4dcf0052cd52fd3cf1e"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_LOCAL_RESULT.json",
+        "status": "added",
+        "gitBlobSHA": "68295a13e9a4757d55a852a567a3d80264a1798a"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_PREPARATION.json",
+        "status": "added",
+        "gitBlobSHA": "1d44c49d18ae4d120f8e32350ed8d302f8ef7fee"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_SOURCE_FREEZE.json",
+        "status": "added",
+        "gitBlobSHA": "e61ccc2d4a5612fe12cbabc8cfc13083021615e6"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "status": "modified",
+        "gitBlobSHA": "c0f3b24aaccfd9d1603ba2f59481ba543ad90fb7"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "status": "modified",
+        "gitBlobSHA": "ead9c06031afb22e651a29198b0a9f63f68be375"
+      }
+    ],
+    "fileBindings": {
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_IMPLEMENTATION_REVIEW.json": {
+        "bytes": 10094,
+        "sha256": "11792f5e16fc6f081ffafe3f9fe603f6531aad9539268c8fde1ed32c9b29adef",
+        "gitBlobSHA": "acaca4106f5c890ce114a4dcf0052cd52fd3cf1e"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_LOCAL_RESULT.json": {
+        "bytes": 1863,
+        "sha256": "318fd3f0eb02df8b872921feb4331c2ca2bbe7c701d49d92c10d1f2deaa9d078",
+        "gitBlobSHA": "68295a13e9a4757d55a852a567a3d80264a1798a"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_PREPARATION.json": {
+        "bytes": 14092,
+        "sha256": "b788241805acb120bb680baff3e35eb94624af16280d253d93ff90abbd525457",
+        "gitBlobSHA": "1d44c49d18ae4d120f8e32350ed8d302f8ef7fee"
+      },
+      "docs/qa/native-nonpgo-validation/20261019/RECOVERY55_SOURCE_FREEZE.json": {
+        "bytes": 865,
+        "sha256": "a25fcca14a251f5865ea35b1b1197039c1efbe8a7f67cc8132358f46e9c473f8",
+        "gitBlobSHA": "e61ccc2d4a5612fe12cbabc8cfc13083021615e6"
+      },
+      "tools/qa/native-nonpgo/build_completion.py": {
+        "bytes": 27426,
+        "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83",
+        "gitBlobSHA": "c0f3b24aaccfd9d1603ba2f59481ba543ad90fb7"
+      },
+      "tools/qa/native-nonpgo/test_build_completion.py": {
+        "bytes": 36824,
+        "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768",
+        "gitBlobSHA": "ead9c06031afb22e651a29198b0a9f63f68be375"
+      }
+    }
+  },
+  "caller": {
+    "sha": "b8a694e5f254e5fdc3595a2fa17700060932897a",
+    "tree": "bd924f7ba0a96281d941ebb2923347cd02255325",
+    "parents": [
+      "4e3a23594d81779890cf81d53286b0ecf6fb80cf"
+    ],
+    "changedPaths": [
+      {
+        "path": ".github/workflows/mac-native-checkpoint.yml",
+        "status": "modified",
+        "gitBlobSHA": "2dcf71bf01ee1878d15a26ede691b46aea554778"
+      }
+    ],
+    "workflow": {
+      "bytes": 49282,
+      "sha256": "c51b42e4476c74742f1491a93cfaf04a4429e66ab5b021cb6b08585175e3af7a"
+    },
+    "branch": "codex/mac-native-streaming-recovery55-20261019",
+    "branchMatchingRefs": 0,
+    "directRefLookup": "404-not-found",
+    "parentWorkflow": {
+      "bytes": 47930,
+      "sha256": "d010182a4546d424f67373ac595713d0376279193824a9e85508eced3fcb708c"
+    },
+    "exactParentTransformVerified": true
+  },
+  "route": {
+    "workflowYAMLFiles": 26,
+    "allWorkflowContentsBoundToNormalAPIGitBlobSHA": true,
+    "matchingPushWorkflows": [
+      "mac-native-checkpoint.yml"
+    ],
+    "createEventWorkflows": 0,
+    "workflowRunEventWorkflows": 0,
+    "singleConsumerJob": true,
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "cancelInProgress": false,
+    "checkoutPersistCredentials": false,
+    "workflowChangedPaths": 1
+  },
+  "freshState": {
+    "priorRun": {
+      "id": 39322232985,
+      "headSHA": "4e3a23594d81779890cf81d53286b0ecf6fb80cf",
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 1
+    },
+    "priorJobs": [
+      {
+        "id": 118298917906,
+        "run": 39322232985,
+        "status": "completed",
+        "conclusion": "failure",
+        "name": "checkpoint-consumer"
+      }
+    ],
+    "nonterminalStatusQueries": {
+      "in_progress": {
+        "total": 0,
+        "owned": 0
+      },
+      "requested": {
+        "total": 0,
+        "owned": 0
+      },
+      "pending": {
+        "total": 0,
+        "owned": 0
+      },
+      "waiting": {
+        "total": 0,
+        "owned": 0
+      },
+      "queued": {
+        "total": 1,
+        "owned": 0
+      }
+    },
+    "ownedCodexMacNonterminalRuns": 0,
+    "allStatusCollectionsComplete": true,
+    "dedicatedBranchUnused": true
+  },
+  "immutableDifference": {
+    "fixtureExactlySixPaths": true,
+    "callerExactlyOneWorkflowPath": true,
+    "parentOnlyReconstruction": "Recovery54-to55 naming, exact fixture pin, three QA522-to525 literals, one fixed probe literal and two identical strict phase validators",
+    "allOtherCallerBytesPreserved": true,
+    "originalUnrenderedPreparation": {
+      "bytes": 8152,
+      "sha256": "8e5318b2a97f1a606f84a2f0bc4cd2c4d4786375a0e87214b9118d9c7b04df5a",
+      "callerBytes": 49262,
+      "callerSHA256": "0f2a0437ed86576f09ff2a3ff23dc968e6eaad4857a68f4fe165e646c893c06a"
+    },
+    "renderedCallerDistinguishedFromPlaceholderFreeze": true
+  },
+  "controls": {
+    "negativeFaultsRejected": 1151,
+    "runtimeContextNegativeControlsIncluded": 46,
+    "actualInlineMockFlows": 17,
+    "recordingTestsRequired": 14,
+    "selectedQATestsRequired": 525,
+    "actualSerializerCasesRequired": 9,
+    "YAMLBashInlinePythonSyntax": "passed",
+    "ResourceWarningPolicy": "error",
+    "originalControlSourcesAndResultsUnchanged": true,
+    "guardedResultSHA256": "72ea96d68024d0c26a65915a97d6b66c205815ffbf956a597b1c7bc15b1bf637",
+    "flowResultSHA256": "f6a2ef06521d27d4f770ab4620d2f32d389facbe15024675983daa1c4f121a99",
+    "heavyInputOrFullQARerunByReviewer": false,
+    "actualChildOrBackendLaunchedByFlowControls": false
+  },
+  "probe": {
+    "parserSHA256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83",
+    "instrumentedFunctionSHA256": "db374c6398ee0bbf4dc6a7459442a274aef95fa8006d68591b700bdb7b403041",
+    "strippingExactlyFourTopLevelCallbacksReproducesOriginalFunctionAST": true,
+    "perRowCallbacks": false,
+    "controlledInputBytes": 195000385,
+    "controlledInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "phaseMinutes": 15,
+    "initialClockReset": false,
+    "interpreterPathChanged": false,
+    "runtimeContextFields": [
+      "pythonVersion",
+      "jsonScanner"
+    ],
+    "runtimeContextTypedAndBounded": true,
+    "runtimeVersionOrBackendQualifiesExecution": false
+  },
+  "officialSerializerSource": {
+    "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "bytes": 126050,
+    "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "responseCapBytes": 1048576,
+    "sourceFilesFetched": 1,
+    "normalContentsAPI": true,
+    "redirectsRejected": true,
+    "TLSVerificationPreserved": true,
+    "sourceTokenConfinedToAcquisitionStep": true
+  },
+  "preservedFailureSemantics": {
+    "originalFailedQAAndFirstFailureRetained": true,
+    "diagnosticContinuationDoesNotQualifyFailedQA": true,
+    "phaseChildUsesExistingRunnerCleanEnvironmentAndOwnership": true,
+    "naturalExitExactReapGroupGoneAndCleanupRequired": true,
+    "childNonzeroMalformedReceiptOrCleanupFailureCannotReplacePrimary": true,
+    "strictProjectionDropsPathsPIDsArbitraryTextAndSecretURLs": true,
+    "originalQAFineGrainedParserBoundary": "UNKNOWN",
+    "separateProbeBoundary": "Only the last reached fixed boundary is observed; it is neither original-QA attribution nor proof of a stalled subroutine."
+  },
+  "qualificationLimits": {
+    "actualMacDenseInput": "NOT_YET_PASSED",
+    "currentSourceFullHostXUL": "NOT_TESTED",
+    "MozillaCases": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN",
+    "graphDiagnosticAuthorizedByThisReview": false,
+    "longBuildAuthorizedByThisReview": false
+  },
+  "operations": {
+    "CIStartedByReviewer": false,
+    "remoteRefsChanged": false,
+    "repositorySourceEdited": false,
+    "SDKAcquired": false,
+    "checkpointDownloaded": false,
+    "artifactUploaded": false,
+    "signingOrAuthenticationSettingsChanged": false
+  },
+  "activationCondition": "Root rechecks the exact immutable pins, dedicated branch absence and zero owned overlap immediately before one activation."
+}
