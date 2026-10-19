@@ -526,7 +526,13 @@ export class CorpusAutomationChild extends JSWindowActorChild {
       name === "ReadAutomaEngineState" ||
       name === "RunAutoma"
     ) {
-      if (!/^moz-extension:\/\/.+\/popup\.html$/.test(document.documentURI)) {
+      const popupURI = document.documentURI.split("#", 1)[0];
+      if (
+        !/^moz-extension:\/\/[^/]+\/popup\.html$/.test(popupURI) ||
+        popupURI !== `${document.nodePrincipal.originNoSuffix}/popup.html` ||
+        document.nodePrincipal.addonId !==
+          "infppggnoaenmfagbfknfkancpbljcca@chromium-extension"
+      ) {
         throw Error("Expected real Automa popup document");
       }
       if (name === "ReadAutomaConfiguration") {

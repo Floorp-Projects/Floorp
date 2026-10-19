@@ -221,6 +221,7 @@ jobs:
           tools/chrome-extension-runtime/NativePortErrorsCandidate.test.mts
           tools/chrome-extension-runtime/NativePortStateCandidate.test.mts
           tools/chrome-extension-runtime/NativeMessageJSONCandidate.test.mts
+          tools/chrome-extension-runtime/NativeMessageResponseRaceCandidate.test.mts
           tools/chrome-extension-runtime/QuietNativePortLifetime.test.mts
           tools/chrome-extension-runtime/ci/ProductionWorkspaces.test.mts
       - name: Check bundled test and private actor source provenance

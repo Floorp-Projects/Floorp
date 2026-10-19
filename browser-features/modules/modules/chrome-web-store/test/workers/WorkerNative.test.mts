@@ -170,7 +170,13 @@ const workerBody = `
           try {
             await browser.fontSettings.setDefaultFontSize({pixelSize:before.pixelSize+1});
             const changed=await browser.fontSettings.getDefaultFontSize({});
-            const voices=await browser.tts.getVoices();
+            const voiceDeadline=Date.now()+15000;
+            let voices=await browser.tts.getVoices();
+            while(!voices.length&&Date.now()<voiceDeadline) {
+              await new Promise(resolve=>setTimeout(resolve,250));
+              if(Date.now()>=voiceDeadline)break;
+              voices=await browser.tts.getVoices();
+            }
             if(!voices.length) throw new Error("Native TTS integration requires an actual installed voice");
             const voice=voices.find(v=>v.lang?.startsWith("en"))||voices[0];
             const events=[];

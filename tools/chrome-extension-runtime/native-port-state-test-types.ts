@@ -44,6 +44,14 @@ export interface PortStateIncomingSender {
   runtimeId: string;
   timeout?: boolean;
   localDisconnectAt: number;
+  strategy?: "independent-worker-current-task";
+  workerWorkMs?: number;
+  connectReturnedAt?: number;
+  workStartedAt?: number;
+  workFinishedAt?: number;
+  workElapsedMs?: number;
+  localDisconnectReturnedAt?: number;
+  localPostThrow?: PortStateError | null;
 }
 export interface PortStateIncoming {
   name: string;

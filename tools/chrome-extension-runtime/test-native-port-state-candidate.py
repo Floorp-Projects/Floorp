@@ -24,7 +24,7 @@ registration_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(registration_module)
 PROBES = {
     "portStateStressProbeSource": ("native-port-state-stress-probe.js", "d62a9785e9cbd2dab40ee11d72752a0629bf7b385b35eb434936dc77e997dcff"),
-    "incomingPortStateProbeSource": ("native-port-state-incoming-probe.js", "2b2b6ad2b64a5d7b3894f0288e653ebd26be4ce8107624ddb334937b05870f1d"),
+    "incomingPortStateProbeSource": ("native-port-state-incoming-probe.js", "002355f0bf53d831702b6e477305765a58c0d27de61071b6e012b1e136f89c38"),
 }
 HOST_SHA = "a69730066a6808dd1ba9353a9fb3cc75e2ee8937bcb5006d82af9f01c4070fa7"
 

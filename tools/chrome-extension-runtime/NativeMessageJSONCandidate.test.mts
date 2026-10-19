@@ -29,21 +29,24 @@ import {
 import type {
   MessagingCandidateAddonManager,
   MessagingCandidateParent,
-  MessagingCandidateWindow,
 } from "./native-messaging-candidate-types.ts";
 import type {
   MessageControlReply,
   MessageEdgeReference,
   MessageGroup,
+  MessageJSONBrowser,
   MessageJSONConfig,
   MessageJSONEvidence,
+  MessageJSONFrameMessage,
   MessageJSONReference,
+  MessageJSONTab,
+  MessageJSONWindow,
   MessageOverloadReference,
   MessageRealm,
   MessageRecord,
   MessageResource,
 } from "./native-message-json-test-types.ts";
-const { setTimeout } = ChromeUtils.importESModule(
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,6 +61,46 @@ async function until<Value>(
     await pause(20);
   }
   throw Error("Timed out waiting for " + label);
+}
+async function documentIsVisible(
+  browser: MessageJSONBrowser,
+): Promise<boolean> {
+  const channel = "floorp-owned-message-visibility-" +
+    Services.uuid.generateUUID();
+  return await new Promise((resolve) => {
+    let active = true;
+    const finish = (visible: boolean) => {
+      if (!active) return;
+      active = false;
+      clearTimeout(timer);
+      browser.messageManager.removeMessageListener(channel, listener);
+      resolve(visible);
+    };
+    const listener = (message: MessageJSONFrameMessage) =>
+      finish(message.data === "visible");
+    const timer = setTimeout(() => finish(false), 1000);
+    browser.messageManager.addMessageListener(channel, listener);
+    browser.messageManager.loadFrameScript(
+      "data:application/javascript," + encodeURIComponent(
+        "sendAsyncMessage(" + JSON.stringify(channel) +
+          ",content.document.visibilityState);",
+      ),
+      false,
+    );
+  });
+}
+async function activateOwnedControlTab(
+  window: MessageJSONWindow,
+  tab: MessageJSONTab,
+): Promise<void> {
+  window.gBrowser.selectedTab = tab;
+  await until(
+    async () =>
+      window.gBrowser.selectedTab === tab &&
+      tab.linkedBrowser.docShellIsActive &&
+      await documentIsVisible(tab.linkedBrowser),
+    "active visible owned control document",
+  );
 }
 const jsonReference = JSON.parse(
   messageJSONReferenceSource,
@@ -111,7 +154,7 @@ async function exercise(): Promise<void> {
   );
   const window = Services.wm.getMostRecentWindow(
     "navigator:browser",
-  ) as unknown as MessagingCandidateWindow;
+  ) as unknown as MessageJSONWindow;
   const evidence: MessageJSONEvidence = {
     stage: "authored-actual-native-message-json-overloads",
     token: config.token,
@@ -220,6 +263,7 @@ async function exercise(): Promise<void> {
         );
         resource.tab = tab;
         const browser = tab.linkedBrowser;
+        await activateOwnedControlTab(window, tab);
         const ready = await until(() => {
           try {
             const value = record(JSON.parse(browser.contentTitle));
@@ -602,6 +646,7 @@ async function exercise(): Promise<void> {
       { triggeringPrincipal: extension.principal },
     );
     ordinaryResource.tab = tab;
+    await activateOwnedControlTab(window, tab);
     await until(
       () =>
         tab.linkedBrowser.contentTitle === "owned-ordinary-json-control-ready",

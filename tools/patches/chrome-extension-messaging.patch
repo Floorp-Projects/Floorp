@@ -32,16 +32,19 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
  // runtime.OnMessage event helper, handles custom async/sendResponse logic.
  export class MessageEvent extends SimpleEventAPI {
    emit(holder, sender) {
-@@ -186,9 +210,26 @@
+@@ -186,9 +210,28 @@
    }
  
    wrapResponse(fire, message, sender) {
+-    let response, sendResponse;
+-    let promise = new Promise(resolve => {
 +    const chromeMessage = !!ExtensionUtils.getChromeExtensionId(
 +      this.context.extension
 +    );
-     let response, sendResponse;
--    let promise = new Promise(resolve => {
++    let response, sendResponse, resolveResponse, rejectResponse;
 +    let promise = new Promise((resolve, reject) => {
++      resolveResponse = resolve;
++      rejectResponse = reject;
        sendResponse = Cu.exportFunction(value => {
 +        if (chromeMessage) {
 +          if (response) {
@@ -60,7 +63,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
          resolve(value);
          response = promise;
        }, this.context.cloneScope);
-@@ -198,7 +239,10 @@
+@@ -198,7 +241,10 @@
      try {
        result = fire.raw(message, sender, sendResponse);
      } catch (e) {
@@ -72,28 +75,44 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      }
      if (
        result &&
-@@ -206,6 +250,20 @@
+@@ -206,6 +252,36 @@
        Cu.getClassName(result, true) === "Promise" &&
        this.context.principal.subsumes(Cu.getObjectPrincipal(result))
      ) {
 +      if (chromeMessage) {
-+        const listenerPromise = result;
-+        result = new Promise((resolve, reject) => {
-+          listenerPromise.then(value => {
++        // A pending returned Promise does not reserve the response channel.
++        // Both it and sendResponse settle the same privileged Promise, so an
++        // earlier callback still wins. Claim before running addon JSON hooks.
++        const rejectListenerResponse = error => {
++          if (!response) {
++            response = promise;
++            rejectResponse(error);
++          }
++        };
++        try {
++          result.then(value => {
++            if (response) {
++              return;
++            }
++            response = promise;
 +            try {
 +              // Normalize before resolving a transport Promise: resolving it
 +              // with the original addon object would read its inherited then.
-+              resolve(normalizeChromeMessage(this.context, value, "sendResponse"));
++              resolveResponse(normalizeChromeMessage(this.context, value, "sendResponse"));
 +            } catch (error) {
-+              reject(error);
++              rejectResponse(error);
 +            }
-+          }, reject);
-+        });
++          }, rejectListenerResponse);
++        } catch (error) {
++          // Preserve the original Promise executor's synchronous throw channel.
++          rejectListenerResponse(error);
++        }
++        return StrongPromise.wrap(promise, fire.location);
 +      }
        return StrongPromise.wrap(result, fire.location);
      } else if (result === true) {
        return StrongPromise.wrap(promise, fire.location);
-@@ -234,10 +292,15 @@
+@@ -234,10 +310,15 @@
      this.context = context;
      this.name = name;
      this.sender = sender;
@@ -113,7 +132,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      this.conduit = context.openConduit(this, {
        portId,
        native,
-@@ -280,6 +343,22 @@
+@@ -280,6 +361,22 @@
    }
  
    sendPortMessage(json) {
@@ -136,7 +155,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      if (this.conduit.actor) {
        return this.conduit.sendPortMessage({
          holder: this.holdMessage(
-@@ -354,6 +433,9 @@
+@@ -354,6 +451,9 @@
      // custom context to ensure that the return value is cloned into the right
      // USER_SCRIPT world.
      context ??= this.context;
@@ -146,7 +165,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      let response = this.conduit.queryRuntimeMessage({
        extensionId: extensionId || this.context.extension.id,
        holder: holdMessage(
-@@ -381,8 +463,16 @@
+@@ -381,8 +481,16 @@
      return port.api;
    }
  
@@ -165,7 +184,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      if (typeof userScriptWorldId == "string") {
        sender = { ...sender, userScriptWorldId };
        event = this.onUserScriptConnect;
-@@ -393,8 +483,15 @@
+@@ -393,8 +501,15 @@
      }
    }
  
@@ -183,7 +202,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
      if (typeof userScriptWorldId == "string") {
        sender = { ...sender, userScriptWorldId };
        return this.onUserScriptMessage.emit(holder, sender);
-@@ -745,6 +842,59 @@
+@@ -745,6 +860,59 @@
      let map = this.childApiManager.listeners.get(this.path);
      return map.listeners.has(listener);
    }
@@ -243,7 +262,7 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
  }
  
  export class ChildLocalAPIImplementation extends LocalAPIImplementation {
-@@ -785,6 +935,21 @@
+@@ -785,6 +953,21 @@
    }
  
    callAsyncFunction(args, callback, requireUserInput) {

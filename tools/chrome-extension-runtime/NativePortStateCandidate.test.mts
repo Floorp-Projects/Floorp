@@ -55,6 +55,7 @@ const program = portStateStressProbeSource + "\n" +
 async function dispatchPortState(request){
  if(request.operation==='state')return globalThis.probePortStateStress(request.hosts);
  if(request.operation==='incoming-start')return globalThis.startIncomingCloseStress(request.name);
+ if(request.operation==='incoming-start-independent')return globalThis.startIncomingCloseIndependentStress(request.name);
  if(request.operation==='incoming-read')return globalThis.getIncomingCloseStress(request.name);
  throw Error('Unknown owned Port state operation');
 }
@@ -333,7 +334,9 @@ async function exercise(): Promise<void> {
         name = "floorp-owned-incoming-close-" + receiver;
       const sender = await request(
         source,
-        "incoming-start",
+        receiver === "document"
+          ? "incoming-start-independent"
+          : "incoming-start",
         name,
       ) as PortStateIncomingSender;
       assertEquals(
@@ -348,8 +351,30 @@ async function exercise(): Promise<void> {
       );
       assert(
         !sender.timeout,
-        "Sender observes incoming receiver callback before closing",
+        "Owned sender completes without the original three-second watchdog",
       );
+      if (receiver === "document") {
+        assertEquals(
+          sender.strategy,
+          "independent-worker-current-task",
+          "Reverse document case closes within the actual Worker connect task",
+        );
+        assertEquals(sender.workerWorkMs, 80, "Pure Worker workload is exact");
+        assert(
+          typeof sender.connectReturnedAt === "number" &&
+            typeof sender.workStartedAt === "number" &&
+            typeof sender.workFinishedAt === "number" &&
+            typeof sender.workElapsedMs === "number" &&
+            sender.workElapsedMs >= 80 &&
+            typeof sender.localDisconnectReturnedAt === "number" &&
+            sender.connectReturnedAt <= sender.workStartedAt &&
+            sender.workStartedAt <= sender.workFinishedAt &&
+            sender.workFinishedAt <= sender.localDisconnectAt &&
+            sender.localDisconnectAt <= sender.localDisconnectReturnedAt &&
+            sender.localPostThrow,
+          "Independent Worker closes an established Port and immediately observes local closed state",
+        );
+      }
       const incoming = await until(async () => {
         const result = await request(receiver, "incoming-read", name) as
           | PortStateIncoming

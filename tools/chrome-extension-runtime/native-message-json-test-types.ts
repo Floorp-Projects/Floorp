@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 import type {
   MessagingCandidateAddon,
+  MessagingCandidateBrowser,
   MessagingCandidateTab,
+  MessagingCandidateWindow,
 } from "./native-messaging-candidate-types.ts";
 export type MessageRecord = Record<string, unknown>;
 export type MessageRealm = "document" | "worker";
@@ -52,4 +54,33 @@ export interface MessageResource {
   addon?: MessagingCandidateAddon;
   tab?: MessagingCandidateTab;
   active: boolean;
+}
+
+export interface MessageJSONFrameMessage {
+  data: unknown;
+}
+export interface MessageJSONBrowser extends MessagingCandidateBrowser {
+  docShellIsActive: boolean;
+  messageManager: MessagingCandidateBrowser["messageManager"] & {
+    addMessageListener(
+      name: string,
+      listener: (message: MessageJSONFrameMessage) => void,
+    ): void;
+    removeMessageListener(
+      name: string,
+      listener: (message: MessageJSONFrameMessage) => void,
+    ): void;
+  };
+}
+export interface MessageJSONTab extends MessagingCandidateTab {
+  linkedBrowser: MessageJSONBrowser;
+}
+export interface MessageJSONWindow extends MessagingCandidateWindow {
+  gBrowser: Omit<MessagingCandidateWindow["gBrowser"], "addTab"> & {
+    selectedTab: MessagingCandidateTab;
+    addTab(
+      url: string,
+      options: { triggeringPrincipal: nsIPrincipal },
+    ): MessageJSONTab;
+  };
 }

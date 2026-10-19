@@ -4014,7 +4014,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
    }
  
    initEventManagers() {
-@@ -149,7 +200,152 @@
+@@ -149,7 +200,155 @@
      // to retrieve the port given the apiObjectId part of the
      // mozIExtensionAPIRequest sent from the ExtensionPort webidl.
      api.portId = this.portId;
@@ -4090,6 +4090,9 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
 +  sendPortMessage(json) {
 +    if (!this.chromePort ||
 +        (!this.activationPending && !this.remoteDisconnected) ||
++        // Incoming callbacks can send before their receive barrier completes.
++        // Only incoming messages/disconnects wait for all onConnect listeners.
++        (this.receiverCallbacksPending && !this.remoteDisconnected) ||
 +        this.locallyDisconnected) {
 +      return super.sendPortMessage(json);
 +    }
@@ -4167,7 +4170,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
    }
  
    get api() {
-@@ -193,6 +389,22 @@
+@@ -193,6 +392,22 @@
      );
    }
  
@@ -4190,7 +4193,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
    close() {
      this.portsById.clear();
    }
-@@ -210,9 +422,13 @@
+@@ -210,9 +425,13 @@
    connect({ name, native = false, ...args }) {
      let portId = getUniqueId();
      let port = new WorkerPort(this.context, portId, name, !!native);
@@ -4207,7 +4210,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
      this.portsById.set(`${portId}`, port);
      // Extension worker calls this method through the WebIDL bindings,
      // and the Port instance returned by the runtime.connect/connectNative
-@@ -221,12 +437,44 @@
+@@ -221,12 +440,44 @@
      return { portId, name };
    }
  
@@ -4255,7 +4258,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
      }
    }
  }
-@@ -310,6 +558,19 @@
+@@ -310,6 +561,19 @@
      // apiPathToEventString is a string that represents the full API path
      // related to the event name (e.g. "runtime.onConnect", or "runtime.Port.onMessage")
      this.eventListenerWrappers = new DefaultMap(() => new WeakMap());
@@ -4275,7 +4278,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
    }
  
    getImplementation(namespace, name) {
-@@ -346,10 +607,59 @@
+@@ -346,10 +610,59 @@
     */
    handleWebIDLAPIRequest(request) {
      try {
@@ -4336,7 +4339,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
            result = this.handleForProxyAPIImplementation(request, impl);
          } else {
            result = this.callAPIImplementation(request, impl);
-@@ -494,16 +804,73 @@
+@@ -494,16 +807,73 @@
      }
  
      const { eventListener } = request;
@@ -4411,7 +4414,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
          this.eventListenerWrappers.delete(eventListener);
          // Failing to send the request to remove the listener in the parent
          // process shouldn't prevent the extension or context shutdown,
-@@ -521,6 +888,16 @@
+@@ -521,6 +891,16 @@
          }
        },
      };
@@ -4428,7 +4431,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
      this.storeListenerWrapper(request, listener);
      this.context.callOnClose(listener._callOnClose);
      return listener;
-@@ -597,13 +974,56 @@
+@@ -597,13 +977,56 @@
      // as structure clone data, we may remove this if we are changing the
      // internals to not use the context.cloneScope).
      this.workerCloneScope = {
@@ -4485,7 +4488,7 @@ diff --git a/toolkit/components/extensions/ExtensionWorkerChild.sys.mjs b/toolki
    }
  
    getCreateProxyContextData() {
-@@ -650,6 +1070,10 @@
+@@ -650,6 +1073,10 @@
      return this.webidlAPIRequest;
    }
  
@@ -8458,11 +8461,21 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
      MOZ_ASSERT(mPromise);
      mozilla::HoldJSObjects(this);
    }
-@@ -91,14 +109,20 @@
+@@ -91,14 +109,30 @@
      }
    }
  
 +  bool WasCalled() const { return mWasCalled; }
++
++  bool TryClaimPromiseResponse() {
++    if (mWasCalled || !mPromise || !mPromise->PromiseObj()) {
++      return false;
++    }
++    // Either a callback or a Promise settlement may arrive first. Claim an
++    // accepted settlement before extension serialization hooks can reenter.
++    mWasCalled = true;
++    return true;
++  }
 +
    static bool Call(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
      JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -8480,7 +8493,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
          reinterpret_cast<SendResponseCallback*>(v.toPrivate());
      if (!sendResponse || !sendResponse->mPromise ||
          !sendResponse->mPromise->PromiseObj()) {
-@@ -106,7 +130,50 @@
+@@ -106,7 +140,50 @@
        return true;
      }
  
@@ -8532,7 +8545,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
      sendResponse->Cleanup();
  
      return true;
-@@ -121,6 +188,8 @@
+@@ -121,6 +198,8 @@
    RefPtr<dom::Promise> mPromise;
    JS::Heap<JS::Value> mValue;
    RefPtr<dom::StrongWorkerRef> mWorkerRef;
@@ -8541,7 +8554,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
  };
  
  NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SendResponseCallback)
-@@ -159,16 +228,20 @@
+@@ -159,16 +238,20 @@
  already_AddRefed<ExtensionEventListener> ExtensionEventListener::Create(
      nsIGlobalObject* aGlobal, ExtensionBrowser* aExtensionBrowser,
      dom::Function* aCallback, CleanupCallback&& aCleanupCallback,
@@ -8566,7 +8579,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
    if (!workerRef) {
      aRv.Throw(NS_ERROR_UNEXPECTED);
      return nullptr;
-@@ -210,12 +283,25 @@
+@@ -210,12 +293,25 @@
    MOZ_ASSERT(NS_IsMainThread());
    NS_ENSURE_ARG_POINTER(aPromiseResult);
  
@@ -8592,7 +8605,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
  
      // Explicitly check that the APIObjectType is one of expected ones,
      // raise to the caller an explicit error if it is not.
-@@ -232,6 +318,7 @@
+@@ -232,6 +328,7 @@
          }
          break;
        case APIObjectType::RUNTIME_PORT:
@@ -8600,7 +8613,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
          if (NS_WARN_IF(apiObjectDescriptor.isNullOrUndefined())) {
            JS_ReportErrorASCII(aCx,
                                "Unexpected null apiObjectDescriptor on "
-@@ -290,6 +377,13 @@
+@@ -290,6 +387,13 @@
      }
    }
  
@@ -8614,7 +8627,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
    UniquePtr<dom::StructuredCloneHolder> argsHolder =
        SerializeCallArguments(args, aCx, rv);
    if (NS_WARN_IF(rv.Failed())) {
-@@ -298,7 +392,8 @@
+@@ -298,7 +402,8 @@
  
    RefPtr<ExtensionListenerCallWorkerRunnable> runnable =
        new ExtensionListenerCallWorkerRunnable(this, std::move(argsHolder),
@@ -8624,7 +8637,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
    runnable->Dispatch(GetWorkerPrivate());
    retPromise.forget(aPromiseResult);
  
-@@ -330,6 +425,12 @@
+@@ -330,6 +435,12 @@
  
  bool ExtensionListenerCallWorkerRunnable::WorkerRun(
      JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) {
@@ -8637,7 +8650,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
    MOZ_ASSERT(aWorkerPrivate);
    aWorkerPrivate->AssertIsOnWorkerThread();
    auto global = mListener->GetGlobalObject();
-@@ -354,6 +455,13 @@
+@@ -354,6 +465,13 @@
    DeserializeCallArguments(aCx, argsSequence, rv);
    if (NS_WARN_IF(rv.Failed())) {
      return true;
@@ -8651,7 +8664,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
    }
  
    RefPtr<dom::Promise> retPromise;
-@@ -402,20 +510,30 @@
+@@ -402,20 +520,30 @@
          aCx, argsSequence.ElementAt(apiObjectIdx));
      JS::Rooted<JS::Value> apiObjectValue(aCx);
  
@@ -8696,7 +8709,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
      }
  
      argsSequence.ReplaceElementAt(apiObjectIdx, apiObjectValue);
-@@ -423,11 +541,13 @@
+@@ -423,11 +551,13 @@
  
    // Create callback argument and append it to the call arguments.
    JS::Rooted<JSObject*> sendResponseObj(aCx);
@@ -8711,7 +8724,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
        JS::Rooted<JSFunction*> sendResponseFn(
            aCx, js::NewFunctionWithReserved(aCx, SendResponseCallback::Call,
                                             /* nargs */ 1, 0, "sendResponse"));
-@@ -441,9 +561,10 @@
+@@ -441,9 +571,10 @@
        // the SendReponseCallback instance from the resolved slot to resolve
        // the promise and invalidated the sendResponse callback (any new call
        // becomes a noop).
@@ -8725,7 +8738,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
        if (NS_WARN_IF(rv.Failed())) {
          retPromise->MaybeReject(NS_ERROR_UNEXPECTED);
          return true;
-@@ -476,8 +597,29 @@
+@@ -476,8 +607,29 @@
    JS::Rooted<JS::Value> retval(aCx);
    ErrorResult erv;
    erv.MightThrowJSException();
@@ -8757,7 +8770,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
  
    // Calling the callback may have thrown an exception.
    // TODO: add a ListenerCallOptions to optionally report the exception
-@@ -493,6 +635,16 @@
+@@ -493,6 +645,16 @@
      }
  
      retPromise->MaybeReject(std::move(erv));
@@ -8774,7 +8787,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
      return true;
    }
  
-@@ -516,20 +668,13 @@
+@@ -516,20 +678,13 @@
        return true;
      }
  
@@ -8802,7 +8815,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
        mIsCallResultCancelled = true;
        retPromise->MaybeResolveWithUndefined();
  
-@@ -544,6 +689,11 @@
+@@ -544,6 +699,70 @@
      }
    }
  
@@ -8811,10 +8824,69 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
 +    // returns undefined or an unrelated value.
 +    return true;
 +  }
++  if (aWorkerPrivate->ExtensionChromeCompatibilityEnabled() &&
++      mCallbackArgType == CallbackType::CALLBACK_SEND_RESPONSE &&
++      !sendResponsePtr->WasCalled() &&
++      ExtensionEventListener::IsPromise(aCx, retval)) {
++    // Observe the returned native Promise directly. Resolving retPromise with
++    // it would assimilate its fulfilled payload a second time before JSON
++    // serialization, invoking an extension's inherited `then` getter again.
++    JS::Rooted<JSObject*> promiseObject(aCx, &retval.toObject());
++    RefPtr<dom::Promise> listenerPromise =
++        dom::Promise::CreateFromExisting(global, promiseObject);
++    if (!listenerPromise) {
++      retPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
++      return true;
++    }
++    listenerPromise->AddCallbacksWithCycleCollectedArgs(
++        [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult&,
++           dom::Promise* aResponsePromise,
++           SendResponseCallback* aResponseCallback) {
++          RefPtr<dom::Promise> responsePromise = aResponsePromise;
++          RefPtr<SendResponseCallback> responseCallback = aResponseCallback;
++          if (responsePromise->State() != dom::Promise::PromiseState::Pending ||
++              !responseCallback->TryClaimPromiseResponse()) {
++            return;
++          }
++          nsAutoString json;
++          if (!ExtensionAPIBase::SerializeChromeMessage(aCx, aValue, json)) {
++            JS_ClearPendingException(aCx);
++            JS_ReportErrorASCII(aCx, "Could not serialize message.");
++            JS::Rooted<JS::Value> error(aCx);
++            if (JS_GetPendingException(aCx, &error)) {
++              responsePromise->MaybeReject(error);
++            } else {
++              responsePromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
++            }
++            JS_ClearPendingException(aCx);
++            return;
++          }
++          JS::Rooted<JSString*> value(aCx, JS_NewUCStringCopyN(
++              aCx, json.BeginReading(), json.Length()));
++          JS::Rooted<JSObject*> carrier(aCx, JS_NewObjectWithGivenProto(
++              aCx, &kChromeResponseJSONClass, nullptr));
++          if (!value || !carrier) {
++            JS_ClearPendingException(aCx);
++            responsePromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
++            return;
++          }
++          JS::SetReservedSlot(carrier, 0, JS::StringValue(value));
++          responsePromise->MaybeResolve(carrier);
++        },
++        [](JSContext*, JS::Handle<JS::Value> aReason, ErrorResult&,
++           dom::Promise* aResponsePromise,
++           SendResponseCallback* aResponseCallback) {
++          if (aResponseCallback->TryClaimPromiseResponse()) {
++            aResponsePromise->MaybeReject(aReason);
++          }
++        },
++        retPromise, sendResponsePtr);
++    return true;
++  }
    retPromise->MaybeResolve(retval);
  
    return true;
-@@ -574,20 +724,50 @@
+@@ -574,20 +793,50 @@
    MOZ_ASSERT(mWorkerRef);
    mWorkerRef->Private()->AssertIsOnWorkerThread();
  
@@ -8878,7 +8950,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
  
    if (retval.isObject()) {
      // Try to serialize the result as an ClonedErrorHolder,
-@@ -628,7 +808,10 @@
+@@ -628,7 +877,10 @@
      return;
    }
  
@@ -8889,7 +8961,7 @@ diff --git a/toolkit/components/extensions/webidl-api/ExtensionEventListener.cpp
                                     resHolder = std::move(resHolder),
                                     runnable = std::move(mWorkerRunnable),
                                     workerRef = std::move(mWorkerRef)]() {
-@@ -643,13 +826,37 @@
+@@ -643,13 +895,37 @@
  
      resHolder->Read(cx, &jsvalue, rv);
  

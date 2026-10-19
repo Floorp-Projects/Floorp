@@ -43,3 +43,38 @@
   });
   globalThis.getIncomingCloseStress = name => cases.get(name) ?? null;
 })();
+
+// The Worker performs this bounded pure-JS workload in the same connect task.
+// Its public Port closes locally before the synchronous main-thread forwarding;
+// the strict receiver-callback timestamps prove the requested overlap.
+(() => {
+  globalThis.startIncomingCloseIndependentStress = name => new Promise(resolve => {
+    const realm = typeof document === 'undefined' ? 'worker' : 'document';
+    if (realm !== 'worker') throw new Error('Independent close requires actual Worker');
+    const result = {
+      realm, runtimeId: chrome.runtime.id, messages: [], localDisconnectAt: null,
+      strategy: 'independent-worker-current-task', workerWorkMs: 80,
+      connectReturnedAt: null, workStartedAt: null, workFinishedAt: null,
+      workElapsedMs: null, localDisconnectReturnedAt: null, localPostThrow: null,
+    };
+    const port = chrome.runtime.connect({ name });
+    result.connectReturnedAt = Date.now();
+    const watchdog = setTimeout(() => {
+      result.timeout = true;
+      port.disconnect();
+      resolve(result);
+    }, 3000);
+    result.workStartedAt = Date.now();
+    const start = performance.now();
+    while (performance.now() - start < result.workerWorkMs) {}
+    result.workElapsedMs = performance.now() - start;
+    result.workFinishedAt = Date.now();
+    result.localDisconnectAt = Date.now();
+    port.disconnect();
+    result.localDisconnectReturnedAt = Date.now();
+    try { port.postMessage({ phase: 'after-local-disconnect' }); }
+    catch (error) { result.localPostThrow = { name: error.name, message: error.message }; }
+    clearTimeout(watchdog);
+    resolve(result);
+  });
+})();
