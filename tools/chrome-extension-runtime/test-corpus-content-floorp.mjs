@@ -167,6 +167,13 @@ export async function runAllTests() {
         win.gBrowser.selectedTab = tab;
         try {
           item.baseline = await until(async () => {
+            // Request the actor only after this owned fixture document commits.
+            if (
+              tab.linkedBrowser.browsingContext.currentWindowGlobal?.documentURI
+                .spec !== fixture
+            ) {
+              return null;
+            }
             const value = await snapshot(tab).catch(() => null);
             return value?.ready === "complete" && value.text ? value : null;
           }, "authored baseline");
