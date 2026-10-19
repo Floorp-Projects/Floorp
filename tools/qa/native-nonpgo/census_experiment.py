@@ -20,6 +20,36 @@ from unittest_receipt import receipt as unittest_receipt
 HERE = Path(__file__).resolve().parent
 
 
+def verify_sdk_acquisition(task, runner, env, result, source_path=None):
+    acquired=json.loads((task/'sdk-download/receipt.json').read_text())
+    from sdk_source import load_sdk_source, validate_acquisition_receipt
+    sdk_source=load_sdk_source(HERE/'plan.json',source_path)
+    pin=sdk_source['pin']
+    if source_path is not None:
+        validate_acquisition_receipt(acquired,sdk_source)
+    require(acquired['artifact']==pin['artifact'] and acquired['run']==pin['run'] and
+            acquired['attempt']==pin['attempt'] and acquired['zipSHA256']==pin['zipSHA256'] and
+            acquired['tarSHA256']==pin['tarSHA256'] and acquired['bytes']==pin['tarBytes'] and
+            acquired['crcVerified'] is True,'census-experiment-sdk-acquisition')
+    result['sdkAcquired']=True
+    sdk_command=[sys.executable,str(HERE/'materialize.py'),'sdk','--task',str(task)]
+    if source_path is not None:
+        sdk_command+=['--sdk-source',str(source_path.resolve())]
+    runner.run('sdk-materialize',sdk_command,
+               task,env,360,phase_deadline_minutes=15)
+    materialized=json.loads((task/'sdk-materialized.json').read_text())
+    require(materialized['canonicalSHA256']==pin['draftReaderTreeSHA256'],
+            'census-experiment-sdk-tree')
+    result['sdkVerification']={'status':'passed','artifact':pin['artifact'],'run':pin['run'],
+        'zipSHA256':pin['zipSHA256'],'tarSHA256':pin['tarSHA256'],
+        'treeSHA256':materialized['canonicalSHA256'],'members':materialized['members'],
+        'logicalBytes':materialized['logicalBytes'],'version':pin['version']}
+    if source_path is not None:
+        result['sdkVerification']['acquisitionSource']={key:sdk_source[key] for key in
+            ('qualification','sourceSHA256','baselinePlanSHA256','uncompressedTar','producerJob')}
+
+
+
 def cleanup_child(child):
     value={'leaderReaped':False,'exitCode':None,'groupCleanup':'unverified','cleanupFailure':None}
     operation='poll'
@@ -114,8 +144,10 @@ def main():
     parser.add_argument('--inventory-stress',action='store_true')
     parser.add_argument('--native-selection-repeats',type=int,default=0)
     parser.add_argument('--verify-sdk',action='store_true')
+    parser.add_argument('--sdk-source',type=Path)
     args=parser.parse_args()
     require(0<=args.native_selection_repeats<=10,'native-selection-repeat-bound')
+    require(args.sdk_source is None or args.verify_sdk,'sdk-source-mode')
     task=args.task
     plan=json.loads((HERE/'plan.json').read_text())
     runner=Runner(task,float((task/'started').read_text()),plan['limits'])
@@ -141,22 +173,7 @@ def main():
         require(version.read_text().strip()==plan['runner']['osVersion'],'census-experiment-os')
         if args.verify_sdk:
             stage='sdk-verification'
-            acquired=json.loads((task/'sdk-download/receipt.json').read_text())
-            pin=plan['sdk']
-            require(acquired['artifact']==pin['artifact'] and acquired['run']==pin['run'] and
-                    acquired['attempt']==pin['attempt'] and acquired['zipSHA256']==pin['zipSHA256'] and
-                    acquired['tarSHA256']==pin['tarSHA256'] and acquired['bytes']==pin['tarBytes'] and
-                    acquired['crcVerified'] is True,'census-experiment-sdk-acquisition')
-            result['sdkAcquired']=True
-            runner.run('sdk-materialize',[sys.executable,str(HERE/'materialize.py'),'sdk','--task',str(task)],
-                       task,env,360,phase_deadline_minutes=15)
-            materialized=json.loads((task/'sdk-materialized.json').read_text())
-            require(materialized['canonicalSHA256']==pin['draftReaderTreeSHA256'],
-                    'census-experiment-sdk-tree')
-            result['sdkVerification']={'status':'passed','artifact':pin['artifact'],'run':pin['run'],
-                'zipSHA256':pin['zipSHA256'],'tarSHA256':pin['tarSHA256'],
-                'treeSHA256':materialized['canonicalSHA256'],'members':materialized['members'],
-                'logicalBytes':materialized['logicalBytes'],'version':pin['version']}
+            verify_sdk_acquisition(task,runner,env,result,args.sdk_source)
         stage='tests'
         try:
             runner.run('checkpoint-tests',[sys.executable,'-m','unittest','discover','-v'],HERE,env,360,phase_deadline_minutes=15)

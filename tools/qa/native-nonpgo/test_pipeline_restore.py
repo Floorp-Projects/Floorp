@@ -78,7 +78,7 @@ class RestoreOnlyFlow(unittest.TestCase):
             object_path.write_bytes(b'object')
         return path
 
-    def invoke(self, *, restore_only=True, mozilla_only=False):
+    def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
                 '--checkpoint-role', 'consumer', '--replay-origin']
@@ -86,6 +86,8 @@ class RestoreOnlyFlow(unittest.TestCase):
             argv += ['--restore-only']
         if mozilla_only:
             argv += ['--mozilla-only']
+        if sdk_source is not None:
+            argv += ['--sdk-source', str(sdk_source)]
         with mock.patch('sys.argv', argv), \
                 mock.patch.dict(os.environ, {'CHECKPOINT_BUILD_DATE': '20261019035607'}), \
                 mock.patch.object(pipeline, 'Runner', return_value=self.runner), \
@@ -153,6 +155,46 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(report['firstFailure'],{'stage':'checkpoint-restore',
                                                'code':'test-original-restore-failure'})
         self.public_restore.assert_not_called()
+
+    def sdk_source_fixture(self):
+        from sdk_source import load_sdk_source, acquisition_receipt
+        path = Path(pipeline.HERE) / 'sdk_source.json'
+        spec = load_sdk_source(Path(pipeline.HERE) / 'plan.json', path)
+        target = self.task / 'sdk-download/receipt.json'
+        target.parent.mkdir()
+        target.write_text(json.dumps(acquisition_receipt(spec)))
+        return path, spec, target
+
+    def test_alternate_sdk_forwards_explicit_source_and_reports_actual_acquisition(self):
+        path, spec, _ = self.sdk_source_fixture()
+        code, report, _ = self.invoke(sdk_source=path)
+        self.assertEqual(code, 0)
+        command = next(call.args[1] for call in self.runner.run.call_args_list if call.args[0]=='sdk-materialize')
+        self.assertEqual(command[-2:], ['--sdk-source', str(path.resolve())])
+        self.assertEqual(report['sdk']['artifact'], spec['pin']['artifact'])
+        self.assertEqual(report['sdk']['sourceRun'], spec['pin']['run'])
+        self.assertEqual(report['sdk']['tarSHA256'], spec['pin']['tarSHA256'])
+        self.assertNotEqual(report['sdk']['artifact'], json.loads((pipeline.HERE/'plan.json').read_text())['sdk']['artifact'])
+        self.assertEqual(report['sdk']['acquisitionSource']['uncompressedTar'], spec['uncompressedTar'])
+
+    def test_missing_alternate_sdk_receipt_cannot_qualify_restore(self):
+        path, _, receipt = self.sdk_source_fixture()
+        receipt.unlink()
+        code, report, _ = self.invoke(sdk_source=path)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['status'], 'failed')
+        self.assertNotIn('sdk', report)
+        self.assertIn('sdkEvidenceError', report)
+
+    def test_foreign_alternate_sdk_receipt_cannot_claim_actual_source(self):
+        path, _, receipt = self.sdk_source_fixture()
+        value = json.loads(receipt.read_text())
+        value['artifact'] = 12133086104
+        receipt.write_text(json.dumps(value))
+        code, report, _ = self.invoke(sdk_source=path)
+        self.assertEqual(code, 1)
+        self.assertNotIn('sdk', report)
+        self.assertEqual(report['sdkEvidenceError'], 'Failure')
 
     def test_mozilla_only_finishes_real_build_then_has_separate_qualification(self):
         self.stop_at_full_build = False

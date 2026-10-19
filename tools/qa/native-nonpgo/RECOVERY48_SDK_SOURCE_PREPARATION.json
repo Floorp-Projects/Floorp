@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY48_SDK_ACQUISITION_SOURCE_PREPARATION",
+  "priorSourceFixture": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+  "fixedSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "qualification": "official-artifact-identical-uncompressed-tar-v1",
+  "implementation": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.py",
+        "bytes": 8194,
+        "sha256": "c7b84cfed8b85d96315fadd785d664e55e33be4edc1f7137e71d42de33bb06c2"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "bytes": 1030,
+        "sha256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+        "bytes": 16070,
+        "sha256": "12f2a907f69ba43e32e1b0ad92a40d8a9047b5cde54f19b42eb94e564a499e02"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "bytes": 4974,
+        "sha256": "89fa1eb5217cc7f2508955e42c4e110aafc2068c120a96a638940aef3297b832"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/materialize.py",
+        "bytes": 2866,
+        "sha256": "8f927ee0f8428e2a7b3de8d32e07bf1a9a51018776588d90afebd0494c875491"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 44683,
+        "sha256": "6007e9a8440aaa4b237a8f011f6abc4ba602b252ac1a1abe89c8c9180d62696a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/census_experiment.py",
+        "bytes": 14466,
+        "sha256": "8f33e00fb2295926060b2714a3400382491de9b0f4c8f34cca10f608686e45cc"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 13466,
+        "sha256": "3f6ff2437ead9c32493f4bc01a3b3b41cf1eba08eeb52737c85b48c90f899aac"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+        "bytes": 13763,
+        "sha256": "e0e844d220c54a69952d952ef1a2ea11018a30def1cfe01479a649769b970f79"
+      }
+    ],
+    "baselineFixture": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+    "qualification": "official-artifact-identical-uncompressed-tar-v1",
+    "existing47Changed": false,
+    "newCIStarted": false,
+    "unchangedPlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "resolvedP2": {
+      "code": "expiry-during-producer-check",
+      "oldRejectedControl": "red: expected sdk-expired was not raised",
+      "newRejectedControl": "green: no zip request or payload download after clock reaches expiry",
+      "defaultSequenceChanged": false
+    }
+  },
+  "localQA": {
+    "returnCode": 0,
+    "elapsedSeconds": 31.684,
+    "tests": {
+      "status": "passed",
+      "complete": true,
+      "total": 618,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    "logBytes": 120826,
+    "logSHA256": "6f74eb4a4075c8adf0f3808306f1d66a603001d172ffab08e16f70a3e9ad3fd8"
+  },
+  "macSelectedPreflightTests": 403,
+  "separateRecordingTests": 14,
+  "sourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+  "guards": {
+    "defaultAcquisitionUnchanged": true,
+    "alternateRequiresExplicitCLI": true,
+    "baselinePlanBytesAndCheckpointContextUnchanged": true,
+    "sourceRunHeadAttemptCompletedAndSDKProducerSuccessFromNormalAPI": true,
+    "unexpiredBeforeAcquisitionIncludingAfterProducerCheck": true,
+    "HTTPFailuresStop": true,
+    "downloadDeadlineSeconds": 600,
+    "fixedNewZIPAndCompressedTARHashes": true,
+    "exactUncompressedTARBytesAndSHA256": true,
+    "canonicalTreeVersionAndSDKReferenceModesUnchanged": true,
+    "materializeDoesNotRequeryArtifactExpiry": true,
+    "actualAcquisitionIdentityInPublicReceipt": true,
+    "receiptNeverSuppliesTrustedHashes": true
+  },
+  "limits": {
+    "actualMacAcquisitionUsingAlternate": "NOT_TESTED",
+    "actualMozillaHarness": "NOT_TESTED",
+    "run47": "in_progress_at_preparation",
+    "run47ID": 39212933648,
+    "originalNativeExitCause": "UNKNOWN",
+    "productSigningOrAuthChanged": false,
+    "newProducerOrUpload": false,
+    "expiryBypass": false,
+    "planMutated": false
+  },
+  "hypothesis": "A new official archive with identical complete decompressed TAR can supply the same SDK while its different ZIP/gzip encodings are checked against explicit new hashes. Checkpoint context equality remains exact. This change does not establish build or Mozilla test success."
+}

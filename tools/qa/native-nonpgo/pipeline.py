@@ -18,6 +18,7 @@ from support import (Failure, Runner, clean_environment, digest, download,
                      extract_tar, require, scan_tar, write_json)
 from owned_native import OwnedNative
 from checkpoint_public import public_restore
+from sdk_source import load_sdk_source, validate_acquisition_receipt
 
 
 HERE = Path(__file__).resolve().parent
@@ -332,6 +333,7 @@ def main():
     parser.add_argument('--restore-only', action='store_true')
     parser.add_argument('--mozilla-only', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
+    parser.add_argument('--sdk-source', type=Path)
     args = parser.parse_args()
     require(not args.restore_only or args.checkpoint_role == 'consumer', 'checkpoint-restore-only-role')
     require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
@@ -347,6 +349,7 @@ def main():
     report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
     stage = 'preflight'
+    sdk_source = None
     checkpoint_role = args.checkpoint_role
     if checkpoint_role:
         report.update(qualification=plan['checkpoint']['qualification'], freshObjdir=False,
@@ -357,6 +360,7 @@ def main():
         runner.phase_deadline_minutes = plan['checkpoint'][
             'producerBuildDeadlineMinutes' if checkpoint_role == 'producer' else 'consumerRestoreDeadlineMinutes']
     try:
+        sdk_source = load_sdk_source(HERE / 'plan.json', args.sdk_source)
         (task / 'tmp').mkdir(mode=0o700)
         basic_env = clean_environment(task)
         basic_env['PATH'] += ':/usr/local/bin'
@@ -367,8 +371,10 @@ def main():
         stage = 'harness'
         report['harness'] = prepare_harness(plan, args.harness, args.fixture, runner, basic_env)
         stage = 'sdk'
-        runner.run('sdk-materialize', [sys.executable, str(HERE / 'materialize.py'), 'sdk',
-                   '--task', str(task)], task, basic_env, plan['limits']['jobMinutes'])
+        sdk_command = [sys.executable, str(HERE / 'materialize.py'), 'sdk', '--task', str(task)]
+        if args.sdk_source is not None:
+            sdk_command += ['--sdk-source', str(args.sdk_source.resolve())]
+        runner.run('sdk-materialize', sdk_command, task, basic_env, plan['limits']['jobMinutes'])
         sdk = Path(json.loads((task / 'sdk-materialized.json').read_text())['path'])
         require(sdk.resolve().is_relative_to(task), 'sdk-materialized-path')
         stage = 'toolchains'
@@ -574,10 +580,22 @@ def main():
                     value = json.loads(candidate.read_text())
                     if key == 'sdk':
                         value.pop('path', None)
-                        value.update({'artifact': plan['sdk']['artifact'], 'sourceRun': plan['sdk']['run'],
-                                      'zipSHA256': plan['sdk']['zipSHA256'], 'tarSHA256': plan['sdk']['tarSHA256']})
+                        if args.sdk_source is None:
+                            value.update({'artifact': plan['sdk']['artifact'], 'sourceRun': plan['sdk']['run'],
+                                          'zipSHA256': plan['sdk']['zipSHA256'], 'tarSHA256': plan['sdk']['tarSHA256']})
+                        else:
+                            require(sdk_source is not None, 'sdk-source-not-validated')
+                            acquired = validate_acquisition_receipt(
+                                json.loads((task / 'sdk-download/receipt.json').read_text()), sdk_source)
+                            value.update({'artifact': acquired['artifact'], 'sourceRun': acquired['run'],
+                                          'attempt': acquired['attempt'], 'zipSHA256': acquired['zipSHA256'],
+                                          'tarSHA256': acquired['tarSHA256'],
+                                          'acquisitionSource': {key: sdk_source[key] for key in
+                                              ('qualification', 'sourceSHA256', 'baselinePlanSHA256',
+                                               'uncompressedTar', 'producerJob')},
+                                          'baselineTarSHA256': plan['sdk']['tarSHA256']})
                     report[key] = value
-            except (ValueError, OSError) as error:
+            except (Failure, ValueError, OSError) as error:
                 report['status'] = 'failed'
                 report[key + 'EvidenceError'] = type(error).__name__
         report['run'] = {key: os.environ.get(name) for key, name in

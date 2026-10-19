@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "review": "Explicit alternate official SDK acquisition implementation",
+  "reviewedAtUtc": "2026-10-19T09:41:07.700762+00:00",
+  "decision": {
+    "source": "CLEAR",
+    "route": "CONDITIONAL_GO_AFTER_IMMUTABLE_BINDING_AND_EXISTING_ACTIVATION_GATES",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0
+  },
+  "baselineFixture": "12e3fe947973c64dfa7a9257427707e5c5fcb9a9",
+  "sourceFreeze": {
+    "bytes": 2158,
+    "sha256": "10410bdea65d3643caa39f346967a30c33b677cd1315107eb0e1aa4c6b5289e7"
+  },
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/sdk_source.py",
+      "bytes": 8194,
+      "sha256": "c7b84cfed8b85d96315fadd785d664e55e33be4edc1f7137e71d42de33bb06c2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/sdk_source.json",
+      "bytes": 1030,
+      "sha256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+      "bytes": 16070,
+      "sha256": "12f2a907f69ba43e32e1b0ad92a40d8a9047b5cde54f19b42eb94e564a499e02"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4974,
+      "sha256": "89fa1eb5217cc7f2508955e42c4e110aafc2068c120a96a638940aef3297b832"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/materialize.py",
+      "bytes": 2866,
+      "sha256": "8f927ee0f8428e2a7b3de8d32e07bf1a9a51018776588d90afebd0494c875491"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 44683,
+      "sha256": "6007e9a8440aaa4b237a8f011f6abc4ba602b252ac1a1abe89c8c9180d62696a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/census_experiment.py",
+      "bytes": 14466,
+      "sha256": "8f33e00fb2295926060b2714a3400382491de9b0f4c8f34cca10f608686e45cc"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 13466,
+      "sha256": "3f6ff2437ead9c32493f4bc01a3b3b41cf1eba08eeb52737c85b48c90f899aac"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+      "bytes": 13763,
+      "sha256": "e0e844d220c54a69952d952ef1a2ea11018a30def1cfe01479a649769b970f79"
+    }
+  ],
+  "unchangedGuardBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+      "bytes": 11556,
+      "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 9635,
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "status": "RESOLVED",
+      "issue": "Alternate acquisition initially checked expiry before a potentially delayed producer metadata request, permitting the later ZIP request to cross expiry.",
+      "fix": "After successful fixed producer verification, recheck the same artifact expiry against current UTC immediately before requesting the ZIP redirect. Default acquisition order remains unchanged.",
+      "negativeControl": "Producer verification advances the clock to expiry; sdk-expired is raised before ZIP/payload request or output directory creation.",
+      "finalCode": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "finalTest": "tools/qa/native-nonpgo/test_sdk_source_integration.py::SDKSourceIntegration.test_expiry_during_producer_check_stops_before_zip_request"
+    }
+  ],
+  "contractChecks": {
+    "explicitSelection": "No --sdk-source preserves original plan pin, original receipt shape and original acquisition/materialization guards. Alternate is never an implicit fallback.",
+    "immutableAlternate": "Fixed code constants and exact typed JSON jointly bind baseline plan SHA256, original compressed TAR SHA256, Runtime ref, producer job, new artifact/run/attempt, ZIP/TAR pins and raw TAR anchor; duplicate/unknown keys and bool-as-int identities reject.",
+    "normalProvenance": "Official fixed-repository metadata requires matching artifact/run/size/digest, completed source/head/attempt, successful exact SDK producer job/run/attempt/name and unexpired artifact. Source run overall failure is distinguished from SDK producer success.",
+    "wireVsContent": "New ZIP and compressed TAR hashes remain different and are recorded honestly. Both original and new compressed streams expand to the identical complete TAR bytes, including header metadata, validated independently and pinned at runtime.",
+    "runtimeIntegrity": "Fetch verifies new ZIP size/hash/CRC/layout, compressed TAR size/hash and bounded full raw TAR hash before success receipt. Materialize revalidates trusted receipt, compressed and raw TAR hashes, canonical tree and SDK version before use.",
+    "consistentOptIn": "Pipeline forwards the explicit source to materialize; census --verify-sdk uses the same source loader and receipt validator. A source supplied without SDK verification is rejected in census mode.",
+    "receiptAuthority": "Receipt cannot choose its own identity or hashes; validation compares exact recursive shape/type/value to freshly built trusted data.",
+    "publicEvidence": "Alternate SDK evidence identifies actual artifact/run/attempt/ZIP/TAR, source JSON digest, raw TAR anchor and original content baseline separately. Invalid/missing acquisition evidence fails without substituting the historical source.",
+    "checkpointCompatibility": "Plan bytes/context comparisons, SDK reference mode/content comparison, typed roots, archive integrity, replay origin and actual effective configuration guards remain unchanged. No manifest or actual GITHUB environment rewrite.",
+    "deadlinesAndPrivileges": "Existing 600-second payload download check, 12-minute workflow SDK step requirement, resource monitoring/cleanup and finite phase/job limits remain required; no new privilege, signing, retention or authentication scope.",
+    "postAcquisitionExpiry": "Legitimately acquired verified local SDK can materialize after later service expiry; no additional network retrieval is needed or permitted by that fact."
+  },
+  "independentExecution": {
+    "platform": "Linux x86_64",
+    "fullSuite": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "cwd": "tools/qa/native-nonpgo",
+      "total": 618,
+      "passed": 601,
+      "skippedDarwinOnly": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 31.319,
+      "log": {
+        "bytes": 10733,
+        "sha256": "2c4eefb7ac43d7b3c2ca78dd371bd5907adc0c60c64a7041b88537b6274ea6ba"
+      }
+    },
+    "earlierFocusedSuite": {
+      "total": 68,
+      "passed": 68,
+      "skipped": 0,
+      "seconds": 0.158,
+      "scope": "SDK source/integration, pipeline restore, legacy SDK guards and census tests before final expiry-boundary regression was added. Final full suite includes that regression.",
+      "log": {
+        "bytes": 98,
+        "sha256": "deb6768ad2d9d0c8508844a52194c0587c7b2e836ec9dae12380004ab6617559"
+      }
+    },
+    "existingLocalPayloadControl": {
+      "status": "PASS",
+      "oldCompressedTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+      "newCompressedTarSHA256": "f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328",
+      "zipBytes": 105082683,
+      "zipCrcVerified": true,
+      "compressedTarBytes": 105567985,
+      "gzipDifferenceOffsets": [
+        4,
+        5,
+        6
+      ],
+      "rawTarAllBytesEqual": true,
+      "uncompressedTar": {
+        "bytes": 760518144,
+        "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+      },
+      "canonicalTree": {
+        "members": 49701,
+        "logicalBytes": 704719765,
+        "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+      },
+      "version": "26.5",
+      "sourceSpecificationFixed": true,
+      "payloadAcquired": false,
+      "wireRewritten": false,
+      "evidence": {
+        "bytes": 799,
+        "sha256": "797fd150b31921bee98edf0b01b633cdc994f0211d5b4025356918fd1ffd96c7"
+      }
+    },
+    "payloadControlScope": "Existing local artifacts only; independently hashed both compressed TARs, compared every decompressed TAR byte, verified new ZIP CRC/hash and tested production raw-TAR helper, canonical tree and version. No download or rewriting."
+  },
+  "ordinaryApiMetadata": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "sourceRun": {
+      "id": 39162639256,
+      "attempt": 1,
+      "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    "sdkProducer": {
+      "id": 117779018335,
+      "matchingEntries": 1,
+      "run": 39162639256,
+      "attempt": 1,
+      "name": "Mac build / download-macos-sdk",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "sdkArtifact": {
+      "id": 12149860607,
+      "matchingEntries": 1,
+      "name": "macos-sdk",
+      "sourceRun": 39162639256,
+      "size": 105082683,
+      "digest": "sha256:2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+      "expired": false,
+      "expiresAt": "2026-10-19T20:18:26Z"
+    },
+    "responseBindings": {
+      "run": {
+        "bytes": 15389,
+        "sha256": "46b842b9748d7375a68a4631ffef5665c28b4c58cfd994ab4afd02989b59ca2f"
+      },
+      "jobsCollection": {
+        "bytes": 85658,
+        "sha256": "5cc3c404b697f3656b8c37c7dcec07044bf08bd752d176698b365478abb40f69"
+      },
+      "artifactsCollection": {
+        "bytes": 18845,
+        "sha256": "22e300e36b25c740edb33ec8ac29a77b4bcbbce9a2e77f5fc57d71c102b8569c"
+      }
+    },
+    "scope": "Metadata was checked through ordinary run/jobs/artifact collections. API metadata is not claimed to provide a direct artifact-to-uploading-job cryptographic relation. Fresh actual-acquisition checks remain mandatory."
+  },
+  "supportingEvidence": {
+    "originalDesignReview": {
+      "bytes": 5919,
+      "sha256": "422ca3c9a891f922107015a989b9a400d560529d856e9184562c8ee70cf6d04f"
+    },
+    "normalRouteAndContentInvestigation": {
+      "bytes": 9388,
+      "sha256": "99fd4a311107cea23051fdcdb4139029326935edb2f48e1fa523426e9d2322ba"
+    },
+    "existingPayloadProductionHelperResult": {
+      "bytes": 1396,
+      "sha256": "1bf56fe65537b4c412fa1a3287823de10979f40222729d3e1b0fd8e7d0ce545a"
+    }
+  },
+  "remainingGates": [
+    "Bind these exact files into immutable fixture/provider readback and review the updated single-consumer caller and explicit source arguments before activation.",
+    "Wait for run39212933648 terminal and independent review; do not overlap or modify that execution.",
+    "Recheck unused branch, no owned active/queued execution, official fresh unexpired SDK and existing checkpoint metadata/provenance/size/digests, and actual current/origin identity.",
+    "Actual Mac workflow must run its correctly counted QA suite plus 14 recording tests without skips, and actual acquisition/materialization/restore/current configuration must pass. Linux tests and local content equality do not establish actual Mac build, Mozilla smoke or native authentication.",
+    "Do not reuse the old expired artifact source, overwrite the original plan/manifest context, or classify this as a fresh same-job build or product qualification."
+  ],
+  "scopeLimits": [
+    "Historical native and monitor failure causes remain unresolved.",
+    "No final new fixture/caller commit was supplied for this implementation review; execution GO remains conditional."
+  ],
+  "operations": {
+    "sourceEdits": false,
+    "ciOrRefMutation": false,
+    "active47PollingOrLogRead": false,
+    "payloadDownload": false,
+    "artifactUpload": false,
+    "wireRewrite": false,
+    "permissionSigningAuthChange": false
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "status": "same-uncompressed-sdk-different-wire-archives",
+  "observedAt": "2026-10-19T09:20:06Z",
+  "contentVerifiedAt": "2026-10-19T09:25:21.267285+00:00",
+  "repository": "Floorp-Projects/Floorp-Runtime",
+  "sourceCommit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "normalProducerRoute": {
+    "workflow": ".github/workflows/daily-build.yml",
+    "workflowID": 142881703,
+    "branch": "nora-0.2.0",
+    "event": "schedule",
+    "cronUTC": [
+      "0 6 * * *",
+      "0 18 * * *"
+    ],
+    "reusableWorkflow": ".github/workflows/wrapper-mac-build.yml",
+    "job": "download-macos-sdk",
+    "runnerLabel": "macos-26",
+    "source": "Stable Xcode already installed in the standard GitHub runner image, selected at SDK >=26.4 and resolved with xcrun.",
+    "packaging": "tar -czf macos_sdk.tar.gz -C SDK_PATH .; ordinary upload-artifact macos-sdk",
+    "retentionDays": 1,
+    "sources": {
+      "daily-build.yml": {
+        "gitBlobSHA1": "fef8955927c395543ee6f589d3cdc37320e12ebb",
+        "sha256": "d14c6b15be1680f7c8fefa9f90823ec1b0b9135cf9a16d64e600cb5efdbed273",
+        "bytes": 23890,
+        "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/daily-build.yml"
+      },
+      "wrapper-mac-build.yml": {
+        "gitBlobSHA1": "0b17a95c7b43fd227ecc4e5a3213f86cfa19a296",
+        "sha256": "1c92a789dba7281226256ea963a8ce642131d8ef26822348eeae64e845cdd862",
+        "bytes": 6717,
+        "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/.github/workflows/wrapper-mac-build.yml"
+      }
+    },
+    "originalProducer": {
+      "id": 117646143247,
+      "name": "Mac build [PGO] / download-macos-sdk",
+      "status": "completed",
+      "conclusion": "success",
+      "labels": [
+        "macos-26"
+      ],
+      "startedAt": "2026-10-18T09:59:50Z",
+      "completedAt": "2026-10-18T10:00:46Z"
+    },
+    "candidateProducer": {
+      "id": 117779018335,
+      "name": "Mac build / download-macos-sdk",
+      "status": "completed",
+      "conclusion": "success",
+      "labels": [
+        "macos-26"
+      ],
+      "startedAt": "2026-10-18T20:17:58Z",
+      "completedAt": "2026-10-18T20:18:31Z"
+    },
+    "bothProducerLogObservations": {
+      "runnerImage": "macos-26-arm64",
+      "xcodePath": "/Applications/Xcode_26.6.app",
+      "xcodeVersion": "26.6",
+      "xcodeBuild": "17F113",
+      "sdkPath": "/Applications/Xcode_26.6.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk"
+    }
+  },
+  "candidateRun": {
+    "id": 39162639256,
+    "workflow_id": 142881703,
+    "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "head_branch": "nora-0.2.0",
+    "path": ".github/workflows/daily-build.yml",
+    "event": "schedule",
+    "status": "completed",
+    "conclusion": "failure",
+    "run_attempt": 1,
+    "created_at": "2026-10-18T20:17:38Z",
+    "updated_at": "2026-10-18T23:32:48Z"
+  },
+  "originalArtifact": {
+    "id": 12133086104,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "expired": false,
+    "createdAt": "2026-10-18T10:00:44Z",
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "workflowRun": {
+      "id": 39117481043,
+      "repository_id": 914860957,
+      "head_repository_id": 914860957,
+      "head_branch": "nora-0.2.0",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b"
+    }
+  },
+  "candidateArtifact": {
+    "id": 12149860607,
+    "name": "macos-sdk",
+    "bytes": 105082683,
+    "digest": "sha256:2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+    "expired": false,
+    "createdAt": "2026-10-18T20:18:29Z",
+    "expiresAt": "2026-10-19T20:18:26Z",
+    "workflowRun": {
+      "id": 39162639256,
+      "repository_id": 914860957,
+      "head_repository_id": 914860957,
+      "head_branch": "nora-0.2.0",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b"
+    }
+  },
+  "candidateProvenance": {
+    "sameSourceCommit": true,
+    "sameWorkflowDefinition": true,
+    "normalScheduledRun": true,
+    "SDKProducerSucceeded": true,
+    "wholeDailyRunSucceeded": false,
+    "unexpiredAtMetadataReadAndAcquisition": true,
+    "artifactListComplete": true,
+    "officialArtifactDownloadSucceeded": true,
+    "TLSAndHTTPSOnly": true,
+    "download600SecondsAndExactZIPSizeAndHash": true,
+    "signedURLInEvidence": false
+  },
+  "contentIdentity": {
+    "zipSingleExpectedEntry": true,
+    "zipEntryUnencrypted": true,
+    "zipCRCComplete": true,
+    "uncompressedTarAllBytesIdentical": true,
+    "uncompressedTarBytes": 760518144,
+    "uncompressedTarSHA256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3",
+    "allTARHeadersModesTimesIncludedInHash": true,
+    "canonicalTreeIdentical": true,
+    "tree": {
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+    },
+    "versionIdentical": true,
+    "version": "26.5"
+  },
+  "wireIdentity": {
+    "zipSHA256Identical": false,
+    "compressedTarSHA256Identical": false,
+    "oldZIP": {
+      "bytes": 105082683,
+      "sha256": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889"
+    },
+    "newZIP": {
+      "bytes": 105082683,
+      "sha256": "2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b"
+    },
+    "oldTARGzip": {
+      "bytes": 105567985,
+      "sha256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4"
+    },
+    "newTARGzip": {
+      "bytes": 105567985,
+      "sha256": "f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328"
+    },
+    "compressedByteDifferences": 3,
+    "differenceOffsets": [
+      4,
+      5,
+      6
+    ],
+    "onlyGzipMtimeDiffers": true,
+    "gzipMTimes": {
+      "existing": "2026-10-18T09:59:54+00:00",
+      "candidate": "2026-10-18T20:18:00+00:00"
+    },
+    "oldZIPAndCompressedTARPinsQualified": false,
+    "recompressedOrRewritten": false
+  },
+  "scope": "Existing scheduled SDK artifact read and full content comparison; no CI started.",
+  "operations": {
+    "oldArtifactReacquired": false,
+    "newCIOrProducer": false,
+    "newUpload": false,
+    "retentionChanged": false,
+    "authChanged": false,
+    "expiryBypass": false,
+    "existing47Changed": false,
+    "SDKRecompressed": false,
+    "planOrCallerChanged": false
+  },
+  "observedSnapshotNotFutureAvailabilityGuarantee": true,
+  "rawLogsOrDownloadURLsPublished": false,
+  "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "actualHelperValidation": {
+    "status": "verified-existing-local-normal-artifact",
+    "artifact": 12149860607,
+    "run": 39162639256,
+    "producerJob": 117779018335,
+    "uncompressedTar": {
+      "bytes": 760518144,
+      "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+    },
+    "sourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "qualification": "official-artifact-identical-uncompressed-tar-v1",
+    "receipt": {
+      "artifact": 12149860607,
+      "run": 39162639256,
+      "attempt": 1,
+      "zipSHA256": "2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b",
+      "tarSHA256": "f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328",
+      "bytes": 105567985,
+      "crcVerified": true,
+      "signedURLPublished": false,
+      "sourceSHA256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25",
+      "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "qualification": "official-artifact-identical-uncompressed-tar-v1",
+      "uncompressedTar": {
+        "bytes": 760518144,
+        "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+      }
+    },
+    "baselinePlanUnchanged": true,
+    "newDownload": false,
+    "newCI": false,
+    "wireRecompressed": false,
+    "allFileDescriptorsClosed": true
+  }
+}
