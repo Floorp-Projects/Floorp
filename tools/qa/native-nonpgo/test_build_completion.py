@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
 import tempfile
+import time
 import tracemalloc
 import unittest
 from unittest import mock
@@ -433,7 +435,18 @@ class CompletionTests(unittest.TestCase):
                          separators=(',', ':')).encode()
         self.assertGreater(len(raw), 16 * 1024**2)
         self.write(raw)
+        started = time.monotonic()
         value = bc.collect(self.task, self.snapshot)
+        elapsed = time.monotonic() - started
+        from unittest_receipt import DENSITY_ID, density_public
+        diagnostic = density_public({'schema': 1, 'case': DENSITY_ID,
+            'status': value['status'], 'reason': value['reason'], 'elapsedSeconds': elapsed,
+            'inputBytes': len(raw), 'inputSHA256': hashlib.sha256(raw).hexdigest(),
+            'resourceRows': 1000000, 'processingSeconds': bc.PROCESSING_SECONDS,
+            'completeCoverage': value['completeCoverage'],
+            'objectCount': (value['finishedTargetMarkers'] or {}).get('Object'),
+            'compileCount': (value['finishedTierMarkers'] or {}).get('compile')})
+        print(json.dumps({'buildCompletionDensityDiagnostic': diagnostic}), flush=True)
         self.assertEqual(value['status'], 'observed')
         self.assertEqual(value['finishedTargetMarkers']['Object'], 1)
         self.assertEqual(value['finishedTierMarkers']['compile'], 1)

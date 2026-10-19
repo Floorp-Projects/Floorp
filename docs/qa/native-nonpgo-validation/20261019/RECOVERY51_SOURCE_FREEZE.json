@@ -1,0 +1,29 @@
+{
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 30711,
+      "sha256": "348aa2161cc38b2e391f9da1919e9370386355d76ddd8aea808785efa239b9f7"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 23266,
+      "sha256": "d08ca28513553b985188c41e1a4df864e004abbbfd4d08783c7a9135283e064d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 25679,
+      "sha256": "e4bd5249891926780eaee46c9f2dcfb28269d75945d81841defbb00eef317d59"
+    }
+  ],
+  "unchangedParserSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+  "fullQA": 737,
+  "MacQA": 522,
+  "recording": 14,
+  "densityInputBytes": 195000385,
+  "densityInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+  "resourceRows": 1000000,
+  "processingSeconds": 30,
+  "failedObservationAssertionLine": 450,
+  "codeChangesFrozen": true
+}

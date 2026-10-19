@@ -5,7 +5,8 @@ import tempfile
 import unittest
 
 from unittest_receipt import (receipt,held_child_public,held_child_control_passed,held_resource_public,
-    HELD_CHILD_CASE,HELPER_WORKER_CASE,HELPER_WORKER_ID,HELPER_WORKER_METHOD)
+    HELD_CHILD_CASE,HELPER_WORKER_CASE,HELPER_WORKER_ID,HELPER_WORKER_METHOD,
+    DENSITY_CASE,DENSITY_ID,DENSITY_METHOD,density_public)
 
 
 class UnittestReceiptGuards(unittest.TestCase):
@@ -13,6 +14,82 @@ class UnittestReceiptGuards(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.path = Path(self.directory.name)/'unittest.private.log'
+
+    def density_value(self, observed=False):
+        return {'schema':1,'case':DENSITY_ID,'status':'observed' if observed else 'unconfirmed',
+            'reason':'build-completion-profile-parsed' if observed else 'build-completion-processing-limit',
+            'elapsedSeconds':8.25 if observed else 30.001,'inputBytes':195000000,
+            'inputSHA256':'a'*64,'resourceRows':1000000,'processingSeconds':30,
+            'completeCoverage':observed,'objectCount':1 if observed else None,
+            'compileCount':1 if observed else None}
+
+    def write_density(self,value,failed=True):
+        marker=json.dumps({'buildCompletionDensityDiagnostic':value})
+        ending=('FAIL\nFAIL: '+DENSITY_METHOD+' ('+DENSITY_ID+')\n'
+            'AssertionError: PRIVATE-ASSERTION /Users/private/input\n'
+            'Ran 1 test in 31.0s\nFAILED (failures=1)\n') if failed else (
+            'ok\nRan 1 test in 9.0s\nOK\n')
+        self.path.write_text(DENSITY_CASE+' ... '+marker+'\n'+ending)
+        return marker
+
+    def test_density_failed_observation_retains_reason_and_elapsed_without_exception_text(self):
+        value=self.density_value();self.write_density(value)
+        result=receipt(self.path)
+        self.assertTrue(result['complete']);self.assertEqual(result['failures'],1)
+        self.assertEqual(result['buildCompletionDensityDiagnostics'],[value])
+        self.assertNotIn('PRIVATE',json.dumps(result));self.assertNotIn('/Users/',json.dumps(result))
+
+    def test_density_observed_control_retains_positive_counts_and_passes(self):
+        value=self.density_value(True);self.write_density(value,failed=False)
+        result=receipt(self.path)
+        self.assertTrue(result['complete']);self.assertEqual(result['status'],'passed')
+        self.assertEqual(result['buildCompletionDensityDiagnostics'],[value])
+
+    def test_density_missing_duplicate_truncated_or_foreign_marker_stays_unknown(self):
+        marker=self.write_density(self.density_value());original=self.path.read_text()
+        for text in (original.replace(marker,''),original.replace('\nFAIL\n','\n'+marker+'\nFAIL\n'),
+                original.replace(marker,marker[:-1]),original.replace(DENSITY_CASE+' ... ','')):
+            self.path.write_text(text);self.assertFalse(receipt(self.path)['complete'])
+
+    def test_density_unconfirmed_marker_cannot_qualify_a_passed_suite(self):
+        self.write_density(self.density_value(),failed=False)
+        self.assertFalse(receipt(self.path)['complete'])
+
+    def test_density_projection_rejects_unbounded_private_or_mistyped_fields(self):
+        for change in ({'schema':True},{'case':'PRIVATE-CASE'},{'reason':'PRIVATE-REASON'},
+                {'elapsedSeconds':True},{'elapsedSeconds':None},{'elapsedSeconds':float('nan')},
+                {'elapsedSeconds':float('inf')},{'elapsedSeconds':-1},{'elapsedSeconds':901},
+                {'inputBytes':True},{'inputBytes':16*1024**2},{'inputBytes':2*1024**3+1},
+                {'inputSHA256':'PRIVATE-SHA'},{'resourceRows':True},{'resourceRows':999999},
+                {'processingSeconds':True},{'processingSeconds':31},
+                {'completeCoverage':None},{'objectCount':0},{'compileCount':False}):
+            self.write_density({**self.density_value(),**change})
+            self.assertFalse(receipt(self.path)['complete'],change)
+        value=self.density_value();value['private']='/Users/private/token'
+        self.write_density(value);self.assertFalse(receipt(self.path)['complete'])
+
+    def test_density_projection_rejects_false_observation_and_missing_fields(self):
+        for key in self.density_value():
+            value=self.density_value();value.pop(key);self.write_density(value)
+            self.assertFalse(receipt(self.path)['complete'],key)
+        for change in ({'reason':'build-completion-processing-limit'},{'objectCount':True},
+                {'compileCount':0},{'completeCoverage':False}):
+            self.write_density({**self.density_value(True),**change},failed=False)
+            self.assertFalse(receipt(self.path)['complete'])
+
+    def test_density_skipped_case_requires_no_diagnostic(self):
+        self.path.write_text(DENSITY_CASE+' ... skipped PRIVATE-REASON\n'
+            'Ran 1 test in 1.0s\nOK (skipped=1)\n')
+        value=receipt(self.path)
+        self.assertTrue(value['complete']);self.assertEqual(value['skipped'],1)
+        self.assertEqual(value['buildCompletionDensityDiagnostics'],[])
+
+    def test_density_allowlisted_other_guard_reason_is_retained_without_becoming_zero(self):
+        for reason in ('file-changed','profile-missing','profile-ambiguous'):
+            value={**self.density_value(),'reason':'build-completion-'+reason,'elapsedSeconds':.25}
+            self.assertEqual(density_public(value),value)
+            self.write_density(value);result=receipt(self.path)
+            self.assertTrue(result['complete']);self.assertIsNone(result['buildCompletionDensityDiagnostics'][0]['objectCount'])
 
     def held_value(self,outcome='safely-rejected-deadline'):
         value={'schema':1,'status':'passed','outcome':outcome,'receiptStatus':'failed',

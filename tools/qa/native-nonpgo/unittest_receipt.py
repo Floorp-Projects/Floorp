@@ -23,6 +23,47 @@ HELPER_WORKER_ID = ('test_helper_import_preflight.WorkloadTests.'
 HELPER_WORKER_METHOD = HELPER_WORKER_ID.rsplit('.', 1)[1]
 HELPER_WORKER_CASE = HELPER_WORKER_METHOD + ' (' + HELPER_WORKER_ID + ')'
 
+DENSITY_ID = ('test_build_completion.CompletionTests.'
+              'test_whole_one_million_small_resource_rows_remain_processable')
+DENSITY_METHOD = DENSITY_ID.rsplit('.', 1)[1]
+DENSITY_CASE = DENSITY_METHOD + ' (' + DENSITY_ID + ')'
+DENSITY_REASONS = {'build-completion-' + reason for reason in (
+    'profile-parsed', 'unavailable', 'depth-limit', 'directory', 'directory-changed',
+    'directory-limit', 'file-changed', 'file-kind', 'file-size', 'input', 'json',
+    'key-limit', 'line-limit', 'marker-limit', 'marker-schema', 'marker-time',
+    'metadata', 'phase-schema', 'processing-limit', 'profile-schema', 'profile-stale',
+    'profile-missing', 'profile-ambiguous',
+    'row-limit', 'snapshot', 'target-schema', 'thread-schema', 'truncated', 'value-limit')}
+
+
+def density_public(value):
+    """Retain the fixed controlled-input result, including a failed observation."""
+    keys = {'schema', 'case', 'status', 'reason', 'elapsedSeconds', 'inputBytes',
+            'inputSHA256', 'resourceRows', 'processingSeconds', 'completeCoverage',
+            'objectCount', 'compileCount'}
+    require(type(value) is dict and set(value) == keys, 'unittest-density-shape')
+    require(type(value['schema']) is int and value['schema'] == 1 and
+            value['case'] == DENSITY_ID, 'unittest-density-case')
+    require(type(value['status']) is str and value['status'] in ('observed', 'unconfirmed') and
+            type(value['reason']) is str and value['reason'] in DENSITY_REASONS,
+            'unittest-density-result')
+    require(type(value['elapsedSeconds']) in (int, float) and math.isfinite(value['elapsedSeconds']) and
+            0 <= value['elapsedSeconds'] <= 900 and type(value['inputBytes']) is int and
+            16*1024**2 < value['inputBytes'] <= 2*1024**3 and
+            type(value['inputSHA256']) is str and re.fullmatch('[0-9a-f]{64}', value['inputSHA256']) and
+            type(value['resourceRows']) is int and value['resourceRows'] == 1000000 and
+            type(value['processingSeconds']) is int and value['processingSeconds'] == 30,
+            'unittest-density-bounds')
+    if value['status'] == 'observed':
+        require(value['reason'] == 'build-completion-profile-parsed' and value['completeCoverage'] is True and
+                all(type(value[key]) is int and value[key] == 1 for key in ('objectCount', 'compileCount')),
+                'unittest-density-observed')
+    else:
+        require(value['reason'] != 'build-completion-profile-parsed' and value['completeCoverage'] is False and
+                value['objectCount'] is None and value['compileCount'] is None,
+                'unittest-density-unconfirmed')
+    return dict(value)
+
 
 def held_resource_public(value):
     from census_convergence import safe_query,safe_reason,read_diagnostic
@@ -217,6 +258,7 @@ def receipt(path, *, recording=False):
         failures, counts, outcomes, current, diagnostics = [], [], [], None, []
         held_diagnostics=[];held_seen=False
         worker_diagnostics=[];worker_seen=False
+        density_diagnostics=[];density_seen=False
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         with os.fdopen(descriptor, 'rb') as stream:
             info = os.fstat(stream.fileno())
@@ -231,6 +273,16 @@ def receipt(path, *, recording=False):
                     held_seen=True
                 if line.startswith(HELPER_WORKER_CASE) and ' ... skipped ' not in line:
                     worker_seen=True
+                if line.startswith(DENSITY_CASE) and ' ... skipped ' not in line:
+                    density_seen=True
+                density_marker=line.find('{"buildCompletionDensityDiagnostic":')
+                if density_marker>=0:
+                    require(not density_diagnostics and line[:density_marker].strip()==DENSITY_CASE+' ...',
+                            'unittest-density-case-binding')
+                    density=json.loads(line[density_marker:])
+                    require(set(density)=={'buildCompletionDensityDiagnostic'} and
+                            (DENSITY_METHOD,DENSITY_ID) in identities, 'unittest-density-marker')
+                    density_diagnostics.append(density_public(density['buildCompletionDensityDiagnostic']))
                 worker_marker=line.find('{"helperImportControlDiagnostic":')
                 if worker_marker>=0:
                     from helper_import_preflight import worker_control_projection
@@ -301,16 +353,21 @@ def receipt(path, *, recording=False):
         require(held_seen==bool(held_diagnostics),'unittest-held-child-missing')
         worker_seen=worker_seen or any(row['test']==HELPER_WORKER_ID for row in failures)
         require(worker_seen==bool(worker_diagnostics),'unittest-helper-worker-missing')
+        density_seen=density_seen or any(row['test']==DENSITY_ID for row in failures)
+        require(density_seen==bool(density_diagnostics),'unittest-density-missing')
         outcome = outcomes[0]
         require(outcome['status']!='passed' or all(row['status']=='passed' for row in held_diagnostics),
                 'unittest-held-child-status')
         require(outcome['status']!='passed' or all(row['status']=='passed' for row in worker_diagnostics),
                 'unittest-helper-worker-status')
+        require(outcome['status']!='passed' or all(row['status']=='observed' for row in density_diagnostics),
+                'unittest-density-status')
         require(sum(row['outcome']=='ERROR' for row in failures)==outcome['errors'] and
                 sum(row['outcome']=='FAIL' for row in failures)==outcome['failures'], 'unittest-log-case-count')
         return {**result, **outcome, 'complete': True, 'total':counts[0][0], 'seconds':counts[0][1],
                 'bytes':total, 'sha256':checksum.hexdigest(), 'cases':failures,
                 'nativeSelectionDiagnostics':diagnostics,'heldChildBoundaryDiagnostics':held_diagnostics,
-                'helperWorkerControlDiagnostics':worker_diagnostics}
+                'helperWorkerControlDiagnostics':worker_diagnostics,
+                'buildCompletionDensityDiagnostics':density_diagnostics}
     except Exception as error:
         return {**result, 'errorType':type(error).__name__}

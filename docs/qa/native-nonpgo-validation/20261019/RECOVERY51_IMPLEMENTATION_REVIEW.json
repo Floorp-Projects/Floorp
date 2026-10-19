@@ -1,0 +1,188 @@
+{
+  "schema": 1,
+  "review": "Recovery51 bounded density evidence and diagnostic-only continuation",
+  "decision": "CODE_AND_SHORT_DIAGNOSTIC_CANDIDATE_CLEAR_PENDING_IMMUTABLE_ROUTE_BINDINGS",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "bindings": {
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 30711,
+        "sha256": "348aa2161cc38b2e391f9da1919e9370386355d76ddd8aea808785efa239b9f7"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+        "bytes": 23266,
+        "sha256": "d08ca28513553b985188c41e1a4df864e004abbbfd4d08783c7a9135283e064d"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+        "bytes": 25679,
+        "sha256": "e4bd5249891926780eaee46c9f2dcfb28269d75945d81841defbb00eef317d59"
+      }
+    ],
+    "freeze": {
+      "name": "floorp-recovery51-source-freeze.json",
+      "bytes": 961,
+      "sha256": "a20b9820697fe18e278d864a5627203308c75b450f33b2db1d03a5cfac0217fa"
+    },
+    "candidate": {
+      "bytes": 36482,
+      "sha256": "85dc613da8ce5e686b61f5497e89e2758383c080835ce0914fed6f8cdaf8bd99"
+    },
+    "candidateFixture": "PLACEHOLDER",
+    "candidateRuntimeParent": "36df5f185f030d0b395e96c6e6b7029417b51e58",
+    "unchangedParserSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+    "unchangedPlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "unchangedProcessingSeconds": 30,
+    "densityInputBytes": 195000385,
+    "densityInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "failedStatusAssertionLine": 450
+  },
+  "sourceAssessment": [
+    "The controlled input and collector call are unchanged. The test records monotonic collector elapsed time and emits the validated diagnostic immediately after collection and before the existing status assertion.",
+    "The fixed twelve-field projection admits only known status and reason values, finite bounded elapsed time, bounded typed input identity, exact row count and processing budget, and coupled coverage/count semantics. Unconfirmed results keep objectCount and compileCount null.",
+    "The unittest reader binds exactly one marker to the exact density test header and known source identity. Missing, duplicate, malformed, foreign or extra fields reject complete receipt qualification; an unconfirmed diagnostic cannot qualify a passed suite.",
+    "Input bytes and hash are measured independently of returned profile size. The caller requires the exact frozen input before granting diagnostic continuation.",
+    "The collector, JSON grammar, file ownership/stability checks, processing limit, resource limits, stage clock and production build inputs are unchanged."
+  ],
+  "continuationAssessment": [
+    "Only a complete 522-test receipt with one FAIL, zero errors/skips, the exact density AssertionError frame 450, one unconfirmed diagnostic and exact input can continue.",
+    "The original first failure must be checkpoint-tests/nonzero-exit. Exactly the two ABI stages and QA stage must have typed exit and reap codes 0, 0 and 1, verified group cleanup, explicit null cleanup failures and empty cleanup diagnostics. The ABI reasons/phases must be explicitly null, and the QA reason/phase must be nonzero-exit/wait.",
+    "A monitor failure, outstanding group, other failed case, malformed receipt, missing diagnostic or wrong input stops before the additional diagnostic stages.",
+    "After the narrowly recognized density failure, recording and the owned monitor control may run, followed by ordinary fixed-source acquisition and the nine serializer controls. These results remain separate diagnostic evidence.",
+    "The preflight remains failed with diagnosticContinuation=true and the original firstFailure. The final job remains failed even if recording and all serializer controls pass. The density failure is never converted into QA PASS or Mac parser qualification.",
+    "The existing Runner first-failure persistence uses an exclusive link and preserves the existing record. A separate short local control verified that a fresh Runner failure does not overwrite the prior first-failure file; the final gate additionally checks equality."
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "issue": "Two existing fixed collector reasons, profile-missing and profile-ambiguous, were initially absent from the diagnostic allowlist.",
+      "resolution": "Both fixed reasons are now retained by the projection and tested alongside file-changed. Unknown free text remains rejected."
+    }
+  ],
+  "validation": {
+    "providedFullQA": {
+      "total": 737,
+      "passed": 720,
+      "DarwinSkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 61.77,
+      "resourceWarningsAreErrors": true,
+      "precision": "Run before adding the two fixed reason strings and their subcases. It is not represented as a complete rerun of the final bytes.",
+      "log": {
+        "name": "floorp-recovery51-linux-full.private.log",
+        "bytes": 141883,
+        "sha256": "3cfaa78365ae1c1beb68b07c1d6beb7a782ff64e72fcfa2b6864c951c2b5153b"
+      }
+    },
+    "providedFinalReceiptTests": {
+      "total": 26,
+      "passed": 26,
+      "skipped": 0,
+      "seconds": 31.79,
+      "precision": "Run after the two fixed reason additions.",
+      "log": {
+        "name": "floorp-recovery51-final-receipt-tests.private.log",
+        "bytes": 5140,
+        "sha256": "6316d7abe169ae0c03e9ad9d874bd67d4a81e5d2656ca58a9445bb568750ad8b"
+      }
+    },
+    "independentFinalDensityReceiptTests": {
+      "total": 8,
+      "passed": 8,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "sourceHashesVerifiedBeforeAfter": true,
+      "resourceWarningsAreErrors": true,
+      "collectorOrHeavyFullQAReexecuted": false,
+      "log": {
+        "name": "floorp-recovery51-independent-density-receipt.private.log",
+        "bytes": 2110,
+        "sha256": "c8da49af842009a59f875516657430dae06b98def7345e72f866175efec31b7d"
+      },
+      "result": {
+        "name": "floorp-recovery51-independent-density-receipt-result.json",
+        "bytes": 531,
+        "sha256": "8db1ab50233411de3c28d34d762e63abe6823b45234ec77c92b02440ac45e035"
+      }
+    },
+    "independentlyReexecutedCandidateControls": {
+      "negativeCasesRejected": 1032,
+      "syntax": "YAML, Bash and inline Python passed",
+      "result": {
+        "name": "floorp-recovery51-independent-guarded-controls-result.json",
+        "bytes": 849,
+        "sha256": "0b64472ca6764f6709ced04012fb391c4f536a46086ff8c166f20b641080fe38"
+      }
+    },
+    "independentlyReexecutedSourceAcquisitionControls": {
+      "cases": 5,
+      "allPassed": true,
+      "actualNetworkRequestedByControls": false,
+      "result": {
+        "name": "floorp-recovery51-independent-source-api-controls-result.json",
+        "bytes": 666,
+        "sha256": "d9c1f6af3378c3fff95e49aab7b3cd226bf082b9b79baca56702c41d9e82eb44"
+      }
+    },
+    "independentlyReexecutedInlineFlowControls": {
+      "cases": 7,
+      "allPassed": true,
+      "actualInlinePreflightAndFinalCodeExecutedUnderMocks": true,
+      "realProcessesLaunched": false,
+      "casesCovered": [
+        "all-pass final pass",
+        "isolated density failure continues diagnostics but final fails",
+        "other case stops",
+        "monitor failure stops",
+        "cleanup failure stops",
+        "wrong input stops",
+        "missing diagnostic stops"
+      ],
+      "result": {
+        "name": "floorp-recovery51-independent-flow-controls-result.json",
+        "bytes": 1704,
+        "sha256": "7e1d6684dd9c9b75df9ef9b863db470afbb72d18ed14f69ccb4175d997c57ddb"
+      }
+    }
+  },
+  "shortScope": {
+    "job": "one standard macos-15-intel consumer diagnostic",
+    "QA": 522,
+    "recording": 14,
+    "serializerCases": 9,
+    "sourceAcquisition": "one pinned ordinary GitHub Contents API file",
+    "SDK": false,
+    "checkpointDownload": false,
+    "RuntimeOrHarnessCheckout": false,
+    "build": false,
+    "artifactUpload": false,
+    "newPermissions": false,
+    "platformMinutes": 360,
+    "ownedStagePhaseMinutes": 15
+  },
+  "remainingConditions": [
+    "Review final immutable source and caller readbacks and exact rendering.",
+    "Confirm the dedicated branch is unused, no prior caller run exists and no owned validation is active or queued immediately before activation.",
+    "Actual Mac density reason and elapsed time, recording results, nine-case outcomes and cleanup must come from the new terminal evidence; Linux observations cannot substitute."
+  ],
+  "limits": [
+    "Recovery50 established a failed observed-status assertion, not a processing-limit cause. That historical uncertainty remains.",
+    "A continued diagnostic failure is still an overall failed job and does not qualify the streaming parser for actual Mac use.",
+    "No long build, current Mozilla cases or native authentication is qualified or started by this code review."
+  ],
+  "reviewerActions": {
+    "sourceEdits": false,
+    "CIOrRefMutations": false,
+    "additionalLargePayloadAcquisition": false,
+    "actualMacExecuted": false
+  }
+}

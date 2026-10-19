@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY51_SAME_INPUT_REASON_CAPTURE_AND_INDEPENDENT_CONTINUATION",
+  "sourceFreeze": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 30711,
+        "sha256": "348aa2161cc38b2e391f9da1919e9370386355d76ddd8aea808785efa239b9f7"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+        "bytes": 23266,
+        "sha256": "d08ca28513553b985188c41e1a4df864e004abbbfd4d08783c7a9135283e064d"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+        "bytes": 25679,
+        "sha256": "e4bd5249891926780eaee46c9f2dcfb28269d75945d81841defbb00eef317d59"
+      }
+    ],
+    "unchangedParserSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+    "fullQA": 737,
+    "MacQA": 522,
+    "recording": 14,
+    "densityInputBytes": 195000385,
+    "densityInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "failedObservationAssertionLine": 450,
+    "codeChangesFrozen": true
+  },
+  "goal": "Identify the actual Mac dense observation failure without changing the parser or its 30-second budget; execute independent recording and serializer controls after an isolated safely reaped density failure, retaining overall failure.",
+  "previousShortRun": {
+    "run": 39312246063,
+    "QA": {
+      "total": 514,
+      "passed": 513,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "actualCollectorReason": "NOT_RETAINED",
+    "actualDensitySeconds": "NOT_RETAINED",
+    "monitorFailure": null,
+    "cleanupFailures": 0,
+    "recordingTests": "NOT_RUN",
+    "serializerCases": "NOT_RUN"
+  },
+  "localValidation": {
+    "fullQA": {
+      "total": 737,
+      "passed": 720,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 61.77,
+      "beforeFinalTwoAllowlistedReasons": true
+    },
+    "finalReceiptTests": {
+      "total": 26,
+      "passed": 26,
+      "seconds": 31.79,
+      "includesProfileMissingAndAmbiguous": true
+    },
+    "resourceWarningsAreErrors": true,
+    "sameInputObservation": {
+      "schema": 1,
+      "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+      "status": "observed",
+      "reason": "build-completion-profile-parsed",
+      "elapsedSeconds": 12.811441818994354,
+      "inputBytes": 195000385,
+      "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+      "resourceRows": 1000000,
+      "processingSeconds": 30,
+      "completeCoverage": true,
+      "objectCount": 1,
+      "compileCount": 1
+    }
+  },
+  "callerControls": {
+    "schema": 1,
+    "status": "passed",
+    "yamlBashInlinePythonSyntax": "passed",
+    "positiveActualContractAccepted": true,
+    "negativeFaultsRejected": 1032,
+    "selectedQATests": 522,
+    "selectedQAResolved": true,
+    "recordingTests": 14,
+    "preflightSafetyRunPreserved": true,
+    "singleConsumerJob": true,
+    "platformMinutes": 360,
+    "phaseDeadlineMinutes": 15,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "sourceContentsAPIFiles": 1,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "sourceCapBytes": 1048576,
+    "artifactUploads": 0,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "fixture": "PLACEHOLDER",
+    "candidate": {
+      "bytes": 36482,
+      "sha256": "85dc613da8ce5e686b61f5497e89e2758383c080835ce0914fed6f8cdaf8bd99"
+    }
+  },
+  "mockedExecutionControls": {
+    "schema": 1,
+    "status": "passed",
+    "actualInlinePreflightExecutedUnderMocks": true,
+    "cases": [
+      {
+        "finalInlineGateVerified": true,
+        "mode": "passed",
+        "preflightExit": 0,
+        "status": "passed",
+        "stageCount": 5,
+        "continued": false,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": true,
+        "mode": "density-only",
+        "preflightExit": 0,
+        "status": "failed",
+        "stageCount": 5,
+        "continued": true,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": false,
+        "mode": "other-case",
+        "preflightExit": 1,
+        "status": "failed",
+        "stageCount": 3,
+        "continued": false,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": false,
+        "mode": "monitor-failure",
+        "preflightExit": 1,
+        "status": "failed",
+        "stageCount": 3,
+        "continued": false,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": false,
+        "mode": "cleanup-failure",
+        "preflightExit": 1,
+        "status": "failed",
+        "stageCount": 3,
+        "continued": false,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": false,
+        "mode": "wrong-input",
+        "preflightExit": 1,
+        "status": "failed",
+        "stageCount": 3,
+        "continued": false,
+        "firstFailurePreserved": true
+      },
+      {
+        "finalInlineGateVerified": false,
+        "mode": "missing-diagnostic",
+        "preflightExit": 1,
+        "status": "failed",
+        "stageCount": 3,
+        "continued": false,
+        "firstFailurePreserved": true
+      }
+    ],
+    "CIStarted": false,
+    "realProcessesLaunched": false
+  },
+  "expectedActualMac": {
+    "QA": 522,
+    "recordingTests": 14,
+    "serializerCases": 9,
+    "largeSerializerCases": 3,
+    "allSkippedErrorsAndUnexpectedFailures": 0
+  },
+  "qualificationRules": [
+    "The controlled input bytes and SHA must exactly match; the parser source and budget are unchanged.",
+    "Only one source-bound density status assertion with an unconfirmed fixed reason, complete typed unittest evidence, no monitor failure, exact natural exit one, no outstanding groups and fully verified cleanup may continue to the independent controls.",
+    "Unknown reason, missing or duplicate evidence, another assertion, another failing test, resource or monitor stop or cleanup failure stops the route.",
+    "The isolated failure remains the first failure in memory and on disk; preflight and final job remain failed even if later independent controls pass."
+  ],
+  "execution": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "branch": "codex/mac-native-streaming-recovery51-20261019",
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "longBuild": false,
+    "status": "NOT_LAUNCHED"
+  },
+  "fullHostXUL": "NOT_TESTED",
+  "Mozilla": "NOT_TESTED",
+  "native": "NOT_TESTED",
+  "originalNativeCause": "UNKNOWN"
+}
