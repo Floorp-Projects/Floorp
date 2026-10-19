@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY49_SDKLESS_MAC_BUILD_COMPLETION_ROUTE",
+  "status": "short-job-activated",
+  "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+  "fixtureTree": "8375dbde3f2350df88e0180f4c1845334fe667f4",
+  "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "caller": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+  "callerTree": "1911acae1706aceffd6acb277cbbf4c3619a0d20",
+  "callerBytes": 29706,
+  "callerSHA256": "96615060c72161a78db1230dde05b7a4a9b133b116d4aae078653c88a8521b1b",
+  "supersededUnexecutedCaller": "ac8fe7aebc13e481c1d2c6c077b7d4f802590599",
+  "exactProviderSourceAndCallerReadbacks": true,
+  "independentPrelaunchReview": {
+    "bytes": 9278,
+    "sha256": "f94dcf0b85b9d7470c87dd2fc75fd94d0204dead80a64f6f8234b4fce47452d3",
+    "decision": "GO_SHORT49_ONLY",
+    "openP1": 0,
+    "openP2": 0
+  },
+  "renderedCallerControls": {
+    "schema": 1,
+    "status": "passed",
+    "yamlBashInlinePythonSyntax": "passed",
+    "positiveActualContractAccepted": true,
+    "negativeFaultsRejected": 547,
+    "selectedQATests": 491,
+    "selectedQAResolved": true,
+    "recordingTests": 14,
+    "preflightSafetyRunPreserved": true,
+    "singleConsumerJob": true,
+    "platformMinutes": 360,
+    "phaseDeadlineMinutes": 15,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "sourceContentsAPIFiles": 1,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "sourceCapBytes": 1048576,
+    "artifactUploads": 0,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+    "candidate": {
+      "bytes": 29706,
+      "sha256": "96615060c72161a78db1230dde05b7a4a9b133b116d4aae078653c88a8521b1b"
+    }
+  },
+  "prelaunchOverlapCheck": {
+    "checkedAtUTC": "2026-10-19T12:57:08Z",
+    "branchMatches": 0,
+    "previousCallerRuns": 0,
+    "ownedActiveOrQueued": 0,
+    "allPagesNeededWereRead": true
+  },
+  "activation": {
+    "run": 39256138254,
+    "job": 118071788169,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39256138254",
+    "branch": "codex/mac-native-build-completion-recovery49-20261019",
+    "attempt": 1,
+    "trigger": "new branch push",
+    "activations": 1,
+    "runner": "macos-15-intel",
+    "qualification": "synthetic-serializer-contract-actual-source",
+    "terminalResult": "PENDING"
+  },
+  "SDKOrCheckpointAcquisition": false,
+  "fullRuntimeCheckout": false,
+  "artifactUploads": 0,
+  "fullBuildOrMozillaOrNativeQualification": "NOT_TESTED",
+  "futureLongValidation": {
+    "activated": false,
+    "sameJobMozillaFirstImplementationReviewed": true,
+    "remaining": [
+      "short Mac terminal proof and review",
+      "combined Mozilla/native caller independent review and immutable readback",
+      "fresh legitimate SDK and existing checkpoint availability",
+      "zero overlap"
+    ],
+    "durationForecast": "UNKNOWN; no indefinite hold solely for forecast uncertainty"
+  },
+  "productSigningReleaseMergeOrAuthenticationChanges": false
+}

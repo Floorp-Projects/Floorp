@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "review": "Recovery49 immutable short serializer contract prelaunch",
+  "decision": "GO_SHORT49_ONLY",
+  "unresolvedFindings": {
+    "blocking": [],
+    "P1": [],
+    "P2": []
+  },
+  "sourceFixture": {
+    "sha": "73b5c6b71be98104bfaa8ba641602b603838d5d5",
+    "tree": "8375dbde3f2350df88e0180f4c1845334fe667f4",
+    "parent": "467a0e9347ae6e75a5030e3bc30e1bf3b8f207a0"
+  },
+  "sourceProviderReadbacks": [
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY49_DESIGN_REVIEW.json",
+      "bytes": 6989,
+      "sha256": "14116228014c8977d0aa9f6429876324fef0b05bb3656b6defeb8cee1224a660"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY49_IMPLEMENTATION_REVIEW.json",
+      "bytes": 9450,
+      "sha256": "e5693a83bbc15601073103fb0e690d84c4bb871e8111b3fcdc7fe71ea7b1fb3e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY49_LOCAL_SERIALIZER_RESULT.json",
+      "bytes": 6528,
+      "sha256": "6258363a37a9e9e5db4fb5c5cd976fa588ca016825cb6b0ba8c35b6e1d1d5115"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/RECOVERY49_PREPARATION.json",
+      "bytes": 5875,
+      "sha256": "4b62cb20d2d1163a0a10096a52b4fd4c0cd7e6fc87431c77717a96e166d2f301"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 14088,
+      "sha256": "e574108d5651a07fa5499122584b029c648dc67d8ba87d73b1535c6f5bd5d5cb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+      "bytes": 13768,
+      "sha256": "0702018e1330d5bb77f8cd6502f4fb8106611c66328f792e398ba3ed8f7ce2fd"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 47069,
+      "sha256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 16696,
+      "sha256": "fe3ade1c1d2db7cc8c3546296aeaab8095a56016dc21cd85bedcf9602669431a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+      "bytes": 12435,
+      "sha256": "61ee6b78dfc15c2e509ee9728227c815f06881dd4e18a75ebb86510bf321c219"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 31741,
+      "sha256": "83e03c2d412561670807440d26d5d4269693c2887095506d91b05c744f660727"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  ],
+  "caller": {
+    "sha": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+    "tree": "1911acae1706aceffd6acb277cbbf4c3619a0d20",
+    "parent": "ac8fe7aebc13e481c1d2c6c077b7d4f802590599",
+    "previousReviewedParent": "0770939680d9413f4aa852bac72b4f25454552c0",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 29706,
+    "sha256": "96615060c72161a78db1230dde05b7a4a9b133b116d4aae078653c88a8521b1b",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "providerBytesEqualRenderedBytes": true
+  },
+  "implementationReview": {
+    "path": "tools/qa/native-nonpgo/RECOVERY49_IMPLEMENTATION_REVIEW.json",
+    "bytes": 9450,
+    "sha256": "e5693a83bbc15601073103fb0e690d84c4bb871e8111b3fcdc7fe71ea7b1fb3e"
+  },
+  "ancestryAndDelta": [
+    "Source fixture has exactly ten changed paths against its fixed parent: six reviewed source/test files and four technical evidence documents. All ten files and unchanged plan were read independently from the immutable provider commit and exactly match local bytes.",
+    "The initial caller replaced only one workflow against 0770939680d9413f4aa852bac72b4f25454552c0 and exactly rendered the reviewed candidate with the source fixture SHA.",
+    "The final caller is a direct child of the initial unexecuted caller. Its only patch strengthens the final receipt predicate; the first six active steps, source acquisition, test commands, serializer probe, branch guards, permissions and concurrency are unchanged.",
+    "All 26 workflow files at the initial caller were independently read. Only the dedicated workflow matches branch49. The final child changes only its receipt predicate and retains all trigger configuration."
+  ],
+  "resolvedTypedGateEdges": [
+    "firstFailure and monitorFailure keys must be present with null values.",
+    "Both suite receipts require failures/errors/skipped to be exact integer zero; missing, bool, float, string, negative or null counters are rejected.",
+    "Each preflight leaderReap requires status reaped and an exact integer zero exit code; boolean False and floating zero are rejected."
+  ],
+  "independentValidation": {
+    "fullQA": {
+      "total": 706,
+      "passed": 689,
+      "DarwinOnlySkippedOnLinux": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 32.967,
+      "exitCode": 0,
+      "warnings": "ResourceWarning=error",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "log": {
+        "path": "private full QA validation log (digest only)",
+        "bytes": 10924,
+        "sha256": "a4b2e0606669a841fbdd13b81eed21b61832a18717296f64cac25f0e903493ff"
+      }
+    },
+    "fixedUpstreamSerializer": {
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+      "bytes": 126050,
+      "sha256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "executionPlatform": "Linux",
+      "cases": 6,
+      "allPassed": true,
+      "bothFormats": true,
+      "workerNeverStarted": true,
+      "allStreamPipeAndProcessHandleCleanupComplete": true,
+      "syntheticClockAndMarkers": true,
+      "resourceOrBuildQualification": false
+    },
+    "finalCallerControls": {
+      "reexecutedByReviewer": true,
+      "normalContractAccepted": true,
+      "negativeCasesRejected": 547,
+      "syntax": "YAML, Bash and inline Python passed",
+      "result": {
+        "path": "independent final caller controls",
+        "bytes": 877,
+        "sha256": "885c3cfe9ddf6d67eb6c37871c9c9d77de32392d933d5d5e9019f81c461759bb"
+      }
+    },
+    "sourceAPIMockedControls": {
+      "cases": 5,
+      "allPassed": true,
+      "actualNetworkRequested": false
+    },
+    "selectedTestCountsIndependentlyLoaded": {
+      "qa": 491,
+      "recording": 14
+    },
+    "workflowTriggerAssessment": {
+      "path": "independent existing workflow trigger assessment",
+      "bytes": 8092,
+      "sha256": "4f2f75589c185e3d36e50d380b280f62188c1ea6e93fbdaab9212159ccfde5f5"
+    }
+  },
+  "freshReadOnlyAvailability": {
+    "observedAt": "2026-10-19T12:57:08Z",
+    "activationBranch": "codex/mac-native-build-completion-recovery49-20261019",
+    "matchingBranchRefs": 0,
+    "priorRunsForFinalCaller": 0,
+    "ownedInProgress": 0,
+    "ownedQueued": 0,
+    "inProgressCollectionTotal": 1,
+    "queuedCollectionTotal": 1,
+    "bothCollectionsCompleteBelow100": true,
+    "unrelatedDailyRunsExcludedFromOwnedScope": true,
+    "SDKOrCheckpointAvailabilityRequiredForThisShort": false
+  },
+  "executionScope": {
+    "jobs": 1,
+    "jobName": "checkpoint-consumer",
+    "runner": "macos-15-intel",
+    "trigger": "initial created push on fixed branch, before SHA all zero, run attempt 1",
+    "contentsPermission": "read",
+    "actionsPermission": "read",
+    "jobPlatformMinutes": 360,
+    "ownedPreflightAndContractAbsolutePhaseMinutes": 15,
+    "actualMacQARequired": 491,
+    "actualMacRecordingRequired": 14,
+    "zeroSkipsRequired": true,
+    "sourceAcquisition": "one immutable official Contents API file; exact size/hash; no redirects; 1 MiB read cap",
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "fullBuild": false,
+    "MozillaTests": false,
+    "nativeAuthentication": false,
+    "artifactUploads": 0
+  },
+  "terminalConditions": [
+    "Actual Mac 491 QA and 14 recording tests must pass with zero skips and no missing or malformed receipt.",
+    "The exact upstream serializer must pass JSONL and whole-profile positive/no-end/truncated cases with all stream/pipe/unused-process handles closed.",
+    "The monitored contract stage must have zero exit, exact leader reaped, group verified gone, no cleanup failure and no stopping monitorFailure. Retained recovered diagnostics remain separately reportable.",
+    "Keep synthetic serializer/schema qualification separate from actual compilation, resource workload, GUI or native authentication qualification."
+  ],
+  "longConsumerStatus": "PENDING_SHORT_TERMINAL_REVIEW_AND_SEPARATE_COMBINED_CALLER_REVIEW",
+  "limits": [
+    "Optional profile observations cover emitted validated completion markers only. Whole-profile size above 16 MiB or malformed/truncated/stale/ambiguous input remains unknown with null counts.",
+    "Actual Mac execution has not occurred in this prelaunch review. Full build duration, remaining work, checkpoint acceleration and native original cause remain unknown.",
+    "Unknown duration forecasts alone do not indefinitely prevent the next authorized validation after the tested minimal diagnostic and real Mac contract proof."
+  ],
+  "reviewerOperations": {
+    "sourceEdits": false,
+    "CIStarted": false,
+    "remoteRefChanges": false,
+    "payloadAcquisitions": false,
+    "artifactOperations": false,
+    "permissionsChanged": false
+  }
+}
