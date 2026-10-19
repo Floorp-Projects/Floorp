@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY46_NORMAL_SERVICE_METADATA_PREFLIGHT",
+  "checkedAtUTC": "2026-10-19 06:16:21 UTC",
+  "fixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+  "caller": "74f408af098528dd07d6e0ff68900945671757db",
+  "SDK": {
+    "artifact": 12133086104,
+    "sourceRun": 39117481043,
+    "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "name": "macos-sdk",
+    "expired": false,
+    "expiresAt": "2026-10-19T10:00:38Z",
+    "bytes": 105082683,
+    "digest": "sha256:e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "actualNewJobAcquisition": "REQUIRED: ordinary API fetch_sdk with HTTP error stop and unexpired-at-acquisition guard; this metadata lookup is not a payload acquisition."
+  },
+  "checkpoint": {
+    "artifact": 12164479528,
+    "sourceRun": 39197008470,
+    "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "name": "checkpoint.tar.gz",
+    "expired": false,
+    "createdAt": "2026-10-19T05:20:31Z",
+    "expiresAt": "2026-10-20T05:19:56Z",
+    "bytes": 2213942620,
+    "digest": "sha256:f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "artifactCount": 1,
+    "unpatchedFixedOriginValidatorPassed": true,
+    "actualNewJobByteAndManifestValidation": "REQUIRED"
+  },
+  "ownedActiveOrQueuedRuns": 0,
+  "newPayloadDownloads": 0,
+  "newArtifactUploads": 0,
+  "retentionOrPermissionsChanged": false
+}

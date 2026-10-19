@@ -1,0 +1,307 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY46_VERIFIED_ORIGIN_RESTORE_ONLY_PRELAUNCH_REVIEW",
+  "reviewedAtUTC": "2026-10-19T06:17:22Z",
+  "decision": {
+    "short46": "GO",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "full47": "CONDITIONAL_CANDIDATE_ONLY_AFTER_SHORT46_TERMINAL_REVIEW_CLEAR",
+    "restoreOrNativeQualificationEstablished": false
+  },
+  "route": {
+    "fixtureRepository": "Floorp-Projects/Floorp",
+    "fixture": "8a1df89c23270a25fa5de04f626c70fd551f1add",
+    "fixtureTree": "5a028a3ed312965aafcf5ffaee66207569eb8725",
+    "fixtureParent": "796ef1d5ffe8f299ffcf3b1d46bd32c61e797e55",
+    "callerRepository": "Floorp-Projects/Floorp-Runtime",
+    "caller": "74f408af098528dd07d6e0ff68900945671757db",
+    "callerTree": "4333231a8a547d728cc9660ad2ed367c477d6ceb",
+    "callerParent": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+    "callerChangedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "callerWorkflow": {
+      "bytes": 10567,
+      "sha256": "b1d94090946b55ab2d2ad8692d5eee8ffeae7e3b8026ed14cbb6bb788e6f803e",
+      "exactTemplateRender": true
+    },
+    "providerReadback": {
+      "sourceAndDocumentFiles": 15,
+      "exactByteHashMatches": 15,
+      "fixtureAndCallerTreeAndParentVerified": true
+    },
+    "branch": "codex/mac-native-checkpoint-restore-recovery46-20261019",
+    "branchRead": "404 before activation",
+    "branchPastRuns": 0,
+    "nativeOwnedActiveOrQueuedRuns": 0,
+    "scope": "one initial-created push, before-zero and attempt-1 guards; one macos-15-intel consumer job; 75-minute job limit; contents/actions read; no producer or upload",
+    "otherWorkflowScope": "caller parent is the reviewed run45 caller; only the checkpoint workflow path changes, preserving the prior pinned trigger audit for other workflows"
+  },
+  "existingOrigin": {
+    "schema": 1,
+    "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+    "origin": {
+      "run": "39197008470",
+      "attempt": "1",
+      "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+      "fixture": "4337d51a228834f4b2cbee1f4ef0771eb45737a8",
+      "producerJob": 117881829274,
+      "artifact": 12164479528,
+      "bytes": 2213942620,
+      "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+      "createdAt": "2026-10-19T05:20:31Z",
+      "expiresAt": "2026-10-20T05:19:56Z"
+    },
+    "buildDate": "20261019035607"
+  },
+  "freshOrdinaryAPICheck": {
+    "observedAtUTC": "2026-10-19T06:15:55Z",
+    "originRunCompletedFailure": true,
+    "originAttempt": 1,
+    "originHeadMatches": true,
+    "jobs": 2,
+    "exactOriginProducerCompletedSuccess": true,
+    "soleCheckpointArtifact": 12164479528,
+    "checkpointExpired": false,
+    "checkpointBytes": 2213942620,
+    "checkpointSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "checkpointExpiresAt": "2026-10-20T05:19:56Z",
+    "sdkArtifact": 12133086104,
+    "sdkExpired": false,
+    "sdkBytes": 105082683,
+    "sdkZIPDigest": "e0b73adc599db2a7ff405048ec47b4787ec3a69a96d5d2c2b3b9e41da614e889",
+    "sdkExpiresAt": "2026-10-19T10:00:38Z",
+    "largePayloadDownloadedByReviewer": false,
+    "normalAcquisitionTimeVerificationStillRequired": true
+  },
+  "sourceReview": {
+    "orderingFix": "Create the complete link graph across all state roots before resolving references; restore file/link modes and nanosecond timestamps before applying captured directory modes deepest first. Complete final state/reference validation remains required.",
+    "immutableLegacyNegativeControls": {
+      "fixtures": 4,
+      "legacyErrors": 4,
+      "fixedPasses": 4,
+      "cases": [
+        "forward object link chain",
+        "virtualenv Python link chain",
+        "cross-state link chain",
+        "read-only parent directory with a link"
+      ],
+      "claim": "Reproduced source defects; the actual run45 offending link is not identified."
+    },
+    "replay": "Explicit opt-in at fetch, pipeline and restore. The locked origin is checked through normal API metadata, a successful exact producer and one unexpired matching artifact. Actual current job/run/head/attempt/environment remain separate and are not rewritten.",
+    "context": "Complete typed key sets are required. Only run/attempt/head/fixture are matched against the locked historical origin. Plan SHA, absolute roots, repository, runtime, harness, runner image and Python executable SHA must exactly equal actual current values.",
+    "defaultBehavior": "Without replay opt-in, historical artifacts and replay receipts are rejected and the original complete same-run context comparison is retained.",
+    "archive": "Full downloaded bytes/SHA/gzip, fixed manifest SHA, trusted producer boundary, archive/dep-info binding, all payload/reference/link/mode/mtime guards and actual restored configuration checks remain in force. Archive context is not modified.",
+    "codeCompatibility": "AST comparison with the capture source changes only checkpoint.restore/main, checkpoint_transfer.main and pipeline.main. Pack/inspect/boundary functions and plan are unchanged; the replay contract explicitly records different capture/execution fixtures.",
+    "diagnosticProjection": "Only exact qa_core.Failure/support.Failure codes from literal require calls in three fixed source files enter the new projection. Phase is a fixed-code category, not an observed runtime phase or traceback frame. Arbitrary messages/paths/URLs/arguments are omitted; unrecognized exceptions remain unclassified.",
+    "restoreOnly": "Runs actual mach environment plus restored-config and normal effective-config validation, then returns restore-ready before full build/package/native. Final proof and workflow checks require this restricted scope.",
+    "phaseAccuracy": "Consumer configuration query, restored-config validation and normal configuration validation now have distinct failure stage names.",
+    "firstFailureAndEvidence": "Existing first failure and before/after cleanup records remain authoritative; a context-evidence OSError does not replace a pending context validation Failure. Source-bound negative tests cover this double failure."
+  },
+  "independentValidation": {
+    "platform": "Linux x86_64",
+    "resourceWarnings": "errors",
+    "workingDirectory": "tools/qa/native-nonpgo",
+    "fullQA": {
+      "command": "python -m unittest discover -v",
+      "total": 500,
+      "passed": 483,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 28.19,
+      "exitCode": 0,
+      "logBytes": 98925,
+      "logSHA256": "101bf75b5a9a82bc0e955ca82aa28f5fb6763e3a441e206a26a88058dca12b7d"
+    },
+    "initialOrderingExcerptPipelineTests": {
+      "total": 60,
+      "passed": 58,
+      "DarwinSkipped": 2,
+      "seconds": 2.334,
+      "exitCode": 0,
+      "logBytes": 10591,
+      "logSHA256": "8938b6e8a895488da4a261b4c59e156d1d8aaa21c394ee73874fe6e238836d5f"
+    },
+    "legacyFourRegressionControls": {
+      "total": 4,
+      "expectedErrors": 4,
+      "logBytes": 739,
+      "logSHA256": "5df4f33733da607b2881b57cc302f7e83b39d9859f14ed89765a72686e5676b4"
+    },
+    "shortGateTestDiscovery": {
+      "QA": 285,
+      "recordingRequired": 14,
+      "actualMacRequiredSkipped": 0
+    },
+    "workflowSyntax": {
+      "templates": 2,
+      "YAML": true,
+      "bashBlocksPerTemplate": 7,
+      "inlinePythonBlocksPerTemplate": 2,
+      "allPassed": true
+    },
+    "negativeCoverage": [
+      "fixed config and origin metadata types/digests/expiry",
+      "failed origin producer or extra artifact",
+      "wrong current job origin",
+      "historical artifact without opt-in",
+      "invalid downloaded payload",
+      "different actual context/image/roots/plan/Python hash",
+      "unknown context keys and environment spoofing",
+      "missing replay receipt",
+      "ready download fields not bound to the origin",
+      "original validation failure plus evidence-write OSError",
+      "restore-only missing proof or configuration failure",
+      "fixed-code excerpt bounds/private text/FIFO/symlink handling"
+    ],
+    "tinyFixtureLimits": "Transport and complete replay integration tests substitute tiny payload sizes/hashes for execution efficiency; separate unpatched config tests require the exact production constants. These tests do not download or qualify the real stored checkpoint."
+  },
+  "resolvedReviewConcerns": [
+    "Fixed-code diagnostic phase is explicitly a category, avoiding a false claim of observed runtime location.",
+    "Pipeline configuration failures no longer retain the checkpoint-restore stage label.",
+    "Four complete-tree regression fixtures reproduce legacy ordering defects while preserving final captured modes and timestamps."
+  ],
+  "remainingGates": [
+    "Activate only the fixed unused short46 branch and immutable caller/fixture after fresh normal SDK and checkpoint metadata checks.",
+    "Actual Mac must report all 285 selected QA cases and 14 recording cases passed with zero skips, no first/monitor failure and verified cleanup.",
+    "The existing real artifact must pass normal download integrity, every restore guard, exact current nonhistoric context and actual restored effective configuration; restore-ready must be supported by its complete proof.",
+    "Independently review the short terminal evidence before any consumer-only full47 continuation; full47 must use the same reviewed source/artifact and fresh valid acquisition checks.",
+    "The exact remote run45 offending link, original native exit cause, resumed full host/XUL completion and native authentication remain unverified."
+  ],
+  "qualificationLimits": {
+    "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+    "freshObjdir": false,
+    "sameJob": false,
+    "strictSameRun": false,
+    "atomicFilesystemSnapshot": false,
+    "shortFullHostXUL": "NOT_TESTED",
+    "shortNativeAuthentication": "NOT_TESTED",
+    "productQualification": false
+  },
+  "unchangedBindings": [
+    {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_activity.py",
+      "bytes": 13139,
+      "sha256": "fbdefbf8a0a1b4112ca7ed97ee723b763dfee765b5ecf17e471404d0d97a37fb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "bytes": 11285,
+      "sha256": "aac48b4168114a31b141cd81c75eef1a6043a9d8c145cb54a25634b4ad899f8a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 10804,
+      "sha256": "43d434019393662aa1cfc4e80aa50df08d5829a98a5e25115f6e1f3477198fed"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+      "bytes": 4204,
+      "sha256": "6ef95cdcf40395414535bca0b4f7a562a0f0d96a7a73876385b0cc30d943e2ff"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint.py",
+      "bytes": 38160,
+      "sha256": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_transfer.py",
+      "bytes": 9635,
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 40695,
+      "sha256": "90fd2eeae2385d9e8b7423322d53a772f59d9188246e03f436bb79c01f53d629"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/failure_excerpt.py",
+      "bytes": 10398,
+      "sha256": "f3d120a923b0abfda1afcbbb467eae2e693671380859a50887a97adb95808c32"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint.py",
+      "bytes": 38273,
+      "sha256": "aabf860135312b91f248174768493b1fdd555b4cbf73b9d01d39e5b333165623"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_transfer.py",
+      "bytes": 10567,
+      "sha256": "8026b8cb50eea480a6d4145538f84161e485df66c7590b185a596abf9532dddb"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_failure_excerpt.py",
+      "bytes": 17387,
+      "sha256": "651bdb3edbde8ffcd1e80e9ff15c987679f003d530af060140ee75b6b6328b69"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 6097,
+      "sha256": "e090c497e97607cb5b77885d98e2094ad6da3a7c37a3a60189010349a65c5825"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_restore_replay.py",
+      "bytes": 4822,
+      "sha256": "40bf8ae5325306055b1bd7d6a3b32a60694d47bbb942d53d6f4a3e918ff0720d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_replay.py",
+      "bytes": 11556,
+      "sha256": "29ba89cf178a98ae9ec4593f05f8556c9d6e923f1567e2806db926c48e02645e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_replay.py",
+      "bytes": 18277,
+      "sha256": "7b20919a2d958c475ab3d16d6525229c2c048928db6d11a04900442286c5dcde"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+      "bytes": 635,
+      "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_CHECKPOINT_RESTORE_WORKFLOW.yml.disabled",
+      "bytes": 10549,
+      "sha256": "ba0acdf363d593911d02fa7c1ad5945357065b303923988bdeb7b0f2d25e41dd"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_CHECKPOINT_CONSUMER_WORKFLOW.yml.disabled",
+      "bytes": 10430,
+      "sha256": "893fbfb6852c9619eb4757251bcfe4e2fae305c0910e69d6526b26c8b2631361"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY46_RESTORE_PREFLIGHT.json",
+      "bytes": 9567,
+      "sha256": "d972435761b751158c9403806e54bc99149bdcc6cafd9e3084d2b8a19ae316b2"
+    }
+  ],
+  "reviewActions": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "payloadDownloaded": false,
+    "artifactUploaded": false,
+    "remoteWritten": false
+  },
+  "publicPrivacy": {
+    "repoRelativePathsOnly": true,
+    "rawLogsOrSignedURLsIncluded": false,
+    "privateTracebackTextIncluded": false,
+    "internalConversationIncluded": false
+  }
+}
