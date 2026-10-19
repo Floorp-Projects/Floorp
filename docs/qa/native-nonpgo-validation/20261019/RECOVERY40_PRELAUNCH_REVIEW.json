@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY40_SHORT_READONLY_FIXTURE_CORRECTION_PRELAUNCH_INDEPENDENT_REVIEW",
+  "checkedAtUTC": "2026-10-19T00:29:09Z",
+  "decision": {
+    "shortDiagnostic": "GO",
+    "blockingFindings": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "productionCheckpointReplacement": "NOT_QUALIFIED",
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "immutableRoute": {
+    "fixture": {
+      "repository": "Floorp-Projects/Floorp",
+      "commit": "361b16aec48366e17e752dc833c38341a901c596",
+      "tree": "30ed15a50d4aeed33a0b7a235850256c25e4cc4c",
+      "parent": "79eafbbc768f41946a3092c05cc3492aaeb67464",
+      "providerCommitDiff": "Exactly two RO source/test changes and three new Recovery40 documents.",
+      "independentFileReadbacks": 5
+    },
+    "caller": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "51d05dfe8a838a188fe64ae8bd42295f83da03dc",
+      "tree": "195b925573c756431333b9ce10243cc435bb7f67",
+      "parent": "ef198f5c88e9a2a30101821f480fcd46632326cb",
+      "onlyChangedFile": ".github/workflows/mac-native-checkpoint.yml",
+      "workflowBytes": 3143,
+      "workflowSHA256": "71066901a4e37a0170c00328925f2b28d7dadf9439c37ebd622f122004f8474b",
+      "independentProviderBytesMatch": true,
+      "renderDifference": "One fixture placeholder replaced by the exact reviewed commit."
+    },
+    "branch": "codex/mac-native-boundary-recovery40-20261019",
+    "branchBeforeExecution": "NOT_FOUND_404",
+    "previousBranchRuns": 0,
+    "ownedInProgressRuns": 0,
+    "ownedQueuedRuns": 0,
+    "otherWorkflowScope": "All other workflow files remain unchanged from the independently reviewed caller base; this change adds no broad trigger.",
+    "stateLimit": "Branch and active-run observations are point-in-time checks; recheck before activation."
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/readonly_boundary_experiment.py",
+      "bytes": 32452,
+      "sha256": "b29ff52e54add461c490779c49c91e9888075368dac325e52a83b139ffaf61cb",
+      "independentProviderBytesMatch": true
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_readonly_boundary_experiment.py",
+      "bytes": 29891,
+      "sha256": "1ff6fc792264b49d6b5ca76074675842f629131eee9f3ffe19d04103ba383907",
+      "independentProviderBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_READONLY_DIAGNOSTIC.md",
+      "bytes": 3644,
+      "sha256": "8c9cab5f63d78ca9885d429523b38a7980f6e5fd469b1467466733d9cfce22a0",
+      "independentProviderBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_BOUNDARY_WORKFLOW.yml.disabled",
+      "bytes": 3125,
+      "sha256": "49ef243c26d0c5bcb3cdd5351a4e76fe4fb56796cccb80efb6526b117aca1e29",
+      "independentProviderBytesMatch": true
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY40_LOCAL_RESULT.json",
+      "bytes": 1838,
+      "sha256": "38b2c27bdf3139604f3d832671a94d3a606dc6af8de9f21a4d15aa9eff0daea9",
+      "independentProviderBytesMatch": true
+    }
+  ],
+  "testsExecutedByReviewer": [
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest test_readonly_boundary_experiment test_task_api_experiment test_checkpoint test_boundary_diagnostic -q",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "total": 84,
+      "passed": 83,
+      "skipped": 1,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 1.165,
+      "exitCode": 0,
+      "privateLogBytes": 110,
+      "privateLogSHA256": "5138a97f7f8d3fab90bcb8cb21ad7587251aaea09c4b5070f34e4a5e797aa269"
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONWARNINGS=error::ResourceWarning python -m unittest discover -q",
+      "workingDirectory": "tools/qa/native-nonpgo",
+      "total": 380,
+      "passed": 364,
+      "skipped": 16,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 18.923,
+      "exitCode": 0,
+      "privateLogBytes": 9156,
+      "privateLogSHA256": "c0cf43580b45cfd9b0539bcc9c556d1532616f491cbf692874e631d665327bc0"
+    }
+  ],
+  "checks": [
+    "Both source files exactly match the frozen hashes; all five modified/new files and rendered workflow independently match immutable provider bytes.",
+    "Official commit metadata confirms source and caller parent/tree bindings and the exact file scope.",
+    "Workflow YAML, all Bash blocks, inline Python and both Python source/test files parse successfully. Template changes from Recovery39 are name, two branch guards and target count77 to84.",
+    "Ten unchanged production source/configuration hashes and six unchanged checkpoint/task-API/driver source/test hashes match the prior immutable review bindings.",
+    "Public notes and receipts retain historical failure/unknown distinctions and contain no private paths, signed URLs, raw utility values, process identities or internal participant references."
+  ],
+  "correctionAssessment": {
+    "ownershipSeparateFromState": "verify_ownership binds the private backing identity, exact hdiutil image entry/device set, canonical mount, diskutil device/VolumeUUID and mounted-root dev/inode. Ambiguous, absent or changed identity refuses detach.",
+    "cleanup": "Normal non-force detach uses ownership binding without requiring optional readonly properties or statvfs. Unknown identity remains an explicit unverified cleanup failure. This prevents the failed state probe itself from blocking otherwise fully bound image cleanup.",
+    "knownProperties": "Only seven fixed names are projected as presence/type/boolean. Nonboolean values become null; unknown keys and free-text values are excluded. No aliases, coercions, media semantics or contradictions are inferred.",
+    "kernelCondition": "Typed finite-range statvfs flags and ST_RDONLY==1 are required. Two consistent kernel state observations are associated with repeated full mount/image/root binding checks. An unknown/invalid flag, state change or unexpected readonly state raises before successful controls.",
+    "ordinaryWriteControls": "A successful RO fixture still requires O_RDWR/new-file/rename EROFS, denied writable shared mapping from a read-only descriptor, private-map file stability, and unchanged payload/manifest hashes with before/after readonly binding checks.",
+    "stoppingEvidence": "A deep copy of the last binding observation is retained before cleanup can append or change diagnostic state. The original first failure and separate cleanup failures remain distinct.",
+    "processesAndResources": "Exact child ownership, inherited outer monitored group, bounded utility output/timeouts, exact Popen reap and external Runner group cleanup remain unchanged. Production resource queries, unknown behavior, limits, candidate selection and census eligibility do not change.",
+    "rawBackingControl": "Open/close O_RDWR only, with zero raw writes and no second writable attachment.",
+    "qualification": "Every fixture outcome keeps checkpointEligibilityEstablished=false, sameUIDImmutabilityEstablished=false and qualification=NO_GO."
+  },
+  "meaningfulNegativeCoverage": [
+    "Absent optional RO keys plus complete ownership identity permits cleanup without a statvfs call; unknown identity still prevents any detach.",
+    "Known readonly-property strings, integers, arrays and unknown keys cannot leak their values or become coerced booleans.",
+    "All optional diskutil observations remain diagnostic even when their booleans differ from the kernel filesystem readonly flag.",
+    "Invalid/null/bool/string/negative/out-of-range kernel flags remain unavailable; changed RO state fails.",
+    "Stopping binding observation remains intact when cleanup mutates the current observation.",
+    "Existing backing replacement, unknown mount, malformed/duplicate devices, UUID mismatch, output/deadline failure, exact child and primary-preserving cleanup tests remain successful."
+  ],
+  "priorFailurePreserved": {
+    "run": 39180177043,
+    "conclusion": "failure",
+    "terminalReceiptSHA256": "9114a4802fc3626a8c41fbc92b5cb8adf7e8a23bc7404bc7a88b99ae0277b260",
+    "terminalReviewSHA256": "6116e33ad9a43ec0d49ed3e41674c8ec269fc485ade4755f79367e591ff26e87",
+    "observed": "77 actual Mac tests and controlled task API32 children passed; the image probe failed on an unestablished diskutil readonly-property schema before writer/RO controls; image detach remains unknown despite stage groups being gone.",
+    "sameBirthLiveBSDTaskESRCHSamples": 9,
+    "execBoundSamples": 0,
+    "originalRun35CauseOrDelayedRepair": "NOT_ESTABLISHED",
+    "endedRunnerState": "Cannot be reconstructed by the new diagnostic."
+  },
+  "resolvedFindings": [
+    {
+      "priority": "P2",
+      "issue": "Required diskutil readonly-property schema was not established on the actual runner.",
+      "resolution": "Known fields are safe observations only; the limited fixture contract uses positively measured kernel filesystem state plus observed write rejection and hash stability."
+    },
+    {
+      "priority": "P2",
+      "issue": "Owned-image cleanup depended on the failed readonly-property interpretation.",
+      "resolution": "Cleanup is authorized only by independent exact ownership binding; absent state metadata no longer blocks a fully bound normal detach."
+    }
+  ],
+  "workflowControls": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "jobTimeoutMinutes": 20,
+    "observationStepTimeoutMinutes": 16,
+    "internalPhaseDeadlineMinutes": 15,
+    "targetActualMacTests": 84,
+    "expectedSkips": 0,
+    "APFSIntegrationCLIExecutions": 1,
+    "createdPushOnly": true,
+    "beforeAllZeroRequired": true,
+    "attemptOneRequired": true,
+    "exactRepositoryAndBranchRequired": true,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "cancelInProgress": false,
+    "checkoutAction": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "persistCredentials": false,
+    "sdkAcquisition": false,
+    "floorpBuild": false,
+    "artifactUpload": false,
+    "productSigning": false,
+    "nativeAuthenticationExercise": false,
+    "permissionOrAuthenticationSettingChanges": false,
+    "forceDetachOrUnrelatedSignals": false
+  },
+  "primarySources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/Libc/blob/71bbe350ab79eef58113991d817ccc6165061a64/include/sys/statvfs.h",
+      "support": "ST_RDONLY has mask0x00000001 and denotes a readonly filesystem."
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/sys/mount.h",
+      "support": "MNT_RDONLY is the filesystem readonly flag; this is separate from media/backing mutability."
+    }
+  ],
+  "sourceLimit": "These public definitions support flag meaning, not exact binding to the deployed runner libc/kernel binary or undocumented diskutil property semantics.",
+  "actualMacRemainingGate": {
+    "status": "NOT_EXECUTED_IN_THIS_REVIEW_LINUX_ENVIRONMENT",
+    "required": [
+      "The exact reviewed immutable route and unused branch/run state still match at activation.",
+      "All84 target tests pass with zero skips under the unchanged outer Runner.",
+      "Known readonly-property observations and stopping detail survive; unknown identity or kernel state fails.",
+      "The small fixture controls complete and ordinary image detach is independently verified, in addition to exact child reap and outer group-gone proof.",
+      "No child, monitor, cleanup or evidence-write failure is erased or interpreted as successful qualification."
+    ],
+    "successMeaning": "Ordinary filesystem write refusal observed for this fully bound small fixture under measured kernel RO state.",
+    "doesNotEstablish": [
+      "Readonly media or immutable same-UID backing/remount authority.",
+      "Atomic capture of all checkpoint payload and source/tools/SDK references.",
+      "Natural Recovery35 cause, outer delayed retry effectiveness, candidate non-writer provenance or production checkpoint eligibility.",
+      "Browser/native Shim authentication or permission/signing changes."
+    ],
+    "longExecution": "NO_GO_ON_HOLD"
+  },
+  "privacy": {
+    "rawLogsPublished": false,
+    "rawPlistsPublished": false,
+    "signedURLsPublished": false,
+    "processIdentitiesPublished": false,
+    "privatePathsPublished": false,
+    "rawArgvOrEnvironmentPublished": false,
+    "internalConversationPublished": false
+  },
+  "reviewerActions": {
+    "sourceEdits": 0,
+    "newCI": 0,
+    "externalWrites": 0,
+    "artifactOperations": 0,
+    "largeDownloads": 0,
+    "permissionChanges": 0,
+    "macExecution": 0
+  }
+}
