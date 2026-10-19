@@ -9,6 +9,7 @@ import { ChromeSiteBrowser } from "../browsers/chrome-site-browser.tsx";
 import { ExtensionSiteBrowser } from "../browsers/extension-site-browser.tsx";
 import { WebSiteBrowser } from "../browsers/web-site-browser.tsx";
 import {
+  activeChromeSidePanelId,
   isFloating,
   panelSidebarConfig,
   panelSidebarData,
@@ -19,6 +20,7 @@ import {
 import type { Panel } from "../utils/type.ts";
 import { createEffect } from "solid-js";
 import { getExtensionSidebarAction } from "../extension-panels.ts";
+import { toggleChromeSidePanel } from "../chrome-side-panels.ts";
 import { WebsitePanel } from "../website-panel-window-parent.ts";
 import "../utils/webRequest.ts";
 
@@ -57,7 +59,12 @@ export class CPanelSidebar {
           panel.removeAttribute("data-checked");
         });
 
-        const currentPanel = this.getPanelData(selectedPanelId() ?? "");
+        const currentPanel = this.getPanelData(selectedPanelId() ?? "") ??
+          panelSidebarData().find(
+            (panel) =>
+              panel.type === "extension" &&
+              panel.extensionId === activeChromeSidePanelId(),
+          );
         if (currentPanel) {
           document
             // Select by data-panel-id to avoid touching workspace entries.
@@ -175,6 +182,14 @@ export class CPanelSidebar {
   }
 
   public changePanel(panelId: string): void {
+    const nativePanel = this.getPanelData(panelId);
+    if (
+      nativePanel?.type === "extension" && nativePanel.extensionId &&
+      toggleChromeSidePanel(nativePanel.extensionId)
+    ) {
+      setSelectedPanelId(null);
+      return;
+    }
     if (panelId === selectedPanelId()) {
       setSelectedPanelId(null);
       if (panelSidebarConfig().autoUnload) {

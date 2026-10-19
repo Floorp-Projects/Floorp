@@ -1,0 +1,251 @@
+---
+title: "Native Extension Service Workers"
+sidebar_label: "Extension Service Workers"
+---
+
+# Native Extension Service Workers
+
+The native implementation is maintained in
+`.github/patches/floorp-runtime/common/chrome-extension-workers.patch`. It adds
+per-extension selection, classic and module registration, compiled API bindings,
+function injection serialization, event gesture propagation, and idle restart
+handling. It requires a Runtime rebuilt with
+`--enable-extensions-webidl-bindings`; applying JavaScript patches to a prebuilt
+Runtime cannot enable these native bindings.
+
+The first candidate is being compiled in an isolated source checkout. The
+generated bindings have passed the Mozilla WebIDL parser and C++ binding
+generator; actual Worker execution must be verified with the resulting native
+binary. The sections below distinguish the pinned baseline gaps from their
+implementation and validation requirements.
+
+## Candidate implementation
+
+The normal `extensions.backgroundServiceWorker.enabled` preference remains
+false. A separate immutable policy flag is selected only for a compatibility
+marker with schema version 1 and a matching Chromium extension ID, and only
+when the native WebIDL option is compiled. Native registration, script loading,
+and API exposure check that policy. Ordinary Firefox extensions keep their
+existing default selection. The existing experimental preference still permits
+upstream Service Worker tests.
+
+The manifest's module type reaches native registration as `WorkerType::Module`.
+The implementation adds native Worker bindings for storage, tabs, action, DNR,
+Offscreen, Side Panel, userScripts, debugger, identity, notifications, tabGroups,
+permissions, cookies, webRequest, management, privacy settings, context menus,
+downloads, webNavigation, tabCapture, desktopCapture, fontSettings, and TTS,
+plus `runtime.getContexts`. These bindings forward to the corresponding native
+child and parent API implementations. `scripting.executeScript` serializes a callable and JSON
+arguments on the Worker thread and then uses the existing parameter validation,
+host permissions, target document validation, and injection implementation.
+
+Trusted native event gestures cross the Worker boundary through internal
+listener and request metadata. The flag is scoped to the synchronous native
+callback and restored afterward; schema methods requiring user input reject
+requests outside that scope. API requests cannot supply their own gesture flag.
+
+The Worker callback adapters preserve the API-specific return conventions.
+`contextMenus.create` returns its ID synchronously while the real asynchronous
+backend reports completion through its callback. Identity token promises retain
+an object result, while legacy callbacks receive the token and granted scopes.
+Desktop selection returns its request ID synchronously and resolves its callback
+with the authorized stream token; cancelling a request suppresses that callback.
+Event registration forwards filters and additional options, and the native
+`webRequest` authentication bridge waits for its asynchronous callback result.
+
+TTS keeps `options.onEvent` on the Worker thread and forwards the remaining
+options to the real speech engine. Per-utterance native listeners route events
+back to that callback, remove internal routing fields, and release callbacks on
+the final event, rejection, or Worker shutdown.
+
+Idle termination preserves the active registration, primes persisted listeners,
+and wakes the registered worker on the next event. Startup watchers and
+activation listeners are released on shutdown.
+
+The actual-browser integration suite is
+`browser-features/modules/modules/chrome-web-store/test/workers/WorkerNative.test.mts`:
+
+```sh
+python3 tools/chrome-extension-runtime/run-browser-tests.py \
+  --browser /path/to/rebuilt/runtime \
+  --test browser-features/modules/modules/chrome-web-store/test/workers/WorkerNative.test.mts
+```
+
+It uses a private profile and a local HTTP fixture. It covers classic
+`importScripts`, static module imports, real Worker globals, storage persistence,
+API calls, callable and file injection, callbacks and `runtime.lastError`, actual
+event wakeup, cookie and tab-group changes, font preference changes and events,
+real TTS speech callbacks, and permission failures. A prebuilt browser without compiled
+bindings fails explicitly.
+
+The source baseline is the commit recorded in `floorp-runtime.lock.json`,
+`1553b7b550dfe555684628d175e0c1701a785d0b`. The tested Linux artifact reports
+Firefox 157.0 and build ID `20260926171135`. The investigation was performed on
+2026-10-19 JST. Source paths below refer to that pinned Runtime checkout.
+
+## Compile-time and startup gates
+
+`toolkit/moz.configure` already provides
+`--enable-extensions-webidl-bindings`. Its default follows
+`milestone.is_nightly`, and its result becomes `MOZ_WEBEXT_WEBIDL_ENABLED`.
+Floorp does not need to change the release channel to select this option.
+
+`toolkit/components/extensions/webidl-api/moz.build` supplies the C++ definition
+to `ExtensionBrowser.cpp`. `ExtensionAPIAllowed()` in that file returns `false`
+unconditionally when the definition is absent. Updating `AppConstants.sys.mjs`
+would change the reported constant without changing this compiled function.
+
+There is also an independent startup gate:
+
+- `modules/libpref/init/StaticPrefList.yaml` defines
+  `extensions.backgroundServiceWorker.enabled` as false with `mirror: once`.
+- `modules/libpref/init/all.js` locks the preference to false when
+  `MOZ_WEBEXT_WEBIDL_ENABLED` is absent.
+- `WebExtensionPolicy::BackgroundServiceWorkerEnabled()` and
+  `ServiceWorkerManager::RegisterForAddonPrincipal()` read that startup value.
+
+The actual browser probe reported both
+`AppConstants.MOZ_WEBEXT_WEBIDL_ENABLED === false` and
+`WebExtensionPolicy.backgroundServiceWorkerEnabled === false`. Setting the
+preference to true after startup did not enable the policy. The candidate enables
+the compile option and adds per-policy compatibility selection while preserving
+the ordinary Firefox default preference.
+
+## Module workers have a separate registration gap
+
+`Extension.sys.mjs` derives `backgroundTypeModule` from `background.type` and
+serializes it. `ExtensionProcessScript.sys.mjs` forwards that field into
+`WebExtensionPolicy`. The policy stores `mBackgroundTypeModule`, but currently
+uses it to select the script type in generated background **page** HTML.
+
+`ServiceWorkerManager::RegisterForAddonPrincipal()` instead calls:
+
+```cpp
+Register(clientInfo.ref(), scope, WorkerType::Classic,
+         NS_ConvertUTF16toUTF8(scriptURL),
+         dom::ServiceWorkerUpdateViaCache::Imports);
+```
+
+It does this regardless of the manifest's type. Preserving `type: "module"`
+in a converted manifest therefore does not produce a native module worker.
+
+A bounded native change can expose the policy's existing immutable background
+type through a C++ getter and select `WorkerType::Module` in this registration
+path. The general Worker module loader already exists in
+`dom/workers/ScriptLoader.cpp` and `dom/workers/loader/WorkerModuleLoader.cpp`,
+and `ServiceWorkerRegistrar.cpp` persists a module registration type. This is
+reuse potential, not proof that the extension loading, cache, update, and
+restart paths already work together.
+
+The module loader intentionally rejects dynamic `import()` for Service Workers;
+that is separate from static ESM imports. `ScriptLoader.cpp` also rejects
+`importScripts()` inside module workers. A native test must preserve these
+distinctions while verifying that classic workers retain `importScripts()`.
+
+## Pinned Worker API binding gaps
+
+The pinned `dom/webidl/ExtensionBrowser.webidl` exposes these production namespaces:
+`alarms`, `browserSettings`, `dns`, `proxy`, `publicSuffix`, `runtime`, and
+`scripting`. It also exposes test-only interfaces. There are no Worker bindings
+for `tabs`, `storage`, `action`, `sidePanel`, `offscreen`, `userScripts`, DNR,
+`identity`, or `debugger` in this interface.
+
+Two gaps also exist inside exposed namespaces:
+
+| API | Pinned implementation | Required change |
+| --- | --- | --- |
+| `scripting.executeScript` | `ExtensionScripting.webidl` uses `WebExtensionStub="NotImplementedAsync"`. `ExtensionWebIDL.conf` explicitly identifies function/argument serialization as unfinished. | Implement serialization and the Worker-to-child/parent request path. A generated async stub alone cannot clone a JavaScript function across runtimes. |
+| `runtime.getContexts` | The method is absent from `ExtensionRuntime.webidl`, although the parent/document API exists. | Generate and wire the method, then verify the same native context/document IDs and filtering from a Worker. |
+
+The existing document API injector cannot simply run inside the Worker.
+`toolkit/components/extensions/docs/webidl_bindings.md` explains that the
+document bindings run on the main thread, whereas the Worker has a separate
+runtime. `ExtensionWorkerChild.sys.mjs` bridges native WebIDL requests and
+listeners to the existing API implementations, including special message and
+Port handling.
+
+New bindings require generated WebIDL/C++ files, entries in
+`dom/bindings/Bindings.conf`, `dom/webidl/moz.build`, and
+`toolkit/components/extensions/webidl-api/moz.build`, plus namespace members,
+getters, and cycle collection in `ExtensionBrowser.h/.cpp`. The pinned
+`GenerateWebIDLBindings.py` and `wiring_up_new_webidl_bindings.md` describe this
+workflow. Generation is an implementation aid; permissions, callbacks,
+`runtime.lastError`, event wakeup, and special values still need behavior tests.
+
+The parent APIs added for Side Panel and Offscreen remain useful, but adding
+those JSON schemas does not expose them through a compiled Worker global.
+
+## Lifetime and verification requirements
+
+The native `BackgroundWorker` in `parent/ext-backgroundPage.js` already delegates
+registration to the service worker manager and watches Worker contexts. Its
+comments still identify follow-up work for spawning a previously registered
+worker and interrupting startup during shutdown. Those paths need evidence
+before treating installation success as lifecycle compatibility.
+
+The rebuilt candidate should run the existing service-worker manifests, which
+are conditionally included only when `MOZ_WEBEXT_WEBIDL_ENABLED` is true:
+
+```sh
+./mach xpcshell-test --tag sw-webextensions \
+  toolkit/components/extensions/test/xpcshell/test_ext_background_service_worker.js
+./mach xpcshell-test --tag sw-webextensions \
+  toolkit/components/extensions/test/xpcshell/test_ext_service_worker_messaging.js
+./mach xpcshell-test toolkit/components/extensions/test/xpcshell/webidl-api/
+```
+
+Additional fixtures must cover classic `importScripts`, module static imports,
+function injection, storage, tabs, Offscreen and Side Panel calls from the
+Worker, callback/Promise errors, and actual event wakeup after idle termination.
+Restart the browser with the same profile to verify persisted registrations.
+During startup and an API request, update, disable, and uninstall the extension;
+verify that old Workers, registrations, Ports, and pending calls are cleaned up.
+Run ordinary Firefox extensions in the same candidate to detect selection and
+binding regressions.
+
+## Build feasibility in the managed environment
+
+At the initial feasibility probe, sourcing `/workspace/.floorp-cloud/env.sh`
+provided the existing Floorp tools without Clang, Rust, Cargo, or Ninja. Those
+native toolchains have since been provisioned for the isolated candidate build.
+The host has five CPUs,
+about 17 GiB RAM, no swap, and about 29 GiB free writable storage. `/tmp` has a
+separate, smaller budget of about 8.8 GiB. The Runtime checkout occupies about
+6.5 GiB, including about 1.6 GiB of Git data; the existing object directory is
+test metadata, not a completed native build.
+
+The managed HTTP policy was observed as enforced and unrestricted. Supported
+proxy requests to the Mozilla Taskcluster service, Rust distribution manifest,
+and Mozilla nightly archive returned HTTP 200. There is no demonstrated
+destination-policy blocker. The Gecko bootstrap helper successfully downloaded
+the small Searchfox CLI into the build cache. That CLI subsequently rejected
+the proxy certificate with `UnknownIssuer` even with the inherited CA bundle;
+the equivalent `curl` connections succeeded. This is a tool-specific trust
+issue, not evidence that compiler artifacts are unreachable.
+
+`mach bootstrap --help` and `mach configure --help` succeeded during the initial
+probe. The implementation phase subsequently provisioned the toolchains and
+started an actual configure and build in `_dist/native-runtime/source`, with an
+owned mozconfig and object directory. The sibling Runtime checkout and Floorp
+lockfile remain unchanged.
+
+A bounded native build should use a separate source checkout/fixture and an
+explicit owned `MOZCONFIG`, with a separate object directory on the larger
+workspace filesystem. Start with a non-PGO, non-LTO Linux test build, disabled
+debug symbols, and conservative build parallelism. Enable
+`--enable-extensions-webidl-bindings` explicitly. Acquire the pinned compiler,
+Rust, sysroot, and build prerequisites through Gecko's supported bootstrap;
+the Runtime CI setup currently selects Rust 1.95.0. Budget the separate source
+tree, downloaded toolchains, object files, and peak linking space before running
+the build. The observed free storage does not establish that a full build fits.
+
+`bootstrap --no-system-changes` is not a dry run: it downloads private build
+tools and may write a suggested mozconfig. An explicit owned mozconfig and
+isolated source path are necessary to keep that work away from the sibling
+Runtime checkout. A full build also would not resolve the missing bindings and
+registration behavior by itself.
+
+After native changes and tests pass, publish matching Runtime artifacts and
+update the Floorp source/artifact provenance together. The existing package
+workflow consumes prebuilt native artifacts, so applying a C++ or WebIDL patch
+in its later source-patch step cannot change the shipped native behavior.

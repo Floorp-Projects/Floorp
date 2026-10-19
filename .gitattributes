@@ -1,5 +1,5 @@
 * text=auto
-*.patch text eol=lf
+*.patch text eol=lf whitespace=-blank-at-eol,-blank-at-eof
 # Generated docs and the shared Notes contract must retain canonical bytes.
 docs/**/*.mdx text eol=lf
 browser-features/pages-notes/test/fixtures/floorp-notes-merge-v1.json text eol=lf

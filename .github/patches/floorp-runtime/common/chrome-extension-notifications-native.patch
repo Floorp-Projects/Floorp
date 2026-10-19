@@ -1,0 +1,27 @@
+diff --git a/toolkit/components/alerts/nsXULAlerts.cpp b/toolkit/components/alerts/nsXULAlerts.cpp
+index 21badadfc86f2f0a44f56cc299e10dcca3cf0ba5..96e51e52f0f5afff22f93fbb59f5f5d22dcd5576 100644
+--- a/toolkit/components/alerts/nsXULAlerts.cpp
++++ b/toolkit/components/alerts/nsXULAlerts.cpp
+@@ -11,6 +11,7 @@
+ #include "mozilla/ClearOnShutdown.h"
+ #include "mozilla/EventForwards.h"
+ #include "mozilla/LookAndFeel.h"
++#include "mozilla/ResultExtensions.h"
+ #include "mozilla/dom/Notification.h"
+ #include "nsIAlertsService.h"
+ #include "nsISupportsPrimitives.h"
+@@ -346,6 +347,14 @@ nsresult nsXULAlerts::ShowAlertImpl(nsIAlertNotification* aAlert,
+   rv = argsArray->AppendElement(scriptableAlertSource);
+   NS_ENSURE_SUCCESS(rv, rv);
+ 
++  nsTArray<RefPtr<nsIAlertAction>> actions;
++  MOZ_TRY(aAlert->GetActions(actions));
++  nsCOMPtr<nsIMutableArray> actionArguments = nsArray::Create();
++  for (const auto& action : actions) {
++    MOZ_TRY(actionArguments->AppendElement(action));
++  }
++  MOZ_TRY(argsArray->AppendElement(actionArguments));
++
+   nsCOMPtr<mozIDOMWindowProxy> newWindow;
+   nsAutoCString features("chrome,dialog=yes,alert=yes,titlebar=no");
+   if (inPrivateBrowsing) {

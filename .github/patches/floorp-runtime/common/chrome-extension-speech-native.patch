@@ -1,0 +1,243 @@
+diff --git a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
+index a3e964b..ab051b3 100644
+--- a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
++++ b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.cpp
+@@ -5,6 +5,7 @@
+ #include "SpeechDispatcherService.h"
+ 
+ #include <math.h>
++#include <stdio.h>
+ 
+ #include "mozilla/ClearOnShutdown.h"
+ #include "mozilla/Preferences.h"
+@@ -85,6 +86,9 @@ typedef enum {
+   FUNC(spd_close, void, (SPDConnection*))                           \
+   FUNC(spd_list_synthesis_voices, SPDVoice**, (SPDConnection*))     \
+   FUNC(spd_say, int, (SPDConnection*, SPDPriority, const char*))    \
++  FUNC(spd_pause, int, (SPDConnection*))                            \
++  FUNC(spd_resume, int, (SPDConnection*))                           \
++  FUNC(spd_set_data_mode, int, (SPDConnection*, int))               \
+   FUNC(spd_cancel, int, (SPDConnection*))                           \
+   FUNC(spd_set_volume, int, (SPDConnection*, int))                  \
+   FUNC(spd_set_voice_rate, int, (SPDConnection*, int))              \
+@@ -104,6 +108,9 @@ SPEECHD_FUNCTIONS
+ #define spd_close _spd_close
+ #define spd_list_synthesis_voices _spd_list_synthesis_voices
+ #define spd_say _spd_say
++#define spd_pause _spd_pause
++#define spd_resume _spd_resume
++#define spd_set_data_mode _spd_set_data_mode
+ #define spd_cancel _spd_cancel
+ #define spd_set_volume _spd_set_volume
+ #define spd_set_voice_rate _spd_set_voice_rate
+@@ -153,6 +160,9 @@ class SpeechDispatcherCallback final : public nsISpeechTaskCallback {
+   NS_DECL_NSISPEECHTASKCALLBACK
+ 
+   bool OnSpeechEvent(SPDNotificationType state);
++  void OnMark(const nsCString& aMark);
++  uint32_t mCharIndex = 0;
++  uint32_t mTextLength = 0;
+ 
+  private:
+   ~SpeechDispatcherCallback() = default;
+@@ -179,22 +189,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechDispatcherCallback)
+ 
+ NS_IMETHODIMP
+ SpeechDispatcherCallback::OnPause() {
+-  // XXX: Speech dispatcher does not pause immediately, but waits for the speech
+-  // to reach an index mark so that it could resume from that offset.
+-  // There is no support for word or sentence boundaries, so index marks would
+-  // only occur in explicit SSML marks, and we don't support that yet.
+-  // What in actuality happens, is that if you call spd_pause(), it will speak
+-  // the utterance in its entirety, dispatch an end event, and then put speechd
+-  // in a 'paused' state. Since it is after the utterance ended, we don't get
+-  // that state change, and our speech api is in an unrecoverable state.
+-  // So, since it is useless anyway, I am not implementing pause.
+-  return NS_OK;
++  return spd_pause(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
+ }
+ 
+ NS_IMETHODIMP
+ SpeechDispatcherCallback::OnResume() {
+-  // XXX: Unsupported, see OnPause().
+-  return NS_OK;
++  return spd_resume(mService->mSpeechdClient) < 0 ? NS_ERROR_FAILURE : NS_OK;
+ }
+ 
+ NS_IMETHODIMP
+@@ -229,16 +229,19 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
+       break;
+ 
+     case SPD_EVENT_PAUSE:
+-      mTask->DispatchPause((TimeStamp::Now() - mStartTime).ToSeconds(), 0);
++      mTask->DispatchPause((TimeStamp::Now() - mStartTime).ToSeconds(),
++                           mCharIndex);
+       break;
+ 
+     case SPD_EVENT_RESUME:
+-      mTask->DispatchResume((TimeStamp::Now() - mStartTime).ToSeconds(), 0);
++      mTask->DispatchResume((TimeStamp::Now() - mStartTime).ToSeconds(),
++                            mCharIndex);
+       break;
+ 
+     case SPD_EVENT_CANCEL:
+     case SPD_EVENT_END:
+-      mTask->DispatchEnd((TimeStamp::Now() - mStartTime).ToSeconds(), 0);
++      mTask->DispatchEnd((TimeStamp::Now() - mStartTime).ToSeconds(),
++                         state == SPD_EVENT_END ? mTextLength : mCharIndex);
+       remove = true;
+       break;
+ 
+@@ -253,6 +256,31 @@ bool SpeechDispatcherCallback::OnSpeechEvent(SPDNotificationType state) {
+   return remove;
+ }
+ 
++void SpeechDispatcherCallback::OnMark(const nsCString& aMark) {
++  uint32_t index, length, sentence;
++  if (sscanf(aMark.get(), "floorp:%u:%u:%u", &index, &length, &sentence) != 3 ||
++      index > mTextLength || length > mTextLength - index) {
++    return;
++  }
++  mCharIndex = index;
++  float elapsed = (TimeStamp::Now() - mStartTime).ToSeconds();
++  if (sentence) {
++    mTask->DispatchBoundary(u"sentence"_ns, elapsed, index, length, 1);
++  }
++  mTask->DispatchBoundary(u"word"_ns, elapsed, index, length, 1);
++}
++
++static void speechd_mark_cb(size_t aMsgId, size_t aClientId,
++                            SPDNotificationType aState, char* aMark) {
++  auto* service = SpeechDispatcherService::GetInstance(false);
++  if (service && aMark) {
++    NS_DispatchToMainThread(NewRunnableMethod<uint32_t, const nsCString>(
++        "dom::SpeechDispatcherService::MarkNotify", service,
++        &SpeechDispatcherService::MarkNotify, static_cast<uint32_t>(aMsgId),
++        nsCString(aMark)));
++  }
++}
++
+ static void speechd_cb(size_t msg_id, size_t client_id,
+                        SPDNotificationType state) {
+   SpeechDispatcherService* service =
+@@ -360,10 +388,15 @@ void SpeechDispatcherService::Setup() {
+   mSpeechdClient->callback_cancel = speechd_cb;
+   mSpeechdClient->callback_pause = speechd_cb;
+   mSpeechdClient->callback_resume = speechd_cb;
++  mSpeechdClient->callback_im = speechd_mark_cb;
+ 
+   spd_set_notification_on(mSpeechdClient, SPD_BEGIN);
+   spd_set_notification_on(mSpeechdClient, SPD_END);
+   spd_set_notification_on(mSpeechdClient, SPD_CANCEL);
++  spd_set_notification_on(mSpeechdClient, SPD_PAUSE);
++  spd_set_notification_on(mSpeechdClient, SPD_RESUME);
++  spd_set_notification_on(mSpeechdClient, SPD_INDEX_MARKS);
++  spd_set_data_mode(mSpeechdClient, 1);
+ 
+   if (list != nullptr) {
+     for (int i = 0; list[i]; i++) {
+@@ -445,7 +478,52 @@ SpeechDispatcherService::Observe(nsISupports* aSubject, const char* aTopic,
+ 
+ // nsISpeechService
+ 
+-// TODO: Support SSML
++static nsCString SpeechTextWithMarks(const nsAString& aText) {
++  nsAutoString markup(u"<speak>");
++  bool sentence = true;
++  uint32_t i = 0;
++  while (i < aText.Length()) {
++    const char16_t ch = aText[i];
++    if (ch > ' ' && (i == 0 || aText[i - 1] <= ' ')) {
++      uint32_t end = i + 1;
++      while (end < aText.Length() && aText[end] > ' ') {
++        ++end;
++      }
++      markup.AppendLiteral("<mark name=\"floorp:");
++      markup.AppendInt(i);
++      markup.Append(':');
++      markup.AppendInt(end - i);
++      markup.Append(':');
++      markup.AppendInt(sentence ? 1 : 0);
++      markup.AppendLiteral("\"/>");
++      sentence = false;
++    }
++    switch (ch) {
++      case '&':
++        markup.AppendLiteral("&amp;");
++        break;
++      case '<':
++        markup.AppendLiteral("&lt;");
++        break;
++      case '>':
++        markup.AppendLiteral("&gt;");
++        break;
++      default:
++        if (ch >= 0x20 || ch == '\t' || ch == '\n' || ch == '\r') {
++          markup.Append(ch);
++        }
++        break;
++    }
++    if (ch == '.' || ch == '!' || ch == '?' || ch == 0x3002 || ch == 0xff01 ||
++        ch == 0xff1f) {
++      sentence = true;
++    }
++    ++i;
++  }
++  markup.AppendLiteral("</speak>");
++  return NS_ConvertUTF16toUTF8(markup);
++}
++
+ NS_IMETHODIMP
+ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
+                                float aVolume, float aRate, float aPitch,
+@@ -493,9 +571,10 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
+     return rv;
+   }
+ 
++  callback->mTextLength = aText.Length();
+   if (aText.Length()) {
+-    int msg_id = spd_say(mSpeechdClient, SPD_MESSAGE,
+-                         NS_ConvertUTF16toUTF8(aText).get());
++    int msg_id =
++        spd_say(mSpeechdClient, SPD_MESSAGE, SpeechTextWithMarks(aText).get());
+ 
+     if (msg_id < 0) {
+       return NS_ERROR_FAILURE;
+@@ -542,6 +621,13 @@ SpeechDispatcherService::GetInstanceForService() {
+   return sapiService.forget();
+ }
+ 
++void SpeechDispatcherService::MarkNotify(uint32_t aMsgId,
++                                         const nsCString& aMark) {
++  if (auto* callback = mCallbacks.GetWeak(aMsgId)) {
++    callback->OnMark(aMark);
++  }
++}
++
+ void SpeechDispatcherService::EventNotify(uint32_t aMsgId, uint32_t aState) {
+   SpeechDispatcherCallback* callback = mCallbacks.GetWeak(aMsgId);
+ 
+diff --git a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
+index bdb6e27..4d2acda 100644
+--- a/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
++++ b/dom/media/webspeech/synth/speechd/SpeechDispatcherService.h
+@@ -36,6 +36,7 @@ class SpeechDispatcherService final : public nsIObserver,
+   void Setup();
+ 
+   void EventNotify(uint32_t aMsgId, uint32_t aState);
++  void MarkNotify(uint32_t aMsgId, const nsCString& aMark);
+ 
+   static SpeechDispatcherService* GetInstance(bool create = true);
+   static already_AddRefed<SpeechDispatcherService> GetInstanceForService();
+diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
+index d740a89..53520a4 100644
+--- a/modules/libpref/init/all.js
++++ b/modules/libpref/init/all.js
+@@ -192,6 +192,7 @@ pref("mathml.disabled",    false);
+ // above. The estimated playback rate is time_duration/length_in_bytes.
+ // This means we'll only throttle the download if there's no concern that
+ // throttling would cause us to stop and buffer.
++pref("floorp.chrome.tts.native", true);
+ pref("media.throttle-factor", 2);
+ 
+ // Master HTML5 media volume scale.

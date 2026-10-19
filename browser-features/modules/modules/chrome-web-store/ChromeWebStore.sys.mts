@@ -29,6 +29,8 @@ export type {
   InstallRequest,
   ConversionResult,
   ConversionOptions,
+  ChromeConversionReport,
+  ChromeExtensionCompatibility,
   TransformOptions,
   // Manifest types
   ChromeManifestBackground,
@@ -75,6 +77,9 @@ export {
   EXTENSION_ID_SUFFIX,
   // Download URLs
   CRX_DOWNLOAD_URLS,
+  STORE_DOWNLOAD_CLIENT_VERSION,
+  resolveChromeDownloadTarget,
+  type ChromeDownloadTarget,
   // Permissions
   UNSUPPORTED_PERMISSIONS,
   UNSUPPORTED_OPTIONAL_PERMISSIONS,
@@ -93,6 +98,7 @@ export {
   INSTALL_TIMEOUT_MS, // Utility functions
   isChromeWebStoreUrl,
   extractExtensionId,
+  isChromeExtensionId,
   generateFirefoxId,
   isPermissionSupported,
   isOptionalPermissionAllowed,
@@ -110,11 +116,26 @@ export {
   isValidCRX,
 } from "./CRXParser.sys.mts";
 
+export { verifyCRX, CRXVerificationError, type VerifiedCRX } from "./CRXVerifier.sys.mts";
+export {
+  ChromeExtensionUpdater,
+  ChromeExtensionUpdaterClass,
+  downloadChromeExtension,
+  getChromeDownloadTarget,
+  type ChromeUpdateCheck,
+  type ChromeUpdateResult,
+} from "./ChromeExtensionUpdater.sys.mts";
+
 // =============================================================================
 // CRX Conversion
 // =============================================================================
 
-export { CRXConverter, CRXConverterClass } from "./CRXConverter.sys.mts";
+export {
+  CRXConverter,
+  CRXConverterClass,
+  ORIGINAL_MANIFEST_PATH,
+  CONVERSION_REPORT_PATH,
+} from "./CRXConverter.sys.mts";
 
 // =============================================================================
 // Manifest Transformation
@@ -125,6 +146,7 @@ export {
   transformManifestFull,
   validateManifest,
   checkCompatibility,
+  checkChromeVersionRequirement,
   getFirefoxExtensionId,
   extractHostPermissions,
   extractApiPermissions,
@@ -149,6 +171,7 @@ export {
 
 export {
   sanitizeDNRRules,
+  sanitizeDNRRulesFull,
   validateDNRRule,
   countInvalidDomains,
 } from "./DNRTransformer.sys.mts";

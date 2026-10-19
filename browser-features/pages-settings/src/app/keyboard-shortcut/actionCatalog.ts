@@ -10,10 +10,18 @@ import type {
 } from "../../types/pref.ts";
 import { createDefaultKeyboardShortcutConfig as createDefaultKeyboardShortcutConfigWithPlatform } from "../../types/pref.ts";
 
+export const CHROME_SIDE_PANEL_ACTION_ID =
+  "floorp-toggle-last-extension-side-panel" as const;
+
 export const INLINE_TAB_URL_ACTION_ID = "floorp-edit-tab-url" as const;
 
 export const KEYBOARD_ONLY_ACTION_DEFINITIONS:
   readonly KeyboardShortcutActionDefinition[] = Object.freeze([
+    Object.freeze({
+      id: CHROME_SIDE_PANEL_ACTION_ID,
+      translationKey:
+        `keyboardShortcut.actionLabels.${CHROME_SIDE_PANEL_ACTION_ID}`,
+    }),
     Object.freeze({
       id: INLINE_TAB_URL_ACTION_ID,
       translationKey:

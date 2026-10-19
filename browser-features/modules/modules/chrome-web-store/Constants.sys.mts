@@ -31,7 +31,7 @@ export const ZIP_SIGNATURE = 0x04034b50;
 // =============================================================================
 
 /** Minimum Gecko version required for extensions */
-export const GECKO_MIN_VERSION = "115.0";
+export const GECKO_MIN_VERSION = "157.0";
 
 /** Suffix added to Chrome extension IDs for Firefox */
 export const EXTENSION_ID_SUFFIX = "@chromium-extension";
@@ -40,24 +40,92 @@ export const EXTENSION_ID_SUFFIX = "@chromium-extension";
 // Download URLs
 // =============================================================================
 
-/** CRX download URL generator functions */
+/**
+ * Chrome reference used for store package selection and minimum-version gating.
+ * This does not assert that Floorp implements every API in that Chrome build.
+ */
+export const STORE_DOWNLOAD_CLIENT_VERSION = "155.0.8059.84";
+
+export interface ChromeDownloadTarget {
+  readonly os: "win" | "mac" | "linux";
+  readonly arch: "x86" | "x64" | "arm64";
+}
+
+/** Resolve the browser process target without assuming a Windows package. */
+export function resolveChromeDownloadTarget(
+  platform: string,
+  xpcomABI: string,
+): ChromeDownloadTarget {
+  const os = platform === "win"
+    ? "win"
+    : platform === "macosx"
+    ? "mac"
+    : platform === "linux"
+    ? "linux"
+    : null;
+  const processArch = xpcomABI.split("-", 1)[0];
+  const arch = processArch === "x86_64"
+    ? "x64"
+    : processArch === "aarch64" || processArch === "arm64"
+    ? "arm64"
+    : processArch === "x86" || /^i[3-6]86$/.test(processArch)
+    ? "x86"
+    : null;
+  if (!os || !arch) {
+    throw new Error(
+      `Unsupported Chrome Web Store download target: ${platform}/${xpcomABI}`,
+    );
+  }
+  return { os, arch };
+}
+
+function crxDownloadURL(
+  extensionId: string,
+  target: ChromeDownloadTarget,
+  fallback: boolean,
+): string {
+  if (!isChromeExtensionId(extensionId)) {
+    throw new Error("Invalid Chrome extension ID");
+  }
+  if (
+    !["win", "mac", "linux"].includes(target.os) ||
+    !["x86", "x64", "arm64"].includes(target.arch)
+  ) {
+    throw new Error("Unsupported Chrome Web Store download target");
+  }
+  const parameters = new URLSearchParams({
+    response: "redirect",
+    prodversion: STORE_DOWNLOAD_CLIENT_VERSION,
+    os: target.os,
+    arch: target.arch,
+    acceptformat: "crx2,crx3",
+    x: `id=${extensionId}&uc`,
+  });
+  if (fallback) {
+    parameters.set("prod", "chromecrx");
+    parameters.set("prodchannel", "unknown");
+  }
+  return `https://clients2.google.com/service/update2/crx?${parameters}`;
+}
+
+/** Both attempts select packages for the same actual browser process target. */
 export const CRX_DOWNLOAD_URLS = {
   /**
    * Primary download URL using Google's update endpoint
    * @param extensionId - Chrome extension ID (32 lowercase letters)
-   * @param chromeVersion - Chrome version to report (default: 130.0.0.0)
+   * @param target - Actual browser process platform and architecture
    * @returns Download URL for the CRX file
    */
-  primary: (extensionId: string, chromeVersion = "130.0.0.0"): string =>
-    `https://clients2.google.com/service/update2/crx?response=redirect&prodversion=${chromeVersion}&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
+  primary: (extensionId: string, target: ChromeDownloadTarget): string =>
+    crxDownloadURL(extensionId, target, false),
 
   /**
-   * Fallback download URL with platform-specific parameters
+   * Alternate store query without switching to a different platform package
    * @param extensionId - Chrome extension ID (32 lowercase letters)
    * @returns Download URL for the CRX file
    */
-  fallback: (extensionId: string): string =>
-    `https://clients2.google.com/service/update2/crx?response=redirect&os=win&arch=x64&os_arch=x86_64&nacl_arch=x86-64&prod=chromecrx&prodchannel=unknown&prodversion=130.0.0.0&acceptformat=crx2,crx3&x=id%3D${extensionId}%26uc`,
+  fallback: (extensionId: string, target: ChromeDownloadTarget): string =>
+    crxDownloadURL(extensionId, target, true),
 } as const;
 
 // =============================================================================
@@ -77,16 +145,11 @@ export const UNSUPPORTED_PERMISSIONS = [
   "platformKeys",
 
   // Chrome-specific APIs
-  "declarativeNetRequestFeedback",
   "fileBrowserHandler",
   "fileSystemProvider",
-  "fontSettings",
   "gcm",
   "processes",
-  "sidePanel",
   "signedInDevices",
-  "tabCapture",
-  "tts",
   "ttsEngine",
   "wallpaper",
 
@@ -112,9 +175,9 @@ export const UNSUPPORTED_OPTIONAL_PERMISSIONS = [
  */
 export const CWS_URL_PATTERNS = [
   /** New Chrome Web Store (chromewebstore.google.com) */
-  /^https:\/\/chromewebstore\.google\.com\/detail\/[^/]+\/([a-z]{32})/,
+  /^https:\/\/chromewebstore\.google\.com\/detail\/[^/]+\/([a-p]{32})(?=[/?#]|$)/,
   /** Old Chrome Web Store (chrome.google.com/webstore) */
-  /^https:\/\/chrome\.google\.com\/webstore\/detail\/[^/]+\/([a-z]{32})/,
+  /^https:\/\/chrome\.google\.com\/webstore\/detail\/[^/]+\/([a-p]{32})(?=[/?#]|$)/,
 ] as const;
 
 /**
@@ -154,13 +217,12 @@ export interface UnsupportedCodePattern {
  * Unsupported code patterns in extensions
  * These patterns indicate Chrome-specific APIs that won't work in Firefox
  *
- * Note: documentId patterns are no longer listed here as they are now
- * supported via the DocumentId polyfill. See polyfills/documentId/
+ * documentId is provided by the pinned Gecko Runtime.
  */
 export const UNSUPPORTED_CODE_PATTERNS: readonly UnsupportedCodePattern[] = [
   {
-    pattern: /chrome\.tabCapture\./,
-    message: "chrome.tabCapture API",
+    pattern: /chrome\.gcm\./,
+    message: "chrome.gcm API",
   },
 ];
 
@@ -173,6 +235,9 @@ export const MAX_CRX_SIZE = 100 * 1024 * 1024;
 
 /** Maximum individual file size in extension (50MB) */
 export const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+export const MAX_EXPANDED_CRX_SIZE = 500 * 1024 * 1024;
+export const MAX_CRX_ENTRIES = 10000;
 
 // =============================================================================
 // Timeouts
@@ -188,8 +253,12 @@ export const INSTALL_TIMEOUT_MS = 2 * 60 * 1000;
 // Utility Functions
 // =============================================================================
 
-/** Chrome extension ID pattern (32 lowercase letters) */
-const EXTENSION_ID_PATTERN = /^[a-z]{32}$/;
+/** Chrome extension IDs encode a hash using the lowercase a-p alphabet. */
+const EXTENSION_ID_PATTERN = /^[a-p]{32}$/;
+
+export function isChromeExtensionId(id: string): boolean {
+  return EXTENSION_ID_PATTERN.test(id);
+}
 
 /**
  * Check if a URL is from Chrome Web Store
@@ -208,7 +277,7 @@ export function isChromeWebStoreUrl(url: string): boolean {
 export function extractExtensionId(url: string): string | null {
   for (const pattern of CWS_URL_PATTERNS) {
     const match = url.match(pattern);
-    if (match?.[1] && EXTENSION_ID_PATTERN.test(match[1])) {
+    if (match?.[1] && isChromeExtensionId(match[1])) {
       return match[1];
     }
   }

@@ -1,0 +1,195 @@
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+index f0c8b87..0245bf2 100644
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -381,8 +381,16 @@ export class Messenger {
+     return port.api;
+   }
+ 
+-  recvPortConnect({ extensionId, portId, name, sender, userScriptWorldId }) {
+-    let event = sender.id === extensionId ? this.onConnect : this.onConnectEx;
++  recvPortConnect({
++    extensionId,
++    portId,
++    name,
++    sender,
++    userScriptWorldId,
++    isExternal,
++  }) {
++    let external = isExternal ?? sender.id !== extensionId;
++    let event = external ? this.onConnectEx : this.onConnect;
+     if (typeof userScriptWorldId == "string") {
+       sender = { ...sender, userScriptWorldId };
+       event = this.onUserScriptConnect;
+@@ -393,8 +401,15 @@ export class Messenger {
+     }
+   }
+ 
+-  recvRuntimeMessage({ extensionId, holder, sender, userScriptWorldId }) {
+-    let event = sender.id === extensionId ? this.onMessage : this.onMessageEx;
++  recvRuntimeMessage({
++    extensionId,
++    holder,
++    sender,
++    userScriptWorldId,
++    isExternal,
++  }) {
++    let external = isExternal ?? sender.id !== extensionId;
++    let event = external ? this.onMessageEx : this.onMessage;
+     if (typeof userScriptWorldId == "string") {
+       sender = { ...sender, userScriptWorldId };
+       return this.onUserScriptMessage.emit(holder, sender);
+diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
+index ddc2bc5..a20f67f 100644
+--- a/modules/ExtensionParent.sys.mjs
++++ b/modules/ExtensionParent.sys.mjs
+@@ -288,9 +288,13 @@ const ProxyMessenger = {
+   },
+ 
+   getSender(extension, source) {
++    const sourceExtension = GlobalManager.extensionMap.get(source.extensionId);
++    const publicId =
++      ExtensionUtils.getChromeExtensionId(extension) &&
++      ExtensionUtils.getChromeExtensionId(sourceExtension);
+     let sender = {
+       contextId: source.id,
+-      id: source.extensionId,
++      id: publicId || source.extensionId,
+       envType: source.envType,
+       url: source.url,
+     };
+@@ -337,10 +341,45 @@ const ProxyMessenger = {
+   // TODO: Rework/simplify this and getSender/getTopBC after bug 1580766.
+   async normalizeArgs(arg, sender) {
+     arg.extensionId = arg.extensionId || sender.extensionId;
++    const sourceExtension = GlobalManager.extensionMap.get(sender.extensionId);
++    if (
++      ExtensionUtils.getChromeExtensionId(sourceExtension) &&
++      /^[a-p]{32}$/.test(arg.extensionId)
++    ) {
++      const target = GlobalManager.extensionMap.get(
++        `${arg.extensionId}@chromium-extension`
++      );
++      // An ID suffix alone must never impersonate a converted extension.
++      if (ExtensionUtils.getChromeExtensionId(target) !== arg.extensionId) {
++        return Promise.reject({ message: ERROR_NO_RECEIVERS });
++      }
++      arg.extensionId = target.id;
++    }
+     let extension = GlobalManager.extensionMap.get(arg.extensionId);
+     if (!extension) {
+       return Promise.reject({ message: ERROR_NO_RECEIVERS });
+     }
++    // Compute from authenticated conduit identities before translating public
++    // sender IDs. Always overwrite a value supplied by an IPC caller.
++    arg.isExternal = sender.extensionId !== arg.extensionId;
++    if (arg.isExternal && ExtensionUtils.getChromeExtensionId(extension)) {
++      const connectable = extension.manifest.externally_connectable;
++      if (connectable) {
++        const sourceId = ExtensionUtils.getChromeExtensionId(sourceExtension);
++        const permitted = connectable.ids?.some(id => {
++          if (id === "*") {
++            return true;
++          }
++          const chromeId = /^([a-p]{32})(?:@chromium-extension)?$/.exec(
++            id
++          )?.[1];
++          return chromeId ? sourceId === chromeId : sender.extensionId === id;
++        });
++        if (!permitted) {
++          return Promise.reject({ message: ERROR_NO_RECEIVERS });
++        }
++      }
++    }
+     // TODO bug 1852317: This should not be unconditional.
+     await extension.wakeupBackground?.();
+ 
+diff --git a/modules/ExtensionUtils.sys.mjs b/modules/ExtensionUtils.sys.mjs
+index c1e5670..5ee7d93 100644
+--- a/modules/ExtensionUtils.sys.mjs
++++ b/modules/ExtensionUtils.sys.mjs
+@@ -340,11 +340,33 @@ function isExtensionUrl(url) {
+   return false;
+ }
+ 
++/**
++ * Get the original Chrome ID only for an explicitly converted extension whose
++ * installed Gecko ID agrees with its compatibility metadata. Internal identity
++ * (permissions, URLs, storage and IPC addressing) continues to use the Gecko ID.
++ *
++ * @param {object} extension Extension or ExtensionChild instance.
++ * @returns {string|null} Validated original Chrome extension ID.
++ */
++function getChromeExtensionId(extension) {
++  const marker =
++    extension?.manifest?.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++  const id = marker?.original_id;
++  return marker?.schema_version === 1 &&
++    typeof id === "string" &&
++    /^[a-p]{32}$/.test(id) &&
++    extension.id === `${id}@chromium-extension`
++    ? id
++    : null;
++}
++
+ export var ExtensionUtils = {
+   flushJarCache,
+   getInnerWindowID,
+   getMessageManager,
+   getUniqueId,
++  getChromeExtensionId,
+   makeDataURI,
+   isExtensionUrl,
+   parseMatchPatterns,
+diff --git a/chrome/toolkit/content/extensions/child/ext-runtime.js b/chrome/toolkit/content/extensions/child/ext-runtime.js
+index 4efb039..621b2cc 100644
+--- a/chrome/toolkit/content/extensions/child/ext-runtime.js
++++ b/chrome/toolkit/content/extensions/child/ext-runtime.js
+@@ -130,7 +130,7 @@ this.runtime = class extends ExtensionAPI {
+           return Cu.cloneInto(extension.manifest, context.cloneScope);
+         },
+ 
+-        id: extension.id,
++        id: ExtensionUtils.getChromeExtensionId(extension) || extension.id,
+ 
+         getURL(url) {
+           return extension.getURL(url);
+diff --git a/chrome/toolkit/content/extensions/schemas/manifest.json b/chrome/toolkit/content/extensions/schemas/manifest.json
+index 000e5fc..f0a18a4 100644
+--- a/chrome/toolkit/content/extensions/schemas/manifest.json
++++ b/chrome/toolkit/content/extensions/schemas/manifest.json
+@@ -106,6 +106,33 @@
+             "optional": true
+           },
+ 
++          "externally_connectable": {
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "ids": {
++                "type": "array",
++                "optional": true,
++                "items": {
++                  "choices": [
++                    { "type": "string", "enum": ["*"] },
++                    { "type": "string", "pattern": "^[a-p]{32}$" },
++                    { "$ref": "ExtensionID" }
++                  ]
++                }
++              },
++              "matches": {
++                "type": "array",
++                "optional": true,
++                "items": { "type": "string" }
++              },
++              "accepts_tls_channel_id": {
++                "type": "boolean",
++                "optional": true
++              }
++            }
++          },
++
+           "minimum_opera_version": {
+             "type": "string",
+             "optional": true

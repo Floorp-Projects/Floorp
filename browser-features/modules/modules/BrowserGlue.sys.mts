@@ -19,8 +19,8 @@ function localPathToResourceURI(path: string) {
 }
 
 const STARTUP_MODE = Services.prefs.getStringPref("nora.startup.mode", "");
-const IS_LOCAL_DEVELOPMENT_MODE = STARTUP_MODE === "dev" ||
-  STARTUP_MODE === "test";
+const IS_LOCAL_DEVELOPMENT_MODE =
+  STARTUP_MODE === "dev" || STARTUP_MODE === "test";
 const DEVELOPMENT_LOCALHOST_MATCHES = IS_LOCAL_DEVELOPMENT_MODE
   ? ["*://localhost/*"]
   : [];
@@ -37,13 +37,13 @@ const WEB_FILE_AND_ABOUT_REMOTE_TYPES = [
 const DEVELOPMENT_WEB_ACTOR_OPTIONS: Partial<WindowActorOptions> =
   IS_LOCAL_DEVELOPMENT_MODE
     ? {
-      // Firefox 154 treats even loopback documents as untrusted web-process
-      // content. These options exist only in local development/test modes,
-      // where the
-      // matching Vite pages are part of the local Floorp development setup.
-      remoteTypes: WEB_FILE_AND_ABOUT_REMOTE_TYPES,
-      safeForUntrustedWebProcess: true,
-    }
+        // Firefox 154 treats even loopback documents as untrusted web-process
+        // content. These options exist only in local development/test modes,
+        // where the
+        // matching Vite pages are part of the local Floorp development setup.
+        remoteTypes: WEB_FILE_AND_ABOUT_REMOTE_TYPES,
+        safeForUntrustedWebProcess: true,
+      }
     : {};
 
 const JS_WINDOW_ACTORS: {
@@ -559,3 +559,14 @@ const JS_WINDOW_ACTORS: {
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
+
+// One profile-wide scheduler; it applies only registrations written after an
+// authenticated Chrome conversion completed through the native installer.
+try {
+  const { ChromeExtensionUpdateScheduler } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdateScheduler.sys.mjs",
+  );
+  ChromeExtensionUpdateScheduler.start();
+} catch (error) {
+  console.error("[ChromeExtensionUpdateScheduler] Startup failed", error);
+}

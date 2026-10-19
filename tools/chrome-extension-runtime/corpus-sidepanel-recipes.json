@@ -1,0 +1,36 @@
+[
+  {
+    "id": "difoiogjjojoaoomphldepapgpbgkhkb",
+    "name": "Sider",
+    "draftSelector": "textarea[placeholder]",
+    "submitForRead": true
+  },
+  {
+    "id": "ofpnmcalabcbjgholdjcjblkibolbppb",
+    "name": "Monica",
+    "draftSelector": "[contenteditable=true]",
+    "submitForRead": true
+  },
+  {
+    "id": "camppjleccjaphfdbohjdohecfnoikec",
+    "name": "Merlin"
+  },
+  {
+    "id": "mhnlakgilnojmhinhkckjpncpbhabphi",
+    "name": "MaxAI"
+  },
+  {
+    "id": "cebmnlammjhancocbbnfcglifgdpfejc",
+    "name": "AI Blaze"
+  },
+  {
+    "id": "gldebcpkoojijledacjeboaehblhfbjg",
+    "name": "Ask Steve",
+    "draftSelector": "#chatInputText",
+    "submitForRead": true
+  },
+  {
+    "id": "befflofjcniongenjmbkgkoljhgliihe",
+    "name": "TinaMind"
+  }
+]

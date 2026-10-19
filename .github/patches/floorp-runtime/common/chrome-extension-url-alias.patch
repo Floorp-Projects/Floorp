@@ -1,0 +1,40 @@
+diff --git a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
+index bc64f8f..b97d88e 100644
+--- a/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
++++ b/toolkit/components/extensions/ExtensionProcessScript.sys.mjs
+@@ -547,4 +547,35 @@ export var ExtensionAPIRequestHandler = {
+   },
+ };
+ 
++// Chrome URLs are an input alias, never a second extension security origin.
++// Every channel uses the native moz-extension URI, principal and loadInfo, so
++// Gecko continues to enforce web_accessible_resources, private access and CSP.
++Services.io.registerProtocolHandler("chrome-extension", {
++  scheme: "chrome-extension",
++  QueryInterface: ChromeUtils.generateQI(["nsIProtocolHandler"]),
++  allowPort() { return false; },
++  newChannel(uri, loadInfo) {
++    const url = new URL(uri.spec);
++    if (url.protocol !== "chrome-extension:" || !/^[a-p]{32}$/.test(url.hostname) ||
++        url.username || url.password || url.port)
++      throw Components.Exception("Invalid Chrome extension URL", Cr.NS_ERROR_MALFORMED_URI);
++    const policy = WebExtensionPolicy.getByID(`${url.hostname}@chromium-extension`);
++    if (!policy || ExtensionUtils.getChromeExtensionId(extensions.get(policy)) !== url.hostname)
++      throw Components.Exception("Chrome extension is not installed", Cr.NS_ERROR_DOM_BAD_URI);
++    const canonical = Services.io.newURI(`moz-extension://${policy.mozExtensionHostname}${url.pathname}${url.search}${url.hash}`);
++    // The alias is loadable so ordinary web requests reach this canonical
++    // check. Never forward the alias URI to the policy service: it deliberately
++    // recognizes only native extension origins.
++    Services.scriptSecurityManager.checkLoadURIWithPrincipal(
++      loadInfo.triggeringPrincipal, canonical, Ci.nsIScriptSecurityManager.STANDARD,
++    );
++    const channel = Services.io.newChannelFromURIWithLoadInfo(canonical, loadInfo);
++    loadInfo.resultPrincipalURI = canonical;
++    return channel;
++  },
++}, Ci.nsIProtocolHandler.URI_STD | Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
++   Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
++   Ci.nsIProtocolHandler.URI_IS_POTENTIALLY_TRUSTWORTHY |
++   Ci.nsIProtocolHandler.URI_HAS_WEB_EXPOSED_ORIGIN, -1);
++
+ ExtensionManager.init();

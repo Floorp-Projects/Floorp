@@ -1,0 +1,508 @@
+diff --git a/toolkit/components/extensions/NativeManifests.sys.mjs b/toolkit/components/extensions/NativeManifests.sys.mjs
+index 48d7d50..870ff06 100644
+--- a/toolkit/components/extensions/NativeManifests.sys.mjs
++++ b/toolkit/components/extensions/NativeManifests.sys.mjs
+@@ -24,6 +24,10 @@ const NATIVE_MANIFEST_SCHEMA =
+ 
+ const REGPATH = "Software\\Mozilla";
+ 
++// Distinguish an absent host from an installed host that refused this caller.
++// Compatibility lookup must never bypass the latter using another browser's host.
++const INVALID_MANIFEST = Symbol("invalid native manifest");
++
+ export var NativeManifests = {
+   _initializePromise: null,
+   _lookup: null,
+@@ -52,6 +56,10 @@ export var NativeManifests = {
+ 
+   async _winLookup(type, name, context) {
+     const REGISTRY = Ci.nsIWindowsRegKey;
++    const chromeCompatible =
++      type === "stdio" && this.getChromeExtensionOrigin(context);
++    const missingPath = value =>
++      chromeCompatible ? value === undefined || value === null : !value;
+     let regPath = `${REGPATH}\\${TYPES[type]}\\${name}`;
+     let path = lazy.WindowsRegistry.readRegKey(
+       REGISTRY.ROOT_KEY_CURRENT_USER,
+@@ -59,7 +67,7 @@ export var NativeManifests = {
+       "",
+       REGISTRY.WOW64_64
+     );
+-    if (!path) {
++    if (missingPath(path)) {
+       path = lazy.WindowsRegistry.readRegKey(
+         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
+         regPath,
+@@ -67,7 +75,7 @@ export var NativeManifests = {
+         REGISTRY.WOW64_32
+       );
+     }
+-    if (!path) {
++    if (missingPath(path)) {
+       path = lazy.WindowsRegistry.readRegKey(
+         REGISTRY.ROOT_KEY_LOCAL_MACHINE,
+         regPath,
+@@ -75,21 +83,25 @@ export var NativeManifests = {
+         REGISTRY.WOW64_64
+       );
+     }
+-    if (!path) {
++    if (missingPath(path)) {
+       return null;
+     }
+     if (typeof path !== "string") {
+       Cu.reportError(
+         `Native manifest registry entry ${regPath} must be a string path`
+       );
+-      return null;
++      return chromeCompatible ? INVALID_MANIFEST : null;
+     }
+ 
+     // Normalize in case the extension used / instead of \.
+     path = path.replaceAll("/", "\\");
+ 
+     let manifest = await this._tryPath(type, path, name, context, true);
+-    return manifest ? { path, manifest } : null;
++    return manifest
++      ? { path, manifest }
++      : chromeCompatible
++        ? INVALID_MANIFEST
++        : null;
+   },
+ 
+   /**
+@@ -186,6 +198,153 @@ export var NativeManifests = {
+       if (manifest) {
+         return { path, manifest };
+       }
++      if (
++        type === "stdio" &&
++        this.getChromeExtensionOrigin(context) &&
++        (await IOUtils.exists(path))
++      ) {
++        return INVALID_MANIFEST;
++      }
++    }
++    return null;
++  },
++
++  /**
++   * Opt in per extension. The original ID is never a replacement for the Gecko
++   * addon ID used for permissions, storage, or the Firefox native host protocol.
++   *
++   * @param {object} context Extension API context.
++   * @returns {string|null} The canonical Chrome origin, or null.
++   */
++  getChromeExtensionOrigin(context) {
++    const extension = context.extension;
++    const compatibility =
++      extension.manifest?.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    const id = compatibility?.original_id;
++    return compatibility?.schema_version === 1 &&
++      typeof id === "string" &&
++      /^[a-p]{32}$/.test(id) &&
++      extension.id === `${id}@chromium-extension`
++      ? `chrome-extension://${id}/`
++      : null;
++  },
++
++  _chromeManifestDirectories() {
++    const home = Services.dirsvc.get("Home", Ci.nsIFile).path;
++    if (AppConstants.platform === "macosx") {
++      return [
++        PathUtils.join(
++          home,
++          "Library",
++          "Application Support",
++          "Google",
++          "Chrome",
++          "NativeMessagingHosts"
++        ),
++        "/Library/Google/Chrome/NativeMessagingHosts",
++        PathUtils.join(
++          home,
++          "Library",
++          "Application Support",
++          "Chromium",
++          "NativeMessagingHosts"
++        ),
++        "/Library/Application Support/Chromium/NativeMessagingHosts",
++      ];
++    }
++    let config = Services.env.get("XDG_CONFIG_HOME");
++    if (!config || !PathUtils.isAbsolute(config)) {
++      config = PathUtils.join(home, ".config");
++    }
++    return [
++      PathUtils.join(config, "google-chrome", "NativeMessagingHosts"),
++      "/etc/opt/chrome/native-messaging-hosts",
++      PathUtils.join(config, "chromium", "NativeMessagingHosts"),
++      "/etc/chromium/native-messaging-hosts",
++    ];
++  },
++
++  _chromeManifestRegistryPath(name) {
++    const REGISTRY = Ci.nsIWindowsRegKey;
++    for (const browser of ["Google\\Chrome", "Chromium"]) {
++      for (const root of [
++        REGISTRY.ROOT_KEY_CURRENT_USER,
++        REGISTRY.ROOT_KEY_LOCAL_MACHINE,
++      ]) {
++        for (const view of [REGISTRY.WOW64_32, REGISTRY.WOW64_64]) {
++          const path = lazy.WindowsRegistry.readRegKey(
++            root,
++            `Software\\${browser}\\NativeMessagingHosts\\${name}`,
++            "",
++            view
++          );
++          if (path !== undefined && path !== null) {
++            // A broken or denied higher-precedence registration must not select
++            // a different executable from another registry view or browser.
++            return typeof path === "string" && path
++              ? path.replaceAll("/", "\\")
++              : "";
++          }
++        }
++      }
++    }
++    return null;
++  },
++
++  async _lookupChromeManifest(name, context, chromeOrigin) {
++    let paths;
++    if (AppConstants.platform === "win") {
++      const path = this._chromeManifestRegistryPath(name);
++      paths = path ? [path] : [];
++    } else {
++      paths = this._chromeManifestDirectories().map(dir =>
++        PathUtils.join(dir, `${name}.json`)
++      );
++    }
++    for (const path of paths) {
++      let data;
++      try {
++        data = await IOUtils.readJSON(path);
++      } catch (error) {
++        if (DOMException.isInstance(error) && error.name === "NotFoundError") {
++          continue;
++        }
++        Cu.reportError(error);
++        return null;
++      }
++      if (
++        !data ||
++        data.type !== "stdio" ||
++        !Array.isArray(data.allowed_origins) ||
++        !data.allowed_origins.length ||
++        !data.allowed_origins.every(
++          origin =>
++            typeof origin === "string" &&
++            /^chrome-extension:\/\/[a-p]{32}\/$/.test(origin)
++        ) ||
++        !data.allowed_origins.includes(chromeOrigin)
++      ) {
++        Cu.reportError(
++          `This extension does not have permission to use native manifest ${path}`
++        );
++        return null;
++      }
++      // Reuse Gecko's validation of the host name, executable path and type.
++      // This translation happens only after exact Chrome-origin authorization.
++      const manifestData = {
++        ...data,
++        allowed_extensions: [context.extension.id],
++      };
++      delete manifestData.allowed_origins;
++      const manifest = await this.parseManifest(
++        "stdio",
++        path,
++        name,
++        context,
++        manifestData
++      );
++      return manifest ? { path, manifest, chromeOrigin } : null;
+     }
+     return null;
+   },
+@@ -201,7 +360,16 @@ export var NativeManifests = {
+    * @returns {object} The contents of the validated manifest, or null if
+    *                   no valid manifest can be found for this type and name.
+    */
+-  lookupManifest(type, name, context) {
+-    return this.init().then(() => this._lookup(type, name, context));
++  async lookupManifest(type, name, context) {
++    await this.init();
++    const hostInfo = await this._lookup(type, name, context);
++    if (hostInfo === INVALID_MANIFEST) {
++      return null;
++    }
++    const origin = type === "stdio" && this.getChromeExtensionOrigin(context);
++    if (hostInfo || !origin) {
++      return hostInfo;
++    }
++    return this._lookupChromeManifest(name, context, origin);
+   },
+ };
+diff --git a/toolkit/components/extensions/NativeMessaging.sys.mjs b/toolkit/components/extensions/NativeMessaging.sys.mjs
+index d4e1b79..bf17a56 100644
+--- a/toolkit/components/extensions/NativeMessaging.sys.mjs
++++ b/toolkit/components/extensions/NativeMessaging.sys.mjs
+@@ -129,11 +129,17 @@ export class NativeApp extends EventEmitter {
+ 
+         let subprocessOpts = {
+           command: command,
+-          arguments: [hostInfo.path, context.extension.id],
++          arguments: hostInfo.chromeOrigin
++            ? [hostInfo.chromeOrigin]
++            : [hostInfo.path, context.extension.id],
+           workdir: PathUtils.parent(command),
+           stderr: "pipe",
+           disclaim: true,
+         };
++        if (hostInfo.chromeOrigin && AppConstants.platform === "win") {
++          // No native parent window is available for a background API context.
++          subprocessOpts.arguments.push("--parent-window=0");
++        }
+ 
+         return lazy.Subprocess.call(subprocessOpts);
+       })
+diff --git a/toolkit/components/extensions/schemas/manifest.json b/toolkit/components/extensions/schemas/manifest.json
+index 000e5fc..607424c 100644
+--- a/toolkit/components/extensions/schemas/manifest.json
++++ b/toolkit/components/extensions/schemas/manifest.json
+@@ -641,6 +641,22 @@
+             "optional": true
+           },
+ 
++          "floorp_chrome_extension": {
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "schema_version": {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 1
++              },
++              "original_id": {
++                "type": "string",
++                "pattern": "^[a-p]{32}$"
++              }
++            }
++          },
++
+           "update_url": {
+             "type": "string",
+             "format": "url",
+diff --git a/toolkit/components/extensions/test/xpcshell/test_native_manifests.js b/toolkit/components/extensions/test/xpcshell/test_native_manifests.js
+index d0faa47..43781c0 100644
+--- a/toolkit/components/extensions/test/xpcshell/test_native_manifests.js
++++ b/toolkit/components/extensions/test/xpcshell/test_native_manifests.js
+@@ -581,6 +581,207 @@ add_task(async function test_user_dir_precedence() {
+   );
+ });
+ 
++// Chrome host lookup is opt-in and never changes the Gecko addon identity.
++add_task(async function test_floorp_chrome_extension_identity() {
++  const id = "a".repeat(32);
++  const makeContext = (metadata, addonId = `${id}@chromium-extension`) => ({
++    extension: {
++      id: addonId,
++      manifest: {
++        browser_specific_settings: {
++          gecko: { floorp_chrome_extension: metadata },
++        },
++      },
++    },
++  });
++  const metadata = { schema_version: 1, original_id: id };
++  equal(
++    NativeManifests.getChromeExtensionOrigin(makeContext(metadata)),
++    `chrome-extension://${id}/`
++  );
++  for (const invalid of [
++    undefined,
++    {},
++    { ...metadata, schema_version: 2 },
++    { ...metadata, original_id: "z".repeat(32) },
++    { ...metadata, original_id: "A".repeat(32) },
++  ]) {
++    equal(NativeManifests.getChromeExtensionOrigin(makeContext(invalid)), null);
++  }
++  equal(
++    NativeManifests.getChromeExtensionOrigin(
++      makeContext(metadata, "other@tests.mozilla.org")
++    ),
++    null
++  );
++});
++
++add_task(async function test_floorp_chrome_native_host() {
++  const id = "a".repeat(32);
++  const origin = `chrome-extension://${id}/`;
++  const metadata = { schema_version: 1, original_id: id };
++  const addonId = `${id}@chromium-extension`;
++  const ctx = {
++    ...context,
++    extension: {
++      id: addonId,
++      manifest: {
++        browser_specific_settings: {
++          gecko: { floorp_chrome_extension: metadata },
++        },
++      },
++    },
++  };
++  const name = "floorpchromehost";
++  const chromeUser = PathUtils.join(userDir.path, "chrome-user");
++  const chromeSystem = PathUtils.join(userDir.path, "chrome-system");
++  await IOUtils.makeDirectory(chromeUser);
++  await IOUtils.makeDirectory(chromeSystem);
++  const userPath = PathUtils.join(chromeUser, `${name}.json`);
++  const systemPath = PathUtils.join(chromeSystem, `${name}.json`);
++  const oldDirectories = NativeManifests._chromeManifestDirectories;
++  const oldRegistryPath = NativeManifests._chromeManifestRegistryPath;
++  NativeManifests._chromeManifestDirectories = () => [chromeUser, chromeSystem];
++  NativeManifests._chromeManifestRegistryPath = () => userPath;
++  let app;
++  try {
++    let scriptPath = PathUtils.join(chromeUser, "echo-arguments.py");
++    const script = String.raw`
++import json
++import struct
++import sys
++stdin = getattr(sys.stdin, 'buffer', sys.stdin)
++stdout = getattr(sys.stdout, 'buffer', sys.stdout)
++while True:
++    rawlen = stdin.read(4)
++    if len(rawlen) != 4:
++        break
++    data = stdin.read(struct.unpack('@I', rawlen)[0])
++    reply = json.dumps({'args': sys.argv[1:], 'message': json.loads(data)}).encode('utf-8')
++    stdout.write(struct.pack('@I', len(reply)))
++    stdout.write(reply)
++    stdout.flush()
++`;
++    let command = scriptPath;
++    if (AppConstants.platform === "win") {
++      await IOUtils.writeUTF8(scriptPath, script);
++      command = PathUtils.join(chromeUser, "echo-arguments.bat");
++      await IOUtils.writeUTF8(
++        command,
++        `@ECHO OFF\n"${PYTHON}" -u "${scriptPath}" %*\n`
++      );
++    } else {
++      await IOUtils.writeUTF8(scriptPath, `#!${PYTHON} -u\n${script}`);
++    }
++    await IOUtils.setPermissions(command, 0o755);
++    const host = {
++      name,
++      description: "Chrome protocol test",
++      type: "stdio",
++      path: command,
++      allowed_origins: [origin],
++    };
++    await writeManifest(userPath, host);
++    let found = await lookupApplication(name, ctx);
++    equal(
++      found.chromeOrigin,
++      origin,
++      "Chrome origin is attached only after authorization"
++    );
++    equal(found.manifest.path, command);
++    equal(
++      await lookupApplication(name, context),
++      null,
++      "Firefox extensions do not search Chrome hosts"
++    );
++    equal(
++      await lookupApplication(name, {
++        ...ctx,
++        extension: { ...ctx.extension, manifest: {} },
++      }),
++      null,
++      "The ID suffix alone does not opt an extension in"
++    );
++
++    const nativeContext = new MockContext(addonId);
++    nativeContext.extension.manifest = ctx.extension.manifest;
++    app = new NativeApp(nativeContext, name);
++    const reply = new Promise((resolve, reject) => {
++      app.on("message", (event, message) => resolve(message));
++      app.on("disconnect", (event, error) =>
++        reject(error || new Error("Host disconnected before replying"))
++      );
++    });
++    app.send(
++      new StructuredCloneHolder(
++        "",
++        null,
++        NativeApp.encodeMessage(nativeContext, "hello")
++      )
++    );
++    const received = await reply;
++    deepEqual(
++      received,
++      {
++        args:
++          AppConstants.platform === "win"
++            ? [origin, "--parent-window=0"]
++            : [origin],
++        message: "hello",
++      },
++      "The executable receives the Chrome argv contract and exchanges framed messages"
++    );
++    await app._cleanup();
++    app = null;
++
++    await writeManifest(systemPath, host);
++    for (const allowed_origins of [
++      ["chrome-extension://" + "b".repeat(32) + "/"],
++      ["chrome-extension://*/"],
++      [],
++    ]) {
++      await writeManifest(userPath, { ...host, allowed_origins });
++      equal(
++        await lookupApplication(name, ctx),
++        null,
++        "Denied user host never falls back to a system host"
++      );
++    }
++    await writeManifest(userPath, "{invalid json");
++    equal(
++      await lookupApplication(name, ctx),
++      null,
++      "Malformed user host never falls back to another executable"
++    );
++    await writeManifest(userPath, host);
++
++    const firefoxPath = PathUtils.join(userDir.path, TYPE_SLUG, `${name}.json`);
++    await writeManifest(firefoxPath, {
++      ...templateManifest,
++      name,
++      path: command,
++    });
++    if (registry) {
++      registry.setValue(
++        Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
++        `${REGPATH}\\${name}`,
++        "",
++        firefoxPath
++      );
++    }
++    equal(
++      await lookupApplication(name, ctx),
++      null,
++      "An installed Firefox host that denies access blocks Chrome fallback"
++    );
++    await IOUtils.remove(firefoxPath);
++  } finally {
++    await app?._cleanup();
++    NativeManifests._chromeManifestDirectories = oldDirectories;
++    NativeManifests._chromeManifestRegistryPath = oldRegistryPath;
++  }
++});
++
+ // Test shutdown handling in NativeApp
+ add_task(async function test_native_app_shutdown() {
+   const SCRIPT = String.raw`

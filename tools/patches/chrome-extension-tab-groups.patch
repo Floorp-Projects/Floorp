@@ -1,0 +1,210 @@
+diff --git a/browser/chrome/browser/content/browser/parent/ext-tabGroups.js b/browser/chrome/browser/content/browser/parent/ext-tabGroups.js
+index ba4e094..856e03d 100644
+--- a/browser/chrome/browser/content/browser/parent/ext-tabGroups.js
++++ b/browser/chrome/browser/content/browser/parent/ext-tabGroups.js
+@@ -45,11 +45,18 @@ function validateTabIndexForMove(group, window, tabIndex) {
+ }
+ 
+ this.tabGroups = class extends ExtensionAPIPersistent {
+-  queryGroups({ collapsed, color, title, windowId } = {}) {
++  queryGroups(
++    { collapsed, color, title, windowId, shared } = {},
++    context = null
++  ) {
++    if (shared != null && !ExtensionUtils.getChromeExtensionId(this.extension))
++      throw new ExtensionError("shared is a Chrome tabGroups query option");
++    // Local Gecko tab groups do not participate in Chrome's collaboration service.
++    if (shared === true) return [];
+     color = spellColour(color);
+     let glob = title != null && new MatchGlob(title);
+     let window =
+-      windowId != null && windowTracker.getWindow(windowId, null, false);
++      windowId != null && windowTracker.getWindow(windowId, context, false);
+     return windowTracker
+       .browserWindows()
+       .filter(
+@@ -81,6 +88,9 @@ this.tabGroups = class extends ExtensionAPIPersistent {
+ 
+   convert(group) {
+     return {
++      ...(ExtensionUtils.getChromeExtensionId(this.extension)
++        ? { shared: false }
++        : {}),
+       collapsed: !!group.collapsed,
+       /** Internally we use "gray", but Chrome uses "grey" @see spellColour. */
+       color: group.color === "gray" ? "grey" : group.color,
+@@ -158,16 +168,21 @@ this.tabGroups = class extends ExtensionAPIPersistent {
+         ) {
+           return;
+         }
+-        fire.async(this.convert(event.originalTarget), {
+-          isWindowClosing: false,
+-        });
++        if (ExtensionUtils.getChromeExtensionId(this.extension))
++          fire.async(this.convert(event.originalTarget));
++        else
++          fire.async(this.convert(event.originalTarget), {
++            isWindowClosing: false,
++          });
+       };
+       let onClosed = window => {
+         if (!this.extension.canAccessWindow(window)) {
+           return;
+         }
+         for (const group of window.gBrowser.tabGroups) {
+-          fire.async(this.convert(group), { isWindowClosing: true });
++          if (ExtensionUtils.getChromeExtensionId(this.extension))
++            fire.async(this.convert(group));
++          else fire.async(this.convert(group), { isWindowClosing: true });
+         }
+       };
+       windowTracker.addListener("TabGroupRemoved", onRemove);
+@@ -248,7 +263,7 @@ this.tabGroups = class extends ExtensionAPIPersistent {
+         },
+ 
+         query: query => {
+-          return Array.from(this.queryGroups(query), group =>
++          return Array.from(this.queryGroups(query, context), group =>
+             this.convert(group)
+           );
+         },
+diff --git a/browser/chrome/browser/content/browser/schemas/tabGroups.json b/browser/chrome/browser/content/browser/schemas/tabGroups.json
+index ab7311f..8e98dd5 100644
+--- a/browser/chrome/browser/content/browser/schemas/tabGroups.json
++++ b/browser/chrome/browser/content/browser/schemas/tabGroups.json
+@@ -59,6 +59,10 @@
+           "windowId": {
+             "type": "integer",
+             "description": "Window that the tab group is in."
++          },
++          "shared": {
++            "type": "boolean",
++            "optional": true
+           }
+         }
+       }
+@@ -84,7 +88,12 @@
+           {
+             "type": "function",
+             "name": "callback",
+-            "parameters": [{ "name": "group", "$ref": "TabGroup" }]
++            "parameters": [
++              {
++                "name": "group",
++                "$ref": "TabGroup"
++              }
++            ]
+           }
+         ]
+       },
+@@ -117,7 +126,12 @@
+           {
+             "type": "function",
+             "name": "callback",
+-            "parameters": [{ "name": "group", "$ref": "TabGroup" }]
++            "parameters": [
++              {
++                "name": "group",
++                "$ref": "TabGroup"
++              }
++            ]
+           }
+         ]
+       },
+@@ -147,6 +161,10 @@
+                 "type": "integer",
+                 "optional": true,
+                 "minimum": -2
++              },
++              "shared": {
++                "type": "boolean",
++                "optional": true
+               }
+             }
+           },
+@@ -157,7 +175,9 @@
+               {
+                 "name": "groups",
+                 "type": "array",
+-                "items": { "$ref": "TabGroup" }
++                "items": {
++                  "$ref": "TabGroup"
++                }
+               }
+             ]
+           }
+@@ -195,7 +215,12 @@
+           {
+             "type": "function",
+             "name": "callback",
+-            "parameters": [{ "name": "group", "$ref": "TabGroup" }]
++            "parameters": [
++              {
++                "name": "group",
++                "$ref": "TabGroup"
++              }
++            ]
+           }
+         ]
+       }
+@@ -205,20 +230,33 @@
+         "name": "onCreated",
+         "type": "function",
+         "description": "Fired when a tab group is created.",
+-        "parameters": [{ "$ref": "TabGroup", "name": "group" }]
++        "parameters": [
++          {
++            "$ref": "TabGroup",
++            "name": "group"
++          }
++        ]
+       },
+       {
+         "name": "onMoved",
+         "type": "function",
+         "description": "Fired when a tab group is moved, within a window or to another window.",
+-        "parameters": [{ "$ref": "TabGroup", "name": "group" }]
++        "parameters": [
++          {
++            "$ref": "TabGroup",
++            "name": "group"
++          }
++        ]
+       },
+       {
+         "name": "onRemoved",
+         "type": "function",
+         "description": "Fired when a tab group is removed.",
+         "parameters": [
+-          { "$ref": "TabGroup", "name": "group" },
++          {
++            "$ref": "TabGroup",
++            "name": "group"
++          },
+           {
+             "type": "object",
+             "name": "removeInfo",
+@@ -227,7 +265,8 @@
+                 "type": "boolean",
+                 "description": "True when the tab group is being closed because its window is being closed."
+               }
+-            }
++            },
++            "optional": true
+           }
+         ]
+       },
+@@ -235,7 +274,12 @@
+         "name": "onUpdated",
+         "type": "function",
+         "description": "Fired when a tab group is updated.",
+-        "parameters": [{ "$ref": "TabGroup", "name": "group" }]
++        "parameters": [
++          {
++            "$ref": "TabGroup",
++            "name": "group"
++          }
++        ]
+       }
+     ]
+   }

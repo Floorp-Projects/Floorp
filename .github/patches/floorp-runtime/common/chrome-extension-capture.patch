@@ -1,0 +1,2036 @@
+diff --git a/toolkit/components/extensions/moz.build b/toolkit/components/extensions/moz.build
+--- a/toolkit/components/extensions/moz.build
++++ b/toolkit/components/extensions/moz.build
+@@ -5,6 +5,13 @@
+ 
+ with Files("**"):
+     BUG_COMPONENT = ("WebExtensions", "General")
++
++EXTRA_JS_MODULES += [
++    "ChromeExtensionCaptureAudio.sys.mjs",
++    "ChromeExtensionCaptureChild.sys.mjs",
++    "ChromeExtensionCaptureConsumer.sys.mjs",
++    "ChromeExtensionCaptureRegistry.sys.mjs",
++]
+ 
+ EXTRA_JS_MODULES += [
+     "ConduitsChild.sys.mjs",
+diff --git a/toolkit/components/extensions/ExtensionPageChild.sys.mjs b/toolkit/components/extensions/ExtensionPageChild.sys.mjs
+--- a/toolkit/components/extensions/ExtensionPageChild.sys.mjs
++++ b/toolkit/components/extensions/ExtensionPageChild.sys.mjs
+@@ -20,6 +20,8 @@
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  ChromeExtensionCaptureChild:
++    "resource://gre/modules/ChromeExtensionCaptureChild.sys.mjs",
+   ExtensionChildDevToolsUtils:
+     "resource://gre/modules/ExtensionChildDevToolsUtils.sys.mjs",
+   Schemas: "resource://gre/modules/Schemas.sys.mjs",
+@@ -237,6 +239,7 @@
+   constructor(extension, params) {
+     super(extension, Object.assign(params, { envType: "addon_child" }));
+     this.extension.views.add(this);
++    lazy.ChromeExtensionCaptureChild.install(this);
+   }
+ 
+   unload() {
+diff --git a/toolkit/components/extensions/ExtensionActions.sys.mjs b/toolkit/components/extensions/ExtensionActions.sys.mjs
+--- a/toolkit/components/extensions/ExtensionActions.sys.mjs
++++ b/toolkit/components/extensions/ExtensionActions.sys.mjs
+@@ -202,6 +202,24 @@
+     return popupUrl;
+   }
+ 
++  recordTabCaptureInvocation(tab) {
++    const marker =
++      this.extension.manifest.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    if (
++      marker?.schema_version === 1 &&
++      /^[a-p]{32}$/.test(marker.original_id) &&
++      this.extension.id === `${marker.original_id}@chromium-extension` &&
++      this.extension.hasPermission("tabCapture")
++    ) {
++      this.extension.floorpTabCaptureGrant = {
++        browsingContextId: tab.linkedBrowser.browsingContext.id,
++        innerWindowId:
++          tab.linkedBrowser.browsingContext.currentWindowGlobal?.innerWindowId,
++      };
++    }
++  }
++
+   /**
+    * Grants activeTab permission for a tab when preloading the popup.
+    *
+@@ -246,6 +264,7 @@
+     // existing preloaded activeTab permission.
+     this.setActiveTabForPreload(null);
+     this.extension.tabManager.addActiveTabPermission(tab);
++    this.recordTabCaptureInvocation(tab);
+     this.extension.tabManager.activateScripts(tab);
+ 
+     let popupUrl = this.getProperty(tab, "popup");
+diff --git a/toolkit/components/extensions/ext-toolkit.json b/toolkit/components/extensions/ext-toolkit.json
+--- a/toolkit/components/extensions/ext-toolkit.json
++++ b/toolkit/components/extensions/ext-toolkit.json
+@@ -150,6 +150,12 @@
+     "scopes": ["addon_parent", "content_parent", "devtools_parent"],
+     "paths": [["storage"]]
+   },
++  "tabCapture": {
++    "url": "chrome://extensions/content/parent/ext-tabCapture.js",
++    "schema": "chrome://extensions/content/schemas/tab_capture.json",
++    "scopes": ["addon_parent"],
++    "paths": [["tabCapture"]]
++  },
+   "telemetry": {
+     "url": "chrome://extensions/content/parent/ext-telemetry.js",
+     "schema": "chrome://extensions/content/schemas/telemetry.json",
+diff --git a/toolkit/components/extensions/child/ext-toolkit.js b/toolkit/components/extensions/child/ext-toolkit.js
+--- a/toolkit/components/extensions/child/ext-toolkit.js
++++ b/toolkit/components/extensions/child/ext-toolkit.js
+@@ -56,6 +56,11 @@
+     scopes: ["addon_child", "content_child", "devtools_child"],
+     paths: [["storage"]],
+   },
++  tabCapture: {
++    url: "chrome://extensions/content/child/ext-tabCapture.js",
++    scopes: ["addon_child"],
++    paths: [["tabCapture"]],
++  },
+   test: {
+     url: "chrome://extensions/content/child/ext-test.js",
+     scopes: ["addon_child", "content_child", "devtools_child"],
+diff --git a/toolkit/components/extensions/jar.mn b/toolkit/components/extensions/jar.mn
+--- a/toolkit/components/extensions/jar.mn
++++ b/toolkit/components/extensions/jar.mn
+@@ -44,6 +44,7 @@
+     content/extensions/parent/ext-scripting.js (parent/ext-scripting.js)
+     content/extensions/parent/ext-storage.js (parent/ext-storage.js)
+     content/extensions/parent/ext-tabs-base.js (parent/ext-tabs-base.js)
++    content/extensions/parent/ext-tabCapture.js (parent/ext-tabCapture.js)
+     content/extensions/parent/ext-telemetry.js (parent/ext-telemetry.js)
+     content/extensions/parent/ext-theme.js (parent/ext-theme.js)
+     content/extensions/parent/ext-toolkit.js (parent/ext-toolkit.js)
+@@ -62,6 +63,7 @@
+     content/extensions/child/ext-runtime.js (child/ext-runtime.js)
+     content/extensions/child/ext-scripting.js (child/ext-scripting.js)
+     content/extensions/child/ext-storage.js (child/ext-storage.js)
++    content/extensions/child/ext-tabCapture.js (child/ext-tabCapture.js)
+     content/extensions/child/ext-test.js (child/ext-test.js)
+     content/extensions/child/ext-toolkit.js (child/ext-toolkit.js)
+     content/extensions/child/ext-userScripts.js (child/ext-userScripts.js)
+diff --git a/toolkit/components/extensions/schemas/jar.mn b/toolkit/components/extensions/schemas/jar.mn
+--- a/toolkit/components/extensions/schemas/jar.mn
++++ b/toolkit/components/extensions/schemas/jar.mn
+@@ -47,6 +47,7 @@
+     content/extensions/schemas/runtime.json
+     content/extensions/schemas/scripting.json
+     content/extensions/schemas/storage.json
++    content/extensions/schemas/tab_capture.json
+     content/extensions/schemas/telemetry.json
+     content/extensions/schemas/test.json
+     content/extensions/schemas/theme.json
+diff --git a/toolkit/components/extensions/parent/ext-tabCapture.js b/toolkit/components/extensions/parent/ext-tabCapture.js
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/parent/ext-tabCapture.js
+@@ -0,0 +1,631 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++
++var { setTimeout: captureSetTimeout, clearTimeout: captureClearTimeout } =
++  ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
++
++var { ChromeExtensionCaptureRegistry } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionCaptureRegistry.sys.mjs"
++);
++this.tabCapture = class extends ExtensionAPIPersistent {
++  PERSISTENT_EVENTS = {
++    onStatusChanged({ fire }) {
++      const listener = (_event, details) => fire.async(details);
++      this.on("capture-status", listener);
++      return {
++        unregister: () => this.off("capture-status", listener),
++        convert(newFire) {
++          fire = newFire;
++        },
++      };
++    },
++  };
++  tokens = new Map();
++  streams = new Map();
++
++  constructor(extension) {
++    super(extension);
++    try {
++      ChromeUtils.registerWindowActor("ChromeExtensionCaptureAudio", {
++        parent: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureAudio.sys.mjs",
++        },
++        child: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureAudio.sys.mjs",
++        },
++        allFrames: true,
++        safeForUntrustedWebProcess: true,
++      });
++    } catch (error) {
++      if (!String(error).includes("already")) throw error;
++    }
++    try {
++      ChromeUtils.registerWindowActor("ChromeExtensionCaptureConsumer", {
++        parent: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureConsumer.sys.mjs",
++        },
++        child: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureConsumer.sys.mjs",
++        },
++        allFrames: true,
++        safeForUntrustedWebProcess: true,
++      });
++    } catch (error) {
++      if (!String(error).includes("already")) throw error;
++    }
++    this.permissionsRemoved = (_event, removed) => {
++      if (removed.permissions.includes("tabCapture")) {
++        for (const token of this.tokens.keys()) this.dropToken(token);
++        for (const session of [...this.streams.values()]) session.stop();
++      }
++    };
++    extension.on("remove-permissions", this.permissionsRemoved);
++  }
++
++  dropToken(token) {
++    ChromeExtensionCaptureRegistry.drop(token);
++    const record = this.tokens.get(token);
++    captureClearTimeout(record?.timer);
++    record?.context.forgetOnClose(record.contextClose);
++    this.tokens.delete(token);
++  }
++
++  onShutdown() {
++    ChromeExtensionCaptureRegistry.shutdown(this);
++    this.extension.off("remove-permissions", this.permissionsRemoved);
++    for (const token of this.tokens.keys()) this.dropToken(token);
++    for (const session of this.streams.values()) {
++      session.unobserve();
++      session.context.forgetOnClose(session.contextClose);
++      session.clearBackendPermission();
++    }
++    this.streams.clear();
++  }
++
++  getAPI(context) {
++    const { extension } = this;
++    const marker =
++      extension.manifest.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    if (
++      marker?.schema_version !== 1 ||
++      !/^[a-p]{32}$/.test(marker.original_id) ||
++      extension.id !== `${marker.original_id}@chromium-extension` ||
++      !extension.hasPermission("tabCapture")
++    ) {
++      return {};
++    }
++    const error = message => new ExtensionUtils.ExtensionError(message);
++    const ownDocument = () => {
++      const window = context.browsingContext?.currentWindowContext;
++      const global = context.actor?.manager;
++      const topPrincipal =
++        context.browsingContext?.top.currentWindowContext?.documentPrincipal;
++      if (
++        !topPrincipal?.equals(window?.documentPrincipal) ||
++        !global?.isCurrentGlobal ||
++        global.innerWindowId !== window?.innerWindowId ||
++        !extension.hasPermission("tabCapture") ||
++        context.unloaded ||
++        context.envType !== "addon_parent" ||
++        !window ||
++        (window.documentPrincipal.originNoSuffix !==
++          extension.baseURI.prePath &&
++          !(
++            context.captureConsumer?.browsingContextId ===
++              context.browsingContext.id &&
++            context.captureConsumer.innerWindowId === window.innerWindowId &&
++            context.captureConsumer.principal.equals(window.documentPrincipal)
++          ))
++      ) {
++        throw error(
++          "Tab capture requires a live document belonging to the extension."
++        );
++      }
++      return window;
++    };
++    const ownIssuer = () => {
++      if (context.viewType !== "background_worker") return ownDocument();
++      if (
++        context.unloaded ||
++        !extension.workerBackground ||
++        extension.backgroundContext !== context ||
++        !context.principal?.equals(extension.principal) ||
++        !extension.hasPermission("tabCapture")
++      ) {
++        throw error(
++          "Tab capture requires the active extension background worker."
++        );
++      }
++      const manager = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
++        Ci.nsIServiceWorkerManager
++      );
++      const registration = manager.getRegistrationForAddonPrincipal(
++        extension.principal
++      );
++      const worker = registration?.getWorkerByID(context.workerDescriptorId);
++      if (
++        !worker ||
++        worker.id !== registration.activeWorker?.id ||
++        worker.state !== Ci.nsIServiceWorkerInfo.STATE_ACTIVATED
++      ) {
++        throw error(
++          "Tab capture requires the current activated background worker."
++        );
++      }
++    };
++    const validTarget = target =>
++      target?.documentPrincipal &&
++      !target.documentPrincipal.isSystemPrincipal &&
++      !target.documentPrincipal.isExpandedPrincipal &&
++      !target.documentPrincipal.addonPolicy;
++    const status = (session, value) => {
++      session.status = value;
++      this.emit("capture-status", {
++        tabId: session.tabId,
++        status: value,
++        fullscreen: false,
++      });
++    };
++    const finish = (sessionId, value = "stopped") => {
++      const session = this.streams.get(sessionId);
++      if (session?.context === context) {
++        this.streams.delete(sessionId);
++        session.unobserve();
++        context.forgetOnClose(session.contextClose);
++        session.clearBackendPermission();
++        status(session, value);
++        if (!context.unloaded)
++          this.emit("capture-stop", { context, sessionId });
++      }
++    };
++    return {
++      tabCapture: {
++        getMediaStreamId: async (options = {}) => {
++          ownIssuer();
++          if (!context.callContextData?.isHandlingUserInput) {
++            throw error("getMediaStreamId requires a user gesture.");
++          }
++          let consumer, consumerGlobal;
++          if (options.consumerTabId != null) {
++            const nativeConsumer = extension.tabManager.get(
++              options.consumerTabId
++            )?.nativeTab;
++            const global =
++              nativeConsumer?.linkedBrowser.browsingContext
++                ?.currentWindowGlobal;
++            if (
++              !nativeConsumer ||
++              !extension.tabManager.canAccessTab(nativeConsumer) ||
++              !global?.isCurrentGlobal ||
++              global.documentPrincipal.isNullPrincipal ||
++              !global.documentPrincipal.isOriginPotentiallyTrustworthy ||
++              !(
++                validTarget(global) ||
++                global.documentPrincipal.originNoSuffix ===
++                  extension.baseURI.prePath
++              )
++            ) {
++              throw error(
++                "consumerTabId requires an accessible secure current document."
++              );
++            }
++            consumer = {
++              browsingContextId: global.browsingContext.id,
++              innerWindowId: global.innerWindowId,
++              principal: global.documentPrincipal,
++            };
++            if (
++              global.documentPrincipal.originNoSuffix !==
++              extension.baseURI.prePath
++            )
++              consumerGlobal = global;
++          }
++          const nativeTab =
++            options.targetTabId == null
++              ? tabTracker.activeTab
++              : extension.tabManager.get(options.targetTabId)?.nativeTab;
++          if (
++            !nativeTab ||
++            !extension.tabManager.canAccessTab(nativeTab) ||
++            nativeTab !== nativeTab.documentGlobal.gBrowser.selectedTab ||
++            (context.pendingEventBrowser
++              ? context.pendingEventBrowser !== nativeTab.linkedBrowser
++              : nativeTab !== tabTracker.activeTab)
++          ) {
++            throw error(
++              "Tab capture requires the active tab selected by the user."
++            );
++          }
++          const browser = nativeTab.linkedBrowser;
++          const uri = browser.currentURI;
++          if (
++            !["http", "https", "data", "blob", "file"].some(scheme =>
++              uri.schemeIs(scheme)
++            ) &&
++            uri.spec !== "about:blank"
++          ) {
++            throw error("Privileged browser pages cannot be captured.");
++          }
++          const target = browser.browsingContext.currentWindowGlobal;
++          if (!validTarget(target))
++            throw error(
++              "Target document is privileged or no longer available."
++            );
++          const grant = extension.floorpTabCaptureGrant;
++          if (
++            !(
++              grant?.browsingContextId === browser.browsingContext.id &&
++              grant.innerWindowId === target.innerWindowId
++            )
++          ) {
++            throw error(
++              "Tab capture requires a real extension action invocation."
++            );
++          }
++          if (consumerGlobal) {
++            await consumerGlobal
++              .getActor("ChromeExtensionCaptureConsumer")
++              .sendQuery("Install", {
++                innerWindowId: consumerGlobal.innerWindowId,
++                extensionId: extension.id,
++                marker,
++              });
++            ownIssuer();
++            if (
++              !consumerGlobal.isCurrentGlobal ||
++              browser.browsingContext.currentWindowGlobal?.innerWindowId !==
++                target.innerWindowId
++            ) {
++              throw error(
++                "Capture consumer or source navigated before stream ID issuance."
++              );
++            }
++          }
++          const token = `floorp-tab-capture-${Services.uuid.generateUUID()}`;
++          const contextClose = { close: () => this.dropToken(token) };
++          this.tokens.set(token, {
++            context,
++            contextClose,
++            browser,
++            consumer,
++            tabId: tabTracker.getId(nativeTab),
++            innerWindowId: target.innerWindowId,
++            expires: Date.now() + 10000,
++            timer: captureSetTimeout(() => this.dropToken(token), 10000),
++          });
++          ChromeExtensionCaptureRegistry.register(token, this);
++          context.callOnClose(contextClose);
++          return token;
++        },
++        _consumeStreamId: async (
++          token,
++          options = { video: true, audio: false }
++        ) => {
++          ownDocument();
++          const record = this.tokens.get(token);
++          this.dropToken(token); // A stream ID is single-use, including failed starts.
++          if (
++            record?.consumer &&
++            (record.consumer.browsingContextId !== context.browsingContext.id ||
++              record.consumer.innerWindowId !== ownDocument().innerWindowId ||
++              !record.consumer.principal.equals(
++                ownDocument().documentPrincipal
++              ))
++          ) {
++            throw error(
++              "Capture stream ID belongs to another consumer document."
++            );
++          }
++          if (
++            !record ||
++            record.expires < Date.now() ||
++            record.browser.browsingContext?.currentWindowGlobal
++              ?.innerWindowId !== record.innerWindowId
++          ) {
++            throw error(
++              "Invalid, expired, or navigated tab capture stream ID."
++            );
++          }
++          if (
++            [...this.streams.values()].some(
++              stream => stream.tabId === record.tabId
++            )
++          ) {
++            throw error("This extension is already capturing the tab.");
++          }
++          const sessionId = String(Services.uuid.generateUUID());
++          const consumerInnerWindowId = ownDocument().innerWindowId;
++          const targetContext = record.browser.browsingContext;
++          const targetBrowserId = targetContext.browserId;
++          const audioSources = new Map();
++          const audioSource = async global => {
++            if (
++              !global?.isCurrentGlobal ||
++              !validTarget(global) ||
++              !this.streams.has(sessionId)
++            )
++              return null;
++            const sourceId = String(global.innerWindowId);
++            if (audioSources.has(sourceId)) return null;
++            const source = {
++              actor: global.getActor("ChromeExtensionCaptureAudio"),
++              innerWindowId: global.innerWindowId,
++            };
++            audioSources.set(sourceId, source);
++            try {
++              const offer = await source.actor.sendQuery("Start", {
++                sessionId,
++                innerWindowId: source.innerWindowId,
++              });
++              if (!this.streams.has(sessionId) || !global.isCurrentGlobal)
++                throw error("Audio source document changed.");
++              return { sourceId, offer };
++            } catch (failure) {
++              audioSources.delete(sourceId);
++              try {
++                source.actor.sendAsyncMessage("Stop", { sessionId });
++              } catch {}
++              if (!global.isCurrentGlobal || !this.streams.has(sessionId))
++                return null;
++              throw failure;
++            }
++          };
++          const observer = (subject, topic) => {
++            if (
++              options.audio &&
++              topic === "window-global-created" &&
++              subject.browsingContext.top.browserId === targetBrowserId &&
++              subject.browsingContext !== subject.browsingContext.top
++            ) {
++              audioSource(subject).then(
++                source => {
++                  if (source)
++                    this.emit("capture-audio-source", {
++                      context,
++                      sessionId,
++                      ...source,
++                    });
++                },
++                () => finish(sessionId, "error")
++              );
++            }
++            if (topic === "window-global-destroyed") {
++              const sourceId = String(subject.innerWindowId);
++              if (audioSources.delete(sourceId))
++                this.emit("capture-audio-source", {
++                  context,
++                  sessionId,
++                  sourceId,
++                  offer: null,
++                });
++              return;
++            }
++            const observed =
++              topic === "browsing-context-discarded"
++                ? subject
++                : subject.browsingContext;
++            if (
++              observed?.top === observed &&
++              observed.browserId === targetBrowserId &&
++              (topic === "browsing-context-discarded" ||
++                subject.innerWindowId !== record.innerWindowId)
++            )
++              finish(sessionId);
++          };
++          const progress = {
++            QueryInterface: ChromeUtils.generateQI([
++              "nsIWebProgressListener",
++              "nsISupportsWeakReference",
++            ]),
++            onStateChange(webProgress, _request, flags) {
++              if (
++                webProgress.isTopLevel &&
++                flags & Ci.nsIWebProgressListener.STATE_START &&
++                flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT
++              )
++                finish(sessionId);
++            },
++            onLocationChange(webProgress) {
++              if (
++                webProgress.isTopLevel &&
++                record.browser.browsingContext?.currentWindowGlobal
++                  ?.innerWindowId !== record.innerWindowId
++              )
++                finish(sessionId);
++            },
++          };
++          record.browser.addProgressListener(
++            progress,
++            Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT |
++              Ci.nsIWebProgress.NOTIFY_LOCATION
++          );
++          Services.obs.addObserver(observer, "window-global-destroyed");
++          Services.obs.addObserver(observer, "window-global-created");
++          Services.obs.addObserver(observer, "browsing-context-discarded");
++          const session = {
++            context,
++            record,
++            audioSources,
++            audioSource,
++            options,
++            consumerInnerWindowId,
++            tabId: record.tabId,
++            status: "pending",
++            contextClose: { close: () => finish(sessionId) },
++            stop: () => finish(sessionId),
++            permissionPrincipal: ownDocument().documentPrincipal,
++            permissionExpires: Date.now() + 10000,
++            backendPermissionInstalled: false,
++            clearBackendPermission() {
++              if (!this.backendPermissionInstalled) return;
++              this.backendPermissionInstalled = false;
++              const permission = Services.perms.getPermissionObject(
++                this.permissionPrincipal,
++                "MediaManagerVideo",
++                true
++              );
++              if (
++                permission?.expireType === Services.perms.EXPIRE_TIME &&
++                permission.expireTime === this.permissionExpires
++              ) {
++                Services.perms.removeFromPrincipal(
++                  this.permissionPrincipal,
++                  "MediaManagerVideo"
++                );
++              }
++            },
++            unobserve() {
++              for (const source of audioSources.values()) {
++                try {
++                  source.actor.sendAsyncMessage("Stop", { sessionId });
++                } catch {}
++              }
++              audioSources.clear();
++              Services.obs.removeObserver(observer, "window-global-destroyed");
++              if (record.browser.webProgress)
++                record.browser.removeProgressListener(progress);
++              Services.obs.removeObserver(observer, "window-global-created");
++              Services.obs.removeObserver(
++                observer,
++                "browsing-context-discarded"
++              );
++            },
++          };
++          this.streams.set(sessionId, session);
++          context.callOnClose(session.contextClose);
++          status(session, "pending");
++          if (
++            options.video &&
++            Services.perms.testExactPermissionFromPrincipal(
++              session.permissionPrincipal,
++              "MediaManagerVideo"
++            ) !== Services.perms.UNKNOWN_ACTION
++          ) {
++            finish(sessionId, "error");
++            throw error("Another video permission request is pending.");
++          }
++          // CamerasParent consumes this internal permission after exactly one
++          // allocation, as it does for a user-approved native WebRTC request.
++          try {
++            if (options.video) {
++              Services.perms.addFromPrincipal(
++                session.permissionPrincipal,
++                "MediaManagerVideo",
++                Services.perms.ALLOW_ACTION,
++                Services.perms.EXPIRE_TIME,
++                session.permissionExpires
++              );
++              session.backendPermissionInstalled = true;
++            }
++          } catch (failure) {
++            finish(sessionId, "error");
++            throw failure;
++          }
++          return {
++            sessionId,
++            browserId: record.browser.browsingContext.browserId,
++          };
++        },
++        _audioOffers: async sessionId => {
++          ownDocument();
++          const session = this.streams.get(sessionId);
++          if (!session || session.context !== context || !session.options.audio)
++            throw error("Invalid audio session.");
++          const contexts = [session.record.browser.browsingContext];
++          const offers = [];
++          while (contexts.length) {
++            const current = contexts.shift();
++            contexts.push(...current.children);
++            const offer = await session.audioSource(
++              current.currentWindowGlobal
++            );
++            if (offer) offers.push(offer);
++          }
++          return offers;
++        },
++        _audioAnswer: async (sessionId, sourceId, answer) => {
++          ownDocument();
++          const session = this.streams.get(sessionId);
++          const source = session?.audioSources.get(sourceId);
++          if (session?.context !== context || !source)
++            throw error("Invalid audio source.");
++          return source.actor.sendQuery("Answer", {
++            sessionId,
++            innerWindowId: source.innerWindowId,
++            answer,
++          });
++        },
++        _streamStarted: async sessionId => {
++          ownDocument();
++          const session = this.streams.get(sessionId);
++          if (!session || session.context !== context)
++            throw error("Invalid capture session.");
++          if (
++            !validTarget(
++              session.record.browser.browsingContext?.currentWindowGlobal
++            ) ||
++            session.record.browser.browsingContext?.currentWindowGlobal
++              ?.innerWindowId !== session.record.innerWindowId ||
++            ownDocument().innerWindowId !== session.consumerInnerWindowId
++          ) {
++            finish(sessionId, "error");
++            throw error(
++              "Capture document or target navigated before stream start."
++            );
++          }
++          session.clearBackendPermission();
++          status(session, "active");
++        },
++        _streamStopped: async (sessionId, failed = false) =>
++          finish(sessionId, failed ? "error" : "stopped"),
++        getCapturedTabs: async () =>
++          [...this.streams.values()].map(session => ({
++            tabId: session.tabId,
++            status: session.status,
++            fullscreen: false,
++          })),
++        onStatusChanged: new EventManager({
++          context,
++          module: "tabCapture",
++          event: "onStatusChanged",
++          extensionApi: this,
++        }).api(),
++        _onAudioSource: new EventManager({
++          context,
++          name: "tabCapture._onAudioSource",
++          register: fire => {
++            const listener = (_event, source) => {
++              if (source.context === context)
++                return fire.async(
++                  source.sessionId,
++                  source.sourceId,
++                  source.offer
++                );
++            };
++            this.on("capture-audio-source", listener);
++            return () => this.off("capture-audio-source", listener);
++          },
++        }).api(),
++        _onStreamStop: new EventManager({
++          context,
++          name: "tabCapture._onStreamStop",
++          register: fire => {
++            const listener = (_event, stopped) => {
++              if (stopped.context === context)
++                return fire.async(stopped.sessionId);
++            };
++            this.on("capture-stop", listener);
++            return () => this.off("capture-stop", listener);
++          },
++        }).api(),
++      },
++    };
++  }
++};
+diff --git a/toolkit/components/extensions/ChromeExtensionCaptureChild.sys.mjs b/toolkit/components/extensions/ChromeExtensionCaptureChild.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/ChromeExtensionCaptureChild.sys.mjs
+@@ -0,0 +1,474 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++import {
++  setTimeout,
++  clearTimeout,
++  setInterval,
++  clearInterval,
++} from "resource://gre/modules/Timer.sys.mjs";
++import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
++const { ExtensionError } = ExtensionUtils;
++
++function compatible(extension) {
++  const marker =
++    extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++  return (
++    marker?.schema_version === 1 &&
++    /^[a-p]{32}$/.test(marker.original_id) &&
++    extension.id === `${marker.original_id}@chromium-extension` &&
++    (extension.permissions.has("tabCapture") ||
++      extension.permissions.has("desktopCapture"))
++  );
++}
++
++function inContentPromise(context, operation) {
++  return new context.cloneScope.Promise(
++    Cu.exportFunction((resolve, reject) => {
++      Promise.resolve()
++        .then(operation)
++        .then(resolve, error => reject(context.normalizeError(error)));
++    }, context.cloneScope)
++  );
++}
++
++function videoConstraints(request) {
++  const mandatory = request?.video?.mandatory || request?.audio?.mandatory;
++  if (
++    !mandatory ||
++    !["tab", "desktop"].includes(mandatory.chromeMediaSource) ||
++    typeof mandatory.chromeMediaSourceId !== "string"
++  ) {
++    throw new ExtensionError(
++      "Tab capture requires a valid chromeMediaSourceId."
++    );
++  }
++  const video = {};
++  const supported = new Set([
++    "chromeMediaSource",
++    "chromeMediaSourceId",
++    "minWidth",
++    "maxWidth",
++    "minHeight",
++    "maxHeight",
++    "minFrameRate",
++    "maxFrameRate",
++  ]);
++  for (const key of Object.keys(mandatory)) {
++    if (!supported.has(key))
++      throw new ExtensionError(`Unsupported tab video constraint: ${key}`);
++  }
++  for (const [property, maximum] of [
++    ["Width", 8192],
++    ["Height", 8192],
++    ["FrameRate", 60],
++  ]) {
++    const min = mandatory[`min${property}`];
++    const max = mandatory[`max${property}`];
++    if (min != null || max != null) {
++      if (
++        [min, max].some(
++          value =>
++            value != null &&
++            (typeof value !== "number" ||
++              !Number.isFinite(value) ||
++              value <= 0 ||
++              value > maximum)
++        ) ||
++        (min != null && max != null && min > max)
++      ) {
++        throw new ExtensionError(`Invalid tab video ${property} constraint.`);
++      }
++      video[property[0].toLowerCase() + property.slice(1)] = {
++        ...(min == null ? {} : { min }),
++        ...(max == null ? {} : { max }),
++      };
++    }
++  }
++  if (
++    request.audio &&
++    (request.audio?.mandatory?.chromeMediaSource !==
++      mandatory.chromeMediaSource ||
++      request.audio.mandatory.chromeMediaSourceId !==
++        mandatory.chromeMediaSourceId)
++  )
++    throw new ExtensionError(
++      "Audio must use the same authorized tab stream ID."
++    );
++  return {
++    token: mandatory.chromeMediaSourceId,
++    video,
++    kind: mandatory.chromeMediaSource,
++    audio: !!request.audio,
++    wantsVideo: !!request.video,
++  };
++}
++
++async function receiveAudio(context, sessionId, call, stream, state) {
++  const window = context.contentWindow;
++  const audioContext = new window.AudioContext();
++  const destination = audioContext.createMediaStreamDestination();
++  const peers = new Map();
++  let closed = false;
++  const close = () => {
++    if (closed) return;
++    closed = true;
++    state.audioSources.delete(sessionId);
++    for (const { peer, source } of peers.values()) {
++      source?.disconnect();
++      peer.close();
++    }
++    peers.clear();
++    destination.stream.getTracks().forEach(track => track.stop());
++    audioContext.close().catch(Cu.reportError);
++  };
++  const attach = async (sourceId, offer) => {
++    if (closed) return;
++    const previous = peers.get(sourceId);
++    previous?.source?.disconnect();
++    previous?.peer.close();
++    peers.delete(sourceId);
++    if (!offer) return;
++    const peer = new window.RTCPeerConnection({ iceServers: [] });
++    const item = { peer };
++    peers.set(sourceId, item);
++    peer.addEventListener("track", event => {
++      if (closed) {
++        event.track.stop();
++        return;
++      }
++      const source = audioContext.createMediaStreamSource(
++        new window.MediaStream([event.track])
++      );
++      source.connect(destination);
++      item.source = source;
++    });
++    await peer.setRemoteDescription(offer);
++    await peer.setLocalDescription(await peer.createAnswer());
++    if (peer.iceGatheringState !== "complete") {
++      await new Promise((resolve, reject) => {
++        const timer = setTimeout(() => {
++          peer.removeEventListener("icegatheringstatechange", changed);
++          reject(new ExtensionError("Audio transport gathering timed out."));
++        }, 10000);
++        function changed() {
++          if (peer.iceGatheringState === "complete") {
++            clearTimeout(timer);
++            peer.removeEventListener("icegatheringstatechange", changed);
++            resolve();
++          }
++        }
++        peer.addEventListener("icegatheringstatechange", changed);
++        changed();
++      });
++    }
++    if (closed) throw new ExtensionError("Audio transport was cancelled.");
++    await call("_audioAnswer", [
++      sessionId,
++      sourceId,
++      peer.localDescription.toJSON(),
++    ]);
++    if (peer.connectionState !== "connected") {
++      await new Promise((resolve, reject) => {
++        const timer = setTimeout(() => {
++          peer.removeEventListener("connectionstatechange", changed);
++          reject(
++            new ExtensionError("Local audio transport connection timed out.")
++          );
++        }, 10000);
++        function changed() {
++          if (
++            ["connected", "failed", "closed"].includes(peer.connectionState)
++          ) {
++            clearTimeout(timer);
++            peer.removeEventListener("connectionstatechange", changed);
++            if (peer.connectionState === "connected") resolve();
++            else reject(new ExtensionError("Local audio transport failed."));
++          }
++        }
++        peer.addEventListener("connectionstatechange", changed);
++        changed();
++      });
++    }
++  };
++  state.audioSources.set(sessionId, { attach, close });
++  if (!state.audioListener) {
++    state.audioListener = (id, sourceId, offer) => {
++      const active = state.audioSources.get(id);
++      if (active)
++        active.attach(sourceId, offer).catch(error => {
++          active.close();
++          const recording = state.streams.get(id);
++          recording?.stream.getTracks().forEach(track => track.stop());
++          call("_streamStopped", [id, true]).catch(Cu.reportError);
++          Cu.reportError(error);
++        });
++    };
++    context.childManager
++      .getImplementation("tabCapture", "_onAudioSource")
++      .addListener(state.audioListener, []);
++  }
++  try {
++    const offers = await call("_audioOffers", [sessionId]);
++    for (const { sourceId, offer } of offers) await attach(sourceId, offer);
++    await audioContext.resume();
++    if (closed) throw new ExtensionError("Audio capture was cancelled.");
++    for (const track of destination.stream.getAudioTracks())
++      stream.addTrack(track);
++    return { close };
++  } catch (error) {
++    close();
++    throw error;
++  }
++}
++
++async function receiveDesktop(context, sessionId, call, stream, options) {
++  const peer = new context.contentWindow.RTCPeerConnection({ iceServers: [] });
++  const close = () => {
++    peer.close();
++    stream.getTracks().forEach(track => track.stop());
++  };
++  peer.addEventListener("track", event => {
++    if (
++      (event.track.kind === "audio" && options.audio) ||
++      (event.track.kind === "video" && options.video)
++    )
++      stream.addTrack(event.track);
++    else event.track.stop();
++  });
++  try {
++    await peer.setRemoteDescription(await call("_desktopOffer", [sessionId]));
++    await peer.setLocalDescription(await peer.createAnswer());
++    if (peer.iceGatheringState !== "complete")
++      await new Promise((resolve, reject) => {
++        const timer = setTimeout(() => {
++          peer.removeEventListener("icegatheringstatechange", changed);
++          reject(new ExtensionError("Desktop transport gathering timed out."));
++        }, 10000);
++        function changed() {
++          if (peer.iceGatheringState === "complete") {
++            clearTimeout(timer);
++            peer.removeEventListener("icegatheringstatechange", changed);
++            resolve();
++          }
++        }
++        peer.addEventListener("icegatheringstatechange", changed);
++        changed();
++      });
++    await call("_desktopAnswer", [sessionId, peer.localDescription.toJSON()]);
++    if (peer.connectionState !== "connected")
++      await new Promise((resolve, reject) => {
++        const timer = setTimeout(() => {
++          peer.removeEventListener("connectionstatechange", changed);
++          reject(new ExtensionError("Desktop transport connection timed out."));
++        }, 10000);
++        function changed() {
++          if (
++            ["connected", "failed", "closed"].includes(peer.connectionState)
++          ) {
++            clearTimeout(timer);
++            peer.removeEventListener("connectionstatechange", changed);
++            if (peer.connectionState === "connected") resolve();
++            else reject(new ExtensionError("Desktop transport failed."));
++          }
++        }
++        peer.addEventListener("connectionstatechange", changed);
++        changed();
++      });
++    if (
++      (options.audio && !stream.getAudioTracks().length) ||
++      (options.video && !stream.getVideoTracks().length)
++    )
++      throw new ExtensionError(
++        "Selected desktop source does not provide the requested tracks."
++      );
++    return { close };
++  } catch (error) {
++    close();
++    throw error;
++  }
++}
++
++const states = new WeakMap();
++
++async function consume(context, request) {
++  const state = states.get(context);
++  if (!state || context.unloaded)
++    throw new ExtensionError("Capture document is no longer available.");
++  const { token, video, audio, wantsVideo, kind } = videoConstraints(request);
++  const namespace = kind === "desktop" ? "desktopCapture" : "tabCapture";
++  if (!state.stopListeners.has(namespace)) {
++    const stopListener = sessionId => {
++      const active = state.streams.get(sessionId);
++      if (active) {
++        clearInterval(active.timer);
++        active.stream.getTracks().forEach(track => track.stop());
++        active.closeAudio?.();
++        state.streams.delete(sessionId);
++      }
++      if (state.pending.has(sessionId)) state.revoked.add(sessionId);
++    };
++    context.childManager
++      .getImplementation(namespace, "_onStreamStop")
++      .addListener(stopListener, []);
++    state.stopListeners.set(namespace, stopListener);
++  }
++  const call = (name, args) =>
++    context.childManager.callParentAsyncFunction(`${namespace}.${name}`, args);
++  const { sessionId, browserId } = await call("_consumeStreamId", [
++    token,
++    { audio, video: wantsVideo },
++  ]);
++  state.pending.add(sessionId);
++  let stream, audioState;
++  try {
++    // Only these sanitized constraints reach the privileged native call. Ordinary
++    // getUserMedia calls below execute with the content principal instead.
++    stream =
++      wantsVideo && kind !== "desktop"
++        ? await state.original.call(state.devices, {
++            audio: false,
++            video: {
++              ...video,
++              mediaSource: "browser",
++              deviceId: { exact: String(browserId) },
++            },
++          })
++        : new context.contentWindow.MediaStream();
++    if (kind === "desktop") {
++      audioState = await receiveDesktop(context, sessionId, call, stream, {
++        audio,
++        video: wantsVideo,
++      });
++    } else if (audio) {
++      audioState = await receiveAudio(context, sessionId, call, stream, state);
++    }
++    if (context.unloaded) {
++      stream.getTracks().forEach(track => track.stop());
++      throw new ExtensionError("Capture document was closed.");
++    }
++    await call("_streamStarted", [sessionId]);
++    if (context.unloaded || state.revoked.has(sessionId)) {
++      throw new ExtensionError("Capture stopped before stream start.");
++    }
++    const tracks = stream.getTracks();
++    const timer = setInterval(() => {
++      if (tracks.every(track => track.readyState === "ended")) {
++        clearInterval(timer);
++        state.streams.delete(sessionId);
++        audioState?.close();
++        if (!context.unloaded)
++          call("_streamStopped", [sessionId]).catch(Cu.reportError);
++      }
++    }, 100);
++    state.streams.set(sessionId, {
++      stream,
++      timer,
++      closeAudio: () => audioState?.close(),
++    });
++    return stream;
++  } catch (error) {
++    audioState?.close();
++    stream?.getTracks().forEach(track => track.stop());
++    if (!context.unloaded) await call("_streamStopped", [sessionId, true]);
++    throw error;
++  } finally {
++    state.pending.delete(sessionId);
++    state.revoked.delete(sessionId);
++  }
++}
++
++export const ChromeExtensionCaptureChild = {
++  install(context) {
++    if (!compatible(context.extension)) return;
++    const devices = context.contentWindow.navigator.mediaDevices;
++    if (!devices) return;
++    const original = devices.getUserMedia;
++    const sandbox = Cu.Sandbox(context.principal, {
++      sandboxPrototype: context.contentWindow,
++      wantXrays: false,
++    });
++    // Resolve the ordinary native function entirely inside the content realm;
++    // importing a chrome-side native wrapper would either elevate or deny calls.
++    const forward = Cu.evalInSandbox(
++      "(function() { const devices = navigator.mediaDevices; const original = devices.getUserMedia; return constraints => original.call(devices, constraints); })()",
++      sandbox
++    );
++    const state = {
++      devices,
++      original,
++      streams: new Map(),
++      pending: new Set(),
++      revoked: new Set(),
++      stopListeners: new Map(),
++      audioSources: new Map(),
++      audioListener: null,
++    };
++    states.set(context, state);
++    const hook = Cu.exportFunction(constraints => {
++      const request = Cu.waiveXrays(constraints);
++      const source =
++        request?.video?.mandatory?.chromeMediaSource ||
++        request?.audio?.mandatory?.chromeMediaSource;
++      if (source === "tab" || source === "desktop")
++        return inContentPromise(context, () => consume(context, request));
++      return forward(constraints);
++    }, context.cloneScope);
++    Object.defineProperty(Cu.waiveXrays(devices), "getUserMedia", {
++      value: hook,
++      configurable: true,
++      writable: true,
++    });
++    context.callOnClose({
++      close() {
++        for (const { stream, timer, closeAudio } of state.streams.values()) {
++          closeAudio?.();
++          clearInterval(timer);
++          stream.getTracks().forEach(track => track.stop());
++        }
++        state.streams.clear();
++        states.delete(context);
++        Cu.nukeSandbox(sandbox);
++      },
++    });
++  },
++  capture(context, options) {
++    const isHandlingUserInput =
++      context.contentWindow.windowUtils.isHandlingUserInput;
++    return inContentPromise(context, async () => {
++      if (!options.video && !options.audio)
++        throw new ExtensionError(
++          "At least one of video:true or audio:true is required for tab capture."
++        );
++      const token = await context.childManager.callParentAsyncFunction(
++        "tabCapture.getMediaStreamId",
++        [{}],
++        null,
++        {
++          isHandlingUserInput,
++        }
++      );
++      return consume(context, {
++        audio: options.audio
++          ? {
++              mandatory: {
++                ...options.audioConstraints?.mandatory,
++                chromeMediaSource: "tab",
++                chromeMediaSourceId: token,
++              },
++            }
++          : false,
++        video: options.video
++          ? {
++              mandatory: {
++                ...options.videoConstraints?.mandatory,
++                chromeMediaSource: "tab",
++                chromeMediaSourceId: token,
++              },
++            }
++          : false,
++      });
++    });
++  },
++};
+diff --git a/toolkit/components/extensions/child/ext-tabCapture.js b/toolkit/components/extensions/child/ext-tabCapture.js
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/child/ext-tabCapture.js
+@@ -0,0 +1,17 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++var { ChromeExtensionCaptureChild } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionCaptureChild.sys.mjs"
++);
++this.tabCapture = class extends ExtensionAPI {
++  getAPI(context) {
++    return {
++      tabCapture: {
++        capture: options =>
++          ChromeExtensionCaptureChild.capture(context, options),
++      },
++    };
++  }
++};
+diff --git a/toolkit/components/extensions/schemas/tab_capture.json b/toolkit/components/extensions/schemas/tab_capture.json
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/schemas/tab_capture.json
+@@ -0,0 +1,281 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "PermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": ["tabCapture"]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "tabCapture",
++    "permissions": ["tabCapture"],
++    "types": [
++      {
++        "id": "CaptureInfo",
++        "type": "object",
++        "properties": {
++          "tabId": {
++            "type": "integer"
++          },
++          "status": {
++            "type": "string",
++            "enum": ["pending", "active", "stopped", "error"]
++          },
++          "fullscreen": {
++            "type": "boolean"
++          }
++        }
++      }
++    ],
++    "functions": [
++      {
++        "name": "getMediaStreamId",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "type": "object",
++            "name": "options",
++            "optional": true,
++            "default": {},
++            "properties": {
++              "targetTabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              },
++              "consumerTabId": {
++                "type": "integer",
++                "minimum": 0,
++                "optional": true
++              }
++            }
++          },
++          {
++            "type": "function",
++            "name": "callback",
++            "parameters": [
++              {
++                "name": "streamId",
++                "type": "string"
++              }
++            ]
++          }
++        ],
++        "requireUserInput": true
++      },
++      {
++        "name": "capture",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "audio": {
++                "type": "boolean",
++                "optional": true
++              },
++              "video": {
++                "type": "boolean",
++                "optional": true
++              },
++              "audioConstraints": {
++                "type": "object",
++                "additionalProperties": true,
++                "optional": true
++              },
++              "videoConstraints": {
++                "type": "object",
++                "additionalProperties": true,
++                "optional": true
++              }
++            }
++          },
++          {
++            "type": "function",
++            "name": "callback",
++            "parameters": [
++              {
++                "name": "stream",
++                "type": "object",
++                "additionalProperties": true
++              }
++            ]
++          }
++        ],
++        "requireUserInput": true
++      },
++      {
++        "name": "getCapturedTabs",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "type": "function",
++            "name": "callback",
++            "parameters": [
++              {
++                "name": "tabs",
++                "type": "array",
++                "items": {
++                  "$ref": "CaptureInfo"
++                }
++              }
++            ]
++          }
++        ]
++      },
++      {
++        "name": "_consumeStreamId",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "token",
++            "type": "string"
++          },
++          {
++            "name": "options",
++            "type": "object",
++            "optional": true,
++            "default": {
++              "audio": false,
++              "video": true
++            },
++            "properties": {
++              "audio": {
++                "type": "boolean"
++              },
++              "video": {
++                "type": "boolean"
++              }
++            }
++          }
++        ],
++        "unsupported": true
++      },
++      {
++        "name": "_streamStarted",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ],
++        "unsupported": true
++      },
++      {
++        "name": "_streamStopped",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          },
++          {
++            "name": "failed",
++            "type": "boolean",
++            "optional": true,
++            "default": false
++          }
++        ],
++        "unsupported": true
++      },
++      {
++        "name": "_audioOffers",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ]
++      },
++      {
++        "name": "_audioAnswer",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          },
++          {
++            "name": "sourceId",
++            "type": "string"
++          },
++          {
++            "name": "answer",
++            "type": "object",
++            "additionalProperties": true
++          }
++        ]
++      }
++    ],
++    "events": [
++      {
++        "name": "onStatusChanged",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "info",
++            "$ref": "CaptureInfo"
++          }
++        ]
++      },
++      {
++        "name": "_onStreamStop",
++        "type": "function",
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ]
++      },
++      {
++        "name": "_onAudioSource",
++        "type": "function",
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          },
++          {
++            "name": "sourceId",
++            "type": "string"
++          },
++          {
++            "name": "offer",
++            "choices": [
++              {
++                "type": "object",
++                "additionalProperties": true
++              },
++              {
++                "type": "null"
++              }
++            ]
++          }
++        ]
++      }
++    ]
++  }
++]
+diff --git a/toolkit/components/extensions/ChromeExtensionCaptureAudio.sys.mjs b/toolkit/components/extensions/ChromeExtensionCaptureAudio.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/ChromeExtensionCaptureAudio.sys.mjs
+@@ -0,0 +1,130 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
++
++async function completeIce(peer) {
++  if (peer.iceGatheringState === "complete") return;
++  await new Promise((resolve, reject) => {
++    const timer = setTimeout(() => {
++      peer.removeEventListener("icegatheringstatechange", changed);
++      reject(new Error("Local audio transport ICE gathering timed out."));
++    }, 10000);
++    function changed() {
++      if (peer.iceGatheringState === "complete") {
++        clearTimeout(timer);
++        peer.removeEventListener("icegatheringstatechange", changed);
++        resolve();
++      }
++    }
++    peer.addEventListener("icegatheringstatechange", changed);
++    changed();
++  });
++}
++
++export class ChromeExtensionCaptureAudioParent extends JSWindowActorParent {}
++
++// Only the privileged parent capture broker can send these messages. No DOM
++// event or content-provided SDP can open a source or select its destination.
++export class ChromeExtensionCaptureAudioChild extends JSWindowActorChild {
++  sessions = new Map();
++  sourcePromise = null;
++
++  stop(id) {
++    const session = this.sessions.get(id);
++    if (!session) return;
++    this.sessions.delete(id);
++    try {
++      session.peer?.close();
++    } catch {}
++    try {
++      session.track?.stop();
++    } catch {}
++    if (!this.sessions.size && this.sourcePromise) {
++      const pending = this.sourcePromise;
++      pending.then(
++        stream => {
++          if (!this.sessions.size && this.sourcePromise === pending) {
++            try {
++              stream.getTracks().forEach(track => track.stop());
++            } catch {}
++            this.sourcePromise = null;
++          }
++        },
++        () => {
++          if (this.sourcePromise === pending) this.sourcePromise = null;
++        }
++      );
++    }
++  }
++
++  didDestroy() {
++    for (const id of this.sessions.keys()) this.stop(id);
++  }
++
++  async receiveMessage({ name, data }) {
++    if (name === "Stop") {
++      this.stop(data.sessionId);
++      return undefined;
++    }
++    if (
++      !this.manager.isCurrentGlobal ||
++      this.manager.innerWindowId !== data.innerWindowId
++    ) {
++      throw new Error("Audio target document is no longer current.");
++    }
++    if (name === "Answer") {
++      const session = this.sessions.get(data.sessionId);
++      if (!session?.peer) throw new Error("Audio session no longer exists.");
++      await session.peer.setRemoteDescription(data.answer);
++      return undefined;
++    }
++    if (name !== "Start" || this.sessions.has(data.sessionId)) {
++      throw new Error("Invalid audio source request.");
++    }
++    const session = {};
++    this.sessions.set(data.sessionId, session);
++    try {
++      // The actual target document owns Gecko's native AudioCaptureTrackSource.
++      // A native peer connection carries its samples across Fission processes;
++      // no page script, microphone source, or synthetic replacement is used.
++      this.sourcePromise ||= Promise.resolve(
++        this.contentWindow.navigator.mediaDevices.getUserMedia({
++          audio: { mediaSource: "audioCapture" },
++          video: false,
++        })
++      );
++      const source = await this.sourcePromise;
++      if (
++        this.sessions.get(data.sessionId) !== session ||
++        !this.manager.isCurrentGlobal
++      ) {
++        throw new Error(
++          "Audio capture was cancelled before source allocation."
++        );
++      }
++      session.track = source.getAudioTracks()[0].clone();
++      session.peer = new this.contentWindow.RTCPeerConnection({
++        iceServers: [],
++      });
++      session.peer.addTrack(
++        session.track,
++        new this.contentWindow.MediaStream([session.track])
++      );
++      await session.peer.setLocalDescription(await session.peer.createOffer());
++      await completeIce(session.peer);
++      if (
++        this.sessions.get(data.sessionId) !== session ||
++        !this.manager.isCurrentGlobal
++      ) {
++        throw new Error(
++          "Audio capture was cancelled before transport allocation."
++        );
++      }
++      return session.peer.localDescription.toJSON();
++    } catch (error) {
++      this.stop(data.sessionId);
++      throw error;
++    }
++  }
++}
+diff --git a/toolkit/components/extensions/ChromeExtensionCaptureRegistry.sys.mjs b/toolkit/components/extensions/ChromeExtensionCaptureRegistry.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/ChromeExtensionCaptureRegistry.sys.mjs
+@@ -0,0 +1,218 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++const tokens = new Map();
++const consumers = new Map();
++export const ChromeExtensionCaptureRegistry = {
++  isLiveConsumer(binding) {
++    if (!binding) return true;
++    const global = BrowsingContext.get(
++      binding.browsingContextId
++    )?.currentWindowGlobal;
++    return !!(
++      global?.isCurrentGlobal &&
++      global.innerWindowId === binding.innerWindowId &&
++      binding.principal.equals(global.documentPrincipal)
++    );
++  },
++  register(token, owner) {
++    this.drop(token);
++    const binding = owner.tokens.get(token)?.consumer;
++    const browserId =
++      binding && BrowsingContext.get(binding.browsingContextId)?.top.browserId;
++    const observer = binding
++      ? (subject, topic) => {
++          if (
++            (topic === "window-global-destroyed" &&
++              subject.innerWindowId === binding.innerWindowId) ||
++            (topic === "window-global-created" &&
++              subject.browsingContext.top === subject.browsingContext &&
++              subject.browsingContext.browserId === browserId &&
++              subject.innerWindowId !== binding.innerWindowId)
++          )
++            owner.dropToken(token);
++        }
++      : null;
++    if (observer)
++      for (const topic of ["window-global-created", "window-global-destroyed"])
++        Services.obs.addObserver(observer, topic);
++    tokens.set(token, { owner, observer });
++  },
++  drop(token) {
++    const record = tokens.get(token);
++    tokens.delete(token);
++    if (record?.observer)
++      for (const topic of ["window-global-created", "window-global-destroyed"])
++        Services.obs.removeObserver(record.observer, topic);
++  },
++  shutdown(owner) {
++    for (const [actor, contexts] of consumers) {
++      const context = contexts.get(owner);
++      if (context) {
++        for (const sessionId of context.sessions) {
++          try {
++            actor.sendAsyncMessage("Event", {
++              apiNamespace: owner.apiNamespace || "tabCapture",
++              name: "_onStreamStop",
++              args: [sessionId],
++            });
++          } catch {}
++        }
++        context.close();
++        contexts.delete(owner);
++      }
++      if (!contexts.size) consumers.delete(actor);
++    }
++  },
++  close(actor) {
++    const contexts = consumers.get(actor);
++    consumers.delete(actor);
++    for (const context of contexts?.values() || []) context.close();
++  },
++  async call(actor, name, args, apiNamespace) {
++    const allowed = new Set([
++      "_consumeStreamId",
++      "_streamStarted",
++      "_streamStopped",
++      "_audioOffers",
++      "_audioAnswer",
++      "_desktopOffer",
++      "_desktopAnswer",
++    ]);
++    if (
++      !allowed.has(name) ||
++      !Array.isArray(args) ||
++      args.length > 3 ||
++      typeof args[0] !== "string"
++    ) {
++      throw new Error("Invalid capture operation.");
++    }
++    let owner, binding;
++    const contexts = consumers.get(actor) || new Map();
++    if (name === "_consumeStreamId") {
++      owner = tokens.get(args[0])?.owner;
++      const record = owner?.tokens.get(args[0]);
++      binding = record?.consumer;
++      const global = actor.manager;
++      if (
++        !binding ||
++        !global.isCurrentGlobal ||
++        binding.browsingContextId !== actor.browsingContext.id ||
++        binding.innerWindowId !== global.innerWindowId ||
++        !binding.principal.equals(global.documentPrincipal)
++      ) {
++        throw new Error(
++          "This capture stream ID does not belong to the current consumer document."
++        );
++      }
++      const options = args[1];
++      if (
++        !options ||
++        typeof options.audio !== "boolean" ||
++        typeof options.video !== "boolean" ||
++        !(options.audio || options.video)
++      ) {
++        throw new Error("Invalid capture track selection.");
++      }
++    } else {
++      for (const [candidate, context] of contexts) {
++        if (context.sessions.has(args[0])) {
++          owner = candidate;
++          break;
++        }
++      }
++      if (!owner) throw new Error("Unknown capture session.");
++    }
++    const namespace = owner.apiNamespace || "tabCapture";
++    if (apiNamespace && apiNamespace !== namespace)
++      throw new Error("Capture token belongs to another API.");
++    let context = contexts.get(owner);
++    if (!context) {
++      const closures = new Set();
++      const listeners = [];
++      context = {
++        actor,
++        extension: owner.extension,
++        envType: "addon_parent",
++        browsingContext: actor.browsingContext,
++        captureConsumer: binding,
++        sessions: new Set(),
++        pending: 0,
++        unloaded: false,
++        callOnClose(closure) {
++          closures.add(closure);
++        },
++        forgetOnClose(closure) {
++          closures.delete(closure);
++        },
++        close() {
++          if (this.unloaded) return;
++          this.unloaded = true;
++          Services.obs.removeObserver(observer, "window-global-created");
++          for (const closure of [...closures]) closure.close();
++          closures.clear();
++          for (const [event, listener] of listeners) owner.off(event, listener);
++          contexts.delete(owner);
++          if (!contexts.size) consumers.delete(actor);
++        },
++      };
++      const browserId = actor.browsingContext.top.browserId;
++      const observer = subject => {
++        if (
++          subject.browsingContext.top === subject.browsingContext &&
++          subject.browsingContext.browserId === browserId &&
++          subject.innerWindowId !== binding.innerWindowId
++        ) {
++          for (const sessionId of context.sessions) {
++            try {
++              actor.sendAsyncMessage("Event", {
++                apiNamespace: namespace,
++                name: "_onStreamStop",
++                args: [sessionId],
++              });
++            } catch {}
++          }
++          context.close();
++        }
++      };
++      Services.obs.addObserver(observer, "window-global-created");
++      const stop = (_event, message) => {
++        if (message.context !== context) return;
++        context.sessions.delete(message.sessionId);
++        if (!context.unloaded)
++          actor.sendAsyncMessage("Event", {
++            apiNamespace: owner.apiNamespace || "tabCapture",
++            name: "_onStreamStop",
++            args: [message.sessionId],
++          });
++      };
++      const audio = (_event, message) => {
++        if (message.context === context && !context.unloaded)
++          actor.sendAsyncMessage("Event", {
++            apiNamespace: owner.apiNamespace || "tabCapture",
++            name: "_onAudioSource",
++            args: [message.sessionId, message.sourceId, message.offer],
++          });
++      };
++      owner.on("capture-stop", stop);
++      listeners.push(["capture-stop", stop]);
++      owner.on("capture-audio-source", audio);
++      listeners.push(["capture-audio-source", audio]);
++      contexts.set(owner, context);
++      consumers.set(actor, contexts);
++    }
++    context.pending++;
++    try {
++      const api = owner.getAPI(context)[namespace];
++      if (!api) throw new Error("Capture permission is no longer available.");
++      const result = await api[name](...args);
++      if (context.unloaded)
++        throw new Error("Capture consumer navigated during allocation.");
++      if (name === "_consumeStreamId") context.sessions.add(result.sessionId);
++      return result;
++    } finally {
++      context.pending--;
++      if (!context.pending && !context.sessions.size) context.close();
++    }
++  },
++};
+diff --git a/toolkit/components/extensions/ChromeExtensionCaptureConsumer.sys.mjs b/toolkit/components/extensions/ChromeExtensionCaptureConsumer.sys.mjs
+new file mode 100644
+--- /dev/null
++++ b/toolkit/components/extensions/ChromeExtensionCaptureConsumer.sys.mjs
+@@ -0,0 +1,116 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++import { ChromeExtensionCaptureRegistry } from "resource://gre/modules/ChromeExtensionCaptureRegistry.sys.mjs";
++import { ChromeExtensionCaptureChild } from "resource://gre/modules/ChromeExtensionCaptureChild.sys.mjs";
++
++export class ChromeExtensionCaptureConsumerParent extends JSWindowActorParent {
++  didDestroy() {
++    ChromeExtensionCaptureRegistry.close(this);
++  }
++  async receiveMessage({ name, data }) {
++    if (name !== "Call") throw new Error("Invalid consumer message.");
++    try {
++      return {
++        ok: true,
++        value: await ChromeExtensionCaptureRegistry.call(
++          this,
++          data.name,
++          data.args,
++          data.apiNamespace
++        ),
++      };
++    } catch (error) {
++      return { ok: false, error: error.message };
++    }
++  }
++}
++export class ChromeExtensionCaptureConsumerChild extends JSWindowActorChild {
++  context = null;
++  listeners = new Map();
++  didDestroy() {
++    this.context?.close();
++    this.listeners.clear();
++  }
++  receiveMessage({ name, data }) {
++    if (name === "Event") {
++      for (const listener of this.listeners.get(
++        `${data.apiNamespace || "tabCapture"}.${data.name}`
++      ) || [])
++        listener(...data.args);
++      return undefined;
++    }
++    if (
++      name !== "Install" ||
++      this.context ||
++      !this.manager.isCurrentGlobal ||
++      this.manager.innerWindowId !== data.innerWindowId
++    )
++      return undefined;
++    if (
++      !this.contentWindow.isSecureContext ||
++      !this.contentWindow.navigator.mediaDevices
++    )
++      throw new Error("Capture consumer requires a secure document.");
++    const closures = new Set();
++    const window = this.contentWindow;
++    const context = {
++      contentWindow: window,
++      cloneScope: Cu.waiveXrays(window),
++      principal: window.document.nodePrincipal,
++      unloaded: false,
++      extension: {
++        id: data.extensionId,
++        manifest: {
++          browser_specific_settings: {
++            gecko: { floorp_chrome_extension: data.marker },
++          },
++        },
++        permissions: new Set(["tabCapture", "desktopCapture"]),
++      },
++      normalizeError(error) {
++        return new window.Error(error.message);
++      },
++      callOnClose(closure) {
++        closures.add(closure);
++      },
++      close() {
++        if (this.unloaded) return;
++        this.unloaded = true;
++        for (const closure of closures) closure.close();
++        closures.clear();
++      },
++      childManager: {
++        callParentAsyncFunction: (path, args) => {
++          const [apiNamespace, name] = path.split(".");
++          if (!["tabCapture", "desktopCapture"].includes(apiNamespace) || !name)
++            throw new Error("Invalid consumer API.");
++          return this.sendQuery("Call", { name, apiNamespace, args }).then(
++            result => {
++              if (!result.ok) throw new Error(result.error);
++              return result.value;
++            }
++          );
++        },
++        getImplementation: (namespace, event) => {
++          if (!["tabCapture", "desktopCapture"].includes(namespace))
++            throw new Error("Invalid consumer event.");
++          return {
++            addListener: listener => {
++              const key = namespace + "." + event;
++              let listeners = this.listeners.get(key);
++              if (!listeners) {
++                listeners = new Set();
++                this.listeners.set(key, listeners);
++              }
++              listeners.add(listener);
++            },
++          };
++        },
++      },
++    };
++    this.context = context;
++    ChromeExtensionCaptureChild.install(context);
++    return undefined;
++  }
++}

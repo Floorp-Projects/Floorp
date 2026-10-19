@@ -7,6 +7,7 @@ import { createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
+  activeChromeSidePanelId,
   panelSidebarData,
   selectedPanelId,
   setPanelSidebarData,
@@ -102,7 +103,9 @@ export function PanelSidebarButton(props: {
       <div
         id={props.panel.id}
         class={`${props.panel.type} panel-sidebar-panel`}
-        data-checked={selectedPanelId() === props.panel.id}
+        data-checked={selectedPanelId() === props.panel.id ||
+          (props.panel.type === "extension" &&
+            activeChromeSidePanelId() === props.panel.extensionId)}
         data-panel-id={props.panel.id}
         onClick={() => {
           gPanelSidebar.changePanel(props.panel.id);

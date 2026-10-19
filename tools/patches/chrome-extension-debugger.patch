@@ -1,0 +1,2440 @@
+diff --git a/browser/chrome/devtools/modules/devtools/server/actors/inspector/node.js b/browser/chrome/devtools/modules/devtools/server/actors/inspector/node.js
+index 3c5cb95e4fd65633f88e3526482bcd29b130b43d..2be5b714cfedd59dab1682c1402cac4195580073 100644
+--- a/browser/chrome/devtools/modules/devtools/server/actors/inspector/node.js
++++ b/browser/chrome/devtools/modules/devtools/server/actors/inspector/node.js
+@@ -19,7 +19,7 @@ loader.lazyRequireGetter(
+   this,
+   ["getCssPath", "getXPath", "findCssSelector"],
+   "resource://devtools/shared/inspector/css-logic.js",
+-  true
++  true,
+ );
+ 
+ loader.lazyRequireGetter(
+@@ -33,7 +33,7 @@ loader.lazyRequireGetter(
+     "isShadowRoot",
+   ],
+   "resource://devtools/shared/layout/utils.js",
+-  true
++  true,
+ );
+ 
+ loader.lazyRequireGetter(
+@@ -46,37 +46,37 @@ loader.lazyRequireGetter(
+     "isNodeDead",
+   ],
+   "resource://devtools/server/actors/inspector/utils.js",
+-  true
++  true,
+ );
+ loader.lazyRequireGetter(
+   this,
+   "LongStringActor",
+   "resource://devtools/server/actors/string.js",
+-  true
++  true,
+ );
+ loader.lazyRequireGetter(
+   this,
+   "getFontPreviewData",
+   "resource://devtools/server/actors/stylesheets/style-utils.js",
+-  true
++  true,
+ );
+ loader.lazyRequireGetter(
+   this,
+   "CssLogic",
+   "resource://devtools/server/actors/inspector/css-logic.js",
+-  true
++  true,
+ );
+ loader.lazyRequireGetter(
+   this,
+   "EventCollector",
+   "resource://devtools/server/actors/inspector/event-collector.js",
+-  true
++  true,
+ );
+ loader.lazyRequireGetter(
+   this,
+   "DOMHelpers",
+   "resource://devtools/shared/dom-helpers.js",
+-  true
++  true,
+ );
+ 
+ const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
+@@ -108,7 +108,7 @@ class NodeActor extends Actor {
+     if (wasScrollable) {
+       this.walker.updateOverflowCausingElements(
+         this,
+-        this.walker.overflowCausingElementsMap
++        this.walker.overflowCausingElementsMap,
+       );
+     }
+   }
+@@ -127,6 +127,21 @@ class NodeActor extends Actor {
+   }
+ 
+   destroy() {
++    if (this.chromeInputProcessor) {
++      try {
++        const win = (this.rawNode.ownerDocument || this.rawNode).defaultView;
++        for (const key of ["Alt", "Control", "Meta", "Shift"]) {
++          if (this.chromeInputProcessor.getModifierState(key)) {
++            this.chromeInputProcessor.keyup(
++              new win.KeyboardEvent("keyup", { key }),
++              this.chromeInputProcessor.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT,
++            );
++          }
++        }
++      } catch { // A destroyed global cannot retain active input state.
++      }
++      this.chromeInputProcessor = null;
++    }
+     super.destroy();
+ 
+     if (this.mutationObserver) {
+@@ -220,8 +235,7 @@ class NodeActor extends Actor {
+       mutationBreakpoints: this.walker.getMutationBreakpoints(this),
+ 
+       isDisplayed: this.isDisplayed,
+-      isInHTMLDocument:
+-        this.rawNode.ownerDocument &&
++      isInHTMLDocument: this.rawNode.ownerDocument &&
+         this.rawNode.ownerDocument.contentType === "text/html",
+       traits: {},
+     };
+@@ -462,7 +476,7 @@ class NodeActor extends Actor {
+       return undefined;
+     }
+ 
+-    return [...this.rawNode.attributes].map(attr => {
++    return [...this.rawNode.attributes].map((attr) => {
+       return { namespace: attr.namespace, name: attr.name, value: attr.value };
+     });
+   }
+@@ -472,10 +486,12 @@ class NodeActor extends Actor {
+       return undefined;
+     }
+     let ret = undefined;
+-    for (const pseudo of [
+-      ...PSEUDO_CLASSES,
+-      ...Object.keys(ELEMENT_SPECIFIC_PSEUDO_CLASSES),
+-    ]) {
++    for (
++      const pseudo of [
++        ...PSEUDO_CLASSES,
++        ...Object.keys(ELEMENT_SPECIFIC_PSEUDO_CLASSES),
++      ]
++    ) {
+       if (InspectorUtils.hasPseudoClassLock(this.rawNode, pseudo)) {
+         ret = ret || [];
+         ret.push(pseudo);
+@@ -497,8 +513,8 @@ class NodeActor extends Actor {
+     }
+ 
+     const customElementsRegistry = this.rawNode.documentGlobal.customElements;
+-    const customElement =
+-      customElementsRegistry && customElementsRegistry.get(name);
++    const customElement = customElementsRegistry &&
++      customElementsRegistry.get(name);
+     if (!customElement) {
+       return undefined;
+     }
+@@ -594,6 +610,215 @@ class NodeActor extends Actor {
+   /**
+    * Scroll the selected node into view.
+    */
++  dispatchChromeInput(command, params) {
++    const options = (value, allowed) => {
++      for (const name of Object.keys(value)) {
++        if (!allowed.includes(name)) {
++          throw new Error(`Unsupported CDP parameter: ${name}`);
++        }
++      }
++    };
++    const string = (value, name) => {
++      if (typeof value !== "string") {
++        throw new Error(`${name} must be a string`);
++      }
++      return value;
++    };
++    const number = (value, name) => {
++      if (typeof value !== "number" || !Number.isFinite(value)) {
++        throw new Error(`${name} must be finite`);
++      }
++      return value;
++    };
++    const win = (this.rawNode.ownerDocument || this.rawNode).defaultView;
++    if (command === "dispatchMouseEvent") {
++      options(params, [
++        "type",
++        "x",
++        "y",
++        "modifiers",
++        "button",
++        "buttons",
++        "clickCount",
++        "deltaX",
++        "deltaY",
++        "pointerType",
++      ]);
++      if (params.pointerType && params.pointerType !== "mouse") {
++        throw new Error("Only mouse pointer input is supported");
++      }
++      const x = number(params.x, "x"), y = number(params.y, "y");
++      const modifiers = ((params.modifiers || 0) & 3) |
++        ((params.modifiers || 0) & 4 ? 8 : 0) |
++        ((params.modifiers || 0) & 8 ? 4 : 0);
++      if (params.type === "mouseWheel") {
++        win.windowUtils.sendWheelEvent(
++          x,
++          y,
++          number(params.deltaX ?? 0, "deltaX"),
++          number(params.deltaY ?? 0, "deltaY"),
++          0,
++          0,
++          modifiers,
++          0,
++          0,
++          0,
++        );
++      } else {
++        const type = {
++          mousePressed: "mousedown",
++          mouseReleased: "mouseup",
++          mouseMoved: "mousemove",
++        }[params.type];
++        if (!type) throw new Error("Unsupported mouse event type");
++        const button = {
++          none: -1,
++          left: 0,
++          middle: 1,
++          right: 2,
++          back: 3,
++          forward: 4,
++        }[params.button || "none"];
++        if (button === undefined) {
++          throw new Error("Unsupported mouse button");
++        }
++        win.synthesizeMouseEvent(type, x, y, {
++          button,
++          buttons: params.buttons,
++          clickCount: params.clickCount ?? (type === "mousemove" ? 0 : 1),
++          modifiers,
++        });
++      }
++      return {};
++    }
++    const tip = this.chromeInputProcessor ||=
++      Cc["@mozilla.org/text-input-processor;1"].createInstance(
++        Ci.nsITextInputProcessor,
++      );
++    if (!tip.beginInputTransactionForTests(win, { onNotify: () => true })) {
++      throw new Error("Native input transaction failed");
++    }
++    if (command === "insertText") {
++      options(params, ["text"]);
++      if (!tip.commitCompositionWith(string(params.text, "text"))) {
++        throw new Error("Text insertion was rejected");
++      }
++      return {};
++    }
++    options(params, [
++      "type",
++      "key",
++      "code",
++      "text",
++      "unmodifiedText",
++      "windowsVirtualKeyCode",
++      "nativeVirtualKeyCode",
++      "modifiers",
++      "autoRepeat",
++      "isKeypad",
++      "location",
++    ]);
++    if (
++      params.nativeVirtualKeyCode &&
++      params.nativeVirtualKeyCode !== params.windowsVirtualKeyCode
++    ) {
++      throw new Error(
++        "Platform-specific native key codes are unsupported",
++      );
++    }
++    const modifiers = params.modifiers ?? 0;
++    if (!Number.isInteger(modifiers) || modifiers < 0 || modifiers > 15) {
++      throw new Error("Invalid key modifiers");
++    }
++    for (
++      const [key, bit] of [["Alt", 1], ["Control", 2], ["Meta", 4], [
++        "Shift",
++        8,
++      ]]
++    ) {
++      if (tip.getModifierState(key) !== !!(modifiers & bit)) {
++        const type = modifiers & bit ? "keydown" : "keyup";
++        tip[type](
++          new win.KeyboardEvent(type, { key }),
++          tip.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT,
++        );
++      }
++    }
++    if (!["keyDown", "rawKeyDown", "keyUp", "char"].includes(params.type)) {
++      throw new Error("Unsupported key event type");
++    }
++    if (params.type === "char") {
++      if (!tip.commitCompositionWith(string(params.text, "text"))) {
++        throw new Error("Character insertion was rejected");
++      }
++    } else {
++      const event = new win.KeyboardEvent(
++        params.type === "keyUp" ? "keyup" : "keydown",
++        {
++          key: params.key || params.text || "Unidentified",
++          code: params.code || "",
++          keyCode: params.windowsVirtualKeyCode || 0,
++          repeat: !!params.autoRepeat,
++          location: params.location ?? (params.isKeypad ? 3 : 0),
++          altKey: !!(modifiers & 1),
++          ctrlKey: !!(modifiers & 2),
++          metaKey: !!(modifiers & 4),
++          shiftKey: !!(modifiers & 8),
++        },
++      );
++      if (params.type === "keyUp") tip.keyup(event);
++      else tip.keydown(event);
++    }
++    return {};
++  }
++
++  async setChromeFileInputFiles(paths) {
++    const node = this.rawNode;
++    if (
++      !node || node.localName !== "input" || node.type !== "file" ||
++      node.disabled
++    ) {
++      throw new Error("Node is not an enabled file input");
++    }
++    if (paths.length > 1 && !node.multiple) {
++      throw new Error("File input does not accept multiple files");
++    }
++    Cu.importGlobalProperties(["File"]);
++    const files = await Promise.all(
++      paths.map((path) => File.createFromFileName(path)),
++    );
++    node.mozSetFileArray(files);
++    for (const type of ["input", "change"]) {
++      node.dispatchEvent(
++        new node.ownerDocument.defaultView.Event(type, { bubbles: true }),
++      );
++    }
++  }
++
++  getChromeBoxModel() {
++    const node = this.rawNode;
++    if (!node || typeof node.getBoxQuads !== "function") {
++      throw new Error("Node has no CSS box model");
++    }
++    const rect = node.getBoundingClientRect();
++    const result = { width: rect.width, height: rect.height };
++    for (const box of ["content", "padding", "border", "margin"]) {
++      const quad = node.getBoxQuads({ box })[0];
++      if (!quad) throw new Error("Node has no layout box");
++      result[box] = [
++        quad.p1.x,
++        quad.p1.y,
++        quad.p2.x,
++        quad.p2.y,
++        quad.p3.x,
++        quad.p3.y,
++        quad.p4.x,
++        quad.p4.y,
++      ];
++    }
++    return result;
++  }
++
+   scrollIntoView() {
+     // this.rawNode can be an element without `scrollIntoView` (e.g. a `Text` or a `Comment`)
+     // In such case, bail out.
+@@ -615,7 +840,7 @@ class NodeActor extends Actor {
+    * transfered in the longstring back to the client will be that much smaller
+    */
+   getImageData(maxDim) {
+-    return imageToImageData(this.rawNode, maxDim).then(imageData => {
++    return imageToImageData(this.rawNode, maxDim).then((imageData) => {
+       return {
+         data: new LongStringActor(this.conn, imageData.data),
+         size: imageData.size,
+@@ -630,7 +855,7 @@ class NodeActor extends Actor {
+     this._nsIEventListenersInfo.clear();
+ 
+     const eventListenersData = this._eventCollector.getEventListeners(
+-      this.rawNode
++      this.rawNode,
+     );
+     let counter = 0;
+     for (const eventListenerData of eventListenersData) {
+@@ -638,7 +863,7 @@ class NodeActor extends Actor {
+         const id = `event-listener-info-${++counter}`;
+         this._nsIEventListenersInfo.set(
+           id,
+-          eventListenerData.nsIEventListenerInfo
++          eventListenerData.nsIEventListenerInfo,
+         );
+ 
+         eventListenerData.eventListenerInfoId = id;
+@@ -655,8 +880,9 @@ class NodeActor extends Actor {
+    * @param {string} eventListenerInfoId
+    */
+   disableEventListener(eventListenerInfoId) {
+-    const nsEventListenerInfo =
+-      this._nsIEventListenersInfo.get(eventListenerInfoId);
++    const nsEventListenerInfo = this._nsIEventListenersInfo.get(
++      eventListenerInfoId,
++    );
+     if (!nsEventListenerInfo) {
+       throw new Error("Unkown nsEventListenerInfo");
+     }
+@@ -669,8 +895,9 @@ class NodeActor extends Actor {
+    * @param {string} eventListenerInfoId
+    */
+   enableEventListener(eventListenerInfoId) {
+-    const nsEventListenerInfo =
+-      this._nsIEventListenersInfo.get(eventListenerInfoId);
++    const nsEventListenerInfo = this._nsIEventListenersInfo.get(
++      eventListenerInfoId,
++    );
+     if (!nsEventListenerInfo) {
+       throw new Error("Unkown nsEventListenerInfo");
+     }
+@@ -697,7 +924,7 @@ class NodeActor extends Actor {
+         if (change.attributeNamespace) {
+           rawNode.removeAttributeNS(
+             change.attributeNamespace,
+-            change.attributeName
++            change.attributeName,
+           );
+         } else {
+           rawNode.removeAttribute(change.attributeName);
+@@ -706,7 +933,7 @@ class NodeActor extends Actor {
+         rawNode.setAttributeDevtoolsNS(
+           change.attributeNamespace,
+           change.attributeName,
+-          change.newValue
++          change.newValue,
+         );
+       } else {
+         rawNode.setAttributeDevtools(change.attributeName, change.newValue);
+@@ -779,7 +1006,7 @@ class NodeActor extends Actor {
+       // If the document is handled by a dedicated target, we'll wait for a DOCUMENT_EVENT
+       // on the created target.
+       throw new Error(
+-        "iframe content document has its own target, use that one instead"
++        "iframe content document has its own target, use that one instead",
+       );
+     }
+ 
+@@ -804,7 +1031,7 @@ class NodeActor extends Actor {
+ 
+         chromeEventHandler.addEventListener(
+           "DOMDocElementInserted",
+-          e => {
++          (e) => {
+             const { browsingContext } = e.target.defaultView;
+             // Check that the document we're notified about is the iframe one.
+             if (browsingContext.id == browsingContextID) {
+@@ -812,7 +1039,7 @@ class NodeActor extends Actor {
+               this._waitForFrameLoadAbortController.abort();
+             }
+           },
+-          { signal: this._waitForFrameLoadAbortController.signal }
++          { signal: this._waitForFrameLoadAbortController.signal },
+         );
+ 
+         // It might happen that the "final" document will be a remote one, living in a
+@@ -835,7 +1062,7 @@ class NodeActor extends Actor {
+     }
+ 
+     if (this.rawNode.contentDocument.readyState === "loading") {
+-      await new Promise(resolve => {
++      await new Promise((resolve) => {
+         DOMHelpers.onceDOMReady(this.rawNode.contentWindow, resolve);
+       });
+     }
+@@ -880,7 +1107,7 @@ class NodeListActor extends Actor {
+   items(start = 0, end = this.nodeList.length) {
+     const items = Array.prototype.slice
+       .call(this.nodeList, start, end)
+-      .map(item => this.walker._getOrCreateNodeActor(item));
++      .map((item) => this.walker._getOrCreateNodeActor(item));
+     return this.walker.attachElements(items);
+   }
+ 
+diff --git a/browser/chrome/devtools/modules/devtools/server/actors/webconsole.js b/browser/chrome/devtools/modules/devtools/server/actors/webconsole.js
+index 83d550e8f25f20caa3c6cd908ec978d4c660d956..50955f86e8606eb559346fe7441af27a4180bf09 100644
+--- a/browser/chrome/devtools/modules/devtools/server/actors/webconsole.js
++++ b/browser/chrome/devtools/modules/devtools/server/actors/webconsole.js
+@@ -892,9 +892,13 @@ class WebConsoleActor extends Actor {
+     this.targetActor.threadActor.insideClientEvaluation = evalOptions;
+ 
+     let evalInfo;
++    const userInput = request.userGesture
++      ? this.targetActor.window?.windowUtils.setHandlingUserInput(true)
++      : null;
+     try {
+       evalInfo = evalWithDebugger(input, evalOptions, this);
+     } finally {
++      userInput?.destruct();
+       this.targetActor.threadActor.insideClientEvaluation = null;
+     }
+ 
+diff --git a/browser/chrome/devtools/modules/devtools/shared/commands/script/script-command.js b/browser/chrome/devtools/modules/devtools/shared/commands/script/script-command.js
+index 0d58ee2a8f5318724890804f196d95c8922dfb9d..bcdc533aa96699fe7c57ab0e8f3f4db1b87a0833 100644
+--- a/browser/chrome/devtools/modules/devtools/shared/commands/script/script-command.js
++++ b/browser/chrome/devtools/modules/devtools/shared/commands/script/script-command.js
+@@ -114,6 +114,7 @@ class ScriptCommand {
+           selectedObjectActor,
+           url: options.url,
+           disableBreaks: options.disableBreaks,
++          userGesture: options.userGesture,
+           preferConsoleCommandsOverLocalSymbols:
+             options.preferConsoleCommandsOverLocalSymbols,
+           evalInTracer: options.evalInTracer,
+diff --git a/browser/chrome/devtools/modules/devtools/shared/specs/node.js b/browser/chrome/devtools/modules/devtools/shared/specs/node.js
+index 1daeb48a33e0f001907b426545d4d9af3d1a03e0..7b86da56cb564d2ee53b3b4d2a8864b2e955a013 100644
+--- a/browser/chrome/devtools/modules/devtools/shared/specs/node.js
++++ b/browser/chrome/devtools/modules/devtools/shared/specs/node.js
+@@ -104,6 +104,18 @@ const nodeSpec = generateActorSpec({
+       request: {},
+       response: {},
+     },
++    dispatchChromeInput: {
++      request: { command: Arg(0, "string"), params: Arg(1, "json") },
++      response: RetVal("json"),
++    },
++    setChromeFileInputFiles: {
++      request: { files: Arg(0, "array:string") },
++      response: {},
++    },
++    getChromeBoxModel: {
++      request: {},
++      response: RetVal("json"),
++    },
+     getImageData: {
+       request: { maxDim: Arg(0, "nullable:number") },
+       response: RetVal("imageData"),
+diff --git a/browser/chrome/devtools/modules/devtools/shared/specs/webconsole.js b/browser/chrome/devtools/modules/devtools/shared/specs/webconsole.js
+index 615cb0b6feec500ec741b65adc125a81f2b1fa50..d3b6a5cb1b8708c7dfdfa6c1f2185123cf4ef3d0 100644
+--- a/browser/chrome/devtools/modules/devtools/shared/specs/webconsole.js
++++ b/browser/chrome/devtools/modules/devtools/shared/specs/webconsole.js
+@@ -157,6 +157,7 @@ const webconsoleSpecPrototype = {
+         mapped: Option(0, "nullable:json"),
+         eager: Option(0, "nullable:boolean"),
+         disableBreaks: Option(0, "nullable:boolean"),
++        userGesture: Option(0, "nullable:boolean"),
+         preferConsoleCommandsOverLocalSymbols: Option(0, "nullable:boolean"),
+         evalInTracer: Option(0, "nullable:boolean"),
+       },
+diff --git a/modules/ChromeDebugger.sys.mjs b/modules/ChromeDebugger.sys.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..18285feec355901ab3f5f0e006cd54d1adbb65c7
+--- /dev/null
++++ b/modules/ChromeDebugger.sys.mjs
+@@ -0,0 +1,1482 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
++import { ExtensionDocumentId } from "resource://gre/modules/ExtensionDocumentId.sys.mjs";
++import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
++import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
++
++const {
++  CommandsFactory,
++} = require("devtools/shared/commands/commands-factory.js");
++const {
++  getAdHocFrontOrPrimitiveGrip,
++} = require("devtools/client/fronts/object.js");
++const {
++  captureScreenshot,
++} = require("devtools/server/actors/utils/capture-screenshot.js");
++const { ExtensionError } = ExtensionUtils;
++const owners = new WeakMap();
++export function isChromeDebuggerAttached(tab) {
++  const { gDevTools } = require("devtools/client/framework/devtools.js");
++  return owners.has(tab) || !!gDevTools.getToolboxForTab(tab);
++}
++
++// This inventory describes implemented commands, never entire CDP domains.
++export const CHROME_DEBUGGER_COMMANDS = Object.freeze({
++  Runtime: [
++    "enable",
++    "disable",
++    "evaluate",
++    "callFunctionOn",
++    "awaitPromise",
++    "getProperties",
++    "releaseObject",
++    "releaseObjectGroup",
++  ],
++  Page: [
++    "enable",
++    "disable",
++    "navigate",
++    "reload",
++    "getFrameTree",
++    "bringToFront",
++    "getLayoutMetrics",
++    "captureScreenshot",
++    "handleJavaScriptDialog",
++    "setBypassCSP",
++  ],
++  DOM: [
++    "enable",
++    "disable",
++    "getDocument",
++    "describeNode",
++    "querySelector",
++    "querySelectorAll",
++    "getOuterHTML",
++    "setOuterHTML",
++    "getAttributes",
++    "setAttributeValue",
++    "removeAttribute",
++    "setNodeValue",
++    "resolveNode",
++    "focus",
++    "scrollIntoViewIfNeeded",
++    "getBoxModel",
++    "setFileInputFiles",
++  ],
++  Network: [
++    "enable",
++    "disable",
++    "getResponseBody",
++    "getRequestPostData",
++    "setCacheDisabled",
++    "setBlockedURLs",
++    "setUserAgentOverride",
++  ],
++  Input: ["dispatchMouseEvent", "dispatchKeyEvent", "insertText"],
++  Emulation: ["setFocusEmulationEnabled"],
++  Target: [
++    "getTargets",
++    "getTargetInfo",
++    "setDiscoverTargets",
++    "attachToTarget",
++    "detachFromTarget",
++  ],
++});
++
++function options(params, allowed) {
++  for (const name of Object.keys(params)) {
++    if (!allowed.includes(name)) {
++      throw new ExtensionError(`Unsupported CDP parameter: ${name}`);
++    }
++  }
++}
++function string(value, name) {
++  if (typeof value !== "string") {
++    throw new ExtensionError(`${name} must be a string`);
++  }
++  return value;
++}
++function number(value, name) {
++  if (typeof value !== "number" || !Number.isFinite(value)) {
++    throw new ExtensionError(`${name} must be a finite number`);
++  }
++  return value;
++}
++function wait(ms) {
++  return new Promise((resolve) => setTimeout(resolve, ms));
++}
++function headers(entries = []) {
++  return Object.fromEntries(entries.map(({ name, value }) => [name, value]));
++}
++
++export class ChromeDebuggerSession {
++  constructor(extension, tab, tabId, sendEvent, detached) {
++    this.extension = extension;
++    this.tab = tab;
++    this.tabId = tabId;
++    this.source = { tabId };
++    this.sendEvent = sendEvent;
++    this.detached = detached;
++    this.closed = false;
++    this.timeOrigin = this.tab.documentGlobal.performance.timeOrigin;
++    this.enabled = new Set();
++    this.objects = new Map();
++    this.groups = new Map();
++    this.nodes = new Map();
++    this.nodeIds = new WeakMap();
++    this.nextNode = 1;
++    this.contexts = new Map();
++    this.nextContext = 1;
++    this.sessions = new Map();
++    this.requests = new Map();
++    this.overrideContexts = new Map();
++    this.overrides = {};
++    this.onResources = this.onResources.bind(this);
++    this.onUpdates = this.onUpdates.bind(this);
++    this.onTargetAvailable = this.onTargetAvailable.bind(this);
++    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
++    this.onTabClose = () => this.close("target_closed");
++  }
++
++  get browser() {
++    return this.tab.linkedBrowser;
++  }
++  permitted(url) {
++    let uri;
++    try {
++      uri = Services.io.newURI(url);
++    } catch {
++      return false;
++    }
++    if (
++      !["http", "https", "data"].includes(uri.scheme) &&
++      !(uri.scheme === "about" && url === "about:blank") &&
++      !(uri.scheme === "file" && this.extension.policy.fileSchemeAllowed)
++    ) {
++      return false;
++    }
++    return (
++      !WebExtensionPolicy.isRestrictedURI(uri) &&
++      !WebExtensionPolicy.isQuarantinedURI(uri) &&
++      !this.extension.policy.checkGuarded(uri)
++    );
++  }
++  check() {
++    if (this.closed || !this.extension.hasPermission("debugger")) {
++      throw new ExtensionError("Debugger is not attached");
++    }
++    if (!this.permitted(this.browser.currentURI.spec)) {
++      this.close("target_closed");
++      throw new ExtensionError("Cannot debug a restricted target");
++    }
++  }
++  emit(method, params = {}, source = this.source) {
++    if (!this.closed) this.sendEvent(source, method, params);
++  }
++  frameId(target = this.commands.targetCommand.targetFront) {
++    return String(target.browsingContextID ?? this.browser.browsingContext.id);
++  }
++  loaderId(target = this.commands.targetCommand.targetFront) {
++    const inner = target.innerWindowId;
++    return inner ? ExtensionDocumentId.getDocumentId(inner) : "";
++  }
++  async open() {
++    this.check();
++    if (owners.has(this.tab)) {
++      throw new ExtensionError(
++        "Another debugger is already attached to this target",
++      );
++    }
++    const { gDevTools } = require("devtools/client/framework/devtools.js");
++    if (gDevTools.getToolboxForTab(this.tab)) {
++      throw new ExtensionError("Developer tools are already attached");
++    }
++    owners.set(this.tab, this);
++    this.tab.addEventListener("TabClose", this.onTabClose);
++    this.onPermissions = () => {
++      if (!this.extension.hasPermission("debugger")) {
++        this.close("canceled_by_user");
++      }
++    };
++    this.extension.on("remove-permissions", this.onPermissions);
++    this.onToolbox = (toolbox) => {
++      if (toolbox.commands.descriptorFront.localTab === this.tab) {
++        this.close("canceled_by_user");
++      }
++    };
++    this.gDevTools = gDevTools;
++    gDevTools.on("toolbox-created", this.onToolbox);
++    try {
++      // The legacy isWebExtension flag disables native target switching.
++      // This adapter consumes target lifetimes and uses the ordinary watcher.
++      this.commands = await CommandsFactory.forTab(this.tab);
++      this.commands.descriptorFront.doNotAttachThreadActor = true;
++      if (this.closed) {
++        await this.commands.destroy();
++        throw new ExtensionError("Target closed during debugger attachment");
++      }
++      const { PromptListener } = ChromeUtils.importESModule(
++        "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
++      );
++      this.promptListener = new PromptListener();
++      this.promptOpened = (_event, data) => {
++        if (data.browsingContext?.top !== this.browser.browsingContext) return;
++        this.prompt = data.prompt;
++        this.promptDetails = data.promptDetails;
++        if (this.enabled.has("Page")) this.emitPrompt();
++      };
++      this.promptClosed = (_event, { contentBrowser, detail }) => {
++        if (
++          contentBrowser !== this.browser &&
++          detail.browsingContext?.top !== this.browser.browsingContext
++        ) return;
++        this.prompt = null;
++        if (this.enabled.has("Page")) {
++          this.emit("Page.javascriptDialogClosed", {
++            result: detail.accepted ?? true,
++            userInput: detail.userText || "",
++          });
++        }
++      };
++      this.promptListener.on("opened", this.promptOpened);
++      this.promptListener.on("closed", this.promptClosed);
++      this.promptListener.startListening();
++      await this.commands.targetCommand.startListening();
++      await this.commands.targetCommand.watchTargets({
++        types: [this.commands.targetCommand.TYPES.FRAME],
++        onAvailable: this.onTargetAvailable,
++        onDestroyed: this.onTargetDestroyed,
++      });
++      const R = this.commands.resourceCommand;
++      await R.watchResources([R.TYPES.DOCUMENT_EVENT], {
++        onAvailable: this.onResources,
++      });
++      this.check();
++    } catch (error) {
++      await this.close(null);
++      throw error;
++    }
++  }
++  emitPrompt() {
++    this.emit("Page.javascriptDialogOpening", {
++      url: this.browser.currentURI.spec,
++      message: this.promptDetails.message,
++      type: this.prompt.promptType,
++      hasBrowserHandler: true,
++      defaultPrompt: this.promptDetails.defaultValue || "",
++    });
++  }
++  context(target) {
++    for (const [id, value] of this.contexts) if (value === target) return id;
++    const id = this.nextContext++;
++    this.contexts.set(id, target);
++    return id;
++  }
++  async onTargetAvailable({ targetFront }) {
++    if (this.closed || !this.permitted(targetFront.url)) return;
++    this.applyOverrides();
++    const id = this.context(targetFront);
++    if (this.enabled.has("Runtime")) this.emitContext(targetFront, id);
++    if (this.discover) {
++      this.emit("Target.targetCreated", {
++        targetInfo: this.targetInfo(targetFront),
++      });
++    }
++  }
++  onTargetDestroyed({ targetFront }) {
++    if (this.discover) {
++      this.emit("Target.targetDestroyed", {
++        targetId: this.frameId(targetFront),
++      });
++    }
++    for (const [id, target] of this.contexts) {
++      if (target === targetFront) {
++        this.contexts.delete(id);
++        if (this.enabled.has("Runtime")) {
++          this.emit("Runtime.executionContextDestroyed", {
++            executionContextId: id,
++          });
++        }
++      }
++    }
++    for (const [id, object] of this.objects) {
++      if (object.targetFront === targetFront) this.objects.delete(id);
++    }
++    for (const [id, node] of this.nodes) {
++      if (node.targetFront === targetFront) this.nodes.delete(id);
++    }
++    for (const [sessionId, target] of this.sessions) {
++      if (target === targetFront) {
++        this.sessions.delete(sessionId);
++        this.emit("Target.detachedFromTarget", {
++          sessionId,
++          targetId: this.frameId(target),
++        });
++      }
++    }
++  }
++  emitContext(target, id = this.context(target)) {
++    this.emit("Runtime.executionContextCreated", {
++      context: {
++        id,
++        origin: new URL(target.url).origin,
++        name: "",
++        uniqueId: `${target.actorID}:${id}`,
++        auxData: {
++          isDefault: true,
++          type: "default",
++          frameId: this.frameId(target),
++        },
++      },
++    });
++  }
++  async onResources(resources) {
++    for (const resource of resources) {
++      if (this.closed) return;
++      const R = this.commands.resourceCommand.TYPES;
++      if (resource.resourceType === R.DOCUMENT_EVENT) {
++        if (
++          !this.permitted(
++            resource.url || resource.newURI || resource.targetFront.url,
++          )
++        ) {
++          if (resource.targetFront.isTopLevel) {
++            await this.close("target_closed");
++          }
++          continue;
++        }
++        const timestamp = (resource.time - this.timeOrigin) / 1000;
++        if (resource.name === "will-navigate") {
++          this.nodes.clear();
++          this.objects.clear();
++          this.groups.clear();
++          if (this.enabled.has("DOM")) this.emit("DOM.documentUpdated");
++          if (this.enabled.has("Runtime")) {
++            this.emit("Runtime.executionContextsCleared");
++          }
++        }
++        if (this.enabled.has("Page")) {
++          if (resource.name === "dom-loading") {
++            this.emit("Page.frameStartedLoading", {
++              frameId: this.frameId(resource.targetFront),
++            });
++          }
++          if (resource.name === "dom-interactive") {
++            this.emit("Page.frameNavigated", {
++              frame: await this.frame(resource.targetFront),
++              type: "Navigation",
++            });
++            this.emit("Page.domContentEventFired", { timestamp });
++          }
++          if (resource.name === "dom-complete") {
++            this.emit("Page.loadEventFired", { timestamp });
++            this.emit("Page.frameStoppedLoading", {
++              frameId: this.frameId(resource.targetFront),
++            });
++          }
++        }
++      } else if (
++        resource.resourceType === R.NETWORK_EVENT &&
++        this.enabled.has("Network") &&
++        this.permitted(resource.url)
++      ) {
++        this.requests.set(String(resource.resourceId), resource);
++        this.emit("Network.requestWillBeSent", {
++          requestId: String(resource.resourceId),
++          loaderId: this.loaderId(),
++          documentURL: resource.targetFront.url,
++          request: {
++            url: resource.url,
++            method: resource.method,
++            headers: headers(
++              (await this.commands.client.request({
++                to: resource.actor,
++                type: "getRequestHeaders",
++              })).headers,
++            ),
++          },
++          timestamp: (Date.parse(resource.startedDateTime) - this.timeOrigin) /
++            1000,
++          wallTime: Date.parse(resource.startedDateTime) / 1000,
++          initiator: { type: "other" },
++          type: resource.cause?.type === "xhr" ? "XHR" : "Other",
++          frameId: this.frameId(resource.targetFront),
++        });
++      } else if (
++        resource.resourceType === R.CONSOLE_MESSAGE &&
++        this.enabled.has("Runtime")
++      ) {
++        const message = resource.message;
++        this.emit("Runtime.consoleAPICalled", {
++          type: message.level === "log" ? "log" : message.level,
++          args: await Promise.all(
++            message.arguments.map((value) =>
++              this.remote(value, resource.targetFront)
++            ),
++          ),
++          executionContextId: this.context(resource.targetFront),
++          timestamp: message.timeStamp,
++        });
++      } else if (
++        resource.resourceType === R.ERROR_MESSAGE &&
++        this.enabled.has("Runtime")
++      ) {
++        this.emit("Runtime.exceptionThrown", {
++          timestamp: resource.pageError.timeStamp,
++          exceptionDetails: {
++            exceptionId: 0,
++            text: resource.pageError.errorMessage,
++            lineNumber: resource.pageError.lineNumber - 1,
++            columnNumber: resource.pageError.columnNumber,
++            url: resource.pageError.sourceName,
++            executionContextId: this.context(resource.targetFront),
++          },
++        });
++      }
++    }
++  }
++  async onUpdates(updates) {
++    for (const { resource } of updates) {
++      if (
++        this.closed ||
++        !this.enabled.has("Network") ||
++        !this.requests.has(String(resource.resourceId))
++      ) {
++        continue;
++      }
++      if (
++        resource.responseStartAvailable &&
++        resource.responseHeadersAvailable &&
++        !resource._floorpDebuggerResponse
++      ) {
++        resource._floorpDebuggerResponse = true;
++        this.emit("Network.responseReceived", {
++          requestId: String(resource.resourceId),
++          loaderId: this.loaderId(),
++          timestamp: (Date.now() - this.timeOrigin) / 1000,
++          type: "Other",
++          frameId: this.frameId(resource.targetFront),
++          response: {
++            url: resource.url,
++            status: Number(resource.status),
++            statusText: resource.statusText || "",
++            headers: headers(
++              (
++                await this.commands.client.request({
++                  to: resource.actor,
++                  type: "getResponseHeaders",
++                })
++              ).headers,
++            ),
++            mimeType: resource.mimeType || "",
++            encodedDataLength: resource.transferredSize || 0,
++            securityState: "unknown",
++          },
++        });
++      }
++      if (
++        resource.responseContentAvailable &&
++        !resource._floorpDebuggerFinished
++      ) {
++        resource._floorpDebuggerFinished = true;
++        if (resource.blockedReason) {
++          this.emit("Network.loadingFailed", {
++            requestId: String(resource.resourceId),
++            timestamp: (Date.now() - this.timeOrigin) / 1000,
++            type: "Other",
++            errorText: "Request blocked",
++            blockedReason: "inspector",
++          });
++        } else {
++          this.emit("Network.loadingFinished", {
++            requestId: String(resource.resourceId),
++            timestamp: (Date.now() - this.timeOrigin) / 1000,
++            encodedDataLength: resource.transferredSize ||
++              resource.contentSize || 0,
++          });
++        }
++      }
++    }
++  }
++  async frame(target) {
++    const metadata = await this.evaluate(
++      "({mimeType:document.contentType,name:window.name,securityOrigin:location.origin})",
++      target,
++      { returnByValue: true },
++    );
++    let domainAndRegistry = "";
++    try {
++      domainAndRegistry = Services.eTLD.getBaseDomain(
++        Services.io.newURI(target.url),
++      );
++    } catch {}
++    return {
++      id: this.frameId(target),
++      loaderId: this.loaderId(target),
++      url: target.url,
++      domainAndRegistry,
++      ...metadata.result.value,
++    };
++  }
++  targetFor(source, params = {}) {
++    let target;
++    if (source.sessionId) {
++      target = this.sessions.get(source.sessionId);
++      if (!target) throw new ExtensionError("Unknown debugger child session");
++    } else if (
++      params.contextId !== undefined ||
++      params.executionContextId !== undefined
++    ) {
++      target = this.contexts.get(params.contextId ?? params.executionContextId);
++      if (!target) {
++        throw new ExtensionError("Unknown or destroyed execution context");
++      }
++    } else target = this.commands.targetCommand.targetFront;
++    if (!target || target.isDestroyed() || !this.permitted(target.url)) {
++      throw new ExtensionError("Target is no longer available");
++    }
++    return target;
++  }
++  async evaluate(expression, target, params = {}) {
++    const response = await this.commands.scriptCommand.execute(expression, {
++      selectedTargetFront: target,
++      selectedObjectActor: params.selectedObjectActor,
++      disableBreaks: true,
++      userGesture: !!params.userGesture,
++    });
++    this.check();
++    if (response.exception) {
++      return {
++        result: await this.remote(response.exception, target),
++        exceptionDetails: {
++          exceptionId: 0,
++          text: typeof response.exceptionMessage === "string"
++            ? response.exceptionMessage
++            : "Evaluation threw",
++          lineNumber: 0,
++          columnNumber: 0,
++        },
++      };
++    }
++    let value = response.result;
++    if (params.awaitPromise && value?.getGrip?.().class === "Promise") {
++      value = await this.awaitValue(value, params.timeout);
++    }
++    return {
++      result: await this.remote(
++        value,
++        target,
++        params.returnByValue,
++        params.objectGroup,
++      ),
++    };
++  }
++  async awaitValue(front, timeout = 30000) {
++    const deadline = Date.now() + Math.min(timeout || 30000, 300000);
++    while (Date.now() < deadline) {
++      this.check();
++      const { promiseState } = await front.getPromiseState();
++      if (promiseState.state === "fulfilled") return promiseState.value;
++      if (promiseState.state === "rejected") {
++        throw new ExtensionError(
++          `Promise rejected: ${
++            promiseState.reason?.getGrip?.().preview?.message ||
++            promiseState.reason
++          }`,
++        );
++      }
++      await wait(10);
++    }
++    throw new ExtensionError("Promise evaluation timed out");
++  }
++  async remote(value, target, byValue = false, group) {
++    const grip = value?.getGrip?.() ?? value;
++    if (grip === null || grip?.type === "null") {
++      return { type: "object", subtype: "null", value: null };
++    }
++    if (grip === undefined || grip?.type === "undefined") {
++      return { type: "undefined" };
++    }
++    if (typeof grip !== "object") {
++      return { type: typeof grip, value: grip, description: String(grip) };
++    }
++    if (["NaN", "Infinity", "-Infinity", "-0"].includes(grip.type)) {
++      return {
++        type: "number",
++        unserializableValue: grip.type,
++        description: grip.type,
++      };
++    }
++    if (grip.type === "bigint") {
++      return {
++        type: "bigint",
++        unserializableValue: `${grip.text}n`,
++        description: `${grip.text}n`,
++      };
++    }
++    if (grip.type === "longString") {
++      return { type: "string", value: await value.string() };
++    }
++    if (!grip.actor) {
++      throw new ExtensionError("Unsupported native remote value");
++    }
++    if (byValue) {
++      const serialized = await this.evaluate("JSON.stringify(_self)", target, {
++        selectedObjectActor: grip.actor,
++      });
++      if (serialized.exceptionDetails) {
++        throw new ExtensionError("Object cannot be serialized by value");
++      }
++      if (serialized.result.type === "undefined") return { type: "undefined" };
++      return { type: "object", value: JSON.parse(serialized.result.value) };
++    }
++    const front = value?.getGrip
++      ? value
++      : getAdHocFrontOrPrimitiveGrip(grip, await target.getFront("console"));
++    this.objects.set(grip.actor, { front, targetFront: target, group });
++    if (group) {
++      if (!this.groups.has(group)) this.groups.set(group, new Set());
++      this.groups.get(group).add(grip.actor);
++    }
++    return {
++      type: grip.class === "Function" ? "function" : "object",
++      objectId: grip.actor,
++      className: grip.class,
++      description: grip.class,
++      ...(({
++          Array: "array",
++          Promise: "promise",
++          Date: "date",
++          RegExp: "regexp",
++          Error: "error",
++          Map: "map",
++          Set: "set",
++        })[grip.class]
++        ? {
++          subtype: {
++            Array: "array",
++            Promise: "promise",
++            Date: "date",
++            RegExp: "regexp",
++            Error: "error",
++            Map: "map",
++            Set: "set",
++          }[grip.class],
++        }
++        : {}),
++    };
++  }
++  object(id) {
++    const object = this.objects.get(id);
++    if (!object || object.front.isDestroyed()) {
++      throw new ExtensionError("Unknown or released remote object");
++    }
++    if (!this.permitted(object.targetFront.url)) {
++      throw new ExtensionError("Remote object belongs to a restricted target");
++    }
++    return object;
++  }
++  async inspector(target) {
++    const inspector = await target.getFront("inspector");
++    await inspector.initialize();
++    return inspector.walker;
++  }
++  node(id) {
++    const node = this.nodes.get(id);
++    if (!node || node.isDestroyed() || !this.permitted(node.targetFront.url)) {
++      throw new ExtensionError("Unknown or stale DOM node");
++    }
++    return node;
++  }
++  nodeId(front) {
++    if (!front) return 0;
++    if (!this.permitted(front.targetFront.url)) {
++      throw new ExtensionError("Restricted frame DOM is unavailable");
++    }
++    if (!this.nodeIds.has(front)) this.nodeIds.set(front, this.nextNode++);
++    const id = this.nodeIds.get(front);
++    this.nodes.set(id, front);
++    return id;
++  }
++  async nodeJSON(front, depth = 0) {
++    const id = this.nodeId(front);
++    const result = {
++      nodeId: id,
++      backendNodeId: id,
++      nodeType: front.nodeType,
++      nodeName: front.nodeName,
++      localName: front.nodeName.toLowerCase(),
++      nodeValue: front._form.nodeValue ?? front._form.shortValue ?? "",
++      childNodeCount: front.numChildren,
++      attributes:
++        front.attributes?.flatMap(({ name, value }) => [name, value]) || [],
++    };
++    if (front.nodeType === 9) result.documentURL = front.targetFront.url;
++    if (depth && front.numChildren) {
++      if (this.nodes.size > 10000) {
++        throw new ExtensionError("DOM result exceeds 10000 nodes");
++      }
++      const { nodes } = await front.walkerFront.children(front);
++      result.children = await Promise.all(
++        nodes.map((node) => this.nodeJSON(node, depth < 0 ? -1 : depth - 1)),
++      );
++    }
++    return result;
++  }
++  async nodeObject(node) {
++    const response = await this.commands.scriptCommand.execute("$0", {
++      selectedTargetFront: node.targetFront,
++      selectedNodeActor: node.actorID,
++      disableBreaks: true,
++    });
++    return this.remote(response.result, node.targetFront);
++  }
++  async nodeExpression(node, expression, byValue = true) {
++    const object = await this.nodeObject(node);
++    return this.evaluate(expression, node.targetFront, {
++      selectedObjectActor: object.objectId,
++      returnByValue: byValue,
++    });
++  }
++
++  async command(source, method, params = {}) {
++    this.check();
++    const [domain, command] = method.split(".");
++    if (!CHROME_DEBUGGER_COMMANDS[domain]?.includes(command)) {
++      throw new ExtensionError(`Unsupported CDP command: ${method}`);
++    }
++    const target = this.targetFor(source, params);
++    if (command === "enable" || command === "disable") {
++      options(
++        params,
++        domain === "Network"
++          ? ["maxTotalBufferSize", "maxResourceBufferSize", "maxPostDataSize"]
++          : [],
++      );
++      if (Object.keys(params).length) {
++        throw new ExtensionError(
++          "Custom network buffer sizes are not supported",
++        );
++      }
++      const enabled = command === "enable";
++      if (enabled) this.enabled.add(domain);
++      else this.enabled.delete(domain);
++      const R = this.commands.resourceCommand;
++      if (domain === "Page" && enabled && this.prompt?.isOpen) {
++        this.emitPrompt();
++      }
++      if (domain === "Runtime") {
++        const types = [R.TYPES.CONSOLE_MESSAGE, R.TYPES.ERROR_MESSAGE];
++        if (enabled) {
++          await R.watchResources(types, {
++            onAvailable: this.onResources,
++            ignoreExistingResources: true,
++          });
++          for (const [id, frame] of this.contexts) this.emitContext(frame, id);
++        } else R.unwatchResources(types, { onAvailable: this.onResources });
++      } else if (domain === "Network") {
++        if (enabled) {
++          await R.watchResources([R.TYPES.NETWORK_EVENT], {
++            onAvailable: this.onResources,
++            onUpdated: this.onUpdates,
++            ignoreExistingResources: true,
++          });
++          const network = await this.commands.watcherFront
++            .getNetworkParentActor();
++          await network.setSaveRequestAndResponseBodies(true);
++        } else {
++          R.unwatchResources([R.TYPES.NETWORK_EVENT], {
++            onAvailable: this.onResources,
++            onUpdated: this.onUpdates,
++          });
++        }
++      }
++      return {};
++    }
++    if (domain === "Emulation") {
++      options(params, ["enabled"]);
++      this.setOverride("chromeDebuggerFocusEmulation", params.enabled);
++      return {};
++    }
++    if (domain === "Runtime") return this.runtime(command, params, target);
++    if (domain === "DOM") return this.dom(command, params, target);
++    if (domain === "Page") return this.page(command, params, target);
++    if (domain === "Network") return this.network(command, params);
++    if (domain === "Input") return this.input(command, params, target);
++    if (domain === "Target") return this.target(command, params, target);
++    throw new ExtensionError(`Unsupported CDP command: ${method}`);
++  }
++  async runtime(command, params, target) {
++    if (command === "evaluate") {
++      options(params, [
++        "expression",
++        "contextId",
++        "returnByValue",
++        "awaitPromise",
++        "objectGroup",
++        "silent",
++        "userGesture",
++        "timeout",
++      ]);
++      if (params.silent) {
++        throw new ExtensionError("Silent exception suppression is unsupported");
++      }
++      return this.evaluate(
++        string(params.expression, "expression"),
++        target,
++        params,
++      );
++    }
++    if (command === "callFunctionOn") {
++      options(params, [
++        "functionDeclaration",
++        "objectId",
++        "arguments",
++        "executionContextId",
++        "returnByValue",
++        "awaitPromise",
++        "objectGroup",
++        "silent",
++        "userGesture",
++      ]);
++      if (params.silent || params.userGesture) {
++        throw new ExtensionError(
++          "Function-call gesture/exception overrides are unsupported",
++        );
++      }
++      const object = params.objectId ? this.object(params.objectId) : null;
++      target = object?.targetFront || target;
++      const functionResult = await this.commands.scriptCommand.execute(
++        `(${string(params.functionDeclaration, "functionDeclaration")})`,
++        { selectedTargetFront: target, disableBreaks: true },
++      );
++      if (functionResult.exception) {
++        return this.evaluate(`(${params.functionDeclaration})`, target, params);
++      }
++      const fn = functionResult.result;
++      if (fn?.getGrip?.().class !== "Function") {
++        throw new ExtensionError(
++          "functionDeclaration did not evaluate to a function",
++        );
++      }
++      const args = [];
++      for (const arg of params.arguments || []) {
++        if (arg.objectId) args.push(this.object(arg.objectId).front.getGrip());
++        else if (arg.unserializableValue !== undefined) {
++          if (
++            !/^(?:NaN|Infinity|-Infinity|-0|-?\d+n)$/.test(
++              arg.unserializableValue,
++            )
++          ) {
++            throw new ExtensionError("Invalid unserializableValue");
++          }
++          const value = await this.commands.scriptCommand.execute(
++            arg.unserializableValue,
++            { selectedTargetFront: target },
++          );
++          args.push(value.result?.getGrip?.() ?? value.result);
++        } else if (arg.value && typeof arg.value === "object") {
++          const value = await this.commands.scriptCommand.execute(
++            `(${JSON.stringify(arg.value)})`,
++            { selectedTargetFront: target },
++          );
++          args.push(value.result.getGrip());
++        } else args.push(arg.value);
++      }
++      const completion = await fn.apply(object?.front.getGrip() || null, args);
++      const value = completion.value?.return ?? completion.value?.throw;
++      const native = getAdHocFrontOrPrimitiveGrip(value, fn);
++      const result = await this.remote(
++        params.awaitPromise && native?.getGrip?.().class === "Promise"
++          ? await this.awaitValue(native)
++          : native,
++        target,
++        params.returnByValue,
++        params.objectGroup,
++      );
++      return {
++        result,
++        ...(completion.value && "throw" in completion.value
++          ? {
++            exceptionDetails: {
++              exceptionId: 0,
++              text: "Function threw",
++              lineNumber: 0,
++              columnNumber: 0,
++            },
++          }
++          : {}),
++      };
++    }
++    if (command === "awaitPromise") {
++      options(params, ["promiseObjectId", "returnByValue", "generatePreview"]);
++      if (params.generatePreview) {
++        throw new ExtensionError("Remote object previews are not supported");
++      }
++      const object = this.object(params.promiseObjectId);
++      return {
++        result: await this.remote(
++          await this.awaitValue(object.front),
++          object.targetFront,
++          params.returnByValue,
++        ),
++      };
++    }
++    if (command === "getProperties") {
++      options(params, [
++        "objectId",
++        "ownProperties",
++        "accessorPropertiesOnly",
++        "generatePreview",
++        "nonIndexedPropertiesOnly",
++      ]);
++      if (
++        params.accessorPropertiesOnly ||
++        params.generatePreview ||
++        params.nonIndexedPropertiesOnly ||
++        params.ownProperties === false
++      ) {
++        throw new ExtensionError(
++          "Only own-property inspection without previews is supported",
++        );
++      }
++      const object = this.object(params.objectId);
++      const native = await object.front.getPrototypeAndProperties();
++      const result = [];
++      for (
++        const [name, descriptor] of Object.entries(
++          native.ownProperties || {},
++        )
++      ) {
++        const item = {
++          name,
++          configurable: descriptor.configurable,
++          enumerable: descriptor.enumerable,
++          isOwn: true,
++        };
++        if ("value" in descriptor) {
++          item.value = await this.remote(descriptor.value, object.targetFront);
++          item.writable = descriptor.writable;
++        }
++        if (descriptor.get) {
++          item.get = await this.remote(descriptor.get, object.targetFront);
++        }
++        if (descriptor.set) {
++          item.set = await this.remote(descriptor.set, object.targetFront);
++        }
++        result.push(item);
++      }
++      return {
++        result,
++        internalProperties: [
++          {
++            name: "[[Prototype]]",
++            value: await this.remote(native.prototype, object.targetFront),
++          },
++        ],
++      };
++    }
++    if (command === "releaseObject") {
++      options(params, ["objectId"]);
++      const object = this.object(params.objectId);
++      this.objects.delete(params.objectId);
++      await object.front.release();
++      return {};
++    }
++    options(params, ["objectGroup"]);
++    for (const id of this.groups.get(params.objectGroup) || []) {
++      const object = this.objects.get(id);
++      this.objects.delete(id);
++      await object?.front.release();
++    }
++    this.groups.delete(params.objectGroup);
++    return {};
++  }
++  async dom(command, params, target) {
++    if (command === "getDocument") {
++      options(params, ["depth", "pierce"]);
++      if (params.pierce) {
++        throw new ExtensionError(
++          "Piercing closed shadow roots is not supported",
++        );
++      }
++      const walker = await this.inspector(target);
++      return {
++        root: await this.nodeJSON(
++          await walker.getRootNode(),
++          params.depth ?? 1,
++        ),
++      };
++    }
++    let node;
++    if (params.objectId) {
++      if (params.nodeId !== undefined || params.backendNodeId !== undefined) {
++        throw new ExtensionError("Specify exactly one node identifier");
++      }
++      const object = this.object(params.objectId);
++      node = await (await this.inspector(object.targetFront)).getNodeFromActor(
++        object.front.actorID,
++        ["rawObj"],
++      );
++      if (!node) throw new ExtensionError("Remote object is not a DOM node");
++      this.nodeId(node);
++    } else node = this.node(params.nodeId ?? params.backendNodeId);
++    const walker = node.walkerFront;
++    if (command === "setFileInputFiles") {
++      options(params, ["nodeId", "backendNodeId", "objectId", "files"]);
++      if (
++        !Array.isArray(params.files) ||
++        params.files.some((path) =>
++          typeof path !== "string" || !PathUtils.isAbsolute(path)
++        )
++      ) {
++        throw new ExtensionError("files must contain absolute file paths");
++      }
++      await node.setChromeFileInputFiles(params.files);
++      return {};
++    }
++    if (command === "describeNode") {
++      options(params, ["nodeId", "backendNodeId", "depth", "pierce"]);
++      if (params.pierce) throw new ExtensionError("Pierce is unsupported");
++      return { node: await this.nodeJSON(node, params.depth ?? 0) };
++    }
++    if (command === "querySelector") {
++      options(params, ["nodeId", "selector"]);
++      return {
++        nodeId: this.nodeId(
++          await walker.querySelector(node, string(params.selector, "selector")),
++        ),
++      };
++    }
++    if (command === "querySelectorAll") {
++      options(params, ["nodeId", "selector"]);
++      const list = await walker.querySelectorAll(
++        node,
++        string(params.selector, "selector"),
++      );
++      try {
++        return {
++          nodeIds: (await list.items()).map((front) => this.nodeId(front)),
++        };
++      } finally {
++        await list.release();
++      }
++    }
++    if (command === "getOuterHTML") {
++      options(params, ["nodeId", "backendNodeId"]);
++      const value = await walker.outerHTML(node);
++      return { outerHTML: await value.string() };
++    }
++    if (command === "setOuterHTML") {
++      options(params, ["nodeId", "outerHTML"]);
++      await walker.setOuterHTML(node, string(params.outerHTML, "outerHTML"));
++      return {};
++    }
++    if (command === "getAttributes") {
++      options(params, ["nodeId"]);
++      return {
++        attributes: node.attributes.flatMap(({ name, value }) => [name, value]),
++      };
++    }
++    if (command === "setAttributeValue" || command === "removeAttribute") {
++      options(params, [
++        "nodeId",
++        "name",
++        ...(command === "setAttributeValue" ? ["value"] : []),
++      ]);
++      await node.modifyAttributes([
++        {
++          attributeName: string(params.name, "name"),
++          newValue: command === "setAttributeValue"
++            ? string(params.value, "value")
++            : null,
++        },
++      ]);
++      return {};
++    }
++    if (command === "setNodeValue") {
++      options(params, ["nodeId", "value"]);
++      await node.setNodeValue(string(params.value, "value"));
++      return {};
++    }
++    if (command === "resolveNode") {
++      options(params, ["nodeId", "backendNodeId", "objectGroup"]);
++      return { object: await this.nodeObject(node) };
++    }
++    if (command === "scrollIntoViewIfNeeded") {
++      options(params, ["nodeId", "backendNodeId"]);
++      await node.scrollIntoView();
++      return {};
++    }
++    if (command === "focus") {
++      options(params, ["nodeId", "backendNodeId"]);
++      const result = await this.nodeExpression(node, "_self.focus()");
++      if (result.exceptionDetails) {
++        throw new ExtensionError(result.exceptionDetails.text);
++      }
++      return {};
++    }
++    options(params, ["nodeId", "backendNodeId"]);
++    return { model: await node.getChromeBoxModel() };
++  }
++
++  setOverride(name, value) {
++    if (typeof value !== "boolean") {
++      throw new ExtensionError("enabled must be a boolean");
++    }
++    if (!(name in this.browser.browsingContext)) {
++      throw new ExtensionError(
++        "This command requires the compiled Chrome debugger Runtime patch",
++      );
++    }
++    this.overrides[name] = value;
++    this.applyOverrides();
++  }
++  applyOverrides() {
++    if (
++      !Object.keys(this.overrides).length || this.closed ||
++      !this.permitted(this.browser.currentURI.spec)
++    ) return;
++    const context = this.browser.browsingContext;
++    if (!this.overrideContexts.has(context)) {
++      if (
++        context.chromeDebuggerOwner &&
++        context.chromeDebuggerOwner !== this.extension.id
++      ) {
++        throw new ExtensionError(
++          "Native debugger overrides have another owner",
++        );
++      }
++      this.overrideContexts.set(context, {
++        chromeDebuggerOwner: context.chromeDebuggerOwner,
++        chromeDebuggerFocusEmulation: context.chromeDebuggerFocusEmulation,
++        chromeDebuggerBypassCSP: context.chromeDebuggerBypassCSP,
++      });
++      context.chromeDebuggerOwner = this.extension.id;
++    }
++    for (const [name, value] of Object.entries(this.overrides)) {
++      context[name] = value;
++    }
++  }
++  async page(command, params, target) {
++    if (command === "setBypassCSP") {
++      options(params, ["enabled"]);
++      this.setOverride("chromeDebuggerBypassCSP", params.enabled);
++      return {};
++    }
++    if (command === "handleJavaScriptDialog") {
++      options(params, ["accept", "promptText"]);
++      if (typeof params.accept !== "boolean") {
++        throw new ExtensionError("accept must be a boolean");
++      }
++      if (!this.prompt?.isOpen) {
++        throw new ExtensionError("No JavaScript dialog is open");
++      }
++      if (params.promptText !== undefined) {
++        string(params.promptText, "promptText");
++        if (this.prompt.promptType !== "prompt") {
++          throw new ExtensionError("Dialog has no text field");
++        }
++        if (params.accept) this.prompt.text = params.promptText;
++      }
++      if (params.accept) this.prompt.accept();
++      else this.prompt.dismiss();
++      return {};
++    }
++    if (command === "navigate") {
++      options(params, ["url", "frameId", "referrer", "transitionType"]);
++      if (
++        params.referrer ||
++        params.transitionType ||
++        (params.frameId && params.frameId !== this.frameId(target))
++      ) {
++        throw new ExtensionError(
++          "Only top-level navigation without overrides is supported",
++        );
++      }
++      const url = string(params.url, "url");
++      if (!this.permitted(url)) {
++        throw new ExtensionError(
++          "Cannot navigate debugger to a restricted URL",
++        );
++      }
++      await this.commands.targetCommand.navigateTo(url);
++      this.check();
++      return { frameId: this.frameId(), loaderId: this.loaderId() };
++    }
++    if (command === "reload") {
++      options(params, ["ignoreCache", "scriptToEvaluateOnLoad"]);
++      if (params.scriptToEvaluateOnLoad) {
++        throw new ExtensionError(
++          "Reload-time script injection is not supported",
++        );
++      }
++      await this.commands.targetCommand.reloadTopLevelTarget(
++        !!params.ignoreCache,
++      );
++      return {};
++    }
++    if (command === "getFrameTree") {
++      options(params, []);
++      const frames = this.commands.targetCommand
++        .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
++        .filter((frame) => this.permitted(frame.url));
++      return {
++        frameTree: {
++          frame: await this.frame(target),
++          childFrames: await Promise.all(
++            frames
++              .filter((frame) => frame !== target)
++              .map(async (frame) => ({ frame: await this.frame(frame) })),
++          ),
++        },
++      };
++    }
++    if (command === "bringToFront") {
++      options(params, []);
++      this.tab.documentGlobal.gBrowser.selectedTab = this.tab;
++      this.browser.focus();
++      return {};
++    }
++    if (command === "getLayoutMetrics") {
++      options(params, []);
++      const result = await this.evaluate(
++        `({layoutViewport:{pageX:scrollX,pageY:scrollY,clientWidth:innerWidth,clientHeight:innerHeight},visualViewport:{offsetX:visualViewport.offsetLeft,offsetY:visualViewport.offsetTop,pageX:visualViewport.pageLeft,pageY:visualViewport.pageTop,clientWidth:visualViewport.width,clientHeight:visualViewport.height,scale:visualViewport.scale,zoom:1},contentSize:{x:0,y:0,width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}})`,
++        target,
++        { returnByValue: true },
++      );
++      const value = result.result.value;
++      return {
++        ...value,
++        cssLayoutViewport: value.layoutViewport,
++        cssVisualViewport: value.visualViewport,
++        cssContentSize: value.contentSize,
++      };
++    }
++    options(params, [
++      "format",
++      "quality",
++      "clip",
++      "fromSurface",
++      "captureBeyondViewport",
++      "optimizeForSpeed",
++    ]);
++    if (
++      (params.format && params.format !== "png") ||
++      params.quality !== undefined ||
++      params.fromSurface === false ||
++      params.optimizeForSpeed
++    ) {
++      throw new ExtensionError("Only native PNG surface capture is supported");
++    }
++    const clip = params.clip;
++    const shot = await captureScreenshot(
++      {
++        disableFlash: true,
++        snapshotScale: clip?.scale || 1,
++        fullpage: !!params.captureBeyondViewport && !clip,
++        ...(clip
++          ? {
++            rect: {
++              left: clip.x,
++              top: clip.y,
++              width: clip.width,
++              height: clip.height,
++            },
++          }
++          : {}),
++      },
++      this.browser.browsingContext,
++    );
++    if (!shot.data?.startsWith("data:image/png;base64,")) {
++      throw new ExtensionError("Native screenshot failed");
++    }
++    return { data: shot.data.split(",", 2)[1] };
++  }
++  async network(command, params) {
++    if (command === "setCacheDisabled") {
++      options(params, ["cacheDisabled"]);
++      if (typeof params.cacheDisabled !== "boolean") {
++        throw new ExtensionError("cacheDisabled must be a boolean");
++      }
++      await this.commands.targetConfigurationCommand.updateConfiguration({
++        cacheDisabled: params.cacheDisabled,
++      });
++      return {};
++    }
++    if (command === "setBlockedURLs") {
++      options(params, ["urls"]);
++      if (
++        !Array.isArray(params.urls) ||
++        !params.urls.every((url) => typeof url === "string")
++      ) {
++        throw new ExtensionError("urls must be an array of patterns");
++      }
++      await this.commands.networkCommand.setBlockedUrls(params.urls);
++      return {};
++    }
++    if (command === "setUserAgentOverride") {
++      options(params, ["userAgent"]);
++      await this.commands.targetConfigurationCommand.updateConfiguration({
++        customUserAgent: string(params.userAgent, "userAgent"),
++      });
++      return {};
++    }
++    options(params, ["requestId"]);
++    const request = this.requests.get(String(params.requestId));
++    if (!request) throw new ExtensionError("Unknown network request");
++    const response = await this.commands.client.request({
++      to: request.actor,
++      type: command === "getResponseBody"
++        ? "getResponseContent"
++        : "getRequestPostData",
++    });
++    if (command === "getRequestPostData") {
++      const value = response.postData?.text;
++      if (value === undefined) {
++        throw new ExtensionError("Request has no retained post data");
++      }
++      return {
++        postData: typeof value === "string"
++          ? value
++          : await this.longString(value),
++      };
++    }
++    const content = response.content;
++    if (!content || content.text === undefined || content.truncated) {
++      throw new ExtensionError("Response body is unavailable or truncated");
++    }
++    return {
++      body: typeof content.text === "string"
++        ? content.text
++        : await this.longString(content.text),
++      base64Encoded: content.encoding === "base64",
++    };
++  }
++  async longString(grip) {
++    if (grip.type !== "longString") {
++      throw new ExtensionError("Unsupported native string payload");
++    }
++    const response = await this.commands.client.request({
++      to: grip.actor,
++      type: "substring",
++      start: 0,
++      end: grip.length,
++    });
++    return response.substring;
++  }
++  async input(command, params, target) {
++    const walker = await this.inspector(target);
++    const document = await walker.getRootNode();
++    return document.dispatchChromeInput(command, params);
++  }
++  async target(command, params, target) {
++    if (command === "getTargets") {
++      options(params, []);
++      return {
++        targetInfos: this.commands.targetCommand
++          .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
++          .filter((frame) => this.permitted(frame.url))
++          .map((frame) => this.targetInfo(frame)),
++      };
++    }
++    if (command === "getTargetInfo") {
++      options(params, ["targetId"]);
++      const frame = params.targetId
++        ? this.commands.targetCommand
++          .getAllTargets([this.commands.targetCommand.TYPES.FRAME])
++          .find((item) => this.frameId(item) === params.targetId)
++        : target;
++      if (!frame || !this.permitted(frame.url)) {
++        throw new ExtensionError("Unknown target");
++      }
++      return { targetInfo: this.targetInfo(frame) };
++    }
++    if (command === "setDiscoverTargets") {
++      options(params, ["discover"]);
++      if (typeof params.discover !== "boolean") {
++        throw new ExtensionError("discover must be a boolean");
++      }
++      this.discover = params.discover;
++      if (this.discover) {
++        for (const frame of this.contexts.values()) {
++          this.emit("Target.targetCreated", {
++            targetInfo: this.targetInfo(frame),
++          });
++        }
++      }
++      return {};
++    }
++    if (command === "attachToTarget") {
++      options(params, ["targetId", "flatten"]);
++      if (params.flatten !== true) {
++        throw new ExtensionError("Only flattened child sessions are supported");
++      }
++      const frame = [...this.contexts.values()].find(
++        (item) => this.frameId(item) === params.targetId,
++      );
++      if (!frame) throw new ExtensionError("Unknown child target");
++      const sessionId = Services.uuid.generateUUID().toString().slice(1, -1);
++      this.sessions.set(sessionId, frame);
++      this.emit("Target.attachedToTarget", {
++        sessionId,
++        targetInfo: this.targetInfo(frame),
++        waitingForDebugger: false,
++      });
++      return { sessionId };
++    }
++    options(params, ["sessionId"]);
++    if (!this.sessions.delete(params.sessionId)) {
++      throw new ExtensionError("Unknown child session");
++    }
++    this.emit("Target.detachedFromTarget", { sessionId: params.sessionId });
++    return {};
++  }
++  targetInfo(target) {
++    return {
++      targetId: this.frameId(target),
++      type: target.isTopLevel ? "page" : "iframe",
++      title: target.title || "",
++      url: target.url,
++      attached: true,
++      canAccessOpener: false,
++    };
++  }
++  async close(reason = "canceled_by_user") {
++    if (this.closed) return;
++    this.closed = true;
++    if (owners.get(this.tab) === this) owners.delete(this.tab);
++    this.tab.removeEventListener("TabClose", this.onTabClose);
++    if (this.onPermissions) {
++      this.extension.off("remove-permissions", this.onPermissions);
++    }
++    this.gDevTools?.off("toolbox-created", this.onToolbox);
++    for (const [context, original] of this.overrideContexts) {
++      if (
++        !context.isDiscarded &&
++        context.chromeDebuggerOwner === this.extension.id
++      ) {
++        context.chromeDebuggerFocusEmulation =
++          original.chromeDebuggerFocusEmulation;
++        context.chromeDebuggerBypassCSP = original.chromeDebuggerBypassCSP;
++        context.chromeDebuggerOwner = original.chromeDebuggerOwner;
++      }
++    }
++    this.overrideContexts.clear();
++    this.promptListener?.destroy();
++    this.prompt = null;
++    this.objects.clear();
++    this.nodes.clear();
++    this.contexts.clear();
++    this.sessions.clear();
++    this.requests.clear();
++    try {
++      await this.commands?.destroy();
++    } finally {
++      this.detached(reason);
++    }
++  }
++}
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+index f0c8b871036e946f840c234b7aa9589efe28ba55..a72866dbab4489eaf3fc02bb0e75fd2ebe8e3043 100644
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -1033,6 +1033,13 @@ export class ChildAPIManager {
+       return false;
+     }
+ 
++    if (
++      (namespace === "debugger" || (!namespace && name === "debugger")) &&
++      !ExtensionUtils.getChromeExtensionId(this.context.extension)
++    ) {
++      return false;
++    }
++
+     return true;
+   }
+ 
+diff --git a/chrome/toolkit/content/extensions/ext-toolkit.json b/chrome/toolkit/content/extensions/ext-toolkit.json
+index 38a435e567f6599e9be923b98334677535b06a2f..2e61e3ea1a1f33a6d55f28801f2cf166773edd2d 100644
+--- a/chrome/toolkit/content/extensions/ext-toolkit.json
++++ b/chrome/toolkit/content/extensions/ext-toolkit.json
+@@ -46,6 +46,12 @@
+     "manifest": ["declarative_net_request"],
+     "paths": [["declarativeNetRequest"]]
+   },
++  "debugger": {
++    "url": "chrome://extensions/content/parent/ext-debugger.js",
++    "schema": "chrome://extensions/content/schemas/debugger.json",
++    "scopes": ["addon_parent"],
++    "paths": [["debugger"]]
++  },
+   "dns": {
+     "url": "chrome://extensions/content/parent/ext-dns.js",
+     "schema": "chrome://extensions/content/schemas/dns.json",
+diff --git a/chrome/toolkit/content/extensions/parent/ext-debugger.js b/chrome/toolkit/content/extensions/parent/ext-debugger.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..be680a95893eef4703f4e5c1e5ed7559ce013191
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/parent/ext-debugger.js
+@@ -0,0 +1,166 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++ChromeUtils.defineESModuleGetters(this, {
++  ChromeDebuggerSession: "resource://gre/modules/ChromeDebugger.sys.mjs",
++  isChromeDebuggerAttached: "resource://gre/modules/ChromeDebugger.sys.mjs",
++});
++this.debugger = class extends ExtensionAPIPersistent {
++  sessions = new Map();
++  events = new Set();
++  detaches = new Set();
++  PERSISTENT_EVENTS = {
++    onEvent({ fire }) {
++      const listener = (...args) => fire.async(...args);
++      this.events.add(listener);
++      return {
++        unregister: () => this.events.delete(listener),
++        convert: (value) => {
++          fire = value;
++        },
++      };
++    },
++    onDetach({ fire }) {
++      const listener = (...args) => fire.async(...args);
++      this.detaches.add(listener);
++      return {
++        unregister: () => this.detaches.delete(listener),
++        convert: (value) => {
++          fire = value;
++        },
++      };
++    },
++  };
++  onShutdown() {
++    for (const session of this.sessions.values()) session.close(null);
++    this.sessions.clear();
++    this.events.clear();
++    this.detaches.clear();
++  }
++  resolve(source) {
++    if (
++      source.extensionId ||
++      (source.tabId != null) === (source.targetId != null)
++    ) {
++      throw new ExtensionUtils.ExtensionError(
++        "Exactly one supported tabId or targetId is required",
++      );
++    }
++    const id = source.tabId ?? /^floorp-tab:(\d+)$/.exec(source.targetId)?.[1];
++    if (id === undefined) {
++      throw new ExtensionUtils.ExtensionError("Unknown debugger targetId");
++    }
++    const tab = tabTracker.getTab(Number(id));
++    if (
++      !this.extension.canAccessWindow(tab.documentGlobal) ||
++      tab.closing ||
++      tab.getAttribute("pending") === "true"
++    ) {
++      throw new ExtensionUtils.ExtensionError("Debugger target is unavailable");
++    }
++    return { tab, tabId: Number(id) };
++  }
++  getAPI(context) {
++    const extension = this.extension;
++    if (!ExtensionUtils.getChromeExtensionId(extension)) return {};
++    return {
++      debugger: {
++        attach: async (source, version) => {
++          if (!/^1\.[0-3]$/.test(version)) {
++            throw new ExtensionUtils.ExtensionError(
++              `Unsupported debugger protocol version: ${version}`,
++            );
++          }
++          if (source.sessionId) {
++            throw new ExtensionUtils.ExtensionError(
++              "Cannot attach an existing child session",
++            );
++          }
++          const { tab, tabId } = this.resolve(source);
++          if (this.sessions.has(tabId)) {
++            throw new ExtensionUtils.ExtensionError(
++              "Debugger is already attached",
++            );
++          }
++          const session = new ChromeDebuggerSession(
++            extension,
++            tab,
++            tabId,
++            (...args) => {
++              for (const listener of this.events) listener(...args);
++            },
++            (reason) => {
++              if (this.sessions.get(tabId) === session) {
++                this.sessions.delete(tabId);
++              }
++              if (reason) {
++                for (const listener of this.detaches) {
++                  listener({ tabId }, reason);
++                }
++              }
++            },
++          );
++          this.sessions.set(tabId, session);
++          try {
++            await session.open();
++          } catch (error) {
++            this.sessions.delete(tabId);
++            throw error;
++          }
++        },
++        detach: async (source) => {
++          if (source.sessionId) {
++            throw new ExtensionUtils.ExtensionError(
++              "Detach a child with Target.detachFromTarget",
++            );
++          }
++          const { tabId } = this.resolve(source);
++          const session = this.sessions.get(tabId);
++          if (!session) {
++            throw new ExtensionUtils.ExtensionError("Debugger is not attached");
++          }
++          await session.close(null);
++        },
++        getTargets: async () => {
++          const targets = [];
++          for (const window of windowTracker.browserWindows()) {
++            if (!extension.canAccessWindow(window)) continue;
++            for (const tab of window.gBrowser.tabs) {
++              const tabId = tabTracker.getId(tab);
++              targets.push({
++                id: `floorp-tab:${tabId}`,
++                tabId,
++                type: "page",
++                title: tab.label,
++                url: tab.linkedBrowser.currentURI.spec,
++                attached: isChromeDebuggerAttached(tab),
++              });
++            }
++          }
++          return targets;
++        },
++        sendCommand: async (source, method, params) => {
++          const { tabId } = this.resolve(source);
++          const session = this.sessions.get(tabId);
++          if (!session) {
++            throw new ExtensionUtils.ExtensionError("Debugger is not attached");
++          }
++          return session.command(source, method, params || {});
++        },
++        onEvent: new EventManager({
++          context,
++          module: "debugger",
++          event: "onEvent",
++          extensionApi: this,
++        }).api(),
++        onDetach: new EventManager({
++          context,
++          module: "debugger",
++          event: "onDetach",
++          extensionApi: this,
++        }).api(),
++      },
++    };
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/schemas/debugger.json b/chrome/toolkit/content/extensions/schemas/debugger.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..407912f82a557f1e7db5f5f7d2018e3be254a590
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/schemas/debugger.json
+@@ -0,0 +1,200 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "OptionalPermission",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "debugger"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "debugger",
++    "permissions": [
++      "debugger"
++    ],
++    "types": [
++      {
++        "id": "Debuggee",
++        "type": "object",
++        "properties": {
++          "tabId": {
++            "type": "integer",
++            "minimum": 0,
++            "optional": true
++          },
++          "targetId": {
++            "type": "string",
++            "optional": true
++          },
++          "extensionId": {
++            "type": "string",
++            "optional": true
++          },
++          "sessionId": {
++            "type": "string",
++            "optional": true
++          }
++        }
++      },
++      {
++        "id": "TargetInfo",
++        "type": "object",
++        "additionalProperties": {
++          "type": "any"
++        }
++      },
++      {
++        "id": "DetachReason",
++        "type": "string",
++        "enum": [
++          "target_closed",
++          "canceled_by_user"
++        ]
++      }
++    ],
++    "functions": [
++      {
++        "name": "attach",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "target",
++            "$ref": "Debuggee"
++          },
++          {
++            "name": "requiredVersion",
++            "type": "string"
++          },
++          {
++            "name": "callback",
++            "type": "function",
++            "optional": true,
++            "parameters": []
++          }
++        ]
++      },
++      {
++        "name": "detach",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "target",
++            "$ref": "Debuggee"
++          },
++          {
++            "name": "callback",
++            "type": "function",
++            "optional": true,
++            "parameters": []
++          }
++        ]
++      },
++      {
++        "name": "getTargets",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "callback",
++            "type": "function",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "result",
++                "type": "array",
++                "items": {
++                  "$ref": "TargetInfo"
++                }
++              }
++            ]
++          }
++        ]
++      },
++      {
++        "name": "sendCommand",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "target",
++            "$ref": "Debuggee"
++          },
++          {
++            "name": "method",
++            "type": "string"
++          },
++          {
++            "name": "commandParams",
++            "type": "object",
++            "optional": true,
++            "additionalProperties": {
++              "type": "any"
++            }
++          },
++          {
++            "name": "callback",
++            "type": "function",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "result",
++                "type": "object",
++                "additionalProperties": {
++                  "type": "any"
++                }
++              }
++            ]
++          }
++        ]
++      }
++    ],
++    "events": [
++      {
++        "name": "onEvent",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "source",
++            "$ref": "Debuggee"
++          },
++          {
++            "name": "method",
++            "type": "string"
++          },
++          {
++            "name": "params",
++            "type": "object",
++            "optional": true,
++            "additionalProperties": {
++              "type": "any"
++            }
++          }
++        ]
++      },
++      {
++        "name": "onDetach",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "source",
++            "$ref": "Debuggee"
++          },
++          {
++            "name": "reason",
++            "$ref": "DetachReason"
++          }
++        ]
++      }
++    ]
++  }
++]

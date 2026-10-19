@@ -1,0 +1,1017 @@
+diff --git a/toolkit/components/extensions/ExtensionChild.sys.mjs b/toolkit/components/extensions/ExtensionChild.sys.mjs
+index f0c8b87..31c5523 100644
+--- a/toolkit/components/extensions/ExtensionChild.sys.mjs
++++ b/toolkit/components/extensions/ExtensionChild.sys.mjs
+@@ -655,6 +655,21 @@ export class ProxyAPIImplementation extends SchemaAPIInterface {
+ 
+   callAsyncFunction(args, callback, requireUserInput) {
+     const context = this.childApiManager.context;
++    if (callback && ExtensionUtils.getChromeExtensionId(context.extension)) {
++      const original = callback;
++      if (this.path === "identity.getAuthToken") {
++        callback = (result) =>
++          context.applySafeWithoutClone(
++            original,
++            result ? [result.token, result.grantedScopes] : []
++          );
++      } else if (
++        this.path === "identity.removeCachedAuthToken" ||
++        this.path === "identity.clearAllCachedAuthTokens"
++      ) {
++        callback = () => context.applySafeWithoutClone(original, []);
++      }
++    }
+     const isHandlingUserInput =
+       context.contentWindow?.windowUtils?.isHandlingUserInput;
+     if (requireUserInput) {
+@@ -1033,7 +1048,18 @@ export class ChildAPIManager {
+       return false;
+     }
+ 
+-    return true;
++    return !(
++      namespace === "identity" &&
++      [
++        "getAccounts",
++        "getAuthToken",
++        "getProfileUserInfo",
++        "removeCachedAuthToken",
++        "clearAllCachedAuthTokens",
++        "onSignInChanged",
++      ].includes(name) &&
++      !ExtensionUtils.getChromeExtensionId(this.context.extension)
++    );
+   }
+ 
+   getImplementation(namespace, name) {
+diff --git a/toolkit/components/extensions/child/ext-identity.js b/toolkit/components/extensions/child/ext-identity.js
+index a070edc..e41e39f 100644
+--- a/toolkit/components/extensions/child/ext-identity.js
++++ b/toolkit/components/extensions/child/ext-identity.js
+@@ -8,22 +8,23 @@ var { Constructor: CC } = Components;
+ 
+ ChromeUtils.defineESModuleGetters(this, {
+   CommonUtils: "resource://services-common/utils.sys.mjs",
++  ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+ });
+ XPCOMUtils.defineLazyPreferenceGetter(
+   this,
+   "redirectDomain",
+-  "extensions.webextensions.identity.redirectDomain"
++  "extensions.webextensions.identity.redirectDomain",
+ );
+ 
+ let CryptoHash = CC(
+   "@mozilla.org/security/hash;1",
+   "nsICryptoHash",
+-  "initWithString"
++  "initWithString",
+ );
+ 
+ XPCOMUtils.defineLazyGlobalGetters(this, ["URL", "TextEncoder"]);
+ 
+-const computeHash = str => {
++const computeHash = (str) => {
+   let byteArr = new TextEncoder().encode(str);
+   let hash = new CryptoHash("sha1");
+   hash.update(byteArr, byteArr.length);
+@@ -36,6 +37,12 @@ this.identity = class extends ExtensionAPI {
+     return {
+       identity: {
+         getRedirectURL: function (path = "") {
++          const chromeId = ExtensionUtils.getChromeExtensionId(extension);
++          if (chromeId) {
++            const url = new URL(`https://${chromeId}.chromiumapp.org/`);
++            url.pathname = path;
++            return url.href;
++          }
+           let hash = computeHash(extension.id);
+           let url = new URL(`https://${hash}.${redirectDomain}/`);
+           url.pathname = path;
+@@ -49,19 +56,29 @@ this.identity = class extends ExtensionAPI {
+           // providers do not accept the URL provided by getRedirectURL.
+           // For more context, see bug 1635344.
+           let loopbackURL = `http://127.0.0.1/mozoauth2/${computeHash(
+-            extension.id
++            extension.id,
+           )}`;
+           let url = URL.parse(details.url);
+           if (!url) {
+             return Promise.reject({ message: "details.url is invalid" });
+           }
+           let redirectURI = URL.parse(
+-            url.searchParams.get("redirect_uri") || baseRedirectURL
++            url.searchParams.get("redirect_uri") || baseRedirectURL,
+           );
+           if (redirectURI) {
+             if (
+-              !redirectURI.href.startsWith(baseRedirectURL) &&
+-              !redirectURI.href.startsWith(loopbackURL)
++              !(
++                redirectURI.origin === new URL(baseRedirectURL).origin &&
++                !redirectURI.username &&
++                !redirectURI.password
++              ) &&
++              !(
++                redirectURI.origin === "http://127.0.0.1" &&
++                (redirectURI.pathname === new URL(loopbackURL).pathname ||
++                  redirectURI.pathname.startsWith(
++                    `${new URL(loopbackURL).pathname}/`,
++                  ))
++              )
+             ) {
+               return Promise.reject({ message: "redirect_uri not allowed" });
+             }
+@@ -71,7 +88,7 @@ this.identity = class extends ExtensionAPI {
+ 
+           return context.childManager.callParentAsyncFunction(
+             "identity.launchWebAuthFlowInParent",
+-            [details, redirectURI.href]
++            [details, redirectURI.href],
+           );
+         },
+       },
+diff --git a/toolkit/components/extensions/parent/ext-identity.js b/toolkit/components/extensions/parent/ext-identity.js
+index f273601..60c8dfe 100644
+--- a/toolkit/components/extensions/parent/ext-identity.js
++++ b/toolkit/components/extensions/parent/ext-identity.js
+@@ -1,157 +1,543 @@
+ /* This Source Code Form is subject to the terms of the Mozilla Public
+- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+- * You can obtain one at http://mozilla.org/MPL/2.0/. */
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+ "use strict";
+ 
+-XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest", "ChannelWrapper"]);
++var { ExtensionError } = ExtensionUtils;
+ 
+-const checkRedirected = (url, redirectURI) => {
++XPCOMUtils.defineLazyGlobalGetters(this, [
++  "XMLHttpRequest",
++  "ChannelWrapper",
++  "URL",
++  "URLSearchParams",
++  "AbortController",
++  "fetch",
++  "TextEncoder",
++  "TextDecoder",
++]);
++const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
++  "resource://gre/modules/Timer.sys.mjs",
++);
++
++function matchesRedirect(url, redirectURI) {
++  const actual = URL.parse(url);
++  const expected = URL.parse(redirectURI);
++  return (
++    !!actual &&
++    !!expected &&
++    actual.origin === expected.origin &&
++    (expected.pathname === "/" || actual.pathname === expected.pathname)
++  );
++}
++
++function checkRedirected(url, redirectURI, signal) {
+   return new Promise((resolve, reject) => {
+-    let xhr = new XMLHttpRequest({ mozAnon: false });
+-    xhr.open("GET", url);
+-    // We expect this if the user has not authenticated.
+-    xhr.onload = () => {
+-      reject(0);
++    const xhr = new XMLHttpRequest({ mozAnon: false });
++    let settled = false;
++    const finish = (error, value) => {
++      if (settled) return;
++      settled = true;
++      signal.removeEventListener("abort", abort);
++      if (error !== undefined) reject(error);
++      else resolve(value);
+     };
+-    // An unexpected error happened, log for extension authors.
+-    xhr.onerror = () => {
+-      reject(xhr.status);
++    const abort = () => {
++      finish({ message: "Authentication flow cancelled or timed out." });
++      xhr.abort();
+     };
+-    // Catch redirect to our redirect_uri before a new request is made.
++    xhr.open("GET", url);
++    xhr.onload = () =>
++      finish(
++        xhr.status >= 400
++          ? { message: `Authentication request failed (${xhr.status}).` }
++          : 0,
++      );
++    xhr.onerror = () => finish({ message: "Authentication request failed." });
++    xhr.onabort = () =>
++      finish({ message: "Authentication flow cancelled or timed out." });
+     xhr.channel.notificationCallbacks = {
+       QueryInterface: ChromeUtils.generateQI([
+         "nsIInterfaceRequestor",
+-        "nsIChannelEventSync",
++        "nsIChannelEventSink",
+       ]),
+-
+       getInterface: ChromeUtils.generateQI(["nsIChannelEventSink"]),
+-
+       asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
+-        let responseURL = newChannel.URI.spec;
+-        if (responseURL.startsWith(redirectURI)) {
+-          resolve(responseURL);
+-          // Cancel the redirect.
++        if (matchesRedirect(newChannel.URI.spec, redirectURI)) {
++          finish(undefined, newChannel.URI.spec);
+           callback.onRedirectVerifyCallback(Cr.NS_BINDING_ABORTED);
+-          return;
+-        }
+-        callback.onRedirectVerifyCallback(Cr.NS_OK);
++        } else callback.onRedirectVerifyCallback(Cr.NS_OK);
+       },
+     };
+-    xhr.send();
++    signal.addEventListener("abort", abort, { once: true });
++    if (signal.aborted) abort();
++    else xhr.send();
+   });
+-};
++}
+ 
+-const openOAuthWindow = (details, redirectURI) => {
+-  let args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+-  let supportsStringPrefURL = Cc[
+-    "@mozilla.org/supports-string;1"
+-  ].createInstance(Ci.nsISupportsString);
+-  supportsStringPrefURL.data = details.url;
+-  args.appendElement(supportsStringPrefURL);
+-
+-  let window = Services.ww.openWindow(
++function openOAuthWindow(details, redirectURI, signal) {
++  const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
++  const location = Cc["@mozilla.org/supports-string;1"].createInstance(
++    Ci.nsISupportsString,
++  );
++  location.data = details.url;
++  args.appendElement(location);
++  const window = Services.ww.openWindow(
+     null,
+     AppConstants.BROWSER_CHROME_URL,
+     "launchWebAuthFlow_dialog",
+     "chrome,location=yes,centerscreen,dialog=no,resizable=yes",
+-    args
++    args,
+   );
+-
+   return new Promise((resolve, reject) => {
+-    let httpActivityDistributor = Cc[
++    const distributor = Cc[
+       "@mozilla.org/network/http-activity-distributor;1"
+     ].getService(Ci.nsIHttpActivityDistributor);
+-
+-    let unloadListener;
+-    let httpObserver;
+-
+-    const resolveIfRedirectURI = channel => {
+-      const url = channel.URI && channel.URI.spec;
+-      if (!url || !url.startsWith(redirectURI)) {
+-        return;
+-      }
+-
+-      // Early exit if channel isn't related to the oauth dialog.
+-      let wrapper = ChannelWrapper.get(channel);
+-      if (
+-        !wrapper.browserElement ||
+-        wrapper.browserElement !== window.gBrowser.selectedBrowser
+-      ) {
+-        return;
+-      }
+-
+-      wrapper.cancel(Cr.NS_ERROR_ABORT, Ci.nsILoadInfo.BLOCKING_REASON_NONE);
+-      window.gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
+-      window.removeEventListener("unload", unloadListener);
+-      httpActivityDistributor.removeObserver(httpObserver);
+-      window.close();
+-      resolve(url);
++    let settled = false;
++    let progressBrowser;
++    const cleanup = () => {
++      window.removeEventListener("unload", unload);
++      window.removeEventListener("load", loaded);
++      progressBrowser?.removeProgressListener(progress);
++      distributor.removeObserver(observer);
++      Services.obs.removeObserver(observer, "http-on-modify-request");
++      signal.removeEventListener("abort", abort);
+     };
+-
+-    httpObserver = {
++    const finish = (error, value) => {
++      if (settled) return;
++      settled = true;
++      cleanup();
++      if (!window.closed) window.close();
++      if (error) reject(error);
++      else resolve(value);
++    };
++    const abort = () =>
++      finish({ message: "Authentication flow cancelled or timed out." });
++    const unload = () => {
++      if (!window.document.isUncommittedInitialDocument)
++        finish({ message: "User cancelled or denied access." });
++    };
++    const onNavigation = (uri, request) => {
++      if (!uri || !matchesRedirect(uri.spec, redirectURI)) return;
++      try {
++        request?.cancel(Cr.NS_BINDING_ABORTED);
++      } catch {}
++      try {
++        progressBrowser?.stop();
++      } catch {}
++      finish(undefined, uri.spec);
++    };
++    const progress = {
++      QueryInterface: ChromeUtils.generateQI([
++        "nsIWebProgressListener",
++        "nsISupportsWeakReference",
++      ]),
++      onLocationChange(webProgress, request, uri) {
++        if (webProgress.isTopLevel) onNavigation(uri, request);
++      },
++      onStateChange(webProgress, request, flags) {
++        if (
++          webProgress.isTopLevel &&
++          flags & Ci.nsIWebProgressListener.STATE_START
++        ) {
++          try {
++            onNavigation(request.QueryInterface(Ci.nsIChannel).URI, request);
++          } catch {}
++        }
++      },
++    };
++    const loaded = () => {
++      if (settled || !window.gBrowser) return;
++      progressBrowser = window.gBrowser.selectedBrowser;
++      progressBrowser.addProgressListener(
++        progress,
++        Ci.nsIWebProgress.NOTIFY_LOCATION |
++          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
++      );
++    };
++    const observer = {
++      observe(channel) {
++        this.observeActivity(channel);
++      },
+       observeActivity(channel) {
+         try {
+           channel.QueryInterface(Ci.nsIChannel);
+         } catch {
+-          // Ignore activities for channels that doesn't implement nsIChannel
+-          // (e.g. a NullHttpChannel).
+           return;
+         }
+-
+-        resolveIfRedirectURI(channel);
++        if (!channel.URI || !matchesRedirect(channel.URI.spec, redirectURI))
++          return;
++        const wrapper = ChannelWrapper.get(channel);
++        if (
++          !wrapper.browserElement ||
++          wrapper.browserElement !== window.gBrowser?.selectedBrowser
++        )
++          return;
++        try {
++          wrapper.cancel(
++            Cr.NS_ERROR_ABORT,
++            Ci.nsILoadInfo.BLOCKING_REASON_NONE,
++          );
++        } catch {}
++        try {
++          window.gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
++        } catch {}
++        finish(undefined, channel.URI.spec);
+       },
+     };
++    distributor.addObserver(observer);
++    Services.obs.addObserver(observer, "http-on-modify-request");
++    window.addEventListener("unload", unload);
++    window.addEventListener("load", loaded, { once: true });
++    if (window.document.readyState === "complete") loaded();
++    signal.addEventListener("abort", abort, { once: true });
++    if (signal.aborted) abort();
++  });
++}
+ 
+-    httpActivityDistributor.addObserver(httpObserver);
++const states = new WeakMap();
++function stateFor(extension) {
++  if (!states.has(extension))
++    states.set(extension, {
++      tokens: new Map(),
++      pending: new Map(),
++      controllers: new Set(),
++      listeners: new Set(),
++      profile: null,
++      generation: 0,
++    });
++  return states.get(extension);
++}
+ 
+-    // If the user just closes the window we need to reject
+-    unloadListener = () => {
+-      if (window.document.isUncommittedInitialDocument) {
+-        // The "unload" event also fires when the initial "about:blank"
+-        // document transitions to the browser document, ignore it.
++this.identity = class extends ExtensionAPI {
++  onShutdown() {
++    const state = states.get(this.extension);
++    if (!state) return;
++    for (const controller of state.controllers) controller.abort();
++    state.generation++;
++    state.tokens.clear();
++    state.pending.clear();
++    state.profile = null;
++    states.delete(this.extension);
++  }
++
++  getAPI(context) {
++    const { extension } = context;
++    const chromeId = ExtensionUtils.getChromeExtensionId(extension);
++    const state = stateFor(extension);
++    const requireChrome = () => {
++      if (!chromeId)
++        throw new ExtensionError(
++          "This identity method requires Chrome compatibility mode.",
++        );
++    };
++    const runFlow = (details, redirectURI) => {
++      if (chromeId) {
++        const redirect = URL.parse(redirectURI);
++        const permitted =
++          redirect?.protocol === "https:" &&
++          redirect.hostname === `${chromeId}.chromiumapp.org` &&
++          !redirect.port &&
++          !redirect.username &&
++          !redirect.password;
++        // Retain the existing Gecko loopback escape hatch, scoped to the
++        // internal extension identity, as validated by the child API.
++        const hash = Cc["@mozilla.org/security/hash;1"].createInstance(
++          Ci.nsICryptoHash,
++        );
++        hash.initWithString("sha1");
++        const id = new TextEncoder().encode(extension.id);
++        hash.update(id, id.length);
++        const hex = Array.from(hash.finish(false), (byte) =>
++          byte.charCodeAt(0).toString(16).padStart(2, "0"),
++        ).join("");
++        const loopback =
++          redirect?.protocol === "http:" &&
++          redirect.hostname === "127.0.0.1" &&
++          !redirect.port &&
++          (redirect.pathname === `/mozoauth2/${hex}` ||
++            redirect.pathname.startsWith(`/mozoauth2/${hex}/`));
++        if (!permitted && !loopback)
++          return Promise.reject({ message: "redirect_uri not allowed" });
++      }
++      const controller = new AbortController();
++      state.controllers.add(controller);
++      const closer = { close: () => controller.abort() };
++      context.callOnClose(closer);
++      const timer = setTimeout(() => controller.abort(), 5 * 60 * 1000);
++      const promise = checkRedirected(
++        details.url,
++        redirectURI,
++        controller.signal,
++      )
++        .catch((error) => {
++          if (error !== 0) return Promise.reject(error);
++          if (!details.interactive)
++            throw { message: "Requires user interaction" };
++          return openOAuthWindow(details, redirectURI, controller.signal);
++        })
++        .finally(() => {
++          clearTimeout(timer);
++          state.controllers.delete(controller);
++          context.forgetOnClose(closer);
++        });
++      if (context.isBackgroundContext)
++        extension.emit("background-script-idle-waituntil", {
++          promise,
++          reason: "launchWebAuthFlow",
++        });
++      return promise;
++    };
++    const updateProfile = async (token, generation) => {
++      if (
++        !token.grantedScopes.some(
++          (scope) =>
++            scope === "openid" ||
++            scope.endsWith("/auth/userinfo.profile") ||
++            scope.endsWith("/auth/userinfo.email"),
++        )
++      )
+         return;
++      const controller = new AbortController();
++      state.controllers.add(controller);
++      const timer = setTimeout(() => controller.abort(), 15000);
++      try {
++        const response = await fetch(
++          "https://openidconnect.googleapis.com/v1/userinfo",
++          {
++            credentials: "omit",
++            redirect: "error",
++            headers: { Authorization: `Bearer ${token.token}` },
++            signal: controller.signal,
++          },
++        );
++        if (!response.ok) {
++          await response.body?.cancel();
++          return;
++        }
++        if (
++          !response.body ||
++          Number(response.headers.get("Content-Length")) > 65536
++        ) {
++          await response.body?.cancel();
++          return;
++        }
++        const reader = response.body.getReader();
++        const chunks = [];
++        let length = 0;
++        while (true) {
++          const { value, done } = await reader.read();
++          if (done) break;
++          length += value.byteLength;
++          if (length > 65536) {
++            await reader.cancel();
++            return;
++          }
++          chunks.push(value);
++        }
++        const bytes = new Uint8Array(length);
++        let offset = 0;
++        for (const chunk of chunks) {
++          bytes.set(chunk, offset);
++          offset += chunk.byteLength;
++        }
++        const profile = JSON.parse(
++          new TextDecoder("utf-8", { fatal: true }).decode(bytes),
++        );
++        if (
++          typeof profile.sub !== "string" ||
++          !profile.sub ||
++          profile.sub.length > 512
++        )
++          return;
++        if (state.generation !== generation) return;
++        const previous = state.profile;
++        state.profile = {
++          id: profile.sub,
++          email:
++            typeof profile.email === "string" && profile.email.length <= 512
++              ? profile.email
++              : "",
++        };
++        if (previous?.id !== profile.sub) {
++          if (previous)
++            for (const listener of state.listeners)
++              listener({ id: previous.id }, false);
++          for (const listener of state.listeners)
++            listener({ id: profile.sub }, true);
++        }
++      } catch {
++        /* Token issuance remains valid if optional profile lookup fails. */
++      } finally {
++        clearTimeout(timer);
++        state.controllers.delete(controller);
+       }
+-      window.removeEventListener("unload", unloadListener);
+-      httpActivityDistributor.removeObserver(httpObserver);
+-      reject({ message: "User cancelled or denied access." });
+     };
+-
+-    window.addEventListener("unload", unloadListener);
+-  });
+-};
+-
+-this.identity = class extends ExtensionAPI {
+-  getAPI(context) {
+     return {
+       identity: {
+-        launchWebAuthFlowInParent: function (details, redirectURI) {
+-          // If the request is automatically redirected the user has already
+-          // authorized and we do not want to show the window.
+-          let promise = checkRedirected(details.url, redirectURI).catch(
+-            requestError => {
+-              // requestError is zero or xhr.status
+-              if (requestError !== 0) {
+-                Cu.reportError(
+-                  `browser.identity auth check failed with ${requestError}`
+-                );
+-                return Promise.reject({ message: "Invalid request" });
+-              }
+-              if (!details.interactive) {
+-                return Promise.reject({ message: `Requires user interaction` });
+-              }
+-
+-              return openOAuthWindow(details, redirectURI);
++        launchWebAuthFlowInParent: runFlow,
++        async getAuthToken(details = {}) {
++          details ??= {};
++          requireChrome();
++          const oauth = extension.manifest.oauth2;
++          const scopes = [
++            ...new Set(details.scopes ?? oauth?.scopes ?? []),
++          ].sort();
++          if (
++            !oauth?.client_id ||
++            !scopes.length ||
++            scopes.some(
++              (scope) =>
++                typeof scope !== "string" || !scope || /\s/.test(scope),
++            )
++          ) {
++            throw new ExtensionError(
++              "A registered OAuth client_id and nonempty scopes are required.",
++            );
++          }
++          if (details.account && state.profile?.id !== details.account.id) {
++            throw new ExtensionError(
++              "The requested browser account has not been authorized by this extension.",
++            );
++          }
++          const key = JSON.stringify([
++            oauth.client_id,
++            scopes,
++            details.account?.id ?? "",
++          ]);
++          const cached = state.tokens.get(key);
++          if (cached && cached.expires > Date.now() + 60000)
++            return {
++              token: cached.token,
++              grantedScopes: [...cached.grantedScopes],
++            };
++          if (state.pending.has(key)) return state.pending.get(key);
++          if (state.pending.size >= 8)
++            throw new ExtensionError("Too many concurrent identity requests.");
++          const generation = state.generation;
++          const request = (async () => {
++            const nonce = Services.uuid.generateUUID().toString();
++            const redirect = `https://${chromeId}.chromiumapp.org/`;
++            const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
++            url.search = new URLSearchParams({
++              client_id: oauth.client_id,
++              redirect_uri: redirect,
++              response_type: "token",
++              scope: scopes.join(" "),
++              state: nonce,
++              prompt: details.interactive ? "consent" : "none",
++              include_granted_scopes: "true",
++            }).toString();
++            const response = new URL(
++              await runFlow(
++                { url: url.href, interactive: !!details.interactive },
++                redirect,
++              ),
++            );
++            if (state.generation !== generation)
++              throw new ExtensionError("Authentication state was cleared.");
++            const result = new URLSearchParams(response.hash.slice(1));
++            if (result.get("state") !== nonce)
++              throw new ExtensionError("OAuth state validation failed.");
++            if (result.has("error"))
++              throw new ExtensionError(
++                `OAuth authorization failed: ${result.get("error")}`,
++              );
++            const token = result.get("access_token");
++            const expires = Number(result.get("expires_in"));
++            const grantedScopes = [
++              ...new Set(
++                (result.get("scope") || scopes.join(" "))
++                  .split(/\s+/)
++                  .filter(Boolean),
++              ),
++            ];
++            if (
++              !token ||
++              token.length > 65536 ||
++              result.get("token_type")?.toLowerCase() !== "bearer" ||
++              !Number.isFinite(expires) ||
++              expires <= 0 ||
++              expires > 86400
++            )
++              throw new ExtensionError(
++                "OAuth provider returned an invalid access token response.",
++              );
++            if (
++              !details.enableGranularPermissions &&
++              scopes.some((scope) => !grantedScopes.includes(scope))
++            ) {
++              throw new ExtensionError(
++                "OAuth provider did not grant the requested scopes.",
++              );
+             }
+-          );
+-          if (context.isBackgroundContext) {
+-            context.extension.emit("background-script-idle-waituntil", {
+-              promise,
+-              reason: "launchWebAuthFlow",
++            const entry = {
++              token,
++              grantedScopes,
++              expires: Date.now() + expires * 1000,
++            };
++            if (state.tokens.size >= 32)
++              state.tokens.delete(state.tokens.keys().next().value);
++            state.tokens.set(key, entry);
++            await updateProfile(entry, generation);
++            if (state.generation !== generation)
++              throw new ExtensionError("Authentication state was cleared.");
++            return { token, grantedScopes: [...grantedScopes] };
++          })().finally(() => {
++            if (state.pending.get(key) === request) state.pending.delete(key);
++          });
++          state.pending.set(key, request);
++          if (context.isBackgroundContext)
++            extension.emit("background-script-idle-waituntil", {
++              promise: request,
++              reason: "getAuthToken",
+             });
+-          }
+-          return promise;
++          return request;
++        },
++        async removeCachedAuthToken({ token }) {
++          requireChrome();
++          for (const [key, value] of state.tokens)
++            if (value.token === token) state.tokens.delete(key);
++        },
++        async clearAllCachedAuthTokens() {
++          requireChrome();
++          state.generation++;
++          state.pending.clear();
++          for (const controller of state.controllers) controller.abort();
++          state.tokens.clear();
++          if (state.profile)
++            for (const listener of state.listeners)
++              listener({ id: state.profile.id }, false);
++          state.profile = null;
++        },
++        async getAccounts() {
++          requireChrome();
++          return state.profile ? [{ id: state.profile.id }] : [];
++        },
++        async getProfileUserInfo(details = {}) {
++          details ??= {};
++          requireChrome();
++          // Floorp has no Chrome Sync account. ANY can expose an account that
++          // this extension actually authorized through the browser OAuth flow.
++          if (
++            details.accountStatus !== "ANY" ||
++            !extension.hasPermission("identity.email") ||
++            !state.profile
++          )
++            return { email: "", id: "" };
++          return { ...state.profile };
+         },
++        onSignInChanged: new ExtensionCommon.EventManager({
++          context,
++          name: "identity.onSignInChanged",
++          register: (fire) => {
++            requireChrome();
++            const listener = (account, signedIn) =>
++              fire.async(account, signedIn);
++            state.listeners.add(listener);
++            return () => state.listeners.delete(listener);
++          },
++        }).api(),
+       },
+     };
+   }
+diff --git a/toolkit/components/extensions/schemas/identity.json b/toolkit/components/extensions/schemas/identity.json
+index 947630a..6fd780f 100644
+--- a/toolkit/components/extensions/schemas/identity.json
++++ b/toolkit/components/extensions/schemas/identity.json
+@@ -7,9 +7,35 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": ["identity"]
++            "enum": ["identity", "identity.email"]
+           }
+         ]
++      },
++      {
++        "$extend": "WebExtensionManifest",
++        "properties": {
++          "oauth2": {
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "client_id": {
++                "type": "string",
++                "minLength": 1,
++                "maxLength": 1024
++              },
++              "scopes": {
++                "type": "array",
++                "minItems": 1,
++                "maxItems": 128,
++                "items": {
++                  "type": "string",
++                  "minLength": 1,
++                  "maxLength": 2048
++                }
++              }
++            }
++          }
++        }
+       }
+     ]
+   },
+@@ -34,7 +60,6 @@
+       {
+         "name": "getAccounts",
+         "type": "function",
+-        "unsupported": true,
+         "description": "Retrieves a list of AccountInfo objects describing the accounts present on the profile.",
+         "async": "callback",
+         "parameters": [
+@@ -56,7 +81,6 @@
+       {
+         "name": "getAuthToken",
+         "type": "function",
+-        "unsupported": true,
+         "description": "Gets an OAuth2 access token using the client ID and scopes specified in the oauth2 section of manifest.json.",
+         "async": "callback",
+         "parameters": [
+@@ -77,8 +101,15 @@
+                 "optional": true,
+                 "type": "array",
+                 "items": {
+-                  "type": "string"
+-                }
++                  "type": "string",
++                  "minLength": 1,
++                  "maxLength": 2048
++                },
++                "maxItems": 128
++              },
++              "enableGranularPermissions": {
++                "type": "boolean",
++                "optional": true
+               }
+             }
+           },
+@@ -88,10 +119,34 @@
+             "type": "function",
+             "parameters": [
+               {
+-                "name": "results",
++                "name": "token",
++                "optional": true,
++                "choices": [
++                  {
++                    "type": "string"
++                  },
++                  {
++                    "type": "object",
++                    "properties": {
++                      "token": {
++                        "type": "string"
++                      },
++                      "grantedScopes": {
++                        "type": "array",
++                        "items": {
++                          "type": "string"
++                        }
++                      }
++                    }
++                  }
++                ]
++              },
++              {
++                "name": "grantedScopes",
++                "optional": true,
+                 "type": "array",
+                 "items": {
+-                  "$ref": "AccountInfo"
++                  "type": "string"
+                 }
+               }
+             ]
+@@ -101,10 +156,21 @@
+       {
+         "name": "getProfileUserInfo",
+         "type": "function",
+-        "unsupported": true,
+         "description": "Retrieves email address and obfuscated gaia id of the user signed into a profile.",
+         "async": "callback",
+         "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "accountStatus": {
++                "type": "string",
++                "enum": ["SYNC", "ANY"],
++                "optional": true
++              }
++            }
++          },
+           {
+             "name": "callback",
+             "type": "function",
+@@ -113,8 +179,12 @@
+                 "name": "userinfo",
+                 "type": "object",
+                 "properties": {
+-                  "email": { "type": "string" },
+-                  "id": { "type": "string" }
++                  "email": {
++                    "type": "string"
++                  },
++                  "id": {
++                    "type": "string"
++                  }
+                 }
+               }
+             ]
+@@ -124,7 +194,6 @@
+       {
+         "name": "removeCachedAuthToken",
+         "type": "function",
+-        "unsupported": true,
+         "description": "Removes an OAuth2 access token from the Identity API's token cache.",
+         "async": "callback",
+         "parameters": [
+@@ -132,23 +201,16 @@
+             "name": "details",
+             "type": "object",
+             "properties": {
+-              "token": { "type": "string" }
++              "token": {
++                "type": "string"
++              }
+             }
+           },
+           {
+             "name": "callback",
+             "optional": true,
+             "type": "function",
+-            "parameters": [
+-              {
+-                "name": "userinfo",
+-                "type": "object",
+-                "properties": {
+-                  "email": { "type": "string" },
+-                  "id": { "type": "string" }
+-                }
+-              }
+-            ]
++            "parameters": []
+           }
+         ]
+       },
+@@ -162,8 +224,13 @@
+             "name": "details",
+             "type": "object",
+             "properties": {
+-              "url": { "$ref": "manifest.HttpURL" },
+-              "interactive": { "type": "boolean", "optional": true }
++              "url": {
++                "$ref": "manifest.HttpURL"
++              },
++              "interactive": {
++                "type": "boolean",
++                "optional": true
++              }
+             }
+           },
+           {
+@@ -195,12 +262,24 @@
+         "returns": {
+           "type": "string"
+         }
++      },
++      {
++        "name": "clearAllCachedAuthTokens",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "name": "callback",
++            "type": "function",
++            "optional": true,
++            "parameters": []
++          }
++        ]
+       }
+     ],
+     "events": [
+       {
+         "name": "onSignInChanged",
+-        "unsupported": true,
+         "type": "function",
+         "description": "Fired when signin state changes for an account on the user's profile.",
+         "parameters": [

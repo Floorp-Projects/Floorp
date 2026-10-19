@@ -17,26 +17,34 @@
  */
 
 import type {
-  ExtensionMetadata,
+  ChromeConversionReport,
   ChromeManifest,
-  ConversionResult,
   ConversionOptions,
+  ConversionResult,
+  ExtensionMetadata,
 } from "./types.ts";
 import { CWSError, CWSErrorCode } from "./types.ts";
-import { extractZipFromCRX } from "./CRXParser.sys.mts";
+import { type VerifiedCRX, verifyCRX } from "./CRXVerifier.sys.mts";
 import {
-  transformManifest,
+  checkChromeVersionRequirement,
+  transformManifestFull,
   validateManifest,
 } from "./ManifestTransformer.sys.mts";
-import { sanitizeDNRRules } from "./DNRTransformer.sys.mts";
+import { sanitizeDNRRulesFull } from "./DNRTransformer.sys.mts";
 import {
-  validateSourceCode,
   isJavaScriptFile,
   mightContainUnsupportedPatterns,
+  validateSourceCodeFull,
 } from "./CodeValidator.sys.mts";
-import { unzipSync, zipSync, type Unzipped } from "fflate/browser";
-import { OFFSCREEN_POLYFILL_SOURCE } from "./polyfills/offscreen/OffscreenPolyfillSource.sys.mts";
-import { DOCUMENT_ID_POLYFILL_SOURCE } from "./polyfills/documentId/DocumentIdPolyfillSource.sys.mts";
+import { type Unzipped, unzipSync, zipSync } from "fflate/browser";
+import {
+  GECKO_MIN_VERSION,
+  generateFirefoxId,
+  isChromeExtensionId,
+  MAX_CRX_ENTRIES,
+  MAX_EXPANDED_CRX_SIZE,
+  MAX_FILE_SIZE,
+} from "./Constants.sys.mts";
 
 // =============================================================================
 // Constants
@@ -45,11 +53,16 @@ import { DOCUMENT_ID_POLYFILL_SOURCE } from "./polyfills/documentId/DocumentIdPo
 /** Number of files to process before yielding to event loop */
 const YIELD_INTERVAL = 50;
 
+export const ORIGINAL_MANIFEST_PATH =
+  "__floorp_chrome__/original-manifest.json";
+export const CONVERSION_REPORT_PATH =
+  "__floorp_chrome__/conversion-report.json";
+
 /** Default conversion options */
 const DEFAULT_OPTIONS: Required<ConversionOptions> = {
   validateCode: true,
   sanitizeDNR: true,
-  minGeckoVersion: "115.0",
+  minGeckoVersion: GECKO_MIN_VERSION,
 } as const;
 
 // =============================================================================
@@ -57,8 +70,9 @@ const DEFAULT_OPTIONS: Required<ConversionOptions> = {
 // =============================================================================
 
 interface ProcessZipResult {
-  modifiedZip: ArrayBuffer | null;
-  originalManifest: ChromeManifest | null;
+  modifiedZip: ArrayBuffer;
+  originalManifest: ChromeManifest;
+  report: ChromeConversionReport;
   warnings: string[];
 }
 
@@ -120,18 +134,31 @@ export class CRXConverterClass {
     try {
       log(`Starting conversion for ${extensionId} (${metadata.name})`);
 
+      if (!isChromeExtensionId(extensionId)) {
+        throw new CWSError(
+          CWSErrorCode.VALIDATION_ERROR,
+          "Invalid Chrome extension ID",
+        );
+      }
+
       // Yield before heavy operation
       await yieldToEventLoop();
 
       // Step 1: Parse CRX header and extract ZIP
       log("Extracting ZIP from CRX...");
-      const zipData = extractZipFromCRX(crxData);
-      if (!zipData) {
+      let verified: VerifiedCRX;
+      try {
+        verified = await verifyCRX(crxData, extensionId);
+      } catch (cause) {
         throw new CWSError(
           CWSErrorCode.INVALID_CRX,
-          "Failed to extract ZIP from CRX file",
+          cause instanceof Error
+            ? cause.message
+            : "CRX signature verification failed",
+          cause,
         );
       }
+      const zipData = verified.zipData;
 
       log(`Extracted ZIP: ${zipData.byteLength} bytes`);
 
@@ -144,18 +171,13 @@ export class CRXConverterClass {
         zipData,
         extensionId,
         log,
+        {
+          format: verified.version,
+          algorithm: verified.algorithm,
+          publicKeySha256: verified.publicKeySha256,
+        },
       );
       log("ZIP processing complete");
-
-      if (!result.modifiedZip) {
-        // Return original ZIP if modification failed but no error thrown
-        log("Could not modify manifest, using original ZIP");
-        return {
-          success: true,
-          xpiData: zipData,
-          warnings: [...warnings, ...result.warnings],
-        };
-      }
 
       warnings.push(...result.warnings);
 
@@ -167,6 +189,7 @@ export class CRXConverterClass {
         success: true,
         xpiData: result.modifiedZip,
         originalManifest: result.originalManifest ?? undefined,
+        report: result.report,
         warnings,
       };
     } catch (error) {
@@ -195,13 +218,31 @@ export class CRXConverterClass {
     zipData: ArrayBuffer,
     extensionId: string,
     log: LogFunction,
+    signature: NonNullable<ChromeConversionReport["signature"]>,
   ): Promise<ProcessZipResult> {
     const warnings: string[] = [];
 
     // Unzip using fflate
     log("Unzipping with fflate...");
     const zipBytes = new Uint8Array(zipData);
-    const unzipped = unzipSync(zipBytes);
+    let expandedSize = 0;
+    let fileCount = 0;
+    const unzipped = unzipSync(zipBytes, {
+      filter(file) {
+        expandedSize += file.originalSize;
+        fileCount++;
+        if (
+          file.originalSize > MAX_FILE_SIZE ||
+          expandedSize > MAX_EXPANDED_CRX_SIZE || fileCount > MAX_CRX_ENTRIES
+        ) {
+          throw new CWSError(
+            CWSErrorCode.VALIDATION_ERROR,
+            "Chrome extension archive exceeds the expansion limits",
+          );
+        }
+        return true;
+      },
+    });
     const entryCount = Object.keys(unzipped).length;
     log(`Unzipped ${entryCount} entries`);
 
@@ -228,10 +269,42 @@ export class CRXConverterClass {
         "Invalid manifest.json structure",
       );
     }
+    const versionRequirement = checkChromeVersionRequirement(parsedManifest);
+    if (versionRequirement) {
+      throw new CWSError(CWSErrorCode.VALIDATION_ERROR, versionRequirement);
+    }
+
+    if (!isChromeExtensionId(extensionId)) {
+      throw new CWSError(
+        CWSErrorCode.VALIDATION_ERROR,
+        "Invalid Chrome extension ID",
+      );
+    }
+
+    if (
+      Object.keys(unzipped).some((name) => {
+        const normalized = name.replace(/^(\.\/)+/, "");
+        return normalized === "__floorp_chrome__" ||
+          normalized.startsWith("__floorp_chrome__/");
+      })
+    ) {
+      throw new CWSError(
+        CWSErrorCode.VALIDATION_ERROR,
+        "Extension uses the reserved __floorp_chrome__ package directory",
+      );
+    }
 
     // Transform manifest for Firefox
     log("Transforming manifest for Firefox...");
-    const firefoxManifest = transformManifest(parsedManifest, extensionId);
+    const transformed = transformManifestFull(parsedManifest, {
+      extensionId,
+      minGeckoVersion: this.options.minGeckoVersion,
+    });
+    const firefoxManifest = transformed.manifest;
+    warnings.push(...transformed.warnings);
+    for (const permission of transformed.removedPermissions) {
+      warnings.push(`Unsupported permission removed: ${permission}`);
+    }
     log("Manifest transformed");
 
     // Identify DNR rule files
@@ -246,29 +319,10 @@ export class CRXConverterClass {
 
     // Add transformed manifest
     const manifestJson = JSON.stringify(firefoxManifest, null, 2);
-    outputFiles["manifest.json"] = new TextEncoder().encode(manifestJson);
-
-    // Inject Offscreen Polyfill if needed
-    if (
-      firefoxManifest.background?.scripts?.includes(
-        "__floorp_polyfills__/OffscreenPolyfill.js",
-      )
-    ) {
-      log("Injecting Offscreen Polyfill source...");
-      outputFiles["__floorp_polyfills__/OffscreenPolyfill.js"] =
-        new TextEncoder().encode(OFFSCREEN_POLYFILL_SOURCE);
-    }
-
-    // Inject DocumentId Polyfill if needed
-    if (
-      firefoxManifest.background?.scripts?.includes(
-        "__floorp_polyfills__/DocumentIdPolyfill.js",
-      )
-    ) {
-      log("Injecting DocumentId Polyfill source...");
-      outputFiles["__floorp_polyfills__/DocumentIdPolyfill.js"] =
-        new TextEncoder().encode(DOCUMENT_ID_POLYFILL_SOURCE);
-    }
+    outputFiles["manifest.json"] = new Uint8Array(
+      new TextEncoder().encode(manifestJson),
+    );
+    outputFiles[ORIGINAL_MANIFEST_PATH] = manifestBytes;
 
     // Process other files
     let processedCount = 0;
@@ -281,13 +335,18 @@ export class CRXConverterClass {
       if (this.options.validateCode && isJavaScriptFile(filename)) {
         const content = new TextDecoder().decode(data);
         if (mightContainUnsupportedPatterns(content)) {
-          const error = validateSourceCode(filename, content);
-          if (error) {
+          const validation = validateSourceCodeFull(filename, content);
+          if (!validation.valid) {
             throw new CWSError(
               CWSErrorCode.UNSUPPORTED_CODE,
-              `${error} in ${filename}`,
+              `${validation.errors[0].message} in ${filename}`,
             );
           }
+          warnings.push(
+            ...validation.warnings.map(
+              (warning) => `${filename}: ${warning.message}`,
+            ),
+          );
         }
       }
 
@@ -295,18 +354,26 @@ export class CRXConverterClass {
       if (this.options.sanitizeDNR && dnrRuleFiles.has(filename)) {
         try {
           const jsonString = new TextDecoder().decode(data);
-          const rules = JSON.parse(jsonString) as unknown[];
-          const sanitizedRules = sanitizeDNRRules(rules);
-          const sanitizedJson = JSON.stringify(sanitizedRules, null, 2);
-          outputFiles[filename] = new TextEncoder().encode(sanitizedJson);
-        } catch (e) {
-          // Fallback to original with warning
+          const rules: unknown = JSON.parse(jsonString);
+          const sanitized = sanitizeDNRRulesFull(rules);
+          if (sanitized.rejectedRules > 0) {
+            throw new TypeError(sanitized.warnings.join("; "));
+          }
           warnings.push(
-            `Failed to sanitize DNR rules in ${filename}: ${
+            ...sanitized.warnings.map((warning) => `${filename}: ${warning}`),
+          );
+          const sanitizedJson = JSON.stringify(sanitized.rules, null, 2);
+          outputFiles[filename] = new Uint8Array(
+            new TextEncoder().encode(sanitizedJson),
+          );
+        } catch (e) {
+          throw new CWSError(
+            CWSErrorCode.VALIDATION_ERROR,
+            `Incompatible DNR rules in ${filename}: ${
               e instanceof Error ? e.message : String(e)
             }`,
+            e,
           );
-          outputFiles[filename] = data;
         }
       } else {
         // Copy as-is
@@ -323,6 +390,22 @@ export class CRXConverterClass {
 
     log(`Processed ${processedCount} entries`);
 
+    const report: ChromeConversionReport = {
+      schemaVersion: 1,
+      chromeId: extensionId,
+      addonId: generateFirefoxId(extensionId),
+      originalVersion: parsedManifest.version,
+      originalManifestPath: ORIGINAL_MANIFEST_PATH,
+      signature,
+      warnings: [...warnings],
+      removedPermissions: [...transformed.removedPermissions],
+    };
+    outputFiles[CONVERSION_REPORT_PATH] = new Uint8Array(
+      new TextEncoder().encode(
+        JSON.stringify(report, null, 2),
+      ),
+    );
+
     // Yield before final zip
     await yieldToEventLoop();
 
@@ -334,6 +417,7 @@ export class CRXConverterClass {
     return {
       modifiedZip: outputZip.buffer as ArrayBuffer,
       originalManifest: parsedManifest,
+      report,
       warnings,
     };
   }

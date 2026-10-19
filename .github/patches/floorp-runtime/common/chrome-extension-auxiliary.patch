@@ -1,0 +1,1854 @@
+diff --git a/toolkit/components/extensions/child/ext-toolkit.js b/toolkit/components/extensions/child/ext-toolkit.js
+index 2d8f434..41fba34 100644
+--- a/toolkit/components/extensions/child/ext-toolkit.js
++++ b/toolkit/components/extensions/child/ext-toolkit.js
+@@ -66,6 +66,11 @@ extensions.registerModules({
+     scopes: ["addon_child"],
+     paths: [["userScripts", "register"]],
+   },
++  tts: {
++    url: "chrome://extensions/content/child/ext-tts.js",
++    scopes: ["addon_child"],
++    paths: [["tts", "speak"]],
++  },
+   userScriptsContent: {
+     url: "chrome://extensions/content/child/ext-userScripts-content.js",
+     scopes: ["content_child"],
+diff --git a/toolkit/components/extensions/child/ext-tts.js b/toolkit/components/extensions/child/ext-tts.js
+new file mode 100644
+index 0000000..02c0bb6
+--- /dev/null
++++ b/toolkit/components/extensions/child/ext-tts.js
+@@ -0,0 +1,40 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++this.tts = class extends ExtensionAPI {
++  getAPI(context) {
++    const callbacks = new Map();
++    let nextId = 0;
++    const onEvent = (event) => {
++      const callback = callbacks.get(event.srcId);
++      if (!callback) return;
++      if (event.isFinalEvent) callbacks.delete(event.srcId);
++      const publicEvent = { ...event };
++      delete publicEvent.srcId;
++      delete publicEvent.isFinalEvent;
++      context.runSafe(callback, publicEvent);
++    };
++    context.childManager.getParentEvent("tts.onEvent").addListener(onEvent);
++    context.callOnClose({ close: () => callbacks.clear() });
++    return {
++      tts: {
++        speak(text, options, callback) {
++          const srcId = ++nextId;
++          const cleanOptions = { ...options };
++          if (cleanOptions.onEvent) callbacks.set(srcId, cleanOptions.onEvent);
++          delete cleanOptions.onEvent;
++          const result = context.childManager.callParentAsyncFunction(
++            "tts.speak",
++            [text, cleanOptions, srcId],
++            callback,
++          );
++          result?.catch(() => callbacks.delete(srcId));
++          return result;
++        },
++      },
++    };
++  }
++};
+diff --git a/toolkit/components/extensions/ext-toolkit.json b/toolkit/components/extensions/ext-toolkit.json
+index 38a435e..f1c2f79 100644
+--- a/toolkit/components/extensions/ext-toolkit.json
++++ b/toolkit/components/extensions/ext-toolkit.json
+@@ -70,6 +70,32 @@
+     "scopes": ["addon_parent"],
+     "paths": [["activityLog"]]
+   },
++  "fontSettings": {
++    "url": "chrome://extensions/content/parent/ext-fontSettings.js",
++    "schema": "chrome://extensions/content/schemas/font_settings.json",
++    "scopes": [
++      "addon_parent"
++    ],
++    "settings": true,
++    "paths": [
++      [
++        "fontSettings"
++      ]
++    ]
++  },
++  "tts": {
++    "url": "chrome://extensions/content/parent/ext-tts.js",
++    "schema": "chrome://extensions/content/schemas/tts.json",
++    "scopes": [
++      "addon_parent"
++    ],
++    "settings": false,
++    "paths": [
++      [
++        "tts"
++      ]
++    ]
++  },
+   "i18n": {
+     "url": "chrome://extensions/content/parent/ext-i18n.js",
+     "schema": "chrome://extensions/content/schemas/i18n.json",
+diff --git a/toolkit/components/extensions/jar.mn b/toolkit/components/extensions/jar.mn
+index c889b6c..0f4bf0e 100644
+--- a/toolkit/components/extensions/jar.mn
++++ b/toolkit/components/extensions/jar.mn
+@@ -28,6 +28,9 @@ toolkit.jar:
+ #ifndef ANDROID
+     content/extensions/parent/ext-geckoProfiler.js (parent/ext-geckoProfiler.js)
+ #endif
++    content/extensions/parent/ext-fontSettings.js (parent/ext-fontSettings.js)
++    content/extensions/parent/ext-tts.js (parent/ext-tts.js)
++    content/extensions/child/ext-tts.js (child/ext-tts.js)
+     content/extensions/parent/ext-i18n.js (parent/ext-i18n.js)
+ #ifndef ANDROID
+     content/extensions/parent/ext-identity.js (parent/ext-identity.js)
+diff --git a/toolkit/components/extensions/parent/ext-fontSettings.js b/toolkit/components/extensions/parent/ext-fontSettings.js
+new file mode 100644
+index 0000000..6bc95bd
+--- /dev/null
++++ b/toolkit/components/extensions/parent/ext-fontSettings.js
+@@ -0,0 +1,366 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
++  "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
++);
++var { ExtensionError } = ExtensionUtils;
++var { EventManager } = ExtensionCommon;
++const FAMILIES = [
++  "standard",
++  "sansserif",
++  "serif",
++  "fixed",
++  "cursive",
++  "fantasy",
++  "math",
++];
++const SCRIPTS = [
++  "Afak",
++  "Arab",
++  "Armi",
++  "Armn",
++  "Avst",
++  "Bali",
++  "Bamu",
++  "Bass",
++  "Batk",
++  "Beng",
++  "Blis",
++  "Bopo",
++  "Brah",
++  "Brai",
++  "Bugi",
++  "Buhd",
++  "Cakm",
++  "Cans",
++  "Cari",
++  "Cham",
++  "Cher",
++  "Cirt",
++  "Copt",
++  "Cprt",
++  "Cyrl",
++  "Cyrs",
++  "Deva",
++  "Dsrt",
++  "Dupl",
++  "Egyd",
++  "Egyh",
++  "Egyp",
++  "Elba",
++  "Ethi",
++  "Geor",
++  "Geok",
++  "Glag",
++  "Goth",
++  "Gran",
++  "Grek",
++  "Gujr",
++  "Guru",
++  "Hang",
++  "Hani",
++  "Hano",
++  "Hans",
++  "Hant",
++  "Hebr",
++  "Hluw",
++  "Hmng",
++  "Hung",
++  "Inds",
++  "Ital",
++  "Java",
++  "Jpan",
++  "Jurc",
++  "Kali",
++  "Khar",
++  "Khmr",
++  "Khoj",
++  "Knda",
++  "Kpel",
++  "Kthi",
++  "Lana",
++  "Laoo",
++  "Latf",
++  "Latg",
++  "Latn",
++  "Lepc",
++  "Limb",
++  "Lina",
++  "Linb",
++  "Lisu",
++  "Loma",
++  "Lyci",
++  "Lydi",
++  "Mand",
++  "Mani",
++  "Maya",
++  "Mend",
++  "Merc",
++  "Mero",
++  "Mlym",
++  "Moon",
++  "Mong",
++  "Mroo",
++  "Mtei",
++  "Mymr",
++  "Narb",
++  "Nbat",
++  "Nkgb",
++  "Nkoo",
++  "Nshu",
++  "Ogam",
++  "Olck",
++  "Orkh",
++  "Orya",
++  "Osma",
++  "Palm",
++  "Perm",
++  "Phag",
++  "Phli",
++  "Phlp",
++  "Phlv",
++  "Phnx",
++  "Plrd",
++  "Prti",
++  "Rjng",
++  "Roro",
++  "Runr",
++  "Samr",
++  "Sara",
++  "Sarb",
++  "Saur",
++  "Sgnw",
++  "Shaw",
++  "Shrd",
++  "Sind",
++  "Sinh",
++  "Sora",
++  "Sund",
++  "Sylo",
++  "Syrc",
++  "Syre",
++  "Syrj",
++  "Syrn",
++  "Tagb",
++  "Takr",
++  "Tale",
++  "Talu",
++  "Taml",
++  "Tang",
++  "Tavt",
++  "Telu",
++  "Teng",
++  "Tfng",
++  "Tglg",
++  "Thaa",
++  "Thai",
++  "Tibt",
++  "Tirh",
++  "Ugar",
++  "Vaii",
++  "Visp",
++  "Wara",
++  "Wole",
++  "Xpeo",
++  "Xsux",
++  "Yiii",
++  "Zmth",
++  "Zsym",
++  "Zyyy",
++];
++const FONT_ENUMERATOR = Cc["@mozilla.org/gfx/fontenumerator;1"].getService(
++  Ci.nsIFontEnumerator,
++);
++const GROUPS = Services.prefs.getChildList("font.size.variable.").map((p) =>
++  p.slice("font.size.variable.".length)
++);
++const SIZE_SETTINGS = {
++  DefaultFontSize: { prefix: "font.size.variable.", fallback: 16 },
++  DefaultFixedFontSize: { prefix: "font.size.monospace.", fallback: 13 },
++  MinimumFontSize: { prefix: "font.minimum-size.", fallback: 0 },
++};
++
++function fontPref(script, generic) {
++  return `font.chrome.${generic}.${script}`;
++}
++function settingName(script, generic) {
++  return `fontSettings.${generic}.${script}`;
++}
++function nativeFamily(generic) {
++  if (generic === "standard") {
++    return Services.prefs.getStringPref("font.default.x-western", "serif");
++  }
++  return { sansserif: "sans-serif", fixed: "monospace" }[generic] || generic;
++}
++function fontValue(script, generic) {
++  const value = Services.prefs.getStringPref(fontPref(script, generic), "");
++  if (value || script !== "Zyyy") {
++    return value ? FONT_ENUMERATOR.getStandardFamilyName(value) || value : "";
++  }
++  const family = nativeFamily(generic);
++  return Services.prefs.getStringPref(`font.name.${family}.x-western`, "") ||
++    FONT_ENUMERATOR.getDefaultFont("x-western", family) || "";
++}
++for (const script of SCRIPTS) {
++  for (const generic of FAMILIES) {
++    const pref = fontPref(script, generic);
++    ExtensionPreferencesManager.addSetting(settingName(script, generic), {
++      permission: "fontSettings",
++      prefNames: [pref],
++      setCallback: (value) => ({ [pref]: value }),
++      getCallback: () => Services.prefs.getStringPref(pref, ""),
++    });
++  }
++}
++for (const [suffix, { prefix, fallback }] of Object.entries(SIZE_SETTINGS)) {
++  const prefNames = GROUPS.map((group) => prefix + group);
++  ExtensionPreferencesManager.addSetting(`fontSettings.${suffix}`, {
++    permission: "fontSettings",
++    prefNames,
++    setCallback: (value) =>
++      Object.fromEntries(prefNames.map((pref) => [pref, value])),
++    getCallback: () =>
++      Services.prefs.getIntPref(prefix + "x-western", fallback),
++  });
++}
++
++this.fontSettings = class extends ExtensionAPIPersistent {
++  PERSISTENT_EVENTS = {
++    onFontChanged: ({ fire }) => this.registerChange(fire, "onFontChanged"),
++    onDefaultFontSizeChanged: ({ fire }) =>
++      this.registerChange(fire, "onDefaultFontSizeChanged"),
++    onDefaultFixedFontSizeChanged: ({ fire }) =>
++      this.registerChange(fire, "onDefaultFixedFontSizeChanged"),
++    onMinimumFontSizeChanged: ({ fire }) =>
++      this.registerChange(fire, "onMinimumFontSizeChanged"),
++  };
++
++  registerChange(fire, event) {
++    let listener = fire;
++    const observer = {
++      observe: (_subject, _topic, pref) => {
++        let details;
++        let name;
++        if (event === "onFontChanged") {
++          const match = /^font\.chrome\.([^.]+)\.([^.]+)$/.exec(pref);
++          if (!match) return;
++          const [, genericFamily, script] = match;
++          name = settingName(script, genericFamily);
++          details = {
++            fontId: fontValue(script, genericFamily),
++            script,
++            genericFamily,
++          };
++        } else {
++          const suffix = event.slice(2, -"Changed".length);
++          const setting = SIZE_SETTINGS[suffix];
++          if (pref !== setting.prefix + "x-western") return;
++          name = `fontSettings.${suffix}`;
++          details = {
++            pixelSize: Services.prefs.getIntPref(pref, setting.fallback),
++          };
++        }
++        ExtensionPreferencesManager.getLevelOfControl(this.extension.id, name)
++          .then(async (levelOfControl) => {
++            await listener.wakeup?.();
++            listener.async({ ...details, levelOfControl });
++          }).catch(Cu.reportError);
++      },
++    };
++    const prefix = event === "onFontChanged"
++      ? "font.chrome."
++      : SIZE_SETTINGS[event.slice(2, -"Changed".length)].prefix;
++    Services.prefs.addObserver(prefix, observer);
++    return {
++      unregister: () => Services.prefs.removeObserver(prefix, observer),
++      convert: (newFire) => {
++        listener = newFire;
++      },
++    };
++  }
++
++  getAPI(context) {
++    if (!ExtensionUtils.getChromeExtensionId(this.extension)) {
++      return {};
++    }
++    const id = this.extension.id;
++    const api = {};
++    const assertWritable = async (name) => {
++      if (
++        await ExtensionPreferencesManager.getLevelOfControl(id, name) ===
++          "not_controllable"
++      ) {
++        throw new ExtensionError(
++          "This font preference is locked by browser policy.",
++        );
++      }
++    };
++    api.getFontList = async () =>
++      (await FONT_ENUMERATOR.EnumerateAllFontsAsync())
++        .filter((font) =>
++          !["serif", "sans-serif", "monospace", "math"].includes(font)
++        )
++        .map((font) => ({ fontId: font, displayName: font }));
++    api.getFont = async ({ script = "Zyyy", genericFamily }) => ({
++      fontId: fontValue(script, genericFamily),
++      levelOfControl: await ExtensionPreferencesManager.getLevelOfControl(
++        id,
++        settingName(script, genericFamily),
++      ),
++    });
++    api.setFont = async ({ script = "Zyyy", genericFamily, fontId }) => {
++      if (
++        !Services.prefs.getBoolPref("floorp.chrome.fontSettings.native", false)
++      ) {
++        throw new ExtensionError(
++          "Script font settings require the compiled Floorp font backend.",
++        );
++      }
++      const name = settingName(script, genericFamily);
++      await assertWritable(name);
++      await ExtensionPreferencesManager.setSetting(id, name, fontId);
++    };
++    api.clearFont = async ({ script = "Zyyy", genericFamily }) => {
++      await ExtensionPreferencesManager.removeSetting(
++        id,
++        settingName(script, genericFamily),
++      );
++    };
++    for (
++      const [suffix, { prefix, fallback }] of Object.entries(SIZE_SETTINGS)
++    ) {
++      const name = `fontSettings.${suffix}`;
++      api[`get${suffix}`] = async () => ({
++        pixelSize: Services.prefs.getIntPref(prefix + "x-western", fallback),
++        levelOfControl: await ExtensionPreferencesManager.getLevelOfControl(
++          id,
++          name,
++        ),
++      });
++      api[`set${suffix}`] = async ({ pixelSize }) => {
++        if (pixelSize < 0 || pixelSize > 2147483647) {
++          throw new ExtensionError(
++            "Font size must be between 0 and 2147483647 pixels.",
++          );
++        }
++        await assertWritable(name);
++        await ExtensionPreferencesManager.setSetting(id, name, pixelSize);
++      };
++      api[`clear${suffix}`] = async () =>
++        ExtensionPreferencesManager.removeSetting(id, name);
++    }
++    for (const event of Object.keys(this.PERSISTENT_EVENTS)) {
++      api[event] = new EventManager({
++        context,
++        module: "fontSettings",
++        event,
++        extensionApi: this,
++      }).api();
++    }
++    return { fontSettings: api };
++  }
++};
+diff --git a/toolkit/components/extensions/parent/ext-tts.js b/toolkit/components/extensions/parent/ext-tts.js
+new file mode 100644
+index 0000000..e1d8a91
+--- /dev/null
++++ b/toolkit/components/extensions/parent/ext-tts.js
+@@ -0,0 +1,321 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++var { ExtensionError } = ExtensionUtils;
++var { EventManager } = ExtensionCommon;
++const FINAL_EVENTS = new Set(["end", "interrupted", "cancelled", "error"]);
++const TtsEngine = {
++  host: null,
++  pending: [],
++  active: null,
++  paused: false,
++  listeners: new Map(),
++  voiceListeners: new Set(),
++
++  ensureHost() {
++    if (this.host) return;
++    this.host = Services.appShell.createWindowlessBrowser(true);
++    const principal = Services.scriptSecurityManager.getSystemPrincipal();
++    this.host.docShell.createAboutBlankDocumentViewer(principal, principal);
++    this.window = this.host.document.defaultView;
++    this.synth = this.window.speechSynthesis;
++    this.synth.addEventListener("voiceschanged", () => {
++      for (const listener of this.voiceListeners) listener();
++    });
++  },
++
++  async voices() {
++    this.ensureHost();
++    if (!this.synth.getVoices().length) {
++      await new Promise((resolve) => {
++        const done = () => {
++          this.window.clearTimeout(timer);
++          this.synth.removeEventListener("voiceschanged", done);
++          resolve();
++        };
++        const timer = this.window.setTimeout(done, 2000);
++        this.synth.addEventListener("voiceschanged", done);
++      });
++    }
++    return this.synth.getVoices();
++  },
++
++  eventTypes(voice) {
++    const types = ["start", "end", "interrupted", "cancelled", "error"];
++    if (
++      Services.appinfo.OS !== "Linux" ||
++      Services.prefs.getBoolPref("floorp.chrome.tts.native", false)
++    ) {
++      types.push("word", "pause", "resume");
++      if (Services.appinfo.OS === "WINNT" || Services.appinfo.OS === "Linux") {
++        types.push("sentence");
++      }
++    }
++    return types;
++  },
++
++  dispatch(job, type, data = {}) {
++    if (job.finished) return;
++    const isFinalEvent = FINAL_EVENTS.has(type);
++    const event = {
++      type,
++      charIndex: job.charIndex || 0,
++      ...data,
++      srcId: job.srcId,
++      isFinalEvent,
++    };
++    if (isFinalEvent) job.finished = true;
++    if (
++      isFinalEvent || !job.options.desiredEventTypes ||
++      job.options.desiredEventTypes.includes(type)
++    ) {
++      for (const fire of this.listeners.get(job.context) || []) {
++        fire.async(event);
++      }
++    }
++  },
++
++  async speak(context, text, options = {}, srcId = 0) {
++    if (text.length > 32768) {
++      throw new ExtensionError("Utterance exceeds 32768 characters.");
++    }
++    if (options.extensionId) {
++      throw new ExtensionError(
++        "Extension-provided speech engines are not installed.",
++      );
++    }
++    if (options.lang) {
++      try {
++        new Intl.Locale(options.lang);
++      } catch {
++        throw new ExtensionError("Invalid speech language tag.");
++      }
++    }
++    const voices = await this.voices();
++    let voice = options.voiceName
++      ? voices.find((v) => v.name === options.voiceName)
++      : null;
++    if (options.voiceName && !voice) {
++      throw new ExtensionError("Requested speech voice is unavailable.");
++    }
++    if (!voice && options.lang) {
++      voice = voices.find((v) =>
++        v.lang.toLowerCase() === options.lang.toLowerCase()
++      ) ||
++        voices.find((v) =>
++          v.lang.split("-")[0].toLowerCase() ===
++            options.lang.split("-")[0].toLowerCase()
++        );
++    }
++    voice ||= voices.find((v) => v.default) || voices[0];
++    if (!voice) {
++      throw new ExtensionError(
++        "No native speech synthesis voice is available.",
++      );
++    }
++    const supported = this.eventTypes(voice);
++    if (
++      (options.requiredEventTypes || []).some((type) =>
++        !supported.includes(type)
++      )
++    ) {
++      throw new ExtensionError(
++        "No native voice supports all required speech events.",
++      );
++    }
++    if (/^\s*<speak[\s>]/i.test(text)) {
++      const parsed = new this.window.DOMParser().parseFromString(
++        text,
++        "application/xml",
++      );
++      if (
++        parsed.querySelector("parsererror") ||
++        parsed.documentElement.localName !== "speak"
++      ) {
++        throw new ExtensionError("Invalid SSML document.");
++      }
++      text = parsed.documentElement.textContent;
++    }
++    if (!options.enqueue) this.stop();
++    const job = {
++      context,
++      extension: context.extension,
++      srcId,
++      text,
++      options,
++      voice,
++      started: false,
++      finished: false,
++      charIndex: 0,
++    };
++    this.pending.push(job);
++    this.startNext();
++  },
++
++  startNext() {
++    if (this.active || this.paused || !this.pending.length) return;
++    const job = this.active = this.pending.shift();
++    const utterance = job.utterance = new this.window.SpeechSynthesisUtterance(
++      job.text,
++    );
++    utterance.voice = job.voice;
++    for (const key of ["lang", "rate", "pitch", "volume"]) {
++      if (job.options[key] !== undefined) utterance[key] = job.options[key];
++    }
++    utterance.addEventListener("start", () => {
++      job.started = true;
++      this.dispatch(job, "start");
++    });
++    utterance.addEventListener("boundary", (event) => {
++      job.charIndex = event.charIndex;
++      this.dispatch(job, event.name === "sentence" ? "sentence" : "word", {
++        charIndex: event.charIndex,
++        length: event.charLength || -1,
++      });
++    });
++    utterance.addEventListener(
++      "pause",
++      (event) => this.dispatch(job, "pause", { charIndex: event.charIndex }),
++    );
++    utterance.addEventListener(
++      "resume",
++      (event) => this.dispatch(job, "resume", { charIndex: event.charIndex }),
++    );
++    const finish = (type, data) => {
++      if (job.finished) return;
++      this.dispatch(job, type, data);
++      if (this.active === job) this.active = null;
++      this.startNext();
++    };
++    utterance.addEventListener(
++      "end",
++      () => finish("end", { charIndex: job.text.length }),
++    );
++    utterance.addEventListener(
++      "error",
++      (event) => finish("error", { errorMessage: event.error }),
++    );
++    try {
++      this.synth.speak(utterance);
++    } catch (error) {
++      finish("error", { errorMessage: error.message });
++    }
++  },
++
++  stop(extension = null) {
++    this.ensureHost();
++    if (this.active && (!extension || this.active.extension === extension)) {
++      const job = this.active;
++      this.active = null;
++      this.dispatch(job, job.started ? "interrupted" : "cancelled");
++      this.synth.cancel();
++    }
++    this.pending = this.pending.filter((job) => {
++      if (extension && job.extension !== extension) return true;
++      this.dispatch(job, "cancelled");
++      return false;
++    });
++    if (!extension) {
++      this.paused = false;
++      this.synth.resume();
++    }
++    this.startNext();
++  },
++
++  pause() {
++    this.ensureHost();
++    this.assertPauseSupported();
++    this.paused = true;
++    this.synth.pause();
++  },
++  resume() {
++    this.ensureHost();
++    this.assertPauseSupported();
++    this.paused = false;
++    this.synth.resume();
++    this.startNext();
++  },
++  assertPauseSupported() {
++    if (
++      Services.appinfo.OS === "Linux" &&
++      !Services.prefs.getBoolPref("floorp.chrome.tts.native", false)
++    ) {
++      throw new ExtensionError(
++        "Speech pause/resume require the compiled Floorp speech backend.",
++      );
++    }
++  },
++};
++
++this.tts = class extends ExtensionAPIPersistent {
++  PERSISTENT_EVENTS = {
++    onVoicesChanged: ({ fire }) => {
++      let listener = fire;
++      TtsEngine.ensureHost();
++      const notify = async () => {
++        await listener.wakeup?.();
++        listener.async();
++      };
++      TtsEngine.voiceListeners.add(notify);
++      return {
++        unregister: () => TtsEngine.voiceListeners.delete(notify),
++        convert: (newFire) => {
++          listener = newFire;
++        },
++      };
++    },
++  };
++  onShutdown() {
++    TtsEngine.stop(this.extension);
++  }
++  getAPI(context) {
++    if (!ExtensionUtils.getChromeExtensionId(this.extension)) return {};
++    return {
++      tts: {
++        speak: (text, options, srcId) =>
++          TtsEngine.speak(context, text, options || {}, srcId),
++        stop: () => TtsEngine.stop(),
++        pause: () => TtsEngine.pause(),
++        resume: () => TtsEngine.resume(),
++        isSpeaking: async () => {
++          TtsEngine.ensureHost();
++          return !!TtsEngine.active || !!TtsEngine.pending.length ||
++            TtsEngine.synth.speaking;
++        },
++        getVoices: async () =>
++          (await TtsEngine.voices()).map((voice) => ({
++            voiceName: voice.name,
++            lang: voice.lang,
++            remote: !voice.localService,
++            eventTypes: TtsEngine.eventTypes(voice),
++          })),
++        onEvent: new EventManager({
++          context,
++          name: "tts.onEvent",
++          register: (fire) => {
++            let listeners = TtsEngine.listeners.get(context);
++            if (!listeners) {
++              TtsEngine.listeners.set(context, listeners = new Set());
++            }
++            listeners.add(fire);
++            return () => {
++              listeners.delete(fire);
++              if (!listeners.size) {
++                TtsEngine.listeners.delete(context);
++              }
++            };
++          },
++        }).api(),
++        onVoicesChanged: new EventManager({
++          context,
++          module: "tts",
++          event: "onVoicesChanged",
++          extensionApi: this,
++        }).api(),
++      },
++    };
++  }
++};
+diff --git a/toolkit/components/extensions/schemas/font_settings.json b/toolkit/components/extensions/schemas/font_settings.json
+new file mode 100644
+index 0000000..5c16f09
+--- /dev/null
++++ b/toolkit/components/extensions/schemas/font_settings.json
+@@ -0,0 +1,694 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "OptionalPermission",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "fontSettings"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "fontSettings",
++    "description": "Use the <code>chrome.fontSettings</code> API to manage Chrome's font settings.",
++    "types": [
++      {
++        "id": "FontName",
++        "type": "object",
++        "description": "Represents a font name.",
++        "properties": {
++          "fontId": {
++            "type": "string",
++            "description": "The font ID."
++          },
++          "displayName": {
++            "type": "string",
++            "description": "The display name of the font."
++          }
++        }
++      },
++      {
++        "id": "ScriptCode",
++        "type": "string",
++        "enum": [
++          "Afak",
++          "Arab",
++          "Armi",
++          "Armn",
++          "Avst",
++          "Bali",
++          "Bamu",
++          "Bass",
++          "Batk",
++          "Beng",
++          "Blis",
++          "Bopo",
++          "Brah",
++          "Brai",
++          "Bugi",
++          "Buhd",
++          "Cakm",
++          "Cans",
++          "Cari",
++          "Cham",
++          "Cher",
++          "Cirt",
++          "Copt",
++          "Cprt",
++          "Cyrl",
++          "Cyrs",
++          "Deva",
++          "Dsrt",
++          "Dupl",
++          "Egyd",
++          "Egyh",
++          "Egyp",
++          "Elba",
++          "Ethi",
++          "Geor",
++          "Geok",
++          "Glag",
++          "Goth",
++          "Gran",
++          "Grek",
++          "Gujr",
++          "Guru",
++          "Hang",
++          "Hani",
++          "Hano",
++          "Hans",
++          "Hant",
++          "Hebr",
++          "Hluw",
++          "Hmng",
++          "Hung",
++          "Inds",
++          "Ital",
++          "Java",
++          "Jpan",
++          "Jurc",
++          "Kali",
++          "Khar",
++          "Khmr",
++          "Khoj",
++          "Knda",
++          "Kpel",
++          "Kthi",
++          "Lana",
++          "Laoo",
++          "Latf",
++          "Latg",
++          "Latn",
++          "Lepc",
++          "Limb",
++          "Lina",
++          "Linb",
++          "Lisu",
++          "Loma",
++          "Lyci",
++          "Lydi",
++          "Mand",
++          "Mani",
++          "Maya",
++          "Mend",
++          "Merc",
++          "Mero",
++          "Mlym",
++          "Moon",
++          "Mong",
++          "Mroo",
++          "Mtei",
++          "Mymr",
++          "Narb",
++          "Nbat",
++          "Nkgb",
++          "Nkoo",
++          "Nshu",
++          "Ogam",
++          "Olck",
++          "Orkh",
++          "Orya",
++          "Osma",
++          "Palm",
++          "Perm",
++          "Phag",
++          "Phli",
++          "Phlp",
++          "Phlv",
++          "Phnx",
++          "Plrd",
++          "Prti",
++          "Rjng",
++          "Roro",
++          "Runr",
++          "Samr",
++          "Sara",
++          "Sarb",
++          "Saur",
++          "Sgnw",
++          "Shaw",
++          "Shrd",
++          "Sind",
++          "Sinh",
++          "Sora",
++          "Sund",
++          "Sylo",
++          "Syrc",
++          "Syre",
++          "Syrj",
++          "Syrn",
++          "Tagb",
++          "Takr",
++          "Tale",
++          "Talu",
++          "Taml",
++          "Tang",
++          "Tavt",
++          "Telu",
++          "Teng",
++          "Tfng",
++          "Tglg",
++          "Thaa",
++          "Thai",
++          "Tibt",
++          "Tirh",
++          "Ugar",
++          "Vaii",
++          "Visp",
++          "Wara",
++          "Wole",
++          "Xpeo",
++          "Xsux",
++          "Yiii",
++          "Zmth",
++          "Zsym",
++          "Zyyy"
++        ],
++        "description": "An ISO 15924 script code. The default, or global, script is represented by script code \"Zyyy\"."
++      },
++      {
++        "id": "GenericFamily",
++        "type": "string",
++        "enum": [
++          "standard",
++          "sansserif",
++          "serif",
++          "fixed",
++          "cursive",
++          "fantasy",
++          "math"
++        ],
++        "description": "A CSS generic font family."
++      },
++      {
++        "id": "LevelOfControl",
++        "description": "One of<br><var>not_controllable</var>: cannot be controlled by any extension<br><var>controlled_by_other_extensions</var>: controlled by extensions with higher precedence<br><var>controllable_by_this_extension</var>: can be controlled by this extension<br><var>controlled_by_this_extension</var>: controlled by this extension",
++        "type": "string",
++        "enum": [
++          "not_controllable",
++          "controlled_by_other_extensions",
++          "controllable_by_this_extension",
++          "controlled_by_this_extension"
++        ]
++      }
++    ],
++    "functions": [
++      {
++        "name": "clearFont",
++        "description": "Clears the font set by this extension, if any.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "script": {
++                "$ref": "ScriptCode",
++                "description": "The script for which the font should be cleared. If omitted, the global script font setting is cleared.",
++                "optional": true
++              },
++              "genericFamily": {
++                "$ref": "GenericFamily",
++                "description": "The generic font family for which the font should be cleared."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "getFont",
++        "description": "Gets the font for a given script and generic font family.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "script": {
++                "$ref": "ScriptCode",
++                "description": "The script for which the font should be retrieved. If omitted, the font setting for the global script (script code \"Zyyy\") is retrieved.",
++                "optional": true
++              },
++              "genericFamily": {
++                "$ref": "GenericFamily",
++                "description": "The generic font family for which the font should be retrieved."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "fontId": {
++                    "type": "string",
++                    "description": "The font ID. Rather than the literal font ID preference value, this may be the ID of the font that the system resolves the preference value to. So, <var>fontId</var> can differ from the font passed to <code>setFont</code>, if, for example, the font is not available on the system. The empty string signifies fallback to the global script font setting."
++                  },
++                  "levelOfControl": {
++                    "$ref": "LevelOfControl",
++                    "description": "The level of control this extension has over the setting."
++                  }
++                }
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "setFont",
++        "description": "Sets the font for a given script and generic font family.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "script": {
++                "$ref": "ScriptCode",
++                "description": "The script code which the font should be set. If omitted, the font setting for the global script (script code \"Zyyy\") is set.",
++                "optional": true
++              },
++              "genericFamily": {
++                "$ref": "GenericFamily",
++                "description": "The generic font family for which the font should be set."
++              },
++              "fontId": {
++                "type": "string",
++                "description": "The font ID. The empty string means to fallback to the global script font setting."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "getFontList",
++        "description": "Gets a list of fonts on the system.",
++        "parameters": [
++          {
++            "name": "callback",
++            "parameters": [
++              {
++                "name": "results",
++                "type": "array",
++                "items": {
++                  "$ref": "FontName"
++                }
++              }
++            ],
++            "type": "function",
++            "optional": true
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "clearDefaultFontSize",
++        "description": "Clears the default font size set by this extension, if any.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "getDefaultFontSize",
++        "description": "Gets the default font size.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "pixelSize": {
++                    "type": "integer",
++                    "description": "The font size in pixels."
++                  },
++                  "levelOfControl": {
++                    "$ref": "LevelOfControl",
++                    "description": "The level of control this extension has over the setting."
++                  }
++                }
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "setDefaultFontSize",
++        "description": "Sets the default font size.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "clearDefaultFixedFontSize",
++        "description": "Clears the default fixed font size set by this extension, if any.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "getDefaultFixedFontSize",
++        "description": "Gets the default size for fixed width fonts.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "pixelSize": {
++                    "type": "integer",
++                    "description": "The font size in pixels."
++                  },
++                  "levelOfControl": {
++                    "$ref": "LevelOfControl",
++                    "description": "The level of control this extension has over the setting."
++                  }
++                }
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "setDefaultFixedFontSize",
++        "description": "Sets the default size for fixed width fonts.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "clearMinimumFontSize",
++        "description": "Clears the minimum font size set by this extension, if any.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "getMinimumFontSize",
++        "description": "Gets the minimum font size.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "optional": true,
++            "description": "This parameter is currently unused.",
++            "properties": {}
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "pixelSize": {
++                    "type": "integer",
++                    "description": "The font size in pixels."
++                  },
++                  "levelOfControl": {
++                    "$ref": "LevelOfControl",
++                    "description": "The level of control this extension has over the setting."
++                  }
++                }
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      },
++      {
++        "name": "setMinimumFontSize",
++        "description": "Sets the minimum font size.",
++        "parameters": [
++          {
++            "name": "details",
++            "type": "object",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              }
++            }
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "type": "function",
++        "async": "callback"
++      }
++    ],
++    "events": [
++      {
++        "name": "onFontChanged",
++        "description": "Fired when a font setting changes.",
++        "parameters": [
++          {
++            "type": "object",
++            "name": "details",
++            "properties": {
++              "fontId": {
++                "type": "string",
++                "description": "The font ID. See the description in <code>getFont</code>."
++              },
++              "script": {
++                "$ref": "ScriptCode",
++                "description": "The script code for which the font setting has changed.",
++                "optional": true
++              },
++              "genericFamily": {
++                "$ref": "GenericFamily",
++                "description": "The generic font family for which the font setting has changed."
++              },
++              "levelOfControl": {
++                "$ref": "LevelOfControl",
++                "description": "The level of control this extension has over the setting."
++              }
++            }
++          }
++        ],
++        "type": "function"
++      },
++      {
++        "name": "onDefaultFontSizeChanged",
++        "description": "Fired when the default font size setting changes.",
++        "parameters": [
++          {
++            "type": "object",
++            "name": "details",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              },
++              "levelOfControl": {
++                "$ref": "LevelOfControl",
++                "description": "The level of control this extension has over the setting."
++              }
++            }
++          }
++        ],
++        "type": "function"
++      },
++      {
++        "name": "onDefaultFixedFontSizeChanged",
++        "description": "Fired when the default fixed font size setting changes.",
++        "parameters": [
++          {
++            "type": "object",
++            "name": "details",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              },
++              "levelOfControl": {
++                "$ref": "LevelOfControl",
++                "description": "The level of control this extension has over the setting."
++              }
++            }
++          }
++        ],
++        "type": "function"
++      },
++      {
++        "name": "onMinimumFontSizeChanged",
++        "description": "Fired when the minimum font size setting changes.",
++        "parameters": [
++          {
++            "type": "object",
++            "name": "details",
++            "properties": {
++              "pixelSize": {
++                "type": "integer",
++                "description": "The font size in pixels."
++              },
++              "levelOfControl": {
++                "$ref": "LevelOfControl",
++                "description": "The level of control this extension has over the setting."
++              }
++            }
++          }
++        ],
++        "type": "function"
++      }
++    ],
++    "permissions": [
++      "fontSettings"
++    ]
++  }
++]
+diff --git a/toolkit/components/extensions/schemas/jar.mn b/toolkit/components/extensions/schemas/jar.mn
+index 3a38aed..63556c6 100644
+--- a/toolkit/components/extensions/schemas/jar.mn
++++ b/toolkit/components/extensions/schemas/jar.mn
+@@ -29,6 +29,8 @@ toolkit.jar:
+ #ifndef ANDROID
+     content/extensions/schemas/geckoProfiler.json
+ #endif
++    content/extensions/schemas/font_settings.json
++    content/extensions/schemas/tts.json
+     content/extensions/schemas/i18n.json
+ #ifndef ANDROID
+     content/extensions/schemas/identity.json
+diff --git a/toolkit/components/extensions/schemas/tts.json b/toolkit/components/extensions/schemas/tts.json
+new file mode 100644
+index 0000000..bb3129b
+--- /dev/null
++++ b/toolkit/components/extensions/schemas/tts.json
+@@ -0,0 +1,323 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "OptionalPermission",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "tts"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "tts",
++    "description": "Use the <code>chrome.tts</code> API to play synthesized text-to-speech (TTS). See also the related <a href='http://developer.chrome.com/extensions/ttsEngine'>ttsEngine</a> API, which allows an extension to implement a speech engine.",
++    "types": [
++      {
++        "id": "EventType",
++        "type": "string",
++        "enum": [
++          "start",
++          "end",
++          "word",
++          "sentence",
++          "marker",
++          "interrupted",
++          "cancelled",
++          "error",
++          "pause",
++          "resume"
++        ]
++      },
++      {
++        "id": "VoiceGender",
++        "type": "string",
++        "deprecated": "Gender is deprecated and is ignored.",
++        "enum": [
++          "male",
++          "female"
++        ]
++      },
++      {
++        "id": "TtsOptions",
++        "type": "object",
++        "description": "The speech options for the TTS engine.",
++        "properties": {
++          "enqueue": {
++            "type": "boolean",
++            "optional": true,
++            "description": "If true, enqueues this utterance if TTS is already in progress. If false (the default), interrupts any current speech and flushes the speech queue before speaking this new utterance."
++          },
++          "voiceName": {
++            "type": "string",
++            "optional": true,
++            "description": "The name of the voice to use for synthesis. If empty, uses any available voice."
++          },
++          "extensionId": {
++            "type": "string",
++            "optional": true,
++            "description": "The extension ID of the speech engine to use, if known."
++          },
++          "lang": {
++            "type": "string",
++            "optional": true,
++            "description": "The language to be used for synthesis, in the form <em>language</em>-<em>region</em>. Examples: 'en', 'en-US', 'en-GB', 'zh-CN'."
++          },
++          "gender": {
++            "$ref": "VoiceGender",
++            "optional": true,
++            "deprecated": "Gender is deprecated and will be ignored.",
++            "description": "Gender of voice for synthesized speech."
++          },
++          "rate": {
++            "type": "number",
++            "optional": true,
++            "minimum": 0.1,
++            "maximum": 10,
++            "description": "Speaking rate relative to the default rate for this voice. 1.0 is the default rate, normally around 180 to 220 words per minute. 2.0 is twice as fast, and 0.5 is half as fast. Values below 0.1 or above 10.0 are strictly disallowed, but many voices will constrain the minimum and maximum rates further&mdash;for example a particular voice may not actually speak faster than 3 times normal even if you specify a value larger than 3.0."
++          },
++          "pitch": {
++            "type": "number",
++            "optional": true,
++            "minimum": 0,
++            "maximum": 2,
++            "description": "Speaking pitch between 0 and 2 inclusive, with 0 being lowest and 2 being highest. 1.0 corresponds to a voice's default pitch."
++          },
++          "volume": {
++            "type": "number",
++            "optional": true,
++            "minimum": 0,
++            "maximum": 1,
++            "description": "Speaking volume between 0 and 1 inclusive, with 0 being lowest and 1 being highest, with a default of 1.0."
++          },
++          "requiredEventTypes": {
++            "type": "array",
++            "items": {
++              "type": "string"
++            },
++            "optional": true,
++            "description": "The TTS event types the voice must support."
++          },
++          "desiredEventTypes": {
++            "type": "array",
++            "items": {
++              "type": "string"
++            },
++            "optional": true,
++            "description": "The TTS event types that you are interested in listening to. If missing, all event types may be sent."
++          },
++          "onEvent": {
++            "type": "function",
++            "optional": true,
++            "description": "This function is called with events that occur in the process of speaking the utterance.",
++            "parameters": [
++              {
++                "name": "event",
++                "$ref": "TtsEvent",
++                "description": "The update event from the text-to-speech engine indicating the status of this utterance."
++              }
++            ]
++          }
++        }
++      },
++      {
++        "id": "TtsEvent",
++        "type": "object",
++        "description": "An event from the TTS engine to communicate the status of an utterance.",
++        "properties": {
++          "type": {
++            "$ref": "EventType",
++            "description": "The type can be <code>start</code> as soon as speech has started, <code>word</code> when a word boundary is reached, <code>sentence</code> when a sentence boundary is reached, <code>marker</code> when an SSML mark element is reached, <code>end</code> when the end of the utterance is reached, <code>interrupted</code> when the utterance is stopped or interrupted before reaching the end, <code>cancelled</code> when it's removed from the queue before ever being synthesized, or <code>error</code> when any other error occurs. When pausing speech, a <code>pause</code> event is fired if a particular utterance is paused in the middle, and <code>resume</code> if an utterance resumes speech. Note that pause and resume events may not fire if speech is paused in-between utterances."
++          },
++          "charIndex": {
++            "type": "integer",
++            "optional": true,
++            "description": "The index of the current character in the utterance. For word events, the event fires at the end of one word and before the beginning of the next. The <code>charIndex</code> represents a point in the text at the beginning of the next word to be spoken."
++          },
++          "errorMessage": {
++            "type": "string",
++            "description": "The error description, if the event type is <code>error</code>.",
++            "optional": true
++          },
++          "srcId": {
++            "type": "number",
++            "description": "An ID unique to the calling function's context so that events can get routed back to the correct tts.speak call.",
++            "nodoc": true,
++            "optional": true
++          },
++          "isFinalEvent": {
++            "type": "boolean",
++            "description": "True if this is the final event that will be sent to this handler.",
++            "nodoc": true,
++            "optional": true
++          },
++          "length": {
++            "type": "integer",
++            "optional": true,
++            "description": "The length of the next part of the utterance. For example, in a <code>word</code> event, this is the length of the word which will be spoken next. It will be set to -1 if not set by the speech engine."
++          }
++        }
++      },
++      {
++        "id": "TtsVoice",
++        "type": "object",
++        "description": "A description of a voice available for speech synthesis.",
++        "properties": {
++          "voiceName": {
++            "type": "string",
++            "optional": true,
++            "description": "The name of the voice."
++          },
++          "lang": {
++            "type": "string",
++            "optional": true,
++            "description": "The language that this voice supports, in the form <em>language</em>-<em>region</em>. Examples: 'en', 'en-US', 'en-GB', 'zh-CN'."
++          },
++          "gender": {
++            "$ref": "VoiceGender",
++            "optional": true,
++            "deprecated": "Gender is deprecated and will be ignored.",
++            "description": "This voice's gender."
++          },
++          "remote": {
++            "type": "boolean",
++            "optional": true,
++            "description": "If true, the synthesis engine is a remote network resource. It may be higher latency and may incur bandwidth costs."
++          },
++          "extensionId": {
++            "type": "string",
++            "optional": true,
++            "description": "The ID of the extension providing this voice."
++          },
++          "eventTypes": {
++            "type": "array",
++            "items": {
++              "$ref": "EventType"
++            },
++            "optional": true,
++            "description": "All of the callback event types that this voice is capable of sending."
++          }
++        }
++      }
++    ],
++    "functions": [
++      {
++        "name": "speak",
++        "type": "function",
++        "description": "Speaks text using a text-to-speech engine.",
++        "parameters": [
++          {
++            "type": "string",
++            "name": "utterance",
++            "description": "The text to speak, either plain text or a complete, well-formed SSML document. Speech engines that do not support SSML will strip away the tags and speak the text. The maximum length of the text is 32,768 characters."
++          },
++          {
++            "$ref": "TtsOptions",
++            "name": "options",
++            "optional": true,
++            "description": "The speech options."
++          },
++          {
++            "name": "callback",
++            "optional": true,
++            "description": "Resolves right away, before speech finishes. If an error occurs, the promise will be rejected. Use options.onEvent to get more detailed feedback.",
++            "parameters": [],
++            "type": "function"
++          }
++        ],
++        "async": "callback"
++      },
++      {
++        "name": "stop",
++        "type": "function",
++        "description": "Stops any current speech and flushes the queue of any pending utterances. In addition, if speech was paused, it will now be un-paused for the next call to speak.",
++        "parameters": []
++      },
++      {
++        "name": "pause",
++        "type": "function",
++        "description": "Pauses speech synthesis, potentially in the middle of an utterance. A call to resume or stop will un-pause speech.",
++        "parameters": []
++      },
++      {
++        "name": "resume",
++        "type": "function",
++        "description": "If speech was paused, resumes speaking where it left off.",
++        "parameters": []
++      },
++      {
++        "name": "isSpeaking",
++        "type": "function",
++        "description": "Checks whether the engine is currently speaking. On Mac OS X, the result is true whenever the system speech engine is speaking, even if the speech wasn't initiated by Chrome.",
++        "parameters": [
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "name": "speaking",
++                "type": "boolean",
++                "description": "True if speaking, false otherwise."
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "async": "callback"
++      },
++      {
++        "name": "getVoices",
++        "type": "function",
++        "description": "Gets an array of all available voices.",
++        "parameters": [
++          {
++            "name": "callback",
++            "optional": true,
++            "parameters": [
++              {
++                "type": "array",
++                "name": "voices",
++                "items": {
++                  "$ref": "TtsVoice"
++                },
++                "description": "Array of $(ref:tts.TtsVoice) objects representing the available voices for speech synthesis."
++              }
++            ],
++            "type": "function"
++          }
++        ],
++        "async": "callback"
++      }
++    ],
++    "events": [
++      {
++        "name": "onEvent",
++        "type": "function",
++        "nodoc": true,
++        "parameters": [
++          {
++            "name": "event",
++            "$ref": "TtsEvent",
++            "description": "The event from the text-to-speech engine indicating the status of this utterance."
++          }
++        ],
++        "description": "Used to pass events back to the function calling speak()."
++      },
++      {
++        "name": "onVoicesChanged",
++        "type": "function",
++        "description": "Called when the list of $(ref:tts.TtsVoice) that would be returned by getVoices has changed.",
++        "parameters": []
++      }
++    ],
++    "permissions": [
++      "tts"
++    ]
++  }
++]

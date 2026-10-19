@@ -1,0 +1,236 @@
+diff --git a/dom/media/MediaManager.cpp b/dom/media/MediaManager.cpp
+--- a/dom/media/MediaManager.cpp
++++ b/dom/media/MediaManager.cpp
+@@ -1758,10 +1758,8 @@
+       // really using the audio source and the SourceMediaTrack, which acts
+       // as placeholders. We re-route a number of tracks internally in the
+       // MTG and mix them down instead.
+-      NS_WARNING(
+-          "MediaCaptureWindowState doesn't handle "
+-          "MediaSourceEnum::AudioCapture. This must be fixed with UX "
+-          "before shipping.");
++      // AudioCapture is reported as browser sharing below, so the existing
++      // browser-sharing indicator and stop-sharing UI cover audio-only streams.
+       auto audioCaptureSource = MakeRefPtr<AudioCaptureTrackSource>(
+           principal, window, u"Window audio capture"_ns,
+           mtg->CreateAudioCaptureTrack(), peerIdentity);
+@@ -2965,8 +2963,17 @@
+   }
+ 
+   // Disallow access to null principal pages and http pages (unless pref)
+-  if (principal->GetIsNullPrincipal() ||
+-      !(isSecure || StaticPrefs::media_getusermedia_insecure_enabled())) {
++  // Floorp's broker invokes this source in the authorized target document's
++  // process. Keep the native source inaccessible to ordinary content even when
++  // the target itself has an opaque or insecure principal.
++  const bool isSystemAudioCapture =
++      isChrome && c.mAudio.IsMediaTrackConstraints() &&
++      c.mAudio.GetAsMediaTrackConstraints().mMediaSource.WasPassed() &&
++      c.mAudio.GetAsMediaTrackConstraints().mMediaSource.Value().EqualsLiteral(
++          "audioCapture");
++  if (!isSystemAudioCapture &&
++      (principal->GetIsNullPrincipal() ||
++       !(isSecure || StaticPrefs::media_getusermedia_insecure_enabled()))) {
+     return StreamPromise::CreateAndReject(
+         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+         __func__);
+@@ -3113,7 +3120,8 @@
+       case MediaSourceEnum::AudioCapture:
+         // Only enable AudioCapture if the pref is enabled. If it's not, we can
+         // deny right away.
+-        if (!Preferences::GetBool("media.getusermedia.audio.capture.enabled")) {
++        if (!isChrome &&
++            !Preferences::GetBool("media.getusermedia.audio.capture.enabled")) {
+           return StreamPromise::CreateAndReject(
+               MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
+               __func__);
+@@ -3151,8 +3159,9 @@
+             !FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)) {
+           disabled = true;
+         }
+-      } else if (!FeaturePolicyUtils::IsFeatureAllowed(doc,
+-                                                       u"display-capture"_ns)) {
++      } else if (!isSystemAudioCapture &&
++                 !FeaturePolicyUtils::IsFeatureAllowed(doc,
++                                                        u"display-capture"_ns)) {
+         disabled = true;
+       }
+     }
+@@ -3197,6 +3206,7 @@
+       (!hasAudio || audioType == MediaSourceEnum::Microphone);
+   bool askPermission =
+       (!privileged ||
++       (isChrome && !c.mMozFloorpCapturePickerToken.IsEmpty()) ||
+        Preferences::GetBool("media.navigator.permission.force")) &&
+       (!hasOnlyForcedFakes ||
+        Preferences::GetBool("media.navigator.permission.fake"));
+@@ -4245,7 +4255,9 @@
+       microphone = listener->CapturingSource(MediaSourceEnum::Microphone);
+       screen = listener->CapturingSource(MediaSourceEnum::Screen);
+       window = listener->CapturingSource(MediaSourceEnum::Window);
+-      browser = listener->CapturingSource(MediaSourceEnum::Browser);
++      browser = CombineCaptureState(
++          listener->CapturingSource(MediaSourceEnum::Browser),
++          listener->CapturingSource(MediaSourceEnum::AudioCapture));
+       devices = listener->GetDevices();
+     }
+   }
+diff --git a/dom/audiochannel/AudioChannelService.h b/dom/audiochannel/AudioChannelService.h
+--- a/dom/audiochannel/AudioChannelService.h
++++ b/dom/audiochannel/AudioChannelService.h
+@@ -130,7 +130,8 @@
+    * Return the state to indicate this audioChannel for his window should keep
+    * playing/muted/suspended.
+    */
+-  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow) const;
++  AudioPlaybackConfig GetMediaConfig(nsPIDOMWindowOuter* aWindow,
++                                    uint64_t aInnerWindowID = 0) const;
+ 
+   /**
+    * Called this method when the audible state of the audio playback changed,
+@@ -177,7 +178,6 @@
+    public:
+     explicit AudioChannelWindow(uint64_t aWindowID)
+         : mWindowID(aWindowID),
+-          mIsAudioCaptured(false),
+           mShouldSendActiveMediaBlockStopEvent(false) {}
+ 
+     void AudioAudibleChanged(AudioChannelAgent* aAgent, AudibleState aAudible,
+@@ -189,7 +189,10 @@
+     void NotifyMediaBlockStop(nsPIDOMWindowOuter* aWindow);
+ 
+     uint64_t mWindowID;
+-    bool mIsAudioCaptured;
++    // Capture belongs to a document, even though agents are grouped by their
++    // in-process top window. Independent frame streams must not revoke each
++    // other or route a neighbour's audio into the wrong sink.
++    nsTArray<uint64_t> mAudioCapturedInnerWindows;
+     AudioPlaybackConfig mConfig;
+ 
+     // Raw pointer because the AudioChannelAgent must unregister itself.
+diff --git a/dom/audiochannel/AudioChannelService.cpp b/dom/audiochannel/AudioChannelService.cpp
+--- a/dom/audiochannel/AudioChannelService.cpp
++++ b/dom/audiochannel/AudioChannelService.cpp
+@@ -197,7 +197,7 @@
+ }
+ 
+ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
+-    nsPIDOMWindowOuter* aWindow) const {
++    nsPIDOMWindowOuter* aWindow, uint64_t aInnerWindowID) const {
+   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
+ 
+   if (!aWindow) {
+@@ -217,7 +217,8 @@
+     if (winData) {
+       config.mVolume *= winData->mConfig.mVolume;
+       config.mMuted = config.mMuted || winData->mConfig.mMuted;
+-      config.mCapturedAudio = winData->mIsAudioCaptured;
++      config.mCapturedAudio =
++          winData->mAudioCapturedInnerWindows.Contains(aInnerWindowID);
+     }
+ 
+     config.mMuted = config.mMuted || window->GetAudioMuted();
+@@ -302,7 +303,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+   if (!winData) {
+     return;
+   }
+@@ -342,7 +343,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+ 
+   // This can happen, but only during shutdown, because the the outer window
+   // changes ScriptableTop, so that its ID is different.
+@@ -353,8 +354,14 @@
+     return;
+   }
+ 
+-  if (aCapture != winData->mIsAudioCaptured) {
+-    winData->mIsAudioCaptured = aCapture;
++  const bool capturing =
++      winData->mAudioCapturedInnerWindows.Contains(aInnerWindowID);
++  if (aCapture != capturing) {
++    if (aCapture) {
++      winData->mAudioCapturedInnerWindows.AppendElement(aInnerWindowID);
++    } else {
++      winData->mAudioCapturedInnerWindows.RemoveElement(aInnerWindowID);
++    }
+     for (AudioChannelAgent* agent : winData->mAgents.ForwardRange()) {
+       agent->WindowAudioCaptureChanged(aInnerWindowID, aCapture);
+     }
+@@ -409,7 +416,7 @@
+     return;
+   }
+ 
+-  AudioChannelWindow* winData = GetWindowData(topWindow->WindowID());
++  AudioChannelWindow* winData = GetOrCreateWindowData(topWindow);
+   if (!winData) {
+     return;
+   }
+diff --git a/dom/audiochannel/AudioChannelAgent.cpp b/dom/audiochannel/AudioChannelAgent.cpp
+--- a/dom/audiochannel/AudioChannelAgent.cpp
++++ b/dom/audiochannel/AudioChannelAgent.cpp
+@@ -130,7 +130,7 @@
+   MOZ_ASSERT(service);
+   MOZ_ASSERT(mIsRegToService);
+ 
+-  AudioPlaybackConfig config = service->GetMediaConfig(mWindow);
++  AudioPlaybackConfig config = service->GetMediaConfig(mWindow, mInnerWindowID);
+   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+           ("AudioChannelAgent, PullInitialUpdate, this=%p, "
+            "mute=%s, volume=%f, suspend=%s, audioCapturing=%s\n",
+@@ -245,7 +245,7 @@
+   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+   AudioPlaybackConfig config(1.0, false, nsISuspendedTypes::NONE_SUSPENDED);
+   if (service) {
+-    config = service->GetMediaConfig(mWindow);
++    config = service->GetMediaConfig(mWindow, mInnerWindowID);
+   }
+   return config;
+ }
+diff --git a/dom/webidl/MediaStream.webidl b/dom/webidl/MediaStream.webidl
+--- a/dom/webidl/MediaStream.webidl
++++ b/dom/webidl/MediaStream.webidl
+@@ -20,6 +20,9 @@
+                         // colors if video is enabled, and sound of 1Khz sine
+                         // wave if audio is enabled.
+     DOMString? peerIdentity = null;
++    // A privileged Floorp picker registration forces the ordinary native
++    // source-selection prompt. Content cannot read or set this member.
++    [ChromeOnly] DOMString mozFloorpCapturePickerToken = "";
+ };
+ 
+ dictionary DisplayMediaStreamConstraints {
+diff --git a/dom/webidl/MediaDevices.webidl b/dom/webidl/MediaDevices.webidl
+--- a/dom/webidl/MediaDevices.webidl
++++ b/dom/webidl/MediaDevices.webidl
+@@ -14,6 +14,10 @@
+ interface MediaDevices : EventTarget {
+   attribute EventHandler ondevicechange;
+   MediaTrackSupportedConstraints getSupportedConstraints();
++
++  // A script-only patch must never silently fall back to unprompted system
++  // capture on a runtime whose dictionary predates the picker token.
++  [ChromeOnly] readonly attribute unsigned short mozFloorpCapturePickerVersion;
+ 
+   [NewObject, UseCounter]
+   Promise<sequence<MediaDeviceInfo>> enumerateDevices();
+diff --git a/dom/media/MediaDevices.h b/dom/media/MediaDevices.h
+--- a/dom/media/MediaDevices.h
++++ b/dom/media/MediaDevices.h
+@@ -56,6 +56,8 @@
+                        JS::Handle<JSObject*> aGivenProto) override;
+ 
+   void GetSupportedConstraints(MediaTrackSupportedConstraints& aResult);
++
++  uint16_t MozFloorpCapturePickerVersion() const { return 1; }
+ 
+   already_AddRefed<Promise> GetUserMedia(
+       const MediaStreamConstraints& aConstraints, CallerType aCallerType,

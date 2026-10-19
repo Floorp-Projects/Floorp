@@ -1,0 +1,414 @@
+diff --git a/modules/ExtensionParent.sys.mjs b/modules/ExtensionParent.sys.mjs
+--- a/modules/ExtensionParent.sys.mjs
++++ b/modules/ExtensionParent.sys.mjs
+@@ -629,6 +629,8 @@
+         return "POPUP";
+       case "sidebar":
+         return "SIDE_PANEL";
++      case "offscreen":
++        return "OFFSCREEN_DOCUMENT";
+       case "tab":
+         return "TAB";
+       default:
+@@ -828,7 +830,7 @@
+   }
+ 
+   get currentWindow() {
+-    if (this.viewType !== "background") {
++    if (this.viewType !== "background" && this.viewType !== "offscreen") {
+       return this.appWindow;
+     }
+     return undefined;
+@@ -2104,21 +2106,35 @@
+ 
+ // This should be called before browser.loadURI is invoked.
+ async function promiseBackgroundViewLoaded(browser) {
++  return promiseExtensionViewLoaded(browser, "Extension:BackgroundViewLoaded");
++}
++
++// Registers before navigation, and rejects on load failure, process loss, or
++// explicit cancellation. Offscreen hosts use this without owning a background.
++async function promiseExtensionViewLoaded(browser, messageName, abortSignal) {
++  abortSignal?.throwIfAborted();
+   const abortController = new AbortController();
+   const messagePromise = promiseMessageFromChild(
+     browser.messageManager,
+-    "Extension:BackgroundViewLoaded",
++    messageName,
+     abortController.signal
+   );
+   const stopPromise = promiseBrowserStopped(browser, abortController.signal);
+ 
++  let onAbort;
++  const cancelled = new Promise((_resolve, reject) => {
++    onAbort = () => reject(new ExtensionError("Offscreen document creation cancelled"));
++    abortSignal?.addEventListener("abort", onAbort, { once: true });
++  });
++
+   let childId;
+   try {
+-    // stopPromise only rejects, so a non-rejection is from messagePromise.
+-    let message = await Promise.race([messagePromise, stopPromise]);
++    // stopPromise and cancelled only reject.
++    let message = await Promise.race([messagePromise, stopPromise, cancelled]);
+     childId = message.childId;
+   } finally {
+     abortController.abort();
++    abortSignal?.removeEventListener("abort", onAbort);
+   }
+ 
+   if (childId) {
+@@ -2558,6 +2574,7 @@
+   WebExtensionPolicy,
+   apiManager,
+   promiseBackgroundViewLoaded,
++  promiseExtensionViewLoaded,
+   watchExtensionProxyContextLoad,
+   watchExtensionWorkerContextLoaded,
+   DebugUtils,
+diff --git a/modules/ExtensionPageChild.sys.mjs b/modules/ExtensionPageChild.sys.mjs
+--- a/modules/ExtensionPageChild.sys.mjs
++++ b/modules/ExtensionPageChild.sys.mjs
+@@ -335,6 +335,8 @@
+       let childId = context?.childManager.id;
+       if (viewType === "background") {
+         global.sendAsyncMessage("Extension:BackgroundViewLoaded", { childId });
++      } else if (viewType === "offscreen") {
++        global.sendAsyncMessage("Extension:OffscreenViewLoaded", { childId });
+       }
+     });
+   },
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -1001,6 +1001,25 @@
+   }
+ 
+   shouldInject(namespace, name, allowedContexts) {
++    const apiNamespace = namespace || name;
++    // Chrome offscreen documents have DOM access and only the runtime API.
++    // The test namespace remains governed by its existing test-only schema.
++    if (this.context.viewType === "offscreen" &&
++        (apiNamespace !== "runtime" && apiNamespace !== "test" ||
++         apiNamespace === "runtime" && name === "getBackgroundPage")) {
++      return false;
++    }
++    if (apiNamespace === "offscreen" || apiNamespace === "sidePanel" || apiNamespace === "tabCapture" || apiNamespace === "desktopCapture" || apiNamespace === "fontSettings" || apiNamespace === "tts") {
++      const { extension } = this.context;
++      const marker = extension.manifest.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++      if (marker?.schema_version !== 1 ||
++          !/^[a-p]{32}$/.test(marker.original_id) ||
++          extension.id !== `${marker.original_id}@chromium-extension`) {
++        return false;
++      }
++    }
++
+     // Do not generate content script APIs, unless explicitly allowed.
+     if (
+       this.context.envType === "content_child" &&
+diff --git a/chrome/toolkit/content/extensions/parent/ext-runtime.js b/chrome/toolkit/content/extensions/parent/ext-runtime.js
+--- a/chrome/toolkit/content/extensions/parent/ext-runtime.js
++++ b/chrome/toolkit/content/extensions/parent/ext-runtime.js
+@@ -167,11 +167,12 @@
+         }
+       }
+ 
++      // Filter with the same stable public ID that we return to callers.
++      if (ctx) {
++        ctx.contextId = this.#contextUUIDMap.get(proxyContext);
++      }
+       if (this.matchContextFilter(filter, ctx)) {
+-        results.push({
+-          ...ctx,
+-          contextId: this.#contextUUIDMap.get(proxyContext),
+-        });
++        results.push(ctx);
+       }
+     }
+     return results;
+diff --git a/chrome/toolkit/content/extensions/schemas/runtime.json b/chrome/toolkit/content/extensions/schemas/runtime.json
+--- a/chrome/toolkit/content/extensions/schemas/runtime.json
++++ b/chrome/toolkit/content/extensions/schemas/runtime.json
+@@ -70,7 +70,7 @@
+       {
+         "id": "ContextType",
+         "type": "string",
+-        "enum": ["BACKGROUND", "POPUP", "SIDE_PANEL", "TAB"],
++        "enum": ["BACKGROUND", "POPUP", "SIDE_PANEL", "TAB", "OFFSCREEN_DOCUMENT"],
+         "description": "The type of extension view."
+       },
+       {
+diff --git a/chrome/toolkit/content/extensions/ext-toolkit.json b/chrome/toolkit/content/extensions/ext-toolkit.json
+--- a/chrome/toolkit/content/extensions/ext-toolkit.json
++++ b/chrome/toolkit/content/extensions/ext-toolkit.json
+@@ -100,6 +100,12 @@
+     "scopes": ["addon_parent"],
+     "paths": [["notifications"]]
+   },
++  "offscreen": {
++    "url": "chrome://extensions/content/parent/ext-offscreen.js",
++    "schema": "chrome://extensions/content/schemas/offscreen.json",
++    "scopes": ["addon_parent"],
++    "paths": [["offscreen"]]
++  },
+   "permissions": {
+     "url": "chrome://extensions/content/parent/ext-permissions.js",
+     "schema": "chrome://extensions/content/schemas/permissions.json",
+diff --git a/chrome/toolkit/content/extensions/parent/ext-offscreen.js b/chrome/toolkit/content/extensions/parent/ext-offscreen.js
+new file mode 100644
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/parent/ext-offscreen.js
+@@ -0,0 +1,141 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++Cu.importGlobalProperties(["AbortController"]);
++
++var { ExtensionParent } = ChromeUtils.importESModule(
++  "resource://gre/modules/ExtensionParent.sys.mjs"
++);
++var { setTimeout: offscreenSetTimeout, clearTimeout: offscreenClearTimeout } =
++  ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
++
++class FloorpOffscreenPage extends ExtensionParent.HiddenExtensionPage {
++  constructor(extension) {
++    super(extension, "offscreen");
++    this.abortController = new AbortController();
++    this.audioTimer = null;
++    this.mediaController = null;
++    this.onAudibleChange = null;
++  }
++
++  async build(url) {
++    await this.createBrowserElement();
++    ExtensionParent.apiManager.emit("extension-browser-inserted", this.browser);
++    const loaded = ExtensionParent.promiseExtensionViewLoaded(
++      this.browser, "Extension:OffscreenViewLoaded", this.abortController.signal
++    );
++    this.browser.fixupAndLoadURIString(url, {
++      triggeringPrincipal: this.extension.principal,
++    });
++    const context = await loaded;
++    if (!context || this.unloaded) {
++      throw new ExtensionUtils.ExtensionError("Offscreen document failed to load");
++    }
++    return context;
++  }
++
++  watchAudio(onSilent) {
++    this.mediaController = this.browser.browsingContext.mediaController;
++    this.onAudibleChange = () => {
++      offscreenClearTimeout(this.audioTimer);
++      this.audioTimer = null;
++      if (!this.mediaController.isAudible) {
++        this.audioTimer = offscreenSetTimeout(onSilent, 30000);
++      }
++    };
++    this.mediaController.addEventListener("audiblechange", this.onAudibleChange);
++    this.onAudibleChange();
++  }
++
++  close() {
++    if (this.unloaded) {
++      return;
++    }
++    this.abortController.abort();
++    offscreenClearTimeout(this.audioTimer);
++    this.mediaController?.removeEventListener("audiblechange", this.onAudibleChange);
++    this.mediaController = null;
++    super.shutdown();
++  }
++}
++
++// Owned by the extension API instance, never by the calling background context.
++this.offscreen = class extends ExtensionAPI {
++  page = null;
++
++  onShutdown() {
++    this.closePage();
++  }
++
++  closePage() {
++    const page = this.page;
++    this.page = null;
++    page?.close();
++  }
++
++  getAPI(context) {
++    const { extension } = this;
++    const marker = extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++    if (marker?.schema_version !== 1 ||
++        !/^[a-p]{32}$/.test(marker.original_id) ||
++        extension.id !== `${marker.original_id}@chromium-extension`) {
++      return {};
++    }
++    return {
++      offscreen: {
++        createDocument: async options => {
++          if (this.page) {
++            throw new ExtensionUtils.ExtensionError(
++              "Only a single offscreen document may be created."
++            );
++          }
++          const uri = Services.io.newURI(extension.baseURI.resolve(options.url));
++          if (!uri.schemeIs("moz-extension") ||
++              uri.prePath !== extension.baseURI.prePath) {
++            throw new ExtensionUtils.ExtensionError(
++              "Offscreen document URL must belong to the extension."
++            );
++          }
++          if (!options.justification.trim()) {
++            throw new ExtensionUtils.ExtensionError("Justification must be specified.");
++          }
++          const page = new FloorpOffscreenPage(extension);
++          // Reserve before awaiting: concurrent callers cannot create two hosts.
++          this.page = page;
++          try {
++            const offscreenContext = await page.build(uri.spec);
++            offscreenContext.callOnClose({ close: () => {
++              if (this.page === page) {
++                this.closePage();
++              }
++            }});
++            if (options.reasons.includes("AUDIO_PLAYBACK")) {
++              page.watchAudio(() => {
++                if (this.page === page) {
++                  this.closePage();
++                }
++              });
++            }
++          } catch (error) {
++            if (this.page === page) {
++              this.page = null;
++            }
++            page.close();
++            throw error;
++          }
++        },
++        closeDocument: async () => {
++          if (!this.page) {
++            throw new ExtensionUtils.ExtensionError("No current offscreen document.");
++          }
++          this.closePage();
++        },
++        hasDocument: async () => !!this.page && !this.page.unloaded,
++      },
++    };
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/schemas/offscreen.json b/chrome/toolkit/content/extensions/schemas/offscreen.json
+new file mode 100644
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/schemas/offscreen.json
+@@ -0,0 +1,106 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "PermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "offscreen"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "offscreen",
++    "min_manifest_version": 3,
++    "permissions": [
++      "offscreen"
++    ],
++    "description": "Chrome compatibility offscreen documents hosted independently of background contexts.",
++    "types": [
++      {
++        "id": "Reason",
++        "type": "string",
++        "enum": [
++          "TESTING",
++          "AUDIO_PLAYBACK",
++          "IFRAME_SCRIPTING",
++          "DOM_SCRAPING",
++          "BLOBS",
++          "DOM_PARSER",
++          "USER_MEDIA",
++          "DISPLAY_MEDIA",
++          "WEB_RTC",
++          "CLIPBOARD",
++          "LOCAL_STORAGE",
++          "WORKERS",
++          "BATTERY_STATUS",
++          "MATCH_MEDIA",
++          "GEOLOCATION"
++        ]
++      },
++      {
++        "id": "CreateParameters",
++        "type": "object",
++        "properties": {
++          "url": {
++            "type": "string",
++            "minLength": 1
++          },
++          "reasons": {
++            "type": "array",
++            "minItems": 1,
++            "items": {
++              "$ref": "Reason"
++            }
++          },
++          "justification": {
++            "type": "string",
++            "minLength": 1
++          }
++        }
++      }
++    ],
++    "functions": [
++      {
++        "name": "createDocument",
++        "type": "function",
++        "async": true,
++        "parameters": [
++          {
++            "name": "parameters",
++            "$ref": "CreateParameters"
++          }
++        ]
++      },
++      {
++        "name": "closeDocument",
++        "type": "function",
++        "async": true,
++        "parameters": []
++      },
++      {
++        "name": "hasDocument",
++        "type": "function",
++        "async": "callback",
++        "parameters": [
++          {
++            "type": "function",
++            "name": "callback",
++            "parameters": [
++              {
++                "name": "result",
++                "type": "boolean"
++              }
++            ]
++          }
++        ]
++      }
++    ]
++  }
++]

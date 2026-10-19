@@ -15,6 +15,7 @@ import {
   strDefaultConfig,
   strDefaultData,
 } from "../utils/default-prerf.js";
+import { getActiveChromeSidePanelId } from "../chrome-side-panels.ts";
 import { PanelSidebarStaticNames } from "../utils/panel-sidebar-static-names.js";
 import {
   type Panels,
@@ -233,3 +234,28 @@ export const [isPanelSidebarEnabled, setIsPanelSidebarEnabled] = createRootHMR(
   createIsPanelSidebarEnabled,
   import.meta.hot,
 );
+
+export const [activeChromeSidePanelId, setActiveChromeSidePanelId] =
+  createRootHMR(
+    () => {
+      const [active, setActive] = createSignal<string | null>(
+        getActiveChromeSidePanelId(globalThis as unknown as Window),
+      );
+      const listener = (event: Event) => {
+        const { extensionId, opened } =
+          (event as CustomEvent<{ extensionId: string; opened: boolean }>)
+            .detail;
+        if (opened) setActive(extensionId);
+        else if (active() === extensionId) setActive(null);
+      };
+      globalThis.addEventListener("FloorpChromeSidePanelChanged", listener);
+      onCleanup(() =>
+        globalThis.removeEventListener("FloorpChromeSidePanelChanged", listener)
+      );
+      return [active, setActive] as [
+        Accessor<string | null>,
+        Setter<string | null>,
+      ];
+    },
+    import.meta.hot,
+  );
