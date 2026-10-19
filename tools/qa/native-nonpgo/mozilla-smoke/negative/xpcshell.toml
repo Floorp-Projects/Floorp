@@ -1,0 +1,4 @@
+[DEFAULT]
+head = ""
+
+["test_expected_failure.js"]

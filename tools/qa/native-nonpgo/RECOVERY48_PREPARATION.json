@@ -1,0 +1,139 @@
+{
+  "actualSourceInputVerification": {
+    "fixtureFiles": 4,
+    "matched": true,
+    "sourceFiles": 18
+  },
+  "cases": [
+    {
+      "case": "compiled-debug",
+      "expectedExitCode": 0,
+      "expectedHarnessStatus": "passed",
+      "purpose": "Execute current xpcshell; assert actual compiled JS DEBUG, AppConstants.DEBUG, and version 158.0.1"
+    },
+    {
+      "case": "failure-control",
+      "expectedExitCode": 1,
+      "expectedFailureRetained": true,
+      "expectedHarnessStatus": "failed",
+      "purpose": "Detect a single deliberate Assert failure through original Mozilla xpcshell harness"
+    },
+    {
+      "case": "upstream-version-comparator",
+      "expectedExitCode": 0,
+      "expectedHarnessStatus": "passed",
+      "purpose": "Run original current-source test_versioncomparator.js with original head_xpcom.js and manifest"
+    }
+  ],
+  "executionGate": {
+    "freshMetadataAndOwnedRunChecksRequired": true,
+    "immutableCallerNotCreated": true,
+    "mustWaitForRun39212933648Terminal": true,
+    "noConcurrentJobLaunch": true
+  },
+  "files": {
+    "mozilla-smoke.json": {
+      "bytes": 5021,
+      "sha256": "1d8687026469552c5e241404603453742a5ed4ccb8985892d4660872c2bb092c"
+    },
+    "mozilla-smoke/negative/test_expected_failure.js": {
+      "bytes": 168,
+      "sha256": "4e860e91eb2ff3950ffbc6574829b95147802052fabdf3f154029e289b6466de"
+    },
+    "mozilla-smoke/negative/xpcshell.toml": {
+      "bytes": 50,
+      "sha256": "8704015158a335bd9931fbcdcc97529f317ebe8eecccf6b1f87dae25f45866d0"
+    },
+    "mozilla-smoke/positive/test_current_debug.js": {
+      "bytes": 645,
+      "sha256": "aecefb33e7768c489c5bf5a851c70d3df87dcb4f6986550108b49241fef0dff9"
+    },
+    "mozilla-smoke/positive/xpcshell.toml": {
+      "bytes": 47,
+      "sha256": "1ffa58e18b8cb51710d569aeceb56368ba9623cfeace6a99f69ade953f570943"
+    },
+    "mozilla_harness_receipt.py": {
+      "bytes": 13639,
+      "sha256": "80fe26e0476de8cff4c2130aa1c17afb3a532a114b62ccb3694a882abcaf26d6"
+    },
+    "mozilla_harness_smoke.py": {
+      "bytes": 16546,
+      "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9"
+    },
+    "pipeline.py": {
+      "bytes": 43309,
+      "sha256": "fdf40e5b63bee0b457402ab8c8e884da91b295cc184a300479459afb6917a142"
+    },
+    "test_mozilla_harness_receipt.py": {
+      "bytes": 21309,
+      "sha256": "a5bae7b4f2445680a63ed31111ff5a89165c6da34eb2cefb451f8feb17c28b26"
+    },
+    "test_mozilla_harness_smoke.py": {
+      "bytes": 17491,
+      "sha256": "7f6062a2ceba0ef172b67c9125641da5132a6b96c7dda62d0b96673f324fdb3a"
+    },
+    "test_pipeline_restore.py": {
+      "bytes": 11218,
+      "sha256": "c4313a1664ba2e964299b09ba201871cc852c813dbb014ddb9201cdae9df825d"
+    }
+  },
+  "independentFocusedValidation": {
+    "openP1": 0,
+    "openP2": 0,
+    "passed": 60,
+    "skipped": 0
+  },
+  "limitations": [
+    "Linux regression tests are not real macOS Mozilla execution.",
+    "This route exercises three xpcshell cases; broader Firefox and browser-chrome coverage remain subsequent work.",
+    "The stock HTTP2 server autostart is suppressed for these non-network cases; no server presence or HTTP capability is claimed. Stock HTTP3 remains inside the owned stage group.",
+    "Original native exit cause from run 39020119793 remains unknown."
+  ],
+  "localValidation": {
+    "errors": 0,
+    "failures": 0,
+    "log": {
+      "bytes": 113233,
+      "elapsedSeconds": 30.278,
+      "sha256": "d213e4379f5ab6d177d9b34e39cb3ec7ad70b462d50f5d4bc7671f3ac2e96c5a"
+    },
+    "passed": 557,
+    "platform": "Linux",
+    "rawPublished": false,
+    "resourceWarnings": "errors",
+    "skipped": 17,
+    "total": 574
+  },
+  "preservedGuards": {
+    "actualNativeMonitorPreflight": true,
+    "authenticationOrPermissionChanges": false,
+    "exactChildReapAndOwnedGroupCleanup": true,
+    "existingCheckpointOnly": 12164479528,
+    "inputAndBuiltAssetHashBindingBeforeAndAfterTests": true,
+    "newLargeArtifactUploads": 0,
+    "noRawFallbackOnEvidenceWriteFailure": true,
+    "privateRecent16AndSeparateStopDetail": true,
+    "productSigning": false,
+    "sameJobMonotonicOriginAndResourceCaps": true,
+    "unexpiredNormalApiSdkAcquisition": true,
+    "unknownRemainsUnknown": true
+  },
+  "qualification": {
+    "actualMozillaHarness": "NOT_TESTED",
+    "broadFirefoxCoverage": false,
+    "browserChrome": "NOT_TESTED",
+    "freshObjdir": false,
+    "fullHostXUL": "NOT_TESTED_BY_THIS_PREPARATION",
+    "nativeAuthentication": "NOT_TESTED_BY_THIS_PREPARATION",
+    "previousFirefox157EvidenceUsedForCurrentSuccess": false,
+    "productQualification": false,
+    "sameJob": false
+  },
+  "runtime": {
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "version": "158.0.1"
+  },
+  "schema": 1,
+  "scope": "RECOVERY48_CURRENT_SOURCE_MOZILLA_HARNESS_PREPARATION",
+  "status": "REVIEWED_NOT_RUN_ON_MAC"
+}

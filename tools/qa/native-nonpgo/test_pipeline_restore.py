@@ -40,6 +40,15 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.verify_config = mock.Mock()
         self.public_restore = mock.Mock(side_effect=lambda value: value)
         self.restore_failure = False
+        self.stop_at_full_build = True
+        self.mozilla = mock.Mock(side_effect=self.mozilla_success)
+
+    def mozilla_success(self, source, fixture, task, runner, env, deadline, macho, result):
+        result.update(status='passed', actualCompiledDebug=True,
+                      actualCurrentSourceUpstreamTest=True, intentionalFailureDetected=True,
+                      allCasesExactReaped=True, allCasesGroupsGone=True,
+                      cases=[{'status':'passed'}, {'status':'failed', 'expectationSatisfied':True},
+                             {'status':'passed'}])
 
     def fail(self, stage, code):
         if self.runner.failure is None:
@@ -62,15 +71,21 @@ class RestoreOnlyFlow(unittest.TestCase):
                     'version-node': 'v22.16.0', 'version-nasm': 'NASM version 3.02'}
         path.write_text(versions.get(stage, ''))
         if stage == 'full-build':
-            raise Failure('test-stop-at-full-build')
+            if self.stop_at_full_build:
+                raise Failure('test-stop-at-full-build')
+            object_path = self.task / 'obj/widget/cocoa/MacWebAppService.o'
+            object_path.parent.mkdir(parents=True)
+            object_path.write_bytes(b'object')
         return path
 
-    def invoke(self, *, restore_only=True):
+    def invoke(self, *, restore_only=True, mozilla_only=False):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
                 '--checkpoint-role', 'consumer', '--replay-origin']
         if restore_only:
             argv += ['--restore-only']
+        if mozilla_only:
+            argv += ['--mozilla-only']
         with mock.patch('sys.argv', argv), \
                 mock.patch.dict(os.environ, {'CHECKPOINT_BUILD_DATE': '20261019035607'}), \
                 mock.patch.object(pipeline, 'Runner', return_value=self.runner), \
@@ -79,6 +94,8 @@ class RestoreOnlyFlow(unittest.TestCase):
                 mock.patch.object(pipeline, 'prepare_source'), \
                 mock.patch.object(pipeline, 'clean_environment', return_value={'PATH': '/usr/bin'}), \
                 mock.patch.object(pipeline, 'verify_config', self.verify_config), \
+                mock.patch.object(pipeline, 'macho', return_value={'verified': True}), \
+                mock.patch('mozilla_harness_smoke.run_smoke', self.mozilla), \
                 mock.patch.object(pipeline, 'public_restore', self.public_restore), \
                 mock.patch('checkpoint.verify_restored_config') as restored_config, \
                 contextlib.redirect_stdout(io.StringIO()):
@@ -136,6 +153,59 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(report['firstFailure'],{'stage':'checkpoint-restore',
                                                'code':'test-original-restore-failure'})
         self.public_restore.assert_not_called()
+
+    def test_mozilla_only_finishes_real_build_then_has_separate_qualification(self):
+        self.stop_at_full_build = False
+        code, report, _ = self.invoke(restore_only=False, mozilla_only=True)
+        self.assertEqual(code, 0)
+        self.mozilla.assert_called_once()
+        self.assertEqual(report['status'], 'mozilla-ready')
+        self.assertEqual(report['qualification'], 'verified-origin-current-mozilla-xpcshell-smoke')
+        self.assertEqual(report['stagePackage'], 'NOT_TESTED')
+        self.assertEqual(report['nativeAuthentication'], 'NOT_TESTED')
+        self.assertFalse(report['freshObjdir'])
+        self.assertFalse(report['sameJob'])
+        self.assertFalse(report['productQualification'])
+        stages = [row['stage'] for row in self.runner.records]
+        self.assertIn('full-build', stages)
+        self.assertNotIn('stage-package', stages)
+        self.assertNotIn('native-suite', stages)
+        self.assertEqual(report['mozilla']['cases'][1]['status'], 'failed')
+
+    def test_mozilla_case_error_preserves_failed_outcome(self):
+        self.stop_at_full_build = False
+        self.mozilla.side_effect = Failure('mozilla-smoke-case-failed')
+        code, report, _ = self.invoke(restore_only=False, mozilla_only=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['firstFailure'], {'stage':'mozilla-harness', 'code':'mozilla-smoke-case-failed'})
+        self.assertEqual(report['status'], 'failed')
+
+    def test_mozilla_missing_compiled_debug_proof_fails_closed(self):
+        self.stop_at_full_build = False
+        def incomplete(*args):
+            self.mozilla_success(*args)
+            args[-1]['actualCompiledDebug'] = False
+        self.mozilla.side_effect = incomplete
+        code, report, _ = self.invoke(restore_only=False, mozilla_only=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['firstFailure']['code'], 'mozilla-smoke-proof-incomplete')
+
+    def test_mozilla_only_cannot_be_combined_with_restore_only(self):
+        with self.assertRaisesRegex(Failure, 'mozilla-smoke-consumer-role'):
+            self.invoke(restore_only=True, mozilla_only=True)
+
+    def test_mozilla_never_runs_after_full_build_failure(self):
+        code, report, _ = self.invoke(restore_only=False, mozilla_only=True)
+        self.assertEqual(code, 1)
+        self.assertEqual(report['firstFailure']['stage'], 'full-build')
+        self.mozilla.assert_not_called()
+
+    def test_mozilla_monitor_failure_is_inconclusive_and_not_product_failure_evidence(self):
+        report = {'status':'failed','monitorFailure':None,
+                  'mozilla':{'monitorFailure':{'stage':'mozilla-xpcshell'}}}
+        value = pipeline.validation_outcome(report)
+        self.assertEqual(value['execution'], 'monitor-inconclusive')
+        self.assertFalse(value['monitorFailureEstablishesProductFailure'])
 
 
 if __name__ == '__main__':

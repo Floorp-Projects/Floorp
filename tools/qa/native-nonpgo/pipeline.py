@@ -315,7 +315,9 @@ def macho(path, kind):
 
 
 def validation_outcome(report):
-    return {'execution': 'monitor-inconclusive' if report.get('monitorFailure') is not None else report['status'],
+    monitor_failed = (report.get('monitorFailure') is not None or
+                      report.get('mozilla', {}).get('monitorFailure') is not None)
+    return {'execution': 'monitor-inconclusive' if monitor_failed else report['status'],
             'nativeAuthentication': 'passed' if report.get('native', {}).get('status') == 'passed' else 'not-verified',
             'monitorFailureEstablishesProductFailure': False}
 
@@ -328,10 +330,13 @@ def main():
     parser.add_argument('--task', type=Path, required=True)
     parser.add_argument('--checkpoint-role', choices=('producer', 'consumer'))
     parser.add_argument('--restore-only', action='store_true')
+    parser.add_argument('--mozilla-only', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
     args = parser.parse_args()
     require(not args.restore_only or args.checkpoint_role == 'consumer', 'checkpoint-restore-only-role')
     require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
+    require(not args.mozilla_only or (args.checkpoint_role == 'consumer' and not args.restore_only),
+            'mozilla-smoke-consumer-role')
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
@@ -480,6 +485,16 @@ def main():
         object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
         report['hostObject'] = macho(object_path, 1)
         require(object_path.stat().st_mtime >= started, 'object-not-fresh')
+        if args.mozilla_only:
+            from mozilla_harness_smoke import run_smoke
+            stage = 'mozilla-harness'
+            report['mozilla'] = {}
+            run_smoke(args.source, HERE, task, runner, env,
+                      plan['checkpoint']['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
+            report.update(status='mozilla-ready', mozillaOnly=True, fullHostXUL='passed',
+                          stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED',
+                          qualification='verified-origin-current-mozilla-xpcshell-smoke')
+            raise CheckpointComplete
         stage = 'stage-package'
         runner.run('stage-package', [sys.executable, 'mach', 'build', '--allow-subdirectory-build',
                    'browser/installer/stage-package'], args.source, env, plan['limits']['buildDeadlineMinutes'],
@@ -612,6 +627,26 @@ def main():
             if not complete:
                 runner.fail('final-proof', 'proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
+        if report['status'] == 'mozilla-ready':
+            mozilla = report.get('mozilla', {})
+            complete = (args.mozilla_only and checkpoint_role == 'consumer' and
+                        all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
+                                                     'source', 'effectiveConfig', 'checkpointRestore', 'hostObject')) and
+                        report.get('monitorPreflight', {}).get('status') == 'passed' and
+                        len(report.get('toolchains', [])) == 11 and
+                        report.get('resumedEffectiveConfigVerified') is True and
+                        mozilla.get('status') == 'passed' and
+                        mozilla.get('actualCompiledDebug') is True and
+                        mozilla.get('actualCurrentSourceUpstreamTest') is True and
+                        mozilla.get('intentionalFailureDetected') is True and
+                        mozilla.get('allCasesExactReaped') is True and
+                        mozilla.get('allCasesGroupsGone') is True and
+                        len(mozilla.get('cases', [])) == 3 and report.get('native') is None and
+                        runner.failure is None and
+                        not any(row['stage'] in ('stage-package', 'native-suite') for row in runner.records))
+            if not complete:
+                runner.fail('final-proof', 'mozilla-smoke-proof-incomplete')
+                report['status'], report['firstFailure'] = 'failed', runner.failure
         report['validationOutcome'] = validation_outcome(report)
         try:
             write_json(task / 'summary.json', report)
@@ -621,7 +656,7 @@ def main():
             report['validationOutcome'] = validation_outcome(report)
         finally:
             print(json.dumps(report), flush=True)
-    return 0 if report['status'] in ('passed', 'checkpoint-ready', 'restore-ready') and runner.failure is None else 1
+    return 0 if report['status'] in ('passed', 'checkpoint-ready', 'restore-ready', 'mozilla-ready') and runner.failure is None else 1
 
 
 if __name__ == '__main__':

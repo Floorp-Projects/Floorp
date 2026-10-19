@@ -1,0 +1,142 @@
+{
+  "contract": "current-source-mozilla-xpcshell-smoke-v1",
+  "execution": {
+    "automaticRetry": false,
+    "automationKeyRemovedFromChildEnvironment": true,
+    "buildEnvironmentUnchanged": true,
+    "http2ServerAutostart": "disabled with existing MOZ_ASSUME_NODE_RUNNING; no HTTP2 server presence or network capability claimed",
+    "http3Server": "stock same-stage-PGID server, subject to existing resource and cleanup checks",
+    "manifestSelection": "explicit original or control manifest plus exactly one absolute existing test file",
+    "originalUpstreamHead": "xpcom/tests/unit/head_xpcom.js",
+    "sequential": true,
+    "threads": 1,
+    "usesDumpTests": false,
+    "verbose": true
+  },
+  "fixtures": [
+    {
+      "bytes": 168,
+      "path": "mozilla-smoke/negative/test_expected_failure.js",
+      "sha256": "4e860e91eb2ff3950ffbc6574829b95147802052fabdf3f154029e289b6466de"
+    },
+    {
+      "bytes": 50,
+      "path": "mozilla-smoke/negative/xpcshell.toml",
+      "sha256": "8704015158a335bd9931fbcdcc97529f317ebe8eecccf6b1f87dae25f45866d0"
+    },
+    {
+      "bytes": 645,
+      "path": "mozilla-smoke/positive/test_current_debug.js",
+      "sha256": "aecefb33e7768c489c5bf5a851c70d3df87dcb4f6986550108b49241fef0dff9"
+    },
+    {
+      "bytes": 47,
+      "path": "mozilla-smoke/positive/xpcshell.toml",
+      "sha256": "1ffa58e18b8cb51710d569aeceb56368ba9623cfeace6a99f69ade953f570943"
+    }
+  ],
+  "qualification": {
+    "broadFirefoxCoverage": false,
+    "browserChrome": false,
+    "nativeAuthentication": false,
+    "productQualification": false
+  },
+  "schema": 1,
+  "source": {
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "files": [
+      {
+        "bytes": 12047,
+        "path": "testing/xpcshell/mach_commands.py",
+        "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489"
+      },
+      {
+        "bytes": 114438,
+        "path": "testing/xpcshell/runxpcshelltests.py",
+        "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad"
+      },
+      {
+        "bytes": 61560,
+        "path": "testing/xpcshell/head.js",
+        "sha256": "7183adfdba72b4d8508208215ddddc6573f0105f1b5a6ebeb3bc5ad11a13b81e"
+      },
+      {
+        "bytes": 13287,
+        "path": "testing/xpcshell/xpcshellcommandline.py",
+        "sha256": "434bdc75e9abbd442b4efa99756a3e26c4abeadcf862639bf4f578b945130853"
+      },
+      {
+        "bytes": 31796,
+        "path": "testing/mozbase/mozlog/mozlog/structuredlog.py",
+        "sha256": "69be708d0b333c720b70ea89c1f95e72c6ccc7b45360b29759ae2827fa171d30"
+      },
+      {
+        "bytes": 8571,
+        "path": "testing/mozbase/mozlog/mozlog/logtypes.py",
+        "sha256": "6802f736c53758279f0c7bc1684c557d83aac2ba124fd8bf993f11030928d12b"
+      },
+      {
+        "bytes": 13115,
+        "path": "testing/mozbase/mozserve/mozserve/servers.py",
+        "sha256": "a67b42aa07d50a0d180a3a0176400dcba3b891122cf0b5e1488dc26798de0413"
+      },
+      {
+        "bytes": 359283,
+        "path": "js/src/builtin/TestingFunctions.cpp",
+        "sha256": "3e41a25b7fdbb63c1ebe81b169a9a7df31acffb7bbb0f579753007c7c9bad146"
+      },
+      {
+        "bytes": 81038,
+        "path": "js/xpconnect/src/XPCComponents.cpp",
+        "sha256": "0a96f9810b7e5c4ab7f3f10f2bc6418f54f77fa584c0d8ef870cb02a56b401ee"
+      },
+      {
+        "bytes": 32421,
+        "path": "js/xpconnect/idl/xpccomponents.idl",
+        "sha256": "0423d45373cafd18ce71979c7ff9671ddfaf609f61d7aa89e6ef6c5f4f6ccfe3"
+      },
+      {
+        "bytes": 6741,
+        "path": "toolkit/modules/AppConstants.sys.mjs",
+        "sha256": "d69e3fec67dcc96c0572f396ad3e5b3b48f0ec63b2b54ba3c6143e79527d1cfd"
+      },
+      {
+        "bytes": 2803,
+        "path": "xpcom/tests/unit/xpcshell.toml",
+        "sha256": "5d7bb1d6235fa018913145227dd79e19aa828f11e26d70c804483f609ed2e00f"
+      },
+      {
+        "bytes": 678,
+        "path": "xpcom/tests/unit/head_xpcom.js",
+        "sha256": "7fbb66d1c184def357c4d7114aedc5d946f0440398891ce796510c25a65f6e95"
+      },
+      {
+        "bytes": 1350,
+        "path": "xpcom/tests/unit/test_versioncomparator.js",
+        "sha256": "6b54315225792c6428d908b02fa73d1b73d8bef8a61310d51862f30b74d582dd"
+      },
+      {
+        "bytes": 45302,
+        "path": "python/mozbuild/mozbuild/base.py",
+        "sha256": "23d86c23ee7068e6be588f6275003a821a7d774e986280a2fc6c8593b610317d"
+      },
+      {
+        "bytes": 1994,
+        "path": "js/xpconnect/shell/moz.build",
+        "sha256": "bdfe6aca1eb5dfcde216c2e53d2c89f64259e8b4c7da1c2fdfefd92cd67d804b"
+      },
+      {
+        "bytes": 13069,
+        "path": "testing/modules/StructuredLog.sys.mjs",
+        "sha256": "0416a36a194482afd467ead83789269c59a31a07d36c6ca4c6bc18f1fdb40ad7"
+      },
+      {
+        "bytes": 22149,
+        "path": "testing/modules/Assert.sys.mjs",
+        "sha256": "d3f362af4e30dc7c7c2714d9478d52fb807ae480e2a1da611ddfa71bf4f75adc"
+      }
+    ],
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "version": "158.0.1"
+  }
+}

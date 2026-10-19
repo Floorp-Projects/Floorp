@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "scope": "PINNED_CURRENT_MOZILLA_XPCSHELL_SMOKE_IMPLEMENTATION_REVIEW",
+  "decision": {
+    "sourceComponents": "CLEAR",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "actualMacOrMozillaExecutedByReviewer": false,
+    "newWorkflowExecutionGO": "PENDING_FINAL_FULL_REGRESSION_IMMUTABLE_ROUTE_AND_SEPARATE_EXECUTION_REVIEW"
+  },
+  "contract": "current-source-mozilla-xpcshell-smoke-v1",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "freezeBinding": {
+    "files": 11,
+    "bytes": 1572,
+    "sha256": "6df7713ba8a57445ada91ed9b312f0784e91628dd089c472304a224186265431",
+    "allCurrentFileBytesAndHashesMatch": true
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 43309,
+      "sha256": "fdf40e5b63bee0b457402ab8c8e884da91b295cc184a300479459afb6917a142"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 11218,
+      "sha256": "c4313a1664ba2e964299b09ba201871cc852c813dbb014ddb9201cdae9df825d"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_harness_smoke.py",
+      "bytes": 16546,
+      "sha256": "84111e7b6ec7039f8a080a9da07735685314152086a05f8d15260616486185a9"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_harness_smoke.py",
+      "bytes": 17491,
+      "sha256": "7f6062a2ceba0ef172b67c9125641da5132a6b96c7dda62d0b96673f324fdb3a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_harness_receipt.py",
+      "bytes": 13639,
+      "sha256": "80fe26e0476de8cff4c2130aa1c17afb3a532a114b62ccb3694a882abcaf26d6"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_harness_receipt.py",
+      "bytes": 21309,
+      "sha256": "a5bae7b4f2445680a63ed31111ff5a89165c6da34eb2cefb451f8feb17c28b26"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke.json",
+      "bytes": 5021,
+      "sha256": "1d8687026469552c5e241404603453742a5ed4ccb8985892d4660872c2bb092c"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/negative/test_expected_failure.js",
+      "bytes": 168,
+      "sha256": "4e860e91eb2ff3950ffbc6574829b95147802052fabdf3f154029e289b6466de"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/negative/xpcshell.toml",
+      "bytes": 50,
+      "sha256": "8704015158a335bd9931fbcdcc97529f317ebe8eecccf6b1f87dae25f45866d0"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/positive/test_current_debug.js",
+      "bytes": 645,
+      "sha256": "aecefb33e7768c489c5bf5a851c70d3df87dcb4f6986550108b49241fef0dff9"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/mozilla-smoke/positive/xpcshell.toml",
+      "bytes": 47,
+      "sha256": "1ffa58e18b8cb51710d569aeceb56368ba9623cfeace6a99f69ade953f570943"
+    }
+  ],
+  "priorComponentReview": {
+    "bytes": 9059,
+    "sha256": "d2da7e8d608b787d1241b6fe1b6ba904215d766195b5fcceaf3118964e210990",
+    "scope": "stock Node autostart suppression and fixed mozlog reader"
+  },
+  "implementation": {
+    "sourceAndFixtures": "18 pinned Runtime source files and four fixture files are verified before and after cases. The fixed positive tests actual JavaScript compiled DEBUG, AppConstants.DEBUG and version 158.0.1; negative names a deliberate Assert failure; upstream comparator keeps its original manifest/head.",
+    "builtAssets": "Require current task obj-root-contained executable xpcshell and XUL, freshness after the current job origin, x86_64 Mach-O types/UUIDs and per-case post hashes. Darwin bundle path agrees with the pinned get_binary_path implementation.",
+    "selectionAndRetry": "Each case uses the real mach xpcshell-test with verbose, sequential, threads 1, explicit manifest and one absolute test file. Only the MOZ_AUTOMATION key is removed from a copy of the clean child environment to prevent stock retry. No dump-tests, failure-to-pass or crash/timeout masking option is used.",
+    "serverScope": "Set the existing MOZ_ASSUME_NODE_RUNNING switch to 1 and reject inherited HTTP2/Node port or switch values. No detached HTTP2 server is started or qualified. Stock HTTP3 and selected xpcshell children inherit the monitored stage group; network coverage is explicitly false.",
+    "childRunnerBoundary": "Each case gets a separate Runner with the same job monotonic/time origin, limits, 360-minute platform ceiling and existing phase deadline. Raw JSONL is under that case native-private directory, which the unchanged Runner monitors against existing private-data bounds.",
+    "expectedNegative": "Require real harness exit 1, exact leader reap with that exit, nonzero-exit at wait, verified group gone, clean cleanup and no stopping monitor failure plus one matching unexpected FAIL lifecycle. Keep child runnerFailure and harness.status failed; never clear or mutate a prior parent failure.",
+    "failureEvidence": "Attach the mutable case result before setup. Outer finally retains safe process/stage/first-failure evidence, latest 16 monitor diagnostics and the separate stopping detail. Raw child records/errors are private only. Setup, reader, collection and receipt-write failures leave attached failed evidence and do not become a satisfied control.",
+    "publicProjection": "Fixed key/type/enum projections strip IDs/tags/paths at nested monitor/query/cleanup levels. Unknown counters remain null; unknown Failure strings and exception class names map to fixed public fallbacks. Case receipt privateEvidence/privateErrors are not returned to the public caller.",
+    "pipelineScope": "--mozilla-only is consumer-only and incompatible with restore-only. It runs after successful resumed full build and current host object validation, before stage-package/native. Success is mozilla-ready with separate qualification and package/native NOT_TESTED, rather than general native-validation passed.",
+    "monitorClassification": "A stopping monitor failure in the nested Mozilla case makes validationOutcome execution monitor-inconclusive; it does not establish a product failure."
+  },
+  "resolvedFindings": [
+    {
+      "priority": "P2",
+      "title": "DEBUG marker not bound to active selected test",
+      "resolution": "Exact INFO marker requires in-suite and one active expected test, with any explicit row test matching it. Out-of-lifecycle, foreign-ID and ambiguous-active markers are ignored and fail the required marker check."
+    },
+    {
+      "priority": "P2",
+      "title": "Per-case monitor and cleanup evidence lost on setup or persistence failures",
+      "resolution": "Caller preattaches the case dictionary; outer finally retains safe first failure/process/stages/latest16/stopping monitor evidence, and private raw evidence is saved separately. Invalid/failed evidence cannot satisfy a case."
+    },
+    {
+      "priority": "P2",
+      "title": "Arbitrary Failure strings and exception class names entered public error fields",
+      "resolution": "error_code allows only known Runner/module literal Failure codes and fixed exception type names; unknown strings/classes become runner-failure or exception while original text stays private."
+    }
+  ],
+  "independentValidation": {
+    "platform": "Linux x86_64",
+    "resourceWarnings": "errors",
+    "workingDirectory": "tools/qa/native-nonpgo",
+    "finalFocused": {
+      "command": "python -m unittest -v test_mozilla_harness_smoke test_pipeline_restore test_mozilla_harness_receipt",
+      "total": 60,
+      "passed": 60,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.067,
+      "exitCode": 0,
+      "logBytes": 11741,
+      "logSHA256": "bd5f90f9ad05b22bb9f9ba8531c16020296393b139282dd43b802f50c0d63f5e"
+    },
+    "actualFixedInputVerification": {
+      "sourceFiles": 18,
+      "fixtureFiles": 4,
+      "allHashesMatch": true,
+      "planSHA256": "1d8687026469552c5e241404603453742a5ed4ccb8985892d4660872c2bb092c"
+    },
+    "negativeControls": [
+      "Original four debug-marker false positives now reject",
+      "Setup failure retains attached case and unknown process",
+      "Monitor stop plus receipt-write failure retains original child failure and separate stop detail",
+      "Twenty samples retain latest16 plus independent earlier stop",
+      "Reader/projection exception retains child cleanup and private evidence",
+      "Expected negative with unverified cleanup never satisfies control",
+      "Existing parent first failure is not cleared",
+      "Existing case receipt is not overwritten on rejected setup",
+      "Unknown child/setup Failure text and arbitrary collection/writer class names never enter public result",
+      "Mozilla case/config/proof failure blocks qualified pipeline status",
+      "Mozilla never runs after full-build failure; restore-only combination rejected"
+    ],
+    "controlsNotClaimed": "Driver and pipeline fault controls use deterministic Runner/Mach doubles or tiny files; they are not actual compiled Mozilla execution, a load test or native authentication evidence.",
+    "fullRegression": "The final complete regression run after these fixes remains a separate required result; an earlier pre-fix full-suite pass is not used to qualify final source."
+  },
+  "remainingGates": [
+    "Complete the final regression run against these exact bytes.",
+    "Independently bind any new immutable fixture/caller and exact explicit manifest/test selection before execution.",
+    "Actual Mac must verify produced xpcshell/XUL identities, compiled DEBUG/version positive, exact deliberate failure, unmodified upstream comparator, real exit status, complete mozlog lifecycle and owned resource/cleanup evidence.",
+    "Keep resumed cross-run provenance, current job/origin separation and all existing SDK/artifact/restore guards."
+  ],
+  "qualificationLimits": {
+    "broadFirefoxSuite": false,
+    "browserChrome": false,
+    "networkCoverage": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "productQualification": false,
+    "freshObjdir": false,
+    "sameJob": false,
+    "originalNativeExitCause": "UNKNOWN"
+  },
+  "reviewActions": {
+    "sourceEdited": false,
+    "newCIStarted": false,
+    "CIStatusPolled": false,
+    "activeLogsRead": false,
+    "largePayloadAcquired": false,
+    "remoteWritten": false
+  }
+}

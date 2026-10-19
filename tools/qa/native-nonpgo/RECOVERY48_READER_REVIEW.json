@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "scope": "CURRENT_PINNED_MOZILLA_XPCSHELL_NODE_DESIGN_AND_RECEIPT_READER_REVIEW",
+  "decision": {
+    "nodeDesign": "USE_STOCK_NODE_AUTOSTART_SKIP_FOR_FIXED_NONNETWORK_CASES",
+    "fixedReader": "CLEAR",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "actualMozillaHarnessExecuted": false,
+    "integrationOrNewWorkflowExecutionGO": "NOT_ESTABLISHED_BY_THIS_COMPONENT_REVIEW"
+  },
+  "nodeDesign": {
+    "recommended": "Set the existing MOZ_ASSUME_NODE_RUNNING switch to exactly 1 only in the controlled smoke child environment, leave MOZHTTP2_PORT and other invented server ports unset, and state that no HTTP/2 server is started or qualified for these network-independent cases.",
+    "why": "Pinned trySetupNode returns before resolving NODEJS or creating MozHttp2Server when the switch is truthy. Missing HTTP2 port is a warning, which is consistent with fixed nonnetwork tests. A switch name or stock informational message is not evidence that an external server exists.",
+    "scope": [
+      "compiled DEBUG and AppConstants/version positive fixture",
+      "one deliberately failing Assert task",
+      "original upstream version comparator test with explicit manifest and single absolute file"
+    ],
+    "alternatives": [
+      {
+        "option": "QA no-network-server patch",
+        "assessment": "Unnecessary for these fixed cases; changes the stock harness semantics and adds maintenance and patch verification."
+      },
+      {
+        "option": "Identity-bound ancillary registry",
+        "assessment": "Needed if an actual detached HTTP2 server becomes part of the requested test scope; unnecessary when its creation is prevented. Do not claim the stage PGID covers a started detached server."
+      }
+    ],
+    "HTTP3": "The switch does not suppress startHttp3Server. Its subprocess inherits the stage group in the pinned code and remains within existing resource/cleanup accounting. Missing server or ERROR records must not be silently treated as clean success.",
+    "xpcshellChild": "Pinned launchProcess calls psutil.Popen or subprocess.Popen without a new session/group argument; keep the fixed selected tests network-independent and do not broaden this to arbitrary child-process tests.",
+    "dumpTests": "Do not use --dump-tests as a no-execution probe: servers start before buildTestList, whose dump-tests branch calls sys.exit before the normal shutdown calls.",
+    "retryAndSelection": "Use explicit manifest and one absolute selected file, --verbose --sequential --threads 1, and remove only MOZ_AUTOMATION from the clean child environment where required to prevent automatic harness retry; preserve its actual failure result and require exact selected-test lifecycle.",
+    "controls": "Five independently extracted pinned trySetupNode controls used a stub server and no real process. Switch 1 without port: zero starts plus one warning; switch 1 with port: zero starts; string 0 is also truthy and skips, so configure exactly 1; default with NODEJS: one stub start; no NODEJS: zero starts plus warning."
+  },
+  "readerReview": {
+    "fileBounds": "Owned regular file, no-follow/nonblocking descriptor, exact pre/post file identity, complete UTF-8 JSONL, strict duplicate-key and nonfinite-JSON rejection, byte/line/record/test bounds.",
+    "selection": "Exactly matching suite IDs, one suite start/end, each selected test starts/ends once, no retries/duplicates or incomplete groups; verbose logging is required to avoid ambiguous replay after test_end.",
+    "positive": "Only complete expected PASS lifecycles with no skip/unexpected/failure/error/crash/timeout/nonzero process exit satisfy the control; source-bound upstream zero-subtest tests are allowed.",
+    "negative": "Require exactly one selected unexpected FAIL subtest and FAIL test end, exact fixed failure marker and no additional failures; receipt status remains failed even when expectationSatisfied is true.",
+    "markerBinding": "Exact INFO marker is credited only within the suite while exactly one selected test is active; an optional row test ID must match it. Missing test field remains supported for stock head.info.",
+    "publicPrivacy": "Only bounded counts, fixed statuses/reasons, marker booleans and full file size/hash are returned. Raw selected IDs, paths, messages, process metadata and marker strings are omitted.",
+    "callerResponsibilities": "Reader does not verify real harness exit status, immutable source/binary binding, timing or cleanup. The integration must independently require the actual intended positive/negative exit, monitored ownership and cleanup proof."
+  },
+  "resolvedFinding": {
+    "priority": "P2",
+    "problem": "The original debug INFO marker was credited before/after suite or test execution and even with a foreign test ID.",
+    "originalReaderSHA256": "5d36db705847b1e5642a2a939f8632cadd49e85902bbaf99c683ca9cd80f1a1d",
+    "independentlyReproducedFalsePasses": 4,
+    "fixedNegativeControlsAllReject": true,
+    "fix": "Bind marker to unique active selected test; outside/foreign/ambiguous events do not satisfy it.",
+    "additionalTests": "Six added cases cover suite-before, test-after, suite-after, foreign ID, stock missing-test-field positive, and multiple-active negative."
+  },
+  "independentValidation": {
+    "platform": "Linux x86_64",
+    "resourceWarnings": "errors",
+    "readerBeforeFix": {
+      "total": 21,
+      "passed": 21,
+      "skipped": 0,
+      "seconds": 0.015,
+      "log": {
+        "bytes": 4504,
+        "sha256": "468c52f678e0aa17f0a6e23dd34f1b82390ac5698f710bb5fb720de88b6d3acf"
+      }
+    },
+    "readerAfterFix": {
+      "total": 27,
+      "passed": 27,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 0.016,
+      "exitCode": 0,
+      "log": {
+        "bytes": 5524,
+        "sha256": "3cd15a44483a26ec2d9d3e058a2ded31ca767da8da17febf217a3311dbed2ef3"
+      }
+    },
+    "additionalCounterexamples": {
+      "originalFalsePasses": 4,
+      "fixedRejects": 4
+    },
+    "nodeMethodControls": 5,
+    "realNodeOrXpcshellExecuted": false
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/mozilla_harness_receipt.py",
+      "bytes": 13639,
+      "sha256": "80fe26e0476de8cff4c2130aa1c17afb3a532a114b62ccb3694a882abcaf26d6"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_mozilla_harness_receipt.py",
+      "bytes": 21309,
+      "sha256": "a5bae7b4f2445680a63ed31111ff5a89165c6da34eb2cefb451f8feb17c28b26"
+    }
+  ],
+  "primarySources": [
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/xpcshell/runxpcshelltests.py",
+      "bytes": 114438,
+      "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad",
+      "keyLocations": "trySetupNode 1751-1794; HTTP3 1815-1870; setup-before-selection 2318-2326; normal shutdown 2611-2612",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/testing/xpcshell/runxpcshelltests.py"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/mozbase/mozserve/mozserve/servers.py",
+      "bytes": 13115,
+      "sha256": "a67b42aa07d50a0d180a3a0176400dcba3b891122cf0b5e1488dc26798de0413",
+      "keyLocations": "HTTP3 Popen 66-75; HTTP2 Popen start_new_session 310-318",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/testing/mozbase/mozserve/mozserve/servers.py"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/xpcshell/head.js",
+      "bytes": 61560,
+      "sha256": "7183adfdba72b4d8508208215ddddc6573f0105f1b5a6ebeb3bc5ad11a13b81e",
+      "keyLocations": "info 868-873",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/testing/xpcshell/head.js"
+    },
+    {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "path": "testing/modules/StructuredLog.sys.mjs",
+      "bytes": 13069,
+      "sha256": "0416a36a194482afd467ead83789269c59a31a07d36c6ca4c6bc18f1fdb40ad7",
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/blob/7dd619742b25567e479eeda97ae071d10542ad0b/testing/modules/StructuredLog.sys.mjs"
+    }
+  ],
+  "limits": [
+    "No actual Mac or compiled Mozilla xpcshell run has been performed by this review.",
+    "This component review does not review the unfinished smoke integration, authorize a new workflow or qualify broad Firefox/browser-chrome/network/native authentication coverage.",
+    "The running full47 validation source and workflow are unchanged."
+  ],
+  "reviewActions": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "CIStatusPolled": false,
+    "activeLogsRead": false,
+    "largePayloadDownloaded": false,
+    "remoteWritten": false
+  }
+}
