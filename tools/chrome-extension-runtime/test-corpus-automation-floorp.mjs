@@ -395,10 +395,42 @@ async function runUIVision() {
 
     await until(
       async () => {
-        item.observed = await boundedAutomationQuery(
-          actor(target).sendQuery("Snapshot"),
-          "Snapshot",
-        );
+        const beforeSnapshotGlobal =
+          target.linkedBrowser.browsingContext.currentWindowGlobal;
+        const beforeSnapshotInnerWindowId = beforeSnapshotGlobal?.innerWindowId;
+        const beforeSnapshotURL = beforeSnapshotGlobal?.documentURI?.spec;
+        try {
+          item.observed = await boundedAutomationQuery(
+            actor(target).sendQuery("Snapshot"),
+            "Snapshot",
+          );
+        } catch (error) {
+          const browser = target.linkedBrowser;
+          const currentInnerWindowId =
+            browser.browsingContext.currentWindowGlobal?.innerWindowId ?? null;
+          const isLoadingDocument =
+            /** @type {import("./automation-test-types.ts").UIVisionNavigationBrowser} */ (browser)
+              .webProgress.isLoadingDocument;
+          // The macro's real open command can replace the actor during this
+          // read-only query. Retry only that exact owned-document transition.
+          if (
+            String(error) !==
+              "AbortError: Actor 'CorpusAutomation' destroyed before query 'Snapshot' was resolved" ||
+            !beforeSnapshotInnerWindowId || beforeSnapshotURL !== url ||
+            browser.currentURI.spec !== url ||
+            (!(currentInnerWindowId &&
+              currentInnerWindowId !== beforeSnapshotInnerWindowId) &&
+              !isLoadingDocument)
+          ) throw error;
+          item.invocation?.documentChanges?.push({
+            error: String(error),
+            beforeInnerWindowId: beforeSnapshotInnerWindowId,
+            currentInnerWindowId,
+            isLoadingDocument,
+            url: browser.currentURI.spec,
+          });
+          return false;
+        }
         item.engineLog = (await boundedAutomationQuery(
           panelActor().sendQuery("Snapshot"),
           "Snapshot",
@@ -582,10 +614,17 @@ async function runAutoma() {
     );
     await until(
       async () => {
-        const target = [...window.gBrowser.tabs].find(
-          (tab) => tab.linkedBrowser.currentURI.spec === url,
-        );
-        if (!target) return false;
+        const targets =
+          /** @type {import("./native-test-types.ts").NativeCorpusWindow[]} */ ([
+            ...Services.wm.getEnumerator("navigator:browser"),
+          ]).filter((browserWindow) => !!browserWindow.gBrowser)
+            .flatMap((browserWindow) => [...browserWindow.gBrowser.tabs])
+            .filter((tab) => tab.linkedBrowser.currentURI.spec === url);
+        if (!targets.length) return false;
+        if (targets.length !== 1) {
+          throw Error("Expected one exact authored Automa target tab");
+        }
+        const target = targets[0];
         item.observed = await boundedAutomationQuery(
           actor(target).sendQuery("Snapshot"),
           "Snapshot",
