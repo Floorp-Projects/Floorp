@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "scope": "ACTUAL_INTEL_MAC_SHORT43_TERMINAL_FAILURE",
+  "run": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "id": 39194618542,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39194618542",
+    "status": "completed",
+    "conclusion": "failure",
+    "event": "push",
+    "attempt": 1,
+    "branch": "codex/mac-native-helper-import-recovery43-20261019",
+    "caller": "5873b369b8193202a370876835fad41d6a353c2b",
+    "fixture": "8135abdafa050694c32cf87dce680bd61816fb22"
+  },
+  "job": {
+    "id": 117874567535,
+    "name": "checkpoint-producer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T03:25:32Z",
+    "completedAt": "2026-10-19T03:26:37Z"
+  },
+  "prelaunchReviewCommit": "99b0bf94c59e907c84c0791ce74c8a04b31acdad",
+  "decodedProviderLog": {
+    "bytes": 27318,
+    "sha256": "46b1fb082ae21fe871fb170c9c22be94b1c0835a5920111c9ad1d90ba1f783b3",
+    "rawPublished": false
+  },
+  "artifactCount": 0,
+  "firstFailure": {
+    "stage": "completion-tests",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 60.52
+  },
+  "monitorFailure": null,
+  "monitorDiagnostics": [],
+  "qaTests": {
+    "complete": true,
+    "rawContentPublished": false,
+    "exceptionTextPublished": false,
+    "total": 210,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "status": "failed",
+    "seconds": 38.67,
+    "bytes": 42283,
+    "sha256": "e0b1f1bf2b3e5eae910b6add26b8eead0d7e7a7c477585b40fc3fdb97d84e4d7",
+    "cases": [
+      {
+        "outcome": "FAIL",
+        "test": "test_helper_import_preflight.WorkloadTests.test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+        "phase": "test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+        "frames": [
+          {
+            "file": "test_helper_import_preflight.py",
+            "line": 152
+          }
+        ],
+        "exceptionType": "AssertionError"
+      }
+    ],
+    "nativeSelectionDiagnostics": [],
+    "heldChildBoundaryDiagnostics": []
+  },
+  "recordingTests": {
+    "status": "NOT_EXECUTED",
+    "expected": 14
+  },
+  "helperImportComparison": {
+    "status": "NOT_EXECUTED",
+    "step": "skipped"
+  },
+  "stages": [
+    {
+      "stage": "census-abi-compile",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 0,
+      "peakRSSMiB": 50,
+      "minimumFreeGiB": 107.97
+    },
+    {
+      "stage": "census-abi",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 377,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 107.96
+    },
+    {
+      "stage": "system-version",
+      "exitCode": 0,
+      "reason": null,
+      "failurePhase": null,
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0
+      },
+      "logBytes": 7,
+      "peakRSSMiB": 0,
+      "minimumFreeGiB": 107.96
+    },
+    {
+      "stage": "completion-tests",
+      "exitCode": 1,
+      "reason": "nonzero-exit",
+      "failurePhase": "wait",
+      "cleanupFailure": null,
+      "cleanupDiagnostics": [],
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 1
+      },
+      "logBytes": 42283,
+      "peakRSSMiB": 89,
+      "minimumFreeGiB": 107.96
+    }
+  ],
+  "assessment": {
+    "observedFailure": "New tiny-worker unittest result status assertion at fixed source line 152.",
+    "rootCause": "UNKNOWN",
+    "missingEvidence": [
+      "Inner workload firstFailure and worker/load/cleanup metrics were not projected into the unittest receipt."
+    ],
+    "timingHypothesis": {
+      "status": "PLAUSIBLE_NOT_ESTABLISHED",
+      "facts": [
+        "The test requests a 0.25-second timed workload with two pairs at coordinator target offsets 0 and 0.125 seconds.",
+        "Workers each use an independent deadline after reading their start barrier; every mocked sample requires both workers alive before and after it.",
+        "Coordinator scheduling delay can allow a normally completed finite worker to fail the liveness predicate."
+      ],
+      "notExcluded": [
+        "Spawn/readiness, disk I/O, worker receipt, cleanup or other workload assertion failures."
+      ]
+    },
+    "noMonitorFailureRecorded": true,
+    "allOuterStagesExactLeadersReapedAndGroupsGone": true,
+    "innerIndividualCleanupEvidence": "NOT_RETAINED; outer group/reap proof is separate.",
+    "fullHostXULQualification": "NOT_TESTED",
+    "nativeAuthenticationQualification": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN",
+    "startupRepairEstablished": false,
+    "sourceScope": "The helper import/ABI/timeout tests were source-bound within a 210-case suite; the sole failure used mocked helper samples. The real 60-second helper contention comparison was not reached.",
+    "next": "Retain safe structured worker-control evidence and separate the finite real-child unit control from timed liveness admission; preserve the actual 60-second timed diagnostic and production resource/timeout policy."
+  }
+}

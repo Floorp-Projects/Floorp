@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY43_ACTUAL_INTEL_MAC_SHORT_TERMINAL_INDEPENDENT_REVIEW",
+  "decision": {
+    "short43": "FAILED_UNIT_CONTROL_BEFORE_BENCHMARK",
+    "longValidation": "HOLD_UNTIL_CORRECTED_SHORT_TERMINAL_REVIEW",
+    "actualMacHelperImportRepair": "NOT_ESTABLISHED",
+    "fullHostXULQualification": "NOT_TESTED",
+    "nativeAuthenticationQualification": "NOT_TESTED",
+    "rootCause": "UNKNOWN",
+    "openEvidenceGap": "Inner tiny-workload failure predicate and per-child measurements were not retained"
+  },
+  "bindings": {
+    "receipt": {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_TERMINAL_RESULT.json",
+      "bytes": 5487,
+      "sha256": "003e97c24d0cf5efc04031c9a1a89754d465d31a13e6a8b844c16b6ca6584776"
+    },
+    "run": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "id": 39194618542,
+      "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39194618542",
+      "event": "push",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "branch": "codex/mac-native-helper-import-recovery43-20261019"
+    },
+    "job": {
+      "id": 117874567535,
+      "name": "checkpoint-producer",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "startedAt": "2026-10-19T03:25:32Z",
+      "completedAt": "2026-10-19T03:26:37Z",
+      "totalJobs": 1
+    },
+    "caller": {
+      "commit": "5873b369b8193202a370876835fad41d6a353c2b",
+      "tree": "02549206e7d7dc92f36c7ed9819f2e272dabbbcb",
+      "workflowSHA256": "50670dcc0b82bb4def1f422c1ee9843ca38d8d43801284ef0bf280d955f12cb1"
+    },
+    "fixture": {
+      "commit": "8135abdafa050694c32cf87dce680bd61816fb22",
+      "tree": "427051eb3212238338b44b1eb93315b8a5640f74"
+    },
+    "sourcePredicate": {
+      "path": "tools/qa/native-nonpgo/test_helper_import_preflight.py",
+      "bytes": 28551,
+      "sha256": "43223756099e0138c627693aa94571ac769d51688597f80416b6bf7bdbc399b8",
+      "test": "test_helper_import_preflight.WorkloadTests.test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions",
+      "line": 152,
+      "predicate": "result['status'] == 'passed'"
+    },
+    "decodedProviderLog": {
+      "bytes": 27318,
+      "sha256": "46b1fb082ae21fe871fb170c9c22be94b1c0835a5920111c9ad1d90ba1f783b3",
+      "rawPublished": false
+    }
+  },
+  "independentVerification": {
+    "terminalProviderRunAndJobsRead": true,
+    "logsReadOnlyAfterJobCompleted": true,
+    "decodedProviderObjectCount": 1,
+    "fullQATestProjectionExact": true,
+    "firstFailureAndMonitorFieldsExact": true,
+    "allFourCuratedStageProjectionsExact": true,
+    "artifactAPIRead": true,
+    "artifactCount": 0,
+    "immutableSourcePredicateChecked": true,
+    "receiptHashAndPrivacyChecked": true,
+    "receiptSourceBinding": "Bound fixture and caller full-byte readbacks were independently verified during prelaunch review",
+    "testsRerunDuringTerminalReview": false,
+    "sourceEdited": false,
+    "newCIStarted": false
+  },
+  "observations": {
+    "qa": {
+      "total": 210,
+      "passed": 209,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 38.67,
+      "privateLogBytes": 42283,
+      "privateLogSHA256": "e0b1f1bf2b3e5eae910b6add26b8eead0d7e7a7c477585b40fc3fdb97d84e4d7",
+      "caseFailureType": "AssertionError",
+      "casePhase": "test_actual_small_workers_touch_memory_disk_and_exit_reaped_without_new_sessions"
+    },
+    "firstFailure": {
+      "stage": "completion-tests",
+      "code": "nonzero-exit",
+      "elapsedSeconds": 60.52
+    },
+    "monitorFailure": null,
+    "monitorDiagnostics": [],
+    "fatalMonitorStopRecorded": false,
+    "stageResults": [
+      {
+        "stage": "census-abi-compile",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      },
+      {
+        "stage": "census-abi",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      },
+      {
+        "stage": "system-version",
+        "exitCode": 0,
+        "reason": null,
+        "failurePhase": null,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      },
+      {
+        "stage": "completion-tests",
+        "exitCode": 1,
+        "reason": "nonzero-exit",
+        "failurePhase": "wait",
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 1
+        },
+        "groupCleanup": "verified-gone",
+        "cleanupFailure": null
+      }
+    ],
+    "allFourOuterGroupsVerifiedGone": true,
+    "allFourExactOuterLeadersReaped": true,
+    "allOuterCleanupFailuresNull": true,
+    "recordingTests": "NOT_EXECUTED; expected 14",
+    "helperImportIdleAndContendedComparison": "NOT_EXECUTED; workflow step skipped",
+    "workerImportGraphAndSixtySecondLoad": "NOT_OBSERVED",
+    "SDKAcquisition": false,
+    "floorpBuild": false,
+    "artifactCount": 0
+  },
+  "interpretation": [
+    "The failure is a new real-child unit-control status assertion. The suite's resource monitor did not report a fatal stop.",
+    "The failed test used mocked helper samples; this run does not establish a real inventory query, ABI or import-graph defect.",
+    "The assertion's private failure message and inner workload firstFailure, ready/barrier state, liveness, worker counters, per-child reaps and disk outcome were not projected. Its precise cause is UNKNOWN.",
+    "The unit requests 0.25 seconds, with its second pair targeted at 0.125 seconds, independent worker deadlines and live-before/live-after checks. Coordinator scheduling delay is a plausible source-bound counterexample, not an established explanation of this run.",
+    "Spawn/readiness, filesystem, worker-receipt, cleanup and other inner workload failures remain possible.",
+    "Verified outer group disappearance and exact outer leader reaping are separate evidence from unretained individual inner-child cleanup operations.",
+    "monitorFailure=null and empty retained diagnostics show no reported fatal/recovered diagnostic in this bounded driver result; they do not provide the unexecuted benchmark measurements.",
+    "Recovery42's original helper timeout cause and the earlier native exit cause remain UNKNOWN."
+  ],
+  "nextMinimalReviewContract": {
+    "designOnly": true,
+    "finiteUnitControl": "Explicit finite four-iteration, 1 MiB real-child control with actual counters and exact-child cleanup; no wall-clock liveness admission claim",
+    "timedDiagnostic": "Preserve the real default 60-second workload, per-phase six pairs, worker-liveness and sufficient-load checks, and the production resource and helper timeout policy",
+    "qualificationSeparation": "Finite controls must explicitly remain ineligible as duration qualification; require a negative test preventing finite-mode results from satisfying timed admission",
+    "evidence": "Single exact-case-bound allowlisted structured marker emitted in finally on success and failure, including fixed phase/code and bounded safe load/worker/cleanup predicates",
+    "projectionNegatives": [
+      "missing marker",
+      "duplicate marker",
+      "malformed data",
+      "private keys and free text",
+      "finite-mode duration qualification",
+      "projection or persistence failure replacing the original cause"
+    ],
+    "permissionOrOwnershipExpansionRequired": false,
+    "unresolvedFunctionalP1OrP2InConcept": 0,
+    "nextSourceAndActualMacReviewRequired": true
+  },
+  "limits": {
+    "original43FailureDetailsRecovered": false,
+    "actualSixtySecondBenchmarkExecuted": false,
+    "longTrialExecuted": false,
+    "productSigningPerformed": false,
+    "authenticationOrPermissionsChanged": false,
+    "atomicOrHostileSameUIDImmutabilityClaimed": false
+  }
+}
