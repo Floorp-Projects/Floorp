@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY47_IMMUTABLE_ROUTE_CONDITIONAL_PRELAUNCH",
+  "reviewedAtUTC": "2026-10-19T06:33:07Z",
+  "decision": {
+    "technicalRoute": "CLEAR",
+    "execution": "CONDITIONAL_ONLY_AWAIT_SHORT46_TERMINAL_REVIEW",
+    "openBlocking": 0,
+    "openP1": 0,
+    "openP2": 0,
+    "short46TerminalClearVerifiedInThisReview": false,
+    "fullHostXULOrNativeQualified": false
+  },
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "d3aeed32c8adabc88267e46cfbbd020f799adecb",
+    "tree": "f382943ec2d5bcc79d1e00bf558c2fcb3bbbac3d",
+    "parent": "4052e5434c83d012995a777baf3d00b6bf9e7e50",
+    "changedFiles": 8,
+    "providerFullContentReadbacks": 8,
+    "exactMatches": 8,
+    "changes": "Five pure public-projection source/test files, one updated full-consumer template, two public documents; functional checkpoint/manifest/restore/replay configuration and plan are unchanged."
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "tree": "e3d85aa3120525478f88b461c1deae1f060b420f",
+    "parent": "74f408af098528dd07d6e0ff68900945671757db",
+    "changedPaths": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "providerExactTemplateRender": true,
+    "renderedBytes": 10473,
+    "renderedSHA256": "866b925e96f50bcf080e362ca4bb7782450d9e23b00ad006da6b9a1456927e4a"
+  },
+  "workflow": {
+    "branch": "codex/mac-native-checkpoint-consumer-recovery47-20261019",
+    "jobCount": 1,
+    "role": "consumer",
+    "runner": "macos-15-intel",
+    "timeoutMinutes": 360,
+    "initialCreatedPushBeforeZeroAttempt1Guards": true,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "expectedQA": 305,
+    "expectedRecording": 14,
+    "requiredSkips": 0,
+    "explicitVerifiedOriginFetchAndRestore": true,
+    "restoreOnly": false,
+    "newProducer": false,
+    "newArtifactUpload": false,
+    "finalSuccessRequiresActualNativePassed": true,
+    "syntax": {
+      "YAML": "passed",
+      "bashBlocks": 7,
+      "inlinePythonBlocks": 2
+    },
+    "otherWorkflowTriggers": "Unchanged from the reviewed caller parent; only one workflow path changed."
+  },
+  "checkpoint": {
+    "artifact": 12164479528,
+    "originRun": 39197008470,
+    "originProducer": 117881829274,
+    "bytes": 2213942620,
+    "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "retentionDays": 1,
+    "maxStoredBytes": 10737418240,
+    "crossRunContract": "verified-origin-cross-run-checkpoint-replay-v1",
+    "sameJob": false,
+    "freshObjdir": false,
+    "strictSameRun": false
+  },
+  "validation": {
+    "independentlyExecutedDelta": {
+      "total": 29,
+      "passed": 29,
+      "skipped": 0,
+      "seconds": 0.27,
+      "resourceWarnings": "errors"
+    },
+    "fullQA": {
+      "total": 520,
+      "passed": 503,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 28.593,
+      "logBytes": 102611,
+      "logSHA256": "c29947dd22eefebbec2c0c0edc16ab9b02b73e560041ff209cc2b26ac8dc374e",
+      "resourceWarnings": "errors",
+      "cwd": "QA module directory",
+      "actualDarwinChecks": "SKIPPED on Linux; required skip0 in Mac consumer"
+    },
+    "fullQAProvenance": "Execution recorded in the committed preflight manifest; this route review does not rerun that full suite. Independent prior base500 and current delta29 results are separately recorded.",
+    "shortActualMacGate": "Existing short46 must pass 285 QA plus 14 recording with zero skips, full real archive/context restoration, actual effective configuration and terminal independent review."
+  },
+  "conditionsBeforeActivation": [
+    "Short46 terminal source-bound evidence and independent review must clear every required actual Mac test, restore/context/effective-config and cleanup condition.",
+    "Recheck unused branch, no overlapping owned runs and normal official unexpired SDK/artifact metadata immediately before activation; acquisition still verifies all original pins.",
+    "Keep the exact reviewed fixture/caller and existing artifact. No manifest/environment spoofing, weakened restore guards or new upload.",
+    "Consumer47 itself must execute 305 QA and 14 recording cases with zero skips before acquisition and continuation."
+  ],
+  "privacyDeltaReview": {
+    "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_PUBLIC_PROJECTION_REVIEW.json",
+    "bytes": 5367,
+    "sha256": "847780301decd201af6ca0e21d567d04f8f973b25175ff1b42f313bbfc6f4649",
+    "resolvedP2": true,
+    "additionalMacRunSolelyForProjectionRequired": false
+  },
+  "bindings": [
+    {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 40813,
+      "sha256": "d0fc9fc8183f98647669dd7a312cb7501dd5e3b96eb1ddb01475622e832792e8"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+      "bytes": 7301,
+      "sha256": "666d5b53213ef64842b3cfd485197c4c52a2376b643f7f1b8005e2470b324401"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_restore_replay.py",
+      "bytes": 5218,
+      "sha256": "740c2ced586a0173ccd7c1de597a9f3add5094826a670f3377ced8d6c1c0438e"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/checkpoint_public.py",
+      "bytes": 6953,
+      "sha256": "4c6715ed0cd4f76f592504279141ad52d525ee891ae923fa096dc2b312e49955"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_checkpoint_public.py",
+      "bytes": 13645,
+      "sha256": "b9d7858eedd1c02e0fd852128d77b5a9ac6e1aed13d60548be7019010349c67a"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_CHECKPOINT_CONSUMER_WORKFLOW.yml.disabled",
+      "bytes": 10455,
+      "sha256": "41294e4534675bf3c5b7278f29c2ab4e9a48f7054df5cc39302c0a438178e6df"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_PUBLIC_PROJECTION_PREFLIGHT.json",
+      "bytes": 5631,
+      "sha256": "fdd8cba822fc119812e31acf15229c7b6367178e0dcbc73f19fcbbb1648d4370"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY47_PUBLIC_PROJECTION_REVIEW.json",
+      "bytes": 5367,
+      "sha256": "847780301decd201af6ca0e21d567d04f8f973b25175ff1b42f313bbfc6f4649"
+    }
+  ],
+  "reviewActions": {
+    "newCIStatusPolling": false,
+    "activeLogsFetched": false,
+    "sourceEdited": false,
+    "CIStarted": false,
+    "payloadDownloaded": false,
+    "remoteWritten": false
+  },
+  "limits": [
+    "This review is conditional route preparation, not a terminal short46 pass or present execution GO.",
+    "It establishes no resumed full-host/XUL, package or native authentication result and no original native-cause resolution.",
+    "Public projection does not remove existing private validation evidence or retroactively alter prior job logs."
+  ]
+}
