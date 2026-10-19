@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 import { zipSync } from "fflate/browser";
+import { captureConsumerFailure } from "../../helpers/capture-consumer-failure-witness.mts";
 import {
   assert,
   assertEquals,
@@ -325,6 +326,16 @@ async function consumerTab() {
       () => consumer.linkedBrowser.contentTitle === "capture-stopped",
       "extension unload ends real site consumer tracks",
     );
+  } catch (error) {
+    try {
+      captureConsumerFailure(window, tabs, error);
+    } catch (diagnosticError) {
+      console.error(
+        "[CaptureConsumerNativeFailureWitness]",
+        String(diagnosticError),
+      );
+    }
+    throw error;
   } finally {
     await IOUtils.writeUTF8(
       PathUtils.join(PathUtils.tempDir, "floorp-consumer-native-titles.json"),
