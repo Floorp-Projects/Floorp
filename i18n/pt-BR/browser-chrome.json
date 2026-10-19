@@ -65,11 +65,11 @@
       "new-workspace": "Novo espaço de trabalho ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "Sincronize este espaço de trabalho e suas abas da web com sua conta Mozilla.",
+      "error-title": "Sincronização do Espaço de Trabalho",
+      "incoming-failed": "Não foi possível ler alguns dados sincronizados. As abas existentes serão mantidas até que a sincronização seja bem-sucedida.",
+      "invalid-workspace": "Não foi possível sincronizar este espaço de trabalho. Use um nome e um ícone com no máximo 256 caracteres e tente novamente. Os demais espaços de trabalho continuam sendo sincronizados.",
+      "deleted-workspace": "Este espaço de trabalho foi excluído do Sync. Recupere-o a partir de um arquivo ou crie um novo espaço de trabalho para sincronizá-lo novamente."
     },
     "context-menu": {
       "move-up": "Mover este espaço de trabalho para cima",
@@ -77,8 +77,8 @@
       "delete": "Excluir espaço de trabalho",
       "manage": "Gerenciar espaço de trabalho",
       "archive": "Arquivo de espaços de trabalho",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "Sincronize este espaço de trabalho e suas abas",
+      "sync-paused": "A sincronização do espaço de trabalho requer atenção"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",

@@ -65,11 +65,11 @@
       "new-workspace": "新しいワークスペース ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "このワークスペースとウェブサイトのタブを Mozilla アカウントで同期します。",
+      "error-title": "ワークスペースの同期",
+      "incoming-failed": "一部の同期データを読み込めませんでした。同期が完了するまで、既存のタブは保持されます。",
+      "invalid-workspace": "このワークスペースを同期できませんでした。256 文字以内の名前とアイコンを設定してから、もう一度お試しください。他のワークスペースは引き続き同期されます。",
+      "deleted-workspace": "このワークスペースは同期から削除されました。アーカイブから復元するか、新しいワークスペースを作成して再度同期してください。"
     },
     "context-menu": {
       "move-up": "このワークスペースを上に移動",
@@ -77,8 +77,8 @@
       "delete": "ワークスペースを削除",
       "manage": "ワークスペースを管理",
       "archive": "ワークスペースをアーカイブ",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "このワークスペースとその中のタブを同期",
+      "sync-paused": "ワークスペースの同期には注意が必要です"
     },
     "popup": {
       "create-new": "新しいワークスペースを作成...",
