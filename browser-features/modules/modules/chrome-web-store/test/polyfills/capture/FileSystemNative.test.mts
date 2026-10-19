@@ -205,7 +205,7 @@ async function fileSystem() {
       background.xulBrowser.contentTitle,
     ) as FileSystemResult & ConcurrentFileSystemResult;
     await IOUtils.writeUTF8(
-      "/tmp/floorp-native-filesystem-result.json",
+      PathUtils.join(PathUtils.tempDir, "floorp-native-filesystem-result.json"),
       JSON.stringify(result),
     );
     assertEquals(result.text, "abXYe", "seek and truncate write actual bytes");

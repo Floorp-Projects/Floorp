@@ -327,7 +327,7 @@ async function consumerTab() {
     );
   } finally {
     await IOUtils.writeUTF8(
-      "/tmp/floorp-consumer-native-titles.json",
+      PathUtils.join(PathUtils.tempDir, "floorp-consumer-native-titles.json"),
       JSON.stringify(tabs.map((tab) => tab.linkedBrowser.contentTitle)),
     );
     await addon?.uninstall();

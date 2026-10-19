@@ -236,7 +236,10 @@ async function desktopAPI() {
     );
     assert(result.replayDenied, "desktop stream ID is single use");
     await IOUtils.writeUTF8(
-      "/tmp/floorp-desktop-api-native-result.json",
+      PathUtils.join(
+        PathUtils.tempDir,
+        "floorp-desktop-api-native-result.json",
+      ),
       JSON.stringify(result),
     );
     const contexts = await extension.apiManager.asyncGetAPI(

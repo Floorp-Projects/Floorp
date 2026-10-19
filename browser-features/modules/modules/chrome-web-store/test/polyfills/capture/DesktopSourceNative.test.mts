@@ -250,7 +250,10 @@ async function desktopSource() {
     );
     assert(bytes > 1000, "source output is real video+audio WebM");
     await IOUtils.writeUTF8(
-      "/tmp/floorp-desktop-source-native-result.json",
+      PathUtils.join(
+        PathUtils.tempDir,
+        "floorp-desktop-source-native-result.json",
+      ),
       JSON.stringify({ bytes, pixel, rms, frequency }),
     );
     let closes = 0;
