@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY55_ONE_SDKLESS_SHORT_MAC_ACTIVATION",
+  "fixture": "26b3dba870b43327da6dfd261df61bc96deed402",
+  "caller": {
+    "sha": "b8a694e5f254e5fdc3595a2fa17700060932897a",
+    "tree": "bd924f7ba0a96281d941ebb2923347cd02255325",
+    "workflowBytes": 49282,
+    "workflowSHA256": "c51b42e4476c74742f1491a93cfaf04a4429e66ab5b021cb6b08585175e3af7a",
+    "branch": "codex/mac-native-streaming-recovery55-20261019"
+  },
+  "prelaunchReviewCommit": "2049a519e925aa80a321dab9fe7694e5019eb7d6",
+  "activation": {
+    "requestedOnce": true,
+    "confirmedBranch": "codex/mac-native-streaming-recovery55-20261019",
+    "at": "2026-10-19 21:21:42 UTC"
+  },
+  "freshGate": {
+    "at": "2026-10-19 21:21:33 UTC",
+    "matchingRefs": 0,
+    "callerPriorRuns": 0,
+    "ownedNonterminalAllFiveStatuses": 0,
+    "previousRun": 39322232985,
+    "previousState": "completed",
+    "previousConclusion": "failure"
+  },
+  "run": {
+    "id": 39326868656,
+    "job": 118314869103,
+    "event": "push",
+    "attempt": 1,
+    "runner": "macos-15-intel",
+    "status": "in_progress",
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39326868656"
+  },
+  "expected": {
+    "jobs": 1,
+    "QA": 525,
+    "recording": 14,
+    "actualSerializerCases": 9,
+    "sourceFilesFetched": 1,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "newArtifacts": 0,
+    "actualBuild": false
+  },
+  "qualification": "Activation only; actual Mac large-reader processing, full host/XUL and native authentication are not yet qualified."
+}
