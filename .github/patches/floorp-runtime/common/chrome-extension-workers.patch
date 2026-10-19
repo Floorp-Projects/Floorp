@@ -1363,7 +1363,7 @@ index 0000000..db24a54
 +};
 diff --git a/dom/webidl/ExtensionI18n.webidl b/dom/webidl/ExtensionI18n.webidl
 new file mode 100644
-index 0000000..1ba44d9
+index 0000000..adb6f8c
 --- /dev/null
 +++ b/dom/webidl/ExtensionI18n.webidl
 @@ -0,0 +1,30 @@
@@ -1383,15 +1383,15 @@ index 0000000..1ba44d9
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
 +  any getAcceptLanguages(any... args);
 +
-+  [Throws, WebExtensionStub]
++  [Throws, WebExtensionStub="ReturnsString"]
 +  DOMString getMessage(DOMString messageName, any substitutions);
-+  [Throws, WebExtensionStub]
++  [Throws, WebExtensionStub="ReturnsString"]
 +  DOMString getMessage(DOMString messageName);
 +
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
 +  any getPreferredSystemLanguages(any... args);
 +
-+  [Throws, WebExtensionStub]
++  [Throws, WebExtensionStub="ReturnsString"]
 +  DOMString getUILanguage();
 +
 +  [Throws, WebExtensionStub="AsyncAmbiguous"]
@@ -10819,7 +10819,7 @@ index 0000000..c302ff0
 +
 +#endif  // mozilla_extensions_ExtensionUserScripts_h
 diff --git a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
-index 5a817b1..4ca853a 100644
+index 5a817b1..e6cb21f 100644
 --- a/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 +++ b/toolkit/components/extensions/webidl-api/ExtensionWebIDL.conf
 @@ -18,21 +18,21 @@
@@ -10868,7 +10868,7 @@ index 5a817b1..4ca853a 100644
      "long",
  ])
  
-@@ -57,27 +57,187 @@ WEBIDL_PRIMITIVE_TYPES = set([
+@@ -57,27 +57,189 @@ WEBIDL_PRIMITIVE_TYPES = set([
  #     "namespace.methodName": "WebExtensionStubName",
  #
  # NOTE: Please keep this table in alphabetic order.
@@ -10971,7 +10971,9 @@ index 5a817b1..4ca853a 100644
 + 'history.search': 'AsyncAmbiguous',
 + 'i18n.detectLanguage': 'AsyncAmbiguous',
 + 'i18n.getAcceptLanguages': 'AsyncAmbiguous',
++ 'i18n.getMessage': 'ReturnsString',
 + 'i18n.getPreferredSystemLanguages': 'AsyncAmbiguous',
++ 'i18n.getUILanguage': 'ReturnsString',
 + 'identity.clearAllCachedAuthTokens': 'AsyncAmbiguous',
 + 'identity.getAccounts': 'AsyncAmbiguous',
 + 'identity.getAuthToken': 'AsyncAmbiguous',
@@ -11075,7 +11077,7 @@ index 5a817b1..4ca853a 100644
      "runtime.getDocumentId",
      "runtime.getFrameId",
      "runtime.getBackgroundPage",
-@@ -104,11 +264,29 @@ WEBEXT_ANDROID_EXCLUDED = [
+@@ -104,11 +266,29 @@ WEBEXT_ANDROID_EXCLUDED = [
  ]
  
  WEBEXT_IGNORED_SCHEMA_FILES = [

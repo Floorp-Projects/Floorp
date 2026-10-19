@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Build the exact Runtime with maintained patches; never consume a prebuilt core."""
 import argparse
+from collections import deque
 import hashlib
 import json
 import os
@@ -13,8 +14,26 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def run(args, cwd, env):
-    subprocess.run([str(value) for value in args], cwd=cwd, env=env, check=True)
+def run(args, cwd, env, log=None):
+    command = [str(value) for value in args]
+    if log is None:
+        subprocess.run(command, cwd=cwd, env=env, check=True)
+        return
+    log.parent.mkdir(parents=True, exist_ok=True)
+    tail = deque(maxlen=300)
+    with log.open("w", encoding="utf-8") as destination:
+        with subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                              errors="replace", bufsize=1) as process:
+            for line in process.stdout:
+                destination.write(line)
+                tail.append(line)
+                sys.stdout.write(line)
+                sys.stdout.flush()
+            code = process.wait()
+    if code:
+        log.with_name(log.stem + "-failure-tail.log").write_text("".join(tail), encoding="utf-8")
+        raise subprocess.CalledProcessError(code, command)
 
 
 def main():
@@ -58,6 +77,19 @@ def main():
     target = {"linux": "x86_64-pc-linux-gnu", "windows": "x86_64-pc-windows-msvc",
               "mac": "aarch64-apple-darwin"}[args.platform]
     jobs = max(1, min(4, (os.cpu_count() or 2) - 1))
+    physical_memory = None
+    if hasattr(os, "sysconf"):
+        try:
+            physical_memory = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        except (ValueError, OSError):
+            pass
+    logs = state / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    (logs / "host-resources.json").write_text(json.dumps({
+        "host": sys.platform, "cpuCount": os.cpu_count(), "parallelJobs": jobs,
+        "physicalMemoryBytes": physical_memory,
+        "freeDiskBytesBeforeBootstrap": shutil.disk_usage(ROOT).free,
+    }, indent=2) + "\n")
     config = [f"mk_add_options MOZ_OBJDIR={obj}", f'mk_add_options MOZ_MAKE_FLAGS="-j{jobs}"',
               "ac_add_options --enable-application=browser", "ac_add_options --enable-bootstrap",
               "ac_add_options --enable-extensions-webidl-bindings", "ac_add_options --disable-debug",
@@ -75,8 +107,8 @@ def main():
     mozconfig.write_text("\n".join(config) + "\n")
     env["MOZCONFIG"] = str(mozconfig)
     run([sys.executable, "./mach", "--no-interactive", "bootstrap",
-         "--application-choice=browser", "--no-system-changes"], source, env)
-    run([sys.executable, "./mach", "--no-interactive", "build"], source, env)
+         "--application-choice=browser", "--no-system-changes"], source, env, logs / "bootstrap.log")
+    run([sys.executable, "./mach", "--no-interactive", "build"], source, env, logs / "build.log")
     if args.platform == "mac":
         apps = [path for path in (obj / "dist").glob("*.app") if path.is_dir()]
         if len(apps) != 1:
@@ -91,7 +123,7 @@ def main():
     preferences = resources / "browser/defaults/preferences/firefox.js"
     run(["bash", ROOT / "static/gecko/pref/override.sh", preferences], ROOT, env)
     shutil.copyfile(ROOT / "_dist/buildid2", resources / "browser/buildid2")
-    run([sys.executable, "./mach", "--no-interactive", "package"], source, env)
+    run([sys.executable, "./mach", "--no-interactive", "package"], source, env, logs / "package.log")
     packages = sorted(path for path in (obj / "dist").glob("floorp-*")
                       if path.is_file() and path.name.endswith((".zip", ".tar.xz", ".tar.gz", ".dmg")))
     if not packages:

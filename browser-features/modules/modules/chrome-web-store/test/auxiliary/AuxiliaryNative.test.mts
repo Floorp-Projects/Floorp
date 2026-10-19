@@ -33,6 +33,14 @@ async function testNativeAuxiliary(): Promise<void> {
     "floorp.chrome.tts.native",
     false,
   );
+  const requireNative =
+    Services.env.get("FLOORP_REQUIRE_NATIVE_CHROME_AUXILIARY") === "1";
+  if (requireNative) {
+    assert(
+      nativeFonts && nativeSpeech,
+      "the packaged media candidate must include compiled font and speech backends",
+    );
+  }
   const background = `
   const results = [];
   let speechEvidence = null;
@@ -92,11 +100,18 @@ async function testNativeAuxiliary(): Promise<void> {
         await expectReject('uncompiled font setter rejects honestly', () => chrome.fontSettings.setFont({script:'Latn',genericFamily:'serif',fontId:fonts[0].fontId}), /compiled/);
       }
       fontWorker.terminate();
-      const voices = await chrome.tts.getVoices();
+      let voices = await chrome.tts.getVoices();
+      if (${requireNative}) {
+        for(let attempt=0;attempt<80&&!voices.length;attempt++) {
+          await new Promise(resolve=>setTimeout(resolve,250));
+          voices = await chrome.tts.getVoices();
+        }
+      }
       const callbackVoices = await new Promise(resolve => chrome.tts.getVoices(resolve));
       check('voice callback matches Promise', voices.length === callbackVoices.length);
       check('idle isSpeaking false', await chrome.tts.isSpeaking() === false);
       if (!voices.length) {
+        if (${requireNative}) throw new Error("Compiled native TTS requires a real operating-system synthesis voice");
         await expectReject('missing real voice rejects', () => chrome.tts.speak('Native synthesis test'), /native speech synthesis voice/);
       } else {
         check('real native voices', voices.every(v => v.voiceName && v.eventTypes.includes('start')));
@@ -123,6 +138,7 @@ async function testNativeAuxiliary(): Promise<void> {
         check('completed isSpeaking false', await chrome.tts.isSpeaking() === false);
         if (${nativeSpeech}) {
           check('native word events', events.some(e=>e.type==='word'&&e.charIndex>0));
+          check('native sentence events', events.some(e=>e.type==='sentence'));
           const first=[], queued=[], replacement=[];
           const long='This is a long native speech queue and cancellation test. '.repeat(30);
           await chrome.tts.speak(long,{rate:0.8,onEvent:e=>first.push(e)});

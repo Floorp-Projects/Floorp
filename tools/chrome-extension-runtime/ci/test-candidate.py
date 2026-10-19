@@ -17,6 +17,7 @@ CORE = [
     "CRXParser.test.mts", "CRXVerifier.test.mts", "CRXConverter.test.mts",
     "Constants.test.mts", "CodeValidator.test.mts", "ManifestTransformer.test.mts",
     "NativeBackgroundSelection.test.mts",
+    "ChromeValidationNative.test.mts",
     "DNRTransformer.test.mts", "ChromeVersionTarget.test.mts", "ChromeExtensionDownload.test.mts",
     "ChromeExtensionUpdater.test.mts", "ChromeExtensionUpdateScheduler.test.mts",
     "ChromeMessagingNative.test.mts", "ChromeIdentityNative.test.mts",

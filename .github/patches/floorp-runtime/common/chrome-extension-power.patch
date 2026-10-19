@@ -28,6 +28,27 @@ diff --git a/toolkit/components/extensions/schemas/jar.mn b/toolkit/components/e
      content/extensions/schemas/proxy.json
 +    content/extensions/schemas/power.json
      content/extensions/schemas/privacy.json
+diff --git a/toolkit/components/extensions/Schemas.sys.mjs b/toolkit/components/extensions/Schemas.sys.mjs
+--- a/toolkit/components/extensions/Schemas.sys.mjs
++++ b/toolkit/components/extensions/Schemas.sys.mjs
+@@ -606,6 +606,17 @@
+   makeError(message, { warning = false } = {}) {
+     let error = forceString(this.error(message, null, warning).error);
+     if (this.cloneScope) {
++      const extensionContext = this.params.context;
++      // API argument errors use the caller's TypeError in converted extension
++      // documents. Manifest normalization and native Worker error transport keep
++      // their existing exception contracts.
++      if (
++        !warning &&
++        extensionContext?.contentWindow &&
++        ExtensionUtils.getChromeExtensionId(extensionContext.extension)
++      ) {
++        return new this.cloneScope.TypeError(error);
++      }
+       return new this.cloneScope.Error(error);
+     }
+     return error;
 diff --git a/toolkit/components/extensions/parent/ext-power.js b/toolkit/components/extensions/parent/ext-power.js
 new file mode 100644
 --- /dev/null
