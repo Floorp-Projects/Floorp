@@ -155,6 +155,28 @@ class UnittestReceiptGuards(unittest.TestCase):
         for secret in ('PRIVATE-SENTINEL','private.invalid','token=',str(frame.parent)):
             self.assertNotIn(secret, json.dumps(value))
 
+    def test_core_failure_identity_keeps_fixed_code_without_unknown_text(self):
+        import qa_core
+        import traceback
+        try:
+            qa_core.require(False, 'census-sysctl-permission')
+        except qa_core.Failure:
+            trace = traceback.format_exc()
+        self.path.write_text('ERROR: test_caps_stop_before_ready_or_upload '
+            '(test_checkpoint.CheckpointGuards.test_caps_stop_before_ready_or_upload)\n' + trace +
+            'ERROR: test_real_mac_new_owned_process_is_observed '
+            '(test_checkpoint.CheckpointGuards.test_real_mac_new_owned_process_is_observed)\n'
+            'qa_core.Failure: PRIVATE-SENTINEL token=https://private.invalid/signed\n'
+            'Ran 2 tests in 1.0s\nFAILED (errors=2)\n')
+        value = receipt(self.path)
+        self.assertTrue(value['complete'])
+        self.assertEqual(value['cases'][0]['exceptionType'], 'qa_core.Failure')
+        self.assertEqual(value['cases'][0]['failureCode'], 'census-sysctl-permission')
+        self.assertIn('qa_core.py', [row['file'] for row in value['cases'][0]['frames']])
+        self.assertNotIn('failureCode', value['cases'][1])
+        for secret in ('PRIVATE-SENTINEL', 'private.invalid', 'token='):
+            self.assertNotIn(secret, json.dumps(value))
+
     def test_complete_success_and_skips_remain_distinguishable(self):
         for ending, skipped in (('OK',0),('OK (skipped=10)',10)):
             self.path.write_text('Ran 178 tests in 7.7s\n'+ending+'\n')

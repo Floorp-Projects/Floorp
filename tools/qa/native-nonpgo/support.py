@@ -16,26 +16,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from failure_excerpt import excerpt
-
-
-class Failure(RuntimeError):
-    pass
-
-
-def require(condition, code):
-    if not condition:
-        raise Failure(code)
-
-
-def digest(path):
-    with Path(path).open('rb') as stream:
-        return hashlib.file_digest(stream, 'sha256').hexdigest()
-
-
-def write_json(path, data):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, sort_keys=True, indent=2) + '\n')
+from qa_core import Failure, require, digest, write_json
 
 
 class HTTPSRedirect(urllib.request.HTTPRedirectHandler):

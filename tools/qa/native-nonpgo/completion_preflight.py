@@ -57,7 +57,9 @@ def main():
         suites = (
             ('completion-tests', [sys.executable, '-m', 'unittest', '-v', 'test_checkpoint',
                                  'test_process_census', 'test_guards', 'test_shim_failure_patch',
-                                 'test_completion_preflight', 'test_unittest_receipt'],
+                                 'test_completion_preflight', 'test_unittest_receipt',
+                                 'test_qa_core', 'test_darwin_inventory', 'test_inventory_timeout',
+                                 'test_helper_import_preflight'],
                                  HERE, args.expected_qa_tests),
             ('failure-recording-tests', [sys.executable, '-m', 'unittest', 'discover', '-v',
                  '-s', str(HERE.parents[1] / 'app-shim'), '-p', 'test_shim_failure_diagnostics.py'],

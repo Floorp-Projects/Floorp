@@ -21,9 +21,9 @@ from pathlib import Path
 import re
 
 from process_census import CAP,canonical,decode,load_abi,validate_layout
-from support import Failure,require
+from qa_core import Failure,require
 
-PHASES=('project-imports','abi-binding','self-bsd','self-snapshot','self-size','self-data',
+PHASES=('project-imports','abi-binding','reader-binding','self-bsd','self-snapshot','self-size','self-data',
         'group-snapshot','group-size','group-data','group-decode')
 
 
@@ -119,6 +119,7 @@ def collect(pgid,queries,*,layout=None,reader=None,system=None,progress=None,not
     mark('abi-binding')
     layout=layout or load_abi(Path(os.environ['FLOORP_CENSUS_ABI']))
     if reader is None:
+        mark('reader-binding')
         from darwin_activity import probe
         reader=probe()
     mark('self-bsd')

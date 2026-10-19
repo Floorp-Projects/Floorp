@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "scope": "LINUX_SHARED_PRIMITIVE_IMPORT_ISOLATION_AND_BOUNDED_DIAGNOSTIC_CONTROLS",
+  "python": "3.12.14",
+  "platform": "Linux",
+  "baselineFixture": "e473170251a03285727571657394ce05f2f4f2be",
+  "sourceParent": "a04d43e5fe7dd5560fdd4d65034f04389cbf221b",
+  "fullQA": {
+    "complete": true,
+    "status": "passed",
+    "total": 430,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 17,
+    "bytes": 83661,
+    "sha256": "31ca74351c8e3748970b74ed0bbf501908641bb5f8ef677d018407984d31653a",
+    "exitCode": 0,
+    "elapsedSeconds": 22.377
+  },
+  "fullQAInvocation": {
+    "cwd": "tools/qa/native-nonpgo",
+    "arguments": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-v",
+      "-s",
+      "."
+    ],
+    "resourceWarningsAsErrors": true,
+    "bytecodeWriting": false,
+    "rawLogPublished": false
+  },
+  "focusedDiagnosticTests": {
+    "command": "python3 -W error::ResourceWarning -m unittest -v test_helper_import_preflight",
+    "errors": 0,
+    "failures": 0,
+    "platform": "linux",
+    "result": "PASS",
+    "seconds": 1.197,
+    "skipped": 0,
+    "tests": 25,
+    "total": 25,
+    "status": "passed",
+    "resourceWarningsAsErrors": true,
+    "rawEvidencePublished": false
+  },
+  "staticControls": {
+    "primitiveDefinitionASTsUnchanged": true,
+    "entireRunnerASTUnchanged": true,
+    "perAttemptCommunicateTimeoutSeconds": 3,
+    "attempts": 3,
+    "retryGapSeconds": 0.25,
+    "processCreationAndCleanupMayAddElapsedTime": true,
+    "abiValidationCachedOrSkipped": false,
+    "FailureIdentitySharedAcrossBothImports": true,
+    "historicAndNewFailureReceiptTypesRetained": true,
+    "safeUnknownExceptionTextOmitted": true
+  },
+  "plannedActualMacQATests": 210,
+  "plannedActualMacRecordingTests": 14,
+  "actualMacExecuted": false,
+  "sdkAcquired": false,
+  "floorpBuilt": false,
+  "nativeAuthenticationVerified": false,
+  "timeoutRepairEstablished": false,
+  "artifactUploads": 0,
+  "sourceAndCandidateManifest": [
+    {
+      "path": "tools/qa/native-nonpgo/qa_core.py",
+      "bytes": 581,
+      "sha256": "13441551e1bfc96aed10fba97f16844b5a8cddbbf5685c72f4c07a7fc578e49a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/support.py",
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/process_census.py",
+      "bytes": 10804,
+      "sha256": "43d434019393662aa1cfc4e80aa50df08d5829a98a5e25115f6e1f3477198fed"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/darwin_inventory.py",
+      "bytes": 11285,
+      "sha256": "aac48b4168114a31b141cd81c75eef1a6043a9d8c145cb54a25634b4ad899f8a"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_qa_core.py",
+      "bytes": 1605,
+      "sha256": "86c5af063a40f465765f7b14531ca1d536d6ef54ede4639a6f3bd499c7e80c82"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_darwin_inventory.py",
+      "bytes": 18588,
+      "sha256": "07f418702eb1191303fb5495233d85befae5bc244563eb088378d6c380765011"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/unittest_receipt.py",
+      "bytes": 17494,
+      "sha256": "2c6c2b46d565ac1164ea26c58a4358a21afb4a572b9d42961689992f053af1d5"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_unittest_receipt.py",
+      "bytes": 15879,
+      "sha256": "42da7d335e9ebf1a594d85aee0e28131dd10d435a4c2841714cbcc5c2ca51c55"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/completion_preflight.py",
+      "bytes": 5732,
+      "sha256": "c80319301aae1626ef5492a99319666b47c420baeff03ac4601d9e4165c63068"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/helper_import_preflight.py",
+      "bytes": 33582,
+      "sha256": "969974dcbd45120425f6ad793e97c090035c6dbd14fa12c7c97e46c2d3ebf635"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_helper_import_preflight.py",
+      "bytes": 28551,
+      "sha256": "43223756099e0138c627693aa94571ac769d51688597f80416b6bf7bdbc399b8"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_HELPER_IMPORT_FIX.md",
+      "bytes": 4177,
+      "sha256": "c0dfda4c129d402a7436a80c3853cacc29be897624aa10814f2623af2baa462a"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY43_HELPER_IMPORT_WORKFLOW.yml.disabled",
+      "bytes": 3601,
+      "sha256": "ffbeeb96bceaa04d3a362010b26bccf68e904d73464c305c5cb21fce1e44e53e"
+    },
+    {
+      "path": "docs/qa/native-nonpgo-validation/20261019/RECOVERY44_TRUSTED_CHECKPOINT_WORKFLOW.yml.disabled",
+      "bytes": 21759,
+      "sha256": "560888c7940fe6ba436d11d23b27a136bde9f69f5c9b299e625a1238a9a7e6d5"
+    }
+  ],
+  "prelaunchControl": {
+    "recoveredOuterRunnerDiagnosticsRetained": true,
+    "retention": 16,
+    "stoppingFailureSeparate": true,
+    "earlyRecoveredLaterGoodPrivacyNegativeControlPassed": true,
+    "productionPolicyChanged": false
+  }
+}

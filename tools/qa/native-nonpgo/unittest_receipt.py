@@ -204,7 +204,7 @@ def receipt(path, *, recording=False):
         identities, source_lines = source_identities(recording)
         exception_types = {name for name, value in vars(builtins).items()
                            if isinstance(value, type) and issubclass(value, BaseException)}
-        exception_types.update(('support.Failure', 'subprocess.CalledProcessError',
+        exception_types.update(('support.Failure', 'qa_core.Failure', 'subprocess.CalledProcessError',
                                 'subprocess.TimeoutExpired', 'json.decoder.JSONDecodeError',
                                 'ctypes.ArgumentError', 'unittest.case.SkipTest'))
         codes = known_failure_codes()
@@ -268,7 +268,7 @@ def receipt(path, *, recording=False):
                 exception = re.fullmatch(r'([A-Za-z_][A-Za-z_0-9.]*)(?:: (.*))?', line)
                 if exception and exception[1] in exception_types:
                     current['exceptionType'] = exception[1]
-                    if exception[1] == 'support.Failure' and exception[2] in codes:
+                    if exception[1] in ('support.Failure', 'qa_core.Failure') and exception[2] in codes:
                         current['failureCode'] = exception[2]
                     number = re.match(r'\[Errno ([0-9]+)\]', exception[2] or '')
                     if number:

@@ -9,7 +9,7 @@ from pathlib import Path
 import stat
 import sys
 
-from support import Failure, digest, require, write_json
+from qa_core import Failure, digest, require, write_json
 
 HERE = Path(__file__).resolve().parent
 CAP = 8 * 1024**2

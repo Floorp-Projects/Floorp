@@ -153,6 +153,19 @@ class DarwinInventoryGuards(unittest.TestCase):
         for value in values:
             with self.assertRaises((Failure,ValueError)):inv.decode_reply(value,900)
 
+    def test_abi_and_reader_setup_have_separate_last_progress_markers(self):
+        for abi_error, expected in ((Failure('census-abi-integrity'), ['abi-binding']),
+                                    (None, ['abi-binding', 'reader-binding'])):
+            phases=[]
+            with mock.patch.dict(os.environ, {'FLOORP_CENSUS_ABI':'unused'}), \
+                    mock.patch.object(inv, 'load_abi', return_value=layout(), side_effect=abi_error), \
+                    mock.patch('darwin_activity.probe', side_effect=OSError('PRIVATE')):
+                with self.assertRaises((Failure, OSError)):
+                    inv.collect(900, [], notify=phases.append)
+            self.assertEqual(phases, expected)
+            output=self.progress('project-imports', *phases)
+            self.assertEqual(inv.progress_reply(output)['phase'], expected[-1])
+
     def native_env(self):
         return {**{key:'bound-'+key for key in BINDING_KEYS},'TASK_ROOT':'/private/task',
                 'FLOORP_CENSUS_ABI':'/private/task/census-abi.json','GITHUB_TOKEN':'private-token'}
