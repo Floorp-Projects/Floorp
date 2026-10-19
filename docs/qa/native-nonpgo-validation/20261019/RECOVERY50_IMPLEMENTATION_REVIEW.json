@@ -1,0 +1,297 @@
+{
+  "schema": 1,
+  "review": "Recovery50 bounded whole-profile streaming implementation",
+  "decision": "CLEAR_FOR_SHORT_MAC_DIAGNOSTIC_SUBJECT_TO_IMMUTABLE_ROUTE_REVIEW",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "scope": {
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24354,
+        "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 29902,
+        "sha256": "dc062f4f04d6ef63ebf887738cf49c40f5e4e8b954274f01860a2a0cd90dc773"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+        "bytes": 14964,
+        "sha256": "9c373c4101d466965ce68662140a1a2f84271c54ae3c069a69c357d37f5c899f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+        "bytes": 14500,
+        "sha256": "5fd3f6eaad306737cf6dea1383865ba8f6e38df5594c99a49e56e9ae167870a5"
+      }
+    ],
+    "freeze": {
+      "name": "floorp-build-completion-streaming-freeze.json",
+      "bytes": 1171,
+      "sha256": "618c8ee41831c71d9aa6741a313af5b79682c86e1b6426f0f41722819003ab1c"
+    },
+    "sourceEditedByReviewer": false,
+    "CIOrRefMutationsByReviewer": false,
+    "additionalPayloadDownloads": false,
+    "actualMacExecutedByReviewer": false
+  },
+  "implementationAssessment": [
+    "The whole-profile DOM path and its 16 MiB rejection are replaced by a bounded full JSON structural pass and independent pread cursors over the same verified descriptor.",
+    "Only fixed-path spans and counts are indexed. The string table is a bounded enum bytearray. Marker columns are consumed in lockstep; all seven column lengths are verified before aggregation.",
+    "The complete JSON document, including ignored values, must pass UTF-8, semantic duplicate-key, finite-number, syntax, truncation, trailing-data, depth, key, and array limits. JSON null remains distinct from cursor EOF and the undecoded sentinel.",
+    "The ASCII small-value and array-prefix fast paths decode at most the current 64 KiB chunk with the same strict hooks and decoded-container limits. Incomplete or unsuitable prefixes fall back to the structural cursor; tracked child spans are retained.",
+    "Counts and finished-marker observations are returned only after parsing, column consumption, descriptor/path identity, directory identity, profile listing, and the shared deadline checks all succeed. Unknown results retain null counts.",
+    "The existing JSONL route and fixed completion-marker semantics remain. The collector never qualifies build success, an active compiler phase, remaining work, cache reuse, or a completion forecast."
+  ],
+  "unchangedBounds": {
+    "maxFileBytes": 2147483648,
+    "decodedScalarOrMarkerValueBytes": 1048576,
+    "preadChunkBytes": 65536,
+    "maxRowsPerArrayAndMarkerRows": 4000000,
+    "maxRelevantCompletedMarkers": 250000,
+    "processingSeconds": 30,
+    "deadline": "one cooperative monotonic budget shared by all passes",
+    "maxDepth": 64,
+    "maxKeysPerObject": 1024,
+    "maxDecodedKeyUTF8Bytes": 256,
+    "newDependencies": false,
+    "temporarySpoolFiles": false
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "topic": "Dense resource rows could move the observability failure from size to processing time",
+      "resolution": "The per-value fast path timed out on the controlled 1,000,000-row input. Bounded array-prefix decoding reduced the same final-parser input to 7.925638 seconds without changing the 30-second limit. The final portable density test now uses 1,000,000 resource rows and is included in the required actual Mac suite.",
+      "actualRecovery48ProfileReproduced": false
+    }
+  ],
+  "independentValidation": {
+    "fullQA": {
+      "total": 729,
+      "passed": 712,
+      "skipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 49.694,
+      "log": {
+        "bytes": 11655,
+        "sha256": "f24f92b85e08bf49bace666bf0a86904f3c4318c65f71284df3d50f35014da43"
+      },
+      "resourceWarningsAreErrors": true,
+      "workingDirectory": "tools/qa/native-nonpgo"
+    },
+    "focused": {
+      "total": 70,
+      "passed": 70,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "resourceWarningsAreErrors": true,
+      "sourceHashesVerifiedBeforeAndAfter": true,
+      "log": {
+        "name": "floorp-recovery50-independent-focused.private.log",
+        "bytes": 13055,
+        "sha256": "0fb5337390d02c759b0a8f08fa8e11cebbd297ae9c0801de455c2ad18aa6bfda"
+      }
+    },
+    "grammarDifferential": {
+      "payloads": 516,
+      "checks": 15480,
+      "chunkBytes": [
+        1,
+        2,
+        7,
+        31,
+        65536
+      ],
+      "modes": [
+        "all-fast",
+        "batch-only",
+        "structural"
+      ],
+      "trackedAndUntrackedRoot": true,
+      "acceptanceMatchesStrictExistingDecoder": true,
+      "mismatches": 0,
+      "evidence": {
+        "name": "floorp-streaming-batch-differential.json",
+        "bytes": 420,
+        "sha256": "09dae90f9fc0905724e50c26d450159bac9af1ad9df57279f9faa28daa57d8e1"
+      }
+    },
+    "structuralBoundDifferential": {
+      "cases": 259,
+      "checks": 777,
+      "allFastBatchOnlyAndStructuralAcceptanceAgree": true,
+      "limits": [
+        "array rows",
+        "object keys",
+        "decoded UTF-8 key bytes",
+        "scalar and container depths"
+      ],
+      "evidence": {
+        "name": "floorp-streaming-batch-bounds-control.json",
+        "bytes": 224,
+        "sha256": "08032a10ccc90637754a59a2e2698181e2ba066ef6ac3d0fe76ce73c7e8de84b"
+      }
+    },
+    "officialSerializerLinuxContract": {
+      "sourcePath": "testing/mozbase/mozsystemmonitor/mozsystemmonitor/resourcemonitor.py",
+      "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "sourceBytes": 126050,
+      "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+      "cases": 9,
+      "allExpectationsSatisfied": true,
+      "largeWholeInputBytes": [
+        17845903,
+        17845498,
+        17845901
+      ],
+      "controls": [
+        "positive ended markers",
+        "no ended markers with complete coverage",
+        "truncation stays unconfirmed"
+      ],
+      "allExactHandlesClosed": true,
+      "workerStarted": false,
+      "syntheticClockAndMarkers": true,
+      "realBuildPerformed": false,
+      "evidence": {
+        "name": "floorp-streaming-official-nine-independent.json",
+        "bytes": 9576,
+        "sha256": "339d05b2202d59b88064d2b8152d78c41a1593f5e93b269052a3d0ee71427bf2"
+      }
+    },
+    "densityMeasurements": {
+      "platform": "Linux",
+      "python": "3.12.14",
+      "actualMacPerformanceQualified": false,
+      "actualRecovery48ProfileAvailable": false,
+      "controlledInputs": [
+        {
+          "variant": "structural-100k",
+          "sourceSHA256": "f0ee1a9b8b8077205f67e0130e87995c26b03b39796ecacdc165f01769ab0503",
+          "inputBytes": 18100384,
+          "inputSHA256": "1c89bdc9188241fb93a16973da668e7925d8c69f2558c1567f8709e47f883232",
+          "resourceRows": 100000,
+          "status": "observed",
+          "reason": "build-completion-profile-parsed",
+          "seconds": 15.486215,
+          "completedObjectCount": 1,
+          "evidence": {
+            "name": "floorp-streaming-prefast-density100k.json",
+            "bytes": 583,
+            "sha256": "f7a0c30786d4b88f42f2bd623923dfbe9b6196e46e7d016add83b082e5d25ea1"
+          }
+        },
+        {
+          "variant": "per-value-fast-100k",
+          "sourceSHA256": "56d1a110ba087e061c6c1815d21c7af8bb96082f56e919e85e3c43b00be57b51",
+          "inputBytes": 18100384,
+          "inputSHA256": "1c89bdc9188241fb93a16973da668e7925d8c69f2558c1567f8709e47f883232",
+          "resourceRows": 100000,
+          "status": "observed",
+          "reason": "build-completion-profile-parsed",
+          "seconds": 3.489416,
+          "completedObjectCount": 1,
+          "evidence": {
+            "name": "floorp-streaming-fast-density100k.json",
+            "bytes": 582,
+            "sha256": "c1b868f50632478034c562d3c9d5eaefc436812b195296542d33c18f946a71a1"
+          }
+        },
+        {
+          "variant": "per-value-fast-200k",
+          "sourceSHA256": "56d1a110ba087e061c6c1815d21c7af8bb96082f56e919e85e3c43b00be57b51",
+          "inputBytes": 36200384,
+          "inputSHA256": "48021a6bdc2b73730e3ff1f06e6c48f81118d9c184f0b0c037c75f085faae423",
+          "resourceRows": 200000,
+          "status": "observed",
+          "reason": "build-completion-profile-parsed",
+          "seconds": 6.961844,
+          "completedObjectCount": 1,
+          "evidence": {
+            "name": "floorp-streaming-fast-density200k.json",
+            "bytes": 582,
+            "sha256": "cfe4a81d31e70dbb5829f1444efebe149d3c9ddc54fde99cd721d5487171d19c"
+          }
+        },
+        {
+          "variant": "per-value-fast-1m",
+          "sourceSHA256": "56d1a110ba087e061c6c1815d21c7af8bb96082f56e919e85e3c43b00be57b51",
+          "inputBytes": 181000385,
+          "inputSHA256": "6c7189aefe9b4c7fbf510210066b16e7b74645f526a43571f96c29abc8ba0138",
+          "resourceRows": 1000000,
+          "status": "unconfirmed",
+          "reason": "build-completion-processing-limit",
+          "seconds": 30.000137,
+          "completedObjectCount": null,
+          "evidence": {
+            "name": "floorp-streaming-fast-density1m.json",
+            "bytes": 594,
+            "sha256": "b5caf3e3d0aaa5e0439f67cc841d170a515f8723109cfd952dad581a08556358"
+          }
+        },
+        {
+          "variant": "final-batched-1m",
+          "sourceSHA256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342",
+          "inputBytes": 181000385,
+          "inputSHA256": "6c7189aefe9b4c7fbf510210066b16e7b74645f526a43571f96c29abc8ba0138",
+          "resourceRows": 1000000,
+          "status": "observed",
+          "reason": "build-completion-profile-parsed",
+          "seconds": 7.925638,
+          "completedObjectCount": 1,
+          "evidence": {
+            "name": "floorp-streaming-batch-density1m.json",
+            "bytes": 585,
+            "sha256": "cdbc9f0705574648b9babc3677e59a2249eda2b1aa540fcf1752f4a1cd0996d9"
+          }
+        }
+      ]
+    }
+  },
+  "guardBindingsUnchanged": {
+    "directory": "tools/qa/native-nonpgo",
+    "sha256": {
+      "plan.json": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+      "pipeline.py": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757",
+      "support.py": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2",
+      "checkpoint.py": "184c55fb846764f9c0b3e0466dbd57ed3c5e915d0dbe4d5a7f917cd4f3ca6a6b",
+      "fetch_sdk.py": "89fa1eb5217cc7f2508955e42c4e110aafc2068c120a96a638940aef3297b832",
+      "sdk_source.py": "c7b84cfed8b85d96315fadd785d664e55e33be4edc1f7137e71d42de33bb06c2"
+    },
+    "compilationInputsChanged": false,
+    "jobClockOrStageLimitsChanged": false,
+    "resourceOrUnknownStopPolicyChanged": false,
+    "checkpointReplayOrSDKGuardsChanged": false
+  },
+  "shortMacGate": {
+    "requiredQA": 514,
+    "requiredRecordingTests": 14,
+    "requiredSkippedFailuresAndErrors": 0,
+    "requiredSerializerCases": 9,
+    "requiredLargeWholeControls": [
+      "positive",
+      "no-end",
+      "truncated"
+    ],
+    "requiredLargeInputBytesGreaterThan": 16777216,
+    "requiredDenseResourceRows": 1000000,
+    "requiredAllOwnedCleanupVerified": true,
+    "SDKOrCheckpointAcquisitionRequired": false,
+    "newArtifactRequired": false,
+    "individualCaseEvidenceMustBeRetained": true,
+    "routeAndImmutableBindingsReview": "PENDING"
+  },
+  "limitsAndNextStep": [
+    "Recovery48 retained evidence still does not identify a valid whole profile, its exact size, last compiler subphase, cache hits, or remaining duration. The original whole-size guard ran before whole JSON validation.",
+    "The controlled large and dense Linux profiles validate the implementation and its tested bounds. They do not reconstruct the lost production profile or establish actual Mac throughput.",
+    "The fixed upstream serializer opt-in adds three large whole-profile controls while preserving the six default cases. It starts no resource worker and confers no build or product qualification.",
+    "Proceed with the authorized SDK-free short Mac diagnostic after immutable caller/source review. Consider continuation using its actual terminal evidence and fresh authorized origin checks; an unknown forecast alone is not an indefinite hold."
+  ]
+}

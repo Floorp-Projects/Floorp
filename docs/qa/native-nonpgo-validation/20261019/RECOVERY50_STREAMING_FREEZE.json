@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "path": "tools/qa/native-nonpgo/build_completion.py",
+      "bytes": 24354,
+      "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion.py",
+      "bytes": 29902,
+      "sha256": "dc062f4f04d6ef63ebf887738cf49c40f5e4e8b954274f01860a2a0cd90dc773"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+      "bytes": 14964,
+      "sha256": "9c373c4101d466965ce68662140a1a2f84271c54ae3c069a69c357d37f5c899f"
+    },
+    {
+      "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+      "bytes": 14500,
+      "sha256": "5fd3f6eaad306737cf6dea1383865ba8f6e38df5594c99a49e56e9ae167870a5"
+    }
+  ],
+  "expectedFullQA": 729,
+  "expectedMacQA": 514,
+  "recording": 14,
+  "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "newDependencies": false,
+  "compiledInputsChanged": false,
+  "processingSeconds": 30,
+  "maxInputBytes": 2147483648,
+  "maxDecodedValueBytes": 1048576,
+  "preadChunkBytes": 65536,
+  "objectKeyLimitIsDecodedUTF8": true,
+  "longRetryStarted": false
+}

@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "change": "Bounded streaming whole-profile completion-marker aggregation",
+  "sourceFreeze": {
+    "files": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 24354,
+        "sha256": "136305cfce0a9b2b04d49e6dc8c5facf41175f635706a1f32c1ae6eaeb783342"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 29902,
+        "sha256": "dc062f4f04d6ef63ebf887738cf49c40f5e4e8b954274f01860a2a0cd90dc773"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/build_completion_contract.py",
+        "bytes": 14964,
+        "sha256": "9c373c4101d466965ce68662140a1a2f84271c54ae3c069a69c357d37f5c899f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion_contract.py",
+        "bytes": 14500,
+        "sha256": "5fd3f6eaad306737cf6dea1383865ba8f6e38df5594c99a49e56e9ae167870a5"
+      }
+    ],
+    "expectedFullQA": 729,
+    "expectedMacQA": 514,
+    "recording": 14,
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "newDependencies": false,
+    "compiledInputsChanged": false,
+    "processingSeconds": 30,
+    "maxInputBytes": 2147483648,
+    "maxDecodedValueBytes": 1048576,
+    "preadChunkBytes": 65536,
+    "objectKeyLimitIsDecodedUTF8": true,
+    "longRetryStarted": false
+  },
+  "previousTerminal": {
+    "run": 39258232399,
+    "job": 118078849382,
+    "firstFailure": {
+      "stage": "full-build",
+      "code": "phase-deadline",
+      "elapsedSeconds": 20700.05
+    },
+    "monitorFailure": null,
+    "completionDiagnostic": "build-completion-whole-size-limit",
+    "wholeDocumentValidated": false,
+    "actualProfileRecovered": false,
+    "fullHostXUL": "NOT_COMPLETED",
+    "MozillaSmoke": "NOT_TESTED",
+    "native": "NOT_TESTED"
+  },
+  "hypotheses": [
+    "A fresh well-formed whole profile above the previous 16 MiB DOM threshold can now retain finished-marker observations within the same file, processing, ownership and cleanup bounds.",
+    "Complete no-end inputs preserve observed zero counts; truncated or malformed inputs remain unconfirmed with null counts.",
+    "The actual Mac suite must also process the controlled one-million resource-row input within the existing 30 second processing limit."
+  ],
+  "localQA": {
+    "total": 729,
+    "passed": 712,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "independentlyExecuted": true
+  },
+  "focused": {
+    "total": 70,
+    "passed": 70,
+    "resourceWarningsAreErrors": true
+  },
+  "callerControls": {
+    "schema": 1,
+    "status": "passed",
+    "yamlBashInlinePythonSyntax": "passed",
+    "positiveActualContractAccepted": true,
+    "negativeFaultsRejected": 871,
+    "selectedQATests": 514,
+    "selectedQAResolved": true,
+    "recordingTests": 14,
+    "preflightSafetyRunPreserved": true,
+    "singleConsumerJob": true,
+    "platformMinutes": 360,
+    "phaseDeadlineMinutes": 15,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "sourceContentsAPIFiles": 1,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf",
+    "sourceCapBytes": 1048576,
+    "artifactUploads": 0,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "fixture": "PLACEHOLDER",
+    "candidate": {
+      "bytes": 30874,
+      "sha256": "31d53118ba46e5a426f707dffaa7992b72c2abbe83f69b2b1de22390a42b79d2"
+    }
+  },
+  "shortMac": {
+    "branch": "codex/mac-native-streaming-recovery50-20261019",
+    "runtimeParent": "f2c962e1c7ab229f543409e64cc9918ac3c7aadb",
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "requiredQA": 514,
+    "recordingTests": 14,
+    "serializerCases": 9,
+    "largeWholeCases": 3,
+    "SDKAcquisition": false,
+    "checkpointDownload": false,
+    "fullRuntimeCheckout": false,
+    "artifactUploads": 0,
+    "longBuild": false,
+    "launchStatus": "not-launched",
+    "immutableBinding": "pending"
+  },
+  "productQualification": false,
+  "originalNativeExitCause": "UNKNOWN",
+  "nextLongRun": "No repeated long build started; target/checkpoint feasibility requires separate evidence."
+}

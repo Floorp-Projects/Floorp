@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import tracemalloc
 import unittest
 from unittest import mock
 
@@ -226,15 +227,242 @@ class CompletionTests(unittest.TestCase):
         os.link(path, self.task / 'alias');self.unknown(bc.collect(self.task, self.snapshot));path.unlink()
         os.mkfifo(path);self.unknown(bc.collect(self.task, self.snapshot))
 
-    def test_file_size_line_size_whole_size_and_marker_caps(self):
+    def test_file_size_line_size_value_size_and_marker_caps(self):
         for setting, cap, raw in (('MAX_BYTES', 1, jsonl([marker()])),
                                  ('MAX_LINE_BYTES', 256, jsonl([marker(text='x' * 300)])),
-                                 ('MAX_WHOLE_BYTES', 32, json.dumps(whole([marker()])).encode()),
+                                 ('MAX_LINE_BYTES', 256, json.dumps(whole([marker(text='x' * 300)])).encode()),
                                  ('MAX_MARKERS', 1, jsonl([marker(), marker()]))):
             with self.subTest(setting=setting):
                 self.write(raw)
                 with mock.patch.object(bc, setting, cap):
                     self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_larger_than_previous_16mib_cap_streams_with_bounded_memory(self):
+        resource = marker('CPU', 'unused')
+        resource['data'] = {'type': 'CPU', 'padding': 'PRIVATE_SENTINEL' + 'x' * (128 * 1024)}
+        raw = json.dumps(whole([phase('compile'), marker(), *([resource] * 136)]),
+                         separators=(',', ':')).encode()
+        self.assertGreater(len(raw), 16 * 1024**2)
+        self.write(raw)
+        original, requests = bc.os.pread, []
+        def bounded(fd, size, offset):
+            requests.append(size)
+            self.assertLessEqual(size, bc.MAX_LINE_BYTES)
+            return original(fd, size, offset)
+        tracemalloc.start()
+        try:
+            with mock.patch.object(bc.os, 'pread', side_effect=bounded):
+                value = bc.collect(self.task, self.snapshot)
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(value['status'], 'observed')
+        self.assertEqual(value['profileFormat'], 'whole-profile')
+        self.assertEqual(value['profileBytes'], len(raw))
+        self.assertEqual(value['finishedTargetMarkers']['Object'], 1)
+        self.assertEqual(value['finishedTierMarkers']['compile'], 1)
+        self.assertLess(peak, 8 * 1024**2)
+        self.assertGreater(len(requests), 100)
+        self.assertNotIn('PRIVATE_SENTINEL', json.dumps(value))
+
+    def test_whole_ignored_large_subtree_is_streamed_and_validated(self):
+        data = whole([marker()])
+        data['ignored'] = ['x' * (128 * 1024)] * 136
+        self.write(json.dumps(data).encode())
+        self.assertEqual(bc.collect(self.task, self.snapshot)['status'], 'observed')
+        raw = json.dumps(data).encode().replace(b'"ignored": [', b'"ignored": [1e999,', 1)
+        self.write(raw)
+        self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_offsets_do_not_depend_on_column_or_metadata_order(self):
+        data = whole([marker(), phase(), marker('Program', 'xpcshell', end=None)])
+        thread = data['threads'][0]
+        thread['markers'] = dict(reversed(list(thread['markers'].items())))
+        thread = dict(reversed(list(thread.items())))
+        data = {'threads': [thread], 'meta': data['meta']}
+        self.write(json.dumps(data).encode())
+        value = bc.collect(self.task, self.snapshot)
+        self.assertEqual(value['status'], 'observed')
+        self.assertEqual(value['finishedTargetMarkers']['Object'], 1)
+        self.assertEqual(value['targets']['xpcshell']['status'], 'unconfirmed')
+
+    def test_whole_chunk_boundaries_cover_escapes_utf8_numbers_and_null(self):
+        data = whole([marker(start=1.25, end=2.5), marker('Program', 'xpcshell', end=None)])
+        data['ignored'] = ['slash\\quote"unicode\u2603', None, True, False, -1.25e-12]
+        self.write(json.dumps(data, ensure_ascii=False, separators=(',', ':')).encode())
+        with mock.patch.object(bc, 'READ_BYTES', 7):
+            value = bc.collect(self.task, self.snapshot)
+        self.assertEqual(value['status'], 'observed')
+        self.assertEqual(value['targets']['MacWebAppService.o']['endTimeMs'], 2.5)
+        self.assertEqual(value['targets']['xpcshell']['status'], 'unconfirmed')
+
+    def test_whole_ignored_duplicate_keys_use_decoded_semantic_names(self):
+        base = json.dumps(whole([marker()])).encode()[:-1]
+        for tail in (b',"ignored":{"a":1,"\\u0061":2}}',
+                     b',"ignored":{"\xc3\xa9":1,"\\u00e9":2}}'):
+            with self.subTest(tail=tail):
+                self.write(base + tail)
+                self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_ignored_nonfinite_bad_numbers_and_utf8_fail_closed(self):
+        base = json.dumps(whole([marker()])).encode()[:-1]
+        for raw in (b'NaN', b'Infinity', b'1e999', b'01', b'1.', b'+1',
+                    b'-.1', b'truefalse', b'"\xff"', b'"bad\\q"', b'"control\x01"'):
+            with self.subTest(raw=raw):
+                self.write(base + b',"ignored":' + raw + b'}')
+                self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_truncated_or_trailing_document_never_aggregates_partial_markers(self):
+        raw = json.dumps(whole([marker()])).encode()
+        for changed in (raw[:-1], raw + b'{}', raw + b'\xff',
+                        raw[:-1] + b',"ignored":[0,]}'):
+            with self.subTest(changed=changed[-20:]):
+                self.write(changed)
+                with mock.patch.object(bc._Completed, 'marker') as aggregate:
+                    self.unknown(bc.collect(self.task, self.snapshot))
+                aggregate.assert_not_called()
+
+    def test_whole_string_table_is_bounded_and_all_entries_are_strings(self):
+        for strings in (['Object', False], ['Object'] * 4):
+            data = whole([marker()]); data['threads'][0]['stringArray'] = strings
+            self.write(json.dumps(data).encode())
+            with mock.patch.object(bc, 'MAX_ROWS', 3):
+                self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_category_stack_counts_and_ignored_values_are_validated(self):
+        for key in ('category', 'stack'):
+            data = whole([marker()]);data['threads'][0]['markers'][key] = []
+            self.write(json.dumps(data).encode())
+            self.unknown(bc.collect(self.task, self.snapshot))
+        raw = json.dumps(whole([marker()])).encode().replace(b'"stack": [null]', b'"stack": [1e999]')
+        self.write(raw);self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_structural_depth_key_and_per_element_limits_fail_closed(self):
+        data = whole([marker()]); data['ignored'] = {'x' * (bc.MAX_KEY_BYTES + 1): 1}
+        self.write(json.dumps(data).encode());self.unknown(bc.collect(self.task, self.snapshot))
+        data['ignored'] = {str(i): 1 for i in range(bc.MAX_OBJECT_KEYS + 1)}
+        self.write(json.dumps(data).encode());self.unknown(bc.collect(self.task, self.snapshot))
+        nested = 1
+        for _ in range(bc.MAX_DEPTH + 1): nested = [nested]
+        data['ignored'] = nested
+        self.write(json.dumps(data).encode());self.unknown(bc.collect(self.task, self.snapshot))
+        data = whole([marker()]); data['threads'][0]['markers']['data'][0]['ignored'] = ['x' * 100000] * 11
+        self.write(json.dumps(data).encode());self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_shares_original_processing_deadline_without_partial_counts(self):
+        self.write(json.dumps(whole([marker()])).encode())
+        with mock.patch.object(bc.time, 'monotonic', side_effect=[0, 31]):
+            value = bc.collect(self.task, self.snapshot)
+        self.unknown(value)
+        self.assertEqual(value['reason'], 'build-completion-processing-limit')
+
+    def test_whole_pread_failure_is_private_and_closes_descriptor(self):
+        self.write(json.dumps(whole([marker()])).encode());descriptors = []
+        def fail(fd, size, offset):
+            descriptors.append(fd)
+            raise OSError('PRIVATE_SENTINEL')
+        with mock.patch.object(bc.os, 'pread', side_effect=fail):
+            value = bc.collect(self.task, self.snapshot)
+        self.unknown(value)
+        self.assertEqual(value['reason'], 'build-completion-unavailable')
+        self.assertEqual(len(set(descriptors)), 1)
+        with self.assertRaises(OSError):os.fstat(descriptors[0])
+
+    def test_whole_stability_recheck_discards_success_after_file_change(self):
+        path = self.write(json.dumps(whole([marker()])).encode());original = bc._whole_stream
+        def change(*args):
+            value = original(*args)
+            with path.open('ab') as stream:stream.write(b' ')
+            return value
+        with mock.patch.object(bc, '_whole_stream', side_effect=change):
+            self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_fast_and_structural_cursors_agree_on_same_valid_and_invalid_values(self):
+        initial = whole([marker(), marker('Program', 'xpcshell', end=None), phase()])
+        cases = [initial]
+        for update in ({'name': [False, 1, 2]}, {'phase': [0, 0, 1]},
+                       {'data': [None, {'type': 'Text', 'text': 'xpcshell'}, {'type': 'Phase', 'phase': 'compile'}]}):
+            value = copy.deepcopy(initial);value['threads'][0]['markers'].update(update);cases.append(value)
+        for data in cases:
+            self.write(json.dumps(data).encode())
+            fast = bc.collect(self.task, self.snapshot)
+            with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                    mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                structural = bc.collect(self.task, self.snapshot)
+            self.assertEqual(fast, structural)
+
+    def test_whole_fast_numeric_or_literal_prefix_at_chunk_boundary_cannot_confirm(self):
+        base = json.dumps(whole([marker()]), separators=(',', ':')).encode()[:-1]
+        for token in (b'1e999', b'01', b'truefalse', b'nullfalse', b'1.2.3'):
+            self.write(base + b',"ignored":' + token + b'}')
+            for size in (1, 2, 3, 7):
+                with self.subTest(token=token, size=size), mock.patch.object(bc, 'READ_BYTES', size):
+                    self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_fast_bounds_match_structural_for_decoded_keys_and_scalar_depth(self):
+        for text in ('\u2603' * 85, '\u2603' * 86):
+            data = whole([marker()]);data['ignored'] = {text: 1}
+            self.write(json.dumps(data).encode())
+            fast = bc.collect(self.task, self.snapshot)
+            with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                    mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                self.assertEqual(fast, bc.collect(self.task, self.snapshot))
+            self.assertEqual(fast['status'], 'observed' if len(text) == 85 else 'unconfirmed')
+        data = whole([marker()]);nested = 1
+        for _ in range(bc.MAX_DEPTH):nested = [nested]
+        data['ignored'] = nested
+        self.write(json.dumps(data).encode())
+        fast = bc.collect(self.task, self.snapshot)
+        with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+            self.assertEqual(fast, bc.collect(self.task, self.snapshot))
+        self.unknown(fast)
+
+    def test_whole_fast_decoder_rejects_boolean_phase_even_with_valid_null_end(self):
+        for end, phase_value in ((None, False), (2, True)):
+            data = whole([marker(end=end)])
+            data['threads'][0]['markers']['phase'] = [phase_value]
+            self.write(json.dumps(data).encode())
+            self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_one_million_small_resource_rows_remain_processable(self):
+        resource = marker('CPU', 'unused')
+        resource['data'] = {'type': 'CPU', 'user': 1.25, 'system': 2.5, 'idle': 97.5,
+                            'cores': [1.0] * 8, 'PRIVATE_SENTINEL': 'x' * 64}
+        raw = json.dumps(whole([phase(), marker(), *([resource] * 1000000)]),
+                         separators=(',', ':')).encode()
+        self.assertGreater(len(raw), 16 * 1024**2)
+        self.write(raw)
+        value = bc.collect(self.task, self.snapshot)
+        self.assertEqual(value['status'], 'observed')
+        self.assertEqual(value['finishedTargetMarkers']['Object'], 1)
+        self.assertEqual(value['finishedTierMarkers']['compile'], 1)
+        self.assertNotIn('PRIVATE_SENTINEL', json.dumps(value))
+
+    def test_whole_batches_with_quoted_container_delimiters_match_generic_validation(self):
+        resource = marker('CPU', 'unused')
+        resource['data'] = {'type': 'CPU', 'quoted': '}, ], \", literal', 'nested': {'a': [1, 2]}}
+        data = whole([marker(), *([resource] * 40)])
+        self.write(json.dumps(data).encode())
+        with mock.patch.object(bc, 'READ_BYTES', 127):
+            fast = bc.collect(self.task, self.snapshot)
+            with mock.patch.object(bc._JSONStream, 'small_value', return_value=bc._UNDECODED), \
+                    mock.patch.object(bc._JSONStream, 'array_batch', return_value=bc._UNDECODED):
+                self.assertEqual(fast, bc.collect(self.task, self.snapshot))
+        self.assertEqual(fast['status'], 'observed')
+        base = json.dumps(whole([marker()])).encode()[:-1]
+        for suffix in (b',"ignored":[{"a":"},","b":[1,2]},]}',
+                       b',"ignored":[1,,2]}', b',"ignored":[,1]}', b',"ignored":[1,2 3]}'):
+            self.write(base + suffix)
+            self.unknown(bc.collect(self.task, self.snapshot))
+
+    def test_whole_batch_row_cap_counts_all_values_not_only_last_element(self):
+        data = whole([marker()]);data['ignored'] = [0, 0, 0, 0]
+        self.write(json.dumps(data).encode())
+        with mock.patch.object(bc, 'MAX_ROWS', 3):
+            value = bc.collect(self.task, self.snapshot)
+        self.unknown(value)
+        self.assertEqual(value['reason'], 'build-completion-row-limit')
 
     def test_processing_budget_returns_unknown_without_partial_counts(self):
         self.write(jsonl([marker()]))

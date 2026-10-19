@@ -21,6 +21,9 @@ SOURCE_SHA256 = '5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1ea
 PROFILE_NAME = 'profile_log_20261019_000000.json'
 FORMATS = ('jsonl', 'whole-profile')
 MODES = ('positive', 'no-end', 'truncated')
+PREVIOUS_WHOLE_LIMIT_BYTES = 16 * 1024**2
+LARGE_PADDING_BYTES = 128 * 1024
+LARGE_RESOURCE_ROWS = 136
 CODES = ('contract-source-kind', 'contract-source-size', 'contract-source-hash',
          'contract-source-changed', 'contract-task', 'contract-snapshot',
          'contract-monitor-init', 'contract-worker-started', 'contract-observation',
@@ -101,8 +104,9 @@ def _clean(value):
         ('streamClosed', 'parentPipeClosed', 'childPipeClosed', 'processClosed', 'workerNeverStarted'))
 
 
-def serialize(module, path, profile_format, mode):
+def serialize(module, path, profile_format, mode, *, large=False):
     require(profile_format in FORMATS and mode in MODES, 'contract-observation')
+    require(type(large) is bool and (not large or profile_format == 'whole-profile'), 'contract-observation')
     clock = _Clock()
     old_time, old_psutil = module.time, module.psutil
     module.time, module.psutil = clock, module.PsutilStub()
@@ -127,6 +131,10 @@ def serialize(module, path, profile_format, mode):
                                       ('Program', 'xpcshell', 102.0, 115.0)):
             monitor._add_marker(name, start, None if mode == 'no-end' else end,
                                 {'type': 'Text', 'text': text})
+        if large:
+            for _ in range(LARGE_RESOURCE_ROWS):
+                monitor._add_marker('CPU', 105.0, None if mode == 'no-end' else 106.0,
+                                    {'type': 'CPU', 'padding': 'x' * LARGE_PADDING_BYTES})
         monitor.stop_time = monitor.end_time = 150.0
         clock.value = 150.0
         if profile_format == 'whole-profile':
@@ -198,7 +206,7 @@ def satisfied(value, profile_format, mode):
             value['finishedTargetCounts'] == {'SharedLib': 2, 'Program': 2})
 
 
-def run_contract(source, task):
+def run_contract(source, task, *, large_whole=False):
     result = {'schema': 1, 'status': 'failed', 'qualification': 'synthetic-serializer-contract-actual-source',
               'runtimeRef': RUNTIME_REF, 'sourceSHA256': SOURCE_SHA256,
               'sourceBytes': SOURCE_BYTES, 'actualSerializerSourceVerified': False,
@@ -207,9 +215,11 @@ def run_contract(source, task):
               'mozillaQualification': False, 'fullBuildQualification': False,
               'resourceQualification': False, 'bothFormatsObserved': False,
               'negativeInputsDidNotConfirmTargets': False, 'cases': [], 'firstFailure': None,
+              'largeWholeRequested': large_whole, 'largeWholeObserved': False,
               'taskCreated': False, 'receiptWriteFailure': None}
     phase = 'source'
     try:
+        require(type(large_whole) is bool, 'contract-observation')
         module = load_serializer(source)
         result['actualSerializerSourceVerified'] = True
         phase = 'task'
@@ -218,32 +228,38 @@ def run_contract(source, task):
                 task.parent.stat().st_uid == os.geteuid() and '..' not in task.parts, 'contract-task')
         task.mkdir(mode=0o700, exist_ok=False)
         result['taskCreated'] = True
-        for profile_format in FORMATS:
-            for mode in MODES:
-                case_task = task / (profile_format + '-' + mode)
-                case_task.mkdir(mode=0o700)
-                directory = case_task / 'obj/.mozbuild/logs/build'
-                directory.mkdir(mode=0o700, parents=True)
-                phase = 'snapshot'
-                snapshot = start_snapshot(case_task)
-                require(snapshot.get('status') == 'captured', 'contract-snapshot')
-                path = directory / PROFILE_NAME
-                phase = 'serializer'
-                cleanup, error = serialize(module, path, profile_format, mode)
-                result['workerStarted'] = False if cleanup.get('workerNeverStarted') is True else None
-                row = {'format': profile_format, 'control': mode, 'cleanup': cleanup,
-                       'observation': None, 'expectationSatisfied': False}
-                result['cases'].append(row)
-                if error is not None:
-                    raise error
-                phase = 'cleanup'
-                require(_clean(cleanup), 'contract-cleanup')
-                phase = 'observation'
-                row['observation'] = observation_projection(collect(case_task, snapshot))
-                row['expectationSatisfied'] = satisfied(row['observation'], profile_format, mode)
-                require(row['expectationSatisfied'], 'contract-observation')
+        cases = [(profile_format, mode, False) for profile_format in FORMATS for mode in MODES]
+        if large_whole:
+            cases += [('whole-profile', mode, True) for mode in MODES]
+        for profile_format, mode, large in cases:
+            case_task = task / (profile_format + ('-large-' if large else '-') + mode)
+            case_task.mkdir(mode=0o700)
+            directory = case_task / 'obj/.mozbuild/logs/build'
+            directory.mkdir(mode=0o700, parents=True)
+            phase = 'snapshot'
+            snapshot = start_snapshot(case_task)
+            require(snapshot.get('status') == 'captured', 'contract-snapshot')
+            path = directory / PROFILE_NAME
+            phase = 'serializer'
+            cleanup, error = (serialize(module, path, profile_format, mode, large=True) if large else
+                              serialize(module, path, profile_format, mode))
+            result['workerStarted'] = False if cleanup.get('workerNeverStarted') is True else None
+            row = {'format': profile_format, 'control': mode, 'cleanup': cleanup,
+                   'largeProfile': large, 'inputBytes': None,
+                   'observation': None, 'expectationSatisfied': False}
+            result['cases'].append(row)
+            if error is not None:
+                raise error
+            phase = 'cleanup'
+            require(_clean(cleanup), 'contract-cleanup')
+            phase = 'observation'
+            row['inputBytes'] = path.stat().st_size
+            require(not large or row['inputBytes'] > PREVIOUS_WHOLE_LIMIT_BYTES, 'contract-observation')
+            row['observation'] = observation_projection(collect(case_task, snapshot))
+            row['expectationSatisfied'] = satisfied(row['observation'], profile_format, mode)
+            require(row['expectationSatisfied'], 'contract-observation')
         result.update(status='observed-both-formats', bothFormatsObserved=True,
-                      negativeInputsDidNotConfirmTargets=True)
+                      negativeInputsDidNotConfirmTargets=True, largeWholeObserved=large_whole)
     except BaseException as error:
         result['firstFailure'] = safe_error(error, phase)
     return result
@@ -253,8 +269,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--runtime-profile-source', type=Path, required=True)
     parser.add_argument('--task', type=Path, required=True)
+    parser.add_argument('--large-whole', action='store_true')
     args = parser.parse_args(argv)
-    result = run_contract(args.runtime_profile_source, args.task)
+    result = run_contract(args.runtime_profile_source, args.task, large_whole=args.large_whole)
     try:
         require(result['taskCreated'] is True, 'contract-task')
         write_json(args.task / 'build-completion-contract.json', result)

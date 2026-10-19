@@ -35,7 +35,7 @@ def profile_rows(mode):
     return rows
 
 
-def fixture_serializer(module, path, profile_format, mode):
+def fixture_serializer(module, path, profile_format, mode, *, large=False):
     rows = profile_rows(mode)
     if profile_format == 'jsonl':
         raw = ''.join(json.dumps(row) + '\n' for row in rows)
@@ -53,8 +53,10 @@ def fixture_serializer(module, path, profile_format, mode):
             markers['category'].append(0)
             markers['stack'].append(None)
         markers['length'] = len(rows) - 2
-        raw = json.dumps({'meta': rows[0], 'threads': [{'stringArray': strings,
-                                                       'markers': markers}]}) + '\n'
+        profile = {'meta': rows[0], 'threads': [{'stringArray': strings, 'markers': markers}]}
+        if large:
+            profile['ignored'] = ['x' * contract.LARGE_PADDING_BYTES] * contract.LARGE_RESOURCE_ROWS
+        raw = json.dumps(profile) + '\n'
     path.write_text(raw[:-2] if mode == 'truncated' else raw)
     return clean(), None
 
@@ -182,10 +184,11 @@ class ContractTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
 
-    def run_fixture(self, task=None, serializer=fixture_serializer):
+    def run_fixture(self, task=None, serializer=fixture_serializer, *, large_whole=False):
         with mock.patch.object(contract, 'load_serializer', return_value=object()), \
                 mock.patch.object(contract, 'serialize', side_effect=serializer):
-            return contract.run_contract(self.root / 'fixture.py', task or self.root / 'probe')
+            return contract.run_contract(self.root / 'fixture.py', task or self.root / 'probe',
+                                         large_whole=large_whole)
 
     def test_known_fixtures_exercise_both_formats_and_negative_controls(self):
         value = self.run_fixture()
@@ -194,6 +197,36 @@ class ContractTests(unittest.TestCase):
         self.assertTrue(all(row['expectationSatisfied'] for row in value['cases']))
         self.assertTrue(value['negativeInputsDidNotConfirmTargets'])
         self.assertFalse(value['realBuildPerformed'] or value['resourceQualification'])
+
+    def test_optional_large_whole_contract_has_positive_noend_and_truncated_controls(self):
+        value = self.run_fixture(large_whole=True)
+        self.assertEqual(value['status'], 'observed-both-formats')
+        self.assertTrue(value['largeWholeRequested'] and value['largeWholeObserved'])
+        self.assertEqual(len(value['cases']), 9)
+        large = [row for row in value['cases'] if row['largeProfile']]
+        self.assertEqual({row['control'] for row in large}, set(contract.MODES))
+        self.assertTrue(all(row['inputBytes'] > contract.PREVIOUS_WHOLE_LIMIT_BYTES and
+                            row['expectationSatisfied'] and contract._clean(row['cleanup']) for row in large))
+        self.assertTrue(all(row['format'] == 'whole-profile' for row in large))
+        self.assertFalse(value['workerStarted'] or value['realBuildPerformed'] or value['mozillaQualification'])
+
+    def test_large_contract_rejects_small_fixture_even_if_markers_are_valid(self):
+        def undersized(*args, **kwargs):
+            return fixture_serializer(*args)
+        value = self.run_fixture(serializer=undersized, large_whole=True)
+        self.assertEqual(value['status'], 'failed')
+        self.assertEqual(value['firstFailure']['code'], 'contract-observation')
+        self.assertFalse(value['largeWholeObserved'])
+        self.assertEqual(len(value['cases']), 7)
+        self.assertIsNone(value['cases'][-1]['observation'])
+
+    def test_large_contract_requires_explicit_boolean_and_default_remains_six_cases(self):
+        value = self.run_fixture()
+        self.assertEqual(len(value['cases']), 6)
+        self.assertFalse(value['largeWholeRequested'] or value['largeWholeObserved'])
+        value = self.run_fixture(task=self.root / 'invalid', large_whole='yes')
+        self.assertEqual(value['status'], 'failed')
+        self.assertFalse(value['taskCreated'])
 
     def test_serializer_failure_retains_first_cause_and_independent_cleanup(self):
         error = PermissionError(13, 'PRIVATE-SERIALIZER')

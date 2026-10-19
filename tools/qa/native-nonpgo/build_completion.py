@@ -15,12 +15,15 @@ import time
 
 
 MAX_BYTES = 2 * 1024**3
-MAX_WHOLE_BYTES = 16 * 1024**2
 MAX_LINE_BYTES = 1024**2
 MAX_MARKERS = 250000
 MAX_ROWS = 4000000
 MAX_ENTRIES = 4096
 PROCESSING_SECONDS = 30
+READ_BYTES = 64 * 1024
+MAX_DEPTH = 64
+MAX_OBJECT_KEYS = 1024
+MAX_KEY_BYTES = 256
 TIERS = ('configure', 'pre-export', 'export', 'pre-compile', 'rust', 'compile',
          'misc', 'libs', 'tools', 'check')
 KINDS = ('Object', 'Program', 'SharedLib', 'StaticLib', 'Rust')
@@ -212,34 +215,302 @@ class _Completed:
             'targets': self.targets}
 
 
-def _whole(value, completed, deadline):
-    _need(type(value) is dict, 'profile-schema')
-    _meta(value.get('meta'))
-    threads = value.get('threads')
-    _need(type(threads) is list and len(threads) == 1 and type(threads[0]) is dict, 'profile-schema')
-    thread = threads[0]
-    strings, markers = thread.get('stringArray'), thread.get('markers')
-    _need(type(strings) is list and all(type(item) is str for item in strings) and type(markers) is dict,
-          'profile-schema')
-    fields = ('data', 'name', 'startTime', 'endTime', 'phase', 'category', 'stack')
-    length = markers.get('length')
-    _need(set(markers) == {*fields, 'length'} and type(length) is int and 0 <= length <= MAX_ROWS and
-          all(type(markers[key]) is list and len(markers[key]) == length for key in fields), 'profile-schema')
-    for index in range(length):
+_FIELDS = ('data', 'name', 'startTime', 'endTime', 'phase', 'category', 'stack')
+_THREAD = ('threads', 0)
+_MARKERS = (*_THREAD, 'markers')
+_TRACK = frozenset(((), ('meta',), ('threads',), _THREAD, (*_THREAD, 'stringArray'),
+                    _MARKERS, (*_MARKERS, 'length'), *[(*_MARKERS, key) for key in _FIELDS]))
+_NONSPACE = re.compile(rb'[^ \t\r\n]')
+_SPECIAL = re.compile(rb'["\\\x00-\x1f]')
+_DELIMITER = re.compile(rb'[ \t\r\n,\]}]')
+_DECODER = json.JSONDecoder(object_pairs_hook=_pairs, parse_float=_float, parse_constant=_constant)
+_UNDECODED = object()
+
+
+def _key_size(key):
+    try:
+        _need(len(key.encode('utf-8')) <= MAX_KEY_BYTES, 'key-limit')
+    except UnicodeError:
+        raise _Unknown('json') from None
+
+
+def _bounded_decoded(value, depth):
+    """Bound a decoder's small value, including ignored nested containers."""
+    _need(depth <= MAX_DEPTH, 'depth-limit')
+    if type(value) is dict:
+        _need(len(value) <= MAX_OBJECT_KEYS, 'key-limit')
+        for key in value:
+            _key_size(key)
+        children = value.values()
+    elif type(value) is list:
+        _need(len(value) <= MAX_ROWS, 'row-limit')
+        children = value
+    else:
+        return
+    _need(not value or depth < MAX_DEPTH, 'depth-limit')
+    for child in children:
+        if type(child) in (dict, list):
+            _bounded_decoded(child, depth + 1)
+
+
+class _JSONStream:
+    """Validate JSON and index selected spans without retaining the document.
+
+    pread gives every column its own cursor over the same verified descriptor.
+    No independent pathname open, shared descriptor offset, or temporary copy
+    is needed. Object keys, depth and individual decoded values are bounded.
+    """
+    def __init__(self, descriptor, start, end, deadline):
+        self.fd, self.pos, self.end, self.deadline = descriptor, start, end, deadline
+        self.base, self.buffer, self.index = start, b'', {}
+        self.text = None
+        self.failed_batch_base = None
+
+    def buffered(self):
+        if self.pos == self.end:
+            return False
+        _need(0 <= self.pos < self.end, 'json')
+        if not self.base <= self.pos < self.base + len(self.buffer):
+            _budget(self.deadline)
+            size = min(READ_BYTES, MAX_LINE_BYTES, self.end - self.pos)
+            self.buffer = os.pread(self.fd, size, self.pos)
+            _need(len(self.buffer) == size, 'file-changed')
+            self.base = self.pos
+            self.text = self.buffer.decode('ascii') if self.buffer.isascii() else None
+        return True
+
+    def peek(self):
+        return self.buffer[self.pos - self.base] if self.buffered() else None
+
+    def whitespace(self):
+        while self.buffered():
+            match = _NONSPACE.search(self.buffer, self.pos - self.base)
+            self.pos = self.base + (match.start() if match else len(self.buffer))
+            if match:
+                break
+
+    def take(self, byte):
+        _need(self.peek() == byte, 'json')
+        self.pos += 1
+
+    def raw(self, start, limit=None):
+        limit = MAX_LINE_BYTES if limit is None else limit
+        size = self.pos - start
+        _need(0 < size <= limit, 'value-limit')
+        if self.base <= start and self.pos <= self.base + len(self.buffer):
+            return self.buffer[start - self.base:self.pos - self.base]
+        raw = os.pread(self.fd, size, start)
+        _need(len(raw) == size, 'file-changed')
+        return raw
+
+    def scalar(self):
+        start = self.pos
+        if self.peek() == 34:
+            self.pos += 1
+            while True:
+                _need(self.buffered(), 'json')
+                match = _SPECIAL.search(self.buffer, self.pos - self.base)
+                if match is None:
+                    self.pos = self.base + len(self.buffer)
+                else:
+                    self.pos = self.base + match.start() + 1
+                    byte = self.buffer[match.start()]
+                    if byte == 34:
+                        break
+                    _need(byte == 92 and self.peek() is not None, 'json')
+                    self.pos += 1
+                _need(self.pos - start <= MAX_LINE_BYTES, 'value-limit')
+        else:
+            while self.buffered():
+                match = _DELIMITER.search(self.buffer, self.pos - self.base)
+                self.pos = self.base + (match.start() if match else len(self.buffer))
+                _need(self.pos - start <= MAX_LINE_BYTES, 'value-limit')
+                if match:
+                    break
+        return _decode(self.raw(start))
+
+    @staticmethod
+    def child(path, key):
+        candidate = (*path, key) if path is not None else None
+        return candidate if candidate in _TRACK else None
+
+    def small_value(self, depth):
+        # The upstream serializer escapes non-ASCII by default. On an ASCII
+        # chunk, character offsets equal verified byte offsets. Decode only a
+        # complete value contained in this bounded chunk; otherwise use the
+        # structural cursor. Reuse that value when iterating marker columns.
+        if self.text is None:
+            return _UNDECODED
+        start = self.pos - self.base
+        try:
+            value, end = _DECODER.raw_decode(self.text, start)
+        except (ValueError, RecursionError):
+            return _UNDECODED
+        if end == len(self.buffer):
+            if self.base + end != self.end:
+                return _UNDECODED
+        elif self.buffer[end] not in b' \t\r\n,]}':
+            return _UNDECODED
+        _need(end - start <= MAX_LINE_BYTES, 'value-limit')
+        _bounded_decoded(value, depth)
+        self.pos = self.base + end
+        return value
+
+    def array_batch(self, depth):
+        # Validate a complete comma-terminated prefix in C. A failed candidate
+        # falls back once per chunk, including delimiters inside strings or
+        # nested containers. Never batch a child whose span must be indexed.
+        self.whitespace()
+        if not self.buffered() or self.text is None or self.failed_batch_base == self.base:
+            return _UNDECODED
+        start = self.pos - self.base
+        ending = {123: b'},', 91: b'],'}.get(self.buffer[start])
+        cut = self.buffer.rfind(ending if ending else b',', start)
+        if ending and cut >= 0:
+            cut += 1
+        if cut <= start:
+            return _UNDECODED
+        try:
+            values = _decode(b'[' + self.buffer[start:cut] + b']')
+        except _Unknown:
+            self.failed_batch_base = self.base
+            return _UNDECODED
+        if not values:
+            return _UNDECODED
+        _bounded_decoded(values, depth)
+        self.pos = self.base + cut + 1
+        return values
+
+    def value(self, path=None, depth=0):
+        _budget(self.deadline)
+        _need(depth <= MAX_DEPTH, 'depth-limit')
+        self.whitespace()
+        start, byte, count, keys, scalar = self.pos, self.peek(), 0, None, None
+        if path is None:
+            decoded = self.small_value(depth)
+            if decoded is not _UNDECODED:
+                return decoded
+        if byte == 123:
+            self.pos += 1
+            keys = set()
+            self.whitespace()
+            if self.peek() != 125:
+                while True:
+                    self.whitespace()
+                    _need(self.peek() == 34, 'json')
+                    key = self.scalar()
+                    _key_size(key)
+                    _need(key not in keys, 'json')
+                    keys.add(key)
+                    _need(len(keys) <= MAX_OBJECT_KEYS, 'key-limit')
+                    self.whitespace(); self.take(58)
+                    self.value(self.child(path, key), depth + 1)
+                    self.whitespace()
+                    if self.peek() != 44:
+                        break
+                    self.pos += 1
+            self.take(125)
+            kind = 'object'
+        elif byte == 91:
+            self.pos += 1
+            self.whitespace()
+            if self.peek() != 93:
+                while True:
+                    _need(count < MAX_ROWS, 'row-limit')
+                    if self.child(path, count) is None:
+                        batch = self.array_batch(depth)
+                        if batch is not _UNDECODED:
+                            count += len(batch)
+                            _need(count <= MAX_ROWS, 'row-limit')
+                            self.whitespace()
+                            continue
+                    self.value(self.child(path, count), depth + 1)
+                    count += 1
+                    self.whitespace()
+                    if self.peek() != 44:
+                        break
+                    self.pos += 1
+            self.take(93)
+            kind = 'array'
+        else:
+            scalar = self.scalar()
+            kind = 'scalar'
+        if path is not None:
+            self.index[path] = {'kind': kind, 'start': start, 'end': self.pos,
+                                'count': count, 'keys': keys, 'value': scalar}
+        return scalar if kind == 'scalar' else _UNDECODED
+
+    def finish(self):
+        self.whitespace()
+        _need(self.pos == self.end, 'json')
+
+
+def _array_values(descriptor, span, deadline):
+    reader = _JSONStream(descriptor, span['start'] + 1, span['end'] - 1, deadline)
+    remaining = span['count']
+    while remaining:
+        reader.whitespace()
+        batch = reader.array_batch(0)
+        if batch is not _UNDECODED:
+            _need(len(batch) < remaining, 'profile-schema')
+            remaining -= len(batch)
+            yield from batch
+            continue
+        start = reader.pos
+        value = reader.value()
+        if value is _UNDECODED:
+            value = _decode(reader.raw(start))
+        reader.whitespace()
+        remaining -= 1
+        if remaining:
+            reader.take(44)
+        else:
+            reader.finish()
+        yield value
+    reader.finish()
+
+
+def _whole_stream(stream, size, completed, deadline):
+    reader = _JSONStream(stream.fileno(), 0, size, deadline)
+    reader.value(())
+    reader.finish()
+    index = reader.index
+    def span(path, kind):
+        item = index.get(path)
+        _need(item is not None and item['kind'] == kind, 'profile-schema')
+        return item
+    span((), 'object')
+    meta = span(('meta',), 'object')
+    _need(meta['end'] - meta['start'] <= MAX_LINE_BYTES, 'value-limit')
+    reader.pos = meta['end']
+    _meta(_decode(reader.raw(meta['start'])))
+    _need(span(('threads',), 'array')['count'] == 1, 'profile-schema')
+    span(_THREAD, 'object')
+    strings = span((*_THREAD, 'stringArray'), 'array')
+    _need(span(_MARKERS, 'object')['keys'] == {*_FIELDS, 'length'}, 'profile-schema')
+    length = span((*_MARKERS, 'length'), 'scalar')['value']
+    _need(type(length) is int and 0 <= length <= MAX_ROWS, 'profile-schema')
+    columns = {key: span((*_MARKERS, key), 'array') for key in _FIELDS}
+    _need(all(item['count'] == length for item in columns.values()), 'profile-schema')
+    names = ('Other', 'Phase', *KINDS)
+    codes = bytearray()
+    for value in _array_values(reader.fd, strings, deadline):
+        _need(type(value) is str, 'profile-schema')
+        codes.append(names.index(value) if value in names else 0)
+    values = [_array_values(reader.fd, columns[key], deadline)
+              for key in ('data', 'name', 'startTime', 'endTime', 'phase')]
+    for data, name, start, end, phase in zip(*values):
         _budget(deadline)
-        name = markers['name'][index]
-        phase = markers['phase'][index]
-        end = markers['endTime'][index]
-        _need(type(name) is int and 0 <= name < len(strings) and type(phase) is int and
+        _need(type(name) is int and 0 <= name < len(codes) and type(phase) is int and
               ((phase == 0 and end is None) or (phase == 1 and end is not None)), 'profile-schema')
-        completed.marker(strings[name], markers['startTime'][index], end, markers['data'][index])
+        completed.marker(names[codes[name]], start, end, data)
 
 
 def _parse(stream, size, deadline):
     first = stream.readline(MAX_LINE_BYTES + 1)
     completed = _Completed()
     try:
-        meta = _decode(first)
+        meta = _decode(first) if len(first) <= MAX_LINE_BYTES else None
     except _Unknown:
         meta = None
     if type(meta) is dict and meta.get('type') == 'meta':
@@ -268,11 +539,7 @@ def _parse(stream, size, deadline):
         _need(read_bytes == size, 'file-changed')
         kind = 'jsonl'
     else:
-        _need(size <= MAX_WHOLE_BYTES, 'whole-size-limit')
-        stream.seek(0)
-        raw = stream.read(MAX_WHOLE_BYTES + 1)
-        _need(len(raw) == size and len(raw) <= MAX_WHOLE_BYTES, 'file-changed')
-        _whole(_decode(raw), completed, deadline)
+        _whole_stream(stream, size, completed, deadline)
         kind = 'whole-profile'
     _budget(deadline)
     return completed.result(kind, size)
