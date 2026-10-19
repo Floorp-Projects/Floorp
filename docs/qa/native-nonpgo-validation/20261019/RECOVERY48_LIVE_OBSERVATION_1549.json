@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "record": "recovery48-consumer-live-observation",
+  "observedAtUTC": "2026-10-19T15:49:26Z",
+  "run": {
+    "id": 39258232399,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39258232399",
+    "caller": "aa2cf04c0e5331a33181413f50b4b9530d7ba525",
+    "fixture": "73b5c6b71be98104bfaa8ba641602b603838d5d5"
+  },
+  "job": {
+    "id": 118078849382,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "status": "in_progress",
+    "conclusion": null,
+    "currentStep": [
+      {
+        "name": "Restore verified state then build XUL and run Firefox smoke before native authentication",
+        "startedAt": "2026-10-19T13:24:04Z"
+      }
+    ]
+  },
+  "developmentEnvironment": {
+    "shellAndGitRead": "passed",
+    "fixedPipelineReadAndCompile": "passed",
+    "pipelineBytes": 47069,
+    "pipelineSHA256": "e48dbb9430596d081c449bf88a692f976bdfb5ab4c8f9846241c334a3bd21757",
+    "temporaryCreateEditReadFsyncDelete": "passed",
+    "blockingFailureObservedAtRecheck": false
+  },
+  "ordinaryLiveLogObservation": {
+    "httpStatus": 404,
+    "code": "NOT_FOUND",
+    "storageResponse": "BlobNotFound",
+    "decodedLogObtained": false,
+    "latestLogUpdateTime": "unknown",
+    "latestInternalBuildSubphase": "unknown",
+    "runnerMonitorFailureEstablishedByThisResponse": false
+  },
+  "results": {
+    "fullHostXUL": "NOT_YET_OBSERVED",
+    "currentMozillaSmoke": "NOT_YET_OBSERVED",
+    "nativeAuthentication": "NOT_YET_OBSERVED",
+    "originalNativeExitCause": "unknown"
+  },
+  "continuation": {
+    "existingRunOnly": true,
+    "humanCancellation": false,
+    "sharedAbsoluteWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "newArtifactUploads": 0
+  },
+  "limits": [
+    "The development environment recheck succeeded at the observation time; this is not a native Mac product result.",
+    "The combined Actions step remains in progress. A log retrieval failure establishes no internal compiler/test phase, log inactivity, or runner monitor failure.",
+    "Firefox smoke and native authentication require separate actual terminal evidence."
+  ]
+}
