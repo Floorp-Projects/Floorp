@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "status": "verified-new-normal-source-and-exact-producer-name-candidate",
+  "qualification": "official-artifact-identical-uncompressed-tar-v1",
+  "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "baselineCompressedTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+  "source": {
+    "run": 39244172146,
+    "attempt": 1,
+    "producerJob": 118032017226,
+    "producerName": "Mac build [PGO] / download-macos-sdk",
+    "artifact": 12182302735,
+    "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "createdAt": "2026-10-19T11:23:48Z",
+    "expiresAt": "2026-10-20T11:23:42Z"
+  },
+  "officialAPI": {
+    "schema": 1,
+    "status": "verified-normal-official-api-origin",
+    "observedAt": "2026-10-19T20:24:51Z",
+    "run": {
+      "id": 39244172146,
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "head_branch": "nora-0.2.0",
+      "run_attempt": 1,
+      "event": "schedule",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/daily-build.yml",
+      "workflow_id": 142881703,
+      "created_at": "2026-10-19T11:22:31Z",
+      "run_started_at": "2026-10-19T11:22:31Z",
+      "updated_at": "2026-10-19T18:21:40Z"
+    },
+    "artifact": {
+      "id": 12182302735,
+      "name": "macos-sdk",
+      "size_in_bytes": 105082683,
+      "digest": "sha256:c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+      "expired": false,
+      "created_at": "2026-10-19T11:23:48Z",
+      "updated_at": "2026-10-19T11:23:48Z",
+      "expires_at": "2026-10-20T11:23:42Z"
+    },
+    "artifactWorkflowRun": {
+      "id": 39244172146,
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "head_branch": "nora-0.2.0"
+    },
+    "producerJob": {
+      "id": 118032017226,
+      "run_id": 39244172146,
+      "name": "Mac build [PGO] / download-macos-sdk",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "started_at": "2026-10-19T11:22:52Z",
+      "completed_at": "2026-10-19T11:23:50Z",
+      "labels": [
+        "macos-26"
+      ],
+      "run_attempt": 1
+    },
+    "pagination": {
+      "perPage": 100,
+      "artifactsReturned": 34,
+      "artifactsTotal": 34,
+      "jobsReturned": 43,
+      "jobsTotal": 43,
+      "complete": true
+    },
+    "directArtifactEndpoint": "connector-route-unavailable-http400",
+    "artifactVerifiedViaCompleteNormalRunListing": true,
+    "downloadsPerformedByThisReview": 0,
+    "signedURLPublished": false
+  },
+  "acquisitionObservation": {
+    "start": "2026-10-19T20:13:53Z",
+    "completed": "2026-10-19T20:19:12Z",
+    "elapsedSeconds": 319.024,
+    "deadlineSeconds": 600,
+    "timingSource": "parent-recorded observation; not independently clock-verified",
+    "startedWhileUnexpired": true,
+    "officialArtifactToolThenNormalPrivateFileReference": true,
+    "signedURLPublished": false,
+    "downloadRepeatedByThisReview": false
+  },
+  "independentCurrentCompressedFileBinding": {
+    "zip": {
+      "bytes": 105082683,
+      "sha256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee"
+    },
+    "tarGzip": {
+      "bytes": 105567985,
+      "sha256": "a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b"
+    },
+    "regularOwnedNlinkOneNoFollowStable": true
+  },
+  "zipEntry": {
+    "entry": "macos_sdk.tar.gz",
+    "uncompressedBytes": 105567985,
+    "crc32": 1053884925,
+    "encrypted": false,
+    "centralDirectoryCheckedByThisReview": true,
+    "fullCRCReadReportedByBoundPriorComparison": true
+  },
+  "boundPriorCompleteContentVerification": {
+    "receipt": {
+      "bytes": 1808,
+      "sha256": "fb77173c8f9249fddbc5563f64776cf08feeaab73be5009b771e71b811eb8702"
+    },
+    "verificationScript": {
+      "bytes": 6643,
+      "sha256": "ebd662591f7a808adb3b433162c9f963804ff2c4e0b202ff18d81de624e3e260"
+    },
+    "logicIndependentlyRead": true,
+    "fullUncompressedTARStreamBytesAndSHA256Checked": true,
+    "fixedUncompressedCheckerFunctionsUnchangedByPinUpdate": true,
+    "fixedCanonicalTreeReader": {
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    "versionReadFromSDKSettingsPlist": true,
+    "currentCompressedInputsMatchPriorReceipt": true,
+    "heavyDecompressedScanRepeatedByThisReview": false,
+    "uncompressedTar": {
+      "bytes": 760518144,
+      "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+    },
+    "tree": {
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "canonicalSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+    },
+    "version": "26.5"
+  },
+  "comparison": {
+    "ZIPWireIdenticalToBaseline": false,
+    "compressedTARWireIdenticalToBaseline": false,
+    "allUncompressedTARBytesIdenticalToFixedBaseline": true,
+    "canonicalTreeIdentical": true,
+    "SDKVersionIdentical": true,
+    "wireRecompressedOrModified": false
+  },
+  "candidateFiles": {
+    "sdk_source.py": {
+      "bytes": 8299,
+      "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa"
+    },
+    "sdk_source.json": {
+      "bytes": 1030,
+      "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+    },
+    "fetch_sdk.py": {
+      "bytes": 4964,
+      "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519"
+    },
+    "test_sdk_source.py": {
+      "bytes": 16624,
+      "sha256": "1dff28b0ec0e557370dcec76f185e825a547ed81cab0f5706f55374a04bc6663"
+    },
+    "test_sdk_source_integration.py": {
+      "bytes": 15303,
+      "sha256": "b66cb8314b67658a3fc2b78d48bf667468293bf298c442c7d1c62448e18ae1a8"
+    }
+  },
+  "sourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+  "narrowSourceRenewal": {
+    "JSONFields": [
+      "producerJob",
+      "pin.artifact",
+      "pin.run",
+      "pin.zipSHA256",
+      "pin.tarSHA256",
+      "pin.expiresObserved"
+    ],
+    "onlyChangedSDKFunction": [
+      "load_sdk_source"
+    ],
+    "otherSDKFunctionASTsUnchanged": true,
+    "onlyNonPinSDKChanges": [
+      "fixed PRODUCER_NAME constant",
+      "default producerName=None",
+      "verified alternate producerName=fixed constant"
+    ],
+    "onlyFetchChange": "exact selected trusted producerName replaces old literal",
+    "allOtherFetchBytesUnchanged": true,
+    "sourceJSONSchemaUnchanged": true,
+    "sourceJSONCannotOverrideProducerName": true,
+    "baselinePlanUnchanged": true,
+    "defaultLegacySelectionUnchanged": true,
+    "previousAlternateRejectedByNewExplicitPin": true,
+    "proof": {
+      "bytes": 2805,
+      "sha256": "d412916183f590bcf1ca926ffd353d46f76aeea4b1f1843445631ab475f6004f"
+    }
+  },
+  "resolvedIntegrationBlocker": {
+    "oldLiteralDidNotMatchNewOfficialProducer": true,
+    "beforeFixControl": {
+      "bytes": 668,
+      "sha256": "11e2d7a1bd9f6fb32a94ed6fa984b2f91bfb93d4f0fc167c89ed92f1e7bc751f"
+    },
+    "fixedByExactInternalTrustedSpecNameNotAllowlist": true,
+    "afterFixControls": {
+      "bytes": 1311,
+      "sha256": "c517c4058acc717d7a98d5cee1db815a205f3944222c25718db2582c0dd18a5b"
+    },
+    "actualNameAcceptedAndOldForeignBooleanMissingNamesRejected": true,
+    "allNameControlsUseMockedAPIAndTinyWireAnchors": true
+  },
+  "acquisitionReceipt": {
+    "artifact": 12182302735,
+    "run": 39244172146,
+    "attempt": 1,
+    "zipSHA256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+    "tarSHA256": "a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b",
+    "bytes": 105567985,
+    "crcVerified": true,
+    "signedURLPublished": false,
+    "sourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "qualification": "official-artifact-identical-uncompressed-tar-v1",
+    "uncompressedTar": {
+      "bytes": 760518144,
+      "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+    }
+  },
+  "testResult": {
+    "unitAndIntegrationAndLegacySDKGuards": 50,
+    "passed": 50,
+    "skipped": 0,
+    "errors": 0,
+    "failures": 0,
+    "resourceWarningsAreErrors": true,
+    "unitTests": 26,
+    "integrationTests": 19,
+    "legacySDKGuards": 5,
+    "additionalActualProducerNameControls": 6,
+    "log": {
+      "bytes": 8696,
+      "sha256": "7760627ae74a2e021bf316cd4c89c179d70cea600191cb9f9def9a6b4f90e3f4"
+    }
+  },
+  "retainedRequirements": {
+    "explicitAlternateOptIn": true,
+    "normalAPIAndHTTPErrorStop": true,
+    "unexpiredAtAcquisitionRequired": true,
+    "acquisitionDeadlineSeconds": 600,
+    "fixedZIPCompressedTARRawTARTreeAndVersionChecks": true,
+    "remainingSixHoursRequired": false,
+    "verifiedLocalSDKUsableAfterServiceExpiry": true,
+    "retentionAndPermissionsUnchanged": true
+  },
+  "scope": "SDK source/content evidence only; no build, target, full-host, or native qualification",
+  "operations": {
+    "repositorySourceEdited": false,
+    "planEdited": false,
+    "CIStarted": false,
+    "remoteRefsChanged": false,
+    "SDKDownloadedByThisReview": false,
+    "oldArtifactReacquired": false,
+    "newProducer": false,
+    "newArtifactUploaded": false,
+    "retentionAuthenticationOrPermissionsChanged": false
+  }
+}

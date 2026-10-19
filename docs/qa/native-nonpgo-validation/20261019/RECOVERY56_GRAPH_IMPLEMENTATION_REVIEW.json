@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "status": "CLEAR",
+  "scope": "independent-narrow-source-review-for-guarded-read-only-integration-only",
+  "candidateFiles": [
+    {
+      "file": "floorp-firefox-target-proof-candidate.py",
+      "bytes": 10361,
+      "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a"
+    },
+    {
+      "file": "floorp-firefox-target-readonly-wrapper-candidate.py",
+      "bytes": 22432,
+      "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb"
+    }
+  ],
+  "priorReview": {
+    "file": "floorp-firefox-target-independent-review.json",
+    "bytes": 8156,
+    "sha256": "ab1fc8963a3ebae373fd2edb2aadbf200a86a961969e26e138ff1d0e34d3e8f1"
+  },
+  "supersedes": "Both prior P2 findings are closed for these exact updated source hashes only; the old hashes remain changes-requested.",
+  "openP1": 0,
+  "openP2": 0,
+  "closedFindings": [
+    {
+      "id": "GRAPH-P2-1",
+      "status": "closed",
+      "fix": "The pure reader accepts only fixed generated root statements and literal dependency rules, with .PHONY and tab recipes recognized without execution. Extra includes, conditions, dynamic targets, overrides and continuations fail closed.",
+      "opaqueException": "Only the seven exact fixed-7dd install targets with the single exact install_manifest_depends prerequisite may be opaque. All other opaque RHS, including disconnected read-time eval, fail closed. A permitted opaque install rule reached from any queried closure also fails closed.",
+      "queriedClosures": [
+        "xpcshell",
+        "XUL",
+        "recurse_tools",
+        "browser/app/tools"
+      ],
+      "projection": "Wrapper retains no graph for an unconfirmed pure proof; complete literal absence is asserted only under the recognized generated grammar."
+    },
+    {
+      "id": "CONFIG-P2-2",
+      "status": "closed-under-parent-approved-narrow-consistency-contract",
+      "fix": "Selected present values compare recursively with exact JSON types and finite numeric values. Debug/tests/sandbox enabling, non-enabled PGO/LTO, fixed CPU/OS/compiler/version/toolkit fields and effective/raw profile consistency are required before graph observation.",
+      "optionalUnknown": "An absent actual optional selected substitution is allowed only when its expected selection is None. It sets configConsistency=unconfirmed and restoredConfigStillMatches=null; it does not count as a matching value. Under the parent-approved contract, a stable graph can still be observed independently.",
+      "qualificationLimit": "This checks retained selected values and critical profile consistency only. It does not reexecute or replace full authentic checkpoint, manifest, context, tool-path or configuration guards."
+    }
+  ],
+  "validation": {
+    "resourceWarningsAreErrors": true,
+    "independentPureControls": 45,
+    "independentWrapperControls": 63,
+    "independentAdditionalRegressionControls": 13,
+    "all121ControlsPassed": true,
+    "originalFrozenControlResultsAndCandidateSourcesUnchanged": true,
+    "pureResult": {
+      "file": "floorp-firefox-target-independent-v2-pure-controls.json",
+      "bytes": 5683,
+      "sha256": "950173125739f3c922e376daa69384c51e9a5b11b06efe5d71368d0711cde0d9"
+    },
+    "wrapperResult": {
+      "file": "floorp-firefox-target-independent-v2-wrapper-controls.json",
+      "bytes": 18096,
+      "sha256": "cbe2d4daafee8ef52fb182cab7e1f110acc45d56cc1835729da0522f5664f540"
+    },
+    "ownRegressions": {
+      "file": "floorp-firefox-target-independent-v2-regressions.json",
+      "bytes": 2138,
+      "sha256": "d06f525bdda9437fbbe3af05309ad93cb5aad00bfdd69b8f55dff2d4e930211c"
+    },
+    "controlSummary": {
+      "file": "floorp-firefox-target-independent-v2-control-summary.json",
+      "bytes": 697,
+      "sha256": "fc37d5ec24a8fc4cb5ee8f80fb53b10bef88536b0b624de178484bbadb14d47a"
+    }
+  },
+  "verifiedRetainedSafety": {
+    "fixedTaskRelativeReadPaths": true,
+    "boundedNoFollowRegularOwnedNlinkOneReads": true,
+    "beforeAfterFDPathAndDirectoryBindings": true,
+    "missingEntryBindingsTracked": true,
+    "bindingFailureClearsGraphAndReadQualifications": true,
+    "unavailableBytesHashCountsRemainNull": true,
+    "outerAndInternalLimitsNotRelaxed": true,
+    "absoluteDeadlineUsesOriginalStartedMonotonicPlusRestore60": true,
+    "processingCapSeconds": 30,
+    "totalByteCap": 67108864,
+    "allOwnedFDsClosedInControls": true,
+    "primaryAndCleanupFailureRemainSeparate": true,
+    "publicProjectionDropsRawPathsPIDsCommandsAndPrivateSentinels": true,
+    "noMakeSyntaxEvaluated": true,
+    "noFileWritesEnvironmentMutationOrChildCreationInCandidates": true
+  },
+  "integrationConditions": [
+    "Use only these immutable reviewed candidates with the fixed pure callback, never a backend-selected executable module.",
+    "First complete the unchanged existing normal-API acquisition, fixed-origin checkpoint, archive/manifest, context, reference/tree, restored-config and resource/census guards.",
+    "Observe only after natural zero restore-only completion, exact leader reap and verified owned-group cleanup with no monitor/cleanup failure.",
+    "Use the existing Runner-owned observer stage, original job clock, restore deadline60 and clean allowlisted environment without SDK/checkpoint credentials.",
+    "Persist observer result independently of existing firstFailure and cleanup evidence; an unconfirmed graph/config is diagnostic, not product failure.",
+    "Do not infer usable minimum suffix, target execution success, full host/XUL qualification, cache hits or time remaining from this source graph."
+  ],
+  "remaining": [
+    "Root integration review and immutable caller binding",
+    "Actual standard macos-15-intel guarded restore-only observation"
+  ],
+  "actualMacValidated": false,
+  "actualCheckpointRestorePerformed": false,
+  "executionAuthorization": "This source review performs or authorizes no CI/ref/acquisition action; parent owns execution decisions under existing user instructions.",
+  "operations": {
+    "candidateOrRepositorySourceEdited": false,
+    "CIStarted": false,
+    "remoteRefsChanged": false,
+    "SDKFetched": false,
+    "checkpointFetched": false,
+    "newProducer": false,
+    "newArtifactUploaded": false,
+    "makeRecipeOrMachConfigureExecuted": false,
+    "permissionsOrAuthenticationChanged": false
+  }
+}

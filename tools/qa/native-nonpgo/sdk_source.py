@@ -22,14 +22,15 @@ QUALIFICATION = 'official-artifact-identical-uncompressed-tar-v1'
 BASELINE_PLAN_SHA256 = '33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460'
 BASELINE_TAR_SHA256 = '2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4'
 RUNTIME_REF = '7dd619742b25567e479eeda97ae071d10542ad0b'
-PRODUCER_JOB = 117779018335
-PIN = {'artifact': 12149860607, 'run': 39162639256, 'attempt': 1,
+PRODUCER_JOB = 118032017226
+PRODUCER_NAME = 'Mac build [PGO] / download-macos-sdk'
+PIN = {'artifact': 12182302735, 'run': 39244172146, 'attempt': 1,
        'name': 'macos-sdk', 'entry': 'macos_sdk.tar.gz', 'zipBytes': 105082683,
-       'zipSHA256': '2891f1867cd3e53a4cf6d25da9128b345a626a9b0aed97bdc25e283699c14e2b',
+       'zipSHA256': 'c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee',
        'tarBytes': 105567985,
-       'tarSHA256': 'f306df0484aa958803d50943e39dde51b740dca97ac44625b42c3839867a5328',
+       'tarSHA256': 'a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b',
        'draftReaderTreeSHA256': 'c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f',
-       'version': '26.5', 'expiresObserved': '2026-10-19T20:18:26Z'}
+       'version': '26.5', 'expiresObserved': '2026-10-20T11:23:42Z'}
 UNCOMPRESSED_TAR = {'bytes': 760518144,
                     'sha256': '57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3'}
 CONTENT_KEYS = ('name', 'entry', 'tarBytes', 'version', 'draftReaderTreeSHA256')
@@ -76,7 +77,7 @@ def load_sdk_source(plan_path, source_path=None):
         raw = Path(plan_path).read_bytes()
         plan = json.loads(raw)
         pin, runtime = plan['sdk'], plan['runtime']['ref']
-        result = {'pin': copy.deepcopy(pin), 'runtimeRef': runtime, 'producerJob': None,
+        result = {'pin': copy.deepcopy(pin), 'runtimeRef': runtime, 'producerJob': None, 'producerName': None,
                   'uncompressedTar': None, 'sourceSHA256': None,
                   'baselinePlanSHA256': hashlib.sha256(raw).hexdigest(),
                   'qualification': DEFAULT_QUALIFICATION}
@@ -98,7 +99,7 @@ def load_sdk_source(plan_path, source_path=None):
     require(all(_same(value['pin'][key], pin.get(key)) for key in CONTENT_KEYS), 'sdk-source-content-binding')
     require(_same(value['uncompressedTar'], UNCOMPRESSED_TAR), 'sdk-source-uncompressed-anchor')
     result['pin'].update({key: value['pin'][key] for key in PIN})
-    result.update(producerJob=PRODUCER_JOB, uncompressedTar=dict(UNCOMPRESSED_TAR),
+    result.update(producerJob=PRODUCER_JOB, producerName=PRODUCER_NAME, uncompressedTar=dict(UNCOMPRESSED_TAR),
                   sourceSHA256=source_sha, qualification=QUALIFICATION)
     return result
 

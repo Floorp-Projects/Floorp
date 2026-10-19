@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "status": "CLEAR",
+  "scope": "frozen-placeholder-guarded-restore-only-graph-caller-static-integration-review",
+  "openP1": 0,
+  "openP2": 0,
+  "launchDecision": "NO_GO_PENDING_EXTERNAL_PREREQUISITES",
+  "files": {
+    "caller": {
+      "path": "floorp-firefox-target-guarded-restore-caller.yml",
+      "bytes": 57528,
+      "sha256": "2e723905461f1e3ff58394a3ccac6056e58a6b44d5c20db970b2d47f4106668b"
+    },
+    "integration": {
+      "path": "floorp-firefox-target-caller-integration-candidate.py",
+      "bytes": 21961,
+      "sha256": "d3e7444f0880d3c5622e68aa52358bb18dc020d49ccef600d649c286070fc96a"
+    },
+    "freeze": {
+      "path": "floorp-firefox-target-guarded-restore-caller-v2-freeze.json",
+      "bytes": 10200,
+      "sha256": "da340523d10e93931711bf2bf592c27f59c7c7a32d16c1a660db3665113d8355"
+    },
+    "writerControls": {
+      "path": "floorp-firefox-target-caller-integration-controls.py",
+      "bytes": 21535,
+      "sha256": "90f05d188877655306185d7eb31c4fe31b1135cf098027bcc0831873b5361a43"
+    },
+    "writerResult": {
+      "path": "floorp-firefox-target-caller-integration-controls-result.json",
+      "bytes": 10030,
+      "sha256": "d3869bceeca4b0f625a6e3acad85926f80ea844ae2a6687c688ef31148574e95"
+    },
+    "independentResult": {
+      "path": "floorp-graph-caller-independent-controls-result.json",
+      "bytes": 10030,
+      "sha256": "d3869bceeca4b0f625a6e3acad85926f80ea844ae2a6687c688ef31148574e95"
+    },
+    "independentProvenance": {
+      "path": "floorp-graph-caller-independent-controls-provenance.json",
+      "bytes": 705,
+      "sha256": "6b2ad90b3d3487f6e4f373ce7303abc15b07585bd6fc3a92a7c3cead1bf7bdec"
+    },
+    "extraControls": {
+      "path": "floorp-graph-caller-independent-extra-controls.py",
+      "bytes": 3575,
+      "sha256": "50131550f91b88f75a046402c42041bb7b341e2c2581e2a97de9e89aa1ba6a12"
+    },
+    "extraResult": {
+      "path": "floorp-graph-caller-independent-extra-result.json",
+      "bytes": 1875,
+      "sha256": "5a9fdd3e7a4f7cd1c05500d4a9f6b20d421ca8aa85c50030211e5282438ff269"
+    },
+    "primaryRegressionControl": {
+      "path": "floorp-graph-caller-primary-write-failure-control.py",
+      "bytes": 3581,
+      "sha256": "1e13a7ba54d1d5968fdc7aa42626e73d7d42a0e558eb6a049a5f81b2b1abe648"
+    },
+    "primaryRegressionResult": {
+      "path": "floorp-graph-caller-primary-write-failure-regression.json",
+      "bytes": 896,
+      "sha256": "f0d91cb7b99d4de18e721cfe1db5486e00b1afb327b1f79f70000ba724ac293c"
+    },
+    "priorCounterexample": {
+      "path": "floorp-graph-caller-primary-write-failure-counterexample.json",
+      "bytes": 749,
+      "sha256": "e10d792b15f7fba060d955cb6c7ed62e61d9ad504a876587820444a5c821a525"
+    },
+    "pure": {
+      "path": "floorp-firefox-target-proof-candidate.py",
+      "bytes": 10361,
+      "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a"
+    },
+    "observer": {
+      "path": "floorp-firefox-target-readonly-wrapper-candidate.py",
+      "bytes": 22432,
+      "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb"
+    }
+  },
+  "closedFindings": [
+    {
+      "priority": "P2",
+      "code": "parent-binding-or-deadline-must-clear-observation",
+      "resolution": "Parent clears observation before propagating post-receipt binding or original60 deadline failure. Raw child receipt remains private. Clock is checked before and after post-receipt reads; unknown returned hash stays null."
+    },
+    {
+      "priority": "P2",
+      "code": "driver-receipt-write-failure-loses-public-primary",
+      "affectedIntegrationSHA256": "940d5b25abf2a7ae35e2eca5e6d83134f3ee76e233ceda79423aba9be55e5649",
+      "affectedCallerSHA256": "f014ab3d90f7a644b288c1c9140748e9e8b9fd8a57e96dfc80f26f6e2a9f24cc",
+      "resolution": "A separate bounded64KiB owned regular nlink1 no-follow stable read recovers the persisted first failure through the existing fixed projector. Only exact observer stage can supplement observerFirstFailure when driver receipt is absent. Recovery never restores observation or success qualification. Actual support.Runner.fail persistence plus forced driver-save failure confirms safe phase-deadline retention."
+    }
+  ],
+  "confirmedContracts": [
+    "One consumer job, original platform360 and existing plan/resource guards; restore-only path never selects shared-deadline or Mozilla work.",
+    "Pipeline outcome success plus typed existing guarded-restore postconditions, current replay-context equality, exact renewed SDK pins and preflight counts are required before the internal genuine-restore flag is set.",
+    "Restore and effective-config stages require natural integer0, exact integer0 reap, verified group disappearance and explicitly absent cleanup failure before observation.",
+    "The same original started-monotonic bounds all graph work to60min. Observer30sec is inside that deadline. Parent post-read checks use the same origin; no reset or additive345min work allowance.",
+    "The existing Runner owns the fixed child and its process group; clean_environment and exact existing ABI/binding keys are forwarded, while acquisition tokens are excluded.",
+    "Only exact owned no-follow helper bytes with pinned hashes are executed. Parent has one fixed Runner.run; child and both graph helpers execute no make, recipe, configure, build command or further worker.",
+    "Before, returned and after summary/context/clock hashes must match. Pure and wrapper pins retain previously reviewed fixed read caps, config typing, opaque-closure failure and unknown-null behavior.",
+    "Always evidence emits strict graph/monitor/stage/failure projections only. Raw source lines, private paths, process identities, arbitrary diagnostic text and token values are not printed.",
+    "Primary, monitor, cleanup and evidence-write conditions remain separate. Recovered first-failure evidence cannot satisfy the observed graph gate.",
+    "No new checkpoint producer, artifact upload, permission, authentication or retention change. Acquisition remains the normal unexpired official API route with fixed SDK and sole checkpoint origins.",
+    "An observed generated order graph proves neither minimal sufficient build suffix, target completion, cache hit, full-host/native qualification nor completion duration."
+  ],
+  "validation": {
+    "ResourceWarningPolicy": "error",
+    "writerControlsIndependentlyRerun": 87,
+    "additionalActualAlwaysControls": 6,
+    "actualRunnerFailPersistenceRegression": 1,
+    "totalIndependentlyRunControls": 94,
+    "shellSyntaxBlocks": 8,
+    "pythonSyntaxBlocks": 4,
+    "ASTIdenticalGateFunctions": 10,
+    "originalWriterFilesAndResultUnchangedDuringRerun": true,
+    "actualLinuxFiniteReadOnlyChild": true,
+    "actualMacRestore": false,
+    "actualResourceMonitorQualified": false
+  },
+  "remainingPrerequisites": [
+    "Successful actual Mac density-reader proof and parent decision before any graph run.",
+    "Root adopts and independently reviews the exact renewed SDK producer-name binding and source pins.",
+    "Resolve immutable fixture, selected QA count and unused future graph branch placeholders; recheck rendered caller before publication.",
+    "Fresh normal API provenance/expiry and zero-overlap checks at launch. No expired acquisition or permission changes."
+  ],
+  "operations": {
+    "repositorySourceEdited": false,
+    "candidateSourceEdited": false,
+    "CIStarted": false,
+    "remoteRefsChanged": false,
+    "SDKAcquired": false,
+    "checkpointAcquired": false,
+    "artifactUploaded": false
+  },
+  "evidenceCorrection": {
+    "staleTemporaryV2CounterexampleRemoved": true,
+    "explanation": "During writer update, an in-progress local reproducer encountered the repaired candidate. Its temporary mislabeled receipt was removed; the retained historical counterexample is bound to the old hashes and the new regression is bound to the final hashes."
+  },
+  "pathProjection": "Only fixed candidate path labels are reduced to basenames; all source and result hashes and technical findings are preserved.",
+  "originalReviewSHA256": "110d9ab297b1bb56ea6601a9abab316b7a6498d7651f1f70aecf578c1e143468"
+}

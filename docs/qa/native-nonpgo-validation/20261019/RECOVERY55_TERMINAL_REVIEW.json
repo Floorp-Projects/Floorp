@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "review": "Recovery55 actual Intel Mac terminal evidence",
+  "decision": "CLEAR",
+  "openP1": 0,
+  "openP2": 0,
+  "observedAt": "2026-10-19 21:36:04 UTC",
+  "publicReceipt": {
+    "commit": "c12c703c0fc767ebc43321a09a84212f5c331636",
+    "bytes": 18274,
+    "sha256": "41e31bd46566585c5cf4827e36d7a2c11a7c3972561a2e53db0d0926e23e49a1",
+    "immutableAPIReadbackExact": true,
+    "onlyTwoDocumentationPathsChanged": true
+  },
+  "normalAPI": {
+    "run": {
+      "id": 39326868656,
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "attempt": 1,
+      "headSHA": "b8a694e5f254e5fdc3595a2fa17700060932897a",
+      "branch": "codex/mac-native-streaming-recovery55-20261019",
+      "createdAt": "2026-10-19T21:21:44Z",
+      "updatedAt": "2026-10-19T21:25:55Z"
+    },
+    "job": {
+      "id": 118314869103,
+      "name": "checkpoint-consumer",
+      "status": "completed",
+      "conclusion": "success",
+      "labels": [
+        "macos-15-intel"
+      ]
+    },
+    "jobCount": 1,
+    "headRunCount": 1,
+    "artifactCount": 0,
+    "allJobStepsSuccess": true
+  },
+  "privateEvidence": {
+    "decodedLogBytes": 106547,
+    "decodedLogSHA256": "c57c70bc158e62fdad6400388b931c77f66b362ee5511801f4ee2bb1c5a7b6d5",
+    "logProtected": true,
+    "completeTopLevelJSONObjectCount": 16,
+    "independentRawExtractionEqualsSavedObjects": true,
+    "rawContentPublished": false
+  },
+  "actualValidation": {
+    "QA": {
+      "total": 525,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "recording": {
+      "total": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "originalDensitySeconds": 17.643181413000036,
+    "separateProbeSeconds": 17.594401747000006,
+    "sameControlledInputBytes": 195000385,
+    "sameControlledInputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "sameProcessingSeconds": 30,
+    "bothTraversalsComplete": true,
+    "exactCallerGatesRevalidatedSeparately": true,
+    "runtimeContext": {
+      "jsonScanner": "c",
+      "pythonVersion": [
+        3,
+        12,
+        10
+      ]
+    },
+    "ownedStagesNaturalZeroExactReapedGroupGone": 7,
+    "preflightStagesWithExplicitCleanupFields": 6,
+    "contractStageRawCleanupFailureFieldProjected": false,
+    "contractStageCleanupFailurePresentFlag": false,
+    "contractDriverAndFinalCleanupGuardsVerified": true,
+    "noFabricatedCleanupFailureNull": true,
+    "fatalMonitorFailure": null,
+    "retainedMonitorDiagnostics": 0,
+    "firstFailure": null,
+    "diagnosticContinuation": false,
+    "actualSerializerCases": 9,
+    "serializerPositiveNoEndAndTruncatedExpectationsPreserved": true,
+    "serializerAllCleanupVerified": true,
+    "sourceBytes": 126050,
+    "sourceSHA256": "5f2f9572658fc19d342b5e56904ce110eeb258ff57c4e5d8614a8b0b5b7d1eaf"
+  },
+  "qualificationLimits": {
+    "qualified": "same controlled195MB million-resource-row input and pinned upstream serializer contract on actual Intel Mac",
+    "productionProfileReconstructed": false,
+    "productionBuildOrGraphExecuted": false,
+    "fullHostXULQualified": false,
+    "MozillaCasesQualified": false,
+    "nativeShimAuthenticationQualified": false,
+    "originalNativeExitCause": "UNKNOWN",
+    "originalQAFineGrainedPhase": "UNKNOWN",
+    "separateProbeBoundaryIsNotOriginalQAAttribution": true,
+    "generalAllProfilePerformanceGuarantee": false
+  },
+  "reviewerOperations": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "remoteRefsChanged": false,
+    "SDKAcquired": false,
+    "checkpointAcquired": false,
+    "heavyBenchmarkRepeated": false
+  },
+  "remaining": "Recovery56 graph requires a separate immutable prelaunch review and fresh source/SDK/checkpoint/branch/overlap validation."
+}

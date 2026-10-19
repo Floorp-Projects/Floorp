@@ -77,7 +77,7 @@ class SDKSourceIntegration(unittest.TestCase):
         self.run = {'run_attempt': current['attempt'], 'head_sha': self.plan['runtime']['ref'],
                     'status': 'completed', 'conclusion': 'failure'}
         self.producer = {'id': self.config['producerJob'], 'run_id': current['run'],
-                         'run_attempt': current['attempt'], 'name': 'Mac build / download-macos-sdk',
+                         'run_attempt': current['attempt'], 'name': 'Mac build [PGO] / download-macos-sdk',
                          'status': 'completed', 'conclusion': 'success'}
         self.api_opener, self.download_opener = mock.Mock(), mock.Mock()
         self.api_opener.open.side_effect = self.api
@@ -131,6 +131,34 @@ class SDKSourceIntegration(unittest.TestCase):
     def test_no_opt_in_keeps_original_artifact_guard(self):
         with self.assertRaisesRegex(Failure, 'sdk-artifact-provenance'):
             self.fetch(alternate=False)
+        self.download_opener.open.assert_not_called()
+
+    def test_current_official_api_exact_producer_name_acquires_through_mocked_download(self):
+        self.assertEqual(self.producer['name'], 'Mac build [PGO] / download-macos-sdk')
+        self.assertEqual(load_sdk_source(self.plan_path, self.source_path)['producerName'], self.producer['name'])
+        self.run['conclusion'] = 'success'
+        self.assertEqual(self.fetch(), 0)
+        self.download_opener.open.assert_called_once()
+
+    def test_old_foreign_boolean_and_missing_producer_names_stop_before_download(self):
+        for name in ('Mac build / download-macos-sdk', 'Foreign / download-macos-sdk',
+                     'Mac build [PGO] / download-macos-sdk extra', True, None):
+            with self.subTest(name=name):
+                self.producer['name'] = name
+                with self.assertRaisesRegex(Failure, 'sdk-producer-provenance'):
+                    self.fetch()
+        self.producer.pop('name')
+        with self.assertRaisesRegex(Failure, 'sdk-producer-provenance'):
+            self.fetch()
+        self.download_opener.open.assert_not_called()
+
+    def test_producer_name_binding_does_not_relax_runtime_head_or_run_attempt(self):
+        for change in ({'head_sha': '0' * 40}, {'run_attempt': 2}):
+            original = copy.deepcopy(self.run)
+            self.run.update(change)
+            with self.subTest(change=change), self.assertRaisesRegex(Failure, 'sdk-run-provenance'):
+                self.fetch()
+            self.run = original
         self.download_opener.open.assert_not_called()
 
     def test_new_source_expiry_is_checked_before_producer_or_download(self):

@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY56_INTEGRATED_LOCAL_QA",
+  "sourceFreeze": {
+    "schema": 1,
+    "scope": "RECOVERY56_EXISTING_CHECKPOINT_FIREFOX_GRAPH_SOURCE",
+    "changedSourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.py",
+        "bytes": 8299,
+        "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "bytes": 1030,
+        "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "bytes": 4964,
+        "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+        "bytes": 16624,
+        "sha256": "1dff28b0ec0e557370dcec76f185e825a547ed81cab0f5706f55374a04bc6663"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+        "bytes": 15303,
+        "sha256": "b66cb8314b67658a3fc2b78d48bf667468293bf298c442c7d1c62448e18ae1a8"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_graph.py",
+        "bytes": 10361,
+        "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_observer.py",
+        "bytes": 22432,
+        "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb"
+      }
+    ],
+    "unchangedGuardFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 27426,
+        "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 36824,
+        "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 27325,
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      }
+    ],
+    "actualMacReaderProof": {
+      "run": 39326868656,
+      "fixture": "26b3dba870b43327da6dfd261df61bc96deed402",
+      "originalControlledDensitySeconds": 17.643181413000036,
+      "qualification": "same-controlled-input-within-existing30s-only"
+    },
+    "fullQA": 744,
+    "selectedMacQA": 529,
+    "recording": 14,
+    "realBuild": false
+  },
+  "total": 744,
+  "passed": 727,
+  "skippedDarwinOnly": 17,
+  "failures": 0,
+  "errors": 0,
+  "seconds": 57.79,
+  "resourceWarningsAreErrors": true,
+  "sameInputDensity": {
+    "schema": 1,
+    "case": "test_build_completion.CompletionTests.test_whole_one_million_small_resource_rows_remain_processable",
+    "status": "observed",
+    "reason": "build-completion-profile-parsed",
+    "elapsedSeconds": 4.511776714003645,
+    "inputBytes": 195000385,
+    "inputSHA256": "0615e94cd59a7e5da8d98decc2b1a48f74a0415fedda610fd3b67c7cbebae8d7",
+    "resourceRows": 1000000,
+    "processingSeconds": 30,
+    "completeCoverage": true,
+    "objectCount": 1,
+    "compileCount": 1
+  },
+  "actualMacSDKOrGraph": "NOT_RUN"
+}

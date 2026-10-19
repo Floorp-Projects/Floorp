@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "review": "Narrow official SDK acquisition-source renewal and fixed producer-name binding",
+  "decision": "NARROW_IMPLEMENTATION_CLEAR_PENDING_INTEGRATION_AND_ACTUAL_MAC_USE",
+  "openFindings": {
+    "blocking": 0,
+    "P1": 0,
+    "P2": 0
+  },
+  "freeze": {
+    "name": "floorp-sdk-source-121823-freeze.json",
+    "bytes": 4985,
+    "sha256": "dce3abde87aaa6680d0e530b9b4843cb09f703aceca1335d70b01305f7b88e13"
+  },
+  "candidateFiles": {
+    "sdk_source.py": {
+      "bytes": 8299,
+      "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa"
+    },
+    "sdk_source.json": {
+      "bytes": 1030,
+      "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+    },
+    "fetch_sdk.py": {
+      "bytes": 4964,
+      "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519"
+    },
+    "test_sdk_source.py": {
+      "bytes": 16624,
+      "sha256": "1dff28b0ec0e557370dcec76f185e825a547ed81cab0f5706f55374a04bc6663"
+    },
+    "test_sdk_source_integration.py": {
+      "bytes": 15303,
+      "sha256": "b66cb8314b67658a3fc2b78d48bf667468293bf298c442c7d1c62448e18ae1a8"
+    }
+  },
+  "unchangedBaselineFiles": {
+    "sdk_source.py": {
+      "bytes": 8194,
+      "sha256": "c7b84cfed8b85d96315fadd785d664e55e33be4edc1f7137e71d42de33bb06c2"
+    },
+    "sdk_source.json": {
+      "bytes": 1030,
+      "sha256": "844cd4f9b47e7a271fe8bdf0731c3731c49f236e22c1e26b5b2c249a8cbf3d25"
+    },
+    "fetch_sdk.py": {
+      "bytes": 4974,
+      "sha256": "89fa1eb5217cc7f2508955e42c4e110aafc2068c120a96a638940aef3297b832"
+    },
+    "test_sdk_source.py": {
+      "bytes": 16070,
+      "sha256": "12f2a907f69ba43e32e1b0ad92a40d8a9047b5cde54f19b42eb94e564a499e02"
+    },
+    "test_sdk_source_integration.py": {
+      "bytes": 13763,
+      "sha256": "e0e844d220c54a69952d952ef1a2ea11018a30def1cfe01479a649769b970f79"
+    },
+    "plan.json": {
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    }
+  },
+  "implementationAssessment": [
+    "The source JSON changes exactly the producer job, artifact/run, ZIP/TAR wire hashes and observed expiry. Plan bytes, runtime/source anchors, raw uncompressed TAR bytes/hash, canonical SDK tree, version and content-field equality remain fixed.",
+    "The actual producer name is Mac build [PGO] / download-macos-sdk. A single exact comparison in fetch_sdk now uses the producerName supplied by the internally fixed validated spec instead of the old incompatible literal. No name-prefix matching or broad producer allowlist is introduced.",
+    "The new producerName is internal metadata: None for default selection and one fixed string for the verified alternate. Source JSON cannot override it; unknown, extra, missing or mistyped source keys remain rejected.",
+    "All source helper functions except load_sdk_source are AST-identical. The fetcher changes only that exact name comparison; producer ID/run/attempt/status/conclusion, run head/attempt, artifact size/digest/provenance, expiry before and after the producer query, ordinary HTTP handling and payload verification remain unchanged.",
+    "Default plan selection remains explicit and unmodified, including its original pin and guards. The alternate remains explicit opt-in and reports actual new wire IDs and hashes. Receipt schema stays exactly eight default or twelve alternate fields.",
+    "The existing payload download deadline remains 600 seconds and metadata HTTP calls remain bounded at 30 seconds. This review does not reinterpret those cooperative component limits as an independently measured end-to-end acquisition duration."
+  ],
+  "independentOfficialAPI": {
+    "observedAt": "2026-10-19 20:36:38 UTC",
+    "run": {
+      "id": 39244172146,
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "event": "schedule",
+      "path": ".github/workflows/daily-build.yml"
+    },
+    "producer": {
+      "id": 118032017226,
+      "run_id": 39244172146,
+      "run_attempt": 1,
+      "name": "Mac build [PGO] / download-macos-sdk",
+      "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "artifact": {
+      "id": 12182302735,
+      "name": "macos-sdk",
+      "size_in_bytes": 105082683,
+      "digest": "sha256:c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+      "expired": false,
+      "expires_at": "2026-10-20T11:23:42Z",
+      "workflow_run": {
+        "id": 39244172146,
+        "repository_id": 914860957,
+        "head_repository_id": 914860957,
+        "head_branch": "nora-0.2.0",
+        "head_sha": "7dd619742b25567e479eeda97ae071d10542ad0b"
+      }
+    },
+    "pagination": {
+      "jobsReturned": 43,
+      "jobsTotal": 43,
+      "artifactsReturned": 34,
+      "artifactsTotal": 34
+    },
+    "proof": {
+      "name": "floorp-sdk54-independent-api-proof.json",
+      "bytes": 1155,
+      "sha256": "965f4d2539a5868dbb8a42605c9902b6015ea73055cb70f4fb2ac96fd1568984"
+    },
+    "newAcquisitionPerformed": false
+  },
+  "contentEvidence": {
+    "currentCompressedContainersIndependentlyRehashed": {
+      "sdk.zip": {
+        "bytes": 105082683,
+        "sha256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee"
+      },
+      "macos_sdk.tar.gz": {
+        "bytes": 105567985,
+        "sha256": "a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b"
+      },
+      "contentScanReceipt": {
+        "bytes": 1808,
+        "sha256": "fb77173c8f9249fddbc5563f64776cf08feeaab73be5009b771e71b811eb8702"
+      },
+      "contentScanScript": {
+        "bytes": 6643,
+        "sha256": "ebd662591f7a808adb3b433162c9f963804ff2c4e0b202ff18d81de624e3e260"
+      },
+      "ownNoFollowStableContainers": true,
+      "heavyRawTarOrTreeScanRepeated": false,
+      "newDownload": false
+    },
+    "sameUncompressedTARAnchor": {
+      "bytes": 760518144,
+      "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+    },
+    "sameCanonicalTree": {
+      "members": 49701,
+      "logicalBytes": 704719765,
+      "sha256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f"
+    },
+    "SDKVersion": "26.5",
+    "priorCompleteScanLogicIndependentlyRead": true,
+    "completedRawTARTreeAndVersionScanBoundToCurrentWireHashes": true,
+    "heavyRawTAROrTreeScanRepeatedByReviewer": false,
+    "ZIPAndCompressedTARDifferFromOldPins": true,
+    "wireBytesRecompressedOrModified": false,
+    "timingPrecision": "The 319.024-second acquisition observation is parent-recorded, not independently clock-verified. The content comparison verifiedAt is script entry, not a full-scan completion timestamp."
+  },
+  "independentTests": {
+    "unit": 26,
+    "integration": 19,
+    "legacySDKGuards": 5,
+    "total": 50,
+    "passed": 50,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 0.128,
+    "ResourceWarningsAreErrors": true,
+    "log": {
+      "name": "floorp-sdk54-independent-focused.private.log",
+      "bytes": 8696,
+      "sha256": "a025ac7e48e51045545b3b43f04a11f8d9482143b2ca91c0e90c67b568dc70a3"
+    },
+    "observedAPINameControls": {
+      "name": "floorp-sdk54-independent-static-and-name-controls.json",
+      "bytes": 728,
+      "sha256": "1e2f80af66911225f942070b879fc8c1c66e91013e92b4947c5576d3a4ace4ff"
+    },
+    "nameControlCases": [
+      "exact actual name accepted with tiny mocked wire data",
+      "old name rejected",
+      "suffix name rejected",
+      "boolean name rejected",
+      "null name rejected",
+      "missing name rejected"
+    ],
+    "allNegativeNamesStopBeforeZIPAndPayload": true,
+    "mockControlsAreNotActualAcquisition": true
+  },
+  "otherEvidenceBindings": {
+    "renewalEvidence": {
+      "name": "floorp-sdk-source-121823-renewal-evidence.json",
+      "bytes": 9336,
+      "sha256": "ec5d42ca115f511c2cc167d08573e36ef362b5489fe7c089122c3fa23056f4e6"
+    },
+    "compressedContainerProof": {
+      "name": "floorp-sdk54-independent-container-binding.json",
+      "bytes": 628,
+      "sha256": "ffb1448b8d0ff8f60ad9ecf858ef9a38dcfbf7d6a73d032c6918d148b7bdd705"
+    },
+    "staticAndNameProof": {
+      "name": "floorp-sdk54-independent-static-and-name-controls.json",
+      "bytes": 728,
+      "sha256": "1e2f80af66911225f942070b879fc8c1c66e91013e92b4947c5576d3a4ace4ff"
+    }
+  },
+  "remainingConditions": [
+    "Integrate only these frozen changes, recheck the unchanged plan/checkpoint/content anchors and run the appropriate combined regression before publishing a new immutable source route.",
+    "Actual Mac acquisition/materialization has not been executed with this candidate. A future runner must use the ordinary unexpired route and repeat metadata, producer, HTTP, wire/raw TAR, canonical-tree and version checks; no expired-artifact workaround follows from this review.",
+    "This is SDK source/content evidence only. It does not qualify dense profile observation, build completion, Mozilla tests or native authentication. The running Recovery53 diagnostic was not altered or polled during this review."
+  ],
+  "reviewerActions": {
+    "repositorySourceEdited": false,
+    "newDownloadPerformed": false,
+    "oldExpiredArtifactReacquired": false,
+    "CIOrRefMutated": false,
+    "retentionAuthenticationOrPermissionsChanged": false
+  }
+}

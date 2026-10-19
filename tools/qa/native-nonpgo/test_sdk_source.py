@@ -50,7 +50,7 @@ class SDKSourceTests(unittest.TestCase):
 
     def test_default_uses_exact_existing_plan_pin_and_no_implicit_source_file(self):
         spec = sdk.load_sdk_source(self.plan_path)
-        self.assertEqual(set(spec), {'pin','runtimeRef','producerJob','uncompressedTar','sourceSHA256',
+        self.assertEqual(set(spec), {'pin','runtimeRef','producerJob','producerName','uncompressedTar','sourceSHA256',
                                      'baselinePlanSHA256','qualification'})
         self.assertEqual(spec['pin'], self.plan['sdk'])
         self.assertEqual(spec['runtimeRef'], self.plan['runtime']['ref'])
@@ -58,6 +58,7 @@ class SDKSourceTests(unittest.TestCase):
         self.assertEqual(spec['qualification'], sdk.DEFAULT_QUALIFICATION)
         self.assertIsNone(spec['sourceSHA256'])
         self.assertIsNone(spec['producerJob'])
+        self.assertIsNone(spec['producerName'])
         self.assertIsNone(spec['uncompressedTar'])
         self.source_path.write_text('PRIVATE-SENTINEL malformed source')
         self.assertEqual(sdk.load_sdk_source(self.plan_path), spec)
@@ -87,7 +88,8 @@ class SDKSourceTests(unittest.TestCase):
         expected.update(self.config['pin'])
         self.assertEqual(spec['pin'], expected)
         self.assertEqual(spec['runtimeRef'], sdk.RUNTIME_REF)
-        self.assertEqual(spec['producerJob'],117779018335)
+        self.assertEqual(spec['producerJob'],118032017226)
+        self.assertEqual(spec['producerName'], 'Mac build [PGO] / download-macos-sdk')
         self.assertEqual(spec['sourceSHA256'],hashlib.sha256(self.source_raw).hexdigest())
         self.assertEqual(spec['baselinePlanSHA256'],sdk.BASELINE_PLAN_SHA256)
         self.assertEqual(spec['qualification'],sdk.QUALIFICATION)
@@ -97,7 +99,7 @@ class SDKSourceTests(unittest.TestCase):
         self.assertEqual(self.plan_path.read_bytes(), self.plan_raw)
         spec['pin']['run'] = 1
         spec['uncompressedTar']['bytes'] = 1
-        self.assertEqual(self.alternate()['pin']['run'],39162639256)
+        self.assertEqual(self.alternate()['pin']['run'],39244172146)
         self.assertEqual(sdk.UNCOMPRESSED_TAR['bytes'],760518144)
 
     def test_source_schema_key_allowlist_and_bool_schema_are_strict(self):
@@ -107,6 +109,12 @@ class SDKSourceTests(unittest.TestCase):
         for key in self.config:
             value=copy.deepcopy(self.config);value.pop(key);self.source(value)
             self.assert_fixed_failure('shape',self.alternate)
+
+    def test_producer_name_is_internal_trusted_spec_and_never_a_json_override(self):
+        self.assertEqual(sdk.PRODUCER_NAME, 'Mac build [PGO] / download-macos-sdk')
+        for name in ('Mac build [PGO] / download-macos-sdk', 'Mac build / download-macos-sdk', True, None):
+            self.source({**self.config, 'producerName': name})
+            self.assert_fixed_failure('shape', self.alternate)
 
     def test_source_read_json_utf8_duplicate_nonfinite_and_size_failures_are_private(self):
         self.source_path.unlink()

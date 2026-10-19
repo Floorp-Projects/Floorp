@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY56_EXISTING_CHECKPOINT_READ_ONLY_FIREFOX_GRAPH",
+  "sourceFreeze": {
+    "schema": 1,
+    "scope": "RECOVERY56_EXISTING_CHECKPOINT_FIREFOX_GRAPH_SOURCE",
+    "changedSourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.py",
+        "bytes": 8299,
+        "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "bytes": 1030,
+        "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/fetch_sdk.py",
+        "bytes": 4964,
+        "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source.py",
+        "bytes": 16624,
+        "sha256": "1dff28b0ec0e557370dcec76f185e825a547ed81cab0f5706f55374a04bc6663"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_sdk_source_integration.py",
+        "bytes": 15303,
+        "sha256": "b66cb8314b67658a3fc2b78d48bf667468293bf298c442c7d1c62448e18ae1a8"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_graph.py",
+        "bytes": 10361,
+        "sha256": "ffe2376b84a1e405255a41573d891fb1ad11f0a6d492630b5e4560b661f5be0a"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/firefox_target_observer.py",
+        "bytes": 22432,
+        "sha256": "fa9be7ee8852b1a3af1f2f6a52a4e271a38630e93507cb8f4b68da2728b014fb"
+      }
+    ],
+    "unchangedGuardFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/build_completion.py",
+        "bytes": 27426,
+        "sha256": "37c17b48e57d910108996878e35445e46405b8afec0a3b20f3eb810db625af83"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_build_completion.py",
+        "bytes": 36824,
+        "sha256": "63122074d62ffca763a1b47e5c1fa720e39854b713d6cd860529743b6dba8768"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "bytes": 27325,
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      }
+    ],
+    "actualMacReaderProof": {
+      "run": 39326868656,
+      "fixture": "26b3dba870b43327da6dfd261df61bc96deed402",
+      "originalControlledDensitySeconds": 17.643181413000036,
+      "qualification": "same-controlled-input-within-existing30s-only"
+    },
+    "fullQA": 744,
+    "selectedMacQA": 529,
+    "recording": 14,
+    "realBuild": false
+  },
+  "callerPreparation": {
+    "actualAdoptedModuleDiscovery": {
+      "failedImports": 0,
+      "moduleCount": 23,
+      "recordingExpectedCount": 14,
+      "selectedModules": [
+        "test_checkpoint",
+        "test_process_census",
+        "test_guards",
+        "test_shim_failure_patch",
+        "test_completion_preflight",
+        "test_unittest_receipt",
+        "test_qa_core",
+        "test_darwin_inventory",
+        "test_inventory_timeout",
+        "test_helper_import_preflight",
+        "test_checkpoint_transfer",
+        "test_checkpoint_replay",
+        "test_failure_excerpt",
+        "test_pipeline_restore",
+        "test_checkpoint_restore_replay",
+        "test_checkpoint_public",
+        "test_mozilla_harness_receipt",
+        "test_mozilla_harness_smoke",
+        "test_sdk_source",
+        "test_sdk_source_integration",
+        "test_consumer_time",
+        "test_build_completion",
+        "test_build_completion_contract"
+      ],
+      "status": "passed",
+      "suiteExecuted": false,
+      "testCount": 529
+    },
+    "candidate": {
+      "bytes": 57560,
+      "file": "floorp-recovery56-caller.yml",
+      "sha256": "a384a38a03ee09261adea2c8c08081048ee64b170fcb097f1aa08a413dcb2581"
+    },
+    "notPerformed": {
+      "CI": true,
+      "actualMacGraph": true,
+      "download": true,
+      "refMutation": true,
+      "repositorySourceEdit": true,
+      "suiteRun": true
+    },
+    "onlyApprovedTokenChanges": true,
+    "pending": [
+      "root-immutable-fixture-render",
+      "root-prelaunch-review-and-authorization",
+      "actual-Mac-guarded-restore-and-graph-observation"
+    ],
+    "preservedBoundaries": {
+      "artifactUploads": 0,
+      "clockReset": false,
+      "fullHostQualificationEstablished": false,
+      "jobName": "checkpoint-consumer",
+      "makeOrBuild": false,
+      "minimumSuffixEstablished": false,
+      "observerSeconds": 30,
+      "platformMinutes": 360,
+      "restoreAbsoluteMinutesFromExistingJobOrigin": 60,
+      "runner": "macos-15-intel",
+      "sharedDeadlineFlag": false,
+      "singleJob": true
+    },
+    "purpose": "recovery56-guarded-existing-checkpoint-graph-caller-preparation",
+    "replacements": [
+      {
+        "occurrences": 1,
+        "token": "PLACEHOLDER",
+        "value": "__FLOORP56_FIXTURE__"
+      },
+      {
+        "occurrences": 2,
+        "token": "__GRAPH_BRANCH__",
+        "value": "codex/mac-native-firefox-graph-recovery56-20261019"
+      },
+      {
+        "occurrences": 3,
+        "token": "__GRAPH_QA_COUNT__",
+        "value": "529"
+      }
+    ],
+    "reviewBindings": {
+      "callerFreezeSHA256": "da340523d10e93931711bf2bf592c27f59c7c7a32d16c1a660db3665113d8355",
+      "callerReviewSHA256": "110d9ab297b1bb56ea6601a9abab316b7a6498d7651f1f70aecf578c1e143468",
+      "graphSourceReviewSHA256": "b85eee0e5d895f6c87fecc1bb1ad597abbcfbb4cbc70e0e60a5b6e7a3400ed4b"
+    },
+    "schema": 1,
+    "source": {
+      "bytes": 57528,
+      "file": "floorp-firefox-target-guarded-restore-caller.yml",
+      "sha256": "2e723905461f1e3ff58394a3ccac6056e58a6b44d5c20db970b2d47f4106668b",
+      "unchanged": true
+    },
+    "status": "prepared-fixture-unrendered",
+    "syntax": {
+      "bashRunSteps": 8,
+      "pythonHeredocs": 4,
+      "yaml": "passed"
+    }
+  },
+  "actualReaderPrerequisite": {
+    "run": 39326868656,
+    "job": 118314869103,
+    "conclusion": "success",
+    "QA": 525,
+    "recording": 14,
+    "serializerCases": 9,
+    "sameControlledInputBytes": 195000385,
+    "originalDensitySeconds": 17.643181413000036,
+    "phaseProbeSeconds": 17.594401747000006,
+    "evidenceCommit": "c12c703c0fc767ebc43321a09a84212f5c331636"
+  },
+  "integrationQA": {
+    "total": 744,
+    "passed": 727,
+    "skippedDarwinOnly": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 57.79,
+    "resourceWarningsAreErrors": true
+  },
+  "purpose": "Read the actual configured generated graph after successful existing guarded restore. Test whether the xpcshell root reaches XUL, gkrust and Cocoa objects, and whether stock tools traversal includes browser/app. Execute no make, configure, build or recipe.",
+  "rebuildQuestion": "The producer contract preserves an export/Rust boundary and rejects completed host objects or XUL; it is not a completed C++ checkpoint. Determine required native dependency closure before choosing a narrower invocation. This diagnostic cannot identify every target rebuilt in the unavailable prior production profile.",
+  "candidateNextInvocation": "mach build -j3 -C . js/xpconnect/shell/target",
+  "candidateQualification": "Source-supported prioritization candidate only. The graph, bundle/resources and harness requirements must still be established; no minimum usable suffix, cache hit, runtime or full-host success claim.",
+  "inputs": {
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "existingCheckpoint": {
+      "artifact": 12164479528,
+      "run": 39197008470,
+      "producerJob": 117881829274,
+      "bytes": 2213942620,
+      "archiveSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "expiryObserved": "2026-10-20T05:19:56Z",
+      "wholeRunConclusion": "failure",
+      "producerConclusion": "success"
+    },
+    "normalSDK": {
+      "artifact": 12182302735,
+      "run": 39244172146,
+      "producerJob": 118032017226,
+      "producerName": "Mac build [PGO] / download-macos-sdk",
+      "bytes": 105082683,
+      "zipSHA256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+      "expiryObserved": "2026-10-20T11:23:42Z",
+      "runAndProducerConclusion": "success"
+    },
+    "normalAPIMetadataObservedAt": "2026-10-19 21:33:43 UTC"
+  },
+  "unchangedGuards": [
+    "Normal official acquisition only, unexpired before acquisition, HTTP errors stop and 600-second acquisition limit. No expired reacquisition or retention change.",
+    "Fixed SDK ZIP/compressed TAR/uncompressed TAR/canonical tree/content version and exact trusted producer identity. No coupling of local SDK usability to six build hours.",
+    "Existing checkpoint provenance, archive/manifest/tree/config/binding/reference/resource checks remain mandatory.",
+    "Absolute restore deadline60 minutes from the existing origin, observer processing30 seconds inside it, platform360 minutes; no new build clock.",
+    "Owned Runner, clean observer environment, no credential inheritance, natural zero exit/exact reap/group gone/cleanup and final receipt binding required.",
+    "Original restore first failure and monitor diagnostics remain separate from observer failure. Unknown or unsupported graph stays unconfirmed/null."
+  ],
+  "scopeLimits": {
+    "jobs": 1,
+    "runner": "macos-15-intel",
+    "newLongBuild": false,
+    "actualBuild": false,
+    "newProducer": false,
+    "newArtifacts": 0,
+    "signingPublishingMergingOrAuthenticationSettingsChanged": false,
+    "LinuxCheckpointPayloadDownloaded": false
+  },
+  "remaining": [
+    "immutable fixture and caller publication/readback",
+    "independent prelaunch review and fresh zero-overlap/unused-branch gates",
+    "actual successful guarded restore and graph observation"
+  ],
+  "qualification": "Local integrated tests and prior fixed-source reviews only. Actual Mac graph and updated SDK end-to-end acquisition are not yet observed; full host/XUL, Mozilla native cases and native authentication remain unqualified."
+}

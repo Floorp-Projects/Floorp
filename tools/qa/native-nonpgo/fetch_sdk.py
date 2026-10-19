@@ -51,7 +51,7 @@ def main():
         require(type(producer.get('id')) is int and producer['id'] == source['producerJob'] and
                 type(producer.get('run_id')) is int and producer['run_id'] == pin['run'] and
                 type(producer.get('run_attempt')) is int and producer['run_attempt'] == pin['attempt'] and
-                producer.get('name') == 'Mac build / download-macos-sdk' and
+                producer.get('name') == source['producerName'] and
                 producer.get('status') == 'completed' and producer.get('conclusion') == 'success',
                 'sdk-producer-provenance')
         require(expires > datetime.datetime.now(datetime.timezone.utc), 'sdk-expired')
