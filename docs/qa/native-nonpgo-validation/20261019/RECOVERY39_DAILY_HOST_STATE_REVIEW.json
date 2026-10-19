@@ -479,7 +479,7 @@
     ]
   },
   "relatedLocalCollectorInspection": {
-    "qualification": "Working-copy observation only; not attributed to daily execution; parent must verify the final immutable source before any change.",
+    "qualification": "Working-copy observation only; not attributed to daily execution; Final immutable source verification is required before any change.",
     "nativeCause": {
       "bytes": 15294,
       "sha256": "23fe298ac1458ddf2a01f921d1c2f795b2aae098d7457c6730401179744cf300",
