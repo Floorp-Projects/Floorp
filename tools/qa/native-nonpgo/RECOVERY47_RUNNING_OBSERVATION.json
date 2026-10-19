@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY47_RUNNING_OBSERVATION",
+  "recordedAt": "2026-10-19T08:36:12Z",
+  "run": {
+    "id": 39212933648,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39212933648",
+    "head": "712b1d56dfd05815dd4c24bc5cc868b8eca750b9",
+    "fixture": "d3aeed32c8adabc88267e46cfbbd020f799adecb",
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "job": {
+    "id": 117930166634,
+    "name": "checkpoint-consumer",
+    "status": "in_progress",
+    "conclusion": null,
+    "labels": [
+      "macos-15-intel"
+    ],
+    "startedAt": "2026-10-19T06:57:28Z"
+  },
+  "observedSteps": [
+    {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:57:29Z",
+      "completedAt": "2026-10-19T06:57:30Z"
+    },
+    {
+      "number": 2,
+      "name": "Bound the initial authorized execution",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:57:30Z",
+      "completedAt": "2026-10-19T06:57:30Z"
+    },
+    {
+      "number": 3,
+      "name": "Checkout immutable reviewed fixture",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:57:30Z",
+      "completedAt": "2026-10-19T06:57:34Z"
+    },
+    {
+      "number": 4,
+      "name": "Establish this job's fresh clock and task root",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:57:34Z",
+      "completedAt": "2026-10-19T06:57:36Z"
+    },
+    {
+      "number": 5,
+      "name": "Verify actual native process monitor before acquisition",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:57:36Z",
+      "completedAt": "2026-10-19T06:58:35Z"
+    },
+    {
+      "number": 6,
+      "name": "Checkout immutable Runtime source",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T06:58:35Z",
+      "completedAt": "2026-10-19T07:02:20Z"
+    },
+    {
+      "number": 7,
+      "name": "Checkout immutable native harness",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T07:02:20Z",
+      "completedAt": "2026-10-19T07:02:22Z"
+    },
+    {
+      "number": 8,
+      "name": "Acquire the official unexpired content-matched SDK",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T07:02:22Z",
+      "completedAt": "2026-10-19T07:02:33Z"
+    },
+    {
+      "number": 9,
+      "name": "Download only the verified successful producer checkpoint",
+      "status": "completed",
+      "conclusion": "success",
+      "startedAt": "2026-10-19T07:02:33Z",
+      "completedAt": "2026-10-19T07:05:24Z"
+    },
+    {
+      "number": 10,
+      "name": "Restore verified state then finish full host XUL and native authentication",
+      "status": "in_progress",
+      "conclusion": null,
+      "startedAt": "2026-10-19T07:05:24Z",
+      "completedAt": null
+    },
+    {
+      "number": 11,
+      "name": "Confirm this stage's bounded evidence",
+      "status": "pending",
+      "conclusion": null,
+      "startedAt": null,
+      "completedAt": null
+    }
+  ],
+  "currentActualSubphase": "UNAVAILABLE_FROM_AVAILABLE_LIVE_LOG_ACCESS",
+  "currentResourceObservation": {
+    "cpuSeconds": null,
+    "ownedRSSMiB": null,
+    "privateLogBytes": null,
+    "freeGiB": null,
+    "lastActivityAt": null
+  },
+  "currentProgressHealth": "NOT_VERIFIED_FROM_LIVE_METRICS",
+  "runnerMonitorFailureObserved": null,
+  "positiveEvidence": {
+    "startupNativeMonitorPreflightStep": "success",
+    "runtimeCheckoutStep": "success",
+    "harnessCheckoutStep": "success",
+    "officialSdkAcquisitionStep": "success",
+    "existingCheckpointDownloadStep": "success"
+  },
+  "logAccess": {
+    "decodedJobLog": {
+      "status": "unavailable-while-running",
+      "httpStatus": 404,
+      "providerCode": "BlobNotFound",
+      "probedAt": "2026-10-19T08:34:26Z"
+    },
+    "publicWebUi": "Sign in to view logs",
+    "accessOrPermissionsChanged": false,
+    "establishesInRunnerMonitorFailure": false
+  },
+  "conditionalInference": {
+    "status": "INFERENCE_ONLY",
+    "condition": "If the bounded stage monitor is operating as reviewed and the controller is progressing normally.",
+    "reason": "The consumer restore phase has a 60 minute deadline from this job's original monotonic start, while this observation is later than that window.",
+    "phaseRange": [
+      "full-build-compilation-or-link",
+      "stage-package",
+      "native-suite",
+      "post-native-verification"
+    ],
+    "compilationVersusLinkingVersusNative": "UNRESOLVED",
+    "positiveProofOfHealthyProgress": false
+  },
+  "inRunnerMonitoringContract": {
+    "resourceScope": "active owned process group, plus identity-bound owned native processes when native registry is active",
+    "maxOwnedRSSMiB": 10240,
+    "minFreeDuringBuildGiB": 8,
+    "maxStageLogBytes": 268435456,
+    "maxNativePrivateBytes": 134217728,
+    "stallQuietMinutes": 20,
+    "stallRequires": "unchanged log, CPU time, process roster, stable RSS and disk space, with no runnable owned process",
+    "unknownIsZero": false,
+    "platformMinutes": 360,
+    "consumerRestoreMinutes": 60,
+    "consumerBuildMinutes": 300,
+    "consumerPackageMinutes": 315,
+    "consumerNativeMinutes": 335,
+    "finalMinutes": 345,
+    "source": "https://github.com/Floorp-Projects/Floorp/blob/d3aeed32c8adabc88267e46cfbbd020f799adecb/tools/qa/native-nonpgo/plan.json"
+  },
+  "disposition": {
+    "continueExistingRun": true,
+    "stoppedForElapsedTimeAlone": false,
+    "newCiLaunched": false,
+    "next": "Obtain the terminal provider log and bind its actual stage records, resource samples, and full/native verdict to this exact run and fixture."
+  }
+}
