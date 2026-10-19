@@ -192,7 +192,14 @@ def validate_maintained_patches(manifest, root):
             raise RuntimeError("Maintained source patch inventory is empty: " + folder.name)
         for patch in patches:
             label = prefix + patch.name
-            if recorded.get(label) != _sha(patch):
+            digest = recorded.get(label)
+            # Production source selection inherits an identical common patch
+            # from the locked Runtime under its upstream namespace. A present
+            # direct label remains authoritative, including invalid values.
+            # OS-specific patches always require their exact OS namespace.
+            if not prefix and label not in recorded:
+                digest = recorded.get("runtime-upstream/" + patch.name)
+            if digest != _sha(patch):
                 raise RuntimeError("Candidate omitted or changed maintained source: " + label)
 
 

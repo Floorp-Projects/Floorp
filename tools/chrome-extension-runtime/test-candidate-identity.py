@@ -17,6 +17,9 @@ spec = importlib.util.spec_from_file_location("candidate_identity", Path(__file_
 identity = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(identity)
 selection = identity._selection
+prepare_spec = importlib.util.spec_from_file_location("candidate_prepare", Path(__file__).with_name("prepare-native-source.py"))
+prepare = importlib.util.module_from_spec(prepare_spec)
+prepare_spec.loader.exec_module(prepare)
 ci_spec = importlib.util.spec_from_file_location("candidate_ci", Path(__file__).parent / "ci/test-candidate.py")
 ci = importlib.util.module_from_spec(ci_spec)
 ci_spec.loader.exec_module(ci)
@@ -168,6 +171,80 @@ class CandidateIdentityTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, label):
                         ci.main()
                     unpack.assert_not_called()
+
+    def select_inherited_production_patches(self, platform="linux"):
+        original = self.root / "locked-runtime-fixture"
+        upstream = original / ".github/patches/upstream"
+        upstream.mkdir(parents=True)
+        # Exercise the actual production selector's byte-identical deduplication.
+        (upstream / self.baseline_patch.name).write_bytes(self.baseline_patch.read_bytes())
+        selected = prepare.select_patches(original, self.patch.parent, True, platform)
+        self.manifest["platform"] = platform
+        self.manifest["patches"] = {label: identity._sha(path) for label, path in selected}
+        return "runtime-upstream/" + self.baseline_patch.name
+
+    def assert_ci_reaches_extraction(self):
+        # Successful preflight must reach extraction; never execute the authored
+        # executable placeholder or pretend this is a native browser result.
+        with patch.object(ci, "ROOT", self.root), patch.object(ci.sys, "argv", [
+                "test-candidate.py", "--platform", "linux", "--artifact", str(self.root)]), \
+                patch.object(ci, "unpack", side_effect=RuntimeError("authored extraction boundary")) as unpack:
+            with self.assertRaisesRegex(RuntimeError, "authored extraction boundary"):
+                ci.main()
+            unpack.assert_called_once()
+
+    def assert_patch_rejected_by_both_consumers(self, label, platform="linux"):
+        with self.assertRaisesRegex(RuntimeError, label):
+            self.authenticate()
+        with patch.object(ci, "ROOT", self.root), patch.object(ci.sys, "argv", [
+                "test-candidate.py", "--platform", platform, "--artifact", str(self.root)]), \
+                patch.object(ci, "unpack") as unpack:
+            with self.assertRaisesRegex(RuntimeError, label):
+                ci.main()
+            unpack.assert_not_called()
+
+    def test_actual_production_selector_inherited_common_passes_both_consumers(self):
+        alias = self.select_inherited_production_patches()
+        self.assertNotIn(self.baseline_patch.name, self.manifest["patches"])
+        self.assertEqual(self.manifest["patches"][alias], identity._sha(self.baseline_patch))
+        self.write_manifest()
+        self.assertEqual(self.authenticate()["verifiedFileCount"], 4)
+        self.assert_ci_reaches_extraction()
+        # The identical common inheritance rule applies on every production OS.
+        for platform in ("linux", "mac", "windows"):
+            original = self.root / "locked-runtime-fixture"
+            selected = prepare.select_patches(original, self.patch.parent, True, platform)
+            manifest = {"platform": platform, "patches": {label: identity._sha(path) for label, path in selected}}
+            identity.validate_maintained_patches(manifest, self.root)
+
+    def test_inherited_common_missing_or_wrong_digest_rejected_before_extraction(self):
+        alias = self.select_inherited_production_patches()
+        for digest in (None, "0" * 64):
+            with self.subTest(aliasDigest=digest):
+                if digest is None:
+                    self.manifest["patches"].pop(alias, None)
+                else:
+                    self.manifest["patches"][alias] = digest
+                self.write_manifest()
+                self.assert_patch_rejected_by_both_consumers(self.baseline_patch.name)
+
+    def test_conflicting_direct_common_label_cannot_hide_behind_valid_inheritance(self):
+        alias = self.select_inherited_production_patches()
+        self.assertEqual(self.manifest["patches"][alias], identity._sha(self.baseline_patch))
+        for digest in (None, "0" * 64):
+            with self.subTest(directDigest=digest):
+                self.manifest["patches"][self.baseline_patch.name] = digest
+                self.write_manifest()
+                self.assert_patch_rejected_by_both_consumers(self.baseline_patch.name)
+
+    def test_windows_source_cannot_inherit_a_common_upstream_alias(self):
+        self.select_inherited_production_patches("windows")
+        label = "windows/" + self.windows_patch.name
+        digest = self.manifest["patches"].pop(label)
+        self.manifest["patches"]["runtime-upstream/" + self.windows_patch.name] = digest
+        self.write_manifest()
+        with patch.object(identity.sys, "platform", "win32"):
+            self.assert_patch_rejected_by_both_consumers(label, "windows")
 
     def test_wrong_source_commit_and_false_native_marker_rejected(self):
         for key, value in (("sourceCommit", "b" * 40), ("floorpCommit", "c" * 40),
