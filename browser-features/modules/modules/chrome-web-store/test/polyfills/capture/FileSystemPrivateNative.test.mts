@@ -82,7 +82,7 @@ async function privateFileSystem(): Promise<void> {
       }
       let entry;
       try{entry=await call((ok,no)=>fs.root.getFile('same.txt',{create:mode==='write'},ok,no));}
-      catch(error){if(error.code===1){report({phase:'done',missing:true});return;}throw error;}
+      catch(error){if(error instanceof DOMException&&error.name==='NotFoundError'&&error.code===8){report({phase:'done',missing:true});return;}throw error;}
       if(mode==='write'){
         const writer=await call((ok,no)=>entry.createWriter(ok,no));
         await new Promise((resolve,reject)=>{writer.onwriteend=()=>writer.error?reject(writer.error):resolve();writer.write(new Blob([value]));});

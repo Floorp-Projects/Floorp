@@ -20,6 +20,7 @@ import type {
   ConcurrentFileSystemResult,
   PendingFileSystemWrites,
 } from "./filesystem-concurrency-test-types.ts";
+import type { FileSystemErrorResult } from "./filesystem-error-test-types.ts";
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -74,6 +75,20 @@ async function fileSystem() {
  async function run(){try{
  const quota=await promise((ok,no)=>navigator.webkitPersistentStorage.requestQuota(64*1024*1024,ok,no));
  const fs=await promise((ok,no)=>webkitRequestFileSystem(PERSISTENT,1024*1024,ok,no));
+ // Missing entries expose Chrome DOMException code8, distinct from the
+ // legacy FileError.SYNTAX_ERR=8 used by existing malformed-request checks.
+ const errorShape=error=>({name:error.name,code:error.code,message:error.message,constructorName:error.constructor.name,tag:Object.prototype.toString.call(error),ownProperties:Object.getOwnPropertyNames(error),nativeException:error instanceof DOMException,nativeConstructor:error.constructor===DOMException});
+ const captureMissing=async operation=>{let successCalls=0,errorCalls=0,returned;const error=await new Promise(resolve=>{returned=operation(()=>{successCalls++;resolve(null);},reason=>{errorCalls++;resolve(errorShape(reason));});});return{successCalls,errorCalls,returnType:typeof returned,error};};
+ const missingFile=await captureMissing((ok,no)=>fs.root.getFile('missing-file.json',{create:false},ok,no));
+ const missingDirectory=await captureMissing((ok,no)=>fs.root.getDirectory('missing-parent',{create:false},ok,no));
+ let existsStatRecovered=false;try{await promise((ok,no)=>fs.root.getDirectory('missing-parent',{create:false},ok,no));}catch(error){if(error&&error.code===8)existsStatRecovered=true;}
+ const recovery=await promise((ok,no)=>fs.root.getDirectory('error-contract',{create:true},ok,no));
+ const readRecovery=async()=>{const entry=await promise((ok,no)=>recovery.getFile('vendor-import.json',{create:false},ok,no));const file=await promise((ok,no)=>entry.file(ok,no));return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(reader.error);reader.onloadend=()=>resolve(reader.result);reader.readAsText(file);});};
+ let missingRead=null,mappedVendorError=null;try{await readRecovery();}catch(error){missingRead=errorShape(error);if(error.message.indexOf('A requested file or directory could not be found')!==-1)mappedVendorError='Error #301: File not found (file names are case-sensitive): vendor-import.json';}
+ const recoveredEntry=await promise((ok,no)=>recovery.getFile('vendor-import.json',{create:true},ok,no));const recoveryWriter=await promise((ok,no)=>recoveredEntry.createWriter(ok,no));const recoveryExpected='{"Name":"Owned import","Commands":[]}';
+ await new Promise((resolve,reject)=>{recoveryWriter.onerror=()=>reject(recoveryWriter.error);recoveryWriter.onwriteend=()=>recoveryWriter.error?reject(recoveryWriter.error):resolve();recoveryWriter.write(new Blob([recoveryExpected],{type:'application/json'}));});
+ const errorContract={missingFile,missingDirectory,existsStatRecovered,missingRead,mappedVendorError,readAfterCreate:await readRecovery(),legacyNotFoundConstant:FileError.NOT_FOUND_ERR,legacySyntaxConstant:FileError.SYNTAX_ERR};
+ await promise((ok,no)=>recovery.removeRecursively(ok,no));
  const dir=await promise((ok,no)=>fs.root.getDirectory('captures',{create:true},ok,no));
  const file=await promise((ok,no)=>dir.getFile('sample.txt',{create:true},ok,no));
  const writer=await promise((ok,no)=>file.createWriter(ok,no));
@@ -150,7 +165,7 @@ async function fileSystem() {
  let oversizedBuffer=false;try{await file._request('write',{bytes:bytes.buffer,position:0,job:'oversized-buffer'});}catch(error){oversizedBuffer=error.code===8;}
  const tempQuota=await promise((ok,no)=>navigator.webkitTemporaryStorage.requestQuota(4,ok,no));const tempFS=await promise((ok,no)=>webkitRequestFileSystem(TEMPORARY,0,ok,no));const limited=await promise((ok,no)=>tempFS.root.getFile('limited.txt',{create:true},ok,no));const limitedWriter=await promise((ok,no)=>limited.createWriter(ok,no));let byteQuota=false;await new Promise(resolve=>{limitedWriter.onwriteend=()=>{byteQuota=limitedWriter.error?.code===FileError.QUOTA_EXCEEDED_ERR;resolve();};limitedWriter.write(new Blob(['12345']));});
  const usage=await new Promise((resolve,reject)=>navigator.webkitPersistentStorage.queryUsageAndQuota((used,quota)=>resolve({used,quota}),reject));
- document.title=JSON.stringify({quota,text,fetched,responseURL,largeIntegrity,concurrency,malformedBuffer,oversizedBuffer,byteQuota,nativeFile:nativeFile instanceof File,resolved:resolved.fullPath,entries:entries.map(e=>e.name),traversal,pixel,url:imageFile.toURL(),usage});
+ document.title=JSON.stringify({errorContract,quota,text,fetched,responseURL,largeIntegrity,concurrency,malformedBuffer,oversizedBuffer,byteQuota,nativeFile:nativeFile instanceof File,resolved:resolved.fullPath,entries:entries.map(e=>e.name),traversal,pixel,url:imageFile.toURL(),usage});
  }catch(error){await new Promise(resolve=>setTimeout(resolve,300));document.title='FAIL:'+error.name+':'+error.message+':'+JSON.stringify(violations)+':'+error.stack;}}
  window.addEventListener('message',async event=>{try{const fs=await promise((ok,no)=>webkitRequestFileSystem(PERSISTENT,0,ok,no));if(event.data==='quota-probe'){let entryQuota=false,copyQuota=false;for(let i=0;i<12;i++){try{await promise((ok,no)=>fs.root.getFile('empty-'+i,{create:true},ok,no));}catch(error){entryQuota=error.code===FileError.QUOTA_EXCEEDED_ERR;break;}}const file=await promise((ok,no)=>fs.root.getFile('captures/sample.txt',{},ok,no));try{await promise((ok,no)=>file.copyTo(fs.root,'copied',ok,no));}catch(error){copyQuota=error.code===10;}document.title='FSSEC:'+JSON.stringify({entryQuota,copyQuota});}if(event.data==='pending-uninstall'){const writers=await Promise.all(Array.from({length:12},async(_,index)=>{const entry=await promise((ok,no)=>fs.root.getFile('captures/concurrent-'+index+'.bin',{},ok,no));return promise((ok,no)=>entry.createWriter(ok,no));}));const blob=new Blob([new Uint8Array(256*1024)]);for(const writer of writers){writer.onwriteend=()=>{};writer.write(blob);}const pendingWrites=writers.filter(writer=>writer.readyState===FileWriter.WRITING).length;for(let i=0;i<100;i++)fs.root.getDirectory('pending-'+i,{create:true},()=>{},()=>{});fetch('filesystem:'+location.origin+'/persistent/captures/large.bin').then(response=>response.body.getReader().read()).catch(()=>{});document.title='FSSEC:'+JSON.stringify({pending:true,pendingWrites});}}catch(error){document.title='FAIL:'+error;}});
  run();`;
@@ -203,10 +218,91 @@ async function fileSystem() {
     );
     const result = JSON.parse(
       background.xulBrowser.contentTitle,
-    ) as FileSystemResult & ConcurrentFileSystemResult;
+    ) as FileSystemResult & ConcurrentFileSystemResult & FileSystemErrorResult;
     await IOUtils.writeUTF8(
       PathUtils.join(PathUtils.tempDir, "floorp-native-filesystem-result.json"),
       JSON.stringify(result),
+    );
+    for (
+      const [name, observation] of Object.entries({
+        missingFile: result.errorContract.missingFile,
+        missingDirectory: result.errorContract.missingDirectory,
+      })
+    ) {
+      assertEquals(
+        observation.successCalls,
+        0,
+        `${name}: missing lookup never succeeds`,
+      );
+      assertEquals(
+        observation.errorCalls,
+        1,
+        `${name}: one public failure callback`,
+      );
+      assertEquals(
+        observation.returnType,
+        "undefined",
+        `${name}: callback API return type`,
+      );
+    }
+    for (
+      const [name, error] of Object.entries({
+        missingFile: result.errorContract.missingFile.error,
+        missingDirectory: result.errorContract.missingDirectory.error,
+        missingRead: result.errorContract.missingRead,
+      })
+    ) {
+      assert(error, `${name}: actual public error is present`);
+      assertEquals(error.name, "NotFoundError", `${name}: Chrome error name`);
+      assertEquals(error.code, 8, `${name}: native DOMException NOT_FOUND_ERR`);
+      assertEquals(
+        error.message,
+        "A requested file or directory could not be found at the time an operation was processed.",
+        `${name}: Chrome public message`,
+      );
+      assertEquals(
+        error.constructorName,
+        "DOMException",
+        `${name}: native constructor name`,
+      );
+      assertEquals(
+        error.tag,
+        "[object DOMException]",
+        `${name}: native exception tag`,
+      );
+      assertEquals(
+        error.ownProperties.length,
+        0,
+        `${name}: no own compatibility branding`,
+      );
+      assert(
+        error.nativeException && error.nativeConstructor,
+        `${name}: genuine extension-realm DOMException`,
+      );
+    }
+    assert(
+      result.errorContract.existsStatRecovered,
+      "vendor missing-parent code8 branch recovers instead of rejecting storage write",
+    );
+    assertEquals(
+      result.errorContract.mappedVendorError,
+      "Error #301: File not found (file names are case-sensitive): vendor-import.json",
+      "vendor missing-read message prefix remains recognizable",
+    );
+    assertEquals(
+      result.errorContract.readAfterCreate,
+      '{"Name":"Owned import","Commands":[]}',
+      "missing-read then create/write/retry returns actual persisted bytes",
+    );
+    assertEquals(
+      result.errorContract.legacyNotFoundConstant,
+      1,
+      "legacy FileError constants remain unchanged",
+    );
+    assertEquals(
+      result.errorContract.legacySyntaxConstant,
+      8,
+      "legacy SyntaxError code remains distinct from DOMException name",
     );
     assertEquals(result.text, "abXYe", "seek and truncate write actual bytes");
     assertEquals(
@@ -503,10 +599,11 @@ async function fileSystem() {
         );
       }
     }
+    const siteProbeURL = window.wrappedJSObject.__floorpRuntimeFixtureURL +
+      "filesystem-security.html?url=" + encodeURIComponent(result.url);
     for (
       const url of [
-        window.wrappedJSObject.__floorpRuntimeFixtureURL +
-        "filesystem-security.html?url=" + encodeURIComponent(result.url),
+        siteProbeURL,
         extension.baseURI.resolve(
           "blocked.html?url=" + encodeURIComponent(result.url),
         ),
@@ -523,6 +620,12 @@ async function fileSystem() {
         "site origin and explicit owner CSP both reject primed filesystem resources: " +
           url + ": " + JSON.stringify(probe),
       );
+      if (url === siteProbeURL) {
+        assert(
+          probe.globalsAbsent,
+          "ordinary site receives no filesystem DOM API grant",
+        );
+      }
       if (probe.violations) {
         assert(
           probe.violations.includes("connect-src") &&

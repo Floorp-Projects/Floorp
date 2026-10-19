@@ -1060,7 +1060,7 @@ diff --git a/toolkit/components/extensions/ChromeExtensionFileSystemChild.sys.mj
 new file mode 100644
 --- /dev/null
 +++ b/toolkit/components/extensions/ChromeExtensionFileSystemChild.sys.mjs
-@@ -0,0 +1,228 @@
+@@ -0,0 +1,235 @@
 +/* This Source Code Form is subject to the terms of the Mozilla Public
 + * License, v. 2.0. If a copy of the MPL was not distributed with this
 + * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1076,7 +1076,14 @@ new file mode 100644
 +  const names=["","NotFoundError","SecurityError","AbortError","NotReadableError","EncodingError","NoModificationAllowedError","InvalidStateError","SyntaxError","InvalidModificationError","QuotaExceededError","TypeMismatchError","PathExistsError"];
 +  class FileError extends Error{constructor(record){super(record.message);this.code=record.code;this.name=names[this.code]||"InvalidStateError";}}
 +  for(const[name,value]of Object.entries({NOT_FOUND_ERR:1,SECURITY_ERR:2,ABORT_ERR:3,NOT_READABLE_ERR:4,ENCODING_ERR:5,NO_MODIFICATION_ALLOWED_ERR:6,INVALID_STATE_ERR:7,SYNTAX_ERR:8,INVALID_MODIFICATION_ERR:9,QUOTA_EXCEEDED_ERR:10,TYPE_MISMATCH_ERR:11,PATH_EXISTS_ERR:12})){Object.defineProperty(FileError,name,{value});Object.defineProperty(FileError.prototype,name,{value});}
-+  const error=value=>value instanceof FileError?value:new FileError({code:value?.code||6,message:value?.message||String(value)});
++  // Backend records retain legacy FileError codes. Only public missing-entry
++  // callbacks use Chrome's native DOMException shape and its NOT_FOUND_ERR=8.
++  const missingErrors=new WeakSet();
++  const error=value=>{
++    if(value instanceof FileError||missingErrors.has(value))return value;
++    if(value?.code===1){const missing=new DOMException("A requested file or directory could not be found at the time an operation was processed.","NotFoundError");missingErrors.add(missing);return missing;}
++    return new FileError({code:value?.code||6,message:value?.message||String(value)});
++  };
 +  const call=request=>bridge(request).catch(value=>{throw error(value);});
 +  const callback=(promise,success,failed)=>{promise.then(value=>success?.(value),reason=>failed?.(error(reason)));};
 +  // Queue immutable Blob snapshots before materializing chunks. The bridge's
