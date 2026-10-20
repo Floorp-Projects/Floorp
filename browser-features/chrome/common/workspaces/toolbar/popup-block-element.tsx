@@ -8,6 +8,10 @@ import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
 import { workspacesDataStore } from "../data/data.ts";
+import {
+  bindWorkspaceSyncFocusTooltip,
+  createWorkspaceSyncIndicator,
+} from "./workspace-sync-indicator.ts";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -17,6 +21,11 @@ export function PopupToolbarElement(props: {
 }) {
   const workspace = createMemo(() =>
     props.ctx.getRawWorkspace(props.workspaceId)
+  );
+  const syncIndicator = createWorkspaceSyncIndicator(
+    props.ctx,
+    () => props.workspaceId,
+    () => workspace()?.name ?? "",
   );
 
   const handleDragStart = (event: DragEvent) => {
@@ -83,18 +92,22 @@ export function PopupToolbarElement(props: {
         const userContextId = () => ws().userContextId ?? 0;
         const hasContainer = () => userContextId() > 0;
         const containerColorName = () => getContainerColorName(userContextId());
-        return (
+        const button = (
           <xul:toolbarbutton
             id={`workspace-${props.workspaceId}`}
             label={ws().name}
             context="workspaces-toolbar-item-context-menu"
             class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
+            tabindex="0"
             style={{
               "list-style-image": `url(${icon()})`,
             }}
             closemenu="none"
             data-selected={props.isSelected}
             data-workspaceId={props.workspaceId}
+            data-workspace-sync={syncIndicator().state}
+            tooltiptext={syncIndicator().tooltip}
+            aria-label={syncIndicator().tooltip}
             data-has-container={hasContainer() ? "true" : "false"}
             data-container-color={containerColorName() ?? ""}
             draggable="true"
@@ -106,8 +119,37 @@ export function PopupToolbarElement(props: {
             onCommand={() => {
               props.ctx.changeWorkspace(props.workspaceId);
             }}
-          />
-        );
+          >
+            <xul:image
+              class="toolbarbutton-icon workspaceButtonIcon"
+              src={icon()}
+              aria-hidden="true"
+            />
+            <xul:vbox
+              class="workspaceButtonContent"
+              flex="1"
+              aria-hidden="true"
+            >
+              <xul:label
+                class="workspace-name"
+                value={ws().name}
+                crop="end"
+              />
+              <Show when={syncIndicator().state}>
+                <xul:hbox class="workspace-sync-status-line">
+                  <xul:box class="workspace-sync-status-icon" />
+                  <xul:label
+                    class="workspace-sync-status"
+                    value={syncIndicator().status}
+                    crop="end"
+                  />
+                </xul:hbox>
+              </Show>
+            </xul:vbox>
+          </xul:toolbarbutton>
+        ) as XULElement;
+        bindWorkspaceSyncFocusTooltip(button, syncIndicator);
+        return button;
       }}
     </Show>
   );
