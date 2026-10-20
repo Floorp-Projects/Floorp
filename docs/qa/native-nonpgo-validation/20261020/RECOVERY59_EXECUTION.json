@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "run": 39372006481,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39372006481",
+  "event": "push",
+  "attempt": 1,
+  "head": "4e2879760390739026a1fef3a567cb43dd2a2749",
+  "callerTree": "e2c8cd43c20f06420d10238cb2e4ca28bb13f1c1",
+  "fixture": "1e6b113a7363a8ba9bb31a0addeb82b2f03a48fe",
+  "fixtureTree": "60dcf5a621d35a1a5d4d0bc9f4b724a74072168d",
+  "branch": "codex/mac-native-mozilla-upstream-recovery59-20261020",
+  "activationUTC": "2026-10-20T04:54:01.316Z",
+  "observedUTC": "2026-10-20T04:54:40.919Z",
+  "headRunCount": 1,
+  "jobCount": 1,
+  "job": {
+    "id": 118461735977,
+    "name": "checkpoint-consumer",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "status": "in_progress"
+  },
+  "statusAtAdmission": "in_progress",
+  "results": "pending",
+  "expectedSelectedMacQA": 577,
+  "expectedFailureRecordingQA": 14,
+  "upstreamSelectedDefinitions": 45,
+  "upstreamInventory": "pending",
+  "upstreamExecution": "pending",
+  "fullUpstreamSuiteExecuted": false,
+  "fullHostQualification": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "originalNativeExitCause": "UNKNOWN",
+  "newArtifactUploadsPlanned": 0,
+  "artifactRetentionChanged": false,
+  "permissionsChanged": false,
+  "productSourceOrUpstreamTestsModified": false,
+  "sharedWorkDeadlineMinutes": 345,
+  "cleanupReserveMinutes": 15,
+  "platformJobTimeoutMinutes": 360,
+  "manualTimeOnlyCancellation": false,
+  "callerReview": {
+    "bytes": 11140,
+    "sha256": "69f9f065c69ebb295708f8269c494dff9f30c0c3aa75cbb610cead6f580fceb2",
+    "openP1": 0,
+    "openP2": 0
+  },
+  "admissionReview": {
+    "bytes": 13216,
+    "sha256": "ebee496a11bd07fb4954c20ba80943283153bc58b31d5ac3e1b71f05ca98abc4",
+    "openP1": 0,
+    "openP2": 0
+  },
+  "finalFreshGateUTC": "2026-10-20T04:52:09.027Z"
+}

@@ -1,0 +1,256 @@
+{
+  "schema": 1,
+  "review": "Recovery59 source-bound inventory journal caller review",
+  "reviewedAtUTC": "2026-10-20T04:48:47Z",
+  "status": "CLEAR",
+  "decision": "CALLER_CODE_CLEAR_PENDING_IMMUTABLE_ADMISSION",
+  "openP1": 0,
+  "openP2": 0,
+  "scope": "Read-only review of the dedicated single-job workflow candidate and its exact fixture rendering. Actual final inline was executed with bounded filesystem, clock and source doubles; actual initial bash guard was executed locally. No Mac build, inventory or CI execution was performed by this reviewer.",
+  "candidate": {
+    "basename": "floorp-recovery59-caller-candidate.yml",
+    "bytes": 50105,
+    "sha256": "c05a4f0e26ef39f1de378da88981a3cf3082e5de1f01de9ee3972de1b5296e8f"
+  },
+  "rendered": {
+    "basename": "floorp-recovery59-caller-rendered.yml",
+    "bytes": 50130,
+    "sha256": "946c6968c1c0213b199287528f563820dd0acf1f49671e707fd1f19a826c61c6"
+  },
+  "sourceFixture": {
+    "commit": "1e6b113a7363a8ba9bb31a0addeb82b2f03a48fe",
+    "tree": "60dcf5a621d35a1a5d4d0bc9f4b724a74072168d",
+    "parent": "3b51aa645f7e2ff25e9afd611e26f189f0ef48a3",
+    "evidenceLevel": "exact local rendering; provider source and caller admission reviewed separately"
+  },
+  "preparedRuntimeCaller": {
+    "commit": "4e2879760390739026a1fef3a567cb43dd2a2749",
+    "tree": "e2c8cd43c20f06420d10238cb2e4ca28bb13f1c1",
+    "parent": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+    "evidenceLevel": "reported prepared immutable identity; this caller review does not substitute for independent provider readback or fresh admission"
+  },
+  "sourceFreeze": {
+    "basename": "floorp-recovery59-source-freeze.json",
+    "bytes": 787,
+    "sha256": "3609024d658f3b945ccfbca14d2044f14c03aed51c03d8414450f7e8056fba61"
+  },
+  "sourceBindings": {
+    "tools/qa/native-nonpgo/mozilla-upstream.json": {
+      "basename": "mozilla-upstream.json",
+      "bytes": 11397,
+      "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+    },
+    "tools/qa/native-nonpgo/mozilla_upstream.py": {
+      "basename": "mozilla_upstream.py",
+      "bytes": 39669,
+      "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+    },
+    "tools/qa/native-nonpgo/pipeline.py": {
+      "basename": "pipeline.py",
+      "bytes": 54135,
+      "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+    },
+    "tools/qa/native-nonpgo/test_mozilla_upstream.py": {
+      "basename": "test_mozilla_upstream.py",
+      "bytes": 29146,
+      "sha256": "691a8300a2d2d0ec9800d2732837b6dbc604b0febee0b73ad8e1c05a5da66d2b"
+    },
+    "tools/qa/native-nonpgo/test_pipeline_restore.py": {
+      "basename": "test_pipeline_restore.py",
+      "bytes": 39291,
+      "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+    }
+  },
+  "sourceImplementationReview": {
+    "basename": "floorp-recovery59-implementation-review.json",
+    "bytes": 9236,
+    "sha256": "5a212e3a900772f3a029b19e26729fd083ebb0098c8e9402785059b8bed72bd6"
+  },
+  "actualStockBootstrapControlsReview": {
+    "basename": "floorp-recovery59-actual-bootstrap-import-review-v2.private.json",
+    "bytes": 5603,
+    "sha256": "29d44d139ae4e4dd1d3fca7f890c6bfcf6de443fb597f644a6aa2928797d342d"
+  },
+  "workflowDelta": {
+    "base": {
+      "basename": "floorp-recovery58-caller-rendered.yml",
+      "bytes": 48932,
+      "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52"
+    },
+    "allowedChanges": [
+      "Workflow name and dedicated branch in trigger and initial guard",
+      "One fixture placeholder and updated immutable upstream helper hash",
+      "Two selected QA count literals from565 to577",
+      "One optional inventory_diagnostic_safe function and its projected upstream field"
+    ],
+    "allOtherWorkflowFieldsAndStepBodiesExactlyMatchAfterInverseNormalization": true,
+    "unchangedFinalInlineFunctions": [
+      "need",
+      "identity",
+      "read_fixed",
+      "decode",
+      "mapping",
+      "integer",
+      "case_ok",
+      "sdk_ok",
+      "time_budget_ok",
+      "final_ok",
+      "boolean",
+      "safe_stage",
+      "failure_safe",
+      "monitor_safe",
+      "stage_safe",
+      "log_safe",
+      "case_safe",
+      "target_ok",
+      "upstream_ok",
+      "digest_safe",
+      "file_safe",
+      "projected_stage_safe",
+      "case_error_safe",
+      "load_source_proof",
+      "persisted_failure",
+      "clock_proof"
+    ],
+    "changedFinalInlineFunctions": [
+      "preflight_ok",
+      "upstream_safe"
+    ],
+    "addedFinalInlineFunctions": [
+      "inventory_diagnostic_safe"
+    ],
+    "renderHasOnlyOneFixturePlaceholderReplacement": true,
+    "yamlParsed": true,
+    "bashSyntaxChecks": 7,
+    "pythonInlineCompileChecks": 3,
+    "dedicatedBranch": "codex/mac-native-mozilla-upstream-recovery59-20261020"
+  },
+  "executedControls": {
+    "inheritedActualFinalInlineOrchestration": {
+      "cases": 11,
+      "unexpectedPasses": 0
+    },
+    "inheritedUpstreamCases": {
+      "cases": 39
+    },
+    "inheritedStrictTypedGateMutations": {
+      "rejected": 218,
+      "unexpectedPasses": 0
+    },
+    "journalActualFinalInline": {
+      "cases": 29,
+      "invalidJournalFormsRejectedToUnavailable": 17,
+      "errors": 0
+    },
+    "actualInitialBashGuard": [
+      {
+        "case": "correct",
+        "exit": 0
+      },
+      {
+        "case": "old-branch",
+        "exit": 1
+      },
+      {
+        "case": "foreign",
+        "exit": 1
+      }
+    ],
+    "selectedQADiscoveryOnly": {
+      "tests": 577,
+      "recordingExpected": 14,
+      "testsNotExecutedByDiscovery": true
+    },
+    "artifactsOrPayloadsAcquired": 0,
+    "evidence": {
+      "floorp-recovery59-caller-independent-reused-controls.py": {
+        "basename": "floorp-recovery59-caller-independent-reused-controls.py",
+        "bytes": 25720,
+        "sha256": "44cb1c1ce884d4cd39b6a57c564d12e6b5e78d523b72b4de72364acad4bfe01d"
+      },
+      "floorp-recovery59-caller-independent-reused-controls-result.json": {
+        "basename": "floorp-recovery59-caller-independent-reused-controls-result.json",
+        "bytes": 640555,
+        "sha256": "eaa31d5b5ac5dca84df991b712bc5deda4226984871411592473bdf6627cc3cb"
+      },
+      "floorp-recovery59-caller-journal-controls.py": {
+        "basename": "floorp-recovery59-caller-journal-controls.py",
+        "bytes": 10012,
+        "sha256": "914cf2fbff610dc08d2218549bec38e458648d2d72dcef5093b18a4d8e3a794f"
+      },
+      "floorp-recovery59-caller-journal-controls-result.json": {
+        "basename": "floorp-recovery59-caller-journal-controls-result.json",
+        "bytes": 378844,
+        "sha256": "15331e31f241e2556dcd544c132a5ad1aa80fde688135a053890b1f63336b5e8"
+      },
+      "floorp-recovery59-caller-static-controls.py": {
+        "basename": "floorp-recovery59-caller-static-controls.py",
+        "bytes": 4712,
+        "sha256": "ccd6480ca217668ba10102281275fa7312d7ae94d7b26abe3e481bddbdf1f54c"
+      },
+      "floorp-recovery59-caller-static-controls-result.json": {
+        "basename": "floorp-recovery59-caller-static-controls-result.json",
+        "bytes": 2136,
+        "sha256": "eae85749d7581e66c333d250976cda3651e1639d03ee27c1be3b720f2f3fd0a6"
+      }
+    }
+  },
+  "verifiedBehavior": {
+    "journalBinding": "The actual pinned source validator and canonical serialized byte count/SHA256 must match before a journal is published. Missing validator, missing/malformed journal or mismatched receipt yields unavailable with null journal.",
+    "fixedProjection": "Only the fixed journal keyset, ordered phase vocabulary, known module byte/hash, allowlisted error classes/fixed own codes, bounded typed SystemExit and boolean category observations survive. Messages, paths, PID/argv and unknown extra keys do not survive.",
+    "primaryFailure": "A failed inventory journal retains original global-invoke SystemExit7 and the distinct later cleanup error. A persisted inventory nonzero primary remains the published first failure across summary conflict, projection failure, late clock failure and source binding failure; result stays failed.",
+    "unknown": "Unavailable inventory/harness counters remain null. Optional journal absence or rejection does not invalidate an independently valid existing proof, and a complete journal cannot make failed inventory pass.",
+    "guards": "The real initial bash block accepts the dedicated Recovery59 branch and rejects the old Recovery58 branch and a foreign branch. Both created-push guards and unchanged origin, current-execution and source predicates remain present.",
+    "expectedResults": "The inherited real proof and typed caller gates preserve manifest SKIP and known expected FAIL independently from positive PASS; bool/float counters, unknown measurements, incomplete log, wrong selection, monitor or cleanup failures fail qualification."
+  },
+  "executionContractPreserved": {
+    "runner": "macos-15-intel",
+    "jobs": 1,
+    "contents": "read",
+    "actions": "read",
+    "newArtifactUploads": 0,
+    "sdkAndCheckpoint": "Existing exact normal unexpired official sources; no new payload or retention policy.",
+    "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "originalClockSharedWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "cleanupReserveMinutes": 15,
+    "sourceConfigTestBodiesAndExpectationsUnchanged": true,
+    "existingSevenTargetsThreeControls45RecordScopeUnchanged": true,
+    "activeProcessGroupResourceAndUnknownStopAndExactCleanupUnchanged": true,
+    "http2Coverage": false,
+    "fullUpstreamSuiteExecuted": false,
+    "fullHostQualification": false,
+    "nativeAuthentication": "NOT_TESTED"
+  },
+  "rootReportedFinalRegression": {
+    "evidence": {
+      "basename": "floorp-recovery59-linux-full-result.json",
+      "bytes": 272,
+      "sha256": "f994b61da748c4359c5be55295089cd3e3607fda9424de51f9ba8504216ab66a"
+    },
+    "testsRun": 792,
+    "passed": 775,
+    "darwinSkipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 58.499,
+    "log": {
+      "bytes": 151762,
+      "sha256": "211efef849a289588a8480b940c022819aae1830dee6d75fe87f58a83b4523e0"
+    },
+    "independentlyRerunHere": false
+  },
+  "limitationsAndNextAdmission": [
+    "Local source/bootstrap controls do not establish the exact Recovery58 Mac exception. Its private inventory traceback was not recovered; original cause remains unknown.",
+    "No Recovery59 Mac inventory, global registration count,45-record result or additional full-host/native qualification is claimed.",
+    "The prepared caller identity requires independent immutable provider readback, exact rendered workflow and one-path ancestry comparison, and unchanged non-dedicated workflow trigger census.",
+    "Immediately before a single authorized activation, require unused branch/head runs, no owned active or queued overlap and fresh normal SDK/checkpoint origin, producer, expiry, size and digest admission. Expired sources must fail closed."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "workflowEdited": false,
+    "CIStarted": false,
+    "refsChanged": false,
+    "artifactAcquiredOrUploaded": false
+  }
+}

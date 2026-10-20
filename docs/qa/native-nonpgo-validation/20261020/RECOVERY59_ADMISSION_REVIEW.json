@@ -1,0 +1,319 @@
+{
+  "admissionLimits": [
+    "Normal approved GitHub API GETs and immutable raw-file reads only; no payload, SDK, checkpoint or live-log acquisition.",
+    "All source/caller hashes are immutable; branch absence, run counts and artifact expiry are point-in-time observations at the recorded API interval, not a lock or reservation.",
+    "The root must recheck current artifact unexpired/lineage, exact unused branch/head and all5 nonterminal statuses immediately before creating the branch once.",
+    "Artifact metadata verifies origin and wire pins only. The actual job must still perform its unchanged normal-API, expiry,600-second and full ZIP/TAR/raw-TAR/tree/version verification; this review does not re-download containers.",
+    "Recovery58 actual private exception remains UNKNOWN. The source startup counterexample and five Linux bootstrap controls support this reviewed repair without identifying the lost Mac traceback."
+  ],
+  "bootstrapActualImport": {
+    "bytes": 5603,
+    "controls": 5,
+    "dependencyStubs": 0,
+    "publishedPath": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_BOOTSTRAP_IMPORT_REVIEW.json",
+    "scope": "Actual current helper and stock module import on Linux only; not actual Mac inventory qualification.",
+    "sha256": "29d44d139ae4e4dd1d3fca7f890c6bfcf6de443fb597f644a6aa2928797d342d"
+  },
+  "caller": {
+    "activatedByReviewer": false,
+    "branch": "codex/mac-native-mozilla-upstream-recovery59-20261020",
+    "bytes": 50130,
+    "parent": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+    "parentTree": "6b2606b8495a8793884aaea8ee5692f1055120bc",
+    "renderedBytesExact": true,
+    "sha": "4e2879760390739026a1fef3a567cb43dd2a2749",
+    "sha256": "946c6968c1c0213b199287528f563820dd0acf1f49671e707fd1f19a826c61c6",
+    "soleChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+    "tree": "e2c8cd43c20f06420d10238cb2e4ca28bb13f1c1",
+    "workflow": ".github/workflows/mac-native-checkpoint.yml"
+  },
+  "decision": "GO for one authorized Recovery59 standard macos-15-intel consumer execution at the exact immutable caller and fixture, after the root repeats its immediate fresh/no-overlap gate.",
+  "evidence": {
+    "checker": {
+      "basename": "floorp-recovery59-check-immutable-admission.py",
+      "bytes": 13346,
+      "sha256": "c516d573af559803b8cba66516f75f01f77112595413af7dd7c15acda01100bd"
+    },
+    "inheritedFiles": {
+      "basename": "inherited-files.json",
+      "bytes": 152968,
+      "sha256": "60e6109001b9d7409ea824f5eee61f140733259ad3ab248fd49259e1345e4516"
+    },
+    "mechanicalChecks": {
+      "basename": "checks.json",
+      "bytes": 6505,
+      "sha256": "ae06ab3716e0733d7e4314917521160cb1ea966b87e383457e59b15a8a1130ce"
+    },
+    "preparation": {
+      "basename": "floorp-recovery59-admission-preparation.private.json",
+      "bytes": 8606,
+      "sha256": "9ffe92454671684753165bfc992bce5ed4af1376d2783a9ff9098d682fcf1420"
+    },
+    "provider": {
+      "basename": "provider.json",
+      "bytes": 636225,
+      "sha256": "214d6a96fa6ebb2948648d2d226ab6f5436e39bf428098bba9c58e76535c20e9"
+    }
+  },
+  "executionContract": {
+    "artifactUploadConfigured": false,
+    "consumerJobs": 1,
+    "failureRecordingExpected": 14,
+    "fullHostQualification": false,
+    "fullUpstreamSuiteExecuted": false,
+    "monitorPreflightStepTimeoutMinutes": 10,
+    "nativeAuthentication": "NOT_TESTED",
+    "newCheckpointProducerConfigured": false,
+    "nominalCleanupReserveMinutes": 15,
+    "originalJobMonotonicClock": true,
+    "originalNativeExitCause": "UNKNOWN",
+    "platform": "macos-15-intel",
+    "platformMinutes": 360,
+    "productQualification": false,
+    "restoreDeadlineMinutes": 60,
+    "scope": "Guarded existing checkpoint restore, current-source XPCOM native helpers and targeted Firefox/resource route, the unchanged3-case smoke controls, and the complete registered XPCOM unit manifest of45 source records; actual enabled/disabled/skip/results remain runtime observations.",
+    "sdkAcquisitionDeadlineSeconds": 600,
+    "sdkAcquisitionStepTimeoutMinutes": 12,
+    "selectedMacQAExpected": 577,
+    "sharedWorkDeadlineMinutes": 345
+  },
+  "fixedInputs": {
+    "checkpointReplaySHA256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c",
+    "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+    "pipelineSHA256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b",
+    "planSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "sdkSourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+    "upstreamHelperSHA256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392",
+    "upstreamPlanSHA256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+  },
+  "fixture": {
+    "all7InheritedBodiesExact": true,
+    "all8ChangedBodiesExact": true,
+    "changedCodeFiles": 2,
+    "changedCuratedDocuments": 6,
+    "changedPaths": 8,
+    "parent": "3b51aa645f7e2ff25e9afd611e26f189f0ef48a3",
+    "parentTree": "ef405157f6145f84a45307a04be6e983abd8caa0",
+    "sha": "1e6b113a7363a8ba9bb31a0addeb82b2f03a48fe",
+    "sourceAndCuratedReadbacks": [
+      {
+        "bytes": 39669,
+        "path": "tools/qa/native-nonpgo/mozilla_upstream.py",
+        "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+      },
+      {
+        "bytes": 29146,
+        "path": "tools/qa/native-nonpgo/test_mozilla_upstream.py",
+        "sha256": "691a8300a2d2d0ec9800d2732837b6dbc604b0febee0b73ad8e1c05a5da66d2b"
+      },
+      {
+        "bytes": 4124,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_PREPARATION.json",
+        "sha256": "e5605cec7f430152fd9db8a0e8898eda53d9e9f74c238efa94b03c3e33bec3e8"
+      },
+      {
+        "bytes": 9236,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_IMPLEMENTATION_REVIEW.json",
+        "sha256": "5a212e3a900772f3a029b19e26729fd083ebb0098c8e9402785059b8bed72bd6"
+      },
+      {
+        "bytes": 5603,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_BOOTSTRAP_IMPORT_REVIEW.json",
+        "sha256": "29d44d139ae4e4dd1d3fca7f890c6bfcf6de443fb597f644a6aa2928797d342d"
+      },
+      {
+        "bytes": 13645,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_STARTUP_CAUSE_REVIEW.json",
+        "sha256": "9f6238a4c9192871c05af2c8f952f4d13990c5f837c61d1f8844a2e4adc2b01a"
+      },
+      {
+        "bytes": 272,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_LOCAL_RESULT.json",
+        "sha256": "f994b61da748c4359c5be55295089cd3e3607fda9424de51f9ba8504216ab66a"
+      },
+      {
+        "bytes": 8003,
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_INVENTORY_JOURNAL_DESIGN_REVIEW.json",
+        "sha256": "9c002ee22807f7fd472ac4b5f87ee5d8a16dbb450e796fa0d97f2e71f422b1d8"
+      },
+      {
+        "bytes": 54135,
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+      },
+      {
+        "bytes": 11397,
+        "path": "tools/qa/native-nonpgo/mozilla-upstream.json",
+        "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+      },
+      {
+        "bytes": 39291,
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+      },
+      {
+        "bytes": 27325,
+        "path": "tools/qa/native-nonpgo/plan.json",
+        "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+      },
+      {
+        "bytes": 1030,
+        "path": "tools/qa/native-nonpgo/sdk_source.json",
+        "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+      },
+      {
+        "bytes": 635,
+        "path": "tools/qa/native-nonpgo/checkpoint-replay.json",
+        "sha256": "7261646e01ffd4abc456785335712cc49e48f6cadac864ed17c6910636cf0c9c"
+      },
+      {
+        "bytes": 13587,
+        "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
+        "sha256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3"
+      }
+    ],
+    "tree": "60dcf5a621d35a1a5d4d0bc9f4b724a74072168d"
+  },
+  "freshMetadata": {
+    "artifactEvidence": {
+      "checkpoint": {
+        "artifact": 12164479528,
+        "artifactsCount": 1,
+        "attempt": 1,
+        "bytes": 2213942620,
+        "completePages": true,
+        "event": "push",
+        "expired": false,
+        "expiresAt": "2026-10-20T05:19:56Z",
+        "head": "fdc6722b6ac5467f7baf6c0fa6a3537ee0a51860",
+        "jobsCount": 2,
+        "producerJob": 117881829274,
+        "producerName": "checkpoint-producer",
+        "producerSucceeded": true,
+        "run": 39197008470,
+        "runConclusion": "failure",
+        "sha256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15"
+      },
+      "sdk": {
+        "artifact": 12182302735,
+        "artifactsCount": 34,
+        "attempt": 1,
+        "bytes": 105082683,
+        "completePages": true,
+        "event": "schedule",
+        "expired": false,
+        "expiresAt": "2026-10-20T11:23:42Z",
+        "head": "7dd619742b25567e479eeda97ae071d10542ad0b",
+        "jobsCount": 43,
+        "producerJob": 118032017226,
+        "producerName": "Mac build [PGO] / download-macos-sdk",
+        "producerSucceeded": true,
+        "run": 39244172146,
+        "runConclusion": "success",
+        "sha256": "c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee"
+      }
+    },
+    "branchHTTPStatus": 404,
+    "callerPriorRuns": 0,
+    "observedEnd": "2026-10-20 04:47:52 UTC",
+    "observedStart": "2026-10-20 04:47:50 UTC",
+    "ownedNonterminal": {
+      "in_progress": {
+        "complete": true,
+        "owned": 0,
+        "total": 0
+      },
+      "pending": {
+        "complete": true,
+        "owned": 0,
+        "total": 0
+      },
+      "queued": {
+        "complete": true,
+        "owned": 0,
+        "total": 1
+      },
+      "requested": {
+        "complete": true,
+        "owned": 0,
+        "total": 0
+      },
+      "waiting": {
+        "complete": true,
+        "owned": 0,
+        "total": 0
+      }
+    },
+    "previous58Terminal": true
+  },
+  "gateAssessment": [
+    "Caller passes only with persisted first-failure positively absent, successful pipeline step, strict final_ok and target_ok. target_ok itself requires upstream_ok/proof_complete, so upstream proof is transitively required even though the outer passed expression names targetProofVerified.",
+    "Typed final gates preserve current source/config/replay binding; all owned stages natural zero, exact reap, group gone, no cleanup/monitor failure; the custom negative smoke case remains actual FAIL with expected process exit1.",
+    "The45-record source manifest is distinct from the all-registered runtime inventory. Neither source counts nor3 smoke cases establish full-upstream completion.",
+    "Unknown/missing inventory results and absent cleanup fields remain unavailable; journal uses a strict fixed vocabulary and primary errors are not replaced by diagnostic or cleanup failures.",
+    "This admission does not adopt stock Node detached-group ownership or broader upstream execution. Current route preserves its existing external-server assumption; that later lifecycle design remains separate."
+  ],
+  "headerControls": {
+    "actualCIExecuted": false,
+    "attempt2": 1,
+    "newBranch": 0,
+    "old58Branch": 1
+  },
+  "independentCaller": {
+    "basename": "floorp-recovery59-caller-review.json",
+    "bytes": 11140,
+    "evidenceSummary": "268 existing controls plus29 journal controls including17 malformed schemas,3 actual initial Bash guard controls and7 Bash/3 Python syntax checks, bound by the independent caller review.",
+    "sha256": "69f9f065c69ebb295708f8269c494dff9f30c0c3aa75cbb610cead6f580fceb2",
+    "status": "CLEAR"
+  },
+  "independentImplementation": {
+    "bytes": 9236,
+    "openP1": 0,
+    "openP2": 0,
+    "publishedPath": "docs/qa/native-nonpgo-validation/20261020/RECOVERY59_IMPLEMENTATION_REVIEW.json",
+    "sha256": "5a212e3a900772f3a029b19e26729fd083ebb0098c8e9402785059b8bed72bd6",
+    "status": "CLEAR"
+  },
+  "openP1": 0,
+  "openP2": 0,
+  "preparedAt": "2026-10-20T04:53:24.148506+00:00",
+  "publishedLinuxResult": {
+    "errors": 0,
+    "failures": 0,
+    "passed": 775,
+    "platform": "Linux",
+    "seconds": 58.499,
+    "skipped": 17,
+    "successful": true,
+    "testsRun": 792
+  },
+  "review": "Recovery59 immutable admission independent read-only review",
+  "reviewerOperations": {
+    "ciOperations": 0,
+    "fullQAReruns": 0,
+    "heavyProfileBenchmarks": 0,
+    "liveLogFetches": 0,
+    "payloadAcquisitions": 0,
+    "refMutations": 0,
+    "sourceEdits": 0
+  },
+  "schema": 1,
+  "status": "GO",
+  "syntax": {
+    "bash": 7,
+    "python": 3
+  },
+  "workflowCensus": {
+    "allBodiesGitBlobBound": true,
+    "bodies": 26,
+    "create": [],
+    "directoryEntries": 29,
+    "other25Unchanged": true,
+    "otherDirectoryEntriesUnchanged": true,
+    "pushMatches": [
+      "mac-native-checkpoint.yml"
+    ],
+    "workflowRun": []
+  }
+}
