@@ -24,6 +24,17 @@ from sdk_source import load_sdk_source, acquisition_receipt
 from support import Failure, digest, scan_tar
 
 
+# Independently recorded normal API origins, not loader-derived expectations.
+KNOWN_SDK_ORIGINS = {
+    12182302735: {'artifact': 12182302735, 'run': 39244172146,
+                  'producerJob': 118032017226,
+                  'producerName': 'Mac build [PGO] / download-macos-sdk'},
+    12225585543: {'artifact': 12225585543, 'run': 39332628358,
+                  'producerJob': 118334374715,
+                  'producerName': 'Mac build / download-macos-sdk'},
+}
+
+
 class SDKSourceIntegration(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
@@ -55,6 +66,11 @@ class SDKSourceIntegration(unittest.TestCase):
         self.plan_path = self.root / 'plan.json'
         self.plan_path.write_text(json.dumps(self.plan))
         self.config = json.loads(Path(__file__).with_name('sdk_source.json').read_text())
+        self.expected_origin = KNOWN_SDK_ORIGINS[self.config['pin']['artifact']]
+        self.assertEqual({'artifact': self.config['pin']['artifact'],
+                          'run': self.config['pin']['run'],
+                          'producerJob': self.config['producerJob'],
+                          'producerName': sdk_source.PRODUCER_NAME}, self.expected_origin)
         self.config.update(baselinePlanSHA256=digest(self.plan_path), baselineTarSHA256=pin['tarSHA256'])
         self.config['pin'].update({key: pin[key] for key in
             ('name', 'entry', 'tarBytes', 'version', 'draftReaderTreeSHA256')})
@@ -77,7 +93,7 @@ class SDKSourceIntegration(unittest.TestCase):
         self.run = {'run_attempt': current['attempt'], 'head_sha': self.plan['runtime']['ref'],
                     'status': 'completed', 'conclusion': 'failure'}
         self.producer = {'id': self.config['producerJob'], 'run_id': current['run'],
-                         'run_attempt': current['attempt'], 'name': 'Mac build [PGO] / download-macos-sdk',
+                         'run_attempt': current['attempt'], 'name': self.expected_origin['producerName'],
                          'status': 'completed', 'conclusion': 'success'}
         self.api_opener, self.download_opener = mock.Mock(), mock.Mock()
         self.api_opener.open.side_effect = self.api
@@ -134,15 +150,57 @@ class SDKSourceIntegration(unittest.TestCase):
         self.download_opener.open.assert_not_called()
 
     def test_current_official_api_exact_producer_name_acquires_through_mocked_download(self):
-        self.assertEqual(self.producer['name'], 'Mac build [PGO] / download-macos-sdk')
-        self.assertEqual(load_sdk_source(self.plan_path, self.source_path)['producerName'], self.producer['name'])
-        self.run['conclusion'] = 'success'
-        self.assertEqual(self.fetch(), 0)
-        self.download_opener.open.assert_called_once()
+        # Both fixed origins use tiny synthetic archives. This exercises a future
+        # pin transition; it does not qualify the new real SDK payload or TAR hash.
+        original_root = self.root
+        original = copy.deepcopy((self.config, self.artifact, self.producer, self.run))
+        try:
+            for expected in KNOWN_SDK_ORIGINS.values():
+                with self.subTest(artifact=expected['artifact']):
+                    self.root = original_root / str(expected['artifact'])
+                    self.root.mkdir()
+                    self.config = copy.deepcopy(original[0])
+                    self.config['pin'].update(artifact=expected['artifact'], run=expected['run'])
+                    self.config['producerJob'] = expected['producerJob']
+                    self.save_source()
+                    self.artifact = {**original[1], 'id': expected['artifact'],
+                                     'workflow_run': {'id': expected['run']}}
+                    self.producer = {**original[2], 'id': expected['producerJob'],
+                                     'run_id': expected['run'], 'name': expected['producerName']}
+                    self.run = {**original[3], 'conclusion': 'success'}
+                    self.api_opener.open.reset_mock()
+                    self.download_opener.open.reset_mock()
+                    with mock.patch.multiple(sdk_source, PIN=copy.deepcopy(self.config['pin']),
+                            PRODUCER_JOB=expected['producerJob'], PRODUCER_NAME=expected['producerName']):
+                        trusted = load_sdk_source(self.plan_path, self.source_path)
+                        self.assertEqual({'artifact': trusted['pin']['artifact'], 'run': trusted['pin']['run'],
+                            'producerJob': trusted['producerJob'], 'producerName': trusted['producerName']}, expected)
+                        self.assertEqual(self.fetch(), 0)
+                        self.download_opener.open.assert_called_once()
+                        receipt = json.loads((self.root / 'sdk-download/receipt.json').read_text())
+                        self.assertEqual(receipt['tarSHA256'], hashlib.sha256(self.new_tar).hexdigest())
+                        self.assertEqual(receipt['artifact'], expected['artifact'])
+                        other_names = [row['producerName'] for row in KNOWN_SDK_ORIGINS.values()
+                                       if row['artifact'] != expected['artifact']]
+                        for name in (*other_names, 'Foreign / download-macos-sdk',
+                                     expected['producerName'] + ' extra', True, None):
+                            self.producer['name'] = name
+                            with self.assertRaisesRegex(Failure, 'sdk-producer-provenance'):
+                                self.fetch()
+                        self.producer.pop('name')
+                        with self.assertRaisesRegex(Failure, 'sdk-producer-provenance'):
+                            self.fetch()
+                        self.download_opener.open.assert_called_once()
+        finally:
+            self.root = original_root
+            self.config, self.artifact, self.producer, self.run = original
+            self.save_source()
 
     def test_old_foreign_boolean_and_missing_producer_names_stop_before_download(self):
-        for name in ('Mac build / download-macos-sdk', 'Foreign / download-macos-sdk',
-                     'Mac build [PGO] / download-macos-sdk extra', True, None):
+        other_names = [row['producerName'] for row in KNOWN_SDK_ORIGINS.values()
+                       if row['artifact'] != self.expected_origin['artifact']]
+        for name in (*other_names, 'Foreign / download-macos-sdk',
+                     self.expected_origin['producerName'] + ' extra', True, None):
             with self.subTest(name=name):
                 self.producer['name'] = name
                 with self.assertRaisesRegex(Failure, 'sdk-producer-provenance'):
@@ -284,6 +342,101 @@ class SDKSourceIntegration(unittest.TestCase):
             '--expected-tests', '1', '--sdk-source', str(self.source_path)]), \
                 self.assertRaisesRegex(Failure, 'sdk-source-mode'):
             census_experiment.main()
+
+    def test_metadata_time_is_inside_the_same_600_second_acquisition_budget(self):
+        normal_api=self.api
+        def delayed(request,**kwargs):
+            response=normal_api(request,**kwargs)
+            clock['now']=600
+            return response
+        clock={'now':0}
+        self.api_opener.open.side_effect=delayed
+        with mock.patch.object(fetch_sdk.time,'monotonic',side_effect=lambda:clock['now']):
+            with self.assertRaisesRegex(Failure,'^download-deadline$'):self.fetch()
+        self.download_opener.open.assert_not_called()
+        self.assertFalse((self.root/'sdk-download').exists())
+
+    def test_payload_does_not_restart_the_budget_after_metadata(self):
+        clock={'now':0};normal_api=self.api
+        def delayed(request,**kwargs):
+            try:return normal_api(request,**kwargs)
+            finally:clock['now']+=100
+        class Payload(io.BytesIO):
+            def read(stream,size=-1):
+                data=super().read(size);clock['now']+=201;return data
+        self.api_opener.open.side_effect=delayed
+        self.download_opener.open.side_effect=lambda *_a,**_k:Payload(self.new_zip)
+        with mock.patch.object(fetch_sdk.time,'monotonic',side_effect=lambda:clock['now']):
+            with self.assertRaisesRegex(Failure,'^download-deadline$'):self.fetch()
+        self.assertEqual(self.api_opener.open.call_count,4)
+        self.assertFalse((self.root/'sdk-download/receipt.json').exists())
+
+    def test_payload_eof_after_deadline_is_not_success(self):
+        clock={'now':0}
+        class Payload(io.BytesIO):
+            def read(stream,size=-1):
+                data=super().read(size);clock['now']=599 if data else 601;return data
+        self.download_opener.open.side_effect=lambda *_a,**_k:Payload(self.new_zip)
+        with mock.patch.object(fetch_sdk.time,'monotonic',side_effect=lambda:clock['now']):
+            with self.assertRaisesRegex(Failure,'^download-deadline$'):self.fetch()
+        self.assertFalse((self.root/'sdk-download/receipt.json').exists())
+
+    def test_redirect_does_not_permit_acquisition_to_start_after_expiry(self):
+        normal_api=self.api
+        def expires(request,**kwargs):
+            if request.full_url.endswith('/zip'):self.now+=datetime.timedelta(hours=1)
+            return normal_api(request,**kwargs)
+        self.api_opener.open.side_effect=expires
+        with self.assertRaisesRegex(Failure,'^sdk-expired$'):self.fetch()
+        self.download_opener.open.assert_not_called()
+        self.assertFalse((self.root/'sdk-download').exists())
+
+    def test_unexpected_redirect_http_error_stops_and_closes_body(self):
+        normal_api=self.api;body=io.BytesIO(b'PRIVATE')
+        def denied(request,**kwargs):
+            if request.full_url.endswith('/zip'):
+                raise urllib.error.HTTPError(request.full_url,429,'PRIVATE',{},body)
+            return normal_api(request,**kwargs)
+        self.api_opener.open.side_effect=denied
+        with self.assertRaisesRegex(Failure,'^sdk-download-redirect$'):self.fetch()
+        self.assertTrue(body.closed)
+        self.download_opener.open.assert_not_called()
+
+    def test_http_200_redirect_response_is_closed_and_not_downloaded(self):
+        normal_api=self.api;body=io.BytesIO(b'PRIVATE')
+        def ordinary(request,**kwargs):
+            return body if request.full_url.endswith('/zip') else normal_api(request,**kwargs)
+        self.api_opener.open.side_effect=ordinary
+        with self.assertRaisesRegex(Failure,'^sdk-expected-download-redirect$'):self.fetch()
+        self.assertTrue(body.closed)
+        self.download_opener.open.assert_not_called()
+
+    def test_boolean_run_attempt_and_unknown_expiry_flag_fail_closed(self):
+        self.run['run_attempt']=True
+        with self.assertRaisesRegex(Failure,'^sdk-run-provenance$'):self.fetch()
+        self.run['run_attempt']=self.config['pin']['attempt']
+        for value in (None,0,'',[]):
+            self.artifact['expired']=value
+            with self.subTest(kind=type(value).__name__),self.assertRaisesRegex(Failure,'^sdk-artifact-provenance$'):
+                self.fetch()
+        self.download_opener.open.assert_not_called()
+
+    def test_expired_acquisition_receipt_write_cannot_leave_success_receipt(self):
+        clock={'now':0};normal_write=fetch_sdk.write_json
+        def late(path,value):
+            normal_write(path,value);clock['now']=601
+        with mock.patch.object(fetch_sdk.time,'monotonic',side_effect=lambda:clock['now']), \
+                mock.patch.object(fetch_sdk,'write_json',side_effect=late):
+            with self.assertRaisesRegex(Failure,'^download-deadline$'):self.fetch()
+        self.assertFalse((self.root/'sdk-download/receipt.json').exists())
+
+    def test_shared_deadline_arguments_are_typed_and_timeouts_are_bounded(self):
+        with mock.patch.object(fetch_sdk.time,'monotonic',return_value=10):
+            self.assertEqual(fetch_sdk.acquisition_budget(11),1)
+            self.assertEqual(fetch_sdk.acquisition_budget(610),30)
+            for value in (True,'PRIVATE',float('nan'),float('inf'),10):
+                with self.subTest(kind=type(value).__name__),self.assertRaisesRegex(Failure,'^download-deadline$'):
+                    fetch_sdk.acquisition_budget(value)
 
 
 if __name__ == '__main__':

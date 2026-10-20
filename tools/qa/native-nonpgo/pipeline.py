@@ -19,7 +19,7 @@ from support import (Failure, Runner, clean_environment, digest, download,
 from owned_native import OwnedNative
 from checkpoint_public import public_restore
 from sdk_source import load_sdk_source, validate_acquisition_receipt
-from consumer_time import select_consumer_time
+from consumer_time import select_consumer_time, select_fresh45_time
 from build_completion import start_snapshot, collect as collect_build_completion
 
 
@@ -361,7 +361,14 @@ def main():
     parser.add_argument('--replay-origin', action='store_true')
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
+    parser.add_argument('--fresh-firefox45', action='store_true')
     args = parser.parse_args()
+    require(not args.fresh_firefox45 or (args.checkpoint_role is None and not any((
+        args.restore_only, args.replay_origin, args.mozilla_only, args.mozilla_first,
+        args.mozilla_targeted, args.mozilla_upstream_xpcom, args.consumer_shared_deadline))),
+        'fresh-firefox45-mode')
+    targeted = args.mozilla_targeted or args.fresh_firefox45
+    upstream_xpcom = args.mozilla_upstream_xpcom or args.fresh_firefox45
     require(not args.restore_only or args.checkpoint_role == 'consumer', 'checkpoint-restore-only-role')
     require(not args.replay_origin or args.checkpoint_role == 'consumer', 'checkpoint-replay-role')
     require(not args.mozilla_only or (args.checkpoint_role == 'consumer' and not args.restore_only),
@@ -382,6 +389,11 @@ def main():
         plan, plan_hash, args.checkpoint_role, shared=args.consumer_shared_deadline,
         restore_only=args.restore_only)
     consumer_deadlines = consumer_time['deadlines']
+    fresh_time = select_fresh45_time(plan, plan_hash, enabled=args.fresh_firefox45)
+    fresh_deadline = fresh_time['deadlineMinutes']
+    target_deadlines = ({key: fresh_deadline for key in (
+        'consumerBuildDeadlineMinutes', 'consumerNativeDeadlineMinutes', 'finalDeadlineMinutes')}
+        if args.fresh_firefox45 else consumer_deadlines)
     require((task / 'started-monotonic').is_file(), 'monotonic-origin-missing')
     started = float((task / 'started').read_text())
     runner = Runner(task, started, plan['limits'])
@@ -391,6 +403,12 @@ def main():
         report['executionTimeBudget'] = consumer_time['evidence']
     if args.mozilla_first:
         report['mozillaFirst'] = True
+    fresh_origin = None
+    if args.fresh_firefox45:
+        import fresh45
+        runner.phase_deadline_minutes = fresh_deadline
+        report.update(freshFirefox45=True, freshObjdir=None, sameJob=None, checkpointUsed=False,
+                      executionTimeBudget=json.loads(json.dumps(fresh_time['evidence'])))
     stage = 'preflight'
     sdk_source = None
     checkpoint_role = args.checkpoint_role
@@ -403,6 +421,11 @@ def main():
         runner.phase_deadline_minutes = plan['checkpoint'][
             'producerBuildDeadlineMinutes' if checkpoint_role == 'producer' else 'consumerRestoreDeadlineMinutes']
     try:
+        if args.fresh_firefox45:
+            fresh_origin = fresh45.read_origin(task)
+            require(fresh45.work_within(task, runner, fresh_origin, fresh_deadline), 'fresh-work-deadline')
+            require(not (task / 'obj').exists() and not (task / 'obj').is_symlink(), 'objdir-not-fresh')
+            report.update(freshObjdir=True, sameJob=True)
         sdk_source = load_sdk_source(HERE / 'plan.json', args.sdk_source)
         (task / 'tmp').mkdir(mode=0o700)
         basic_env = clean_environment(task)
@@ -445,7 +468,8 @@ def main():
             require(expected in path.read_text(), 'tool-version-' + name)
         stage = 'prepare-source'
         prepare_source(plan, args.source, args.fixture, task, tools, sdk, runner, env)
-        require(not (task / 'obj').exists(), 'objdir-not-fresh')
+        require(not (task / 'obj').exists() and
+                (not args.fresh_firefox45 or not (task / 'obj').is_symlink()), 'objdir-not-fresh')
         if checkpoint_role == 'consumer':
             stage = 'checkpoint-restore'
             runner.run(stage, [sys.executable, str(HERE / 'checkpoint.py'), 'restore',
@@ -471,6 +495,17 @@ def main():
                        args.source, env, plan['limits']['jobMinutes'])
         stage = 'effective-config-validation'
         verify_config(plan, task, tools, sdk)
+        if args.fresh_firefox45:
+            require(fresh45.work_within(task, runner, fresh_origin, fresh_deadline), 'fresh-work-deadline')
+            stage = fresh45.EXPORT_STAGE
+            from mozilla_target_build import stage_complete
+            before = len(runner.records)
+            runner.run(stage, [sys.executable, 'mach', 'build', '-j3', 'pre-export', 'export'],
+                       args.source, env, plan['limits']['jobMinutes'],
+                       phase_deadline_minutes=fresh_deadline)
+            require(len(runner.records) == before + 1 and runner.records[-1].get('stage') == stage and
+                    stage_complete(runner.records[-1]) and runner.failure is None and
+                    runner.monitor_failure is None, 'fresh-exports-proof-incomplete')
         if args.restore_only:
             report.update(status='restore-ready', restoreOnly=True,
                           fullHostXUL='NOT_TESTED', nativeAuthentication='NOT_TESTED',
@@ -524,56 +559,62 @@ def main():
                 for key in ('bytes', 'sha256', 'manifestSHA256', 'buildDate'):
                     output.write(key + '=' + str(ready[key]) + '\n')
             raise CheckpointComplete
-        runner.phase_deadline_minutes = None
-        if args.mozilla_targeted:
+        runner.phase_deadline_minutes = fresh_deadline
+        if targeted:
             from mozilla_target_build import run_build, verify_assets, proof_complete
             from mozilla_harness_smoke import run_smoke
             stage = 'mozilla-target-build'
             report['mozillaTargets'] = {}
             report.update(mozillaTargeted=True, fullHostXUL='NOT_TESTED', fullHostQualification=False,
                           stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED')
-            if args.mozilla_upstream_xpcom:
+            if upstream_xpcom:
                 import mozilla_upstream as upstream
                 report['mozillaUpstream'] = {}
                 upstream.prepare(args.source, task, runner, env,
-                    consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
+                    target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
             run_build(args.source, task, runner, env,
-                      consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
-            if args.mozilla_upstream_xpcom:
+                      target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
+            if upstream_xpcom:
                 upstream.child_and_resources(args.source, task, runner, env,
-                    consumer_deadlines['consumerBuildDeadlineMinutes'])
-                report['mozillaUpstream']['assets'] = upstream.verify_scope_assets(task, runner, macho)
+                    target_deadlines['consumerBuildDeadlineMinutes'])
+                diagnostic = {}
+                report['mozillaUpstream']['nativeAssetPrecondition'] = diagnostic
+                report['mozillaUpstream']['assets'] = upstream.verify_scope_assets(
+                    task, runner, macho, diagnostic=diagnostic)
             stage = 'mozilla-target-assets'
             report['mozillaTargets']['assets'] = verify_assets(task, runner, macho, source=args.source)
             object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
             report['hostObject'] = macho(object_path, 1)
             require(object_path.stat().st_mtime >= started, 'object-not-fresh')
-            runner.phase_deadline_minutes = consumer_deadlines['consumerNativeDeadlineMinutes']
+            runner.phase_deadline_minutes = target_deadlines['consumerNativeDeadlineMinutes']
             stage = 'mozilla-harness'
             report['mozilla'] = {}
             run_smoke(args.source, HERE, task, runner, env,
-                      consumer_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
-            if args.mozilla_upstream_xpcom:
+                      target_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
+            if upstream_xpcom:
                 stage = 'mozilla-upstream-xpcom'
                 upstream.run_scope(args.source, task, runner, env,
-                    consumer_deadlines['consumerNativeDeadlineMinutes'], report['mozillaUpstream'])
-                require(upstream.verify_scope_assets(task, runner, macho) == report['mozillaUpstream']['assets'],
+                    target_deadlines['consumerNativeDeadlineMinutes'], report['mozillaUpstream'])
+                diagnostic = {}
+                report['mozillaUpstream']['postNativeAssetPrecondition'] = diagnostic
+                require(upstream.verify_scope_assets(task, runner, macho, diagnostic=diagnostic) == report['mozillaUpstream']['assets'],
                         'mozilla-upstream-post-asset-binding')
                 require(upstream.proof_complete(report['mozillaUpstream'], runner.records),
                         'mozilla-upstream-proof-incomplete')
                 report['upstreamQualification'] = upstream.CONTRACT
             stage = 'mozilla-target-final-evidence'
-            require(runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60,
+            require(runner.elapsed() < target_deadlines['finalDeadlineMinutes'] * 60,
                     'mozilla-target-final-deadline')
             report['mozillaTargets']['status'] = 'passed'
             require(mozilla_proof_complete(report['mozilla']) and
                     proof_complete(report['mozillaTargets'], report['mozilla'], runner.records) and
                     runner.failure is None and runner.monitor_failure is None, 'mozilla-target-proof-incomplete')
             write_json(task / 'mozilla-target-build.json', report['mozillaTargets'])
-            require(runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60,
+            require(runner.elapsed() < target_deadlines['finalDeadlineMinutes'] * 60,
                     'mozilla-target-final-deadline')
-            report.update(status='mozilla-target-ready',
-                          qualification='verified-origin-root-target-mozilla-smoke-v1')
+            report.update(status=fresh45.STATUS if args.fresh_firefox45 else 'mozilla-target-ready',
+                          qualification=fresh45.QUALIFICATION if args.fresh_firefox45 else
+                          'verified-origin-root-target-mozilla-smoke-v1')
             raise CheckpointComplete
         stage = 'full-build'
         try:
@@ -715,20 +756,24 @@ def main():
         report['monitorFailure'] = runner.monitor_failure
         report['firstFailure'] = runner.failure
         report['stages'] = runner.records
-        if checkpoint_role:
+        if checkpoint_role or args.fresh_firefox45:
             from checkpoint import full_log_receipt
             target_log_stages = ()
-            if args.mozilla_targeted:
+            if targeted:
                 from mozilla_target_build import STAGES
                 target_log_stages = STAGES
-            if args.mozilla_upstream_xpcom:
+            if upstream_xpcom:
                 from mozilla_upstream import EXTRA_STAGES
                 target_log_stages += EXTRA_STAGES
+            if args.fresh_firefox45:
+                target_log_stages += (fresh45.EXPORT_STAGE,)
             report['checkpointStageLogs'] = {
                 row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
                 for row in runner.records if row['stage'] in
                 ('checkpoint-exports', 'checkpoint-rust', 'checkpoint-pack', 'checkpoint-restore',
                  'full-build', 'stage-package', 'native-suite') + target_log_stages}
+            if args.fresh_firefox45:
+                report['targetStageLogs'] = report.pop('checkpointStageLogs')
         report['elapsedMinutes'] = round(runner.elapsed() / 60, 2)
         if report['status'] == 'checkpoint-ready':
             complete = (all(key in report for key in ('monitorPreflight', 'harness', 'sdk', 'toolchains',
@@ -800,6 +845,9 @@ def main():
                 runner.fail('final-proof', 'mozilla-target-proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure
         report['validationOutcome'] = validation_outcome(report)
+        if args.fresh_firefox45:
+            return fresh45.finish(task, runner, report, fresh_origin, fresh_deadline,
+                                  fresh_time['evidence'])
         try:
             write_json(task / 'summary.json', report)
             if args.mozilla_targeted and report['status'] == 'mozilla-target-ready' and not (

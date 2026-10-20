@@ -27,8 +27,9 @@ HELPERS = ('TestArguments', 'TestBlockingProcess', 'TestPRIntN',
 PREPARE_STAGE = 'mozilla-upstream-helpers-build'
 INVENTORY_STAGE = 'mozilla-upstream-inventory'
 CHILD_STAGE = 'mozilla-upstream-child-build'
+CHILD_LIBS_STAGE = 'mozilla-upstream-child-libs'
 RESOURCE_STAGE = 'mozilla-upstream-resources-build'
-EXTRA_STAGES = (PREPARE_STAGE, INVENTORY_STAGE, CHILD_STAGE, RESOURCE_STAGE)
+EXTRA_STAGES = (PREPARE_STAGE, INVENTORY_STAGE, CHILD_STAGE, CHILD_LIBS_STAGE, RESOURCE_STAGE)
 
 
 def plan_definition():
@@ -410,11 +411,47 @@ def child_and_resources(source, task, runner, env, deadline):
     runner.run(CHILD_STAGE, [sys.executable,'mach','build','-j3','-C','.',
                'ipc/app/target'], source, env, runner.limits['jobMinutes'],
                phase_deadline_minutes=deadline)
+    # Non-stage MacOSBundle assembly is a directory libs recipe. A bare
+    # root ipc/app/libs dependency does not select CURRENT_TIER's recipe.
+    runner.run(CHILD_LIBS_STAGE, [sys.executable,'mach','build','-j3','-C','ipc/app','libs'],
+               source, env, runner.limits['jobMinutes'], phase_deadline_minutes=deadline)
     runner.run(RESOURCE_STAGE, [sys.executable,'mach','build','-j3','faster'],
                source, env, runner.limits['jobMinutes'], phase_deadline_minutes=deadline)
 
 
-def verify_scope_assets(task, runner, macho):
+ASSET_PREDICATES = ('file', 'object-root', 'owner', 'executable', 'current-mtime')
+
+
+def asset_precondition_evidence(value):
+    """Project bounded guard observations, never paths, owners or wall times."""
+    unknown = {'schema':1, 'status':'unavailable', 'checkedAssets':None, 'failure':None, 'inspection':None}
+    labels = ('plugin-container', *HELPERS)
+    if not (type(value) is dict and set(value) == set(unknown) and
+            type(value['schema']) is int and value['schema'] == 1 and
+            type(value['status']) is str and value['status'] in ('checking','passed','failed','unavailable') and
+            type(value['checkedAssets']) is int and 0 <= value['checkedAssets'] <= len(labels)):
+        return unknown
+    observations = {}
+    for key,status in (('failure','failed'), ('inspection','unavailable')):
+        row = value[key]
+        if row is not None:
+            if not (type(row) is dict and set(row) == {'asset','predicate'} and
+                    value['checkedAssets'] < len(labels) and type(row['asset']) is str and
+                    row['asset'] == labels[value['checkedAssets']] and
+                    type(row['predicate']) is str and row['predicate'] in ASSET_PREDICATES and
+                    value['status'] == status):
+                return unknown
+            row = dict(row)
+        observations[key] = row
+    if value['status'] == 'failed' and observations['failure'] is None:
+        return unknown
+    if value['status'] == 'passed' and value['checkedAssets'] != len(labels):
+        return unknown
+    return {'schema':1, 'status':'unavailable' if value['status'] == 'checking' else value['status'],
+            'checkedAssets':value['checkedAssets'], **observations}
+
+
+def verify_scope_assets(task, runner, macho, *, diagnostic=None):
     root = (task/'obj').resolve()
     unit = root/'_tests/xpcshell'/SCOPE
     config = json.loads((task/'effective-config.private.log').read_text())['substs']
@@ -424,13 +461,31 @@ def verify_scope_assets(task, runner, macho):
     paths = {name: app/(name+'.app')/'Contents/MacOS'/name,
              **{helper:unit/helper for helper in HELPERS}}
     result = {'binaries':{},'xpcomTypelib':None}
+    if type(diagnostic) is dict:
+        diagnostic.clear()
+        diagnostic.update(schema=1, status='checking', checkedAssets=0, failure=None, inspection=None)
     for label,path in paths.items():
-        require(path.is_file() and path.resolve().is_relative_to(root) and
-                path.stat().st_uid == os.geteuid() and os.access(path,os.X_OK) and
-                path.stat().st_mtime >= runner.started, 'mozilla-upstream-current-native-asset')
+        predicates = (lambda: path.is_file(), lambda: path.resolve().is_relative_to(root),
+                      lambda: path.stat().st_uid == os.geteuid(),
+                      lambda: os.access(path,os.X_OK), lambda: path.stat().st_mtime >= runner.started)
+        for name,predicate in zip(ASSET_PREDICATES,predicates):
+            try:
+                accepted = predicate()
+            except BaseException:
+                if type(diagnostic) is dict:
+                    diagnostic.update(status='unavailable', inspection={'asset':label,'predicate':name})
+                raise
+            if not accepted:
+                if type(diagnostic) is dict:
+                    diagnostic.update(status='failed', failure={'asset':label,'predicate':name})
+                raise Failure('mozilla-upstream-current-native-asset')
+        if type(diagnostic) is dict:
+            diagnostic['checkedAssets'] += 1
         value = macho(path,2)
         require(value.get('uuid') is not None, 'mozilla-upstream-native-identity')
         result['binaries'][label] = value
+    if type(diagnostic) is dict:
+        diagnostic['status'] = 'passed'
     # XPIDL now feeds this JSON module into xptdata.cpp and XUL. The legacy
     # manifest generated-files entry does not install a unit/xpcomtest.xpt.
     typelib=root/'config/makefiles/xpidl/xpcomtest.xpt'

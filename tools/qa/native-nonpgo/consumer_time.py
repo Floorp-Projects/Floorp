@@ -49,3 +49,31 @@ def select_consumer_time(plan, plan_sha256, checkpoint_role, *, shared=False, re
                 'onlyExecutionTimingChanged': True, 'resourceAndCompilationInputsChanged': False,
                 'clockResetAllowed': False, 'stageBudgetsAreAdditive': False}
     return {'deadlines': deadlines, 'evidence': evidence}
+
+
+def select_fresh45_time(plan, plan_sha256, *, enabled=False):
+    """Separate explicit fresh profile; consumer/default selection is unchanged."""
+    require(type(enabled) is bool, 'fresh-time-flag')
+    if not enabled:
+        return {'deadlineMinutes': None, 'evidence': None}
+    require(type(plan_sha256) is str and plan_sha256 == BASELINE_PLAN_SHA256,
+            'fresh-time-plan-binding')
+    try:
+        platform = plan['limits']['jobMinutes']
+        final = plan['checkpoint']['finalDeadlineMinutes']
+    except (KeyError, TypeError):
+        raise Failure('fresh-time-plan-shape') from None
+    require(type(platform) is int and type(final) is int and
+            platform == PLATFORM_MINUTES and final == LEGACY[-1] and platform - final == 15,
+            'fresh-time-caps')
+    return {'deadlineMinutes': final, 'evidence': {
+        'schema': 1, 'profile': 'fresh-firefox45-shared-job-deadline-v1',
+        'baselinePlanSHA256': BASELINE_PLAN_SHA256, 'platformMinutes': platform,
+        'sharedWorkDeadlineMinutes': final, 'cleanupReserveMinutes': platform - final,
+        'clock': 'fresh-job-monotonic-origin',
+        'deadlineReference': 'absolute-from-existing-job-origin',
+        'deadlines': {name: final for name in
+                      ('prepare', 'configure', 'exports', 'build', 'mozilla', 'final')},
+        'freshObjdir': True, 'sameJob': True, 'checkpointRequired': False,
+        'resourceAndCompilationInputsChanged': False,
+        'clockResetAllowed': False, 'stageBudgetsAreAdditive': False}}

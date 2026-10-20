@@ -125,7 +125,7 @@ class RestoreOnlyFlow(unittest.TestCase):
             self.runner_constructor = constructor
         return code, json.loads((self.task / 'summary.json').read_text()), restored_config
 
-    def invoke_upstream(self, final_ok):
+    def invoke_upstream(self, final_ok, *, asset_failure=False):
         import mozilla_target_build as target
         import mozilla_upstream as upstream
         def build(source, task, runner, env, deadline, result):
@@ -144,16 +144,23 @@ class RestoreOnlyFlow(unittest.TestCase):
         def scope(source, task, runner, env, deadline, result):
             self.assertEqual(deadline,345)
             result.update(status='passed')
+        def assets(task, runner, macho, *, diagnostic):
+            diagnostic.update(schema=1,status='failed' if asset_failure else 'passed',
+                checkedAssets=0 if asset_failure else 6,
+                failure={'asset':'plugin-container','predicate':'current-mtime'} if asset_failure else None,inspection=None)
+            if asset_failure:
+                raise Failure('mozilla-upstream-current-native-asset')
+            return {}
         with mock.patch.object(target,'run_build',side_effect=build), \
                 mock.patch.object(target,'verify_assets',return_value={}), \
                 mock.patch.object(target,'proof_complete',return_value=True), \
                 mock.patch.object(upstream,'prepare',side_effect=prepare), \
                 mock.patch.object(upstream,'child_and_resources',side_effect=child), \
-                mock.patch.object(upstream,'verify_scope_assets',return_value={}), \
+                mock.patch.object(upstream,'verify_scope_assets',side_effect=assets), \
                 mock.patch.object(upstream,'run_scope',side_effect=scope), \
                 mock.patch.object(upstream,'proof_complete',side_effect=[True,final_ok]) as proof:
             result=self.invoke(restore_only=False,mozilla_targeted=True,mozilla_upstream=True,shared_deadline=True)
-        self.assertEqual(proof.call_count,2)
+        self.assertEqual(proof.call_count,0 if asset_failure else 2)
         return result
 
     def test_upstream_complete_scope_keeps_original_route_and_extra_stage_receipts(self):
@@ -165,6 +172,18 @@ class RestoreOnlyFlow(unittest.TestCase):
         self.assertEqual(report['mozillaUpstream']['status'],'passed')
         self.assertFalse(report['fullHostQualification'])
         self.assertEqual(report['nativeAuthentication'],'NOT_TESTED')
+
+    def test_upstream_asset_failure_retains_predicate_before_asset_assignment(self):
+        code,report,_=self.invoke_upstream(True,asset_failure=True)
+        self.assertEqual(code,1)
+        self.assertEqual(report['firstFailure'],{
+            'stage':'mozilla-target-build','code':'mozilla-upstream-current-native-asset'})
+        self.assertEqual(report['mozillaUpstream']['nativeAssetPrecondition'],{
+            'schema':1,'status':'failed','checkedAssets':0,
+            'failure':{'asset':'plugin-container','predicate':'current-mtime'},'inspection':None})
+        self.assertNotIn('assets',report['mozillaUpstream'])
+        self.assertNotIn('postNativeAssetPrecondition',report['mozillaUpstream'])
+        self.mozilla.assert_not_called()
 
     def test_upstream_late_incomplete_proof_cannot_keep_ready(self):
         code,report,_=self.invoke_upstream(False)

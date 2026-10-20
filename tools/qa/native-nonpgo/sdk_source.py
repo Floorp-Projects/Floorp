@@ -8,10 +8,12 @@ import copy
 import gzip
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
 import stat
+import time
 import zlib
 
 from qa_core import Failure, require
@@ -22,15 +24,9 @@ QUALIFICATION = 'official-artifact-identical-uncompressed-tar-v1'
 BASELINE_PLAN_SHA256 = '33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460'
 BASELINE_TAR_SHA256 = '2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4'
 RUNTIME_REF = '7dd619742b25567e479eeda97ae071d10542ad0b'
-PRODUCER_JOB = 118032017226
-PRODUCER_NAME = 'Mac build [PGO] / download-macos-sdk'
-PIN = {'artifact': 12182302735, 'run': 39244172146, 'attempt': 1,
-       'name': 'macos-sdk', 'entry': 'macos_sdk.tar.gz', 'zipBytes': 105082683,
-       'zipSHA256': 'c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee',
-       'tarBytes': 105567985,
-       'tarSHA256': 'a190b3eee16abf546611a18c033c09ecc9e6bbb9b32ad83bb2c68f772ef95b6b',
-       'draftReaderTreeSHA256': 'c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f',
-       'version': '26.5', 'expiresObserved': '2026-10-20T11:23:42Z'}
+PRODUCER_JOB = 118334374715
+PRODUCER_NAME = 'Mac build / download-macos-sdk'
+PIN = {'artifact': 12225585543, 'run': 39332628358, 'attempt': 1, 'name': 'macos-sdk', 'entry': 'macos_sdk.tar.gz', 'zipBytes': 105082683, 'zipSHA256': '4d4b7e003737a3f6db74563d1d6aff4d9776fe05d721e26756a801e6b0a0c106', 'tarBytes': 105567985, 'tarSHA256': 'b60f658599f24fea098271b1c4abc5ad3e7b681712bd2269a732432c95f06d38', 'draftReaderTreeSHA256': 'c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f', 'version': '26.5', 'expiresObserved': '2026-10-20T22:08:04Z'}
 UNCOMPRESSED_TAR = {'bytes': 760518144,
                     'sha256': '57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3'}
 CONTENT_KEYS = ('name', 'entry', 'tarBytes', 'version', 'draftReaderTreeSHA256')
@@ -112,10 +108,14 @@ def _alternate(spec):
     return source is not None
 
 
-def verify_uncompressed_tar(path, spec):
+def verify_uncompressed_tar(path, spec, *, deadline=None):
     """Hash every decompressed TAR byte within the exact expected byte cap."""
     if not _alternate(spec):
         return None
+    def budget():
+        require(deadline is None or (type(deadline) in (int, float) and
+                math.isfinite(deadline) and time.monotonic() < deadline), 'download-deadline')
+    budget()
     anchor = spec.get('uncompressedTar')
     require(type(anchor) is dict and set(anchor) == {'bytes', 'sha256'} and
             type(anchor['bytes']) is int and 0 < anchor['bytes'] <= MAX_UNCOMPRESSED_BYTES and
@@ -135,10 +135,12 @@ def verify_uncompressed_tar(path, spec):
             checksum, count = hashlib.sha256(), 0
             with gzip.GzipFile(fileobj=compressed, mode='rb') as stream:
                 while chunk := stream.read(min(1024**2, anchor['bytes'] + 1 - count)):
+                    budget()
                     count += len(chunk)
                     require(count <= anchor['bytes'], 'sdk-source-uncompressed-limit')
                     checksum.update(chunk)
             after = os.fstat(compressed.fileno())
+            budget()
             current = path.lstat()
             require(all(getattr(before, key) == getattr(after, key) == getattr(current, key) for key in fields),
                     'sdk-source-uncompressed-file-changed')

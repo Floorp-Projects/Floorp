@@ -176,10 +176,21 @@ class UpstreamTests(unittest.TestCase):
         calls=[];runner=SimpleNamespace(limits={'jobMinutes':360},run=lambda *a,**k:calls.append((a,k)))
         upstream.child_and_resources(self.task,self.task,runner,{},345)
         self.assertEqual([call[0][1][1:] for call in calls],
-                         [['mach','build','-j3','-C','.','ipc/app/target'],['mach','build','-j3','faster']])
+                         [['mach','build','-j3','-C','.','ipc/app/target'],
+                          ['mach','build','-j3','-C','ipc/app','libs'],['mach','build','-j3','faster']])
         self.assertTrue(all(call[0][4]==360 and call[1]['phase_deadline_minutes']==345 for call in calls))
 
-    def scope_assets(self, *, wrong_uuid=False):
+    def test_child_libs_failure_does_not_start_resource_repackage(self):
+        calls=[]
+        def run(stage,*args,**kwargs):
+            calls.append(stage)
+            if stage==upstream.CHILD_LIBS_STAGE: raise Failure('controlled-libs-failure')
+        runner=SimpleNamespace(limits={'jobMinutes':360},run=run)
+        with self.assertRaisesRegex(Failure,'controlled-libs-failure'):
+            upstream.child_and_resources(self.task,self.task,runner,{},345)
+        self.assertEqual(calls,[upstream.CHILD_STAGE,upstream.CHILD_LIBS_STAGE])
+
+    def scope_assets(self, *, wrong_uuid=False, diagnostic=None):
         import os
         root=self.task/'obj';unit=root/'_tests/xpcshell'/upstream.SCOPE
         unit.mkdir(parents=True)
@@ -194,7 +205,75 @@ class UpstreamTests(unittest.TestCase):
         (self.task/'effective-config.private.log').write_text(json.dumps({'substs':{
             'MOZ_MACBUNDLE_NAME':'Floorp.app','MOZ_CHILD_PROCESS_NAME':'plugin-container'}}))
         runner=SimpleNamespace(started=1)
-        return upstream.verify_scope_assets(self.task,runner,lambda path,kind:{'filetype':kind,'uuid':'a'*32})
+        return upstream.verify_scope_assets(self.task,runner,lambda path,kind:{'filetype':kind,'uuid':'a'*32},
+                                            diagnostic=diagnostic)
+
+    def test_native_asset_precondition_reports_all_six_without_private_values(self):
+        diagnostic={'private':'must be cleared'}
+        self.scope_assets(diagnostic=diagnostic)
+        self.assertEqual(diagnostic,{'schema':1,'status':'passed','checkedAssets':6,'failure':None,'inspection':None})
+        self.assertEqual(upstream.asset_precondition_evidence(diagnostic),diagnostic)
+
+    def test_native_asset_precondition_preserves_ordered_rejection_and_macho_boundary(self):
+        import os
+        from types import SimpleNamespace
+        self.scope_assets()
+        for predicate in upstream.ASSET_PREDICATES:
+            with self.subTest(predicate=predicate):
+                diagnostic={};macho=mock.Mock()
+                with mock.patch.object(Path,'is_file',return_value=predicate!='file'), \
+                     mock.patch.object(Path,'is_relative_to',return_value=predicate!='object-root'), \
+                     mock.patch.object(Path,'stat',return_value=SimpleNamespace(
+                         st_uid=os.geteuid()+1 if predicate=='owner' else os.geteuid(),
+                         st_mtime=0 if predicate=='current-mtime' else 2)), \
+                     mock.patch.object(upstream.os,'access',return_value=predicate!='executable'):
+                    with self.assertRaisesRegex(Failure,'^mozilla-upstream-current-native-asset$'):
+                        upstream.verify_scope_assets(self.task,SimpleNamespace(started=1),macho,
+                                                     diagnostic=diagnostic)
+                self.assertEqual(diagnostic,{'schema':1,'status':'failed','checkedAssets':0,
+                    'failure':{'asset':'plugin-container','predicate':predicate},'inspection':None})
+                self.assertEqual(upstream.asset_precondition_evidence(diagnostic),diagnostic)
+                macho.assert_not_called()
+
+    def test_native_asset_precondition_stale_helper_is_rejected_without_touching_mtime(self):
+        import os
+        from types import SimpleNamespace
+        self.scope_assets()
+        path=self.task/'obj/_tests/xpcshell'/upstream.SCOPE/'TestBlockingProcess'
+        os.utime(path,(0,0));diagnostic={};macho=mock.Mock(return_value={'uuid':'a'*32})
+        with self.assertRaisesRegex(Failure,'mozilla-upstream-current-native-asset'):
+            upstream.verify_scope_assets(self.task,SimpleNamespace(started=1),macho,diagnostic=diagnostic)
+        self.assertEqual(diagnostic,{'schema':1,'status':'failed','checkedAssets':2,
+            'failure':{'asset':'TestBlockingProcess','predicate':'current-mtime'},'inspection':None})
+        self.assertEqual(path.stat().st_mtime,0)
+        self.assertEqual(macho.call_count,2)
+
+    def test_native_asset_inspection_error_remains_unavailable_and_preserves_exception(self):
+        from types import SimpleNamespace
+        self.scope_assets();diagnostic={};error=PermissionError('PRIVATE_PATH')
+        with mock.patch.object(Path,'is_file',side_effect=error):
+            with self.assertRaises(PermissionError) as caught:
+                upstream.verify_scope_assets(self.task,SimpleNamespace(started=1),mock.Mock(),
+                                             diagnostic=diagnostic)
+        self.assertIs(caught.exception,error)
+        self.assertEqual(diagnostic['status'],'unavailable')
+        self.assertEqual(diagnostic['checkedAssets'],0)
+        self.assertIsNone(diagnostic['failure'])
+        self.assertEqual(diagnostic['inspection'],{'asset':'plugin-container','predicate':'file'})
+        self.assertNotIn('PRIVATE_PATH',json.dumps(upstream.asset_precondition_evidence(diagnostic)))
+
+    def test_native_asset_projection_rejects_private_or_inconsistent_records(self):
+        base={'schema':1,'status':'failed','checkedAssets':0,
+              'failure':{'asset':'plugin-container','predicate':'current-mtime'},'inspection':None}
+        unknown={'schema':1,'status':'unavailable','checkedAssets':None,'failure':None,'inspection':None}
+        for change in (lambda d:d.update(schema=True),lambda d:d.update(checkedAssets=True),
+                       lambda d:d.update(checkedAssets=6),lambda d:d.update(status='passed'),
+                       lambda d:d.update(path='PRIVATE'),lambda d:d['failure'].update(asset='/PRIVATE'),
+                       lambda d:d['failure'].update(predicate='PRIVATE'),
+                       lambda d:d['failure'].update(message='PRIVATE')):
+            value=copy.deepcopy(base);change(value)
+            self.assertEqual(upstream.asset_precondition_evidence(value),unknown)
+        self.assertEqual(upstream.asset_precondition_evidence(None),unknown)
 
     def test_typelib_gate_uses_actual_compiled_input_without_legacy_unit_copy(self):
         value=self.scope_assets()

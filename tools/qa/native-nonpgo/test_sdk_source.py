@@ -14,6 +14,17 @@ import sdk_source as sdk
 from qa_core import Failure
 
 
+# Independently recorded normal API origins, not loader-derived expectations.
+KNOWN_SDK_ORIGINS = {
+    12182302735: {'artifact': 12182302735, 'run': 39244172146,
+                  'producerJob': 118032017226,
+                  'producerName': 'Mac build [PGO] / download-macos-sdk'},
+    12225585543: {'artifact': 12225585543, 'run': 39332628358,
+                  'producerJob': 118334374715,
+                  'producerName': 'Mac build / download-macos-sdk'},
+}
+
+
 class SDKSourceTests(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory(prefix='floorp-sdk-source-')
@@ -27,6 +38,11 @@ class SDKSourceTests(unittest.TestCase):
         self.source_path.write_bytes(self.source_raw)
         self.plan = json.loads(self.plan_raw)
         self.config = json.loads(self.source_raw)
+        self.expected_origin = KNOWN_SDK_ORIGINS[self.config['pin']['artifact']]
+        self.assertEqual({'artifact': self.config['pin']['artifact'],
+                          'run': self.config['pin']['run'],
+                          'producerJob': self.config['producerJob'],
+                          'producerName': sdk.PRODUCER_NAME}, self.expected_origin)
 
     def alternate(self):
         return sdk.load_sdk_source(self.plan_path, self.source_path)
@@ -88,8 +104,8 @@ class SDKSourceTests(unittest.TestCase):
         expected.update(self.config['pin'])
         self.assertEqual(spec['pin'], expected)
         self.assertEqual(spec['runtimeRef'], sdk.RUNTIME_REF)
-        self.assertEqual(spec['producerJob'],118032017226)
-        self.assertEqual(spec['producerName'], 'Mac build [PGO] / download-macos-sdk')
+        self.assertEqual(spec['producerJob'], self.expected_origin['producerJob'])
+        self.assertEqual(spec['producerName'], self.expected_origin['producerName'])
         self.assertEqual(spec['sourceSHA256'],hashlib.sha256(self.source_raw).hexdigest())
         self.assertEqual(spec['baselinePlanSHA256'],sdk.BASELINE_PLAN_SHA256)
         self.assertEqual(spec['qualification'],sdk.QUALIFICATION)
@@ -99,7 +115,7 @@ class SDKSourceTests(unittest.TestCase):
         self.assertEqual(self.plan_path.read_bytes(), self.plan_raw)
         spec['pin']['run'] = 1
         spec['uncompressedTar']['bytes'] = 1
-        self.assertEqual(self.alternate()['pin']['run'],39244172146)
+        self.assertEqual(self.alternate()['pin']['run'], self.expected_origin['run'])
         self.assertEqual(sdk.UNCOMPRESSED_TAR['bytes'],760518144)
 
     def test_source_schema_key_allowlist_and_bool_schema_are_strict(self):
@@ -111,7 +127,7 @@ class SDKSourceTests(unittest.TestCase):
             self.assert_fixed_failure('shape',self.alternate)
 
     def test_producer_name_is_internal_trusted_spec_and_never_a_json_override(self):
-        self.assertEqual(sdk.PRODUCER_NAME, 'Mac build [PGO] / download-macos-sdk')
+        self.assertEqual(sdk.PRODUCER_NAME, self.expected_origin['producerName'])
         for name in ('Mac build [PGO] / download-macos-sdk', 'Mac build / download-macos-sdk', True, None):
             self.source({**self.config, 'producerName': name})
             self.assert_fixed_failure('shape', self.alternate)
@@ -278,6 +294,25 @@ class SDKSourceTests(unittest.TestCase):
         self.assertIsNot(result,value)
         result['uncompressedTar']['bytes']=1
         self.assertEqual((spec,value,dict(os.environ)),snapshot)
+
+    def test_optional_acquisition_deadline_rejects_invalid_values_before_open(self):
+        path,spec=self.compressed_fixture()
+        for value in (True,'PRIVATE-SENTINEL',float('nan'),float('inf'),0):
+            with self.subTest(kind=type(value).__name__), mock.patch.object(sdk.os,'open') as opened:
+                with self.assertRaisesRegex(Failure,'^download-deadline$'):
+                    sdk.verify_uncompressed_tar(path,spec,deadline=value)
+                opened.assert_not_called()
+
+    def test_acquisition_deadline_checks_after_complete_raw_stream(self):
+        path,spec=self.compressed_fixture()
+        with mock.patch.object(sdk.time,'monotonic',side_effect=[0,0,10]):
+            with self.assertRaisesRegex(Failure,'^download-deadline$'):
+                sdk.verify_uncompressed_tar(path,spec,deadline=10)
+
+    def test_local_verification_has_no_acquisition_or_expiry_clock(self):
+        path,spec=self.compressed_fixture()
+        with mock.patch.object(sdk.time,'monotonic',side_effect=AssertionError('unexpected-acquisition-clock')):
+            self.assertEqual(sdk.verify_uncompressed_tar(path,spec),spec['uncompressedTar'])
 
 
 if __name__=='__main__':

@@ -1665,8 +1665,9 @@ class SDKGuards(unittest.TestCase):
             with self.assertRaisesRegex(Failure, 'download-deadline'):
                 self.fetch()
         self.assertFalse((self.root / 'sdk-download/receipt.json').exists())
-        (self.root / 'sdk-download/sdk.zip').unlink()
-        (self.root / 'sdk-download').rmdir()
+        # The shared acquisition clock now rejects before any API or output,
+        # rather than creating a ZIP before discovering the old payload limit.
+        self.assertFalse((self.root / 'sdk-download').exists())
         self.download_opener.open.side_effect = lambda *_args, **_kwargs: io.BytesIO(b'x' * len(self.zip_bytes))
         with self.assertRaisesRegex(Failure, 'download-hash-mismatch'):
             self.fetch()
