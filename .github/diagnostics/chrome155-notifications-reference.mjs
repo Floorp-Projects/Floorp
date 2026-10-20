@@ -248,9 +248,19 @@ try {
       throw Error("Owned Chrome exited before DevToolsActivePort");
     }
     if (!existsSync(portFile)) return false;
-    const [portText, path] = readFileSync(portFile, "utf8").trim().split(
-      /\r?\n/,
-    );
+    let portContents;
+    try {
+      portContents = readFileSync(portFile, "utf8");
+    } catch (error) {
+      // Chrome briefly owns this startup file exclusively on Windows.
+      // Retry only that observed sharing race within wait's original deadline.
+      if (
+        process.platform === "win32" && error instanceof Error &&
+        "code" in error && error.code === "EBUSY"
+      ) return false;
+      throw error;
+    }
+    const [portText, path] = portContents.trim().split(/\r?\n/);
     if (
       !/^\d+$/.test(portText) || Number(portText) < 1 ||
       Number(portText) > 65535 ||

@@ -36,7 +36,7 @@ jobs:
         run: >-
           python .github/diagnostics/run-windows-chrome155-notifications.py
           --output chrome155-notification-output --application chrome155-portable-application
-          --vendor chrome155-official-vendor
+          --vendor chrome155-official-vendor --geometry-case maximized
       - name: Retain real public rows, OS and UI observations, sources and full owned profiles
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

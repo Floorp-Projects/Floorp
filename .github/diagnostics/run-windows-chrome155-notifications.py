@@ -327,9 +327,10 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
         save(out/'official-executable-binding.json',executable_binding)
     authorization={'chrome':record(chrome),'signature':signature,'version':VERSION,'revision':REVISION,'distribution':distribution,'distributionType':distribution_type,'archive':receipt,'executableBinding':executable_binding,'nativeToastReadinessAssumed':False}
     save(out/'authorization.json',authorization)
-    summary={'scope':'Actual Windows Chrome DOC public observation only; zero qualification credit','producerFiles':producers,'authorization':authorization,'nativeToastReadinessAssumed':False,'installedDiscovery':discovered,'cases':[],'observationCompleted':False}
+    requested_cases=[args.geometry_case] if args.geometry_case else ['normal','maximized']
+    summary={'requestedGeometryCases':requested_cases,'scope':'Actual Windows Chrome DOC public observation only; zero qualification credit','producerFiles':producers,'authorization':authorization,'nativeToastReadinessAssumed':False,'installedDiscovery':discovered,'cases':[],'observationCompleted':False}
     save(out/'summary.json',summary)
-    for geometry in ['normal','maximized']:
+    for geometry in requested_cases:
         case=out/'cases'/geometry;case.parent.mkdir(exist_ok=True)
         command=['node',HERE/'chrome155-notifications-reference.mjs','--chrome',chrome,'--output',case,'--geometry',geometry,'--python',sys.executable,'--observer',Path(__file__).resolve(),'--authorization',out/'authorization.json']
         owned=old.bounded_windows(command,HERE,environment,out/('owned-'+geometry),seconds=300)
@@ -340,7 +341,7 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
     summary['applicationUnchanged']=before==after
     for row in producers:
         if sha(Path(row['path']))!=row['sha256']:raise RuntimeError('Reference source changed during observation')
-    summary['observationCompleted']=len(summary['cases'])==2 and summary['applicationUnchanged'] and all(lifecycle(r['owned']) and r['result']['observationCompleted'] for r in summary['cases'])
+    summary['observationCompleted']=len(summary['cases'])==len(requested_cases) and [r['geometry'] for r in summary['cases']]==requested_cases and summary['applicationUnchanged'] and all(lifecycle(r['owned']) and r['result']['observationCompleted'] for r in summary['cases'])
     summary['vendorPayloadUploaded']=False
     summary['limitation']='Public calls, actual UI/text pixels and native-ready histograms are separate observations. No native toast or Floorp compatibility PASS follows solely from completion.'
     save(out/'summary.json',summary)
@@ -349,6 +350,7 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--geometry-case',choices=['normal','maximized'],help='Run only the explicitly named fresh profile; omitted retains the original two-case matrix')
     parser.add_argument('--snapshot',action='store_true');parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--expected-message',default='');parser.add_argument('--chrome-pid',type=int,default=0);parser.add_argument('--title',default='Floorp authored native programmatic close');parser.add_argument('--ui-wait-ms',type=int,default=0)
     parser.add_argument('--application',type=Path);parser.add_argument('--vendor',type=Path)
