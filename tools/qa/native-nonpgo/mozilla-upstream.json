@@ -1,0 +1,344 @@
+{
+  "contract": "current-source-upstream-xpcom-manifest-v1",
+  "source": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "scope": "xpcom/tests/unit",
+  "tests": [
+    "test_KeyedUUIDMapper.js",
+    "test_binarystream_systemprincipal.js",
+    "test_bug121341.js",
+    "test_bug1434856.js",
+    "test_bug325418.js",
+    "test_bug332389.js",
+    "test_bug333505.js",
+    "test_bug364285-1.js",
+    "test_bug374754.js",
+    "test_bug476919.js",
+    "test_bug478086.js",
+    "test_bug745466.js",
+    "test_create_single.js",
+    "test_debugger_malloc_size_of.js",
+    "test_error_iserror.js",
+    "test_file_createUnique.js",
+    "test_file_equality.js",
+    "test_file_renameTo.js",
+    "test_getTimers.js",
+    "test_hidden_files.js",
+    "test_home.js",
+    "test_iniParser.js",
+    "test_invalidGrayBits.js",
+    "test_ioutil.js",
+    "test_localfile.js",
+    "test_logFromPreference.js",
+    "test_mac_bundle.js",
+    "test_mac_xattrs.js",
+    "test_notxpcom_scriptable.js",
+    "test_nsIMutableArray.js",
+    "test_nsIProcess.js",
+    "test_nsIProcess_stress.js",
+    "test_pipe.js",
+    "test_process_directives.js",
+    "test_process_directives_child.js",
+    "test_seek_multiplex.js",
+    "test_storagestream.js",
+    "test_streams.js",
+    "test_stringstream.js",
+    "test_symlinks.js",
+    "test_systemInfo.js",
+    "test_versioncomparator.js",
+    "test_windows_cmdline_file.js",
+    "test_windows_onedrive_registry.js",
+    "test_windows_registry.js"
+  ],
+  "files": [
+    {
+      "path": "xpcom/tests/unit/xpcshell.toml",
+      "bytes": 2803,
+      "sha256": "5d7bb1d6235fa018913145227dd79e19aa828f11e26d70c804483f609ed2e00f"
+    },
+    {
+      "path": "xpcom/tests/unit/head_xpcom.js",
+      "bytes": 678,
+      "sha256": "7fbb66d1c184def357c4d7114aedc5d946f0440398891ce796510c25a65f6e95"
+    },
+    {
+      "path": "xpcom/tests/NotXPCOMTest.idl",
+      "bytes": 510,
+      "sha256": "0736decdffcb67c9e5f4afbcdea2c0a92a1a4b4eabf09a6b216bad33bca72646"
+    },
+    {
+      "path": "xpcom/tests/unit/test_KeyedUUIDMapper.js",
+      "bytes": 9113,
+      "sha256": "7f20d69cf2f51b6fe7dbda8e2a15c7d790c4d1ce494b2a7597317a1a4a80800e"
+    },
+    {
+      "path": "xpcom/tests/unit/test_binarystream_systemprincipal.js",
+      "bytes": 1714,
+      "sha256": "46522b46afa1de8fbdfedac1fcbb78d4b64bef63934ac8dcd09d4fbcdc80a8f3"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug121341.js",
+      "bytes": 1775,
+      "sha256": "98207859f29c665410bc540cf877e11497a184e6a22539b40a7dad8aa5f3bd5a"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug1434856.js",
+      "bytes": 740,
+      "sha256": "1987d822c8416ccf00028d3a16e5db4211a93c804a39b7668799d27a5c403bbe"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug325418.js",
+      "bytes": 1613,
+      "sha256": "6e556b70d0256ddb4e7a32e4db2eea691b71d80b85a5d83ddbe05b79d67f5173"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug332389.js",
+      "bytes": 253,
+      "sha256": "fc50f8329318aef585cd0b597deca42ba98365a08af5580f320a8655e1206dfc"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug333505.js",
+      "bytes": 212,
+      "sha256": "98bfe927e76868a1f087c4a4fdaeb87d264fdbb6ccd51610e15746ef810199cc"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug364285-1.js",
+      "bytes": 1087,
+      "sha256": "378988e8d2d8616d4107aa36698663fe548ed1a9e00e19e9ecfb9f367cef057b"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug374754.js",
+      "bytes": 1470,
+      "sha256": "cebbaef563e8cfb2a88176ee46dd1a9fc3c5449950f8748deedf53c13927f5db"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug476919.js",
+      "bytes": 762,
+      "sha256": "bf0474be8511bb99a1e35f3b6b2bbd9f385d6e32b9949ce4b2845ee47487e71d"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug478086.js",
+      "bytes": 879,
+      "sha256": "7695bb6170fb4905bc0da78ee295a7565bb2d53b42c762ccf280404b451a9d92"
+    },
+    {
+      "path": "xpcom/tests/unit/test_bug745466.js",
+      "bytes": 194,
+      "sha256": "7419b70be37a9f742e7d04594132cd885bd5f474c5fa57d281ea126f287f48b7"
+    },
+    {
+      "path": "xpcom/tests/unit/test_create_single.js",
+      "bytes": 1088,
+      "sha256": "1ac0a67441b99b82158b28085e54cd3381a6a4e2dbfc9c6d5c9394eba7fbd9d0"
+    },
+    {
+      "path": "xpcom/tests/unit/test_debugger_malloc_size_of.js",
+      "bytes": 951,
+      "sha256": "0629bba9aa587fcc69a66c68b956190415a75cf5b5bc42a9f237ce9810a64184"
+    },
+    {
+      "path": "xpcom/tests/unit/test_error_iserror.js",
+      "bytes": 459,
+      "sha256": "ea9856e5e652e31d652cc857eff07cade6c1ced7eb436dc0f5da6bdf9265bfbd"
+    },
+    {
+      "path": "xpcom/tests/unit/test_file_createUnique.js",
+      "bytes": 829,
+      "sha256": "8981101942f7725de666c8a5d0c6a4581f165416d3e25562bbfc50745a3d4dfc"
+    },
+    {
+      "path": "xpcom/tests/unit/test_file_equality.js",
+      "bytes": 1149,
+      "sha256": "235fc37b14b8c89df467aeab249b86dba8b39c9ac8ad9c8fde64fb29c7ff8018"
+    },
+    {
+      "path": "xpcom/tests/unit/test_file_renameTo.js",
+      "bytes": 1660,
+      "sha256": "26b6b7176ebe099753007b79dbcc233eee4012633c55294bc1c5d574bf64d98c"
+    },
+    {
+      "path": "xpcom/tests/unit/test_getTimers.js",
+      "bytes": 5076,
+      "sha256": "4601e339d2ccb89421e3ae25df4f8b532c36c4f8e0e7f641f22a1ca2773dc1e5"
+    },
+    {
+      "path": "xpcom/tests/unit/test_hidden_files.js",
+      "bytes": 645,
+      "sha256": "cd98f326f5a67bd0a378c5b172b760f53ee72d9918142b29ee7b2993bac9a107"
+    },
+    {
+      "path": "xpcom/tests/unit/test_home.js",
+      "bytes": 498,
+      "sha256": "b16b2eb126d4071a4b1dec92450e420f3e0791c08b765f2eb92a202964b661a0"
+    },
+    {
+      "path": "xpcom/tests/unit/test_iniParser.js",
+      "bytes": 14819,
+      "sha256": "946e5b2d0d4d79a272919b3eeca23f3dc458416c3ff884d6bc680041e3969c00"
+    },
+    {
+      "path": "xpcom/tests/unit/test_invalidGrayBits.js",
+      "bytes": 680,
+      "sha256": "af7c786454687a1f18f958f3e3bf9ec8d6303d73690375b3ae6d552d4d9cb17d"
+    },
+    {
+      "path": "xpcom/tests/unit/test_ioutil.js",
+      "bytes": 881,
+      "sha256": "52f50f98e773776c0ad5da1e5ad6d0789ea4e6873da600c425a943e96b709404"
+    },
+    {
+      "path": "xpcom/tests/unit/test_localfile.js",
+      "bytes": 9985,
+      "sha256": "fdbf39dac171843c5a8c331da4589467e21eabb5bd04fc4364b7bd5cf7105e9c"
+    },
+    {
+      "path": "xpcom/tests/unit/test_logFromPreference.js",
+      "bytes": 1552,
+      "sha256": "81f6cef3ade2b227a12214b43178de51b4559139d3e13f55494c895f529abd57"
+    },
+    {
+      "path": "xpcom/tests/unit/test_mac_bundle.js",
+      "bytes": 622,
+      "sha256": "364e73628a17c351c942aa36ef1ac63765eaa81d85af6606a621987b7c3647b8"
+    },
+    {
+      "path": "xpcom/tests/unit/test_mac_xattrs.js",
+      "bytes": 2626,
+      "sha256": "fcaa4450477e2aecbc9683fb55dc80716f9d9ef18d19cf882cace60ef69d9287"
+    },
+    {
+      "path": "xpcom/tests/unit/test_notxpcom_scriptable.js",
+      "bytes": 1639,
+      "sha256": "12305a6d4f4519f0344b9ca33d971c263a040e90ddb8a3c41cbc8304df2f85fb"
+    },
+    {
+      "path": "xpcom/tests/unit/test_nsIMutableArray.js",
+      "bytes": 3892,
+      "sha256": "14a828e5c0f54aa0561c5995da9e6b3948e99f6f2117a13ef6bb620b9638ff08"
+    },
+    {
+      "path": "xpcom/tests/unit/test_nsIProcess.js",
+      "bytes": 4874,
+      "sha256": "a859028902aa791e79a5d1b34783aa4a2770fb68be87fedc00454067881f1cc6"
+    },
+    {
+      "path": "xpcom/tests/unit/test_nsIProcess_stress.js",
+      "bytes": 626,
+      "sha256": "4f6de1ab7cae9e8842b2efe0b805419c5217d7b4f66ec2437c73abbe53541a83"
+    },
+    {
+      "path": "xpcom/tests/unit/test_pipe.js",
+      "bytes": 1926,
+      "sha256": "abde275d3736c8b6ff7162d16cbefeabbd9b24927ee08efcd5a7ceeff5f06ec3"
+    },
+    {
+      "path": "xpcom/tests/unit/test_process_directives.js",
+      "bytes": 528,
+      "sha256": "4b6a8d7b7bd9e3812d9c6f3a43f6e04bdce2f1a72510345b34e057e1a1eae684"
+    },
+    {
+      "path": "xpcom/tests/unit/test_process_directives_child.js",
+      "bytes": 75,
+      "sha256": "07960981f501d5e8872f61cce08e385c8c0d7d9e4a81f10d438e430d70776454"
+    },
+    {
+      "path": "xpcom/tests/unit/test_seek_multiplex.js",
+      "bytes": 5692,
+      "sha256": "d9bb61f678205ff57ebbf516a8046df24372506dfa90c3eb38f531817f763c7e"
+    },
+    {
+      "path": "xpcom/tests/unit/test_storagestream.js",
+      "bytes": 3693,
+      "sha256": "73bd02218c8926052212ccffb4ee8b1989b880d2b35eb9799cc5f66021cadef5"
+    },
+    {
+      "path": "xpcom/tests/unit/test_streams.js",
+      "bytes": 4803,
+      "sha256": "cab26ba3bede975961bebcd264ef03abf9251b7bacbd7752f5d15147c195ebae"
+    },
+    {
+      "path": "xpcom/tests/unit/test_stringstream.js",
+      "bytes": 607,
+      "sha256": "141838a93d78c64da16d98d0f24253f24e53f530f5186c21e2090a5d1f31a3e5"
+    },
+    {
+      "path": "xpcom/tests/unit/test_symlinks.js",
+      "bytes": 3664,
+      "sha256": "97b74bc43436aed0b600be3869a453db8486ad1f628474eed4a9e178860b2869"
+    },
+    {
+      "path": "xpcom/tests/unit/test_systemInfo.js",
+      "bytes": 2026,
+      "sha256": "9ba911a75ccf07991e4b0323567b13b85b99a3a13418359e46e023891f5cdc57"
+    },
+    {
+      "path": "xpcom/tests/unit/test_versioncomparator.js",
+      "bytes": 1350,
+      "sha256": "6b54315225792c6428d908b02fa73d1b73d8bef8a61310d51862f30b74d582dd"
+    },
+    {
+      "path": "xpcom/tests/unit/test_windows_cmdline_file.js",
+      "bytes": 896,
+      "sha256": "220f4080493eff77f456eddd376abf1832a4023814a2972974e4d0ec9e6a3c38"
+    },
+    {
+      "path": "xpcom/tests/unit/test_windows_onedrive_registry.js",
+      "bytes": 5110,
+      "sha256": "ba699be2fe1f38ae22df418613d6ca749646864109e7e398503602e8ddbf6280"
+    },
+    {
+      "path": "xpcom/tests/unit/test_windows_registry.js",
+      "bytes": 7922,
+      "sha256": "800e869468c61f2ca425407062ae48687b418ad23dc6fac7fe0f7792e21b63e2"
+    },
+    {
+      "path": "xpcom/tests/TestArguments.cpp",
+      "bytes": 521,
+      "sha256": "71e5a371652c54b0d6eede1b1e50c7eec222330639f35ee7ef1163e280416cb6"
+    },
+    {
+      "path": "xpcom/tests/TestBlockingProcess.cpp",
+      "bytes": 125,
+      "sha256": "3899f7d7a56fd37bcb03e4be0a984bb1dd8399d7b26730576f8f867040e0220c"
+    },
+    {
+      "path": "xpcom/tests/TestPRIntN.cpp",
+      "bytes": 869,
+      "sha256": "c9a9405a4be79a8c2798c5c7801a6bfaac373ced6001a2ef2d471db3ae205292"
+    },
+    {
+      "path": "xpcom/tests/TestQuickReturn.cpp",
+      "bytes": 79,
+      "sha256": "c6c73e8a985c9d99bc1d4c27f316d3db13ee0e4c88bd85b4f458a60466a86c0b"
+    },
+    {
+      "path": "xpcom/tests/TestUnicodeArguments.cpp",
+      "bytes": 1792,
+      "sha256": "dfa148ab3ac9b3414d48f933564c8ae2c33deed552ecea8fce6713b4cd5c1578"
+    },
+    {
+      "path": "testing/xpcshell/runxpcshelltests.py",
+      "bytes": 114438,
+      "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad"
+    },
+    {
+      "path": "testing/xpcshell/mach_commands.py",
+      "bytes": 12047,
+      "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489"
+    },
+    {
+      "path": "testing/xpcshell/xpcshellcommandline.py",
+      "bytes": 13287,
+      "sha256": "434bdc75e9abbd442b4efa99756a3e26c4abeadcf862639bf4f578b945130853"
+    },
+    {
+      "path": "ipc/app/moz.build",
+      "bytes": 4824,
+      "sha256": "8422c39f5f31b6503f6bbfee38b034f47732aed080f1bb84e3fe9c22d012fe16"
+    },
+    {
+      "path": "ipc/glue/GeckoChildProcessHost.cpp",
+      "bytes": 70712,
+      "sha256": "177743335bbd0cfdc0cfde2dbe502bf0596fc213f463c61b865053e917f38a0d"
+    }
+  ]
+}

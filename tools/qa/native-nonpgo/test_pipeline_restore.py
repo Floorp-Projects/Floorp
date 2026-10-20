@@ -83,7 +83,7 @@ class RestoreOnlyFlow(unittest.TestCase):
 
     def invoke(self, *, restore_only=True, mozilla_only=False, sdk_source=None,
                shared_deadline=False, checkpoint_role='consumer', mozilla_first=False,
-               mozilla_targeted=False):
+               mozilla_targeted=False, mozilla_upstream=False):
         argv = ['pipeline.py', '--source', str(self.source), '--fixture', str(self.root / 'fixture'),
                 '--harness', str(self.root / 'harness'), '--task', str(self.task),
                 '--checkpoint-role', checkpoint_role]
@@ -97,6 +97,8 @@ class RestoreOnlyFlow(unittest.TestCase):
             argv += ['--mozilla-first']
         if mozilla_targeted:
             argv += ['--mozilla-targeted']
+        if mozilla_upstream:
+            argv += ['--mozilla-upstream-xpcom']
         if sdk_source is not None:
             argv += ['--sdk-source', str(sdk_source)]
         if shared_deadline:
@@ -117,6 +119,57 @@ class RestoreOnlyFlow(unittest.TestCase):
             code = pipeline.main()
             self.runner_constructor = constructor
         return code, json.loads((self.task / 'summary.json').read_text()), restored_config
+
+    def invoke_upstream(self, final_ok):
+        import mozilla_target_build as target
+        import mozilla_upstream as upstream
+        def build(source, task, runner, env, deadline, result):
+            for stage in target.STAGES:
+                self.run_stage(stage, [], source, env)
+            path=task/'obj/widget/cocoa/MacWebAppService.o'
+            path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'object')
+            result.update(status='built')
+        def prepare(source, task, runner, env, deadline, result):
+            self.assertEqual(deadline,345)
+            for stage in upstream.EXTRA_STAGES[:2]: self.run_stage(stage,[],source,env)
+            result.update(status='inventory-observed')
+        def child(source, task, runner, env, deadline):
+            self.assertEqual(deadline,345)
+            for stage in upstream.EXTRA_STAGES[2:]: self.run_stage(stage,[],source,env)
+        def scope(source, task, runner, env, deadline, result):
+            self.assertEqual(deadline,345)
+            result.update(status='passed')
+        with mock.patch.object(target,'run_build',side_effect=build), \
+                mock.patch.object(target,'verify_assets',return_value={}), \
+                mock.patch.object(target,'proof_complete',return_value=True), \
+                mock.patch.object(upstream,'prepare',side_effect=prepare), \
+                mock.patch.object(upstream,'child_and_resources',side_effect=child), \
+                mock.patch.object(upstream,'verify_scope_assets',return_value={}), \
+                mock.patch.object(upstream,'run_scope',side_effect=scope), \
+                mock.patch.object(upstream,'proof_complete',side_effect=[True,final_ok]) as proof:
+            result=self.invoke(restore_only=False,mozilla_targeted=True,mozilla_upstream=True,shared_deadline=True)
+        self.assertEqual(proof.call_count,2)
+        return result
+
+    def test_upstream_complete_scope_keeps_original_route_and_extra_stage_receipts(self):
+        import mozilla_upstream as upstream
+        code,report,_=self.invoke_upstream(True)
+        self.assertEqual(code,0)
+        self.assertEqual(report['upstreamQualification'],upstream.CONTRACT)
+        self.assertTrue(set(upstream.EXTRA_STAGES).issubset(report['checkpointStageLogs']))
+        self.assertEqual(report['mozillaUpstream']['status'],'passed')
+        self.assertFalse(report['fullHostQualification'])
+        self.assertEqual(report['nativeAuthentication'],'NOT_TESTED')
+
+    def test_upstream_late_incomplete_proof_cannot_keep_ready(self):
+        code,report,_=self.invoke_upstream(False)
+        self.assertEqual(code,1)
+        self.assertEqual(report['status'],'failed')
+        self.assertEqual(report['firstFailure']['code'],'mozilla-target-proof-incomplete')
+
+    def test_upstream_flag_requires_targeted_route(self):
+        with self.assertRaisesRegex(Failure,'mozilla-upstream-targeted-role'):
+            self.invoke(restore_only=False,mozilla_upstream=True)
 
     def test_restore_only_verifies_actual_config_then_stops_before_full_build(self):
         code, report, restored = self.invoke()

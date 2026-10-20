@@ -1,0 +1,351 @@
+{
+  "schema": 1,
+  "review": "RECOVERY58_INDEPENDENT_IMPLEMENTATION_REVIEW",
+  "decision": "CODE_CLEAR_FOR_FROZEN_UPSTREAM_XPCOM_CANDIDATE",
+  "openP1": 0,
+  "openP2": 0,
+  "scope": "Source implementation and bounded offline validation only. Calling workflow, immutable execution route, fresh origins and actual Mac eligibility/execution remain separate reviews.",
+  "baseline": {
+    "fixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+    "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "pipeline": {
+      "path": "tools/qa/native-nonpgo/pipeline.py",
+      "bytes": 52205,
+      "sha256": "e0f750a8905ee49f32ed0cb4f5b78b3b56e6c3ac122ce85e780856db06368eb5"
+    },
+    "comparison": "The baseline pipeline was independently read from the immutable provider fixture during Recovery57 terminal review. Only main and nested-monitor validation_outcome definitions change; helper preparation, source/configuration validation, Mach-O reading and existing smoke proof definitions remain AST-identical."
+  },
+  "bindings": {
+    "sourceFreeze": {
+      "path": "floorp-recovery58-source-freeze.json",
+      "bytes": 787,
+      "sha256": "ac12031dc5119bddfdafde82c29e31986b229c69715f92c3548e822bf5f7085c"
+    },
+    "sourceFiles": [
+      {
+        "path": "tools/qa/native-nonpgo/mozilla-upstream.json",
+        "bytes": 11397,
+        "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_upstream.py",
+        "bytes": 30175,
+        "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 54135,
+        "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_mozilla_upstream.py",
+        "bytes": 20954,
+        "sha256": "50351b4571f166b9c8037261978b36d197c44642f06eb5f0ee490eef5d610869"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 39291,
+        "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+      }
+    ],
+    "unchangedBaselinePlan": {
+      "path": "tools/qa/native-nonpgo/plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "independentFocusedResult": {
+      "path": "floorp-recovery58-independent-focused-post-xpidl-result.json",
+      "bytes": 924,
+      "sha256": "101da3cb08f76bff21f2e5176f403696a0543ed6031f811663ea48d904d11ed9"
+    },
+    "independentControlScript": {
+      "path": "floorp-recovery58-final-independent-controls.py",
+      "bytes": 6266,
+      "sha256": "79f6ce106cb989517a0f71e4c721c8b8ab1e211abb6f46670f54ff5160aa2d64"
+    },
+    "independentControlResult": {
+      "path": "floorp-recovery58-final-independent-controls-post-xpidl-result.json",
+      "bytes": 6070,
+      "sha256": "6d212c36730325e3f66899b054844ea6c0f7156ef8b226abdc013dea18e67ba0"
+    },
+    "independentSourcePinResult": {
+      "path": "floorp-recovery58-source-pin-independent-result.json",
+      "bytes": 11121,
+      "sha256": "ff75ae2384d0bd3ee54daf0b2f33818d446025bfb43c11e7433a8cb60faff49a"
+    },
+    "stockAPIPeerReview": {
+      "path": "recovery58-stock-api-peer-review",
+      "bytes": 5775,
+      "sha256": "7f7b9868ea1368f6d39ba7e5d8906a87b553dc8f3e8964402cfa1cb09f89f548"
+    },
+    "xpidlDependencyPeerReview": {
+      "path": "recovery58-xpidl-source-dependency-review",
+      "bytes": 6098,
+      "sha256": "bc2c82d3aa0d11f5d5e19c6b6c4a66af561dc875c50756981c35f7e50a3045bb"
+    },
+    "rootFinalFullSuiteResult": {
+      "path": "floorp-recovery58-final-bound-linux-full-result.json",
+      "bytes": 272,
+      "sha256": "c4b6b7effdb0e9d46ebfac4ac45550eee78c1463a869187a809fe6d559a51553"
+    },
+    "rootFinalFullSuitePrivateLog": {
+      "bytes": 149553,
+      "sha256": "be9f1a42150e7f7ce56118e147c9d9c681ba4bdf16a273a297665bfc666876a4"
+    },
+    "testPathNormalizationFocusedResult": {
+      "path": "floorp-recovery58-test-path-normalization-result.json",
+      "bytes": 594,
+      "sha256": "b995c70cef27142a4d7a0f7595bc22f1b0c4c1a88d447471e5198bf56e065f25"
+    },
+    "priorReviewBeforeTestOnlyRebind": {
+      "path": "floorp-recovery58-implementation-review-before-test-path-normalization.json",
+      "bytes": 15544,
+      "sha256": "3dc48e44796e2bf49676ca19e6d1e76c341ae7ddb81d556b9739d7bcc0931bc4"
+    }
+  },
+  "validation": {
+    "independentlyExecutedFocusedSuite": {
+      "tests": 65,
+      "passed": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "suite": [
+        "test_mozilla_upstream",
+        "test_pipeline_restore"
+      ],
+      "resourceWarningIsError": true,
+      "properQACwd": true,
+      "resultAndLogDigestRetained": true,
+      "testVersion": "before the one-line test temporary-directory canonicalization; production bytes identical to current freeze"
+    },
+    "independentlyExecutedBoundedControls": {
+      "passed": 64,
+      "failed": 0,
+      "coverage": [
+        "valid complete scope proof",
+        "strict bool/float/negative nested status rejection",
+        "unexpected ERROR/TIMEOUT and inconsistent lifecycle rejection",
+        "manifest SKIP separate from executed/PASS",
+        "known FAIL remains actual FAIL",
+        "legitimate subtest SKIP remains distinct",
+        "setup failure leaves counts unknown",
+        "primary preserved across writer and collection failure",
+        "unknown exception class/text excluded from returned result",
+        "nested monitor remains inconclusive"
+      ],
+      "sourceBytesStableAcrossExecution": true,
+      "realTestOrServerProcessesStarted": false,
+      "testVersion": "before the one-line test temporary-directory canonicalization; production bytes identical to current freeze"
+    },
+    "fixedRuntimePins": {
+      "declaredFiles": 58,
+      "all58MatchImmutableGitObjects": true,
+      "independentNormalProviderReadbacks": 5,
+      "providerReadbackHashesMatchDeclaredPins": true,
+      "mutableWorkingTreeUsedAsProof": false
+    },
+    "peerFixedStockASTControls": {
+      "reportedPassed": 8,
+      "reportedFailed": 0,
+      "independentlyReviewedControlDescriptionAndPrimarySource": true,
+      "notClaimedAsReviewerExecutedFullMachOrActualMac": true
+    },
+    "xpidlSourceReview": {
+      "peerFixedStockASTControlsPassed": 3,
+      "fixedSourceDependencyChainIndependentlyRead": true,
+      "newTwoAssetUnitControlsIncludedInIndependentFocusedSuite": true,
+      "MacCompiledInterfaceProofClaimed": false
+    },
+    "rootFullSuite": {
+      "tests": 780,
+      "passed": 763,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 57.687,
+      "resultAndPrivateLogHashIndependentlyChecked": true,
+      "fullSuiteExecutedByThisReviewer": false
+    },
+    "earlierMovingSourceObservationsUsedAsFinalValidation": false,
+    "testOnlyPathNormalization": {
+      "tests": 19,
+      "passed": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "independentlyExecuted": true,
+      "resourceWarningIsError": true,
+      "actualMacExecution": false
+    }
+  },
+  "resolvedFindings": [
+    {
+      "severity": "P1",
+      "code": "stock-manifest-string-api",
+      "status": "closed-before-final-review",
+      "origin": "peer stock API review",
+      "resolution": "Inventory omits explicit string --manifest so stock XPCShellRunner selects the checked generated global manifest. Directory filtering remains the ordinary stock testPaths input."
+    },
+    {
+      "severity": "P1",
+      "code": "stock-log-manager-none",
+      "status": "closed-before-final-review",
+      "origin": "peer stock API review",
+      "resolution": "The MozbuildObject receives a real LoggingManager before spawning the stock runner; enable/disable and global class restoration are protected."
+    },
+    {
+      "severity": "P1",
+      "code": "legacy-installed-unit-xpt-requirement",
+      "status": "closed-in-current-freeze",
+      "origin": "owner and peer fixed-source dependency review",
+      "resolution": "The obsolete manifest generated-files entry does not create a required installed unit/xpcomtest.xpt. The gate now reads the actual config/makefiles/xpidl/xpcomtest.xpt intermediate JSON, binds its two fixed interface names/UUIDs through the stable descriptor, and never creates or copies a dummy runtime file. Actual compiled Ci registration still requires the unchanged test_notxpcom_scriptable.js to pass."
+    },
+    {
+      "severity": "P2",
+      "code": "nested-upstream-failure-evidence",
+      "status": "closed-in-current-freeze",
+      "origin": "independent source review and owner fault controls",
+      "resolution": "Case evidence is attached before filesystem setup. Setup, launch, parsing and post-source binding are protected. Primary launch failure, collection failure and receipt-write failure remain separate; private errors/raw stage evidence do not replace returned safe evidence. Nested monitor observation is captured before projection and drives pipeline monitor-inconclusive."
+    },
+    {
+      "severity": "P2",
+      "code": "lifecycle-counter-forgery",
+      "status": "closed-in-current-freeze",
+      "origin": "independent concrete proof mutations",
+      "resolution": "Every nested status value is an exact nonnegative integer with an exact enum keyset. The complete test-end distribution equals PASS/known FAIL/SKIP expectations with all other statuses zero. Unexpected failure counters are zero, subtest sums match and total skips include separately retained subtest skips."
+    }
+  ],
+  "inventoryContract": {
+    "installedGlobalManifest": "stock configured object _tests/xpcshell/xpcshell.toml",
+    "globalPopulationIsActualMacEvidenceAlready": false,
+    "scope": "xpcom/tests/unit",
+    "sourceTestIds": 45,
+    "requiredActualScopeSelection": "Exactly the 45 fixed source IDs; no missing, duplicate or foreign ID may satisfy scope proof.",
+    "stockSelectionPreserved": [
+      "parser defaults",
+      "stock prefs construction",
+      "stock updateMozinfo",
+      "stock manifest normalization",
+      "stock default filters and strict expressions"
+    ],
+    "inventoryOnlyOverrides": [
+      "HTTP2 server startup",
+      "HTTP3 server startup",
+      "test class instantiation guard"
+    ],
+    "serversAndTestsStartedDuringInventoryRequired": 0,
+    "exitProof": "Dump SystemExit must be None or exact int0, with both suppressed hook events, no server handles and testCount exact zero. Ordinary return or missing/partial dump is rejected.",
+    "temporaryPrefs": "Stock object temp directory is retained and accurately labeled; no claim that stock removed a caller-owned object temp directory.",
+    "recordCountsAreUniqueFileCounts": false,
+    "globalRegisteredActiveEnabledDisabledAndUniqueCountersDistinct": true,
+    "listingProvesMissingNativeOrSupportAssetsReady": false
+  },
+  "selectionAndOutcomeContract": {
+    "execution": "stock mach xpcshell-test, directory scope, explicit built binary, sequential threads1, verbose and no automatic retry key",
+    "expectedStatusSource": "Actual fixed-source inventory output, not Linux fixture numbers or a predeclared Mac skip total.",
+    "selected45MeansExecuted45": false,
+    "PASS": "Only actual PASS test ends count as passed.",
+    "manifestSKIP": "Expected disabled records retain actual SKIP, count as selected/skipped and do not count as executed/PASS.",
+    "knownFAIL": "A complete expected FAIL remains actual FAIL and a separate expectedFailures count; it is not rewritten to PASS.",
+    "unknown": "Unreadable, malformed, partial, duplicate or mismatched evidence keeps counts null and fails qualification.",
+    "completeLifecycle": "All 45 selected IDs must be uniquely listed, started and ended once in one complete suite. Raw lifecycle, per-test status map and aggregate counts must agree.",
+    "unexpectedErrorCrashTimeoutOrNonzeroProcessPassAllowed": false,
+    "globalSuiteExecuted": false,
+    "actualMacSelectedEnabledSkippedPassedCounts": "NOT_TESTED",
+    "globalCoveragePercent": "NOT_ESTABLISHED"
+  },
+  "nativeAndResourcePreparation": {
+    "order": [
+      "build xpcom/tests/target",
+      "stock install_tests(force=True) during inventory",
+      "existing seven target/resource stages",
+      "build ipc/app/target",
+      "normal mach build -j3 faster",
+      "verify additional current assets",
+      "existing three smoke controls",
+      "full selected upstream scope",
+      "repeat additional asset identity checks",
+      "final proof"
+    ],
+    "fiveFixedNativeHelpers": [
+      "TestArguments",
+      "TestBlockingProcess",
+      "TestPRIntN",
+      "TestQuickReturn",
+      "TestUnicodeArguments"
+    ],
+    "additionalIPCChild": "configured plugin-container bundle executable",
+    "generatedInterfaceIntermediate": "object config/makefiles/xpidl/xpcomtest.xpt JSON module input",
+    "legacyInstalledUnitXPTRequired": false,
+    "dummyOrCopiedUnitXPTCreated": false,
+    "nativeChecks": "Owned executable, resolved inside object root, fresh current-job mtime, x86_64 Mach-O executable identity, hash/sections/UUID. The real XPIDL intermediate is read through the owned stable descriptor reader and its exact two interface name/UUID pairs are required.",
+    "XpidlIntermediateAloneProvesCompiledInterfaceRegistration": false,
+    "compiledInterfaceRuntimeProof": "The unchanged test_notxpcom_scriptable.js is included in the exact 45-record real harness selection and must satisfy its expected result.",
+    "preAndPostAssetIdentityEqualityRequired": true,
+    "sourceOnlyBuildDeclarationOrInventoryIsActualExecutableProof": false,
+    "actualMacLinkInstallAndRuntimePrerequisitesValidated": false
+  },
+  "pipelineAndSafety": {
+    "optInFlag": "--mozilla-upstream-xpcom",
+    "requiresExistingTargetedConsumerReplayAndSharedProfile": true,
+    "defaultRecovery57RouteUnchangedWhenFlagAbsent": true,
+    "existingSevenTargetsAndThreeControlsRetained": true,
+    "extraMainStages": 4,
+    "extraCaseHasSeparateOwnedRunner": true,
+    "sameObjectTreeAndOriginalJobMonotonicOrigin": true,
+    "sharedAbsoluteWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "RSSDiskStallLimitsAndUnknownStopChanged": false,
+    "childFailureClearedToClaimPass": false,
+    "allMainStageNaturalExitExactReapAndGoneRequiredByFinalProof": true,
+    "upstreamCaseNaturalExit0ExactReapGroupGoneCleanupAndMonitorAbsenceRequired": true,
+    "lateProofOrDeadlineFailureMayKeepReady": false,
+    "sourcePlanSDKCheckpointGuardsRelaxed": false,
+    "newArtifactOrStorageMechanismAdded": false,
+    "HTTP2": "Stock assume-node switch remains the preexisting deliberate no-HTTP2 path; this scope does not qualify HTTP2 behavior.",
+    "HTTP3": "Stock startup remains in the monitored case process group for actual execution; only listing suppresses it."
+  },
+  "privacyAndEvidence": {
+    "inventoryRawAbsolutePaths": "Private dump only; returned global inventory contains numeric aggregates and hashes.",
+    "publicTestIds": "Only the fixed 45 source-relative scope IDs and fixed PASS/FAIL/SKIP enums.",
+    "returnedExceptions": "Fixed allowlisted code or class; arbitrary exception text remains private.",
+    "privateRawStagesErrorsNotReturned": true,
+    "recoveredDiagnosticsRemainSeparateFromFatalMonitorStop": true,
+    "monitorFailureDoesNotEstablishProductFailure": true,
+    "publicReviewContainsMachinePathsPIDsTagsRawEnvironmentSignedURLsOrConversation": false
+  },
+  "remainingExecutionConditions": [
+    "Calling workflow and immutable route are not covered by this code-only result and require their separate typed gate/pin review.",
+    "Actual Mac installed global population, scope enabled/SKIP status, native helper/IPC installation and 45-record complete execution remain untested until the proposed real job runs.",
+    "Fresh normal SDK/checkpoint origin and expiry checks, nonoverlap and ordinary owned cleanup remain required at admission.",
+    "Success would qualify only the fixed manifest scope and existing controls, not the entire upstream population, complete stock host build, package or native authentication."
+  ],
+  "reviewerOperations": {
+    "sourceEdited": false,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "SDKOrCheckpointPayloadDownloaded": false,
+    "realBuildOrActualMacTestsExecuted": false,
+    "ordinaryFixedPublicSourceRead": true,
+    "boundedOfflineTestsExecuted": true
+  },
+  "testOnlyRebind": {
+    "productionChanged": false,
+    "otherTestFileChanged": false,
+    "change": "Canonicalize the test TemporaryDirectory Path with resolve(), so a macOS /var alias resolves to its canonical directory.",
+    "singleInverseReplacementMatchesPriorExactTestBytes": true,
+    "currentTest": {
+      "path": "tools/qa/native-nonpgo/test_mozilla_upstream.py",
+      "bytes": 20954,
+      "sha256": "50351b4571f166b9c8037261978b36d197c44642f06eb5f0ee490eef5d610869"
+    },
+    "priorReview": {
+      "bytes": 15544,
+      "sha256": "3dc48e44796e2bf49676ca19e6d1e76c341ae7ddb81d556b9739d7bcc0931bc4"
+    },
+    "previousCodeAssessmentAndClosedFindingsUnchanged": true,
+    "interveningIncorrectCwdRun": "One full run from the repository root had an existing subprocess import error and is excluded from success evidence. The corrected QA-directory run is the bound final full result.",
+    "MacAliasBehaviorAlreadyExecuted": false
+  }
+}

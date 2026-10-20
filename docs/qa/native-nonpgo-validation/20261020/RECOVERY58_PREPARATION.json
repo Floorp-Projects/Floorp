@@ -1,0 +1,116 @@
+{
+  "additionalPreparation": {
+    "inventory": "No test or HTTP server is started by listing; actual test execution uses stock harness ownership constraints.",
+    "resources": "Normal mach build -j3 faster after the child target",
+    "rootTargets": [
+      "xpcom/tests/target",
+      "ipc/app/target"
+    ],
+    "xpidl": "Read the actual config/makefiles/xpidl/xpcomtest.xpt generator input; no obsolete unit copy is manufactured. Runtime Ci registration requires the unchanged upstream test to pass."
+  },
+  "baselineFixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+  "hypotheses": [
+    "The complete fixed upstream XPCOM manifest can run after current native process helpers and the Gecko child are built, with the existing three smoke expectations preserved.",
+    "Stock configured Mac manifest enumeration can establish a registered and enabled denominator independently of the source-only census.",
+    "Expected SKIP and known FAIL remain separate from PASS; missing, partial or unavailable logs keep unknown counts."
+  ],
+  "implementationReview": {
+    "bytes": 17485,
+    "decision": "CODE_CLEAR",
+    "openP1": 0,
+    "openP2": 0,
+    "sha256": "a1f74ca3aaaa3cfc458e80ae28dcbe87707a1c4238a6da595ca9f524633720d7"
+  },
+  "localValidation": {
+    "errors": 0,
+    "failures": 0,
+    "log": {
+      "bytes": 149553,
+      "sha256": "be9f1a42150e7f7ce56118e147c9d9c681ba4bdf16a273a297665bfc666876a4"
+    },
+    "passed": 763,
+    "properQACwd": true,
+    "seconds": 57.687,
+    "skipped": 17,
+    "successful": true,
+    "testsRun": 780
+  },
+  "plannedMacPreflight": {
+    "failureRecording": 14,
+    "selectedQA": 565,
+    "skippedAllowed": 0
+  },
+  "purpose": "Current-source upstream XPCOM manifest and configured Mac population verification",
+  "qualificationLimits": {
+    "actualMacRunStarted": false,
+    "fullHostQualification": false,
+    "fullUpstreamSuiteExecuted": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeHostExitCause": "UNKNOWN",
+    "previousTargetedRun": 39340278789
+  },
+  "runtimeCallerBase": "063d5223e67712555c3168df803d3b0fd0ca338b",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 1,
+  "scope": {
+    "actualExecuted": null,
+    "enabledMacPopulation": null,
+    "expectedFailures": null,
+    "fixedSourceRecords": 45,
+    "globalCoveragePercent": null,
+    "manifest": "xpcom/tests/unit/xpcshell.toml",
+    "passed": null,
+    "registeredMacPopulation": null,
+    "selection": "Exact installed global-manifest path filter with stock prefs, mozinfo and strict condition evaluation",
+    "skipped": null,
+    "unattempted": null,
+    "unexpectedResults": null,
+    "unsupported": null
+  },
+  "sourceFiles": {
+    "tools/qa/native-nonpgo/mozilla-upstream.json": {
+      "bytes": 11397,
+      "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+    },
+    "tools/qa/native-nonpgo/mozilla_upstream.py": {
+      "bytes": 30175,
+      "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+    },
+    "tools/qa/native-nonpgo/pipeline.py": {
+      "bytes": 54135,
+      "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+    },
+    "tools/qa/native-nonpgo/test_mozilla_upstream.py": {
+      "bytes": 20954,
+      "sha256": "50351b4571f166b9c8037261978b36d197c44642f06eb5f0ee490eef5d610869"
+    },
+    "tools/qa/native-nonpgo/test_pipeline_restore.py": {
+      "bytes": 39291,
+      "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+    }
+  },
+  "sourceOnlyCensus": {
+    "combinedRawMembershipRecords": 5513,
+    "isConfiguredMacPopulation": false,
+    "uniqueSourceManifestSectionRecords": 5075,
+    "uniqueTrackedJavaScriptFiles": 4999
+  },
+  "unchangedExecutionConstraints": {
+    "absoluteSharedWorkMinutes": 345,
+    "authenticationPermissionsChanged": false,
+    "checkpointArtifact": 12164479528,
+    "checkpointRetentionChanged": false,
+    "jobs": 1,
+    "merge": false,
+    "newArtifactUploads": 0,
+    "nominalCleanupReserveMinutes": 15,
+    "platformMinutes": 360,
+    "productRelease": false,
+    "productSigning": false,
+    "resetClock": false,
+    "runner": "macos-15-intel",
+    "sdkAcquisitionDeadlineSeconds": 600,
+    "sdkSourceArtifact": 12182302735,
+    "sourceConfigurationChanged": false
+  }
+}

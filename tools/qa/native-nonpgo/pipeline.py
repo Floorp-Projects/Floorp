@@ -319,7 +319,8 @@ def macho(path, kind):
 
 def validation_outcome(report):
     monitor_failed = (report.get('monitorFailure') is not None or
-                      report.get('mozilla', {}).get('monitorFailure') is not None)
+                      report.get('mozilla', {}).get('monitorFailure') is not None or
+                      report.get('mozillaUpstream', {}).get('monitorFailure') is not None)
     return {'execution': 'monitor-inconclusive' if monitor_failed else report['status'],
             'nativeAuthentication': 'passed' if report.get('native', {}).get('status') == 'passed' else 'not-verified',
             'monitorFailureEstablishesProductFailure': False}
@@ -356,6 +357,7 @@ def main():
     parser.add_argument('--mozilla-only', action='store_true')
     parser.add_argument('--mozilla-first', action='store_true')
     parser.add_argument('--mozilla-targeted', action='store_true')
+    parser.add_argument('--mozilla-upstream-xpcom', action='store_true')
     parser.add_argument('--replay-origin', action='store_true')
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
@@ -370,6 +372,8 @@ def main():
     require(not args.mozilla_targeted or (args.checkpoint_role == 'consumer' and args.replay_origin and
             args.consumer_shared_deadline and not any((args.restore_only, args.mozilla_only, args.mozilla_first))),
             'mozilla-targeted-consumer-role')
+    require(not args.mozilla_upstream_xpcom or args.mozilla_targeted,
+            'mozilla-upstream-targeted-role')
     task = args.task.resolve()
     plan_bytes = (HERE / 'plan.json').read_bytes()
     plan = json.loads(plan_bytes)
@@ -528,8 +532,17 @@ def main():
             report['mozillaTargets'] = {}
             report.update(mozillaTargeted=True, fullHostXUL='NOT_TESTED', fullHostQualification=False,
                           stagePackage='NOT_TESTED', nativeAuthentication='NOT_TESTED')
+            if args.mozilla_upstream_xpcom:
+                import mozilla_upstream as upstream
+                report['mozillaUpstream'] = {}
+                upstream.prepare(args.source, task, runner, env,
+                    consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
             run_build(args.source, task, runner, env,
                       consumer_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
+            if args.mozilla_upstream_xpcom:
+                upstream.child_and_resources(args.source, task, runner, env,
+                    consumer_deadlines['consumerBuildDeadlineMinutes'])
+                report['mozillaUpstream']['assets'] = upstream.verify_scope_assets(task, runner, macho)
             stage = 'mozilla-target-assets'
             report['mozillaTargets']['assets'] = verify_assets(task, runner, macho, source=args.source)
             object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
@@ -540,6 +553,15 @@ def main():
             report['mozilla'] = {}
             run_smoke(args.source, HERE, task, runner, env,
                       consumer_deadlines['consumerNativeDeadlineMinutes'], macho, report['mozilla'])
+            if args.mozilla_upstream_xpcom:
+                stage = 'mozilla-upstream-xpcom'
+                upstream.run_scope(args.source, task, runner, env,
+                    consumer_deadlines['consumerNativeDeadlineMinutes'], report['mozillaUpstream'])
+                require(upstream.verify_scope_assets(task, runner, macho) == report['mozillaUpstream']['assets'],
+                        'mozilla-upstream-post-asset-binding')
+                require(upstream.proof_complete(report['mozillaUpstream'], runner.records),
+                        'mozilla-upstream-proof-incomplete')
+                report['upstreamQualification'] = upstream.CONTRACT
             stage = 'mozilla-target-final-evidence'
             require(runner.elapsed() < consumer_deadlines['finalDeadlineMinutes'] * 60,
                     'mozilla-target-final-deadline')
@@ -699,6 +721,9 @@ def main():
             if args.mozilla_targeted:
                 from mozilla_target_build import STAGES
                 target_log_stages = STAGES
+            if args.mozilla_upstream_xpcom:
+                from mozilla_upstream import EXTRA_STAGES
+                target_log_stages += EXTRA_STAGES
             report['checkpointStageLogs'] = {
                 row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
                 for row in runner.records if row['stage'] in
@@ -768,6 +793,9 @@ def main():
                         report.get('native') is None and runner.failure is None and runner.monitor_failure is None and
                         all(stage_complete(row) for row in runner.records) and
                         not any(row['stage'] in ('full-build', 'stage-package', 'native-suite') for row in runner.records))
+            if args.mozilla_upstream_xpcom:
+                from mozilla_upstream import proof_complete as upstream_complete
+                complete = complete and upstream_complete(report.get('mozillaUpstream', {}), runner.records)
             if not complete:
                 runner.fail('final-proof', 'mozilla-target-proof-incomplete')
                 report['status'], report['firstFailure'] = 'failed', runner.failure

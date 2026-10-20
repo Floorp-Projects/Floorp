@@ -1,0 +1,14 @@
+{
+  "testsRun": 780,
+  "passed": 763,
+  "skipped": 17,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "seconds": 57.687,
+  "properQACwd": true,
+  "log": {
+    "bytes": 149553,
+    "sha256": "be9f1a42150e7f7ce56118e147c9d9c681ba4bdf16a273a297665bfc666876a4"
+  }
+}
