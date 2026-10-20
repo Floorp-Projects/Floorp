@@ -102,7 +102,7 @@ def observe(args):
     image = str(args.output.resolve().with_suffix('.png')).replace("'", "''")
     message = args.expected_message.replace("'", "''")
     script = r'''
-[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
+$ErrorActionPreference='Stop';[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 Add-Type -AssemblyName System.Drawing
@@ -134,7 +134,7 @@ try {
 '''.replace('TITLE',title).replace('IMAGE',image).replace('WAIT',str(args.ui_wait_ms)).replace('MESSAGE',message)
     log=args.output.with_suffix('.ui.log');log.parent.mkdir(parents=True,exist_ok=True)
     try:
-        child=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-Command',script],capture_output=True,
+        child=subprocess.run(['pwsh.exe','-NoProfile','-NonInteractive','-Command',script],capture_output=True,
                              timeout=args.ui_wait_ms/1000+10)
     except subprocess.TimeoutExpired as error:
         log.write_bytes((error.stdout or b'')+(error.stderr or b''))
@@ -214,12 +214,12 @@ def main(args):
     for row in producers:
         path=out/'producer-source'/Path(row['path']).name;path.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(row['path'],path)
     discovery_script = r"""
-[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
+$ErrorActionPreference='Stop';[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
 $paths=@("$env:ProgramFiles\Google\Chrome\Application\chrome.exe","${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe","$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe")
 $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath $path -PathType Leaf){$s=Get-AuthenticodeSignature -LiteralPath $path;$v=(Get-Item -LiteralPath $path).VersionInfo;[ordered]@{path=(Get-Item -LiteralPath $path).FullName;status=[string]$s.Status;subject=$s.SignerCertificate.Subject;thumbprint=$s.SignerCertificate.Thumbprint;fileVersion=$v.FileVersion;productVersion=$v.ProductVersion;productName=$v.ProductName}}})
 [ordered]@{candidates=$rows;settingsChanged=$false}|ConvertTo-Json -Depth 6 -Compress
 """
-    discovery=old.bounded_windows(['powershell.exe','-NoProfile','-NonInteractive','-Command',discovery_script],HERE,environment,out/'installed-discovery',seconds=45)
+    discovery=old.bounded_windows(['pwsh.exe','-NoProfile','-NonInteractive','-Command',discovery_script],HERE,environment,out/'installed-discovery',seconds=45)
     if not lifecycle(discovery):raise RuntimeError('Owned readonly installed Chrome discovery failed')
     discovered=json.loads((out/'installed-discovery/supervisor.log').read_text(encoding='utf-8-sig').strip().splitlines()[-1])
     save(out/'installed-chrome-discovery.json',discovered)
@@ -250,8 +250,8 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
         chrome=app/'chrome-win64/chrome.exe'
         if not chrome.is_file() or not win64(chrome):raise RuntimeError('Official Chrome win64 executable absent')
         quoted=str(chrome).replace("'","''")
-        script="[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);$s=Get-AuthenticodeSignature -LiteralPath '"+quoted+"';$v=(Get-Item -LiteralPath '"+quoted+"').VersionInfo;[ordered]@{status=[string]$s.Status;subject=$s.SignerCertificate.Subject;thumbprint=$s.SignerCertificate.Thumbprint;fileVersion=$v.FileVersion;productVersion=$v.ProductVersion;productName=$v.ProductName}|ConvertTo-Json -Compress"
-        signed=old.bounded_windows(['powershell.exe','-NoProfile','-NonInteractive','-Command',script],HERE,environment,out/'authenticode',seconds=30)
+        script="$ErrorActionPreference='Stop';[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false);$s=Get-AuthenticodeSignature -LiteralPath '"+quoted+"';$v=(Get-Item -LiteralPath '"+quoted+"').VersionInfo;[ordered]@{status=[string]$s.Status;subject=$s.SignerCertificate.Subject;thumbprint=$s.SignerCertificate.Thumbprint;fileVersion=$v.FileVersion;productVersion=$v.ProductVersion;productName=$v.ProductName}|ConvertTo-Json -Compress"
+        signed=old.bounded_windows(['pwsh.exe','-NoProfile','-NonInteractive','-Command',script],HERE,environment,out/'authenticode',seconds=30)
         if not lifecycle(signed):raise RuntimeError('Owned native Authenticode observation failed')
         signature=json.loads((out/'authenticode/supervisor.log').read_text(encoding='utf-8-sig').strip().splitlines()[-1])
         if not valid_signature(signature):raise RuntimeError('Expected Google-signed exact Windows Chrome required')
