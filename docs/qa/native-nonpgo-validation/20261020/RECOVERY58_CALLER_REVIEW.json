@@ -1,0 +1,235 @@
+{
+  "schema": 1,
+  "review": "Recovery58 immutable caller independent read-only review",
+  "status": "CLEAR",
+  "openP1": 0,
+  "openP2": 0,
+  "scope": "Caller orchestration, source proof binding, final gates and public evidence projection; no source/workflow/ref/CI edits by reviewer",
+  "candidate": {
+    "basename": "floorp-recovery58-caller-candidate.yml",
+    "bytes": 48907,
+    "sha256": "047f7d346fc4a68703564506d2015e5311edce9b27969e685a02b74565403424"
+  },
+  "rendered": {
+    "basename": "floorp-recovery58-caller-rendered.yml",
+    "bytes": 48932,
+    "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52"
+  },
+  "fixtureCommit": "3c2999d115f13226da83c8285818725c6cb0ab36",
+  "sourcePins": {
+    "mozilla_target_build.py": {
+      "bytes": 13587,
+      "sha256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3"
+    },
+    "pipeline.py": {
+      "bytes": 54135,
+      "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+    },
+    "mozilla_upstream.py": {
+      "bytes": 30175,
+      "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+    },
+    "mozilla-upstream.json": {
+      "bytes": 11397,
+      "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+    }
+  },
+  "evidence": {
+    "floorp-recovery58-caller-independent-controls.py": {
+      "basename": "floorp-recovery58-caller-independent-controls.py",
+      "bytes": 25720,
+      "sha256": "617734fe03630141009dabbc8b62c2647a2cc091525ac99b816682d2605dee75"
+    },
+    "floorp-recovery58-caller-independent-static.py": {
+      "basename": "floorp-recovery58-caller-independent-static.py",
+      "bytes": 4666,
+      "sha256": "d7436f868208ef55c5202627741d33007443b7c26b9582a569f7a17df3dd6d64"
+    },
+    "floorp-recovery58-caller-independent-static-final.json": {
+      "basename": "floorp-recovery58-caller-independent-static-final.json",
+      "bytes": 5267,
+      "sha256": "a6e9b2b3b0e3effd41ede4c5fb77bc9b63790ec8882fe13b069bb347fe2113ff"
+    },
+    "floorp-recovery58-caller-stage-projection-counterexample.json": {
+      "basename": "floorp-recovery58-caller-stage-projection-counterexample.json",
+      "bytes": 1770,
+      "sha256": "21b97b3d81057e1ab83f49af3f3b7a87cde01968b7f44faa448683e35f267b60"
+    },
+    "floorp-recovery58-caller-stage-projection-regression.json": {
+      "basename": "floorp-recovery58-caller-stage-projection-regression.json",
+      "bytes": 6074,
+      "sha256": "4e4603bc9e3872443bb2d359ef603c2f2df037cea98956f65867849d1ae08044"
+    },
+    "floorp-recovery58-caller-independent-rendered-branch-fixed-controls-result.json": {
+      "basename": "floorp-recovery58-caller-independent-rendered-branch-fixed-controls-result.json",
+      "bytes": 630204,
+      "sha256": "e308bd0d3f50eba62cefd249437c4a5601b77601932bc19150a43fe89a3961fe"
+    },
+    "floorp-recovery58-caller-independent-branch-guard-controls.py": {
+      "basename": "floorp-recovery58-caller-independent-branch-guard-controls.py",
+      "bytes": 3266,
+      "sha256": "67988fc2f103f96956205faa1641f20d90de6e626efc2179e88c55abc01d7f05"
+    },
+    "floorp-recovery58-caller-independent-branch-guard-result.json": {
+      "basename": "floorp-recovery58-caller-independent-branch-guard-result.json",
+      "bytes": 1106,
+      "sha256": "dcb14590ff1fd6f16cdc51c854e341d302d1324ed2361e3bdec0fc9ab16d04c8"
+    },
+    "floorp-recovery58-caller-independent-review-before-branch-guard-fix.private.json": {
+      "basename": "floorp-recovery58-caller-independent-review-before-branch-guard-fix.private.json",
+      "bytes": 6872,
+      "sha256": "59352b878d90fff8018813b214844e742c9790e21ae4336f76ecc43afa36cb13"
+    },
+    "floorp-recovery58-caller-independent-static-before-branch-guard-fix.private.py": {
+      "basename": "floorp-recovery58-caller-independent-static-before-branch-guard-fix.private.py",
+      "bytes": 4666,
+      "sha256": "42a6fbc2905f50d0352b499012032cb06ec1bcc8390bb30fcae64b1744aa07b6"
+    },
+    "floorp-recovery58-caller-independent-static-before-branch-guard-fix.private.json": {
+      "basename": "floorp-recovery58-caller-independent-static-before-branch-guard-fix.private.json",
+      "bytes": 5267,
+      "sha256": "5b4327a6fdf72aa460aa47e2c1e32a52442d8f8caf636eca4d7d5684350f8a87"
+    }
+  },
+  "checks": {
+    "yamlBashInlinePythonSyntax": "passed",
+    "actualSelectedModuleDiscovery": {
+      "modules": 25,
+      "tests": 565,
+      "testsExecuted": false
+    },
+    "localBoundedSyntheticControls": {
+      "existing57ActualInlineCases": 11,
+      "newUpstreamActualInlineCases": 39,
+      "directTypedGateMutationsRejected": 218,
+      "total": 268,
+      "failures": 0,
+      "resourceWarningIsError": true,
+      "realPinnedProofPredicates": true,
+      "virtualFilesystemAndClockUsed": true,
+      "sourceLoaderPathMappedToActualImmutableLocalHelper": true
+    },
+    "base57FinalFunctionASTPreserved": [
+      "need",
+      "identity",
+      "read_fixed",
+      "decode",
+      "mapping",
+      "integer",
+      "case_ok",
+      "sdk_ok",
+      "time_budget_ok",
+      "final_ok",
+      "boolean",
+      "safe_stage",
+      "failure_safe",
+      "monitor_safe",
+      "stage_safe",
+      "log_safe",
+      "case_safe",
+      "persisted_failure",
+      "clock_proof"
+    ],
+    "invariants": {
+      "singleJobMacIntel": true,
+      "platformMinutes": 360,
+      "samePermissions": true,
+      "sameConcurrency": true,
+      "sameSDKAcquisitionStepBeforeRuntime": true,
+      "sameSoleCheckpointFetch": true,
+      "sameSDKSourceHash": true,
+      "targetedPlusUpstreamFlags": true,
+      "sameAbsolute345TimeGate": true,
+      "noArtifactUploadStep": true
+    },
+    "fixtureRendering": "single placeholder replacement only",
+    "newProofConjunction": "existing three Mozilla cases plus target assets/stages plus fixed 45-record upstream proof; no product/full-host/native qualification expansion",
+    "failureRetention": "persisted primary absence required for success; observed/corrupt/unreadable persisted evidence rejects; source-known upstream primary and case phase retained; optional projection exceptions and late clocks force failure",
+    "privacy": "fixed test IDs and stage enums; numeric/boolean/hash projections; private unknown code, argv, PID, path and free text sentinels dropped",
+    "unknownHandling": "unavailable counts and global unattempted count remain null; global percentage always null; expected FAIL and SKIP distinct from PASS and executed count",
+    "actualBashAdmissionGuard": {
+      "cases": 3,
+      "failures": 0,
+      "triggerAndGuardExactMatch": true,
+      "correctUpstreamRefExit": 0,
+      "wrongTargetRefExit": 1,
+      "priorWrongGuardWouldRejectAuthorizedTriggerExit": 1,
+      "noExternalAction": true
+    },
+    "totalLocalControls": 271,
+    "onlyChangeFromPriorReviewedCaller": "step0 GITHUB_REF target to upstream; exactly two bytes longer, source and final inline unchanged"
+  },
+  "findings": [
+    {
+      "id": "R58-CALLER-P2-1",
+      "severity": "P2",
+      "status": "resolved",
+      "affectedOriginalCaller": {
+        "bytes": 47350,
+        "sha256": "d4064cb5995d65e98da4a370eba7d4ed2ea04eb134e13d0921aee3ab407ebf59"
+      },
+      "problem": "Applying raw Runner stage_safe to already projected stage_evidence reset cleanupFailurePresent true to false and marked naturally completed nested stages false when raw fields were unavailable. Overall product failure gate remained correct.",
+      "sourceAnchors": [
+        {
+          "file": "mozilla_upstream.py",
+          "line": 367
+        },
+        {
+          "file": "mozilla_harness_smoke.py",
+          "line": 95
+        },
+        {
+          "file": "helper_import_preflight.py",
+          "line": 297
+        }
+      ],
+      "resolution": "Dedicated projected_stage_safe keeps typed cleanup presence, fixed cleanup failure code and latest bounded cleanup diagnostics; raw completion is null. Main raw-stage predicate remains unchanged.",
+      "fixedCaller": {
+        "basename": "floorp-recovery58-caller-candidate.yml",
+        "bytes": 48905,
+        "sha256": "fd9a494608fbf86a25adcda7bf335955344bacab8fdd67efcf15e84c3628d6f3"
+      },
+      "fixedFunctionAnchor": {
+        "inlinePythonLine": 255,
+        "endLine": 272
+      },
+      "regressionCasesIncludedIn268": 7
+    },
+    {
+      "id": "R58-CALLER-P1-1",
+      "severity": "P1",
+      "status": "resolved",
+      "problem": "Trigger branch used upstream58 but step0 admitted target58, so every authorized push would fail before work. Initial caller review missed the guard binding.",
+      "affectedPriorRenderedCaller": {
+        "bytes": 48930,
+        "sha256": "e6007dc6027dd681c1d51ebb563e75d5ee8db369513063e92fe9633cb7be7eec"
+      },
+      "resolution": "Admission GITHUB_REF now matches the sole literal trigger branch. Actual full step0 bash tests admit upstream, reject target, and reproduce rejection with the old guard.",
+      "fixedCaller": {
+        "basename": "floorp-recovery58-caller-candidate.yml",
+        "bytes": 48907,
+        "sha256": "047f7d346fc4a68703564506d2015e5311edce9b27969e685a02b74565403424"
+      },
+      "fixedRenderedCaller": {
+        "basename": "floorp-recovery58-caller-rendered.yml",
+        "bytes": 48932,
+        "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52"
+      },
+      "workflowAnchor": "jobs.consumer.steps[0].run",
+      "controls": 3
+    }
+  ],
+  "remainingExecutionEvidence": {
+    "actualMacRecovery58": "not run by reviewer",
+    "freshProviderPrelaunchChecks": "parent-owned and outside this static review",
+    "realUpstream45Results": "unavailable until authorized actual run; synthetic counts are not Mac results"
+  },
+  "readOnly": {
+    "repositorySourceEdited": false,
+    "workflowEdited": false,
+    "refsMutated": false,
+    "CIStarted": false,
+    "payloadDownloaded": false
+  },
+  "supersedesPriorReviewDueToAdmissionGuardFinding": true
+}

@@ -1,0 +1,61 @@
+{
+  "actualMacOutcome": null,
+  "attempt": 1,
+  "branch": "codex/mac-native-mozilla-upstream-recovery58-20261020",
+  "caller": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+  "callerFile": {
+    "bytes": 48932,
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52"
+  },
+  "callerReadbackExact": true,
+  "callerTree": "6b2606b8495a8793884aaea8ee5692f1055120bc",
+  "event": "push",
+  "expectedFailureRecording": 14,
+  "expectedJobs": 1,
+  "expectedMacQA": 565,
+  "fixture": "3c2999d115f13226da83c8285818725c6cb0ab36",
+  "fixtureTree": "e1deaba554020f93d06cfb243eecef23a9dd1103",
+  "fullHostQualification": false,
+  "globalMacPopulation": null,
+  "harness": "cbe45a7d7480d713b2c40a9ed348420126e6ccb0",
+  "headRuns": 1,
+  "nativeAuthentication": "NOT_TESTED",
+  "newArtifactUploads": 0,
+  "nominalCleanupReserveMinutes": 15,
+  "originAdmissionCheckedUTC": "2026-10-20 03:59:35 UTC",
+  "originalNativeHostExitCause": "UNKNOWN",
+  "origins": {
+    "checkpoint": {
+      "digest": "sha256:f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "expired": false,
+      "expires_at": "2026-10-20T05:19:56Z",
+      "id": 12164479528,
+      "name": "checkpoint.tar.gz",
+      "run": 39197008470,
+      "size_in_bytes": 2213942620
+    },
+    "sdk": {
+      "digest": "sha256:c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+      "expired": false,
+      "expires_at": "2026-10-20T11:23:42Z",
+      "id": 12182302735,
+      "name": "macos-sdk",
+      "run": 39244172146,
+      "size_in_bytes": 105082683
+    }
+  },
+  "otherWorkflowFilesUnchanged": 25,
+  "phase": "activated",
+  "platformMinutes": 360,
+  "run": 39367227591,
+  "runner": "macos-15-intel",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 1,
+  "sharedWorkDeadlineMinutes": 345,
+  "sourceCodeReadbackExact": true,
+  "upstreamScopeSelectedSourceRecords": 45,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39367227591",
+  "wholeUpstreamSuiteExecuted": false,
+  "workflowYAMLFiles": 26
+}

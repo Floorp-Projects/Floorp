@@ -1,0 +1,279 @@
+{
+  "schema": 1,
+  "review": "RECOVERY58_INDEPENDENT_IMMUTABLE_ADMISSION_REVIEW",
+  "reviewedAtUTC": "2026-10-20T04:00:10.727798+00:00",
+  "decision": "GO_FOR_ONE_FIXED_TARGETED_UPSTREAM_XPCOM_EXECUTION_AFTER_IMMEDIATE_FRESH_RECHECK",
+  "openP1": 0,
+  "openP2": 0,
+  "scope": "Immutable source/caller identity, workflow footprint and current ordinary-origin metadata. This is execution admission, not an actual Mac test result or full product qualification.",
+  "fixture": {
+    "repository": "Floorp-Projects/Floorp",
+    "commit": "3c2999d115f13226da83c8285818725c6cb0ab36",
+    "tree": "e1deaba554020f93d06cfb243eecef23a9dd1103",
+    "parent": "90db55e3ab1f6b074840e76defb4ac7b64f4f770",
+    "exactChangedFiles": 8,
+    "exactProviderReadbacks": [
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY58_IMPLEMENTATION_REVIEW.json",
+        "bytes": 17485,
+        "sha256": "a1f74ca3aaaa3cfc458e80ae28dcbe87707a1c4238a6da595ca9f524633720d7"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY58_LOCAL_RESULT.json",
+        "bytes": 272,
+        "sha256": "c4b6b7effdb0e9d46ebfac4ac45550eee78c1463a869187a809fe6d559a51553"
+      },
+      {
+        "path": "docs/qa/native-nonpgo-validation/20261020/RECOVERY58_PREPARATION.json",
+        "bytes": 4304,
+        "sha256": "403567dc56ef3268a6b8bbca8e275c1b5fc8754fa96e93edffc779fd29b4fe7e"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla-upstream.json",
+        "bytes": 11397,
+        "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_upstream.py",
+        "bytes": 30175,
+        "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 54135,
+        "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_mozilla_upstream.py",
+        "bytes": 20954,
+        "sha256": "50351b4571f166b9c8037261978b36d197c44642f06eb5f0ee490eef5d610869"
+      },
+      {
+        "path": "tools/qa/native-nonpgo/test_pipeline_restore.py",
+        "bytes": 39291,
+        "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+      }
+    ]
+  },
+  "caller": {
+    "repository": "Floorp-Projects/Floorp-Runtime",
+    "commit": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+    "tree": "6b2606b8495a8793884aaea8ee5692f1055120bc",
+    "parent": "063d5223e67712555c3168df803d3b0fd0ca338b",
+    "bytes": 48932,
+    "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "totalCommitsOverParent": 1,
+    "onlyChangedPath": ".github/workflows/mac-native-checkpoint.yml",
+    "normalProviderReadbackEqualsReviewedRenderedBytes": true,
+    "branch": "codex/mac-native-mozilla-upstream-recovery58-20261020"
+  },
+  "resolvedAdmissionFinding": {
+    "severity": "P1",
+    "code": "trigger-initial-reference-mismatch",
+    "status": "closed",
+    "rejectedCaller": "0911418b8b7281fbfbc4e48270262265eea0e646",
+    "rejectedCallerSHA256": "e6007dc6027dd681c1d51ebb563e75d5ee8db369513063e92fe9633cb7be7eec",
+    "problem": "The upstream branch push trigger differed from the initial GITHUB_REF guard, which still named the target branch. The selected upstream push would stop in the first step.",
+    "resolution": "Only the guard reference was changed from target to upstream. The final immutable caller is otherwise byte-identical to the rejected caller.",
+    "independentlyExecutedActualFirstStepBashControls": {
+      "correctUpstreamBranchExit": 0,
+      "obsoleteTargetBranchExit": 1
+    },
+    "rejectedCallerIsApprovedByThisReview": false
+  },
+  "workflowFootprint": {
+    "workflowDirectoryEntries": 29,
+    "activeYAMLFiles": 26,
+    "other25YAMLProviderBodiesMatchUnchangedGitBlobIds": true,
+    "allOtherWorkflowDirectoryEntriesUnchanged": true,
+    "matchingPushWorkflows": [
+      ".github/workflows/mac-native-checkpoint.yml"
+    ],
+    "createTriggers": 0,
+    "workflowRunTriggers": 0,
+    "triggerEvaluation": "Every other push filter has a nonmatching branch prefix or a different fixed branch. All 26 complete bodies were read and Git-blob-bound.",
+    "singleJob": true,
+    "runner": "macos-15-intel",
+    "platformMinutes": 360,
+    "permissions": {
+      "contents": "read",
+      "actions": "read"
+    },
+    "artifactUploadSteps": 0,
+    "concurrencyCancelInProgress": false
+  },
+  "sourceAndExecutionContract": {
+    "implementationStatus": "CODE_CLEAR",
+    "baselineRuntime": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+    "sourceConfigurationSDKContentAndCheckpointContextGuardsUnchanged": true,
+    "currentCompiledDebugNonPGONonLTOContractUnchanged": true,
+    "existingSevenTargetsAndThreeSmokeControlsRetained": true,
+    "newScope": "Configured installed global registration inventory plus exact xpcom/tests/unit 45-source-ID manifest scope.",
+    "newNativePrerequisites": "Five fixed XPCOM helpers and configured IPC child with normal Faster resource preparation; proper XPIDL intermediate identity gate.",
+    "selectedQARequiredByCaller": 565,
+    "failureRecordingRequiredByCaller": 14,
+    "realUpstreamExecutionRequired": "stock harness, sequential threads1, exact complete lifecycle and expectation/status distribution",
+    "expectedSKIPAndKnownFAILBecomePASS": false,
+    "unknownCountsBecomeZero": false,
+    "HTTP2InventoryOrCoverageQualified": false,
+    "absoluteSharedWorkMinutes": 345,
+    "platformMinutes": 360,
+    "nominalCleanupReserveMinutes": 15,
+    "clockOrigin": "same original job monotonic origin",
+    "clockResetAllowed": false,
+    "ownedStageResourceLimitsAndUnknownStopUnchanged": true,
+    "newProducerOrUploadOrRetentionChange": false
+  },
+  "ordinaryOriginChecks": {
+    "observedUTC": "2026-10-20T03:57:16.722757+00:00",
+    "SDK": {
+      "artifact": 12182302735,
+      "size": 105082683,
+      "digest": "sha256:c2b125f6cba2e98aa6515d772b2300e458be8cc4236bf33028cd633ceb6624ee",
+      "expiresAt": "2026-10-20T11:23:42Z",
+      "sourceRun": 39244172146,
+      "sourceRunConclusion": "success",
+      "producerJob": 118032017226,
+      "producerJobName": "Mac build [PGO] / download-macos-sdk",
+      "producerSucceeded": true,
+      "actualPinnedSourceChecksPassed": true
+    },
+    "checkpoint": {
+      "artifact": 12164479528,
+      "size": 2213942620,
+      "digest": "sha256:f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+      "expiresAt": "2026-10-20T05:19:56Z",
+      "sourceRun": 39197008470,
+      "sourceRunConclusion": "failure",
+      "producerJob": 117881829274,
+      "unpatchedValidation": {
+        "contract": "verified-origin-cross-run-checkpoint-replay-v1",
+        "originVerified": true,
+        "producerJobVerified": true,
+        "soleArtifactVerified": true,
+        "unexpiredAtVerification": true,
+        "strictSameRunQualified": false,
+        "productQualification": false
+      }
+    },
+    "SDKWholeRunRelabeledSuccessful": false,
+    "checkpointWholeRunRelabeledSuccessful": false,
+    "payloadDownloadedOrUnpackedByReviewer": false,
+    "metadataAtThisInstantIsAcquisitionOrActualSDKContentProof": false,
+    "actualRunnerRechecksNormalMetadataExpiryHTTPAndPinnedPayloadRequired": true
+  },
+  "admissionSnapshot": {
+    "unusedBranch": true,
+    "priorCallerHeadRuns": 0,
+    "ownedNonterminalDefinition": "All returned runs with head branch prefix codex/mac-native- across the five queried nonterminal statuses.",
+    "allReturnedPagesExhaustiveWithin100": true,
+    "nonterminalStatusQueries": {
+      "in_progress": {
+        "total": 0,
+        "returned": 0,
+        "owned": 0
+      },
+      "queued": {
+        "total": 1,
+        "returned": 1,
+        "owned": 0
+      },
+      "waiting": {
+        "total": 0,
+        "returned": 0,
+        "owned": 0
+      },
+      "pending": {
+        "total": 0,
+        "returned": 0,
+        "owned": 0
+      },
+      "requested": {
+        "total": 0,
+        "returned": 0,
+        "owned": 0
+      }
+    },
+    "unrelatedQueuedRunIncludedAsOwned": false
+  },
+  "validation": {
+    "immutableProviderReadbacksExact": true,
+    "fixedInitialGuardActualBashControls": 2,
+    "priorCallerTypedGateAndFlowControls": 268,
+    "priorCallerControlsIndependentlyReexecutedByThisReviewer": false,
+    "callerReviewInheritedExceptOneExplicitGuardLiteral": true,
+    "implementationIndependentFocusedTests": 65,
+    "implementationIndependentBoundedControls": 64,
+    "testOnlyCanonicalizationAdditionalIndependentTests": 19,
+    "rootFinalLinuxFullSuite": {
+      "tests": 780,
+      "passed": 763,
+      "DarwinOnlySkipped": 17,
+      "failures": 0,
+      "errors": 0
+    },
+    "actualMacRecovery58AlreadyTested": false
+  },
+  "conditionsImmediatelyBeforeActivation": [
+    "Recheck the exact new caller and fixture pins, unused branch and zero prior head runs.",
+    "Recheck no owned running, queued, waiting, pending or requested run.",
+    "Recheck normal unexpired SDK and sole checkpoint metadata/producer bindings; actual download must retain all existing expiry and byte/content guards.",
+    "Create only the reviewed branch once under existing authorization; this reviewer performs no activation."
+  ],
+  "qualificationLimits": {
+    "actualConfiguredMacPopulation": "NOT_YET_OBSERVED",
+    "actual45RecordPASSFAILSKIPAndAttemptedCounts": "NOT_YET_OBSERVED",
+    "globalCoveragePercent": null,
+    "entireUpstreamSuiteQualified": false,
+    "fullHostQualification": false,
+    "package": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "runtimeAssertionsExpectationsOrOriginalTestFilesModified": false
+  },
+  "bindings": {
+    "implementationReview": {
+      "path": "floorp-recovery58-implementation-review.json",
+      "bytes": 17485,
+      "sha256": "a1f74ca3aaaa3cfc458e80ae28dcbe87707a1c4238a6da595ca9f524633720d7"
+    },
+    "callerReview": {
+      "path": "floorp-recovery58-caller-independent-review.json",
+      "bytes": 9952,
+      "sha256": "9ea19afd0953bb9a94486fd72858d32df9404b08a387a0172fa5fcc6cf078c48"
+    },
+    "independentAdmissionCheckScript": {
+      "path": "floorp-recovery58-check-immutable-admission.py",
+      "bytes": 6038,
+      "sha256": "472c5b403f4c08ff761058bdf02af9dfe41dc3a8103d5920afd1df049c9b3998"
+    },
+    "independentAdmissionChecks": {
+      "path": "floorp-recovery58-immutable-admission-checks.json",
+      "bytes": 3174,
+      "sha256": "7f05f9ce8928019294bfe649fb62c457bcb0bb3bf343678bdf2e1a478420a1f0"
+    },
+    "independentLiveOrigins": {
+      "path": "floorp-recovery58-independent-live-origin-check.json",
+      "bytes": 1162,
+      "sha256": "7e0710342bd8584bf65f1a76403deeb9f9dbcc44c83ba535a8785acfebd3d676"
+    },
+    "finalRenderedCaller": {
+      "path": "floorp-recovery58-caller-rendered.yml",
+      "bytes": 48932,
+      "sha256": "855d683767f73b350fd01479f39c15142d8b199a7811303651fab39ebec89b52"
+    }
+  },
+  "reviewerOperations": {
+    "ordinaryAPIAndFixedProviderFileReads": true,
+    "boundedLocalGuardExecution": true,
+    "sourceChanged": false,
+    "remoteRefChanged": false,
+    "CIStarted": false,
+    "SDKOrCheckpointDownloaded": false,
+    "retentionSigningOrAuthenticationChanged": false
+  },
+  "privacy": {
+    "rawLogsMachinePathsProcessIdsEnvironmentTokensSignedURLsOrConversationPublished": false
+  }
+}
