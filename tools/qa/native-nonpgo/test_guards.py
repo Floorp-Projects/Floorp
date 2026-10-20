@@ -31,6 +31,7 @@ from support import Failure, ProgressWatch, Runner, clean_environment, digest, e
 from native_suite import cause_failure_snapshot, context_result, failure_snapshot, failure_recording
 from pipeline import macho, prepare_harness, verify_config
 from owned_native import MacProcesses, OwnedNative
+from primary_anchor import AnchorSpawnError, Binding, Observation, PrimaryAnchor
 
 
 class Guards(unittest.TestCase):
@@ -515,19 +516,21 @@ class Guards(unittest.TestCase):
     def test_sampler_exception_records_stage_and_reaps_owned_process(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         runner = Runner(self.root, time.time(), limits)
-        children, popen = [], subprocess.Popen
+        anchors, spawn = [], PrimaryAnchor.spawn
         def launch(*args, **kwargs):
-            child = popen(*args, **kwargs)
-            children.append(child)
+            child = spawn(*args, **kwargs)
+            anchors.append(child)
             return child
         with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
-                mock.patch('support.subprocess.Popen', side_effect=launch), \
+                mock.patch.object(PrimaryAnchor, 'spawn', side_effect=launch), \
                 mock.patch.object(runner, 'group_activity', side_effect=subprocess.TimeoutExpired('private command', 3)):
             with self.assertRaises(subprocess.TimeoutExpired):
                 runner.run('sampler-exception', [sys.executable, '-c', 'import time; time.sleep(30)'],
                            self.root, os.environ.copy(), 360)
-        self.assertIsNotNone(children[0].poll())
-        self.assertFalse(runner.group_alive(children[0].pid))
+        self.assertIsNotNone(anchors[0].actual_returncode)
+        with self.assertRaises(ChildProcessError):
+            os.waitpid(anchors[0].pid, os.WNOHANG)
+        self.assertEqual(runner.records[0]['primaryAnchor']['postReapAbsence']['groupEmpty'], True)
         self.assertEqual(len(runner.records), 1)
         self.assertEqual(runner.records[0]['reason'], 'TimeoutExpired')
         self.assertEqual(runner.records[0]['failurePhase'], 'group-activity')
@@ -556,7 +559,7 @@ class Guards(unittest.TestCase):
     def test_launch_failure_still_has_a_stage_record(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         runner = Runner(self.root, time.time(), limits)
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaisesRegex(AnchorSpawnError, 'anchor-constructor-failed'):
             runner.run('launch-failure', [str(self.root / 'missing-executable')],
                        self.root, os.environ.copy(), 360)
         self.assertEqual(len(runner.records), 1)
@@ -567,58 +570,62 @@ class Guards(unittest.TestCase):
     def test_group_permission_failure_still_reaps_exact_child_and_keeps_denial(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         incomplete = {'sampleComplete': False, 'rssMiB': None, 'rssLowerBoundMiB': 0}
-        for denied_signal, operation in ((0, 'group-probe'), (signal.SIGINT, 'group-signal')):
-            with self.subTest(denied_signal=denied_signal), tempfile.TemporaryDirectory() as directory:
-                runner = Runner(directory, time.time(), limits)
-                children, popen = [], subprocess.Popen
-                def launch(*args, **kwargs):
-                    child = popen(*args, **kwargs)
-                    children.append(child)
-                    return child
-                def killpg(_pid, sig):
-                    if sig == denied_signal:
-                        raise PermissionError(errno.EPERM, 'private denied process identity')
-                with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
-                        mock.patch('support.subprocess.Popen', side_effect=launch), \
-                        mock.patch.object(runner, 'group_activity', return_value=incomplete), \
-                        mock.patch('support.os.killpg', side_effect=killpg):
-                    with self.assertRaises(PermissionError):
-                        runner.run('denied-cleanup', [sys.executable, '-c',
-                                   'import time; time.sleep(0.1); raise SystemExit(7)'],
-                                   directory, os.environ.copy(), 360)
-                record = runner.records[0]
-                self.assertEqual(runner.failure['code'], 'monitor-unavailable')
-                self.assertEqual(record['reason'], 'monitor-unavailable')
-                self.assertEqual(record['cleanupFailure'], 'PermissionError')
-                self.assertEqual(record['groupCleanup'], 'unverified')
-                self.assertIn({
-                    'operation': operation, 'signal': int(denied_signal),
-                    'errorType': 'PermissionError', 'errno': errno.EPERM}, record['cleanupDiagnostics'])
-                self.assertEqual(record['leaderReap'], {'status': 'reaped', 'exitCode': 7})
-                self.assertEqual(record['exitCode'], 7)
-                self.assertIsNone(record['peakRSSMiB'])
-                with self.assertRaises(ChildProcessError):
-                    os.waitpid(children[0].pid, os.WNOHANG)
-                self.assertNotIn('private denied', json.dumps(record))
+        runner = Runner(self.root, time.time(), limits)
+        anchors, spawn = [], PrimaryAnchor.spawn
+        def launch(*args, **kwargs):
+            child = spawn(*args, **kwargs)
+            anchors.append(child)
+            return child
+        with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
+                mock.patch.object(PrimaryAnchor, 'spawn', side_effect=launch), \
+                mock.patch.object(runner, 'group_activity', return_value=incomplete), \
+                mock.patch('primary_anchor.os.killpg', side_effect=PermissionError(
+                    errno.EPERM, 'private denied process identity')):
+            with self.assertRaisesRegex(Failure, 'owned-primary-signal-unavailable'):
+                runner.run('denied-cleanup', [sys.executable, '-c',
+                           'import time; time.sleep(0.1); raise SystemExit(7)'],
+                           self.root, os.environ.copy(), 360)
+        record = runner.records[0]
+        self.assertEqual(runner.failure['code'], 'monitor-unavailable')
+        self.assertEqual(record['reason'], 'monitor-unavailable')
+        self.assertEqual(record['cleanupFailure'], 'owned-primary-signal-unavailable')
+        self.assertEqual(record['groupCleanup'], 'unverified')
+        stopping = record['cleanupStoppingDiagnostic']
+        self.assertEqual(stopping['operation'], 'anchor-group-signal')
+        self.assertEqual(stopping['signal'], int(signal.SIGINT))
+        self.assertEqual((stopping['errorType'], stopping['errno']), ('os-error', errno.EPERM))
+        self.assertEqual(record['leaderReap'], {'status': 'reaped', 'exitCode': 7})
+        self.assertEqual(record['exitCode'], 7)
+        self.assertIsNone(record['peakRSSMiB'])
+        self.assertFalse(record['primaryAnchor']['retirementVerified'])
+        with self.assertRaises(ChildProcessError):
+            os.waitpid(anchors[0].pid, os.WNOHANG)
+        self.assertNotIn('private denied', json.dumps(record))
 
     def test_denied_group_and_live_child_remain_unverified_after_bounded_wait(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         runner = Runner(self.root, time.time(), limits)
-        child = mock.Mock(pid=99999, returncode=None)
-        child.poll.return_value = None
-        child.wait.side_effect = subprocess.TimeoutExpired('private argv', 5)
+        child = mock.Mock(pid=99999, returncode=None, stdin=None)
+        binding = Binding(child.pid, os.getpid(), os.geteuid(), os.getuid(), child.pid, (1,))
+        backend = mock.Mock()
+        backend.observe.return_value = Observation(binding, 'live', None)
+        anchor = PrimaryAnchor(child, backend, None)
         incomplete = {'sampleComplete': False, 'rssMiB': None, 'rssLowerBoundMiB': 0}
         with mock.patch('support.shutil.disk_usage', return_value=mock.Mock(free=64 * 1024**3)), \
-                mock.patch('support.subprocess.Popen', return_value=child), \
+                mock.patch.object(PrimaryAnchor, 'spawn', return_value=anchor), \
+                mock.patch.object(runner, 'anchor_deadline', side_effect=lambda *_: time.monotonic() + .01), \
                 mock.patch.object(runner, 'group_activity', return_value=incomplete), \
-                mock.patch('support.os.killpg', side_effect=PermissionError(errno.EPERM, 'denied')):
-            with self.assertRaises(PermissionError):
+                mock.patch('primary_anchor.os.killpg', side_effect=PermissionError(errno.EPERM, 'denied')), \
+                mock.patch('primary_anchor.os.waitpid') as wait:
+            with self.assertRaisesRegex(Failure, 'owned-primary-signal-unavailable'):
                 runner.run('denied-live', ['unused'], self.root, os.environ.copy(), 360)
-        self.assertEqual(runner.records[0]['leaderReap'], {'status': 'still-running', 'exitCode': None})
-        self.assertEqual(runner.records[0]['cleanupFailure'], 'PermissionError')
+        wait.assert_not_called()
+        self.assertEqual(runner.records[0]['leaderReap'], {'status': 'unavailable', 'exitCode': None})
+        self.assertEqual(runner.records[0]['cleanupFailure'], 'owned-primary-signal-unavailable')
         self.assertEqual(runner.records[0]['groupCleanup'], 'unverified')
         self.assertIsNone(runner.records[0]['exitCode'])
-        self.assertEqual(child.wait.call_args_list, [mock.call(timeout=0.05), mock.call(timeout=5)])
+        child.wait.assert_not_called()
+        child.poll.assert_not_called()
         self.assertEqual(runner.failure['code'], 'monitor-unavailable')
 
     def test_stall_requires_multiple_stable_signals(self):
@@ -720,18 +727,221 @@ class Guards(unittest.TestCase):
         self.assertEqual(runner.failure['persistenceError'], errno.ENOSPC)
 
     def test_group_cleanup_does_not_stop_at_leader_exit(self):
-        runner = Runner(self.root, time.time(), {'processCleanupGraceSeconds': 0})
-        alive, signals = [True], []
+        runner = Runner(self.root, time.time(), {'processCleanupGraceSeconds': 1, 'jobMinutes': 360})
+        child = mock.Mock(pid=99999, returncode=None, stdin=None)
+        binding = Binding(child.pid, os.getpid(), os.geteuid(), os.getuid(), child.pid, (1,))
+        backend = mock.Mock()
+        backend.observe.return_value = Observation(binding, 'zombie', 0)
+        members, signals = [99999, 100000], []
+        def census(pgid, *, deadline=None):
+            return {'status': 'complete', 'group': pgid, 'pids': list(members),
+                    'source': 'darwin-header-bound' if sys.platform == 'darwin' else 'linux-ps-test',
+                    'bindingVerified': True}
+        anchor = PrimaryAnchor(child, backend, census)
         def killpg(_pid, sig):
-            if not alive[0]:
-                raise ProcessLookupError()
-            if sig:
-                signals.append(sig)
-                alive[0] = False
-        with mock.patch('support.os.killpg', side_effect=killpg):
-            runner.stop(mock.Mock(pid=99999, poll=mock.Mock(return_value=0)))
-        self.assertTrue(signals)
-        self.assertFalse(alive[0])
+            self.assertIsNone(child.returncode)
+            signals.append(sig)
+            members[:] = [child.pid]
+        with mock.patch('primary_anchor.os.killpg', side_effect=killpg), \
+                mock.patch('primary_anchor.os.waitpid', return_value=(child.pid, 0)) as wait:
+            runner.stop(anchor)
+        self.assertEqual(signals, [int(signal.SIGINT)])
+        wait.assert_called_once_with(child.pid, os.WNOHANG)
+        self.assertEqual(anchor.lifecycle_state, 'reaped')
+
+    def test_numeric_process_without_anchor_never_authorizes_cleanup_signals(self):
+        runner = Runner(self.root, time.time(), {})
+        with mock.patch('support.os.killpg') as send:
+            with self.assertRaisesRegex(Failure, 'owned-primary-anchor-required'):
+                runner.stop(mock.Mock(pid=99999, returncode=0))
+        send.assert_not_called()
+
+    def test_runner_retired_primary_never_signals_a_later_numeric_group(self):
+        for foreign_group in (False, True):
+            with self.subTest(foreign_group=foreign_group):
+                task = self.root / str(foreign_group)
+                task.mkdir()
+                limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+                runner = Runner(task, time.time(), limits)
+                child = mock.Mock(pid=99999, returncode=None, stdin=None)
+                binding = Binding(child.pid, os.getpid(), os.geteuid(), os.getuid(), child.pid, (1,))
+                backend = mock.Mock()
+                backend.observe.return_value = Observation(binding, 'zombie', 0)
+                waited = False
+                def census(pgid, *, deadline=None):
+                    # Reuse begins only after exact wait released the old epoch.
+                    pids = [child.pid] if not waited or foreign_group else []
+                    return {'status': 'complete', 'group': pgid, 'pids': pids,
+                            'source': 'darwin-header-bound' if sys.platform == 'darwin' else 'linux-ps-test',
+                            'bindingVerified': True}
+                def exact_wait(pid, flags):
+                    nonlocal waited
+                    self.assertFalse(waited)
+                    waited = True
+                    return pid, 0
+                anchor = PrimaryAnchor(child, backend, census)
+                with mock.patch.object(PrimaryAnchor, 'spawn', return_value=anchor), \
+                        mock.patch('primary_anchor.os.waitpid', side_effect=exact_wait) as wait, \
+                        mock.patch('primary_anchor.os.killpg') as send, \
+                        mock.patch.object(runner, 'group_activity') as resources:
+                    if foreign_group:
+                        with self.assertRaisesRegex(Failure, 'owned-primary-post-reap-group-unconfirmed'):
+                            runner.run('retired-primary', ['unused'], task, {}, 360)
+                    else:
+                        runner.run('retired-primary', ['unused'], task, {}, 360)
+                wait.assert_called_once_with(child.pid, os.WNOHANG)
+                send.assert_not_called()
+                resources.assert_not_called()
+                child.poll.assert_not_called()
+                child.wait.assert_not_called()
+                record = runner.records[0]
+                self.assertEqual(record['exitCode'], 0)
+                self.assertTrue(record['primaryAnchor']['retirementVerified'])
+                self.assertEqual(record['primaryAnchor']['postReapAbsence']['groupEmpty'], not foreign_group)
+                self.assertEqual(record['groupCleanup'], 'unverified' if foreign_group else 'verified-gone')
+                self.assertEqual(record['failurePhase'], 'cleanup' if foreign_group else None)
+
+    def test_primary_observation_failure_keeps_unknown_exit_and_lifecycle_phase(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        runner = Runner(self.root, time.time(), limits)
+        child = mock.Mock(pid=99999, returncode=None, stdin=None)
+        backend = mock.Mock()
+        backend.observe.side_effect = OSError(errno.EPERM, 'PRIVATE-SENTINEL')
+        anchor = PrimaryAnchor(child, backend, None)
+        with mock.patch.object(PrimaryAnchor, 'spawn', return_value=anchor), \
+                mock.patch.object(runner, 'anchor_deadline', side_effect=lambda *_: time.monotonic() + .01), \
+                mock.patch('primary_anchor.os.killpg') as send, \
+                mock.patch('primary_anchor.os.waitpid') as wait, \
+                mock.patch.object(runner, 'group_activity') as resources:
+            with self.assertRaisesRegex(Failure, 'owned-primary-signal-unavailable'):
+                runner.run('primary-unknown', ['unused'], self.root, {}, 360)
+        send.assert_not_called()
+        wait.assert_not_called()
+        resources.assert_not_called()
+        child.poll.assert_not_called()
+        child.wait.assert_not_called()
+        record = runner.records[0]
+        self.assertEqual(runner.failure['code'], 'owned-primary-observation-unavailable')
+        self.assertEqual(record['reason'], 'owned-primary-observation-unavailable')
+        self.assertEqual(record['failurePhase'], 'primary-observation')
+        self.assertEqual(runner.monitor_failure['component'], 'primary-lifecycle')
+        self.assertEqual(record['leaderReap'], {'status': 'unavailable', 'exitCode': None})
+        self.assertEqual(record['groupCleanup'], 'unverified')
+        self.assertIsNone(record['exitCode'])
+        self.assertIsNone(record['peakRSSMiB'])
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(record))
+
+    def test_failed_cleanup_does_not_restart_signal_graces_in_finally(self):
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        clock = SimpleNamespace(now=100.0)
+        def sleep(seconds):
+            clock.now += max(seconds, 0.000001)
+        child = mock.Mock(pid=99999, returncode=None, stdin=None)
+        anchor = PrimaryAnchor(child, None, None)
+        signals = []
+        def send(sig, *, deadline=None):
+            signals.append((sig, clock.now, deadline))
+            return anchor.receipt(reason='anchor-signal-sent', signalAuthority=True)
+        def recover(*, deadline=None):
+            anchor._state, anchor._reason = 'lost', 'anchor-recovery-unbound'
+            return anchor.receipt()
+        with mock.patch('support.time.monotonic', side_effect=lambda: clock.now), \
+                mock.patch('support.time.sleep', side_effect=sleep), \
+                mock.patch.object(PrimaryAnchor, 'spawn', return_value=anchor), \
+                mock.patch.object(anchor, 'try_reap', side_effect=lambda **_: anchor.receipt(
+                    reason='anchor-not-terminal', signalAuthority=False)), \
+                mock.patch.object(anchor, 'signal_group', side_effect=send), \
+                mock.patch.object(anchor, 'recover_exact_child', side_effect=recover), \
+                mock.patch('primary_anchor.os.killpg') as actual_signal, \
+                mock.patch('primary_anchor.os.waitpid') as actual_wait:
+            runner = Runner(self.root, time.time(), limits)
+            with mock.patch.object(runner, 'observed_exit', return_value=0), \
+                    mock.patch.object(runner, 'stop', wraps=runner.stop) as stop:
+                with self.assertRaisesRegex(Failure, 'owned-process-cleanup-timeout'):
+                    runner.run('cleanup-graces', ['unused'], self.root, {}, 360)
+            self.assertEqual(stop.call_count, 1)
+        actual_signal.assert_not_called()
+        actual_wait.assert_not_called()
+        self.assertEqual([row[0] for row in signals], [int(signal.SIGINT), int(signal.SIGTERM), int(signal.SIGKILL)])
+        self.assertEqual([row[1:] for row in signals], [(100.0, 190.0), (190.0, 200.0), (200.0, 205.0)])
+        self.assertAlmostEqual(clock.now - 100, 105)
+        record = runner.records[0]
+        self.assertEqual(record['reason'], 'owned-primary-reap-unconfirmed')
+        self.assertEqual(record['cleanupFailure'], 'owned-process-cleanup-timeout')
+        self.assertEqual(record['groupCleanup'], 'unverified')
+        self.assertIsNone(record['exitCode'])
+
+    def test_anchor_inventory_retains_adapter_and_native_producer_failure_codes(self):
+        from anchor_inventory import InventoryError
+        runner = Runner(self.root, time.time(), {})
+        diagnostic = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+                      'failureCode': 'inventory-query-permission', 'phase': 'group-data',
+                      'errorType': 'OSError', 'errno': errno.EPERM}
+        diagnostics = []
+        with mock.patch('anchor_inventory.collect', side_effect=InventoryError(
+                'anchor-inventory-unavailable', diagnostic)):
+            with self.assertRaisesRegex(InventoryError, 'anchor-inventory-unavailable'):
+                runner.anchor_inventory(99999, 'fixed-test', diagnostics=diagnostics)
+        self.assertEqual(diagnostics[-1]['failureCode'], 'anchor-inventory-unavailable')
+        self.assertEqual(diagnostics[-1]['producerFailureCode'], 'inventory-query-permission')
+        self.assertEqual(diagnostics[-1]['phase'], 'group-data')
+        self.assertEqual(diagnostics[-1]['errno'], errno.EPERM)
+        self.assertEqual(diagnostic['failureCode'], 'inventory-query-permission')
+
+    def test_cleanup_inventory_cause_survives_retirement_and_recovery_tail_overflow(self):
+        from anchor_inventory import InventoryError
+        limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        clock = SimpleNamespace(now=100.0)
+        def sleep(seconds):
+            clock.now += max(seconds, .000001)
+        child = mock.Mock(pid=99999, returncode=None, stdin=None)
+        anchor = PrimaryAnchor(child, None, None)
+        def spawn(*args, **kwargs):
+            anchor._census = kwargs['census']
+            return anchor
+        def retirement(*, deadline=None):
+            with self.assertRaises(InventoryError):
+                anchor._census(child.pid, deadline=deadline)
+            return anchor.receipt(reason='anchor-census-unavailable', signalAuthority=False)
+        def recover(*, deadline=None):
+            anchor._state = 'lost'
+            return anchor.receipt(reason='anchor-recovery-not-terminal', signalAuthority=False)
+        producer = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+                    'failureCode': 'inventory-query-permission', 'phase': 'group-data',
+                    'errorType': 'failure', 'errno': errno.EACCES,
+                    'helperProgress': {'phase': 'group-data', 'events': 6}}
+        with mock.patch('support.time.monotonic', side_effect=lambda: clock.now), \
+                mock.patch('support.time.sleep', side_effect=sleep), \
+                mock.patch.object(PrimaryAnchor, 'spawn', side_effect=spawn), \
+                mock.patch.object(anchor, 'try_reap', side_effect=retirement), \
+                mock.patch.object(anchor, 'signal_group', side_effect=lambda *_, **__: anchor.receipt(
+                    reason='anchor-signal-sent', signalAuthority=True)), \
+                mock.patch.object(anchor, 'recover_exact_child', side_effect=recover), \
+                mock.patch('anchor_inventory.collect', side_effect=InventoryError(
+                    'anchor-inventory-unavailable', producer)), \
+                mock.patch('primary_anchor.os.waitpid') as wait, \
+                mock.patch('primary_anchor.os.killpg') as send:
+            runner = Runner(self.root, time.time(), limits)
+            with mock.patch.object(runner, 'observed_exit', return_value=0):
+                with self.assertRaisesRegex(Failure, 'owned-process-cleanup-timeout'):
+                    runner.run('inventory-cause-retention', ['unused'], self.root, {}, 360)
+        wait.assert_not_called()
+        send.assert_not_called()
+        record = runner.records[0]
+        self.assertEqual(len(record['cleanupDiagnostics']), 16)
+        self.assertTrue(all(item['operation'] == 'anchor-exact-recovery'
+                            for item in record['cleanupDiagnostics']))
+        self.assertEqual(record['cleanupStoppingDiagnostic']['operation'], 'anchor-retirement')
+        saved = record['cleanupInventoryFailure']
+        self.assertEqual(saved['backend'], 'darwin-header-bound')
+        self.assertEqual(saved['failureCode'], 'anchor-inventory-unavailable')
+        self.assertEqual(saved['producerFailureCode'], 'inventory-query-permission')
+        self.assertEqual(saved['phase'], 'group-data')
+        self.assertEqual(saved['helperProgress'], {'phase': 'group-data', 'events': 6})
+        self.assertEqual(saved['errno'], errno.EACCES)
+        self.assertEqual(runner.failure['code'], 'owned-primary-reap-unconfirmed')
+        self.assertEqual(record['groupCleanup'], 'unverified')
+        self.assertIsNone(record['exitCode'])
 
     def test_deadline_uses_monotonic_origin(self):
         (self.root / 'started-monotonic').write_text(str(time.monotonic() - 10))

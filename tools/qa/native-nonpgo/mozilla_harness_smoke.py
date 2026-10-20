@@ -6,8 +6,8 @@ import os
 from pathlib import Path
 import sys
 
-from helper_import_preflight import (ERROR_TYPES, FAILURE_CODES, choice,
-                                     monitor_projection, number, runner_failure,
+from helper_import_preflight import (ERROR_TYPES, FAILURE_CODES, PROCESS_PHASES, choice,
+                                     cleanup_diagnostic_projection, monitor_projection, number, runner_failure,
                                      stage_projection)
 from mozilla_harness_receipt import receipt
 from support import Failure, Runner, digest, require, write_json
@@ -71,7 +71,8 @@ def process_evidence(case_runner):
     rows = case_runner.records if case_runner is not None else []
     if len(rows) != 1:
         return {'available': False, 'exitCode': None, 'exactReaped': None,
-                'groupGone': None, 'cleanupClean': None, 'monitorFailureAbsent': None}
+                'groupGone': None, 'cleanupClean': None, 'monitorFailureAbsent': None,
+                'cleanupInventoryFailure': None}
     row = rows[0]
     code = number(row.get('exitCode'), integer=True, signed=True)
     reap = row.get('leaderReap', {})
@@ -82,10 +83,10 @@ def process_evidence(case_runner):
     return {'available': True, 'exitCode': code,
             'reason': None if reason is None else choice(reason, FAILURE_CODES, 'runner-failure'),
             'failurePhase': None if phase is None else choice(phase,
-                ('launch', 'resources', 'group-activity', 'native-census', 'progress', 'wait', 'cleanup'),
-                'unavailable'),
+                PROCESS_PHASES, 'unavailable'),
             'exactReaped': exact_reaped, 'groupGone': row.get('groupCleanup') == 'verified-gone',
             'cleanupClean': row.get('cleanupFailure') is None,
+            'cleanupInventoryFailure': cleanup_diagnostic_projection(row.get('cleanupInventoryFailure')),
             'monitorFailureAbsent': case_runner.monitor_failure is None,
             'monitorDiagnosticsCount': len(case_runner.monitor_diagnostics),
             'minimumFreeGiB': number(row.get('minimumFreeGiB')),
@@ -95,27 +96,6 @@ def process_evidence(case_runner):
 def stage_evidence(row):
     value = stage_projection(row)
     value['stage'] = 'mozilla-xpcshell' if row.get('stage') == 'mozilla-xpcshell' else None
-    value['cleanupFailureCode'] = None if row.get('cleanupFailure') is None else choice(
-        row['cleanupFailure'], (*FAILURE_CODES, 'owned-process-cleanup-timeout'), 'cleanup-failure')
-    value['cleanupDiagnostics'] = []
-    for item in row.get('cleanupDiagnostics', [])[-16:]:
-        if type(item) is not dict:
-            continue
-        entry = {'operation':choice(item.get('operation'),
-            ('group-probe', 'group-signal', 'denied-group-leader-reap'), 'unavailable')}
-        for key in ('signal', 'errno', 'leaderExitAtProbe', 'boundedWaitSeconds'):
-            if key in item:
-                entry[key] = number(item[key], integer=key != 'boundedWaitSeconds',
-                                    signed=key == 'leaderExitAtProbe')
-        if 'errorType' in item:
-            entry['errorType'] = choice(item['errorType'], ERROR_TYPES, 'unavailable')
-        for key in ('leaderWasUnreaped', 'freshProbeAttempted'):
-            if key in item:
-                entry[key] = item[key] if type(item[key]) is bool else None
-        if 'reapResult' in item:
-            entry['reapResult'] = choice(item['reapResult'],
-                ('already-reaped', 'pending', 'reaped', 'unavailable', 'still-running'), 'unavailable')
-        value['cleanupDiagnostics'].append(entry)
     return value
 
 

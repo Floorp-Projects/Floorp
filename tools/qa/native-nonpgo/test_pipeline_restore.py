@@ -58,7 +58,12 @@ class RestoreOnlyFlow(unittest.TestCase):
     def run_stage(self, stage, command, cwd, env, *args, **kwargs):
         self.runner.records.append({'stage': stage, 'exitCode': 0, 'reason': None,
             'failurePhase': None, 'cleanupFailure': None, 'groupCleanup': 'verified-gone',
-            'leaderReap': {'status': 'reaped', 'exitCode': 0}})
+            'leaderReap': {'status': 'reaped', 'exitCode': 0},
+            'primaryAnchor': {'policy': 'retained-direct-child-v1', 'retirementVerified': True,
+                'actualReaped': True, 'actualReturncode': 0, 'signalAuthorityRevoked': True,
+                'postReapAbsence': {'status': 'observed', 'groupEmpty': True,
+                                    'readOnly': True, 'signalAuthority': False},
+                'scope': 'active-process-group-epoch', 'sessionOrDescendantClosure': 'unconfirmed'}})
         path = self.task / (stage + '.private.log')
         if stage == 'sdk-materialize':
             (self.task / 'sdk-materialized.json').write_text(json.dumps({'path': str(self.task / 'sdk')}))

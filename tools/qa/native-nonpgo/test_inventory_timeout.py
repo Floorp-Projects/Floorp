@@ -142,11 +142,21 @@ class InventoryTimeoutTests(unittest.TestCase):
 
     def test_persistent_timeouts_record_classification_and_cleanup_real_stage(self):
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
+        original_run = subprocess.run
+        resource_queries = 0
+        def exhausted_resource_query(*args, **kwargs):
+            nonlocal resource_queries
+            resource_queries += 1
+            if resource_queries <= 3:
+                raise self.timeout()
+            # Lifecycle cleanup needs a fresh complete inventory. Exhausting
+            # the resource sample does not invent an empty cleanup roster.
+            return original_run(*args, **kwargs)
         with tempfile.TemporaryDirectory() as directory:
             task = Path(directory)
             runner = Runner(task, time.time(), limits)
             durable = io.StringIO()
-            with mock.patch('support.subprocess.run', side_effect=self.timeout()), \
+            with mock.patch('support.subprocess.run', side_effect=exhausted_resource_query), \
                     contextlib.redirect_stdout(durable):
                 with self.assertRaisesRegex(Failure, 'monitor-unavailable'):
                     runner.run('inventory-timeout', [sys.executable, '-c', 'import time; time.sleep(30)'],

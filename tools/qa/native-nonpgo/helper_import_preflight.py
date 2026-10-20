@@ -216,12 +216,102 @@ def worker_control_projection(value):
 STAGES = ('census-abi-compile', 'census-abi', 'helper-import-workload')
 ERROR_TYPES = ('TimeoutExpired', 'PermissionError', 'ProcessLookupError', 'OSError',
                'Failure', 'ValueError', 'InterruptedError', 'KeyboardInterrupt',
-               'failure', 'os-error', 'exception')
+               'ChildProcessError', 'CalledProcessError', 'AnchorError', 'AnchorSpawnError',
+               'AnchorInterrupted', 'failure', 'os-error', 'anchor-error', 'interrupted',
+               'validation', 'exception')
+PRIMARY_FAILURE_CODES = ('owned-primary-anchor-required', 'owned-primary-anchor-unavailable',
+    'owned-primary-exit-unavailable', 'owned-primary-observation-unavailable',
+    'owned-primary-post-reap-group-unconfirmed', 'owned-primary-reap-unconfirmed',
+    'owned-primary-signal-unavailable')
 FAILURE_CODES = ('monitor-unavailable', 'nonzero-exit', 'platform-job-limit',
     'free-disk-reserve', 'private-log-limit', 'native-private-size-limit', 'phase-deadline',
     'owned-process-memory-limit', 'stalled-no-progress', 'owned-descendants-outlived-leader',
     'owned-native-cleanup-incomplete', 'owned-group-cleanup-incomplete', 'owned-leader-reap-failed',
-    *ERROR_TYPES)
+    'owned-process-cleanup-timeout', *PRIMARY_FAILURE_CODES, *ERROR_TYPES)
+PROCESS_PHASES = ('launch', 'primary-observation', 'resources', 'group-activity',
+                  'native-census', 'progress', 'wait', 'cleanup')
+# Fixed producer vocabulary; no import of the ownership primitive or raw receipt.
+ANCHOR_REASONS = (
+    'anchor-argv', 'anchor-bootstrap-stage', 'anchor-bsd-binding', 'anchor-bsd-unavailable',
+    'anchor-census-limit', 'anchor-census-pids', 'anchor-census-schema', 'anchor-census-source',
+    'anchor-census-unavailable', 'anchor-constructor-failed', 'anchor-constructor-interrupted',
+    'anchor-deadline', 'anchor-echild', 'anchor-final-wait-interrupted',
+    'anchor-final-wait-unavailable', 'anchor-generation-changed', 'anchor-hidden-reap-forbidden',
+    'anchor-missing-from-roster', 'anchor-observation-binding', 'anchor-observation-schema',
+    'anchor-observation-unavailable', 'anchor-operation-deadline', 'anchor-operation-busy',
+    'anchor-popen-status-mutated', 'anchor-proc-binding', 'anchor-proc-schema', 'anchor-proc-size',
+    'anchor-quarantine-limit', 'anchor-session', 'anchor-signal', 'anchor-platform',
+    'anchor-sigchld-not-default', 'anchor-recovery-unbound', 'anchor-recovery-not-terminal',
+    'anchor-recovery-not-ready', 'anchor-recovery-unavailable', 'anchor-terminal-mismatch',
+    'anchor-terminal-race', 'anchor-wait-pid-mismatch', 'anchor-wait-signal', 'anchor-wait-status',
+    'anchor-wait-status-mismatch', 'anchor-wait-not-ready', 'anchor-waitid-binding',
+    'anchor-not-terminal', 'anchor-nonleaders-remain', 'anchor-signal-sent',
+    'anchor-authority-revoked', 'anchor-recovered-without-group-proof')
+ANCHOR_OPERATIONS = ('anchor-observation', 'anchor-retirement', 'anchor-group-signal',
+    'anchor-post-reap-absence', 'anchor-exact-recovery', 'anchor-stop-refused',
+    'anchor-group-inventory', 'group-probe', 'group-signal', 'denied-group-leader-reap')
+ANCHOR_INVENTORY_FAILURE_CODES = (
+    'anchor-inventory-deadline', 'anchor-inventory-abi-missing', 'anchor-inventory-size',
+    'anchor-inventory-schema', 'anchor-inventory-empty-producer', 'anchor-inventory-unavailable',
+    'anchor-inventory-timeout', 'anchor-inventory-producer-failed', 'inventory-protocol-size',
+    'inventory-protocol', 'inventory-protocol-keys', 'inventory-protocol-queries',
+    'inventory-protocol-query', 'inventory-protocol-unknown', 'inventory-protocol-failure',
+    'inventory-protocol-pids', 'inventory-protocol-measurement', 'inventory-protocol-progress')
+NATIVE_INVENTORY_FAILURE_CODES = (
+    'inventory-helper-exception', 'inventory-query-permission', 'inventory-size-unavailable',
+    'inventory-data-unavailable', 'inventory-size', 'inventory-returned-size',
+    'inventory-record-length', 'inventory-record-pid', 'inventory-record-identity',
+    'inventory-self-unavailable', 'inventory-self-count', 'inventory-abi-unavailable',
+    'inventory-group-id', 'inventory-selector', 'inventory-retries-exhausted', 'inventory-platform')
+
+
+def cleanup_diagnostic_projection(value):
+    """One fixed lifecycle diagnostic, without identities or signal authority proof."""
+    if type(value) is not dict:
+        return None
+    result = {'operation': choice(value.get('operation'), ANCHOR_OPERATIONS, 'unavailable')}
+    for key in ('status', 'state'):
+        if key in value:
+            result[key] = choice(value[key],
+                ('held', 'live', 'zombie', 'reaping', 'reaped', 'lost', 'recovered',
+                 'unavailable', 'observed', 'unconfirmed'), 'unavailable')
+    for key, allowed in (('reason', ANCHOR_REASONS), ('errorType', ERROR_TYPES)):
+        if key in value:
+            result[key] = None if value[key] is None else choice(value[key], allowed, 'unavailable')
+    for key in ('errno', 'actualReturncode', 'observedExitCode', 'leaderExitAtProbe', 'boundedWaitSeconds'):
+        if key in value:
+            result[key] = number(value[key], integer=key != 'boundedWaitSeconds',
+                signed=key in ('actualReturncode', 'observedExitCode', 'leaderExitAtProbe'))
+    if 'signal' in value:
+        item = value['signal']
+        result['signal'] = item if type(item) is int and item in (0, 2, 9, 15) else None
+    for key in ('actualReaped', 'signalAuthority', 'freshIdentityVerified', 'groupEmpty',
+                'readOnly', 'leaderWasUnreaped', 'freshProbeAttempted'):
+        if key in value:
+            result[key] = value[key] if type(value[key]) is bool else None
+    if 'reapResult' in value:
+        result['reapResult'] = choice(value['reapResult'],
+            ('already-reaped', 'pending', 'reaped', 'unavailable', 'still-running'), 'unavailable')
+    if 'backend' in value:
+        result['backend'] = choice(value['backend'],
+            ('darwin-header-bound', 'darwin-bootstrap-ps', 'linux-ps-test'), 'unavailable')
+    if 'failureCode' in value:
+        result['failureCode'] = choice(value['failureCode'], ANCHOR_INVENTORY_FAILURE_CODES, 'unavailable')
+    if 'producerFailureCode' in value:
+        result['producerFailureCode'] = choice(
+            value['producerFailureCode'], NATIVE_INVENTORY_FAILURE_CODES, 'unavailable')
+    if 'phase' in value:
+        result['phase'] = choice(value['phase'], (*PHASES, 'startup'), 'unobserved')
+    if 'timeoutSeconds' in value:
+        seconds = number(value['timeoutSeconds'])
+        result['timeoutSeconds'] = seconds if seconds is not None and 0 < seconds <= TIMEOUT else None
+    progress = value.get('helperProgress')
+    if type(progress) is dict:
+        events = number(progress.get('events'), integer=True)
+        result['helperProgress'] = {
+            'phase': choice(progress.get('phase'), PHASES, 'unobserved'),
+            'events': events if events is not None and events <= len(PHASES) else None}
+    return result
 
 
 def runner_failure(value):
@@ -294,7 +384,62 @@ def monitor_projection(value, *, partial=False):
     return result
 
 
+PRIMARY_ANCHOR_KEYS = frozenset(('policy', 'retirementVerified', 'actualReaped', 'actualReturncode',
+    'signalAuthorityRevoked', 'postReapAbsence', 'scope', 'sessionOrDescendantClosure'))
+PRIMARY_ABSENCE_KEYS = frozenset(('status', 'groupEmpty', 'readOnly', 'signalAuthority'))
+
+
+def primary_anchor_complete(value, exit_code):
+    if type(value) is not dict or set(value) != PRIMARY_ANCHOR_KEYS or type(exit_code) is not int:
+        return False
+    absence = value['postReapAbsence']
+    return (type(absence) is dict and set(absence) == PRIMARY_ABSENCE_KEYS and
+            type(value['policy']) is str and value['policy'] == 'retained-direct-child-v1' and
+            value['retirementVerified'] is True and value['actualReaped'] is True and
+            type(value['actualReturncode']) is int and value['actualReturncode'] == exit_code and
+            value['signalAuthorityRevoked'] is True and
+            type(value['scope']) is str and value['scope'] == 'active-process-group-epoch' and
+            type(value['sessionOrDescendantClosure']) is str and
+            value['sessionOrDescendantClosure'] == 'unconfirmed' and
+            type(absence['status']) is str and absence['status'] == 'observed' and
+            absence['groupEmpty'] is True and absence['readOnly'] is True and
+            absence['signalAuthority'] is False)
+
+
+def stage_complete(row):
+    leader = row.get('leaderReap') if type(row) is dict else None
+    return (type(row) is dict and type(row.get('exitCode')) is int and row['exitCode'] == 0 and
+            row.get('groupCleanup') == 'verified-gone' and
+            all(key in row and row[key] is None for key in ('reason', 'failurePhase', 'cleanupFailure')) and
+            type(leader) is dict and leader.get('status') == 'reaped' and
+            type(leader.get('exitCode')) is int and leader['exitCode'] == 0 and
+            primary_anchor_complete(row.get('primaryAnchor'), row['exitCode']))
+
+
+def primary_anchor_projection(value):
+    # Reject shape changes as a unit: dropping an extra private key must not
+    # turn a forged proof into a valid proof on a later readback.
+    if type(value) is not dict or set(value) != PRIMARY_ANCHOR_KEYS:
+        return None
+    absence = value['postReapAbsence']
+    if type(absence) is not dict or set(absence) != PRIMARY_ABSENCE_KEYS:
+        return None
+    boolean = lambda item: item if type(item) is bool else None
+    return {'policy': choice(value['policy'], ('retained-direct-child-v1',), None),
+        'retirementVerified': boolean(value['retirementVerified']),
+        'actualReaped': boolean(value['actualReaped']),
+        'actualReturncode': number(value['actualReturncode'], integer=True, signed=True),
+        'signalAuthorityRevoked': boolean(value['signalAuthorityRevoked']),
+        'postReapAbsence': {
+            'status': choice(absence['status'], ('observed', 'unconfirmed'), None),
+            'groupEmpty': boolean(absence['groupEmpty']), 'readOnly': boolean(absence['readOnly']),
+            'signalAuthority': boolean(absence['signalAuthority'])},
+        'scope': choice(value['scope'], ('active-process-group-epoch',), None),
+        'sessionOrDescendantClosure': choice(value['sessionOrDescendantClosure'], ('unconfirmed',), None)}
+
+
 def stage_projection(row):
+    row = row if type(row) is dict else {}
     leader = row.get('leaderReap')
     leader = leader if isinstance(leader, dict) else {}
     return {'stage': choice(row.get('stage'), STAGES),
@@ -305,7 +450,18 @@ def stage_projection(row):
             'exitCode': number(leader.get('exitCode'), integer=True, signed=True),
             'errorType': choice(leader.get('errorType'), ERROR_TYPES, 'unavailable'),
             'errno': number(leader.get('errno'), integer=True)},
+        'primaryAnchor': primary_anchor_projection(row.get('primaryAnchor')),
+        'reason': None if row.get('reason') is None else choice(row['reason'], FAILURE_CODES, 'runner-failure'),
+        'failurePhase': None if row.get('failurePhase') is None else choice(
+            row['failurePhase'], PROCESS_PHASES, 'unavailable'),
         'cleanupFailurePresent': row.get('cleanupFailure') is not None,
+        'cleanupFailureCode': None if row.get('cleanupFailure') is None else choice(
+            row['cleanupFailure'], FAILURE_CODES, 'cleanup-failure'),
+        'cleanupDiagnostics': [cleanup_diagnostic_projection(item)
+            for item in row.get('cleanupDiagnostics', [])[-16:] if type(item) is dict]
+            if type(row.get('cleanupDiagnostics', [])) is list else [],
+        'cleanupStoppingDiagnostic': cleanup_diagnostic_projection(row.get('cleanupStoppingDiagnostic')),
+        'cleanupInventoryFailure': cleanup_diagnostic_projection(row.get('cleanupInventoryFailure')),
         'peakRSSMiB': number(row.get('peakRSSMiB')), 'minimumFreeGiB': number(row.get('minimumFreeGiB')),
         'lastActivity': monitor_projection(row.get('lastActivity'))}
 
@@ -713,9 +869,8 @@ def run_experiment(task, result):
         value = json.loads((private/'workload.json').read_text())
         result['workload'] = value
         require(value['status'] == 'passed', 'helper-import-workload-failed')
-        require(runner.failure is None and runner.monitor_failure is None and
-            all(row['groupCleanup'] == 'verified-gone' and row['leaderReap']['status'] == 'reaped'
-                and row['cleanupFailure'] is None for row in runner.records), 'helper-import-stage-cleanup')
+        require(runner.failure is None and runner.monitor_failure is None and runner.records and
+            all(stage_complete(row) for row in runner.records), 'helper-import-stage-cleanup')
         result['status'] = 'passed'
     except BaseException as error:
         result['firstFailure'] = (runner_failure(runner.failure) if runner is not None else None) or {

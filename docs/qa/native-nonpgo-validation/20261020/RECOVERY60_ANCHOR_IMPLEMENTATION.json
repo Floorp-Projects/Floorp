@@ -1,0 +1,386 @@
+{
+  "schema": 1,
+  "status": "IMPLEMENTATION_REVIEWED_LINUX_VALIDATED_ACTUAL_MAC_AND_ADMISSION_PENDING",
+  "preparedUTC": "2026-10-20T07:23:51.004309+00:00",
+  "publication": {
+    "candidateOnly": true,
+    "docsApplied": false,
+    "immutableSourceCommit": null,
+    "workflowCreated": false,
+    "newCIStarted": false
+  },
+  "purpose": "Validate retained direct-child cleanup and fixed safe evidence before a separate real Mac preflight; no browser, SDK or build qualification.",
+  "implementation": {
+    "signalAuthority": "Retain the exact direct child until serialized positive final wait. Fresh BSD identity and raw complete group membership are separate inputs; numeric group existence never restores authority.",
+    "retirement": "Exact expected-child wait and true exit status; revoke signal authority before final reap. Unknown, ECHILD, interrupted or mismatched observations fail closed.",
+    "rawInventory": "Keep valid zombies and all owners in raw group membership. Unavailable inventory is not empty; native failure has no ps fallback. Only two named ABI bootstrap stages use their restricted bootstrap producer.",
+    "budget": "Preserve original job clock and resource limits. Repeated finally does not renew the nominal total105-second cleanup signal grace.",
+    "evidence": "Keep original primary failure, latest16 diagnostics, actual stopping anchor operation and independent latest inventory failure. Adapter and native producer causes remain separate; only fixed typed public fields survive.",
+    "stageProof": "Require exact retained-direct-child-v1 proof with8 primary keys and4 read-only post-reap absence keys, matched actual return code, authority revoked and observed empty group. Session and descendant closure remain unconfirmed."
+  },
+  "sourceBindings": [
+    {
+      "file": "support.py",
+      "bytes": 41059,
+      "sha256": "6909ccfa9cb25cc48554405dde0185f396b12a94493f9073f32a847a0d9c3631"
+    },
+    {
+      "file": "primary_anchor.py",
+      "bytes": 34463,
+      "sha256": "6155e6b86a6125adca2914b467e2da20302a00bf0333ea22af40e61c52f1148b"
+    },
+    {
+      "file": "test_primary_anchor.py",
+      "bytes": 64330,
+      "sha256": "9b9ed529145832b2bdb5f9e4f8210ac62bbef969bed685c50466fcf7b27437dc"
+    },
+    {
+      "file": "anchor_inventory.py",
+      "bytes": 6427,
+      "sha256": "4c535e9358b33cf6d55ca0e707e6c22a598c0b9088d619c1a2b19fa59249c96e"
+    },
+    {
+      "file": "test_anchor_inventory.py",
+      "bytes": 18690,
+      "sha256": "5cf39799069b5f2c7f7c8d7ab348f549ab095edb7801ba5f08e6e982edb08130"
+    },
+    {
+      "file": "mozilla_target_build.py",
+      "bytes": 15013,
+      "sha256": "c989a44b20f48f73784330d70be80d2d12b028b2af1cab510f4e2439d01ac8cf"
+    },
+    {
+      "file": "test_mozilla_target_build.py",
+      "bytes": 17648,
+      "sha256": "53fcf2fb20dfad2ef0c2e3d3fb4b379bf2b72e2740179fdb07b505a28f34a63a"
+    },
+    {
+      "file": "helper_import_preflight.py",
+      "bytes": 53583,
+      "sha256": "4ed23cb1220d040f831018f2ce77a8e1a5444e1e047e6a41c0a73932c2a882fc"
+    },
+    {
+      "file": "test_helper_import_preflight.py",
+      "bytes": 71215,
+      "sha256": "35be5f2f8afc267f330c9fa72b1fdd2116fbf5ecb1313b7ecfe693c2ed10f206"
+    },
+    {
+      "file": "mozilla_harness_smoke.py",
+      "bytes": 15367,
+      "sha256": "2562fd36c1e7dfb630abbf29fb567eec0dcdecf946174044718d81f6990bcabe"
+    },
+    {
+      "file": "test_mozilla_harness_smoke.py",
+      "bytes": 25558,
+      "sha256": "6ae41fb5378d03f3674330e6e3518803d76ec987f077df24a1b8855311173d59"
+    },
+    {
+      "file": "test_owned_cleanup.py",
+      "bytes": 22526,
+      "sha256": "5d422f8ae06df0b5221d7f8d093746460b77c9e2d62f1c87d49e186dca810371"
+    },
+    {
+      "file": "test_guards.py",
+      "bytes": 99060,
+      "sha256": "ea3a6c3be96588ff57d267677625c664ecd451bcdea2330e245cd902211c4cfe"
+    },
+    {
+      "file": "test_anchor_wait_models.py",
+      "bytes": 15631,
+      "sha256": "1c5f9b3257dc3ecb128d976dfd9d458b8cb88fb8cd4912cd456bfd52493c2353"
+    },
+    {
+      "file": "test_anchor_mac_groups.py",
+      "bytes": 23616,
+      "sha256": "2a7b34d3d206ce09a412c5e1b40427aacc41d607520c0aa32de0fad9557ec060"
+    },
+    {
+      "file": "test_inventory_timeout.py",
+      "bytes": 11530,
+      "sha256": "92892f68b769594f5aead398b1efd05ba542cabf245b4c185f9404cc556effb0"
+    },
+    {
+      "file": "test_checkpoint_prototype.py",
+      "bytes": 24540,
+      "sha256": "b8795db26866dcfd0915c6031ba90f5363f9d50ca0b56a33f970f023f451856e"
+    },
+    {
+      "file": "test_checkpoint_transfer.py",
+      "bytes": 11635,
+      "sha256": "62a3844c09cadb067a63ff2726c75ea4700500950b43aa7f3627b80991cc6d0c"
+    },
+    {
+      "file": "test_mozilla_upstream.py",
+      "bytes": 29575,
+      "sha256": "f3546f3aa35df3bba9dae0834ccddf076b9a3a2cb47168f9b493f290f4c699ef"
+    },
+    {
+      "file": "test_pipeline_restore.py",
+      "bytes": 39740,
+      "sha256": "4586ea90767a9c9d4ecc071f1531f09cd612fc37ea094b95198aa7fac53467e5"
+    }
+  ],
+  "independentReview": {
+    "status": "CODE_CLEAR_ACTUAL_MAC_AND_ADMISSION_PENDING",
+    "bytes": 15964,
+    "sha256": "4755f4ebc2f7342b1835ca4184822e2cc1d99b21a956793430b13d74776932e5",
+    "boundSourceFiles": 20,
+    "openP1": 0,
+    "openP2": 0,
+    "codeSuitableForDedicatedMacValidation": true,
+    "actualMacQualification": "NOT_RUN",
+    "workflowOrImmutableAdmissionGranted": false,
+    "productionOrFullHostNativeQualificationGranted": false,
+    "validation": {
+      "runnerPureClockRegressionsPassed": 4,
+      "newProjectionRegressionsPassed": 9,
+      "portableWaitMethods": 14,
+      "portableWaitExecutionsPassed": 28,
+      "actualDarwinExecution": false,
+      "independentProjectionControlsPassed": 80,
+      "macFixtureDisposalMockControlsPassed": 4,
+      "queryPostlaunchFailureMocks": {
+        "killCalls": 1,
+        "waitCalls": 1,
+        "streamCloseCalls": 2,
+        "actualProcesses": 0
+      }
+    },
+    "linuxRerunDecision": "The reviewer found no need to repeat the full Linux suite for the subsequent Darwin-skipped fixture-only change; actual Mac execution remains mandatory."
+  },
+  "linuxValidation": {
+    "final": {
+      "testsRun": 967,
+      "passed": 920,
+      "failures": 0,
+      "errors": 0,
+      "darwinSkipped": 47,
+      "seconds": 68.294,
+      "ResourceWarningPolicy": "error",
+      "unexpectedUnraisableCount": 0,
+      "sourceBeforeAfterUnchanged": true,
+      "scope": "Linux integration only; Darwin actual bodies were skipped, not passed.",
+      "logDigest": {
+        "bytes": 182277,
+        "sha256": "316681130b1a3a55d1a0b2be066d96c96c31b370c452bdf3df368a2c6d594f69"
+      }
+    },
+    "postRunBinding": {
+      "filesCompared": 88,
+      "changedFiles": [
+        {
+          "file": "test_anchor_mac_groups.py",
+          "linuxRunBinding": {
+            "bytes": 21920,
+            "sha256": "66dce5d792be569c3ee7809cc9d7d650f656162c70cfb069cdb90c55a3257b08"
+          },
+          "currentBinding": {
+            "bytes": 23616,
+            "sha256": "2a7b34d3d206ce09a412c5e1b40427aacc41d607520c0aa32de0fad9557ec060"
+          }
+        }
+      ],
+      "productionOrPortableSourcesChanged": 0,
+      "onlyChangedFileWasDarwinSkipped": true,
+      "latestMacFixtureActualExecution": "NOT_RUN"
+    },
+    "earlierFailedFullTrial": {
+      "status": "FAILED",
+      "testsRun": 921,
+      "passed": 867,
+      "failures": 1,
+      "errors": 16,
+      "darwinSkipped": 37,
+      "supersededAsSuccessfulValidation": false
+    },
+    "earlierFailedPrototypeCleanup": {
+      "status": "CLEANUP_INCOMPLETE_AT_RECORDED_OBSERVATION",
+      "fixtureRoles": [
+        "make-parent",
+        "leaf"
+      ],
+      "identityBoundBeforeSignal": true,
+      "leafSignal": "SIGINT",
+      "signalMechanism": "pidfd",
+      "bothTargetsObservedTerminal": true,
+      "makeParentReparentedToInitZombie": true,
+      "controllerExactWaitAvailable": false,
+      "controllerExactReapClaim": false,
+      "allHistoryResidueZeroClaim": false
+    },
+    "forkMechanicsTrials": [
+      {
+        "status": "FAILED",
+        "errorKind": "OSError",
+        "failurePhase": null,
+        "failureLocation": "UNKNOWN",
+        "actualMac": false,
+        "allHistoryResidueZeroClaim": false
+      },
+      {
+        "status": "PASSED",
+        "modeCount": 4,
+        "modes": [
+          "live",
+          "zombie",
+          "leave",
+          "rejoin"
+        ],
+        "knownPrimaryCount": 4,
+        "knownLeafCount": 4,
+        "knownPrimariesECHILD": true,
+        "knownLeavesECHILD": true,
+        "sourceChangedForSuccessfulRetry": false,
+        "scope": "Linux fork mechanics for this fixed known cohort only",
+        "actualMac": false,
+        "allHistoryResidueZeroClaim": false
+      }
+    ]
+  },
+  "actualMacPlan": {
+    "status": "NOT_RUN",
+    "selectionVerification": "TestLoader discovery only; zero test bodies executed for this plan.",
+    "selectedIDs": 157,
+    "uniqueSelectedIDs": 157,
+    "loaderErrors": 0,
+    "expectedSkippedOnPinnedMac": 0,
+    "linuxActualMethodsExcluded": 42,
+    "darwinSpecificSelectedMethods": 34,
+    "selectionBySourceFile": [
+      {
+        "file": "test_anchor_inventory.py",
+        "selectedMethods": 22
+      },
+      {
+        "file": "test_anchor_mac_groups.py",
+        "selectedMethods": 10
+      },
+      {
+        "file": "test_anchor_wait_models.py",
+        "selectedMethods": 14
+      },
+      {
+        "file": "test_darwin_inventory.py",
+        "selectedMethods": 2
+      },
+      {
+        "file": "test_failure_recovery.py",
+        "selectedMethods": 4
+      },
+      {
+        "file": "test_guards.py",
+        "selectedMethods": 15
+      },
+      {
+        "file": "test_helper_import_preflight.py",
+        "selectedMethods": 6
+      },
+      {
+        "file": "test_mozilla_harness_smoke.py",
+        "selectedMethods": 3
+      },
+      {
+        "file": "test_owned_cleanup.py",
+        "selectedMethods": 20
+      },
+      {
+        "file": "test_primary_anchor.py",
+        "selectedMethods": 59
+      },
+      {
+        "file": "test_process_census.py",
+        "selectedMethods": 2
+      }
+    ],
+    "mandatoryMatrix": {
+      "rows": 24,
+      "actualMacRows": 15,
+      "modelRows": 9,
+      "coverage": "Planned source-to-case mapping; not a Mac PASS result."
+    },
+    "actualGroups": [
+      "live BSD low16 zero is not exit",
+      "all8 signed exit arguments with canonical actual wait comparison",
+      "TERM/KILL actual raw wait comparison",
+      "first positive observation already zombie",
+      "fatal leader with live nonleader raw drain",
+      "raw zombie nonleader and delegated parent wait",
+      "same-session leave and return after snapshot",
+      "actual ECHILD revokes authority",
+      "two same-birth live resource samples then terminal-null",
+      "query child timeout/exact reap while real primary remains held"
+    ],
+    "platform": {
+      "runner": "macos-15-intel",
+      "host": "x86_64-apple-darwin",
+      "python": "3.12.10",
+      "osVersion": "15.7.9",
+      "imageVersion": "20260824.0482.1"
+    },
+    "bootstrap": [
+      "census-abi-compile",
+      "census-abi"
+    ],
+    "clock": "All stages use the original job monotonic origin without reset. Only the two existing ABI bootstrap stages retain absolute phase15. The selected157 diagnostic stage uses absolute phase345 and shared work cap345, within platform360 and nominal15-minute cleanup reserve; no additive stage budgets or whole-job15-minute cutoff.",
+    "constraints": {
+      "sdkAcquisition": false,
+      "runtimeCheckoutOrBuild": false,
+      "checkpointAcquisition": false,
+      "newArtifactStorageOrUpload": false,
+      "productSigning": false,
+      "authOrPermissionChange": false
+    },
+    "admission": "Future driver and immutable caller are prepared separately; current run must first be terminal, and final source/caller/initial-push admission must be reviewed before one new short execution.",
+    "qualification": "Tested active process-group epoch only. Direct-primary exact waits, delegated waits and grandchild raw absence are distinct. No all-descendant, all-session, all-history or future-service cleanup proof.",
+    "deadlines": {
+      "clockOrigin": "original-job-monotonic-origin",
+      "abiBootstrapPhaseMinutes": 15,
+      "selectedDiagnosticPhaseMinutes": 345,
+      "sharedWorkCapMinutes": 345,
+      "platformMinutes": 360,
+      "nominalCleanupReserveMinutes": 15,
+      "clockResetAllowed": false,
+      "stageBudgetsAdditive": false,
+      "wholeJob15MinuteCutoff": false
+    }
+  },
+  "existingRun": {
+    "runID": 39372006481,
+    "canonicalURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39372006481",
+    "changedByThisWork": false,
+    "statusAtReportedPreparation": "in-progress",
+    "fixtureCommit": "1e6b113a7363a8ba9bb31a0addeb82b2f03a48fe",
+    "fixtureCanonicalURL": "https://github.com/Floorp-Projects/Floorp/commit/1e6b113a7363a8ba9bb31a0addeb82b2f03a48fe",
+    "newCleanupSourceApplied": false,
+    "implementationGeneration": "prior-pinned-fixture-only"
+  },
+  "fixedRuntime": {
+    "commit": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "canonicalURL": "https://github.com/Floorp-Projects/Floorp-Runtime/commit/7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "qualification": {
+    "actualMac": "NOT_RUN",
+    "nativeShimAuthentication": "NOT_TESTED",
+    "fullHostXUL": "NOT_TESTED",
+    "upstreamServiceOwnership": "NOT_TESTED",
+    "productionGO": false,
+    "allHistoryResidueZeroClaim": false
+  },
+  "privacy": {
+    "privateConversationIdentifiers": false,
+    "privatePaths": false,
+    "processIdentifiers": false,
+    "processArgumentsOrEnvironment": false,
+    "rawLogs": false,
+    "secretOrSignedURLs": false
+  },
+  "legacyFindingScope": {
+    "basis": "Fixed-source and model numeric group reuse counterexamples.",
+    "currentRunActualReuse": "NOT_ESTABLISHED",
+    "currentRunActualForeignSignal": "NOT_ESTABLISHED",
+    "currentRunFailureCause": "NOT_ESTABLISHED_BY_THIS_FINDING",
+    "legacyVerifiedGoneOwnershipCaveat": true,
+    "newCodeReviewRetroactivelyProvesPriorCleanup": false,
+    "qualification": "An earlier verified-gone group result alone does not establish the stronger retained direct-child ownership qualification. The new code review neither diagnoses the current run nor retroactively validates its cleanup."
+  }
+}

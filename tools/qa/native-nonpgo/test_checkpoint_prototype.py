@@ -19,6 +19,7 @@ from unittest import mock
 
 from failure_excerpt import classify, excerpt
 from support import Failure, Runner, digest, require, scan_tar
+from primary_anchor import PrimaryAnchor
 
 
 DEADLINES_MINUTES = {'build': 240, 'cleanup': 245, 'scan': 260, 'archive': 305,
@@ -382,13 +383,15 @@ class CheckpointPrototypeTests(unittest.TestCase):
             'program: stable.o slow.o\n\tcc stable.o slow.o -o program\n')
         (obj / '.fingerprint').mkdir()
         (obj / '.fingerprint/completed').write_text('toy hidden state\n')
-        (self.root / 'started-monotonic').write_text('-999\n')
+        # Old private state must stay out of the archive, while this live
+        # cleanup experiment still obeys the original platform deadline.
+        (self.root / 'started-monotonic').write_text(str(time.monotonic() - 10) + '\n')
         (self.root / 'first-failure.json').write_text('{"code":"OLD-PRIVATE"}\n')
         env = {**os.environ, 'PAUSE_COMPILE': '1', 'LC_ALL': 'C'}
         limits = json.loads(Path(__file__).with_name('plan.json').read_text())['limits']
         limits['processCleanupGraceSeconds'] = 3
         runner = Runner(self.root, time.time(), limits)
-        process = None
+        anchor = None
         signals = []
         actual_killpg = os.killpg
         def observed_signal(pgid, value):
@@ -397,20 +400,25 @@ class CheckpointPrototypeTests(unittest.TestCase):
             return actual_killpg(pgid, value)
         try:
             with self.log.open('xb') as output:
-                process = subprocess.Popen(['make', '-j', '1'], cwd=obj, env=env, stdout=output,
-                                           stderr=subprocess.STDOUT, start_new_session=True)
+                anchor = PrimaryAnchor.spawn(['make', '-j', '1'], cwd=obj, env=env, stdout=output,
+                    stderr=subprocess.STDOUT, census=lambda pgid, *, deadline=None:
+                    runner.anchor_inventory(pgid, 'local-checkpoint-interrupt', deadline=deadline))
                 deadline = time.monotonic() + 10
-                while not (obj / 'ready').exists() and process.poll() is None and time.monotonic() < deadline:
+                while not (obj / 'ready').exists() and time.monotonic() < deadline:
+                    self.assertEqual(anchor.observe()['status'], 'live')
                     time.sleep(.01)
                 self.assertTrue((obj / 'ready').exists())
-                self.assertIsNone(process.poll())
+                self.assertEqual(anchor.observe()['status'], 'live')
                 self.assertEqual((obj / 'slow.o').read_bytes(), b'PARTIAL OBJECT')
                 stable_hash, stable_mtime = digest(obj / 'stable.o'), (obj / 'stable.o').stat().st_mtime_ns
                 before = scan_full_log(self.log)
                 with mock.patch('support.os.killpg', side_effect=observed_signal):
-                    runner.stop(process)
-                code = process.wait(timeout=5)
-            self.assertFalse(runner.owned_group_alive(process))
+                    runner.stop(anchor)
+                code = anchor.actual_returncode
+            self.assertEqual(anchor.lifecycle_state, 'reaped')
+            self.assertTrue(anchor.post_reap_absence(deadline=time.monotonic() + 3)['groupEmpty'])
+            with self.assertRaises(ChildProcessError):
+                os.waitpid(anchor.pid, os.WNOHANG)
             self.assertEqual(signals, [int(signal.SIGINT)])
             self.assertFalse((obj / 'slow.o').exists())
             after = scan_full_log(self.log, stop_offset=before['scannedBytes'])
@@ -453,10 +461,10 @@ class CheckpointPrototypeTests(unittest.TestCase):
                 'beforeLog': before, 'afterLog': after, 'consumerBuildExit': result.returncode,
                 'floorpQualification': False}}), flush=True)
         finally:
-            if process is not None:
-                if runner.owned_group_alive(process):
-                    runner.stop(process)
-                process.wait(timeout=5)
+            if anchor is not None and anchor.lifecycle_state != 'reaped':
+                runner.stop(anchor)
+            if anchor is not None:
+                self.assertIsNotNone(anchor.actual_returncode)
 
 
 if __name__ == '__main__':

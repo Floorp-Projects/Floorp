@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import contextlib
+import ast
+import copy
 import errno
 import io
 import json
@@ -54,6 +56,20 @@ def control_value():
         'cleanup': [{'index': index, 'reaped': True, 'exitCode': 0, 'failure': None} for index in range(2)],
         'temporaryDiskRemoval': {'status': 'removed-after-exact-reap', 'failure': None},
         'temporaryDirectoryCleanup': {'status': 'removed-after-exact-reap', 'failure': None}}
+
+
+def primary_anchor(code=0):
+    return {'policy': 'retained-direct-child-v1', 'retirementVerified': True,
+        'actualReaped': True, 'actualReturncode': code, 'signalAuthorityRevoked': True,
+        'postReapAbsence': {'status': 'observed', 'groupEmpty': True,
+                          'readOnly': True, 'signalAuthority': False},
+        'scope': 'active-process-group-epoch', 'sessionOrDescendantClosure': 'unconfirmed'}
+
+
+def stage_row():
+    return {'stage': 'helper-import-workload', 'exitCode': 0, 'reason': None, 'failurePhase': None,
+            'cleanupFailure': None, 'groupCleanup': 'verified-gone',
+            'leaderReap': {'status': 'reaped', 'exitCode': 0}, 'primaryAnchor': primary_anchor()}
 
 
 @contextlib.contextmanager
@@ -648,6 +664,238 @@ class ControlProjectionTests(unittest.TestCase):
 
 
 class DriverTests(unittest.TestCase):
+    def test_fixed_primary_failure_codes_and_phase_survive_without_arbitrary_text(self):
+        for code in hp.PRIMARY_FAILURE_CODES:
+            with self.subTest(code=code):
+                failure = hp.runner_failure({'stage': 'helper-import-workload', 'code': code,
+                    'elapsedSeconds': 1.5, 'pid': 987654321, 'path': '/PRIVATE-SENTINEL'})
+                stage = hp.stage_projection({'stage': 'helper-import-workload', 'reason': code,
+                    'failurePhase': 'primary-observation', 'cleanupFailure': code})
+                self.assertEqual(failure['code'], code)
+                self.assertEqual(stage['reason'], code)
+                self.assertEqual(stage['failurePhase'], 'primary-observation')
+                self.assertEqual(stage['cleanupFailureCode'], code)
+                self.assertNotIn('PRIVATE-SENTINEL', json.dumps([failure, stage]))
+                self.assertNotIn('987654321', json.dumps([failure, stage]))
+        for unknown in ('owned-primary-PRIVATE-SENTINEL', True, ['PRIVATE-SENTINEL']):
+            self.assertEqual(hp.runner_failure({'code': unknown})['code'], 'runner-failure')
+            value = hp.stage_projection({'reason': unknown, 'failurePhase': unknown,
+                                        'cleanupFailure': unknown})
+            self.assertEqual(value['reason'], 'runner-failure')
+            self.assertEqual(value['failurePhase'], 'unavailable')
+            self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+
+    def test_anchor_cleanup_history_and_separate_stopping_detail_share_safe_projection(self):
+        stopping = {'operation': 'anchor-observation', 'status': 'unavailable', 'state': 'lost',
+            'reason': 'anchor-echild', 'actualReaped': None, 'actualReturncode': None,
+            'observedExitCode': None, 'signalAuthority': False, 'freshIdentityVerified': False,
+            'errorType': 'os-error', 'errno': errno.ECHILD, 'pid': 987654321,
+            'argv': ['/PRIVATE-SENTINEL'], 'private': 'PRIVATE-SENTINEL'}
+        later = {'operation': 'anchor-exact-recovery', 'status': 'lost', 'state': 'lost',
+            'reason': 'anchor-recovery-unbound', 'actualReaped': None,
+            'signalAuthority': False, 'errorType': 'anchor-error', 'errno': None,
+            'group': 987654321, 'path': '/PRIVATE-SENTINEL'}
+        value = hp.stage_projection({'cleanupFailure': 'owned-primary-anchor-unavailable',
+            'cleanupDiagnostics': [stopping] + [later] * 20,
+            'cleanupStoppingDiagnostic': stopping})
+        self.assertEqual(len(value['cleanupDiagnostics']), 16)
+        self.assertTrue(all(row['operation'] == 'anchor-exact-recovery'
+                            for row in value['cleanupDiagnostics']))
+        self.assertEqual(value['cleanupStoppingDiagnostic']['reason'], 'anchor-echild')
+        self.assertEqual(value['cleanupStoppingDiagnostic']['errno'], errno.ECHILD)
+        self.assertIsNone(value['cleanupStoppingDiagnostic']['actualReaped'])
+        self.assertEqual(value['cleanupFailureCode'], 'owned-primary-anchor-unavailable')
+        self.assertEqual(hp.cleanup_diagnostic_projection(value['cleanupStoppingDiagnostic']),
+                         value['cleanupStoppingDiagnostic'])
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+        self.assertNotIn('987654321', json.dumps(value))
+
+    def test_anchor_diagnostics_reject_unknown_types_and_never_supply_primary_proof(self):
+        for operation in ('anchor-stop-refused', 'anchor-group-signal', 'anchor-retirement',
+                          'anchor-post-reap-absence', 'anchor-exact-recovery'):
+            value = hp.cleanup_diagnostic_projection({'operation': operation,
+                'reason': 'anchor-authority-revoked', 'errorType': 'interrupted'})
+            self.assertEqual(value['operation'], operation)
+            self.assertEqual(value['reason'], 'anchor-authority-revoked')
+        raw = {'operation': ['PRIVATE-SENTINEL'], 'reason': '/PRIVATE-SENTINEL',
+            'errorType': True, 'status': False, 'state': ['PRIVATE-SENTINEL'],
+            'errno': True, 'actualReturncode': False, 'observedExitCode': True,
+            'signal': True, 'actualReaped': 1, 'signalAuthority': 1,
+            'freshIdentityVerified': 0, 'groupEmpty': 1, 'readOnly': 1}
+        value = hp.cleanup_diagnostic_projection(raw)
+        for key in ('operation', 'reason', 'errorType', 'status', 'state'):
+            self.assertEqual(value[key], 'unavailable')
+        for key in ('errno', 'actualReturncode', 'observedExitCode', 'signal', 'actualReaped',
+                    'signalAuthority', 'freshIdentityVerified', 'groupEmpty', 'readOnly'):
+            self.assertIsNone(value[key])
+        self.assertEqual(hp.cleanup_diagnostic_projection(value), value)
+        self.assertIsNone(hp.cleanup_diagnostic_projection(False))
+        row = {'exitCode': 0, 'groupCleanup': 'verified-gone',
+            'leaderReap': {'status': 'reaped', 'exitCode': 0}, 'reason': None,
+            'failurePhase': None, 'cleanupFailure': None, 'cleanupStoppingDiagnostic': value}
+        self.assertFalse(hp.stage_complete(row))
+        self.assertFalse(hp.stage_complete(hp.stage_projection(row)))
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+
+    def test_inventory_timeout_cause_and_progress_survive_later_anchor_cleanup_without_private_fields(self):
+        stopping = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+            'failureCode': 'anchor-inventory-timeout', 'errorType': 'TimeoutExpired',
+            'phase': 'abi-binding', 'timeoutSeconds': 3,
+            'helperProgress': {'phase': 'project-imports', 'events': 1,
+                               'path': '/PRIVATE-SENTINEL', 'pid': 987654321},
+            'argv': ['/PRIVATE-SENTINEL'], 'raw': 'PRIVATE-SENTINEL'}
+        later = [{'operation': 'anchor-retirement', 'reason': 'anchor-nonleaders-remain'},
+                 {'operation': 'anchor-stop-refused', 'reason': 'anchor-echild'},
+                 {'operation': 'anchor-exact-recovery', 'reason': 'anchor-recovery-unbound'}] * 7
+        value = hp.stage_projection({'reason': 'owned-primary-reap-unconfirmed',
+            'cleanupFailure': 'owned-primary-anchor-unavailable',
+            'cleanupDiagnostics': [stopping] + later, 'cleanupStoppingDiagnostic': stopping})
+        self.assertEqual(value['reason'], 'owned-primary-reap-unconfirmed')
+        self.assertEqual(len(value['cleanupDiagnostics']), 16)
+        self.assertFalse(any(item['operation'] == 'anchor-group-inventory'
+                             for item in value['cleanupDiagnostics']))
+        stop = value['cleanupStoppingDiagnostic']
+        self.assertEqual(stop['backend'], 'darwin-header-bound')
+        self.assertEqual(stop['failureCode'], 'anchor-inventory-timeout')
+        self.assertEqual(stop['phase'], 'abi-binding')
+        self.assertEqual(stop['timeoutSeconds'], 3)
+        self.assertEqual(stop['helperProgress'], {'phase': 'project-imports', 'events': 1})
+        self.assertEqual(hp.cleanup_diagnostic_projection(stop), stop)
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+        self.assertNotIn('987654321', json.dumps(value))
+        for unknown in ('/PRIVATE-SENTINEL', True, ['PRIVATE-SENTINEL']):
+            bad = hp.cleanup_diagnostic_projection({'operation': 'anchor-group-inventory',
+                'backend': unknown, 'failureCode': unknown, 'phase': unknown,
+                'timeoutSeconds': unknown, 'helperProgress': {'phase': unknown, 'events': unknown}})
+            self.assertEqual(bad['backend'], 'unavailable')
+            self.assertEqual(bad['failureCode'], 'unavailable')
+            self.assertEqual(bad['phase'], 'unobserved')
+            self.assertIsNone(bad['timeoutSeconds'])
+            self.assertEqual(bad['helperProgress'], {'phase': 'unobserved', 'events': None})
+            self.assertNotIn('PRIVATE-SENTINEL', json.dumps(bad))
+        for bad_count in (-1, len(hp.PHASES) + 1, True):
+            projected = hp.cleanup_diagnostic_projection({'helperProgress': {
+                'phase': 'project-imports', 'events': bad_count}})
+            self.assertIsNone(projected['helperProgress']['events'])
+
+    def test_native_producer_failure_stays_separate_from_adapter_and_unknown_text(self):
+        source = ast.parse(Path(hp.__file__).with_name('darwin_inventory.py').read_text())
+        decoder = next(node for node in source.body
+                       if isinstance(node, ast.FunctionDef) and node.name == 'decode_reply')
+        vocabulary = next(node for node in ast.walk(decoder) if isinstance(node, ast.Set) and
+            all(isinstance(item, ast.Constant) and type(item.value) is str and
+                item.value.startswith('inventory-') for item in node.elts))
+        self.assertEqual(set(hp.NATIVE_INVENTORY_FAILURE_CODES),
+                         {node.value for node in vocabulary.elts})
+        for code in hp.NATIVE_INVENTORY_FAILURE_CODES:
+            stopping = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+                'failureCode': 'anchor-inventory-unavailable', 'producerFailureCode': code,
+                'phase': 'abi-binding', 'errorType': 'failure', 'errno': errno.EACCES,
+                'pid': 987654321, 'path': '/PRIVATE-SENTINEL'}
+            projected = hp.stage_projection({'cleanupDiagnostics': [stopping] +
+                [{'operation': 'anchor-stop-refused', 'reason': 'anchor-echild'}] * 20,
+                'cleanupStoppingDiagnostic': stopping})
+            stop = projected['cleanupStoppingDiagnostic']
+            self.assertEqual(stop['failureCode'], 'anchor-inventory-unavailable')
+            self.assertEqual(stop['producerFailureCode'], code)
+            self.assertEqual(stop['phase'], 'abi-binding')
+            self.assertEqual(stop['errno'], errno.EACCES)
+            self.assertEqual(hp.cleanup_diagnostic_projection(stop), stop)
+            self.assertNotIn('PRIVATE-SENTINEL', json.dumps(projected))
+            self.assertNotIn('987654321', json.dumps(projected))
+        for unknown in ('/PRIVATE-SENTINEL', 'anchor-inventory-timeout', True, ['PRIVATE-SENTINEL']):
+            value = hp.cleanup_diagnostic_projection({'producerFailureCode': unknown})
+            self.assertEqual(value['producerFailureCode'], 'unavailable')
+            self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+
+    def test_inventory_failure_slot_is_independent_of_stop_and_unknown_is_not_zero(self):
+        cause = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+            'failureCode': 'anchor-inventory-unavailable',
+            'producerFailureCode': 'inventory-abi-unavailable', 'phase': 'abi-binding',
+            'errorType': 'failure', 'errno': True, 'pid': 987654321,
+            'helperProgress': {'phase': 'abi-binding', 'events': True,
+                               'argv': ['/PRIVATE-SENTINEL']}}
+        stop = {'operation': 'anchor-retirement', 'reason': 'anchor-census-unavailable'}
+        row = hp.stage_projection({'cleanupStoppingDiagnostic': stop,
+            'cleanupInventoryFailure': cause, 'cleanupDiagnostics': [stop] * 20})
+        self.assertEqual(row['cleanupStoppingDiagnostic'], stop)
+        self.assertEqual(row['cleanupInventoryFailure']['producerFailureCode'], 'inventory-abi-unavailable')
+        self.assertIsNone(row['cleanupInventoryFailure']['errno'])
+        self.assertIsNone(row['cleanupInventoryFailure']['helperProgress']['events'])
+        self.assertEqual(len(row['cleanupDiagnostics']), 16)
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(row))
+        self.assertNotIn('987654321', json.dumps(row))
+        for unavailable in (None, False, ['/PRIVATE-SENTINEL']):
+            self.assertIsNone(hp.stage_projection({'cleanupInventoryFailure': unavailable})[
+                'cleanupInventoryFailure'])
+
+    def test_stage_gate_rejects_old_missing_unknown_and_forged_anchor_proofs(self):
+        value = stage_row()
+        self.assertTrue(hp.stage_complete(value))
+        variants = []
+        old = copy.deepcopy(value); del old['primaryAnchor']; variants.append(old)
+        for key in hp.PRIMARY_ANCHOR_KEYS:
+            item = copy.deepcopy(value); del item['primaryAnchor'][key]; variants.append(item)
+        for key in hp.PRIMARY_ABSENCE_KEYS:
+            item = copy.deepcopy(value); del item['primaryAnchor']['postReapAbsence'][key]; variants.append(item)
+        for key, bad in (('policy', 'PRIVATE'), ('retirementVerified', 1), ('actualReaped', None),
+                         ('actualReaped', 1), ('actualReturncode', False), ('actualReturncode', 1),
+                         ('signalAuthorityRevoked', False), ('signalAuthorityRevoked', 1),
+                         ('scope', 'all-descendants'), ('sessionOrDescendantClosure', 'verified'),
+                         ('argv', ['PRIVATE'])):
+            item = copy.deepcopy(value); item['primaryAnchor'][key] = bad; variants.append(item)
+        for key, bad in (('status', 'unconfirmed'), ('groupEmpty', None), ('groupEmpty', 1),
+                         ('readOnly', False), ('readOnly', 1), ('signalAuthority', True),
+                         ('signalAuthority', 0), ('path', '/PRIVATE')):
+            item = copy.deepcopy(value); item['primaryAnchor']['postReapAbsence'][key] = bad
+            variants.append(item)
+        for item in variants:
+            with self.subTest(proof=item.get('primaryAnchor')):
+                self.assertFalse(hp.stage_complete(item))
+
+    def test_anchor_projection_is_typed_private_and_cannot_launder_extra_fields(self):
+        source = stage_row()
+        self.assertEqual(hp.stage_projection(source)['primaryAnchor'], primary_anchor())
+        self.assertEqual(hp.primary_anchor_projection(hp.primary_anchor_projection(primary_anchor())), primary_anchor())
+        for where in ('outer', 'absence'):
+            item = copy.deepcopy(source)
+            target = item['primaryAnchor'] if where == 'outer' else item['primaryAnchor']['postReapAbsence']
+            target['PRIVATE'] = '/PRIVATE/argv/987654321'
+            projected = hp.stage_projection(item)
+            self.assertIsNone(projected['primaryAnchor'])
+            self.assertNotIn('PRIVATE', json.dumps(projected))
+            self.assertNotIn('987654321', json.dumps(projected))
+            self.assertFalse(hp.primary_anchor_complete(projected['primaryAnchor'], 0))
+        unknown = primary_anchor()
+        unknown.update(policy='PRIVATE', actualReaped=None, actualReturncode=False, scope='PRIVATE')
+        unknown['postReapAbsence'].update(groupEmpty=None, signalAuthority=0)
+        projected = hp.primary_anchor_projection(unknown)
+        self.assertIsNone(projected['policy']); self.assertIsNone(projected['scope'])
+        self.assertIsNone(projected['actualReaped']); self.assertIsNone(projected['actualReturncode'])
+        self.assertIsNone(projected['postReapAbsence']['groupEmpty'])
+        self.assertIsNone(projected['postReapAbsence']['signalAuthority'])
+        self.assertEqual(hp.primary_anchor_projection(projected), projected)
+        self.assertFalse(hp.primary_anchor_complete(projected, 0))
+
+    def test_driver_cannot_promote_old_or_forged_stage_shape_to_success(self):
+        import support
+        variants = [[], [stage_row()], [stage_row()]]
+        del variants[1][0]['primaryAnchor']
+        variants[2][0]['primaryAnchor']['postReapAbsence']['groupEmpty'] = None
+        for records in variants:
+            def run(_stage, args, *_args, **_kwargs):
+                hp.write_json(Path(args[-1])/'workload.json', {'status': 'passed'})
+            runner = SimpleNamespace(failure=None, monitor_failure=None, records=records, run=run,
+                                     monitor_diagnostics=[])
+            with self.subTest(records=records), tempfile.TemporaryDirectory() as temporary, \
+                 mock.patch.object(hp.sys, 'platform', 'darwin'), mock.patch.object(support, 'Runner', return_value=runner), \
+                 mock.patch.object(support, 'clean_environment', return_value={}), mock.patch.object(hp, 'select_abi', return_value=True), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                task = Path(temporary); (task/'started').write_text('1')
+                value = hp.run_experiment(task, {})
+            self.assertEqual(value['status'], 'failed')
+            self.assertIsNotNone(value['firstFailure'])
+
     def test_monitor_projection_keeps_stop_query_partial_progress_and_unknown_values_without_secrets(self):
         partial = {'unknownKinds': {'inventory-timeout': 1, 'PRIVATE': 7},
             'formatExamples': ['PRIVATE'], 'knownRSSLowerBoundMiB': None,
@@ -701,6 +949,7 @@ class DriverTests(unittest.TestCase):
             'PRIVATE': 'SECRET'}
         records = [{'stage': 'helper-import-workload', 'exitCode': 0, 'groupCleanup': 'verified-gone',
             'leaderReap': {'status': 'reaped', 'exitCode': 0, 'PRIVATE': 'SECRET'}, 'cleanupFailure': None,
+            'reason': None, 'failurePhase': None, 'primaryAnchor': primary_anchor(),
             'peakRSSMiB': 13, 'minimumFreeGiB': 20, 'lastActivity': later}]
         def run(_stage, args, *_args, **_kwargs):
             hp.write_json(Path(args[-1])/'workload.json', {'status': 'passed'})

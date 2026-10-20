@@ -35,13 +35,36 @@ GRAPH_PINS = {
 }
 
 
+PRIMARY_ANCHOR_KEYS = frozenset(('policy', 'retirementVerified', 'actualReaped', 'actualReturncode',
+    'signalAuthorityRevoked', 'postReapAbsence', 'scope', 'sessionOrDescendantClosure'))
+PRIMARY_ABSENCE_KEYS = frozenset(('status', 'groupEmpty', 'readOnly', 'signalAuthority'))
+
+
+def primary_anchor_complete(value, exit_code):
+    if type(value) is not dict or set(value) != PRIMARY_ANCHOR_KEYS or type(exit_code) is not int:
+        return False
+    absence = value['postReapAbsence']
+    return (type(absence) is dict and set(absence) == PRIMARY_ABSENCE_KEYS and
+            type(value['policy']) is str and value['policy'] == 'retained-direct-child-v1' and
+            value['retirementVerified'] is True and value['actualReaped'] is True and
+            type(value['actualReturncode']) is int and value['actualReturncode'] == exit_code and
+            value['signalAuthorityRevoked'] is True and
+            type(value['scope']) is str and value['scope'] == 'active-process-group-epoch' and
+            type(value['sessionOrDescendantClosure']) is str and
+            value['sessionOrDescendantClosure'] == 'unconfirmed' and
+            type(absence['status']) is str and absence['status'] == 'observed' and
+            absence['groupEmpty'] is True and absence['readOnly'] is True and
+            absence['signalAuthority'] is False)
+
+
 def stage_complete(row):
     leader = row.get('leaderReap') if type(row) is dict else None
     return (type(row) is dict and type(row.get('exitCode')) is int and row['exitCode'] == 0 and
             row.get('groupCleanup') == 'verified-gone' and
             all(key in row and row[key] is None for key in ('reason', 'failurePhase', 'cleanupFailure')) and
             type(leader) is dict and leader.get('status') == 'reaped' and
-            type(leader.get('exitCode')) is int and leader['exitCode'] == 0)
+            type(leader.get('exitCode')) is int and leader['exitCode'] == 0 and
+            primary_anchor_complete(row.get('primaryAnchor'), row['exitCode']))
 
 
 def graph_precondition(task):

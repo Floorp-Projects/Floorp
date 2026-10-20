@@ -14,7 +14,12 @@ from support import Failure
 
 def stage(name):
     return {'stage':name,'exitCode':0,'reason':None,'failurePhase':None,'cleanupFailure':None,
-            'groupCleanup':'verified-gone','leaderReap':{'status':'reaped','exitCode':0}}
+            'groupCleanup':'verified-gone','leaderReap':{'status':'reaped','exitCode':0},
+            'primaryAnchor':{'policy':'retained-direct-child-v1','retirementVerified':True,
+                'actualReaped':True,'actualReturncode':0,'signalAuthorityRevoked':True,
+                'postReapAbsence':{'status':'observed','groupEmpty':True,
+                                   'readOnly':True,'signalAuthority':False},
+                'scope':'active-process-group-epoch','sessionOrDescendantClosure':'unconfirmed'}}
 
 
 def binding(value):

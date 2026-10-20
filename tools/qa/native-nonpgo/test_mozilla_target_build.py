@@ -14,10 +14,18 @@ import mozilla_target_build as target
 from support import Failure
 
 
+def primary_anchor(code=0):
+    return {'policy': 'retained-direct-child-v1', 'retirementVerified': True,
+            'actualReaped': True, 'actualReturncode': code, 'signalAuthorityRevoked': True,
+            'postReapAbsence': {'status': 'observed', 'groupEmpty': True,
+                                'readOnly': True, 'signalAuthority': False},
+            'scope': 'active-process-group-epoch', 'sessionOrDescendantClosure': 'unconfirmed'}
+
+
 def row(stage):
     return {'stage': stage, 'exitCode': 0, 'reason': None, 'failurePhase': None,
             'cleanupFailure': None, 'groupCleanup': 'verified-gone',
-            'leaderReap': {'status': 'reaped', 'exitCode': 0}}
+            'leaderReap': {'status': 'reaped', 'exitCode': 0}, 'primaryAnchor': primary_anchor()}
 
 
 class TargetBuildTests(unittest.TestCase):
@@ -89,6 +97,44 @@ class TargetBuildTests(unittest.TestCase):
             self.assertFalse(target.stage_complete(value))
         value = row('stage'); del value['cleanupFailure']
         self.assertFalse(target.stage_complete(value))
+
+    def test_primary_anchor_requires_exact_shape_types_retirement_and_group_scope(self):
+        valid = row('stage')
+        self.assertTrue(target.stage_complete(valid))
+        variants = []
+        old = copy.deepcopy(valid); del old['primaryAnchor']; variants.append(old)
+        for key in target.PRIMARY_ANCHOR_KEYS:
+            value = copy.deepcopy(valid); del value['primaryAnchor'][key]; variants.append(value)
+        for key in target.PRIMARY_ABSENCE_KEYS:
+            value = copy.deepcopy(valid); del value['primaryAnchor']['postReapAbsence'][key]; variants.append(value)
+        for key, bad in (
+            ('policy', 'legacy'), ('retirementVerified', False), ('retirementVerified', 1),
+            ('actualReaped', None), ('actualReaped', 1), ('actualReturncode', None),
+            ('actualReturncode', False), ('actualReturncode', 7), ('signalAuthorityRevoked', False),
+            ('signalAuthorityRevoked', 1), ('scope', 'all-descendants'),
+            ('sessionOrDescendantClosure', 'verified'), ('privatePath', '/PRIVATE')):
+            value = copy.deepcopy(valid); value['primaryAnchor'][key] = bad; variants.append(value)
+        for key, bad in (('status', 'unconfirmed'), ('status', None), ('groupEmpty', None),
+                         ('groupEmpty', 1), ('groupEmpty', False), ('readOnly', 1),
+                         ('readOnly', False), ('signalAuthority', 0), ('signalAuthority', True),
+                         ('argv', ['PRIVATE'])):
+            value = copy.deepcopy(valid); value['primaryAnchor']['postReapAbsence'][key] = bad
+            variants.append(value)
+        for value in variants:
+            with self.subTest(proof=value.get('primaryAnchor')):
+                self.assertFalse(target.stage_complete(value))
+
+    def test_invalid_anchor_stops_build_before_any_next_target(self):
+        original = self.runner.run
+        def old_record(stage, *args, **kwargs):
+            original(stage, *args, **kwargs)
+            del self.runner.records[-1]['primaryAnchor']
+        self.runner.run = old_record
+        with self.assertRaisesRegex(Failure, 'mozilla-target-stage-proof'):
+            self.build()
+        self.assertEqual(len(self.calls), 1)
+        saved = json.loads((self.task/'mozilla-target-build.json').read_text())
+        self.assertEqual(saved['completedStages'], [])
 
     def graph_files(self):
         nodes = [node for _, node in target.TARGETS] + [
@@ -207,7 +253,7 @@ class TargetBuildTests(unittest.TestCase):
         self.assertTrue(target.proof_complete(value, smoke, rows))
         for change in ('negative-exit','unknown-cleanup','case-order','missing-log','stage-bool','asset-binding',
                        'missing-graph','unstable-graph','graph-pin','minimal','native','inprogress','forecast',
-                       'missing-current-stage','extra-graph-field'):
+                       'missing-current-stage','extra-graph-field','missing-anchor','forged-anchor'):
             a,b,c=copy.deepcopy((value,smoke,rows))
             if change=='negative-exit':b['cases'][1]['process']['exitCode']=0
             elif change=='unknown-cleanup':b['cases'][0]['process']['cleanupClean']=None
@@ -223,6 +269,8 @@ class TargetBuildTests(unittest.TestCase):
             elif change=='inprogress':a['currentStage']='mozilla-shell-build'
             elif change=='missing-current-stage':del a['currentStage']
             elif change=='extra-graph-field':a['graph']['graph']['privatePath']='/private/sentinel'
+            elif change=='missing-anchor':del c[0]['primaryAnchor']
+            elif change=='forged-anchor':c[0]['primaryAnchor']['postReapAbsence']['signalAuthority']=True
             else:a['durationToCompletion']='45 minutes'
             self.assertFalse(target.proof_complete(a,b,c), change)
 

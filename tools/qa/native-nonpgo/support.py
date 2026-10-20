@@ -218,44 +218,45 @@ class Runner:
                 del diagnostics[:-16]
             raise
 
-    def owned_group_alive(self, process, diagnostics=None):
-        was_unreaped = process.returncode is None
-        process.poll()
+    def anchor_deadline(self, maximum_seconds=None):
+        deadline = self.monotonic_started + self.limits['jobMinutes'] * 60
+        return deadline if maximum_seconds is None else min(
+            deadline, time.monotonic() + maximum_seconds)
+
+    @staticmethod
+    def record_cleanup(diagnostics, operation, result, **extra):
+        if diagnostics is None:
+            return
+        keys = ('status', 'state', 'reason', 'actualReaped', 'actualReturncode',
+                'observedExitCode', 'signalAuthority', 'freshIdentityVerified', 'errorType', 'errno')
+        diagnostics.append({'operation': operation,
+                            **{key: result[key] for key in keys if key in result}, **extra})
+        del diagnostics[:-16]
+
+    def anchor_inventory(self, pgid, stage, *, deadline=None, diagnostics=None):
+        from anchor_inventory import InventoryError, collect
         try:
-            return self.group_alive(process.pid, diagnostics)
-        except PermissionError as denied:
-            # A newly exited, unreaped leader can leave a zombie-only Darwin
-            # group. Only a new exact-child reap in this call permits a
-            # fresh group probe, including a reap by the initial poll.
-            observation = {'operation': 'denied-group-leader-reap',
-                           'leaderWasUnreaped': was_unreaped,
-                           'leaderExitAtProbe': process.returncode,
-                           'reapResult': 'already-reaped' if not was_unreaped else 'pending',
-                           'boundedWaitSeconds': None, 'freshProbeAttempted': False}
+            return collect(pgid, bootstrap_stage=stage if self.inventory_bootstrap else None,
+                           deadline=deadline)
+        except InventoryError as error:
             if diagnostics is not None:
-                diagnostics.append(observation)
+                diagnostic = {**error.details, 'failureCode': str(error)}
+                if 'failureCode' in error.details:
+                    diagnostic['producerFailureCode'] = error.details['failureCode']
+                diagnostics.append(diagnostic)
                 del diagnostics[:-16]
-            if not was_unreaped:
-                raise
-            source = 'initial-poll'
-            if process.returncode is None and process.poll() is None:
-                # An exiting child may not yet be waitable at either poll.
-                # Wait only for this exact child; timeout preserves denial.
-                observation['boundedWaitSeconds'] = 0.05
-                try:
-                    process.wait(timeout=0.05)
-                except subprocess.TimeoutExpired:
-                    observation['reapResult'] = 'wait-timeout'
-                    raise denied from None
-                source = 'bounded-wait'
-            elif observation['leaderExitAtProbe'] is None:
-                source = 'second-poll'
-            if process.returncode is None:
-                observation['reapResult'] = 'unconfirmed'
-                raise denied
-            observation.update(reapResult='newly-reaped', reapSource=source,
-                               leaderExitAfterReap=process.returncode, freshProbeAttempted=True)
-            return self.group_alive(process.pid, diagnostics)
+            raise
+
+    def observed_exit(self, anchor, diagnostics=None):
+        value = anchor.observe(deadline=self.anchor_deadline())
+        if value['status'] == 'live':
+            return None
+        if value['status'] == 'zombie' and type(value.get('observedExitCode')) is int:
+            return value['observedExitCode']
+        if value['status'] == 'reaped' and type(anchor.actual_returncode) is int:
+            return anchor.actual_returncode
+        self.record_cleanup(diagnostics, 'anchor-observation', value)
+        raise Failure('owned-primary-observation-unavailable')
 
     @staticmethod
     def parse_group_activity(text, pgid):
@@ -414,6 +415,7 @@ class Runner:
         return value
 
     def run(self, stage, args, cwd, env, deadline_minutes, log_limit=None, *, phase_deadline_minutes=None):
+        from primary_anchor import AnchorInterrupted, AnchorSpawnError, PrimaryAnchor
         require(stage.replace('-', '').isalnum(), 'stage-name')
         require(not self.inventory_bootstrap or stage in ('census-abi-compile','census-abi'),
                 'census-abi-bootstrap-stage')
@@ -428,6 +430,8 @@ class Runner:
         limit = log_limit or self.limits['maxStageLogBytes']
         reason = None
         process = None
+        anchor = None
+        launch_complete = False
         progress = ProgressWatch(self.limits['stallQuietMinutes'])
         peak_rss, minimum_free, last_activity, quiet = None, None, None, 0
         phase = 'launch'
@@ -436,7 +440,39 @@ class Runner:
         cleanup_diagnostics = []
         leader_reap = {'status': 'not-launched'}
         group_cleanup = 'not-launched'
+        post_reap_absence = {'status': 'unconfirmed', 'groupEmpty': None,
+                            'readOnly': True, 'signalAuthority': False}
+        cleanup_stopping_diagnostic = None
+        cleanup_inventory_failure = None
         failure_evidence = None
+        cleanup_attempted = False
+        cleanup_stop_error = None
+        def stop_primary_once():
+            nonlocal cleanup_attempted, cleanup_stop_error
+            if cleanup_attempted:
+                if cleanup_stop_error is not None:
+                    raise cleanup_stop_error
+                return
+            # One stage owns one INT/TERM/KILL cleanup sequence. In particular,
+            # finally must not restart exhausted graces after a failed stop.
+            cleanup_attempted = True
+            try:
+                self.stop(anchor, cleanup_diagnostics)
+            except BaseException as error:
+                cleanup_stop_error = error
+                raise
+        def collect_primary_group(pgid, *, deadline=None):
+            nonlocal cleanup_inventory_failure
+            from anchor_inventory import InventoryError
+            try:
+                return self.anchor_inventory(pgid, stage, deadline=deadline,
+                                             diagnostics=cleanup_diagnostics)
+            except InventoryError:
+                # Keep the producer failure independently of the rolling tail
+                # and later lifecycle/recovery receipts. Never infer emptiness.
+                if cleanup_diagnostics and cleanup_diagnostics[-1].get('operation') == 'anchor-group-inventory':
+                    cleanup_inventory_failure = dict(cleanup_diagnostics[-1])
+                raise
         def collect_excerpt():
             try:
                 return excerpt(path)
@@ -455,16 +491,23 @@ class Runner:
                 before = collect_excerpt() if before_cleanup else {
                     'available': False, 'reason': 'not-captured-before-cleanup'}
                 failure_evidence = {'beforeCleanup': before,
-                                    'leaderExitAlreadyObserved': process.returncode if process is not None else None}
+                                    'leaderExitAlreadyObserved': anchor.observed_exit_code if anchor is not None else None}
                 emit_excerpt('before-cleanup', before)
         try:
             with path.open('xb') as output:
-                process = subprocess.Popen(args, cwd=cwd, env=env, stdout=output,
-                                           stderr=subprocess.STDOUT, start_new_session=True)
+                anchor = PrimaryAnchor.spawn(args, cwd=cwd, env=env, stdout=output,
+                    stderr=subprocess.STDOUT,
+                    bootstrap_stage=stage if self.inventory_bootstrap else None,
+                    census=collect_primary_group)
+                process = anchor.process
+                launch_complete = True
                 group_cleanup = 'unverified'
                 self.groups.add(process.pid)
                 next_status = 0
-                while process.poll() is None:
+                while True:
+                    phase = 'primary-observation'
+                    if self.observed_exit(anchor, cleanup_diagnostics) is not None:
+                        break
                     phase = 'resources'
                     elapsed = self.elapsed()
                     free = shutil.disk_usage(self.task).free
@@ -491,7 +534,7 @@ class Runner:
                     if reason:
                         self.fail(stage, reason)
                         capture_failure_evidence()
-                        self.stop(process, cleanup_diagnostics)
+                        stop_primary_once()
                         break
                     phase = 'group-activity'
                     activity = (self.group_activity(process.pid,bootstrap=True) if self.inventory_bootstrap
@@ -501,8 +544,10 @@ class Runner:
                     if activity.get('sampleAttempts', 1) > 1 or not activity['sampleComplete'] or activity.get('esrchRechecks'):
                         diagnostic = self.record_monitor(stage, activity)
                     if not activity['sampleComplete']:
-                        if process.poll() is not None:
+                        phase = 'primary-observation'
+                        if self.observed_exit(anchor, cleanup_diagnostics) is not None:
                             break
+                        phase = 'group-activity'
                         if self.monitor_failure is None:
                             self.monitor_failure = diagnostic
                         lower_bound = activity.get('rssLowerBoundMiB')
@@ -528,7 +573,7 @@ class Runner:
                     if reason:
                         self.fail(stage, reason)
                         capture_failure_evidence()
-                        self.stop(process, cleanup_diagnostics)
+                        stop_primary_once()
                         break
                     if elapsed >= next_status:
                         print(json.dumps({'stage': stage, 'elapsedMinutes': round(elapsed / 60, 1),
@@ -540,35 +585,64 @@ class Runner:
                         next_status = elapsed + 30
                     time.sleep(1)
             phase = 'wait'
-            code = process.wait(timeout=5)
-            if phase_deadline_minutes is not None and self.elapsed() >= phase_deadline_minutes * 60:
-                reason = reason or 'phase-deadline'
-            if self.owned_group_alive(process, cleanup_diagnostics):
-                reason = reason or 'owned-descendants-outlived-leader'
+            code = self.observed_exit(anchor, cleanup_diagnostics)
+            require(type(code) is int, 'owned-primary-exit-unavailable')
+            if code:
+                reason = reason or 'nonzero-exit'
+                self.fail(stage, reason)
+            retired = anchor.try_reap(deadline=self.anchor_deadline(5))
+            self.record_cleanup(cleanup_diagnostics, 'anchor-retirement', retired)
+            if anchor.lifecycle_state != 'reaped':
+                reason = reason or ('owned-descendants-outlived-leader'
+                    if retired.get('reason') == 'anchor-nonleaders-remain'
+                    else 'owned-primary-reap-unconfirmed')
                 self.fail(stage, reason)
                 capture_failure_evidence()
-                self.stop(process, cleanup_diagnostics)
+                stop_primary_once()
+            code = anchor.actual_returncode
+            require(type(code) is int, 'owned-primary-exit-unavailable')
+            if phase_deadline_minutes is not None and self.elapsed() >= phase_deadline_minutes * 60:
+                reason = reason or 'phase-deadline'
             if code or reason:
                 self.fail(stage, reason or 'nonzero-exit')
                 raise Failure(reason or 'nonzero-exit')
             return path
         except BaseException as error:
+            if anchor is None and isinstance(error, (AnchorInterrupted, AnchorSpawnError)) and error.anchor is not None:
+                anchor = error.anchor
+                process = anchor.process
+                if anchor.receipt()['actualReaped'] is not True:
+                    group_cleanup = 'unverified'
+                    if type(anchor.pid) is int:
+                        self.groups.add(anchor.pid)
             capture_failure_evidence()
-            reason = reason or (str(error) if isinstance(error, Failure) else type(error).__name__)
+            reason = reason or (str(error) if isinstance(error, (Failure, AnchorSpawnError,
+                                AnchorInterrupted)) else type(error).__name__)
             failure_phase = phase
-            if phase == 'group-activity' and self.monitor_failure is None:
-                self.monitor_failure = self.record_monitor(stage, {'errorType': type(error).__name__})
+            if phase in ('group-activity', 'primary-observation') and self.monitor_failure is None:
+                self.monitor_failure = self.record_monitor(stage, {
+                    'errorType': type(error).__name__,
+                    **({'component': 'primary-lifecycle'} if phase == 'primary-observation' else {})})
             self.fail(stage, reason)
             raise
         finally:
             try:
-                if process is not None:
+                if anchor is not None and (launch_complete or anchor.receipt()['actualReaped'] is not True):
                     try:
-                        if self.owned_group_alive(process, cleanup_diagnostics):
-                            self.stop(process, cleanup_diagnostics)
+                        if anchor.lifecycle_state != 'reaped':
+                            stop_primary_once()
+                        absence_result = anchor.post_reap_absence(deadline=self.anchor_deadline(5))
+                        self.record_cleanup(cleanup_diagnostics, 'anchor-post-reap-absence', absence_result)
+                        post_reap_absence = {key: absence_result[key] for key in
+                            ('status', 'groupEmpty', 'readOnly', 'signalAuthority')}
+                        require(anchor.lifecycle_state == 'reaped' and
+                                post_reap_absence['status'] == 'observed' and
+                                post_reap_absence['groupEmpty'] is True,
+                                'owned-primary-post-reap-group-unconfirmed')
                         group_cleanup = 'verified-gone'
                     finally:
-                        self.groups.discard(process.pid)
+                        if group_cleanup == 'verified-gone':
+                            self.groups.discard(anchor.pid)
                         if self.native_registry is not None:
                             self.native_cleanup = self.native_registry.finish()
                             if self.native_cleanup['outlivedHarness'] or not self.native_cleanup['allOwnedGone']:
@@ -577,23 +651,29 @@ class Runner:
             except BaseException as error:
                 capture_failure_evidence(before_cleanup=False)
                 cleanup_failure = str(error) if isinstance(error, Failure) else type(error).__name__
+                cleanup_stopping_diagnostic = (dict(cleanup_diagnostics[-1])
+                                               if cleanup_diagnostics else None)
                 reason = reason or cleanup_failure
                 failure_phase = failure_phase or 'cleanup'
                 self.fail(stage, reason)
                 raise
             finally:
-                # Reaping this exact Popen child needs no group access. A
-                # denied group probe must remain an error, but must not skip
-                # the independent bounded wait. No extra signal is sent.
-                if process is not None:
-                    try:
-                        code = process.wait(timeout=5)
-                        leader_reap = {'status': 'reaped', 'exitCode': code}
-                    except subprocess.TimeoutExpired:
-                        leader_reap = {'status': 'still-running', 'exitCode': None}
-                    except OSError as error:
-                        leader_reap = {'status': 'unavailable', 'exitCode': None,
-                                       'errorType': type(error).__name__, 'errno': error.errno}
+                # Failed authority never falls back to Popen's reaping methods.
+                # The final recovery is a separate bounded exact-child attempt;
+                # it supplies neither group retirement nor signal authority.
+                if anchor is not None:
+                    recovery_deadline = self.anchor_deadline(5)
+                    while anchor.actual_returncode is None and time.monotonic() < recovery_deadline:
+                        recovery = anchor.recover_exact_child(deadline=recovery_deadline)
+                        self.record_cleanup(cleanup_diagnostics, 'anchor-exact-recovery', recovery)
+                        if anchor.actual_returncode is not None or recovery.get('reason') not in (
+                                'anchor-recovery-not-terminal', 'anchor-recovery-unavailable',
+                                'anchor-recovery-not-ready', 'anchor-deadline'):
+                            break
+                        time.sleep(min(0.05, max(0, recovery_deadline - time.monotonic())))
+                    code = anchor.actual_returncode
+                    leader_reap = {'status': 'reaped' if type(code) is int else 'unavailable',
+                                   'exitCode': code if type(code) is int else None}
                 try:
                     log_bytes = path.stat().st_size
                 except OSError:
@@ -601,34 +681,59 @@ class Runner:
                 if failure_evidence is not None:
                     failure_evidence['afterCleanup'] = collect_excerpt()
                     emit_excerpt('after-cleanup', failure_evidence['afterCleanup'])
-                self.records.append({'stage': stage, 'exitCode': process.returncode if process is not None else None,
+                actual_code = anchor.actual_returncode if anchor is not None else None
+                self.records.append({'stage': stage, 'exitCode': actual_code if launch_complete and type(actual_code) is int else None,
+                                     'launchCompleted': launch_complete,
                                      'failureEvidence': failure_evidence,
                                      'reason': reason, 'failurePhase': failure_phase,
                                      'cleanupFailure': cleanup_failure,
                                      'cleanupDiagnostics': cleanup_diagnostics,
+                                     'cleanupStoppingDiagnostic': cleanup_stopping_diagnostic,
+                                     'cleanupInventoryFailure': cleanup_inventory_failure,
                                      'groupCleanup': group_cleanup,
                                      'leaderReap': leader_reap,
+                                     'primaryAnchor': ({
+                                         'policy': 'retained-direct-child-v1',
+                                         'retirementVerified': anchor.lifecycle_state == 'reaped',
+                                         'actualReaped': anchor.receipt()['actualReaped'],
+                                         'actualReturncode': anchor.actual_returncode,
+                                         'signalAuthorityRevoked': not anchor.held,
+                                         'postReapAbsence': post_reap_absence,
+                                         'scope': 'active-process-group-epoch',
+                                         'sessionOrDescendantClosure': 'unconfirmed'}
+                                         if anchor is not None else None),
                                      'logBytes': log_bytes, 'peakRSSMiB': round(peak_rss) if peak_rss is not None else None,
                                      'minimumFreeGiB': round(minimum_free / 1024**3, 2) if minimum_free is not None else None,
                                      'lastActivity': last_activity, 'quietSeconds': round(quiet)})
 
-    def stop(self, process, diagnostics=None):
+    def stop(self, anchor, diagnostics=None):
+        from primary_anchor import PrimaryAnchor
+        require(isinstance(anchor, PrimaryAnchor), 'owned-primary-anchor-required')
+        if anchor.lifecycle_state == 'reaped':
+            return
+        if not anchor.held:
+            self.record_cleanup(diagnostics, 'anchor-stop-refused', anchor.receipt())
+            raise Failure('owned-primary-anchor-unavailable')
         for value, grace in ((signal.SIGINT, self.limits['processCleanupGraceSeconds']),
                              (signal.SIGTERM, 10), (signal.SIGKILL, 5)):
-            if not self.owned_group_alive(process, diagnostics):
-                process.poll()
+            deadline = self.anchor_deadline(grace)
+            require(time.monotonic() < deadline, 'owned-process-cleanup-timeout')
+            retired = anchor.try_reap(deadline=deadline)
+            self.record_cleanup(diagnostics, 'anchor-retirement', retired)
+            if anchor.lifecycle_state == 'reaped':
                 return
-            try:
-                os.killpg(process.pid, value)
-            except ProcessLookupError:
-                break
-            except OSError as error:
-                if diagnostics is not None:
-                    diagnostics.append({'operation': 'group-signal', 'signal': int(value),
-                                        'errorType': type(error).__name__, 'errno': error.errno})
-                    del diagnostics[:-16]
-                raise
-            deadline = time.monotonic() + grace
-            while self.owned_group_alive(process, diagnostics) and time.monotonic() < deadline:
-                time.sleep(0.05)
-        require(not self.owned_group_alive(process, diagnostics), 'owned-process-cleanup-timeout')
+            require(anchor.held, 'owned-primary-anchor-unavailable')
+            sent = anchor.signal_group(int(value), deadline=deadline)
+            self.record_cleanup(diagnostics, 'anchor-group-signal', sent, signal=int(value))
+            require(sent.get('reason') == 'anchor-signal-sent' and
+                    sent.get('signalAuthority') is True, 'owned-primary-signal-unavailable')
+            while time.monotonic() < deadline:
+                retired = anchor.try_reap(deadline=deadline)
+                if retired.get('reason') != 'anchor-not-terminal':
+                    self.record_cleanup(diagnostics, 'anchor-retirement', retired)
+                if anchor.lifecycle_state == 'reaped':
+                    return
+                require(anchor.held, 'owned-primary-anchor-unavailable')
+                interval = 0.05 if retired.get('reason') == 'anchor-not-terminal' else 0.25
+                time.sleep(min(interval, max(0, deadline - time.monotonic())))
+        raise Failure('owned-process-cleanup-timeout')

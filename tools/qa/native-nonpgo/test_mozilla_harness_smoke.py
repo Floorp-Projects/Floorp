@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
+import errno
 import json
+import time
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -226,6 +228,128 @@ class MozillaHarnessSmokeTests(unittest.TestCase):
         self.assertEqual(value['stages'][0]['cleanupFailureCode'], 'owned-process-cleanup-timeout')
         self.assertTrue(value['stages'][0]['cleanupFailurePresent'])
         self.assertFalse(value['process']['groupGone'])
+
+    def test_primary_observation_and_fixed_cleanup_causes_survive_process_and_stage_projection(self):
+        for code in smoke.FAILURE_CODES:
+            if not code.startswith('owned-primary-'):
+                continue
+            row = {'stage': 'mozilla-xpcshell', 'exitCode': None, 'reason': code,
+                'failurePhase': 'primary-observation', 'cleanupFailure': code,
+                'leaderReap': {'status': 'unavailable', 'exitCode': None},
+                'groupCleanup': 'unverified', 'pid': 987654321, 'private': 'PRIVATE-SENTINEL'}
+            self.case_runner.records[:] = [row]
+            process = smoke.process_evidence(self.case_runner)
+            stage = smoke.stage_evidence(row)
+            self.assertEqual(process['reason'], code)
+            self.assertEqual(process['failurePhase'], 'primary-observation')
+            self.assertEqual(stage['reason'], code)
+            self.assertEqual(stage['cleanupFailureCode'], code)
+            self.assertFalse(process['exactReaped'])
+            self.assertFalse(process['cleanupClean'])
+            self.assertNotIn('PRIVATE-SENTINEL', json.dumps([process, stage]))
+            self.assertNotIn('987654321', json.dumps([process, stage]))
+
+    def test_finally_keeps_primary_anchor_stop_apart_from_later_cleanup_and_write_failure(self):
+        original_receipt = smoke.receipt
+        stopping = {'operation': 'anchor-stop-refused', 'status': 'lost', 'state': 'lost',
+            'reason': 'anchor-echild', 'actualReaped': None, 'actualReturncode': None,
+            'signalAuthority': False, 'freshIdentityVerified': False,
+            'errorType': 'os-error', 'errno': errno.ECHILD,
+            'pid': 987654321, 'argv': ['/PRIVATE-SENTINEL']}
+        later = {'operation': 'anchor-exact-recovery', 'reason': 'anchor-recovery-unbound',
+            'errorType': 'anchor-error', 'errno': None, 'path': '/PRIVATE-SENTINEL'}
+        def fail_after_harness(*args, **kwargs):
+            result = original_receipt(*args, **kwargs)
+            row = self.case_runner.records[0]
+            row.update(exitCode=None, reason='owned-primary-observation-unavailable',
+                failurePhase='primary-observation', cleanupFailure='owned-primary-anchor-unavailable',
+                groupCleanup='unverified', leaderReap={'status': 'unavailable', 'exitCode': None},
+                cleanupDiagnostics=[stopping] + [later] * 20, cleanupStoppingDiagnostic=stopping)
+            self.case_runner.failure = {'stage': 'mozilla-xpcshell',
+                'code': 'owned-primary-observation-unavailable', 'elapsedSeconds': 3,
+                'private': 'PRIVATE-SENTINEL'}
+            return result
+        with mock.patch.object(smoke, 'receipt', side_effect=fail_after_harness), \
+                mock.patch.object(smoke, 'write_json', side_effect=OSError('PRIVATE-SENTINEL')):
+            value = self.run_case()
+        self.assertFalse(value['expectationSatisfied'])
+        self.assertEqual(value['runnerFailure']['code'], 'owned-primary-observation-unavailable')
+        self.assertEqual(value['process']['failurePhase'], 'primary-observation')
+        stage = value['stages'][0]
+        self.assertEqual(stage['cleanupFailureCode'], 'owned-primary-anchor-unavailable')
+        self.assertEqual(len(stage['cleanupDiagnostics']), 16)
+        self.assertTrue(all(item['operation'] == 'anchor-exact-recovery'
+                            for item in stage['cleanupDiagnostics']))
+        self.assertEqual(stage['cleanupStoppingDiagnostic']['operation'], 'anchor-stop-refused')
+        self.assertEqual(stage['cleanupStoppingDiagnostic']['reason'], 'anchor-echild')
+        self.assertEqual(stage['cleanupStoppingDiagnostic']['errno'], errno.ECHILD)
+        self.assertEqual(value['evidenceWriteFailure'], 'OSError')
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps(value))
+        self.assertNotIn('987654321', json.dumps(value))
+
+    def test_real_runner_inventory_cause_survives_cleanup_tail_in_all_public_projections(self):
+        from anchor_inventory import InventoryError
+        from primary_anchor import PrimaryAnchor
+        limits = json.loads(Path(smoke.__file__).with_name('plan.json').read_text())['limits']
+        clock = SimpleNamespace(now=100.0)
+        def sleep(seconds):
+            clock.now += max(seconds, .000001)
+        child = mock.Mock(pid=987654321, returncode=None, stdin=None)
+        anchor = PrimaryAnchor(child, None, None)
+        def spawn(*args, **kwargs):
+            anchor._census = kwargs['census']
+            return anchor
+        def retire(*, deadline=None):
+            with self.assertRaises(InventoryError):
+                anchor._census(child.pid, deadline=deadline)
+            return anchor.receipt(reason='anchor-census-unavailable', signalAuthority=False)
+        def recover(*, deadline=None):
+            anchor._state = 'lost'
+            return anchor.receipt(reason='anchor-recovery-not-terminal', signalAuthority=False)
+        producer = {'operation': 'anchor-group-inventory', 'backend': 'darwin-header-bound',
+            'failureCode': 'inventory-query-permission', 'phase': 'group-data',
+            'errorType': 'failure', 'errno': errno.EACCES, 'pid': 987654321,
+            'helperProgress': {'phase': 'group-data', 'events': 6, 'path': '/PRIVATE-SENTINEL'},
+            'argv': ['/PRIVATE-SENTINEL']}
+        with mock.patch('support.time.monotonic', side_effect=lambda: clock.now), \
+                mock.patch('support.time.sleep', side_effect=sleep), \
+                mock.patch.object(PrimaryAnchor, 'spawn', side_effect=spawn), \
+                mock.patch.object(anchor, 'try_reap', side_effect=retire), \
+                mock.patch.object(anchor, 'signal_group', side_effect=lambda *_, **__: anchor.receipt(
+                    reason='anchor-signal-sent', signalAuthority=True)), \
+                mock.patch.object(anchor, 'recover_exact_child', side_effect=recover), \
+                mock.patch('anchor_inventory.collect', side_effect=InventoryError(
+                    'anchor-inventory-unavailable', producer)), \
+                mock.patch('primary_anchor.os.waitpid') as wait, \
+                mock.patch('primary_anchor.os.killpg') as send:
+            runner = smoke.Runner(self.task, time.time(), limits)
+            with mock.patch.object(runner, 'observed_exit', return_value=0):
+                with self.assertRaisesRegex(Failure, 'owned-process-cleanup-timeout'):
+                    runner.run('mozilla-xpcshell', ['unused'], self.task, {}, 360)
+        wait.assert_not_called()
+        send.assert_not_called()
+        self.assertEqual(runner.failure['code'], 'owned-primary-reap-unconfirmed')
+        row = runner.records[0]
+        self.assertIn('PRIVATE-SENTINEL', json.dumps(row['cleanupInventoryFailure']))
+        process = smoke.process_evidence(runner)
+        stage = smoke.stage_evidence(row)
+        self.assertEqual(process['reason'], 'owned-primary-reap-unconfirmed')
+        self.assertFalse(process['exactReaped'])
+        self.assertFalse(process['groupGone'])
+        self.assertEqual(len(stage['cleanupDiagnostics']), 16)
+        self.assertTrue(all(item['operation'] == 'anchor-exact-recovery'
+                            for item in stage['cleanupDiagnostics']))
+        self.assertEqual(stage['cleanupStoppingDiagnostic']['operation'], 'anchor-retirement')
+        cause = stage['cleanupInventoryFailure']
+        self.assertEqual(cause, process['cleanupInventoryFailure'])
+        self.assertEqual(cause['backend'], 'darwin-header-bound')
+        self.assertEqual(cause['failureCode'], 'anchor-inventory-unavailable')
+        self.assertEqual(cause['producerFailureCode'], 'inventory-query-permission')
+        self.assertEqual(cause['phase'], 'group-data')
+        self.assertEqual(cause['helperProgress'], {'phase': 'group-data', 'events': 6})
+        self.assertEqual(cause['errno'], errno.EACCES)
+        self.assertNotIn('PRIVATE-SENTINEL', json.dumps([process, stage]))
+        self.assertNotIn('987654321', json.dumps([process, stage]))
 
     def test_preexisting_parent_failure_is_never_cleared_by_expected_negative(self):
         original = {'stage':'earlier','code':'earlier-failure'}

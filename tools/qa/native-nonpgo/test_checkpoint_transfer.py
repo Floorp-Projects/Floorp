@@ -120,6 +120,10 @@ class ReplayTransferGuards(unittest.TestCase):
         # replay tests require the production constants/config without patching.
         self.config['origin'].update(bytes=len(self.data), sha256=self.sha)
         self.origin = self.config['origin']
+        # Pin a clock inside the fixed historical artifact's validity window.
+        # Transport tests must not depend on the wall clock on the test host.
+        self.verification_now = datetime.datetime.fromisoformat(
+            self.origin['expiresAt'].replace('Z', '+00:00')) - datetime.timedelta(seconds=1)
         self.started = '2026-10-19T06:00:00Z'
         self.jobs = {'total_count': 1, 'jobs': [{'id': 222, 'name': 'checkpoint-consumer',
                     'status': 'in_progress', 'labels': ['macos-15-intel'], 'started_at': self.started}]}
@@ -152,9 +156,21 @@ class ReplayTransferGuards(unittest.TestCase):
 
     def invoke(self, *, replay_origin=True):
         import checkpoint_replay as replay
+        validate_origin = replay.validate_origin
         with mock.patch.object(replay,'load_config',return_value=copy.deepcopy(self.config)), \
-                mock.patch.dict(replay.ORIGIN,self.origin):
+                mock.patch.dict(replay.ORIGIN,self.origin), \
+                mock.patch.object(replay, 'validate_origin', side_effect=lambda *args:
+                    validate_origin(*args, now=self.verification_now)):
             return TransferGuards.invoke(self,replay_origin=replay_origin)
+
+    def test_expired_historical_metadata_still_blocks_before_payload_download(self):
+        self.verification_now = datetime.datetime.fromisoformat(
+            self.origin['expiresAt'].replace('Z', '+00:00'))
+        with self.assertRaisesRegex(Failure, 'checkpoint-replay-artifact-expired'):
+            self.invoke()
+        self.assertFalse(any(url.endswith('/zip') for url in self.requests))
+        self.assertFalse((self.task / 'checkpoint.tar.gz').exists())
+        self.assertFalse((self.task / 'checkpoint-download.json').exists())
 
     def test_replay_receipt_keeps_real_current_and_original_ids_separate(self):
         before = {key:os.environ[key] for key in ('GITHUB_RUN_ID','GITHUB_SHA','FLOORP_FIXTURE_SHA')}
