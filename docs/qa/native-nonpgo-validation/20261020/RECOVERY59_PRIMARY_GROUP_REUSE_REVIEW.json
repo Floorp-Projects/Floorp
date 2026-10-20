@@ -1,0 +1,284 @@
+{
+  "activity": {
+    "activeRunPolling": 0,
+    "actualMacValidation": false,
+    "actualOSGroupProbes": 0,
+    "actualOSSignals": 0,
+    "actualServerProcessesStarted": 0,
+    "ciOperations": 0,
+    "payloadAcquisitions": 0,
+    "refMutations": 0,
+    "sourceEdits": 0,
+    "workflowEdits": 0
+  },
+  "controlSummary": {
+    "counterexampleControls": 8,
+    "counterexamplesAreExpectedPasses": "PASS means each declared source-level behavior/counterexample was observed, not that the cleanup implementation is safe.",
+    "safeComparisonControls": 4,
+    "safeComparisons": [
+      "Absent group emits no signal",
+      "Denied group emits no signal and retains PermissionError",
+      "Live unreaped leader signals the modeled owned group",
+      "Continuously present owned descendants after leader reap receive the intended owned-group signal"
+    ]
+  },
+  "controls": {
+    "actualChildProcesses": 0,
+    "actualMacValidation": false,
+    "actualOSGroupProbes": 0,
+    "actualOSSignals": 0,
+    "execution": "Actual fixed Runner/ProgressWatch/Failure/require AST; Popen, process state, clock and every OS killpg call are local doubles. Small private log/receipt files only.",
+    "failed": 0,
+    "passed": 12,
+    "resourceWarningPolicy": "error",
+    "result": {
+      "basename": "floorp-recovery59-primary-group-reuse-controls-result.json",
+      "bytes": 13248,
+      "sha256": "680022c46e19e9a155362abd071116eddc3144d239564824ae6cb20b7a21cfae"
+    },
+    "script": {
+      "basename": "floorp-recovery59-primary-group-reuse-controls.py",
+      "bytes": 12405,
+      "sha256": "eeb80a5dc59dec1530183dfbec606379ec43b967d41a2c377be6018db34e5501"
+    }
+  },
+  "current45Profile": {
+    "applicability": "The same Runner implementation governs ordinary selected xpcshell stages. The ownership gap predates and does not require the future Node profile. Fatal or natural primary exit followed by cleanup is a relevant source path.",
+    "currentRuntimeEvidence": "No actual reuse or foreign signal was observed in this review. Existing stage outcomes remain their recorded outcomes; this review does not infer the active run failed or supply its cause.",
+    "operationalAction": "No polling, cancellation, extra job, CI/ref mutation or source change was performed. The active run is not stopped based on this modeled issue.",
+    "qualificationLimit": "Existing leaderReap and verified-gone receipts do not, by themselves, prove that every earlier signal targeted the original group epoch under this counterexample."
+  },
+  "finding": {
+    "conclusion": "Existing guards do not prevent a successful numeric existence probe from authorizing signals to a later foreign group using the reaped primary PID/PGID.",
+    "confirmedAtSourceLevel": [
+      "Direct stop on an already-reaped primary sends SIGINT to the modeled foreign epoch.",
+      "owned_group_alive itself can reap then accept a reused numeric group.",
+      "The last old member can disappear after the successful existence probe, with a replacement foreign group receiving the following SIGINT.",
+      "The PermissionError/newly-reaped recheck also accepts a different epoch when the later numeric probe succeeds.",
+      "Actual run paths with modeled exit zero or nonzero can send the foreign signal, then report exact leader reaping and verified-gone cleanup.",
+      "Reuse introduced only in the final finally block can send the foreign signal while Runner.run returns normally with exitCode zero, reason null, cleanupFailure null, verified-gone and failure null."
+    ],
+    "id": "reaped-primary-numeric-group-reuse",
+    "missingInvariant": "The signal path has no unreaped exact-child reservation or other kernel-held group-epoch authority after poll/wait; killpg(pgid,0) proves existence/access at that moment, not ownership or epoch continuity.",
+    "modelRestriction": "No model replaces a continuously populated old group. Numeric reuse is introduced only after all old members and the old session have gone and the primary was reaped.",
+    "notEstablished": [
+      "Actual PID/PGID reuse on any current runner",
+      "Any actual unauthorized OS signal",
+      "Frequency or time-to-reuse on standard hosted Mac",
+      "A historical native/server failure cause",
+      "An exploit by an untrusted actor"
+    ],
+    "priority": "P1",
+    "priorityScope": "Source-level signal-ownership and successful-cleanup qualification; blocks admitting a new fatal-cleanup profile on unchanged Runner. It does not attribute an incident to the current CI.",
+    "trigger": "The original leader was reaped; all old process-group/session members disappear; that numeric PID becomes available and a foreign process starts a new same-number group before a cleanup probe or signal."
+  },
+  "futureExternalRealService": {
+    "admission": "No new external-service ownership/cleanup PASS profile until the shared primary cleanup authority is fixed/reviewed and real Mac failure probes pass. The route can remain narrower than a broker, but not by assuming this unverified invariant.",
+    "amendsPriorDesign": {
+      "basename": "floorp-recovery59-controller-ownership-independent-design-review.private.json",
+      "bytes": 22059,
+      "sha256": "da2ff4ea161299a57b97eb0c8aa68199c9a4ddd77d9aa32d94a919a8d5056215"
+    },
+    "correctedLimit": "The previous comparison must not be read as certification of fatal-exit cleanup safety inherited from unchanged Runner. That primary cleanup authority has now been independently disproved under the modeled reuse ordering.",
+    "fatalHarnessOwnerLoss": "If the exact-child QA owner lives in the harness and the harness fatally exits, its Node child may be reparented; that owner cannot supply a later matched wait. Outer numeric PGID cleanup alone does not repair that missing authority.",
+    "retainedClaim": "A same-primary-PGID real service naturally enters the existing group resource sample while its membership is valid."
+  },
+  "kernelReference": {
+    "qualification": "Tagged primary source is a semantic reference, not evidence of selected runner runtime state or measured reuse frequency.",
+    "sources": [
+      {
+        "basis": "Reap removes the child from its process group and process hash, then releases the group reference.",
+        "bytes": 116595,
+        "gitBlobSHA": "e7e0ab60250cba05f2bb032b9af18b74979bb46f",
+        "sha256": "28cb01205c0d28cf532d21e8070470ce871f4d3ac7c4babd1d3176a98d33dc53",
+        "sourceLineRanges": [
+          [
+            2808,
+            2822
+          ],
+          [
+            2832,
+            2832
+          ]
+        ],
+        "sourceLines": [
+          2808,
+          2822,
+          2832,
+          2832
+        ],
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exit.c"
+      },
+      {
+        "basis": "Last-member removal marks the group empty; final release destroys it, removes its hash entry and releases the session.",
+        "bytes": 144762,
+        "gitBlobSHA": "830b2354570c1a6bef6e835e82b3c7380fa8c1c7",
+        "sha256": "a7e866c2b7da42584ff8b898aabf464fafd31635d2cedf0dc4309c356bdff6c1",
+        "sourceLineRanges": [
+          [
+            2385,
+            2406
+          ],
+          [
+            2716,
+            2729
+          ]
+        ],
+        "sourceLines": [
+          2385,
+          2406,
+          2716,
+          2729
+        ],
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_proc.c"
+      },
+      {
+        "basis": "A process can form its own new-session group only when it is not already that group leader and no same-ID group is found.",
+        "bytes": 46334,
+        "gitBlobSHA": "cb6e980618f4771c4cb1f338ca92241407d6668f",
+        "sha256": "988c19ea6b73574292a70ea2ce3174374a7ec70de76ffe6a8d4f07675c846014",
+        "sourceLineRanges": [
+          [
+            484,
+            496
+          ]
+        ],
+        "sourceLines": [
+          484,
+          496
+        ],
+        "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_prot.c"
+      }
+    ]
+  },
+  "minimumRemediationChoices": [
+    {
+      "choice": "Immediate fail-closed hardening",
+      "limitation": "This prevents using stale numeric authority but cannot drain live orphan descendants after fatal leader exit; it is insufficient alone for a successful future service cleanup proof.",
+      "scope": "Stop issuing nonzero group signals once the exact direct-child anchor has been reaped or its ownership is unknown. Independent exact-child wait/evidence may continue. Missing safe group retirement must remain cleanup-unconfirmed and fail qualification."
+    },
+    {
+      "choice": "Retain exact primary anchor through drainage",
+      "limitation": "Requires deliberate changes to the primary run poll/wait/cleanup path or explicit launch semantics. Preserve clocks/resource limits and first-failure evidence. No such implementation is supplied by this review.",
+      "scope": "Use a reviewed non-reaping observation/terminal-barrier protocol or an owned session-leader guardian so a genuine unreaped direct child reserves the group epoch until all nonleaders are drained. Serialize signals with the sole reaper, then matched wait and fresh retirement."
+    },
+    {
+      "choice": "Do not substitute cached identity checks",
+      "limitation": "Any alternative kernel-bound handle/anchor contract must be separately proven on the actual selected platform.",
+      "scope": "A generation check immediately before a later numeric signal is useful evidence but does not itself close the post-reap query-to-signal race. PID/name/UID scans, groups membership or an earlier complete census are insufficient replacement authority."
+    }
+  ],
+  "preparedAt": "2026-10-20T05:26:33.642352+00:00",
+  "requiredMacProofAfterPatch": [
+    "Exact owned leader lives, exits to unreaped zombie, remains the bound group anchor through descendant drainage, and is waited exactly once only after anchor-only state.",
+    "Harness fatal exit while a real service/pipe-holding child survives: no lost owner, no false live/zero status, no numeric signal after anchor loss and independent cleanup result.",
+    "Natural zero exit and nonzero/signal exit, plus late finally, all preserve first cause and no cleanup PASS if signal authority becomes unavailable.",
+    "Deterministic foreign-epoch, last-member-departure, reaper/ECHILD, denied-query and duplicate-stop fault injections reject before any OS signal to a foreign target; real reuse stress is not needed to send foreign signals.",
+    "Existing normal stages, resource/helper deadlines and original job clock stay unchanged; monitor failure/cleanup evidence remains separate."
+  ],
+  "schema": 1,
+  "scope": "Read-only independent review of existing primary process-group cleanup after the exact leader has been reaped. This is not evidence that the active CI run reused a PID or signaled a foreign group.",
+  "source": {
+    "bytes": 34225,
+    "methods": {
+      "group_alive": {
+        "astSHA256": "eaea5dc3e6ba1a92bf39fbbf55616b95142afea883300d293ed728adea1d0dbd",
+        "endLine": 219,
+        "line": 208
+      },
+      "owned_group_alive": {
+        "astSHA256": "1ca489b941f1ad0dd8b410cebb2feb55fb9e028f9a963475ae48287fa1eb2d8e",
+        "endLine": 258,
+        "line": 221
+      },
+      "run": {
+        "astSHA256": "b1f0b388d11c57de6716957ad6019a2bc12a50e512aa9cdf96d48a622238fb09",
+        "endLine": 613,
+        "line": 416
+      },
+      "stop": {
+        "astSHA256": "507c0a8347fe38e020171e9f0caef43e8f5b30b23f319abc10727ff060dd8215",
+        "endLine": 634,
+        "line": 615
+      }
+    },
+    "path": "tools/qa/native-nonpgo/support.py",
+    "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+  },
+  "sourceAnchorCorrection": {
+    "changesToSourceModelOrFindingOrRuntimeClaims": false,
+    "fixedTag": "xnu-11417.101.15",
+    "reason": "The earlier line numbers did not identify the stated operations in the named fixed tag. Independent raw reads confirmed the exact file bytes and corrected locations.",
+    "selectedRunnerKernelExactVersionVerified": false,
+    "supersedesAnchorsOnlyOf": {
+      "basename": "floorp-recovery59-primary-group-reuse-review.private.json",
+      "bytes": 12854,
+      "sha256": "6e3595f02c50a4a45e97182034fb3136b75b3f5903d44b71fb54a6b680d76480"
+    }
+  },
+  "status": "SOURCE_OWNERSHIP_COUNTEREXAMPLE_CONFIRMED_RUNTIME_OCCURRENCE_UNKNOWN",
+  "whyExistingGuardsDoNotRefute": [
+    {
+      "assessment": "Stores/removes only numeric PGIDs. stop does not consult it, and membership would not distinguish epochs even if it did.",
+      "guard": "groups numeric set",
+      "lines": [
+        142,
+        465,
+        571
+      ]
+    },
+    {
+      "assessment": "Explicitly diagnostic-only and never consulted to authorize primary group signals. A stale list is not a kernel-held reservation.",
+      "guard": "observed birth hints",
+      "lines": [
+        155,
+        164,
+        175
+      ]
+    },
+    {
+      "assessment": "Calls killpg with signal zero; success contains no PID birth, SID generation or owned epoch information.",
+      "guard": "group_alive",
+      "lines": [
+        208,
+        210
+      ]
+    },
+    {
+      "assessment": "Limits one denied-path retry to a newly reaped leader, but the retry is still the same numeric probe. The success path does not enter this guard at all.",
+      "guard": "PermissionError reap fallback",
+      "lines": [
+        221,
+        227,
+        258
+      ]
+    },
+    {
+      "assessment": "poll and wait may already have reaped the exact primary before every later cleanup probe. finally can signal a newly existing group without recording a new failure if that cleanup returns normally.",
+      "guard": "normal run wait and cleanup",
+      "lines": [
+        467,
+        542,
+        546,
+        563,
+        567
+      ]
+    },
+    {
+      "assessment": "Provides separately bound native-process evidence; it is not a gate on the primary stop killpg call.",
+      "guard": "native registry",
+      "lines": [
+        514,
+        572
+      ]
+    },
+    {
+      "assessment": "Existence is not ownership. After anchor loss, a separate fresh query cannot make query-then-killpg atomic against last-member departure and number reuse.",
+      "guard": "fresh probe before signal",
+      "lines": [
+        618,
+        622
+      ]
+    }
+  ]
+}

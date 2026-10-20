@@ -1,0 +1,166 @@
+{
+  "schema": 1,
+  "review": "Independent review of shared primary cleanup group-reuse source counterexample",
+  "reviewedAtUTC": "2026-10-20T05:41:29Z",
+  "publicationStatus": "CLEAR_FOR_CORRECTED_V2",
+  "openPublicationP1": 0,
+  "openPublicationP2": 0,
+  "underlyingSourceFinding": {
+    "id": "reaped-primary-numeric-group-reuse",
+    "priority": "P1",
+    "status": "CONFIRMED_IN_FIXED_SOURCE_WITH_MODEL; ACTUAL_RUNTIME_OCCURRENCE_UNKNOWN",
+    "remediated": false
+  },
+  "correctedEvidence": {
+    "basename": "floorp-recovery59-primary-group-reuse-review-v2.json",
+    "bytes": 14468,
+    "sha256": "75c0008970687d7f43ed85e52b16b05cd699d648f39517af323df7f74bfa468f"
+  },
+  "originalEvidencePreserved": {
+    "basename": "floorp-recovery59-primary-group-reuse-review.private.json",
+    "bytes": 12854,
+    "sha256": "6e3595f02c50a4a45e97182034fb3136b75b3f5903d44b71fb54a6b680d76480"
+  },
+  "reviewedSource": {
+    "path": "tools/qa/native-nonpgo/support.py",
+    "bytes": 34225,
+    "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+  },
+  "controlEvidence": {
+    "floorp-recovery59-primary-group-reuse-controls.py": {
+      "basename": "floorp-recovery59-primary-group-reuse-controls.py",
+      "bytes": 12405,
+      "sha256": "eeb80a5dc59dec1530183dfbec606379ec43b967d41a2c377be6018db34e5501"
+    },
+    "floorp-recovery59-primary-group-reuse-controls-result.json": {
+      "basename": "floorp-recovery59-primary-group-reuse-controls-result.json",
+      "bytes": 13248,
+      "sha256": "680022c46e19e9a155362abd071116eddc3144d239564824ae6cb20b7a21cfae"
+    },
+    "floorp-recovery59-primary-group-reuse-independent-rerun.py": {
+      "basename": "floorp-recovery59-primary-group-reuse-independent-rerun.py",
+      "bytes": 12414,
+      "sha256": "863cba9ed310b226727368276f33670bdd8fddf58535bcc5d4a1a851faee11a3"
+    },
+    "floorp-recovery59-primary-group-reuse-independent-rerun-result.json": {
+      "basename": "floorp-recovery59-primary-group-reuse-independent-rerun-result.json",
+      "bytes": 13248,
+      "sha256": "680022c46e19e9a155362abd071116eddc3144d239564824ae6cb20b7a21cfae"
+    }
+  },
+  "independentExecution": {
+    "passed": 12,
+    "failed": 0,
+    "counterexampleCases": 8,
+    "safeComparisonCases": 4,
+    "resultExactlyMatchesOriginal": true,
+    "actualOSSignals": 0,
+    "actualOSGroupProbes": 0,
+    "actualChildProcesses": 0,
+    "resourceWarningPolicy": "error",
+    "smallTemporaryReceiptAndLogFilesOnly": true
+  },
+  "modelAssessment": [
+    "Every modeled foreign signal occurs after the exact primary has been reaped. Numeric reuse is conditioned on all old group members and the old session being gone; it never replaces a continuously populated original group.",
+    "The model explicitly supplies a later process and new-session group with the recycled number and sufficient signal permission. This is a conditional kernel-allowed ordering, not a measured Mac scheduler trace, allocator frequency or time-to-reuse claim.",
+    "The actual Runner AST polls and waits its Popen child before later numeric probes and cleanup. Neither successful killpg with signal zero nor the numeric groups set binds a subsequent signal to an original group epoch.",
+    "The direct, denied-recheck, query-to-signal, normal-return and nonzero-return paths exercise that missing authority. A final verified-gone/reaped receipt can coexist with the modeled foreign signal; those fields alone do not establish historical signal ownership.",
+    "The four safe comparisons distinguish absence and denial without signals from the intended live owned leader or continuously populated descendant group. They do not claim the latter is atomically protected against later departure."
+  ],
+  "fixedPrimarySources": [
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_exit.c",
+      "basis": "Reap removes the child from its process group and process hash, then releases the group reference.",
+      "sourceLineRanges": [
+        [
+          2808,
+          2822
+        ],
+        [
+          2832,
+          2832
+        ]
+      ],
+      "sourceLines": [
+        2808,
+        2822,
+        2832,
+        2832
+      ],
+      "bytes": 116595,
+      "sha256": "28cb01205c0d28cf532d21e8070470ce871f4d3ac7c4babd1d3176a98d33dc53",
+      "gitBlobSHA": "e7e0ab60250cba05f2bb032b9af18b74979bb46f"
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_proc.c",
+      "basis": "Last-member removal marks the group empty; final release destroys it, removes its hash entry and releases the session.",
+      "sourceLineRanges": [
+        [
+          2385,
+          2406
+        ],
+        [
+          2716,
+          2729
+        ]
+      ],
+      "sourceLines": [
+        2385,
+        2406,
+        2716,
+        2729
+      ],
+      "bytes": 144762,
+      "sha256": "a7e866c2b7da42584ff8b898aabf464fafd31635d2cedf0dc4309c356bdff6c1",
+      "gitBlobSHA": "830b2354570c1a6bef6e835e82b3c7380fa8c1c7"
+    },
+    {
+      "url": "https://github.com/apple-oss-distributions/xnu/blob/xnu-11417.101.15/bsd/kern/kern_prot.c",
+      "basis": "A process can form its own new-session group only when it is not already that group leader and no same-ID group is found.",
+      "sourceLineRanges": [
+        [
+          484,
+          496
+        ]
+      ],
+      "sourceLines": [
+        484,
+        496
+      ],
+      "bytes": 46334,
+      "sha256": "988c19ea6b73574292a70ea2ce3174374a7ec70de76ffe6a8d4f07675c846014",
+      "gitBlobSHA": "cb6e980618f4771c4cb1f338ca92241407d6668f"
+    }
+  ],
+  "resolvedPublicationIssue": {
+    "severity": "P2",
+    "kind": "incorrect fixed-tag source line anchors",
+    "status": "resolved in separate v2",
+    "correctedOperations": [
+      "reap group/hash removal and reference release",
+      "last-member empty flag, final release and group hash removal",
+      "setsid own-ID absence guard"
+    ],
+    "modelAndFindingConclusionsUnchanged": true
+  },
+  "privacyAssessment": {
+    "absolutePrivatePaths": 0,
+    "rawPIDsOrArgumentEnvironmentValues": 0,
+    "exceptionMessagesOrSignedURLsOrSecrets": 0,
+    "internalConversationOrApprovalMetadata": 0,
+    "publicRelativeSourceAndEvidenceBasenamesOnly": true
+  },
+  "scopeSeparation": [
+    "Existing Recovery59 caller CLEAR covers workflow binding, typed proof and safe journal projection. It did not review or certify a fix to this unchanged shared Runner authority gap.",
+    "This review neither observes nor attributes a reuse, foreign signal, cleanup incident or failure cause to the current CI. No active logs were obtained and no cancellation or execution change was made.",
+    "No new external-service cleanup qualification is supplied. Before admitting a new profile that depends on fatal-leader descendant drainage, retain or replace exact signal authority, preserve failure/resource/clock limits and review deterministic fault controls plus actual Mac lifecycle probes.",
+    "Failing closed after loss of the exact unreaped child anchor prevents stale group signals but alone cannot certify drainage of live orphan descendants. Birth or UID snapshots and cached membership do not make a later numeric signal atomic."
+  ],
+  "actions": {
+    "sourceEdited": false,
+    "workflowEdited": false,
+    "CIOrRefsChanged": false,
+    "artifactPayloadAcquired": false,
+    "onlyPublicPrimarySourceReadAndLocalMockControls": true
+  }
+}
