@@ -25,6 +25,8 @@ REVISION = '@5869fe313571d75152b77813cf0a4ee26a4e6df0'
 VENDOR_METADATA = 'https://googlechromelabs.github.io/chrome-for-testing/155.0.8059.84.json'
 METADATA_SHA = 'b3e9c2d6fd21794f210fec79dbfe5813389fd36ab5919e6a1f99dbe0f5ab310a'
 VENDOR_ARCHIVE = 'https://storage.googleapis.com/chrome-for-testing-public/155.0.8059.84/win64/chrome-win64.zip'
+PINNED_OFFICIAL_ARCHIVE_BYTES = 206114888
+PINNED_OFFICIAL_ARCHIVE_SHA256 = '507f2a031441d10c62b5e3d4e863f09ac1198a571c1419976cbd8387f639afde'
 HELPERS = {'run-windows-old-diagnostic.py':'2908ab5a2368c1ac38b84031be502abe0fa16dbb7bec314fd8d3d893549526c0',
            'observe-windows-alert-state.py':'aa4da4e360459d540fe3516c7e56b64e34d43c19626a4d4b9ee5049aef055997'}
 
@@ -150,10 +152,13 @@ try {
 
 
 def acquire(url,target,maximum):
+    if url not in [VENDOR_METADATA, VENDOR_ARCHIVE]: raise RuntimeError('Exact official HTTPS destination required')
     if target.exists(): raise RuntimeError('Fresh vendor output required')
     started=time.monotonic();size=0;digest=hashlib.sha256()
     with urllib.request.urlopen(url,timeout=30) as response,target.open('xb') as stream:
         if response.status!=200: raise RuntimeError('Official vendor HTTP200 required')
+        final_url = response.geturl()
+        if final_url != url: raise RuntimeError('Exact canonical official HTTPS final URL required')
         headers={key:response.headers.get(key) for key in ['Content-Length','ETag','Last-Modified','Content-Type']}
         for block in iter(lambda:response.read(1048576),b''):
             if time.monotonic()-started>300: raise RuntimeError('Bounded official vendor delivery expired')
@@ -162,11 +167,11 @@ def acquire(url,target,maximum):
             digest.update(block);stream.write(block)
         if time.monotonic()-started>300: raise RuntimeError('Bounded official vendor delivery expired')
     if headers['Content-Length'] and int(headers['Content-Length'])!=size: raise RuntimeError('Incomplete official body')
-    return {'url':url,'bytes':size,'sha256':digest.hexdigest(),'headers':headers,'elapsedSeconds':time.monotonic()-started}
+    return {'url':url,'finalUrl':final_url,'bytes':size,'sha256':digest.hexdigest(),'headers':headers,'elapsedSeconds':time.monotonic()-started}
 
 
 def extract(archive,destination):
-    destination.mkdir(exist_ok=False);seen=set();total=0
+    destination.mkdir(exist_ok=False);seen=set();total=0;members=[]
     with zipfile.ZipFile(archive) as source:
         for row in source.infolist():
             path=PurePosixPath(row.filename);parts=path.parts
@@ -181,7 +186,50 @@ def extract(archive,destination):
             target=destination/Path(*parts)
             if row.is_dir():target.mkdir(parents=True,exist_ok=True);continue
             target.parent.mkdir(parents=True,exist_ok=True)
-            with source.open(row) as current,target.open('xb') as out:shutil.copyfileobj(current,out,1048576)
+            digest=hashlib.sha256();written=0
+            with source.open(row) as current,target.open('xb') as out:
+                for block in iter(lambda:current.read(1048576),b''):
+                    written+=len(block)
+                    if written>row.file_size: raise RuntimeError('Actual ZIP member exceeds declared size')
+                    digest.update(block);out.write(block)
+            if written!=row.file_size: raise RuntimeError('Actual ZIP member incomplete')
+            members.append({'relativePath':path.as_posix(),'bytes':written,'sha256':digest.hexdigest()})
+    return sorted(members,key=lambda row:row['relativePath'])
+
+
+def require_official_archive(receipt):
+    if (receipt.get('url')!=VENDOR_ARCHIVE or receipt.get('finalUrl')!=VENDOR_ARCHIVE or
+        receipt.get('bytes')!=PINNED_OFFICIAL_ARCHIVE_BYTES or
+        receipt.get('sha256')!=PINNED_OFFICIAL_ARCHIVE_SHA256):
+        raise RuntimeError('Official unsigned CfT archive differs from both prior authenticated deliveries')
+
+
+def require_physical_archive(receipt,path):
+    actual=record(path)
+    if actual['bytes']!=receipt['bytes'] or actual['sha256']!=receipt['sha256']:
+        raise RuntimeError('Saved official archive differs from authenticated HTTPS body')
+    return actual
+
+
+def require_unsigned_cft_signature(signature):
+    # CfT is a separate official unsigned test distribution, not installed Google Chrome.
+    # Null certificate is retained as observed. Other missing/invalid observations reject.
+    if (not all(key in signature for key in ['status','subject','thumbprint','productName','productVersion']) or
+        signature.get('status')!='NotSigned' or signature.get('subject') is not None or
+        signature.get('thumbprint') is not None or signature.get('productName')!='Google Chrome for Testing' or
+        not re.match(r'^155\.0\.8059\.84(?:\s|$)',signature.get('productVersion',''))):
+        raise RuntimeError('Exact unsigned official CfT signature/version observation required')
+
+
+def require_extracted_inventory(members,actual):
+    expected=sorted(members,key=lambda row:row['relativePath'])
+    physical=sorted([{key:row[key] for key in ['relativePath','bytes','sha256']} for row in actual],
+                    key=lambda row:row['relativePath'])
+    if expected!=physical:
+        raise RuntimeError('Complete extracted application differs from SHA-pinned ZIP members')
+    executable=[row for row in expected if row['relativePath']=='chrome-win64/chrome.exe']
+    if len(executable)!=1:raise RuntimeError('Exactly one SHA-bound official CfT executable required')
+    return executable[0]
 
 
 def inventory(root):
@@ -234,10 +282,11 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
             stream.seek(offset);header=stream.read(6)
             return header[:4]==b'PE\0\0' and struct.unpack('<H',header[4:])[0]==0x8664
     candidates=[row for row in discovered.get('candidates',[]) if valid_signature(row) and win64(Path(row['path']))]
-    receipt=None
+    receipt=None;official_members=None;executable_binding=None
     if candidates:
         signature=candidates[0];chrome=Path(signature['path']).resolve(strict=True);app=chrome.parent
         distribution='existing installed Google-signed Chrome win64, exact static version; actual revision still must pass'
+        distribution_type='installed-google-signed-chrome-win64'
     else:
         vendor.mkdir(exist_ok=False)
         meta=vendor/'metadata.json';metadata_receipt=acquire(VENDOR_METADATA,meta,65536)
@@ -245,8 +294,15 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
         data=json.loads(meta.read_text());choices=[r for r in data['downloads']['chrome'] if r['platform']=='win64']
         if data['version']!=VERSION or len(choices)!=1 or choices[0]['url']!=VENDOR_ARCHIVE:raise RuntimeError('Exact official win64 vendor selection differs')
         receipt=acquire(VENDOR_ARCHIVE,vendor/'archive.zip',367001600)
-        save(out/'official-vendor-delivery.json',{'metadata':metadata_receipt,'archive':receipt,'trustedPreviousWindowsArchiveDigest':None,'scope':'Official pinned HTTPS+valid Google Authenticode+hard actual runtime gate; no Linux binary digest substitution'})
-        extract(vendor/'archive.zip',app)
+        save(out/'official-vendor-delivery.json',{'metadata':metadata_receipt,'archive':receipt,
+            'pinnedPriorWholeZip':{'bytes':PINNED_OFFICIAL_ARCHIVE_BYTES,'sha256':PINNED_OFFICIAL_ARCHIVE_SHA256,
+              'authenticatedPriorRuns':[39352017818,39352493049]},
+            'scope':'Official unsigned CfT: exact canonical HTTPS, fixed metadata and independently repeated wholeZIP hash, derived member hashes plus physical equality, actual NotSigned, hard runtime gate. No Google signature or toast-readiness assumption.'})
+        require_official_archive(receipt)
+        physical_archive=require_physical_archive(receipt,vendor/'archive.zip')
+        save(out/'official-saved-archive-binding.json',physical_archive)
+        official_members=extract(vendor/'archive.zip',app)
+        save(out/'official-zip-member-inventory.json',official_members)
         chrome=app/'chrome-win64/chrome.exe'
         if not chrome.is_file() or not win64(chrome):raise RuntimeError('Official Chrome win64 executable absent')
         quoted=str(chrome).replace("'","''")
@@ -254,10 +310,22 @@ $rows=@(foreach($path in $paths|Select-Object -Unique){if(Test-Path -LiteralPath
         signed=old.bounded_windows(['pwsh.exe','-NoProfile','-NonInteractive','-Command',script],HERE,environment,out/'authenticode',seconds=30)
         if not lifecycle(signed):raise RuntimeError('Owned native Authenticode observation failed')
         signature=json.loads((out/'authenticode/supervisor.log').read_text(encoding='utf-8-sig').strip().splitlines()[-1])
-        if not valid_signature(signature):raise RuntimeError('Expected Google-signed exact Windows Chrome required')
-        distribution='official Chrome for Testing win64; native toast activation not assumed'
+        save(out/'actual-cft-authenticode-observation.json',signature)
+        require_unsigned_cft_signature(signature)
+        distribution='official unsigned Chrome for Testing win64; native toast activation not assumed'
+        distribution_type='official-unsigned-chrome-for-testing-win64'
     before=inventory(app);save(out/'application-inventory-before.json',before)
-    authorization={'chrome':record(chrome),'signature':signature,'version':VERSION,'revision':REVISION,'distribution':distribution,'archive':receipt,'nativeToastReadinessAssumed':False}
+    if official_members is not None:
+        member=require_extracted_inventory(official_members,before)
+        if sha(chrome)!=member['sha256']:raise RuntimeError('Actual executable differs from verified ZIP member')
+        executable_binding={'expectedSha256':member['sha256'],'expectedBytes':member['bytes'],
+          'actualExecutable':record(chrome),'relativePath':member['relativePath'],
+          'derivedFromVerifiedWholeZipSha256':PINNED_OFFICIAL_ARCHIVE_SHA256,
+          'derivedFromVerifiedWholeZipBytes':PINNED_OFFICIAL_ARCHIVE_BYTES,
+          'completeInventoryPhysicalEquality':True,'priorReceiptsContainedExeDigest':False,
+          'provenance':'Expected EXE hash is derived from the exact immutable wholeZIP matched in both prior actual deliveries; never attributed to an absent prior EXE receipt.'}
+        save(out/'official-executable-binding.json',executable_binding)
+    authorization={'chrome':record(chrome),'signature':signature,'version':VERSION,'revision':REVISION,'distribution':distribution,'distributionType':distribution_type,'archive':receipt,'executableBinding':executable_binding,'nativeToastReadinessAssumed':False}
     save(out/'authorization.json',authorization)
     summary={'scope':'Actual Windows Chrome DOC public observation only; zero qualification credit','producerFiles':producers,'authorization':authorization,'nativeToastReadinessAssumed':False,'installedDiscovery':discovered,'cases':[],'observationCompleted':False}
     save(out/'summary.json',summary)
