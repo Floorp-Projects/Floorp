@@ -74,7 +74,39 @@ static BOOL OwnedGreenSourceVisible(NSString *binary) {
   return found;
 }
 
-static BOOL Matches(AXUIElementRef element, pid_t expectedPid, CGRect controls, CGRect *frame) {
+// Bind the accessible display-specific label to the actual public main display.
+// NSScreen names have not been observed in the preceding run; retain the real
+// values here and fail closed unless identity and geometry agree at action time.
+static NSDictionary *MainDisplayBinding(void) {
+  CGDirectDisplayID displayID = CGMainDisplayID();
+  CGRect cgFrame = CGDisplayBounds(displayID);
+  NSScreen *matched = nil;
+  NSUInteger count = 0;
+  for (NSScreen *screen in NSScreen.screens) {
+    NSNumber *number = screen.deviceDescription[@"NSScreenNumber"];
+    if ([number isKindOfClass:NSNumber.class] && number.unsignedIntValue == displayID) {
+      matched = screen;
+      ++count;
+    }
+  }
+  NSString *name = matched.localizedName;
+  CGRect nsFrame = matched ? NSRectToCGRect(matched.frame) : CGRectZero;
+  BOOL identity = count == 1 && [name isKindOfClass:NSString.class] && name.length > 0 &&
+                  name.length <= 128 && CGRectEqualToRect(nsFrame, cgFrame);
+  return @{
+    @"cgMainDisplayID" : @(displayID),
+    @"matchedNSScreenCount" : @(count),
+    @"nsScreenNumber" : matched.deviceDescription[@"NSScreenNumber"] ?: @0,
+    @"localizedName" : name ?: @"",
+    @"cgDisplayFrame" : CFBridgingRelease(CGRectCreateDictionaryRepresentation(cgFrame)),
+    @"nsScreenFrame" : CFBridgingRelease(CGRectCreateDictionaryRepresentation(nsFrame)),
+    @"identityMatches" : @(identity),
+    @"exactDisplayAXLabel" : identity ? [@"Share " stringByAppendingString:name] : @""
+  };
+}
+
+static BOOL Matches(AXUIElementRef element, pid_t expectedPid, CGRect controls,
+                    NSString *displayLabel, CGRect *frame) {
   pid_t actualPid = 0;
   id enabled = Read(element, kAXEnabledAttribute);
   NSString *title = Text(Read(element, kAXTitleAttribute));
@@ -86,7 +118,8 @@ static BOOL Matches(AXUIElementRef element, pid_t expectedPid, CGRect controls, 
     CFRelease(rawActions);
   return AXUIElementGetPid(element, &actualPid) == kAXErrorSuccess && actualPid == expectedPid &&
          [Text(Read(element, kAXRoleAttribute)) isEqual:(__bridge NSString *)kAXButtonRole] &&
-         ([title isEqual:@"Share Entire Screen"] || [description isEqual:@"Share Entire Screen"]) && enabled &&
+         ([title isEqual:@"Share Entire Screen"] || [description isEqual:@"Share Entire Screen"] ||
+          [title isEqual:displayLabel] || [description isEqual:displayLabel]) && enabled &&
          CFGetTypeID((__bridge CFTypeRef)enabled) == CFBooleanGetTypeID() && [enabled boolValue] && press &&
          Frame(element, frame) && CGRectContainsRect(controls, *frame);
 }
@@ -109,6 +142,9 @@ int main(int argc, const char *argv[]) {
       @"pressSucceeded" : @NO,
       @"networkOrSettingsPromptInteraction" : @NO
     } mutableCopy];
+    NSDictionary *displayBinding = MainDisplayBinding();
+    NSString *displayLabel = displayBinding[@"exactDisplayAXLabel"];
+    record[@"mainDisplayBinding"] = displayBinding;
     NSDictionary *controls = VisibleControls();
     CGRect controlsFrame;
     pid_t pid = [controls[(__bridge NSString *)kCGWindowOwnerPID] intValue];
@@ -117,7 +153,8 @@ int main(int argc, const char *argv[]) {
         controls && CGRectMakeWithDictionaryRepresentation(
                         (__bridge CFDictionaryRef)controls[(__bridge NSString *)kCGWindowBounds], &controlsFrame);
     CGRect display = CGDisplayBounds(CGMainDisplayID());
-    BOOL identityOK = frameOK && pid > 0 && [application.bundleIdentifier isEqual:@"com.apple.controlcenter"] &&
+    BOOL identityOK = [displayBinding[@"identityMatches"] boolValue] && frameOK && pid > 0 &&
+                      [application.bundleIdentifier isEqual:@"com.apple.controlcenter"] &&
                       [application.bundleURL.path isEqual:@"/System/Library/CoreServices/ControlCenter.app"] &&
                       controlsFrame.origin.x == display.origin.x && controlsFrame.origin.y == display.origin.y &&
                       controlsFrame.size.width == display.size.width && controlsFrame.size.height == 60;
@@ -161,7 +198,7 @@ int main(int argc, const char *argv[]) {
         } mutableCopy];
         if (hasFrame)
           node[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(frame));
-        if (Matches(element, pid, controlsFrame, &frame)) {
+        if (Matches(element, pid, controlsFrame, displayLabel, &frame)) {
           node[@"exactShareEntireScreenCandidate"] = @YES;
           [candidates addObject:object];
         }
@@ -195,15 +232,17 @@ int main(int argc, const char *argv[]) {
     record[@"exactCandidateCount"] = @(candidates.count);
     if (requested && complete && candidates.count == 1) {
       NSDictionary *fresh = VisibleControls();
+      NSDictionary *freshDisplayBinding = MainDisplayBinding();
+      record[@"immediateMainDisplayBinding"] = freshDisplayBinding;
       CGRect freshFrame, buttonFrame;
       BOOL same =
-          fresh &&
+          [freshDisplayBinding isEqual:displayBinding] && fresh &&
           [fresh[(__bridge NSString *)kCGWindowNumber] isEqual:controls[(__bridge NSString *)kCGWindowNumber]] &&
           [fresh[(__bridge NSString *)kCGWindowOwnerPID] intValue] == pid &&
           CGRectMakeWithDictionaryRepresentation(
               (__bridge CFDictionaryRef)fresh[(__bridge NSString *)kCGWindowBounds], &freshFrame) &&
           CGRectEqualToRect(freshFrame, controlsFrame) &&
-          Matches((__bridge AXUIElementRef)candidates[0], pid, freshFrame, &buttonFrame);
+          Matches((__bridge AXUIElementRef)candidates[0], pid, freshFrame, displayLabel, &buttonFrame);
       record[@"immediateRevalidationMatches"] = @(same);
       if (same && !AXReadErrors.count && AXIsProcessTrusted() && CGPreflightScreenCaptureAccess() && OwnedGreenSourceVisible(expectedBinary)) {
         record[@"pressAttempted"] = @YES;
