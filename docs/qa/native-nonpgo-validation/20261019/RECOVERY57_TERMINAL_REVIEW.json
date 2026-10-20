@@ -1,0 +1,579 @@
+{
+  "schema": 1,
+  "review": "RECOVERY57_INDEPENDENT_TERMINAL_REVIEW",
+  "decision": "TARGETED_CURRENT_SOURCE_MOZILLA_SMOKE_DEMONSTRATED",
+  "evidenceReviewStatus": "CLEAR_FOR_BOUNDED_TARGETED_QUALIFICATION",
+  "openP1": 0,
+  "openP2": 0,
+  "findingScope": "No unresolved P1/P2 was identified in the reviewed targeted execution evidence or its bounded qualification. This does not close unrelated full-host/native product questions.",
+  "run": {
+    "id": 39340278789,
+    "head": "063d5223e67712555c3168df803d3b0fd0ca338b",
+    "status": "completed",
+    "conclusion": "success",
+    "attempt": 1,
+    "event": "push"
+  },
+  "job": {
+    "id": 118359816164,
+    "name": "checkpoint-consumer",
+    "head": "063d5223e67712555c3168df803d3b0fd0ca338b",
+    "status": "completed",
+    "conclusion": "success",
+    "startedAt": "2026-10-19T23:14:11Z",
+    "completedAt": "2026-10-20T02:57:54Z",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "all15JobStepsSucceeded": true
+  },
+  "independentProviderChecks": {
+    "completedRunAndJob": true,
+    "attempt": 1,
+    "headMatchingRuns": 1,
+    "jobs": 1,
+    "artifactCount": 0,
+    "immutableCallerReadbackExact": true,
+    "immutablePinnedSourceReadbackExact": true,
+    "jobCompletedAtUTC": "2026-10-20T02:57:54Z",
+    "runUpdatedAtUTC": "2026-10-20T02:57:55Z"
+  },
+  "actualOutcome": {
+    "status": "passed",
+    "qualification": "verified-origin-root-target-mozilla-smoke-v1",
+    "positivePASSCount": 2,
+    "intentionalExpectedFAILCount": 1,
+    "unexpectedCaseFailures": 0,
+    "directlyProjectedTargetStageCount": 7,
+    "gateAttestedMainStageCount": 52,
+    "targetedSmokeScope": "two fixed QA control files and one original current-source upstream version-comparator case",
+    "allThreeCasesPassedAsTests": false,
+    "allThreeExpectationsSatisfied": true,
+    "wholeUpstreamSuiteExecuted": false,
+    "fullHostQualification": false,
+    "fullHostXUL": "NOT_TESTED",
+    "package": "NOT_TESTED",
+    "nativeAuthentication": "NOT_TESTED",
+    "productQualification": false
+  },
+  "directProjectedEvidence": {
+    "targetStages": [
+      {
+        "stage": "mozilla-shell-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 4160,
+        "minimumFreeGiB": 78.65
+      },
+      {
+        "stage": "mozilla-http3-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 2647,
+        "minimumFreeGiB": 76.89
+      },
+      {
+        "stage": "mozilla-browser-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 465,
+        "minimumFreeGiB": 76.89
+      },
+      {
+        "stage": "mozilla-updater-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 464,
+        "minimumFreeGiB": 76.82
+      },
+      {
+        "stage": "mozilla-channel-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 48,
+        "minimumFreeGiB": 76.82
+      },
+      {
+        "stage": "mozilla-dmg-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 153,
+        "minimumFreeGiB": 76.82
+      },
+      {
+        "stage": "mozilla-resources-build",
+        "exitCode": 0,
+        "complete": true,
+        "reasonAvailable": true,
+        "reason": null,
+        "failurePhaseAvailable": true,
+        "failurePhase": null,
+        "groupCleanup": "verified-gone",
+        "cleanupFailurePresent": false,
+        "leaderReap": {
+          "status": "reaped",
+          "exitCode": 0,
+          "errorType": "unavailable",
+          "errno": null
+        },
+        "peakRSSMiB": 700,
+        "minimumFreeGiB": 76.45
+      }
+    ],
+    "mozillaCases": [
+      {
+        "case": "compiled-debug",
+        "mode": "positive",
+        "expectedExitCode": 0,
+        "harnessStatus": "passed",
+        "verified": true,
+        "completeLog": true,
+        "expectationSatisfied": true,
+        "testEndStatuses": {
+          "PASS": 1,
+          "FAIL": 0
+        },
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 0,
+          "unexpectedTestEnds": 0,
+          "unexpectedFailSubtests": 0,
+          "unexpectedFailTestEnds": 0
+        },
+        "markers": {
+          "debug": true,
+          "failure": null
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 0
+        },
+        "runnerFailure": null,
+        "monitorFailure": null
+      },
+      {
+        "case": "failure-control",
+        "mode": "negative-control",
+        "expectedExitCode": 1,
+        "harnessStatus": "failed",
+        "verified": true,
+        "completeLog": true,
+        "expectationSatisfied": true,
+        "testEndStatuses": {
+          "PASS": 0,
+          "FAIL": 1
+        },
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 1,
+          "unexpectedTestEnds": 1,
+          "unexpectedFailSubtests": 1,
+          "unexpectedFailTestEnds": 1
+        },
+        "markers": {
+          "debug": null,
+          "failure": true
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 1
+        },
+        "runnerFailure": {
+          "source": "runner",
+          "stage": "other",
+          "code": "nonzero-exit",
+          "elapsedSeconds": 13385.68,
+          "existingEvidenceInvalid": false,
+          "persistenceErrno": null
+        },
+        "monitorFailure": null
+      },
+      {
+        "case": "upstream-version-comparator",
+        "mode": "positive",
+        "expectedExitCode": 0,
+        "harnessStatus": "passed",
+        "verified": true,
+        "completeLog": true,
+        "expectationSatisfied": true,
+        "testEndStatuses": {
+          "PASS": 1,
+          "FAIL": 0
+        },
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 0,
+          "unexpectedTestEnds": 0,
+          "unexpectedFailSubtests": 0,
+          "unexpectedFailTestEnds": 0
+        },
+        "markers": {
+          "debug": null,
+          "failure": null
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 0
+        },
+        "runnerFailure": null,
+        "monitorFailure": null
+      }
+    ],
+    "firstFailure": null,
+    "firstFailureAvailable": true,
+    "monitorFailure": null,
+    "monitorFailureAvailable": true,
+    "persistedFirstFailure": null,
+    "persistedFirstFailureStatus": "absent",
+    "summaryFirstFailure": null,
+    "summaryFirstFailureAvailable": true
+  },
+  "immutableExecutedGateAttestations": {
+    "sourcePinsVerified": true,
+    "targetProofVerified": true,
+    "pipelineStepSucceeded": true,
+    "all52MainStagesComplete": true,
+    "all52RowsDirectlyProjected": false,
+    "all52StageNaturalExitReapGroupAndCleanupProof": "Attested by the successfully executed pinned helper/caller predicate; seven target rows are additionally directly projected.",
+    "preflight": {
+      "gateVerified": true,
+      "requiredQA": 543,
+      "requiredFailureRecording": 14,
+      "requiredErrorsFailuresSkips": 0,
+      "individualUnittestSummariesDirectlyRecovered": false,
+      "evidenceLevel": "Successful immutable preflight and final preflight_ok assertions, not independently recovered private unittest totals or per-test traces."
+    },
+    "restoreAndConfiguration": {
+      "verified": true,
+      "existingOriginReplayAndActualEnvironmentGuardsRetained": true,
+      "resumedEffectiveConfigRequiredTrueByGate": true,
+      "elevenRawContextKeyComparisonsDirectlyProjected": false,
+      "individualConfigurationValuesReconstructedByReviewer": false
+    },
+    "builtAssetsAndInputs": {
+      "actualCurrentCompiledDebugAndSourceChecksRequired": true,
+      "sevenNativeAssetsAndFourResourcesRequired": true,
+      "assetHashesAndUUIDValuesDirectlyProjected": false,
+      "exactThreeSourceBoundCasesAndCompleteLogsRequired": true,
+      "sourceBoundChannelInfoException": "Only the reviewed fixed static source resource is permitted; no general outside-object exception is inferred."
+    }
+  },
+  "checkpointAndSDK": {
+    "existingArtifact": 12164479528,
+    "originRun": 39197008470,
+    "originProducerJob": 117881829274,
+    "checkpointContentSHA256": "f548c7f86f6a05dc23b2b3c9764cec3d4d1d1e7d01014b2c56d5d60aac84ed15",
+    "manifestSHA256": "ec4581e1d23861581b446b4d826c3812df9cc21bc9224fb682f16120690d8644",
+    "originContract": "verified-origin-cross-run-checkpoint-replay-v1",
+    "sdkSourceVerified": true,
+    "sdkArtifact": 12182302735,
+    "sdkSourceRun": 39244172146,
+    "sdkProducerJob": 118032017226,
+    "sdkSourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+    "acquisitionEvidenceLevel": "The successful fixed normal SDK/checkpoint steps and immutable source-bound guards; no independent payload reacquisition or unpack was performed by this reviewer.",
+    "checkpointProducerWhoseWholeRunLaterFailedRelabeledAsSuccessfulRun": false,
+    "newUploads": 0,
+    "actualRunArtifactCount": 0,
+    "crossJobLaterCppProgressPersisted": false
+  },
+  "timeAndResourceScope": {
+    "executionTimeBudgetVerified": true,
+    "executionTimeProfile": "consumer-shared-final-deadline-v1",
+    "sharedWorkDeadlineMinutes": 345,
+    "platformMinutes": 360,
+    "nominalCleanupReserveMinutes": 15,
+    "deadlineReference": "absolute original job monotonic origin, not per-target or compiler-only time",
+    "clockBeforeAndAfterProjectionVerified": true,
+    "clockResetAllowed": false,
+    "APIJobElapsedSeconds": 13423.0,
+    "APIJobElapsedMinutes": 223.71666666666667,
+    "APIElapsedIsCompilerOnlyWallTime": false,
+    "maximumPeakRSSAcrossSevenProjectedTargetsMiB": 4160,
+    "minimumFreeAcrossSevenProjectedTargetsGiB": 76.45,
+    "resourceValuesClaimedWholeJobMaxima": false,
+    "controlledSpeedupOrCacheHitProven": false,
+    "comparisonLimit": "This prioritized subset completed in this job. Prior broad full-build deadline stops are not a controlled performance comparison or proof that stock full build would now complete."
+  },
+  "monitorInterpretation": {
+    "fatalMainMonitorFailure": null,
+    "preflightFatalMonitorFailure": null,
+    "caseFatalMonitorFailures": 0,
+    "retainedRecoveredMainDiagnostics": 16,
+    "retentionLimit": 16,
+    "retainedIsTotalEverCount": false,
+    "allRetainedEventuallyComplete": true,
+    "retainedAttempts": [
+      2
+    ],
+    "retainedInitialPartialKind": "short-task-info",
+    "preflightRetainedDiagnostics": 0,
+    "caseRetainedDiagnostics": 0,
+    "noRecoveredDiagnosticsClaimed": false,
+    "allEarlierHelperOrTaskFailuresUniversallyRepaired": false,
+    "auxiliaryProjectionCaveat": "leaderReap/errorType=unavailable and negative runnerFailure/stage=other are fixed sanitizer outputs. They do not overturn affirmative typed exit/reap proof or authorize reconstruction of omitted private fields."
+  },
+  "logInterpretation": {
+    "targetLogScansComplete": true,
+    "shellUnclassifiedErrorMarkers": 8,
+    "HTTP3UnclassifiedErrorMarkers": 41,
+    "markerCountsEstablishCompilerFailure": false,
+    "basis": "Both commands returned natural zero and the complete source-bound actual cases satisfied their expectations. These normalized word-pattern counts are not compiler failure verdicts.",
+    "restoreLogComplete": true,
+    "restoreLogRawContentRecovered": false,
+    "rawCompilerOrHarnessLogsPublished": false
+  },
+  "qualifiedAndRemaining": {
+    "qualified": "The reviewed fixed-checkpoint prioritized native target and Faster resource route produced current compiled assets sufficient for the three exact real Mozilla harness controls.",
+    "XULAssetBuiltAndExercisedBySelectedCases": true,
+    "fullHostXULFieldDoesNotDenyActualTargetXULAsset": "NOT_TESTED preserves the broader full-host qualification boundary.",
+    "notQualified": [
+      "complete stock full-host build",
+      "complete upstream test suite",
+      "broad browser or network coverage",
+      "package validation",
+      "native authentication/PWA/GUI behavior",
+      "new durable later-C++ checkpoint"
+    ],
+    "minimumSufficientSuffixEstablished": false,
+    "actualAutomaticReconfigureBackendOrCargoDecisions": "UNKNOWN",
+    "specificRedundantRecompileCause": "UNKNOWN",
+    "originalNativeExitCause": "UNKNOWN",
+    "newCIRequestedOrStartedByReviewer": false
+  },
+  "validation": {
+    "actualFinalReceiptUniqueAndByteEquivalentToRetainedParsedObject": true,
+    "boundedIndependentNegativeProjectionChecksRejected": 20,
+    "negativeControlScope": "Receipt primary/monitor/source/proof/time/storage/overclaim/target/case mutations; no actual test, target or payload was rerun.",
+    "noUnresolvedTerminalEvidenceFindingInScope": true
+  },
+  "publicWrapperReview": {
+    "threeSuppliedFilesReviewed": true,
+    "terminalWrapperCaseRowsEqualActualUniqueLogProjection": true,
+    "fourteenMilestoneTimestampsAndStatesEqualRetainedTerminalLog": true,
+    "executionRunJobAndAll15StepTimestampsEqualIndependentOrdinaryAPI": true,
+    "coverageCorrectlySeparatesTwoPositivePassesAndOneExpectedFailure": true,
+    "singleOriginalUpstreamFileDoesNotEstablishGlobalCoverage": true,
+    "globalEligiblePopulationAndCoveragePercentRemainNull": true,
+    "fiftyTwoRowsAndQARestoreAssetsRemainExplicitImmutableGateAttestations": true,
+    "noWrapperOverclaimOrPrivacyFindingIdentified": true
+  },
+  "bindings": {
+    "actualFinalProjectedReceipt": {
+      "path": "RECOVERY57_RECEIPT.json",
+      "bytes": 27048,
+      "sha256": "54a87e39748d1de1984e19b35ee50a07ccd406aabbb2bf7d8ff5f6b73ae644c2"
+    },
+    "publicTerminalResult": {
+      "path": "RECOVERY57_TERMINAL_RESULT.json",
+      "bytes": 8655,
+      "sha256": "0568c13a3fe2ee1a85e81ee65906eb518063bd82b419113ed4ede298ba80b560"
+    },
+    "publicExecution": {
+      "path": "RECOVERY57_EXECUTION.json",
+      "bytes": 5118,
+      "sha256": "db1987b0eade7eae91b6885cde9c698af37c6da9796abbb3ab242d081f908a3f"
+    },
+    "retainedDecodedTerminalLog": {
+      "path": "recovery57-terminal-decoded-private-log",
+      "bytes": 132482,
+      "sha256": "5ec65682e6b7a9108ee7280eb80d2eb4b1ef6a7ab47618ac989a5d3dc02ba241"
+    },
+    "independentOrdinaryAPIProof": {
+      "path": "floorp-recovery57-terminal-independent-provider-proof.json",
+      "bytes": 2888,
+      "sha256": "af85bfd5b9c217557b90b1adcaba0e296a5b9f65e5a3a4a0ce05ea43bd838d18"
+    },
+    "independentOrdinaryAPIStepTimingProof": {
+      "path": "floorp-recovery57-terminal-independent-timing-proof.json",
+      "bytes": 4459,
+      "sha256": "20d8563c2cbc6e7f187e1293a724231147bfe39fa090d95027ca3894fd1cde1b"
+    },
+    "caller": {
+      "repository": "Floorp-Projects/Floorp-Runtime",
+      "head": "063d5223e67712555c3168df803d3b0fd0ca338b",
+      "path": ".github/workflows/mac-native-checkpoint.yml",
+      "bytes": 38240,
+      "sha256": "300e6fb572b06dfdfc2a536b6e19db70330e175c52c4958b495c58f0f329103a"
+    },
+    "immutableSource": [
+      {
+        "path": "tools/qa/native-nonpgo/pipeline.py",
+        "bytes": 52205,
+        "sha256": "e0f750a8905ee49f32ed0cb4f5b78b3b56e6c3ac122ce85e780856db06368eb5",
+        "immutableFixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+        "ordinaryProviderBytesIndependentlyRead": true
+      },
+      {
+        "path": "tools/qa/native-nonpgo/mozilla_target_build.py",
+        "bytes": 13587,
+        "sha256": "b9a5debecd559aed8550e3a5e5a102fdbb3646cb57e5cef94f2bf8e2e0658eb3",
+        "immutableFixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+        "ordinaryProviderBytesIndependentlyRead": true
+      }
+    ],
+    "sourceImplementationReview": {
+      "path": "floorp-recovery57-implementation-review.json",
+      "bytes": 16608,
+      "sha256": "e8f3e9550ce90f534a2569f4dabd328db7986f67669ed8a17b7be0e984571675"
+    },
+    "callerLogicReview": {
+      "path": "floorp-recovery57-caller-review.json",
+      "bytes": 12535,
+      "sha256": "bfb38b19540d56d30f3d8f4042c009ef93fa7edf8b12f9da2db43d3846e83ef9"
+    },
+    "callerQA543Addendum": {
+      "path": "floorp-recovery57-caller-count-addendum-review.json",
+      "bytes": 3899,
+      "sha256": "f2f884c1ee0c0929aaa620523a1048506412b724fc09041d837e5e6f344260f0"
+    },
+    "finalLocalBindingReview": {
+      "path": "floorp-recovery57-final-local-binding-review.json",
+      "bytes": 6320,
+      "sha256": "fb79e7a367b0a6da6f53be2828be393222a8d71b9424a7d438b06bc57b16f3c0"
+    },
+    "independentControlScript": {
+      "path": "floorp-recovery57-terminal-independent-controls.py",
+      "bytes": 6434,
+      "sha256": "2b01a239bfe81f42f9189741a0e6a5fe47b36bfa1be72d0b1a2436c5321218f0"
+    },
+    "independentControlResult": {
+      "path": "floorp-recovery57-terminal-independent-controls-result.json",
+      "bytes": 990,
+      "sha256": "0960fe79d2f93e89c00518dca4dac5e3ad33ef5e4bff8c1679bf4e454ae076d4"
+    }
+  },
+  "reviewerOperations": {
+    "ordinaryTerminalAPIRead": true,
+    "immutablePublicSourceRead": true,
+    "existingPrivateDecodedLogRead": true,
+    "duplicateJobLogDownload": false,
+    "newLargePayloadDownload": false,
+    "sourceChanged": false,
+    "CIStarted": false,
+    "remoteRefChanged": false
+  },
+  "privacy": {
+    "rawMachinePathsOrProcessIdentitiesPublished": false,
+    "rawLogsOrEnvironmentPublished": false,
+    "arbitraryExceptionTextPublished": false,
+    "signedURLsPublished": false,
+    "internalConversationPublished": false
+  }
+}

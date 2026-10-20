@@ -1,0 +1,291 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY57_TARGETED_MOZILLA_TERMINAL_RESULT",
+  "decision": "TARGETED_SMOKE_EXPECTATIONS_SATISFIED",
+  "observedUTC": "2026-10-20T03:07:54Z",
+  "run": 39340278789,
+  "runURL": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39340278789",
+  "job": 118359816164,
+  "status": "success",
+  "attempt": 1,
+  "head": "063d5223e67712555c3168df803d3b0fd0ca338b",
+  "fixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "qualification": "verified-origin-root-target-mozilla-smoke-v1",
+  "headRunCount": 1,
+  "artifactCount": 0,
+  "curatedReceipt": {
+    "path": "RECOVERY57_RECEIPT.json",
+    "bytes": 27048,
+    "sha256": "54a87e39748d1de1984e19b35ee50a07ccd406aabbb2bf7d8ff5f6b73ae644c2"
+  },
+  "rawLogReceipt": {
+    "bytes": 132482,
+    "sha256": "5ec65682e6b7a9108ee7280eb80d2eb4b1ef6a7ab47618ac989a5d3dc02ba241",
+    "rawPublished": false
+  },
+  "coverage": {
+    "expectedCases": 3,
+    "caseExpectationsSatisfied": 3,
+    "positiveCasesPassed": 2,
+    "intentionalFailureDetected": 1,
+    "customFixtureCases": 2,
+    "currentSourceUpstreamTestFilesExecuted": 1,
+    "currentSourceUpstreamTestFilesPassed": 1,
+    "globalUpstreamEligiblePopulation": null,
+    "globalCoveragePercent": null,
+    "globalCoverageEstablished": false,
+    "reason": "Three selected cases qualify only this explicit smoke scope. The source candidate and runtime registered/eligible populations require separate census."
+  },
+  "directEvidence": {
+    "targetBuildStagesProjected": 7,
+    "allSevenNaturalExit0Reaped0GroupGone": true,
+    "caseResults": [
+      {
+        "case": "compiled-debug",
+        "available": true,
+        "verified": true,
+        "mode": "positive",
+        "expectedExitCode": 0,
+        "expectationSatisfied": true,
+        "harnessStatus": "passed",
+        "completeLog": true,
+        "runnerFailure": null,
+        "monitorFailure": null,
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 0,
+          "unexpectedTestEnds": 0,
+          "unexpectedFailSubtests": 0,
+          "unexpectedFailTestEnds": 0
+        },
+        "testEndStatuses": {
+          "PASS": 1,
+          "FAIL": 0
+        },
+        "markers": {
+          "debug": true,
+          "failure": null
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 0
+        },
+        "monitorDiagnostics": []
+      },
+      {
+        "case": "failure-control",
+        "available": true,
+        "verified": true,
+        "mode": "negative-control",
+        "expectedExitCode": 1,
+        "expectationSatisfied": true,
+        "harnessStatus": "failed",
+        "completeLog": true,
+        "runnerFailure": {
+          "source": "runner",
+          "stage": "other",
+          "code": "nonzero-exit",
+          "elapsedSeconds": 13385.68,
+          "existingEvidenceInvalid": false,
+          "persistenceErrno": null
+        },
+        "monitorFailure": null,
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 1,
+          "unexpectedTestEnds": 1,
+          "unexpectedFailSubtests": 1,
+          "unexpectedFailTestEnds": 1
+        },
+        "testEndStatuses": {
+          "PASS": 0,
+          "FAIL": 1
+        },
+        "markers": {
+          "debug": null,
+          "failure": true
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 1
+        },
+        "monitorDiagnostics": []
+      },
+      {
+        "case": "upstream-version-comparator",
+        "available": true,
+        "verified": true,
+        "mode": "positive",
+        "expectedExitCode": 0,
+        "expectationSatisfied": true,
+        "harnessStatus": "passed",
+        "completeLog": true,
+        "runnerFailure": null,
+        "monitorFailure": null,
+        "counts": {
+          "expectedTests": 1,
+          "listedTests": 1,
+          "suiteStarts": 1,
+          "suiteEnds": 1,
+          "testStarts": 1,
+          "testEnds": 1,
+          "skips": 0,
+          "crashes": 0,
+          "timeouts": 0,
+          "otherFailures": 0,
+          "errorLogs": 0,
+          "nonzeroProcessExits": 0,
+          "unexpectedSubtests": 0,
+          "unexpectedTestEnds": 0,
+          "unexpectedFailSubtests": 0,
+          "unexpectedFailTestEnds": 0
+        },
+        "testEndStatuses": {
+          "PASS": 1,
+          "FAIL": 0
+        },
+        "markers": {
+          "debug": null,
+          "failure": null
+        },
+        "process": {
+          "available": true,
+          "exactReaped": true,
+          "groupGone": true,
+          "cleanupClean": true,
+          "monitorFailureAbsent": true,
+          "exitCode": 0
+        },
+        "monitorDiagnostics": []
+      }
+    ],
+    "targetMilestones": [
+      {
+        "timestamp": "2026-10-19T23:42:21.1084060Z",
+        "stage": "mozilla-shell-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:44:29.8609540Z",
+        "stage": "mozilla-shell-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:44:29.8620830Z",
+        "stage": "mozilla-http3-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:51:58.0465370Z",
+        "stage": "mozilla-http3-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:51:58.0467250Z",
+        "stage": "mozilla-browser-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:52:10.4584220Z",
+        "stage": "mozilla-browser-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:52:10.4599540Z",
+        "stage": "mozilla-updater-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:44.4610250Z",
+        "stage": "mozilla-updater-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:44.4653370Z",
+        "stage": "mozilla-channel-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:46.8204790Z",
+        "stage": "mozilla-channel-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:46.8568030Z",
+        "stage": "mozilla-dmg-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:52.8188110Z",
+        "stage": "mozilla-dmg-build",
+        "state": "completed"
+      },
+      {
+        "timestamp": "2026-10-20T02:53:52.8191810Z",
+        "stage": "mozilla-resources-build",
+        "state": "started"
+      },
+      {
+        "timestamp": "2026-10-20T02:56:26.1051540Z",
+        "stage": "mozilla-resources-build",
+        "state": "completed"
+      }
+    ]
+  },
+  "immutableGateAttestations": {
+    "sourcePinsVerified": true,
+    "targetProofVerified": true,
+    "preflightVerified": true,
+    "selectedMacQACases": 543,
+    "failureRecordingCases": 14,
+    "sdkSourceVerified": true,
+    "executionTimeBudgetVerified": true,
+    "allStageCount": 52,
+    "allStagesComplete": true,
+    "note": "Only seven target rows and three case process projections are directly published; the complete52-row set, restore/configuration guards, asset identities and QA counts are attested by the immutable final caller gate."
+  },
+  "primaryFailure": null,
+  "persistedFirstFailureStatus": "absent",
+  "monitorFailure": null,
+  "retainedMonitorDiagnostics": 16,
+  "totalMonitorDiagnosticsEver": null,
+  "fullHostXUL": "NOT_TESTED",
+  "fullHostQualification": false,
+  "stagePackage": "NOT_TESTED",
+  "nativeAuthentication": "NOT_TESTED",
+  "originalNativeExitCause": "UNKNOWN",
+  "crossJobCppProgressPersisted": false,
+  "cppCheckpointPayloadProduced": false,
+  "independentReview": "RECOVERY57_TERMINAL_REVIEW.json"
+}

@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "scope": "RECOVERY57_ACTUAL_FIXED_SOURCE_TARGETED_MOZILLA_EXECUTION",
+  "repository": "Floorp-Projects/Floorp-runtime",
+  "run": {
+    "id": 39340278789,
+    "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39340278789",
+    "event": "push",
+    "head": "063d5223e67712555c3168df803d3b0fd0ca338b",
+    "branch": "codex/mac-native-mozilla-target-recovery57-20261019",
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-19T23:14:07Z",
+    "run_started_at": "2026-10-19T23:14:07Z",
+    "updated_at": "2026-10-20T02:57:55Z"
+  },
+  "job": {
+    "id": 118359816164,
+    "name": "checkpoint-consumer",
+    "status": "completed",
+    "conclusion": "success",
+    "labels": [
+      "macos-15-intel"
+    ],
+    "started_at": "2026-10-19T23:14:11Z",
+    "completed_at": "2026-10-20T02:57:54Z",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:14:11Z",
+        "completed_at": "2026-10-19T23:14:12Z"
+      },
+      {
+        "name": "Bound the initial authorized execution",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:14:12Z",
+        "completed_at": "2026-10-19T23:14:12Z"
+      },
+      {
+        "name": "Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:14:12Z",
+        "completed_at": "2026-10-19T23:14:18Z"
+      },
+      {
+        "name": "Establish this job's fresh clock and task root",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:14:18Z",
+        "completed_at": "2026-10-19T23:14:19Z"
+      },
+      {
+        "name": "Verify actual native process monitor before acquisition",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:14:19Z",
+        "completed_at": "2026-10-19T23:17:04Z"
+      },
+      {
+        "name": "Acquire the official unexpired renewed content-matched SDK",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:17:04Z",
+        "completed_at": "2026-10-19T23:17:19Z"
+      },
+      {
+        "name": "Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:17:19Z",
+        "completed_at": "2026-10-19T23:22:25Z"
+      },
+      {
+        "name": "Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:22:25Z",
+        "completed_at": "2026-10-19T23:22:28Z"
+      },
+      {
+        "name": "Download only the verified successful producer checkpoint",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:22:28Z",
+        "completed_at": "2026-10-19T23:25:15Z"
+      },
+      {
+        "name": "Restore guarded state and build six Firefox roots plus Faster resources, then run three Mozilla cases",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-19T23:25:15Z",
+        "completed_at": "2026-10-20T02:57:27Z"
+      },
+      {
+        "name": "Verify targeted Firefox smoke, source pins and independent stage cleanup",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-20T02:57:27Z",
+        "completed_at": "2026-10-20T02:57:29Z"
+      },
+      {
+        "name": "Post Checkout immutable native harness",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-20T02:57:29Z",
+        "completed_at": "2026-10-20T02:57:30Z"
+      },
+      {
+        "name": "Post Checkout immutable Runtime source",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-20T02:57:30Z",
+        "completed_at": "2026-10-20T02:57:32Z"
+      },
+      {
+        "name": "Post Checkout immutable reviewed fixture",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-20T02:57:32Z",
+        "completed_at": "2026-10-20T02:57:32Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-20T02:57:32Z",
+        "completed_at": "2026-10-20T02:57:33Z"
+      }
+    ]
+  },
+  "fixture": "4e6d275a52619cdb06e4a0995d914d2931c0eb6d",
+  "caller": {
+    "commit": "063d5223e67712555c3168df803d3b0fd0ca338b",
+    "tree": "8e5122b77073a1e3e4e8cc90e9f63c224a4d6d64",
+    "path": ".github/workflows/mac-native-checkpoint.yml",
+    "bytes": 38240,
+    "sha256": "300e6fb572b06dfdfc2a536b6e19db70330e175c52c4958b495c58f0f329103a"
+  },
+  "headRunCount": 1,
+  "artifactCount": 0,
+  "newArtifactUploads": 0,
+  "checkpointArtifact": 12164479528,
+  "sdkArtifact": 12182302735,
+  "platformMinutes": 360,
+  "sharedOriginalMinutes": 345,
+  "clockReset": false,
+  "fullHostQualification": false,
+  "nativeAuthentication": "NOT_TESTED"
+}
