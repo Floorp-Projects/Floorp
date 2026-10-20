@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "run": 39367227591,
+  "url": "https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/39367227591",
+  "attempt": 1,
+  "event": "push",
+  "head": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+  "callerTree": "6b2606b8495a8793884aaea8ee5692f1055120bc",
+  "fixture": "3c2999d115f13226da83c8285818725c6cb0ab36",
+  "status": "completed",
+  "conclusion": "failure",
+  "startedAt": "2026-10-20T04:00:08Z",
+  "updatedAt": "2026-10-20T04:27:53Z",
+  "jobCount": 1,
+  "jobs": [
+    {
+      "id": 118446715438,
+      "name": "checkpoint-consumer",
+      "status": "completed",
+      "conclusion": "failure",
+      "labels": [
+        "macos-15-intel"
+      ],
+      "startedAt": "2026-10-20T04:00:12Z",
+      "completedAt": "2026-10-20T04:27:53Z",
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:00:13Z",
+          "completedAt": "2026-10-20T04:00:15Z"
+        },
+        {
+          "number": 2,
+          "name": "Bound the initial authorized execution",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:00:15Z",
+          "completedAt": "2026-10-20T04:00:15Z"
+        },
+        {
+          "number": 3,
+          "name": "Checkout immutable reviewed fixture",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:00:15Z",
+          "completedAt": "2026-10-20T04:00:22Z"
+        },
+        {
+          "number": 4,
+          "name": "Establish this job's fresh clock and task root",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:00:22Z",
+          "completedAt": "2026-10-20T04:00:23Z"
+        },
+        {
+          "number": 5,
+          "name": "Verify actual native process monitor before acquisition",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:00:23Z",
+          "completedAt": "2026-10-20T04:02:36Z"
+        },
+        {
+          "number": 6,
+          "name": "Acquire the official unexpired renewed content-matched SDK",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:02:36Z",
+          "completedAt": "2026-10-20T04:02:49Z"
+        },
+        {
+          "number": 7,
+          "name": "Checkout immutable Runtime source",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:02:49Z",
+          "completedAt": "2026-10-20T04:06:18Z"
+        },
+        {
+          "number": 8,
+          "name": "Checkout immutable native harness",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:06:18Z",
+          "completedAt": "2026-10-20T04:06:21Z"
+        },
+        {
+          "number": 9,
+          "name": "Download only the verified successful producer checkpoint",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:06:21Z",
+          "completedAt": "2026-10-20T04:08:58Z"
+        },
+        {
+          "number": 10,
+          "name": "Restore guarded state, build current Firefox and XPCOM assets, inventory upstream and run all XPCOM cases",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-10-20T04:08:58Z",
+          "completedAt": "2026-10-20T04:27:35Z"
+        },
+        {
+          "number": 11,
+          "name": "Verify exact XPCOM selection, distinct results, source pins and owned cleanup",
+          "status": "completed",
+          "conclusion": "failure",
+          "startedAt": "2026-10-20T04:27:35Z",
+          "completedAt": "2026-10-20T04:27:37Z"
+        },
+        {
+          "number": 20,
+          "name": "Post Checkout immutable native harness",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:27:37Z",
+          "completedAt": "2026-10-20T04:27:38Z"
+        },
+        {
+          "number": 21,
+          "name": "Post Checkout immutable Runtime source",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:27:38Z",
+          "completedAt": "2026-10-20T04:27:39Z"
+        },
+        {
+          "number": 22,
+          "name": "Post Checkout immutable reviewed fixture",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:27:39Z",
+          "completedAt": "2026-10-20T04:27:40Z"
+        },
+        {
+          "number": 23,
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-20T04:27:40Z",
+          "completedAt": "2026-10-20T04:27:40Z"
+        }
+      ]
+    }
+  ],
+  "curatedReceipt": {
+    "bytes": 9845,
+    "sha256": "1164d7fb8ae82834f240040be97050d6839c20d1bf030b9360080b4c45117929"
+  },
+  "privateJobLog": {
+    "bytes": 129099,
+    "sha256": "2d0880a6d36e2b1deb603167bec1850ae9b1c386caf103891f40ade88ef92233",
+    "contentPublished": false
+  },
+  "firstFailure": {
+    "source": "runner",
+    "stage": "mozilla-upstream-inventory",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 1642.91,
+    "existingEvidenceInvalid": false,
+    "persistenceErrno": null
+  },
+  "monitorFailure": null,
+  "inventoryFirstFailureMeaning": "The owned inventory child exited nonzero. The retained stage log has only bytes, line count, SHA256 and zero matched diagnostic records. Its exact exception and underlying cause are unknown.",
+  "independentlyReproducedSourceDefect": "On Linux with the fixed Runtime dependencies and an empty child Mach Registrar, executing stock testing/xpcshell/mach_commands.py raises undefined testing category. This is a retry hypothesis, not confirmed direct evidence of the old Mac exception.",
+  "counts": {
+    "upstreamSelected": null,
+    "upstreamExecuted": null,
+    "upstreamPassed": null,
+    "upstreamSkipped": null,
+    "globalEligible": null,
+    "targetStagesObserved": 0
+  },
+  "scopeStatus": "Upstream inventory was not observed; no original seven targeted builds, three smoke cases, or 45-case upstream run was invoked.",
+  "QAControls": {
+    "selectedTests": 565,
+    "failureRecordingTests": 14,
+    "evidenceKind": "successful workflow step and pinned final gate attestation, not direct raw per-test results"
+  },
+  "fullHostQualification": false,
+  "nativeAuthentication": "NOT_TESTED",
+  "originalNativeExitCause": "UNKNOWN",
+  "newArtifactUploads": 0,
+  "retentionChanged": false,
+  "permissionsChanged": false,
+  "productSourceOrUpstreamTestsChanged": false,
+  "guards": {
+    "sharedWorkDeadlineMinutes": 345,
+    "nominalCleanupReserveMinutes": 15,
+    "platformJobTimeoutMinutes": 360,
+    "manualTimeOnlyCancellation": false,
+    "sdkAndCheckpointDownloadedThroughNormalUnexpiredAPI": true
+  },
+  "nextHypothesis": "Initialize only the source-pinned stock testing category before loading the unchanged stock module; add a fixed-vocabulary diagnostic journal collected in the parent finally path, then retry the same 45 scope."
+}

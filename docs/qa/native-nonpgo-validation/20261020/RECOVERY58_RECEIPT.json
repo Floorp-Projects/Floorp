@@ -1,0 +1,359 @@
+{
+  "role": "consumer",
+  "status": "failed",
+  "qualification": null,
+  "targeted": true,
+  "originRun": 39197008470,
+  "existingArtifact": 12164479528,
+  "newArtifactUploads": 0,
+  "fullHostXUL": "NOT_TESTED",
+  "fullHostQualification": false,
+  "stagePackage": "NOT_TESTED",
+  "nativeAuthentication": "NOT_TESTED",
+  "productQualification": false,
+  "rawSummaryPublished": false,
+  "rawLogContentPublished": false,
+  "firstFailure": {
+    "source": "runner",
+    "stage": "mozilla-upstream-inventory",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 1642.91,
+    "existingEvidenceInvalid": false,
+    "persistenceErrno": null
+  },
+  "firstFailureAvailable": true,
+  "monitorFailure": null,
+  "monitorFailureAvailable": true,
+  "persistedFirstFailure": {
+    "source": "runner",
+    "stage": "mozilla-upstream-inventory",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 1642.91,
+    "existingEvidenceInvalid": false,
+    "persistenceErrno": null
+  },
+  "persistedFirstFailureStatus": "observed",
+  "sourcePinsVerified": true,
+  "targetProofVerified": false,
+  "upstreamProofVerified": false,
+  "upstreamQualification": null,
+  "upstream": {
+    "scope": "xpcom/tests/unit",
+    "contract": "current-source-upstream-xpcom-manifest-v1",
+    "verified": false,
+    "status": "failed",
+    "fullUpstreamSuiteExecuted": false,
+    "fullHostQualification": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "globalCoveragePercent": null,
+    "globalInventory": {
+      "registeredRecords": null,
+      "activeRecords": null,
+      "manifestEnabledRecords": null,
+      "manifestDisabledRecords": null,
+      "excludedByDefaultFilters": null,
+      "uniqueIds": null,
+      "uniqueEnabledIds": null,
+      "uniqueFiles": null,
+      "expectedFailureRecords": null
+    },
+    "scopeInventory": {
+      "registeredRecords": null,
+      "activeRecords": null,
+      "manifestEnabledRecords": null,
+      "manifestDisabledRecords": null,
+      "excludedByDefaultFilters": null,
+      "uniqueIds": null,
+      "uniqueEnabledIds": null,
+      "uniqueFiles": null,
+      "expectedFailureRecords": null
+    },
+    "inventoryStatus": "unavailable",
+    "inventoryPlanSHA256": null,
+    "inventoryReceipt": {
+      "bytes": null,
+      "sha256": null
+    },
+    "globalDump": {
+      "bytes": null,
+      "sha256": null
+    },
+    "scopeDump": {
+      "bytes": null,
+      "sha256": null
+    },
+    "inventoryTestsExecuted": null,
+    "inventoryServerProcessesStarted": null,
+    "harnessStatus": "unavailable",
+    "completeLog": null,
+    "harnessReceipt": {
+      "bytes": null,
+      "sha256": null
+    },
+    "counts": {
+      "selected": null,
+      "executed": null,
+      "passed": null,
+      "expectedFailures": null,
+      "unexpectedResults": null,
+      "skipped": null,
+      "crashes": null,
+      "timeouts": null,
+      "errorLogs": null,
+      "unsupported": null,
+      "unattempted": null
+    },
+    "process": {
+      "available": null,
+      "exactReaped": null,
+      "groupGone": null,
+      "cleanupClean": null,
+      "monitorFailureAbsent": null,
+      "exitCode": null
+    },
+    "runnerFailure": null,
+    "monitorFailure": null,
+    "monitorFailureObserved": null,
+    "inputBindingStable": null,
+    "caseError": null,
+    "caughtCode": null,
+    "caseFailurePhase": null,
+    "stages": [],
+    "subtestStatuses": {
+      "PASS": null,
+      "FAIL": null,
+      "SKIP": null,
+      "ERROR": null,
+      "TIMEOUT": null,
+      "ASSERT": null,
+      "PRECONDITION_FAILED": null,
+      "NOTRUN": null
+    },
+    "evidenceCollectionFailure": null,
+    "evidenceWriteFailure": null,
+    "monitorDiagnostics": [],
+    "tests": [],
+    "assets": {
+      "binaries": {
+        "TestArguments": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        },
+        "TestBlockingProcess": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        },
+        "TestPRIntN": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        },
+        "TestQuickReturn": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        },
+        "TestUnicodeArguments": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        },
+        "plugin-container": {
+          "bytes": null,
+          "sha256": null,
+          "filetype": null,
+          "uuid": null,
+          "sections": null,
+          "sectionsSHA256": null
+        }
+      },
+      "xpcomTypelibGeneratorInput": {
+        "bytes": null,
+        "sha256": null,
+        "interfacesVerified": null
+      }
+    },
+    "unattemptedGlobalManifestEnabledRecords": null
+  },
+  "upstreamStages": [
+    {
+      "stage": "mozilla-upstream-helpers-build",
+      "exitCode": 0,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 0,
+        "errorType": "unavailable",
+        "errno": null
+      },
+      "cleanupFailurePresent": false,
+      "peakRSSMiB": 477,
+      "minimumFreeGiB": 89.49,
+      "lastActivity": {
+        "unknownKinds": {},
+        "rssMiB": 146.25390625,
+        "cpuSeconds": 1.995,
+        "rssLowerBoundMiB": 146.25390625,
+        "cpuLowerBoundSeconds": 1.995,
+        "stage": "other",
+        "sampleComplete": true,
+        "sampleAttempts": 1,
+        "processes": 9,
+        "inventoryBackend": "kern-proc-pgrp-helper",
+        "errorType": "unavailable",
+        "partialSamples": []
+      },
+      "complete": true,
+      "reasonAvailable": true,
+      "reason": null,
+      "failurePhaseAvailable": true,
+      "failurePhase": null
+    },
+    {
+      "stage": "mozilla-upstream-inventory",
+      "exitCode": 1,
+      "groupCleanup": "verified-gone",
+      "leaderReap": {
+        "status": "reaped",
+        "exitCode": 1,
+        "errorType": "unavailable",
+        "errno": null
+      },
+      "cleanupFailurePresent": false,
+      "peakRSSMiB": 108,
+      "minimumFreeGiB": 89.47,
+      "lastActivity": {
+        "unknownKinds": {},
+        "rssMiB": 107.6015625,
+        "cpuSeconds": 1.629,
+        "rssLowerBoundMiB": 107.6015625,
+        "cpuLowerBoundSeconds": 1.629,
+        "stage": "other",
+        "sampleComplete": true,
+        "sampleAttempts": 1,
+        "processes": 2,
+        "inventoryBackend": "kern-proc-pgrp-helper",
+        "errorType": "unavailable",
+        "partialSamples": []
+      },
+      "complete": false,
+      "reasonAvailable": true,
+      "reason": "nonzero-exit",
+      "failurePhaseAvailable": true,
+      "failurePhase": "wait"
+    }
+  ],
+  "upstreamStageLogs": {
+    "mozilla-upstream-helpers-build": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 105027,
+      "lines": 114,
+      "sha256": "518fc34071e2c6c50d48d3632ecf0739f65b29a83dafa716032a056184a7f633",
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "diagnosticCounts": {},
+      "records": []
+    },
+    "mozilla-upstream-inventory": {
+      "complete": true,
+      "rawContentPublished": false,
+      "freeTextPublished": false,
+      "bytes": 1544,
+      "lines": 19,
+      "sha256": "f1d29640c1574878ad6799e7984384aca54f64ad2b7e723a1199c5799f77bda6",
+      "matchingRecords": 0,
+      "recordsTruncated": false,
+      "diagnosticCounts": {},
+      "records": []
+    },
+    "mozilla-upstream-child-build": null,
+    "mozilla-upstream-resources-build": null
+  },
+  "mozillaCases": [
+    {
+      "case": "compiled-debug",
+      "available": false,
+      "verified": false
+    },
+    {
+      "case": "failure-control",
+      "available": false,
+      "verified": false
+    },
+    {
+      "case": "upstream-version-comparator",
+      "available": false,
+      "verified": false
+    }
+  ],
+  "targetStages": [],
+  "targetStageLogs": {
+    "mozilla-shell-build": null,
+    "mozilla-http3-build": null,
+    "mozilla-browser-build": null,
+    "mozilla-updater-build": null,
+    "mozilla-channel-build": null,
+    "mozilla-dmg-build": null,
+    "mozilla-resources-build": null
+  },
+  "firstFailureSource": "persisted",
+  "preflightFirstFailure": null,
+  "preflightMonitorFailure": null,
+  "preflightMonitorDiagnostics": [],
+  "clockBeforeProjectionVerified": true,
+  "summaryFirstFailureAvailable": true,
+  "summaryFirstFailure": {
+    "source": "runner",
+    "stage": "mozilla-upstream-inventory",
+    "code": "nonzero-exit",
+    "elapsedSeconds": 1642.91,
+    "existingEvidenceInvalid": false,
+    "persistenceErrno": null
+  },
+  "monitorDiagnostics": [],
+  "allStageCount": 47,
+  "allStagesComplete": false,
+  "checkpointRestoreLog": {
+    "complete": true,
+    "rawContentPublished": false,
+    "freeTextPublished": false,
+    "bytes": 61742,
+    "lines": 1,
+    "sha256": "868cda86640c4033b3876db70c0041b63765a3d9abab22c7f101679c51a75166",
+    "matchingRecords": 0,
+    "recordsTruncated": false,
+    "diagnosticCounts": {},
+    "records": []
+  },
+  "pipelineStepSucceeded": false,
+  "preflightVerified": true,
+  "sdkSourceVerified": true,
+  "executionTimeBudgetVerified": true,
+  "executionTimeProfile": "consumer-shared-final-deadline-v1",
+  "sharedWorkDeadlineMinutes": 345,
+  "nominalCleanupReserveMinutes": 15,
+  "sdkArtifact": 12182302735,
+  "sdkSourceRun": 39244172146,
+  "sdkProducerJob": 118032017226,
+  "sdkSourceSHA256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688",
+  "clockAfterProjectionVerified": true
+}
