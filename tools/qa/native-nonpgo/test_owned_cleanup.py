@@ -111,6 +111,43 @@ class OwnedCleanupGuards(unittest.TestCase):
         self.assertNotIn('PRIVATE_DENIAL', json.dumps(diagnostics))
         self.assert_no_popen_reap(anchor)
 
+    def test_darwin_query_errno_reaches_cleanup_without_signal_or_wait(self):
+        import ctypes
+        import darwin_activity as darwin
+        from primary_anchor import DarwinBSD
+        cases = [(0, value, value) for value in
+                 (errno.EPERM, errno.EACCES, errno.ESRCH, errno.ECHILD)]
+        cases += [(ctypes.sizeof(darwin.BSDInfo), errno.EPERM, errno.EPERM)]
+        cases += [(0, value, None) for value in (0, False, True, -1, 2**31, None, '1')]
+        runner = self.runner()
+        for size, error, expected in cases:
+            with self.subTest(size=size, error=error):
+                anchor, diagnostics = self.anchor(terminal=False), []
+                original = anchor._backend
+                reader = SimpleNamespace(query=mock.Mock(return_value=(size, error)))
+                anchor._backend = DarwinBSD(reader, darwin.BSDInfo,
+                                           os.getpid(), os.geteuid(), os.getuid())
+                with mock.patch('primary_anchor.os.waitpid') as wait, \
+                        mock.patch('primary_anchor.os.killpg') as send:
+                    with self.assertRaisesRegex(Failure, '^owned-primary-signal-unavailable$'):
+                        runner.stop(anchor, diagnostics)
+                wait.assert_not_called()
+                send.assert_not_called()
+                self.assertEqual(reader.query.call_count, 2)
+                self.assertEqual(len(diagnostics), 2)
+                for row in diagnostics:
+                    self.assertEqual((row['reason'], row['errorType'], row['errno']),
+                                     ('anchor-bsd-unavailable', 'anchor-error', expected))
+                    self.assertIs(row['signalAuthority'], False)
+                self.assertTrue(anchor.held)
+                self.assertIsNone(anchor.actual_returncode)
+                self.assertEqual(anchor.receipt()['resources'], {'rssMiB': None, 'cpuSeconds': None})
+                self.assert_no_popen_reap(anchor)
+                anchor._backend = original
+                recovered = anchor.observe()
+                self.assertEqual(recovered['status'], 'live')
+                self.assertIsNone(recovered['errno'])
+
     def test_unknown_observation_does_not_synthesize_exit_zero(self):
         runner, anchor, diagnostics = self.runner(), self.anchor(terminal=False), []
         anchor._backend.observe.side_effect = OSError(errno.EIO, 'PRIVATE_UNAVAILABLE')

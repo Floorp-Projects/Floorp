@@ -236,8 +236,11 @@ class DarwinBSD:
         value = self.bsd_type()
         METRICS['bsdQueries'] += 1
         size, error = self.reader.query(pid, 3, value)
-        require(type(size) is int and size == ctypes.sizeof(value) and
-                type(error) is int and error == 0, 'anchor-bsd-unavailable')
+        if not (type(size) is int and size == ctypes.sizeof(value) and
+                type(error) is int and error == 0):
+            unavailable = AnchorError('anchor-bsd-unavailable')
+            unavailable.errno = error if integer(error, 1) else None
+            raise unavailable
         require(value.pid == pid and value.ppid == self.parent and
                 value.uid == self.uid and value.ruid == self.ruid and
                 value.pgid == pgid and value.start_sec > 0 and
