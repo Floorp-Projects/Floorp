@@ -1,0 +1,14 @@
+{
+  "testsRun": 792,
+  "passed": 775,
+  "skipped": 17,
+  "failures": 0,
+  "errors": 0,
+  "successful": true,
+  "seconds": 58.499,
+  "platform": "Linux",
+  "log": {
+    "bytes": 151762,
+    "sha256": "211efef849a289588a8480b940c022819aae1830dee6d75fe87f58a83b4523e0"
+  }
+}

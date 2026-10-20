@@ -1,0 +1,269 @@
+{
+  "actual58": {
+    "cause": "UNKNOWN",
+    "counts": null,
+    "firstFailure": {
+      "code": "nonzero-exit",
+      "stage": "mozilla-upstream-inventory"
+    },
+    "inventoryExitCode": 1,
+    "inventoryLog": {
+      "bytes": 1544,
+      "lines": 19,
+      "rawPayloadAvailableToThisReview": false,
+      "sha256": "f1d29640c1574878ad6799e7984384aca54f64ad2b7e723a1199c5799f77bda6"
+    },
+    "job": 118446715438,
+    "provenance": "Parent terminal report; this review did not acquire new CI logs or payloads.",
+    "run": "39367227591",
+    "scope45Executed": false,
+    "sevenTargetRouteStarted": false
+  },
+  "conclusion": "A fresh-child registry initialization defect is demonstrated with actual fixed sources and real dependencies. The lost actual58 exception remains UNKNOWN until exact evidence or a new properly journaled short diagnostic identifies it.",
+  "finding": {
+    "actual58Attribution": "UNCONFIRMED: no exact raw traceback or complete hash reconstruction matches the 1544-byte Mac log. Similar line/byte lengths are not proof.",
+    "facts": [
+      "Stock mach python launches the chosen virtualenv Python with command_context.run_process. Registrar Python objects in the parent Mach process do not transfer to this fresh interpreter.",
+      "The new interpreter successfully imports runxpcshelltests, parser_desktop, MozbuildObject, BuildDriver, LoggingManager and StructuredLogger using the fixed mach/common source paths, but its actual Registrar.categories remains empty.",
+      "Inventory then executes the entire stock testing/xpcshell/mach_commands.py. Its actual @Command xpcshell-test registration names category testing. _MachCommand.register calls Registrar.register_command_handler, which raises MachError when that category is absent.",
+      "The same complete stock module imports successfully when the category is first registered through the real Registrar API. The synthetic module name remains absent from sys.modules in both cases; missing sys.modules registration is not the cause of this reproduced error."
+    ],
+    "fixedExceptionMessage": "Cannot register a command to an undefined category: xpcshell-test -> testing",
+    "fixedExceptionType": "mach.base.MachError",
+    "id": "inventory-fresh-interpreter-command-category",
+    "impact": "Reproducible startup defect in the standalone child import path; a leading source explanation for the observed inventory nonzero exit, not direct identification of the lost Mac exception."
+  },
+  "followupGates": [
+    "Initialize the category with strict source/metadata binding and keep the complete stock module/decorators unchanged.",
+    "Add regression coverage for fresh empty Registrar, exact pre-existing metadata without membership reset, malformed metadata/type bool/wrong priority, missing source binding and nonmatching definition.",
+    "Record fixed phase transitions before imports/stock-module load/build binding/install_tests/global listing/scope listing and retain a privacy-safe fixed exception code/frame journal even when listing output is unavailable.",
+    "Run the smallest separately authorized real-Mac inventory diagnostic before another long native-target route if the original Mac cause remains unknown; require normal zero exit, exact reap, group gone, no monitor failure, no test/server execution, and complete typed inventory evidence.",
+    "Keep current failed inventory primary failure intact. No 7-target/3-control/45-test result or enabled/disabled population is inferred from this failure."
+  ],
+  "historical58DriverPin": {
+    "bytes": 30175,
+    "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+  },
+  "localEvidence": {
+    "actualMacValidated": false,
+    "actualMachExecuted": false,
+    "assertionsPassed": 4,
+    "caseCount": 3,
+    "dependencyStubs": 0,
+    "ordinarySourceImportOnly": true,
+    "priorDiagnosticAttempts": "Earlier audit-denied Linux platform discovery attempts are retained privately and are not source defects. The final controls permit only exact read-only uname/file/lsb_release/ldconfig import queries; network, shell and other subprocess actions are denied.",
+    "result": {
+      "bytes": 2990,
+      "path": "floorp-recovery58-stock-import-controls-result.private.json",
+      "sha256": "2e0df53acaa844fb0490032eaab79a93f8b176694a3abb1b59c5c96a0b97496e"
+    },
+    "results": [
+      {
+        "completedPhases": [
+          "stock-import",
+          "parser-import",
+          "mozbuild-import",
+          "builddriver-import",
+          "logging-import",
+          "empty-categories"
+        ],
+        "exceptionType": "MachError",
+        "knownCategoryFailure": true,
+        "phase": "stock-mach-module-exec",
+        "qualification": "source-import-control-only",
+        "readOnlyPlatformTools": [
+          "uname",
+          "file",
+          "lsb_release",
+          "uname",
+          "ldconfig"
+        ],
+        "registeredTesting": false,
+        "site": "common",
+        "status": "failed",
+        "traceBasename": "floorp-recovery58-stock-import-common-unregistered-final.private.log",
+        "traceBytes": 957,
+        "traceLines": 15,
+        "traceSHA256": "a9aa492767bbc49cc1f0790459a126b7c635930c2180cd10532f17dd049f26b4"
+      },
+      {
+        "moduleAbsentFromSysModules": true,
+        "phases": [
+          "stock-import",
+          "parser-import",
+          "mozbuild-import",
+          "builddriver-import",
+          "logging-import",
+          "empty-categories",
+          "stock-mach-module-exec"
+        ],
+        "qualification": "source-import-control-only",
+        "readOnlyPlatformTools": [
+          "uname",
+          "file",
+          "lsb_release",
+          "uname",
+          "ldconfig"
+        ],
+        "registeredTesting": true,
+        "registrarCategoryCount": 1,
+        "site": "common",
+        "status": "passed"
+      },
+      {
+        "completedPhases": [],
+        "exceptionType": "ModuleNotFoundError",
+        "knownCategoryFailure": false,
+        "phase": "stock-import",
+        "qualification": "source-import-control-only",
+        "readOnlyPlatformTools": [
+          "uname",
+          "file",
+          "lsb_release",
+          "uname",
+          "ldconfig"
+        ],
+        "registeredTesting": false,
+        "site": "mach",
+        "status": "failed",
+        "traceBasename": "floorp-recovery58-stock-import-mach-unregistered-final.private.log",
+        "traceBytes": 612,
+        "traceLines": 10,
+        "traceSHA256": "49a869c91d3308346e88afd9e175aa586268ac5d628d782318e63002b0d70e0f"
+      }
+    ],
+    "script": {
+      "bytes": 4422,
+      "path": "floorp-recovery58-stock-import-control.py",
+      "sha256": "599c1a1f85914e16213d7143cf830bb69568a3b86a500a8edd94c007695d2836"
+    },
+    "unexpectedFailures": 0
+  },
+  "minimalProposedInitialization": {
+    "absentCategory": "Use the real Registrar API once, then assert exact tuple metadata and the expected commands_by_category set entry.",
+    "api": "Registrar.register_category(name, title, description, priority=50)",
+    "definition": {
+      "selector": "CATEGORIES[testing]",
+      "source": "build/mach_initialize.py",
+      "sourceBytes": 23749,
+      "sourceSHA256": "ca18450abb98a15bbf84d8a815616a41e0dda36db6f7091866422ce382d1ffaf",
+      "value": {
+        "long": "Run tests.",
+        "priority": 60,
+        "short": "Testing"
+      }
+    },
+    "definitionRead": "Bind the fixed file by hash and bounded owned/no-follow source reading, extract only the single literal CATEGORIES assignment, and require exact known testing metadata/types. Avoid importing mach_initialize merely to get the dictionary: its module tail installs a sys.meta_path finder hook.",
+    "exactCall": "Registrar.register_category('testing', 'Testing', 'Run tests.', 60)",
+    "existingCategory": "Require type tuple, length 3, exact str/str/int types with int not bool, and exact equality to the stock metadata tuple. Require the category membership container to be a set. Preserve its identity and contents; do not call register_category again.",
+    "expectedRegistryTuple": [
+      "Testing",
+      "Run tests.",
+      60
+    ],
+    "mismatch": "Fail with a fixed privacy-safe initialization/binding code; do not silently overwrite an existing foreign/malformed category or weaken the decorator check.",
+    "normalStockCaller": "mach_initialize.initialize iterates CATEGORIES and calls driver.define_category(name, short, long, priority). Mach.define_category forwards to Registrar.register_category.",
+    "qualification": "A normal command-registry initialization step before full stock module execution; no skipping or monkeypatching stock @Command and no test/selection changes.",
+    "state": "Proposal only. Root owns implementation, repository regression tests, source publication and any later actual-Mac admission.",
+    "whyNoOverwrite": "Actual Registrar.register_category unconditionally resets commands_by_category[name] to an empty set, so re-registering an existing category discards its command membership list."
+  },
+  "normalSiteAnalysis": {
+    "default": "Mach command contexts with no explicit virtualenv use MozbuildObject._virtualenv_name = virtualenv_name or common. The python command ensures that context virtualenv and runs its Python executable.",
+    "explicitCommon": "mach python --virtualenv common chooses the same logical site and does not initialize Registrar categories. It is not a repair for this reproduced defect.",
+    "limits": "Linux import-path reproduction is not actual Mac Mach/bootstrap or mozinfo/listing validation. Optional installed packages and runtime metadata may differ.",
+    "machOnly": "The isolated mach-only path additionally lacks redo imported by mozcrash. This is a separate site-scope observation, not the current common-context Mac cause.",
+    "noPipOrVenvWork": "This review reconstructed the declared first-party/vendored import paths in isolated Linux Python. It did not create/activate/ensure a Mach virtualenv, execute a Mach command, install requirements, contact a package index or build anything.",
+    "ordinaryXpcshellCommand": "The stock xpcshell-test @Command declares no dedicated virtualenv. The actual Mach initialize path defines all categories before normal command dispatch.",
+    "xpcshellSiteExists": false
+  },
+  "operations": {
+    "builds": 0,
+    "ciOperations": 0,
+    "packageInstalls": 0,
+    "payloadAcquisitions": 0,
+    "refMutations": 0,
+    "repositoryEdits": 0,
+    "runtimeEdits": 0,
+    "serverOrTestProcessesStarted": 0,
+    "venvCreates": 0
+  },
+  "preparedAt": "2026-10-20T04:38:43.300336+00:00",
+  "previousDecoratorReviewClarification": {
+    "additionalFact": "That earlier control explicitly initialized the category. The real standalone driver did not establish that prerequisite; the new counterexample exposes this missing startup context.",
+    "basename": "floorp-recovery58-mach-module-decorator-review.private.json",
+    "scopeStillValid": "The sys.modules-specific decorator concern remains clear when testing category is initialized.",
+    "sha256": "16a69aa599f42b0753e52d674bae1edd929bb9c04d72d9501ef39c75385ff3d0"
+  },
+  "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 1,
+  "scope": "Read-only inventory startup API/site review; no fixture/source/CI/ref/payload change.",
+  "sourcePins": [
+    {
+      "bytes": 23749,
+      "fixedSourceBytesEqual": true,
+      "path": "build/mach_initialize.py",
+      "sha256": "ca18450abb98a15bbf84d8a815616a41e0dda36db6f7091866422ce382d1ffaf"
+    },
+    {
+      "bytes": 6677,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mach/mach/registrar.py",
+      "sha256": "bea1a191c5ce4b09be2a82cb7598ba688552c6e5bc2e66aaeeaf0b3c616795fd"
+    },
+    {
+      "bytes": 10950,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mach/mach/decorators.py",
+      "sha256": "7c97bc9590949d0070ae48f94cec47c7dcb606aea5896da3a225127ebf89b865"
+    },
+    {
+      "bytes": 22416,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mach/mach/main.py",
+      "sha256": "693ab70ffc60281c4931f3cfe320467a953fdd1c3c1bf6b06113139e443c91bb"
+    },
+    {
+      "bytes": 11132,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mach_commands.py",
+      "sha256": "c9e0bc7473b40074ef176517bdb6f7635c093d839c7504e064ba6f2578c46c80"
+    },
+    {
+      "bytes": 45302,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mozbuild/mozbuild/base.py",
+      "sha256": "23d86c23ee7068e6be588f6275003a821a7d774e986280a2fc6c8593b610317d"
+    },
+    {
+      "bytes": 67292,
+      "fixedSourceBytesEqual": true,
+      "path": "python/mach/mach/site.py",
+      "sha256": "9d0d7997dff2410273aef1c80dcd0b402fca9043f68ee7afa5193392b1da0c98"
+    },
+    {
+      "bytes": 3810,
+      "fixedSourceBytesEqual": true,
+      "path": "python/sites/mach.txt",
+      "sha256": "3d9f6457781c92a78f239cad84a6fb181b94af8c2f50401399889da3d9f3b49d"
+    },
+    {
+      "bytes": 2010,
+      "fixedSourceBytesEqual": true,
+      "path": "python/sites/common.txt",
+      "sha256": "a408fc35773558247992def55a4d46ef975cf883ee100ef53cea9938f7622ccd"
+    },
+    {
+      "bytes": 12047,
+      "fixedSourceBytesEqual": true,
+      "path": "testing/xpcshell/mach_commands.py",
+      "sha256": "2b2a28610ef77529fed066307808d23e157b970b2ea81533ccb87a1acbc1e489"
+    },
+    {
+      "bytes": 114438,
+      "fixedSourceBytesEqual": true,
+      "path": "testing/xpcshell/runxpcshelltests.py",
+      "sha256": "6d62bb5191fb1662c45bb3a544c84fbf3c89889dd60b0586a4993b39d50c26ad"
+    }
+  ],
+  "status": "SOURCE_COUNTEREXAMPLE_REPRODUCED_ACTUAL58_CAUSE_UNKNOWN"
+}

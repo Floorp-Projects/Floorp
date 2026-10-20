@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "scope": "Retry the same 45 unchanged upstream XPCOM test definitions after repairing the source-bound Mach child bootstrap and inventory diagnostics",
+  "previousRun": 39367227591,
+  "previousTerminalEvidence": "3b51aa645f7e2ff25e9afd611e26f189f0ef48a3",
+  "previousDirectExceptionCause": "UNKNOWN",
+  "hypothesis": "The fixed source command module requires its testing category in the fresh mach python child. Initializing that exact stock category should let inventory proceed; if any later phase fails, its fixed phase and typed exception journal will survive in the final safe receipt.",
+  "changes": [
+    "Read the pinned CATEGORIES literal from build/mach_initialize.py with owned descriptor and content binding; register the exact testing category through the stock Registrar API only when absent and no orphan commands exist; validate existing metadata without re-registration.",
+    "Record fixed inventory phases, allowlisted exception class, fixed own Failure codes and typed SystemExit values; never record exception messages, module names, paths, argv or source text.",
+    "Collect the diagnostic journal in the parent finally path even after a failed inventory process; keep unknown as unavailable and preserve execution failure over diagnostic collection/write or logger cleanup failure.",
+    "Keep an abnormal SystemExit code and invoke phase before logger cleanup; fail closed on partially initialized category membership instead of resetting existing commands."
+  ],
+  "unchanged": {
+    "runtimeSource": "7dd619742b25567e479eeda97ae071d10542ad0b",
+    "upstreamTestBodiesAndAssertionsAndExpectedResults": true,
+    "scope45And58SourceInputPlan": true,
+    "productSource": true,
+    "buildConfiguration": true,
+    "sevenTargetedBuildsAndNormalFasterPackaging": true,
+    "threeSmokeControls": true,
+    "sharedWorkDeadlineMinutes": 345,
+    "cleanupReserveMinutes": 15,
+    "platformMinutes": 360,
+    "existingResourceOwnershipAndCleanupRules": true,
+    "normalUnexpiredSDKAndCheckpointAPI": true,
+    "sdk600SecondAcquisitionDeadlineAndPins": true,
+    "artifactRetention": true,
+    "permissions": true
+  },
+  "qualification": {
+    "fullUpstreamSuiteExecuted": false,
+    "fullHostQualification": false,
+    "nativeAuthentication": "NOT_TESTED",
+    "originalNativeExitCause": "UNKNOWN",
+    "newArtifactUploads": 0
+  },
+  "sourceFiles": {
+    "tools/qa/native-nonpgo/mozilla-upstream.json": {
+      "bytes": 11397,
+      "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+    },
+    "tools/qa/native-nonpgo/mozilla_upstream.py": {
+      "bytes": 39669,
+      "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+    },
+    "tools/qa/native-nonpgo/pipeline.py": {
+      "bytes": 54135,
+      "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+    },
+    "tools/qa/native-nonpgo/test_mozilla_upstream.py": {
+      "bytes": 29146,
+      "sha256": "691a8300a2d2d0ec9800d2732837b6dbc604b0febee0b73ad8e1c05a5da66d2b"
+    },
+    "tools/qa/native-nonpgo/test_pipeline_restore.py": {
+      "bytes": 39291,
+      "sha256": "b548e137c45a40e2aaeec3ce56d78137bdf2c00cb977ae10f79acb5d0d3c5c9d"
+    }
+  },
+  "validation": {
+    "testsRun": 792,
+    "passed": 775,
+    "skipped": 17,
+    "failures": 0,
+    "errors": 0,
+    "successful": true,
+    "seconds": 58.499,
+    "platform": "Linux",
+    "log": {
+      "bytes": 151762,
+      "sha256": "211efef849a289588a8480b940c022819aae1830dee6d75fe87f58a83b4523e0"
+    }
+  },
+  "selectedMacQAExpected": 577,
+  "failureRecordingExpected": 14,
+  "independentReviewsRequiredBeforeExecution": [
+    "implementation",
+    "caller including safe journal projection",
+    "actual dependency import controls",
+    "immutable caller/source and normal unexpired artifact admission"
+  ],
+  "continuationAfterScope45": "First observe the 45 scope, then implement and independently review auxiliary-server ownership, aggregate CPU/RSS and safe cleanup; finally align upstream server startup and expand the selected suite. This retry does not claim HTTP2 or whole-suite coverage."
+}

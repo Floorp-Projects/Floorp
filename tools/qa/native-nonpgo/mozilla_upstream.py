@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Inventory the real registered suite and run the complete upstream XPCOM manifest."""
 import argparse
+import ast
 from contextlib import ExitStack
 import hashlib
 import importlib.util
@@ -85,25 +86,187 @@ def inventory_summary(rows, registered):
             'expectedFailureRecords': sum(row['expected'] == 'fail' for row in enabled)}
 
 
+BOOTSTRAP_RECEIPT = {'bytes': 23749,
+    'sha256': 'ca18450abb98a15bbf84d8a815616a41e0dda36db6f7091866422ce382d1ffaf'}
+JOURNAL_CONTRACT = 'upstream-inventory-diagnostic-v1'
+JOURNAL_FILE = 'mozilla-upstream-inventory-diagnostic.json'
+INVENTORY_PHASES = ('entry', 'imports', 'category-source', 'category-register', 'stock-module',
+    'source-plan', 'build-environment', 'install-tests', 'registered-manifest',
+    'global-options', 'global-invoke', 'global-logger-cleanup', 'global-read',
+    'scope-options', 'scope-invoke', 'scope-logger-cleanup', 'scope-read',
+    'restore-stock-class', 'inventory-write', 'complete')
+DIAGNOSTIC_ERRORS = ('Failure', 'MachError', 'ModuleNotFoundError', 'ImportError', 'SyntaxError',
+    'OSError', 'FileNotFoundError', 'PermissionError', 'ValueError', 'TypeError', 'KeyError',
+    'AttributeError', 'RuntimeError', 'AssertionError', 'SystemExit', 'KeyboardInterrupt',
+    'JSONDecodeError', 'Unknown', 'unavailable')
+DIAGNOSTIC_CODES = ('mozilla-upstream-category-source', 'mozilla-upstream-category-binding',
+    'mozilla-upstream-source-plan', 'mozilla-upstream-source-input', 'mozilla-upstream-build-binding',
+    'mozilla-upstream-registered-manifest', 'mozilla-upstream-inventory-existing-output',
+    'mozilla-upstream-inventory-started-test', 'mozilla-upstream-inventory-exit',
+    'mozilla-upstream-inventory-lifecycle', 'mozilla-upstream-inventory-output',
+    'mozilla-upstream-inventory-shape', 'mozilla-upstream-scope-selection')
+
+
+def diagnostic_error(error):
+    kind = type(error).__name__
+    value = {'type': kind if kind in DIAGNOSTIC_ERRORS else 'unavailable', 'code': None,
+             'exitKind': None, 'exitCode': None}
+    if type(error) is Failure and len(error.args) == 1 and error.args[0] in DIAGNOSTIC_CODES:
+        value['code'] = error.args[0]
+    if isinstance(error, SystemExit):
+        value['exitKind'] = ('none' if error.code is None else
+                             'integer' if type(error.code) is int else 'other')
+        if type(error.code) is int and -255 <= error.code <= 255:
+            value['exitCode'] = error.code
+    return value
+
+
+class InventoryJournal:
+    """A fixed vocabulary of observations, never exception text or private paths."""
+    def __init__(self, task):
+        self.path = task / JOURNAL_FILE
+        self.value = {'contract': JOURNAL_CONTRACT, 'status': 'running', 'phases': [],
+            'lastReached': None, 'errorPhase': None, 'error': None, 'cleanupError': None,
+            'writeFailure': None, 'categorySource': None, 'categoryInitiallyPresent': None}
+
+    def persist(self):
+        try:
+            write_json(self.path, self.value)
+        except BaseException as error:
+            # Diagnostic persistence cannot replace an execution/cleanup failure.
+            self.value['writeFailure'] = diagnostic_error(error)['type']
+
+    def phase(self, name):
+        require(name in INVENTORY_PHASES, 'mozilla-upstream-inventory-shape')
+        self.value['lastReached'] = name
+        self.value['phases'].append(name)
+        self.persist()
+
+    def fail(self, error, cleanup=False):
+        if cleanup:
+            self.value['cleanupError'] = diagnostic_error(error)
+        elif self.value['error'] is None:
+            self.value.update(status='failed', errorPhase=self.value['lastReached'],
+                              error=diagnostic_error(error))
+        self.persist()
+
+
+def bootstrap_testing_category(source, journal):
+    # Read only the pinned literal. Importing mach_initialize would install meta-path hooks.
+    from mach.registrar import Registrar
+    journal.phase('category-source')
+    with ExitStack() as stack:
+        reader = _FixedRead(source, stack, time.monotonic()+30)
+        raw, receipt = reader.read('build/mach_initialize.py', 1024**2)
+        require(raw is not None and {key:receipt[key] for key in ('bytes','sha256')} ==
+                BOOTSTRAP_RECEIPT, 'mozilla-upstream-category-source')
+        tree = ast.parse(raw)
+        definitions = [node.value for node in tree.body if isinstance(node, ast.Assign) and
+            len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and
+            node.targets[0].id == 'CATEGORIES']
+        require(len(definitions) == 1, 'mozilla-upstream-category-source')
+        metadata = ast.literal_eval(definitions[0])['testing']
+        require(metadata == {'short':'Testing','long':'Run tests.','priority':60},
+                'mozilla-upstream-category-source')
+        reader.verify()
+    journal.value['categorySource'] = dict(BOOTSTRAP_RECEIPT)
+    journal.phase('category-register')
+    expected = (metadata['short'], metadata['long'], metadata['priority'])
+    present = 'testing' in Registrar.categories
+    journal.value['categoryInitiallyPresent'] = present
+    if present:
+        value = Registrar.categories['testing']
+        require(type(value) is tuple and len(value) == 3 and
+                type(value[0]) is str and type(value[1]) is str and type(value[2]) is int and
+                value == expected, 'mozilla-upstream-category-binding')
+    else:
+        require(not Registrar.commands_by_category.get('testing'),
+                'mozilla-upstream-category-binding')
+        Registrar.register_category('testing', *expected)
+    journal.persist()
+
+
+def inventory_diagnostic(value):
+    """Validate rather than publish arbitrary child-controlled JSON fields."""
+    require(type(value) is dict and set(value) == {'contract','status','phases','lastReached',
+        'errorPhase','error','cleanupError','writeFailure','categorySource','categoryInitiallyPresent'} and
+        value['contract'] == JOURNAL_CONTRACT and value['status'] in ('running','failed','complete') and
+        type(value['phases']) is list and 0 < len(value['phases']) <= len(INVENTORY_PHASES) and
+        value['phases'][0] == 'entry' and all(type(x) is str and x in INVENTORY_PHASES
+            for x in value['phases']) and len(set(value['phases'])) == len(value['phases']) and
+        [INVENTORY_PHASES.index(x) for x in value['phases']] == sorted(INVENTORY_PHASES.index(x) for x in value['phases']) and
+        value['lastReached'] == value['phases'][-1] and
+        (value['errorPhase'] is None or value['errorPhase'] in value['phases']) and
+        (value['writeFailure'] is None or value['writeFailure'] in DIAGNOSTIC_ERRORS) and
+        (value['categorySource'] is None or value['categorySource'] == BOOTSTRAP_RECEIPT) and
+        (value['categoryInitiallyPresent'] is None or type(value['categoryInitiallyPresent']) is bool),
+        'mozilla-upstream-inventory-shape')
+    for name in ('error','cleanupError'):
+        error = value[name]
+        if error is None: continue
+        require(type(error) is dict and set(error) == {'type','code','exitKind','exitCode'} and
+            error['type'] in DIAGNOSTIC_ERRORS and (error['code'] is None or error['code'] in DIAGNOSTIC_CODES) and
+            error['exitKind'] in (None,'none','integer','other') and
+            (error['exitCode'] is None or type(error['exitCode']) is int and -255 <= error['exitCode'] <= 255),
+            'mozilla-upstream-inventory-shape')
+    return value
+
+
+def collect_inventory_diagnostic(task, result):
+    output = {'status':'unavailable', 'journal':None, 'receipt':None, 'collectionError':None}
+    result['inventoryDiagnostic'] = output
+    try:
+        with ExitStack() as stack:
+            reader = _FixedRead(task, stack, time.monotonic()+30)
+            raw, receipt = reader.read(JOURNAL_FILE, 16384)
+            if raw is not None:
+                output['journal'] = inventory_diagnostic(json.loads(raw))
+                output['receipt'] = {key:receipt[key] for key in ('bytes','sha256')}
+                output['status'] = 'observed'
+            reader.verify()
+    except BaseException as error:
+        output.update(status='unavailable', journal=None, receipt=None,
+                      collectionError=diagnostic_error(error)['type'])
+
+
 def inventory_driver(source, task, binary):
+    journal = InventoryJournal(task)
+    journal.phase('entry')
+    try:
+        _inventory_driver(source, task, binary, journal)
+    except BaseException as error:
+        journal.fail(error)
+        raise
+    else:
+        journal.value['status'] = 'complete'
+        journal.phase('complete')
+
+
+def _inventory_driver(source, task, binary, journal):
     """Use stock prefs/mozinfo/normalization, suppressing both server startups only for listing."""
+    journal.phase('imports')
     import runxpcshelltests as stock
     from xpcshellcommandline import parser_desktop
     from mozbuild.base import MozbuildObject
     from mozbuild.controller.building import BuildDriver
     from mach.logging import LoggingManager
     from mozlog.structuredlog import StructuredLogger
+    bootstrap_testing_category(source, journal)
+    journal.phase('stock-module')
     spec = importlib.util.spec_from_file_location('floorp_stock_xpcshell_mach',
         source/'testing/xpcshell/mach_commands.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     XPCShellRunner = module.XPCShellRunner
 
+    journal.phase('source-plan')
     plan, plan_hash = scope_plan(source)
+    journal.phase('build-environment')
     build = MozbuildObject.from_environment(cwd=str(source))
     build.log_manager = LoggingManager()
     require(Path(build.topsrcdir).resolve() == source and
             Path(build.topobjdir).resolve() == task / 'obj', 'mozilla-upstream-build-binding')
+    journal.phase('install-tests')
     build._spawn(BuildDriver).install_tests(force=True)
     original = stock.XPCShellTests
     captures = []
@@ -135,11 +298,13 @@ def inventory_driver(source, task, binary):
     result = {'contract': CONTRACT, 'planSHA256': plan_hash, 'serverProcessesStarted': 0,
               'testsExecuted': 0, 'global': None, 'scope': None, 'scopeTests': [],
               'status': 'failed', 'temporaryPrefsOwnership': 'stock-obj-temp-not-removed'}
+    journal.phase('registered-manifest')
     manifest = task / 'obj/_tests/xpcshell/xpcshell.toml'
     require(manifest.is_file(), 'mozilla-upstream-registered-manifest')
     try:
         stock.XPCShellTests = InventoryOnly
         for label, paths in (('global', []), ('scope', [SCOPE])):
+            journal.phase(label+'-options')
             output = task / ('upstream-' + label + '.raw.json')
             require(not output.exists(), 'mozilla-upstream-inventory-existing-output')
             options = vars(parser_desktop().parse_args([
@@ -149,20 +314,32 @@ def inventory_driver(source, task, binary):
                            self_test=False, profileName='firefox', threadCount=1)
             runner = build._spawn(XPCShellRunner)
             code = 'not-exited'
+            journal.phase(label+'-invoke')
             try:
                 runner._run_xpcshell_harness(**options)
+                raise Failure('mozilla-upstream-inventory-exit')
             except SystemExit as error:
                 code = error.code
+                if not (code is None or type(code) is int and code == 0):
+                    journal.fail(error)
+                    raise Failure('mozilla-upstream-inventory-exit') from error
+            except BaseException as error:
+                journal.fail(error)
+                raise
             finally:
-                # The stock method exits before its normal logger restoration.
-                runner.log_manager.disable_unstructured()
-            require(code is None or (type(code) is int and code == 0),
-                    'mozilla-upstream-inventory-exit')
+                active_error = sys.exc_info()[0] is not None
+                journal.phase(label+'-logger-cleanup')
+                try:
+                    runner.log_manager.disable_unstructured()
+                except BaseException as error:
+                    journal.fail(error, cleanup=True)
+                    if not active_error: raise
             capture = captures[-1]
             require(capture.suppressed == ['http2', 'http3'] and
                     type(capture.testCount) is int and capture.testCount == 0 and
                     capture.mozHttp2Server is None and capture.http3Server is None,
                     'mozilla-upstream-inventory-lifecycle')
+            journal.phase(label+'-read')
             with ExitStack() as stack:
                 reader = _FixedRead(task, stack, time.monotonic()+30)
                 raw, receipt = reader.read(output.name, 16*1024**2)
@@ -182,8 +359,13 @@ def inventory_driver(source, task, binary):
                     'SKIP' if 'disabled' in row else row['expected'].upper()} for row in rows),
                     key=lambda row:row['id'])
         result['status'] = 'observed'
+    except BaseException as error:
+        journal.fail(error)
+        raise
     finally:
+        journal.phase('restore-stock-class')
         stock.XPCShellTests = original
+    journal.phase('inventory-write')
     write_json(task / 'mozilla-upstream-inventory.json', result)
     print(json.dumps({'upstreamInventory':'observed',
                       'registeredRecords':result['global']['registeredRecords'],
@@ -204,10 +386,14 @@ def prepare(source, task, runner, env, deadline, result):
     require(type(bundle) is str and re.fullmatch(r'[A-Za-z0-9 _.-]+\.app',bundle) is not None and
             '..' not in bundle, 'mozilla-upstream-bundle')
     binary = task/'obj/dist'/bundle/'Contents/MacOS/xpcshell'
-    runner.run(INVENTORY_STAGE, [sys.executable,'mach','python',str(HERE/'mozilla_upstream.py'),
-               '--inventory','--source',str(source),'--task',str(task),'--binary',str(binary)],
-               source, child_environment(env), runner.limits['jobMinutes'],
-               phase_deadline_minutes=deadline)
+    result['inventoryDiagnostic'] = {'status':'unavailable','journal':None,'receipt':None,'collectionError':None}
+    try:
+        runner.run(INVENTORY_STAGE, [sys.executable,'mach','python',str(HERE/'mozilla_upstream.py'),
+                   '--inventory','--source',str(source),'--task',str(task),'--binary',str(binary)],
+                   source, child_environment(env), runner.limits['jobMinutes'],
+                   phase_deadline_minutes=deadline)
+    finally:
+        collect_inventory_diagnostic(task, result)
     with ExitStack() as stack:
         reader = _FixedRead(task, stack, time.monotonic()+30)
         raw, record = reader.read('mozilla-upstream-inventory.json', 1024**2)

@@ -1,0 +1,106 @@
+{
+  "actualFunction": {
+    "bytes": 1874,
+    "selector": "bootstrap_testing_category",
+    "sourceSHA256": "f1fa15232e9b0427646560859e39c51dd1408164fc8f02b72dfa67e336f29c46"
+  },
+  "actualHelperSource": {
+    "basename": "mozilla_upstream.py",
+    "bytes": 39669,
+    "path": "tools/qa/native-nonpgo/mozilla_upstream.py",
+    "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+  },
+  "baselineCauseReview": {
+    "basename": "floorp-recovery58-inventory-startup-cause-review.private.json",
+    "bytes": 13645,
+    "sha256": "9f6238a4c9192871c05af2c8f952f4d13990c5f837c61d1f8844a2e4adc2b01a"
+  },
+  "conclusion": "Latest actual bootstrap source e002606d passes five real-dependency Linux controls, including the orphan membership regression. Actual Mac inventory/listing and the lost Recovery58 direct cause remain unconfirmed.",
+  "controls": {
+    "cases": [
+      {
+        "name": "fresh-category",
+        "observed": "Actual bounded owned source read and actual Journal initialize exact stock category; complete stock module and real decorator registration succeed."
+      },
+      {
+        "name": "exact-existing-category",
+        "observed": "Complete stock module succeeds; existing command-membership set identity and sentinel are preserved without re-registration."
+      },
+      {
+        "name": "wrong-existing-priority",
+        "observed": "Actual helper raises only the fixed category-binding Failure before stock module execution."
+      },
+      {
+        "name": "bool-existing-priority",
+        "observed": "Actual helper rejects bool before stock module execution with the same fixed category-binding code."
+      },
+      {
+        "name": "absent-category-with-orphan-membership",
+        "observed": "Actual MachRegistrar counterexample confirms unconditional register_category would replace the orphan membership set with an empty set. The new actual helper rejects the orphan state with fixed category-binding Failure before stock module execution and preserves the existing set identity and sentinel; category remains absent."
+      }
+    ],
+    "count": 5,
+    "dependencyStubs": 0,
+    "expectedOutcomes": 5,
+    "resourceWarningPolicy": "error",
+    "sourceHashBeforeAfterStable": true,
+    "unexpectedFailures": 0
+  },
+  "controlsResult": {
+    "basename": "floorp-recovery59-actual-bootstrap-import-controls-result-v2.private.json",
+    "bytes": 6232,
+    "sha256": "469bca3222813269ebf1085a843905e3338e68d10cf42a352d4b437e4046e9f5"
+  },
+  "controlsScript": {
+    "basename": "floorp-recovery59-actual-bootstrap-import-control-v2.py",
+    "bytes": 5311,
+    "sha256": "ea797bdb5ee881bee80fc54867af9669fafe7f855cb17ad248cdb205c8fd1509"
+  },
+  "implementationAssessment": [
+    "The helper uses actual _FixedRead with FD binding, hash/bytes pin, unique literal CATEGORIES extraction and the real Registrar API. No mach_initialize import or meta-path hook is needed.",
+    "Existing metadata is checked with exact tuple and value types before equality. Existing matching categories are not re-registered.",
+    "The complete stock mach_commands module remains intact; the synthetic module absence from sys.modules does not block this tested import path.",
+    "Normal Journal state after this isolated helper call is running at category-register. These controls do not pretend the inventory completed.",
+    "Before registering an absent category, the actual helper rejects a nonempty orphan commands_by_category entry, preventing silent membership reset. The new control exercises the real Registrar API counterexample and the real production helper."
+  ],
+  "limits": [
+    "The Linux interpreter used static declared mach/common first-party and vendored paths; no real Mach virtualenv was ensured or activated.",
+    "No actual BuildDriver.install_tests, prefs/mozinfo listing, server, test, native target build or Mac kernel execution ran.",
+    "Recovery58 lost raw traceback was not recovered or hash-matched, so its direct cause remains UNKNOWN.",
+    "These controls bind helper SHA e002606d only; a later changed helper needs appropriate rebinding.",
+    "The separate SystemExit-before-cleanup primary-retention change is not executed by these five bootstrap/import controls; no whole-helper or full-inventory qualification is implied."
+  ],
+  "operations": {
+    "builds": 0,
+    "ciOperations": 0,
+    "networkOperations": 0,
+    "packageInstalls": 0,
+    "payloadAcquisitions": 0,
+    "refMutations": 0,
+    "repositoryEditsByReviewer": 0,
+    "runtimeEdits": 0,
+    "serverOrTestProcessesStarted": 0,
+    "venvCreates": 0
+  },
+  "preparedAt": "2026-10-20T04:43:23.452164+00:00",
+  "schema": 1,
+  "scope": "Independent execution of the actual new bootstrap function and complete pinned stock module imports with real dependencies on Linux. This is not full inventory, actual Mach or actual Mac qualification.",
+  "sourceBinding": {
+    "api": "mach.registrar.Registrar.register_category",
+    "definition": "build/mach_initialize.py CATEGORIES[testing]",
+    "definitionBytes": 23749,
+    "definitionSHA256": "ca18450abb98a15bbf84d8a815616a41e0dda36db6f7091866422ce382d1ffaf",
+    "metadata": {
+      "long": "Run tests.",
+      "priority": 60,
+      "short": "Testing"
+    },
+    "runtime": "7dd619742b25567e479eeda97ae071d10542ad0b"
+  },
+  "status": "CLEAR_FOR_BOOTSTRAP_AND_STOCK_MODULE_IMPORT_CONTROL",
+  "supersedesForCurrentHelper": {
+    "basename": "floorp-recovery59-actual-bootstrap-import-review.private.json",
+    "bytes": 4485,
+    "sha256": "33aa4d9f4e2ea866632902655b618f6db9311be4bfbf74fac30a6eaf080052c5"
+  }
+}

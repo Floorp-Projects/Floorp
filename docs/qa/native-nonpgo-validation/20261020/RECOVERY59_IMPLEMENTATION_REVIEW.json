@@ -1,0 +1,224 @@
+{
+  "schema": 1,
+  "review": "Recovery59 inventory bootstrap and safe journal independent implementation review",
+  "status": "CLEAR",
+  "openP1": 0,
+  "openP2": 0,
+  "source": {
+    "basename": "mozilla_upstream.py",
+    "bytes": 39669,
+    "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+  },
+  "tests": {
+    "basename": "test_mozilla_upstream.py",
+    "bytes": 29146,
+    "sha256": "691a8300a2d2d0ec9800d2732837b6dbc604b0febee0b73ad8e1c05a5da66d2b"
+  },
+  "scope": "Read-only review of the inventory bootstrap/journal/failed-child finally collector; no caller, CI or product change reviewed or executed",
+  "evidence": {
+    "floorp-recovery59-independent-counterexamples.py": {
+      "basename": "floorp-recovery59-independent-counterexamples.py",
+      "bytes": 3681,
+      "sha256": "5109c77b0508ef013bc451514898df84e88853ff1c351b446de4b76e294639f7"
+    },
+    "floorp-recovery59-independent-counterexamples.json": {
+      "basename": "floorp-recovery59-independent-counterexamples.json",
+      "bytes": 2769,
+      "sha256": "5704f7d51d2f57506fc93db2c7be380f0b2ba062e6f68f0647d21e1a00086ed9"
+    },
+    "floorp-recovery59-independent-controls.py": {
+      "basename": "floorp-recovery59-independent-controls.py",
+      "bytes": 10874,
+      "sha256": "550efa5504e92b0350a1224940f311eecbef1ac592e60016cc58fc463be7e451"
+    },
+    "floorp-recovery59-independent-controls-result.json": {
+      "basename": "floorp-recovery59-independent-controls-result.json",
+      "bytes": 15216,
+      "sha256": "6ef6f57d0eaa53f29ce3c1d57cecebf4df60af7191fff0fe184b92397bd271bb"
+    }
+  },
+  "unchangedBindings": {
+    "pipeline.py": {
+      "basename": "pipeline.py",
+      "bytes": 54135,
+      "sha256": "dec14bcff2ddcfd6fd05190224d0e659d7384d597a953101887cfd1071da908b"
+    },
+    "plan.json": {
+      "basename": "plan.json",
+      "bytes": 27325,
+      "sha256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460"
+    },
+    "mozilla-upstream.json": {
+      "basename": "mozilla-upstream.json",
+      "bytes": 11397,
+      "sha256": "514b9ef7af24c9a5eea9fac21260fb5e918759cf15b71f99b9c715bf1269e05f"
+    },
+    "support.py": {
+      "basename": "support.py",
+      "bytes": 34225,
+      "sha256": "bdd47009c7db52fff44f782144827a8915f90b5b4b35a243a5e4d86ae49cdac2"
+    },
+    "consumer_time.py": {
+      "basename": "consumer_time.py",
+      "bytes": 2767,
+      "sha256": "43e6e1373e57e52ca47bf14570117508d403264954e823e1d91660c917c4d839"
+    },
+    "sdk_source.py": {
+      "basename": "sdk_source.py",
+      "bytes": 8299,
+      "sha256": "f4c595fdf4c72cc6eb22a70dc51edddffac477dda81df181b0fcf21e71b78aaa"
+    },
+    "sdk_source.json": {
+      "basename": "sdk_source.json",
+      "bytes": 1030,
+      "sha256": "ef5d0ed40f4f27b919df7a46323c63b7790ba325ce288a873b207858614bd688"
+    },
+    "fetch_sdk.py": {
+      "basename": "fetch_sdk.py",
+      "bytes": 4964,
+      "sha256": "9b804cdfda759c0d6d034172c2af80720b376dbe7719cf93fa55670606da3519"
+    },
+    "materialize.py": {
+      "basename": "materialize.py",
+      "bytes": 2866,
+      "sha256": "8f927ee0f8428e2a7b3de8d32e07bf1a9a51018776588d90afebd0494c875491"
+    },
+    "checkpoint_transfer.py": {
+      "basename": "checkpoint_transfer.py",
+      "bytes": 9635,
+      "sha256": "4c3ecb1d85912b9dead5b25b49c4eb38c9a481e2f73f9619eff7352c59cea4aa"
+    }
+  },
+  "sourceAnchors": {
+    "diagnostic_error": {
+      "file": "mozilla_upstream.py",
+      "line": 110,
+      "endLine": 121
+    },
+    "InventoryJournal": {
+      "file": "mozilla_upstream.py",
+      "line": 124,
+      "endLine": 151
+    },
+    "bootstrap_testing_category": {
+      "file": "mozilla_upstream.py",
+      "line": 154,
+      "endLine": 186
+    },
+    "inventory_diagnostic": {
+      "file": "mozilla_upstream.py",
+      "line": 189,
+      "endLine": 212
+    },
+    "collect_inventory_diagnostic": {
+      "file": "mozilla_upstream.py",
+      "line": 215,
+      "endLine": 229
+    },
+    "inventory_driver": {
+      "file": "mozilla_upstream.py",
+      "line": 232,
+      "endLine": 242
+    },
+    "_inventory_driver": {
+      "file": "mozilla_upstream.py",
+      "line": 245,
+      "endLine": 373
+    },
+    "prepare": {
+      "file": "mozilla_upstream.py",
+      "line": 376,
+      "endLine": 406
+    }
+  },
+  "fixedRuntimeSources": {
+    "build/mach_initialize.py": {
+      "bytes": 23749,
+      "sha256": "ca18450abb98a15bbf84d8a815616a41e0dda36db6f7091866422ce382d1ffaf"
+    },
+    "python/mach/mach/registrar.py": {
+      "bytes": 6677,
+      "sha256": "bea1a191c5ce4b09be2a82cb7598ba688552c6e5bc2e66aaeeaf0b3c616795fd"
+    }
+  },
+  "validation": {
+    "currentUnitSuite": {
+      "module": "test_mozilla_upstream",
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "resourceWarningIsError": true
+    },
+    "independentFaultAndPrivacyControls": {
+      "cases": 35,
+      "failures": 0,
+      "errors": 0,
+      "resourceWarningIsError": true,
+      "usesActualFixedRegistrarAndBootstrapLiteral": true,
+      "driverStockHarnessIsControlledDouble": true
+    },
+    "totalCurrentChecks": 66,
+    "actualMacOrCIExecuted": false,
+    "actual45ScopeTestsExecutedByReview": false,
+    "historicalMacDirectCauseEstablished": false
+  },
+  "findings": [
+    {
+      "id": "R59-JOURNAL-P2-1",
+      "severity": "P2",
+      "status": "resolved",
+      "affectedSource": {
+        "bytes": 39416,
+        "sha256": "4efa2200d5bd3683723bff004af4b4cb7c5b5c19f75bbc23d40e049f949628f2"
+      },
+      "problem": "A consumed nonzero SystemExit was validated only after logger cleanup. Cleanup failure replaced the original exit and even successful cleanup moved the recorded failure phase from invocation to cleanup.",
+      "oldCounterexampleCases": 2,
+      "resolution": "Non-success SystemExit is recorded at the invoke phase before raising the fixed inventory-exit Failure; active execution errors prevent cleanup exceptions from replacing the primary. Unexpected normal return is also rejected and recorded within invocation.",
+      "fixedSource": {
+        "basename": "mozilla_upstream.py",
+        "bytes": 39669,
+        "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+      },
+      "regression": "SystemExit7, ordinary Failure and unexpected return, each with cleanup success/failure; original code/phase/exception identity retained where applicable."
+    },
+    {
+      "id": "R59-BOOTSTRAP-P2-2",
+      "severity": "P2",
+      "status": "resolved",
+      "affectedSource": {
+        "bytes": 39416,
+        "sha256": "4efa2200d5bd3683723bff004af4b4cb7c5b5c19f75bbc23d40e049f949628f2"
+      },
+      "problem": "Calling real Registrar.register_category for a missing testing category reset an existing commands_by_category testing set in a partial registry.",
+      "oldCounterexampleCases": 1,
+      "resolution": "Nonempty orphan command membership is rejected with the fixed binding failure before registration. A valid existing category is validated and reused without resetting command membership.",
+      "fixedSource": {
+        "basename": "mozilla_upstream.py",
+        "bytes": 39669,
+        "sha256": "e002606d3c232b802db648e9a99aa03df61985f4f2da5f2e869a13aca9efa392"
+      },
+      "regression": "Actual fixed MachRegistrar new/present/orphan/foreign state controls; existing command object and membership preserved; source CATEGORIES parsed as pinned literal without importing mach_initialize."
+    }
+  ],
+  "verifiedSemantics": {
+    "primary": "First execution error and invocation phase survive later journal write and logger cleanup failures.",
+    "journal": "Only fixed phase/type/code vocabularies are retained. SystemExit kind and bounded strict integer code are typed; bool and free text do not become integer exit codes. Unknown exception class/code remains unavailable/null.",
+    "collection": "prepare always attempts bounded owned no-follow journal collection after inventory Runner failure. Missing, corrupt, oversized, symlinked, unknown-field, invalid-phase or post-read binding failure yields unavailable journal/receipt without replacing the child primary.",
+    "privacy": "Exception messages, module names, paths, private extra fields and PRIVATE_SENTINEL are absent from the returned evidence.",
+    "bootstrap": "The fixed source build/mach_initialize.py bytes/hash and AST literal testing metadata are verified, then the official Registrar API is used only for an empty missing category. Existing valid category commands are retained.",
+    "productBoundary": "The journal remains diagnostic; no source manifest, compilation profile, resource/timeout/cleanup limit, SDK expiry or product qualification gate was relaxed."
+  },
+  "remainingEvidence": [
+    "Recovery59 caller and prelaunch guards need their own immutable review.",
+    "Actual Mac inventory execution and45-case results are not supplied by these local controls.",
+    "Recovery58 remains a failed inventory-start attempt with45 tests unexecuted; this review does not retroactively establish its exact Mac exception cause."
+  ],
+  "reviewerActions": {
+    "sourceEdited": false,
+    "workflowEdited": false,
+    "CIStarted": false,
+    "refsChanged": false,
+    "payloadDownloaded": false
+  }
+}

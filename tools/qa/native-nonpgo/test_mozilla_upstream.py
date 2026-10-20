@@ -267,12 +267,15 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(outcome['execution'],'monitor-inconclusive')
         self.assertFalse(outcome['monitorFailureEstablishesProductFailure'])
 
-    def driver(self, *, execute=False, mismatch=False):
+    def driver(self, *, execute=False, mismatch=False, exit_code=None, cleanup_error=False):
         source=self.task/'source';source.mkdir()
         task=self.task/'task';(task/'obj/_tests/xpcshell').mkdir(parents=True)
         (task/'obj/_tests/xpcshell/xpcshell.toml').write_text('')
-        calls=[];manager=SimpleNamespace(enable_unstructured=lambda:calls.append('enable'),
-                                        disable_unstructured=lambda:calls.append('disable'))
+        calls=[]
+        def disable():
+            calls.append('disable')
+            if cleanup_error: raise PermissionError('PRIVATE_SENTINEL')
+        manager=SimpleNamespace(enable_unstructured=lambda:calls.append('enable'),disable_unstructured=disable)
         stock=ModuleType('runxpcshelltests');rows=self.inventory_rows()
         class Original:
             def __init__(self,**kwargs):
@@ -283,7 +286,7 @@ class UpstreamTests(unittest.TestCase):
                 self.manifest=options['manifest'];self.trySetupNode();self.startHttp3Server();self.buildTestList()
                 if execute: testClass()
                 Path(options['dump_tests']).write_text(json.dumps({'active_tests':rows[:-1] if mismatch else rows}))
-                raise SystemExit()
+                raise SystemExit(exit_code)
         stock.XPCShellTests=Original
         class Build:
             topsrcdir=str(source);topobjdir=str(task/'obj');log_manager=None
@@ -315,10 +318,12 @@ class UpstreamTests(unittest.TestCase):
         modules['mach.logging'].LoggingManager=lambda:manager
         modules['mozlog.structuredlog'].StructuredLogger=lambda name:None
         with mock.patch.dict('sys.modules',modules),mock.patch.object(upstream,'scope_plan',return_value=(self.plan,self.plan_hash)), \
+                mock.patch.object(upstream,'bootstrap_testing_category'), \
                 mock.patch.object(upstream.importlib.util,'spec_from_file_location',return_value=spec), \
                 mock.patch.object(upstream.importlib.util,'module_from_spec',return_value=module):
             try: upstream.inventory_driver(source,task,task/'future/xpcshell')
             finally:
+                self.journal=json.loads((task/upstream.JOURNAL_FILE).read_text())
                 self.assertIs(stock.XPCShellTests,Original)
                 self.assertEqual(calls.count('enable'),calls.count('disable'))
         self.assertEqual(calls,[('install',{'force':True}),'enable','disable','enable','disable'])
@@ -336,6 +341,132 @@ class UpstreamTests(unittest.TestCase):
 
     def test_inventory_refuses_partial_scope_and_restores_globals(self):
         with self.assertRaisesRegex(Failure,'scope-selection'): self.driver(mismatch=True)
+
+    def test_inventory_journal_records_both_dumps_and_success(self):
+        self.driver()
+        journal=upstream.inventory_diagnostic(self.journal)
+        self.assertEqual(journal['status'],'complete')
+        self.assertIn('global-read',journal['phases'])
+        self.assertIn('scope-read',journal['phases'])
+        self.assertEqual(journal['lastReached'],'complete')
+        self.assertIsNone(journal['error'])
+
+    def test_inventory_journal_keeps_failure_phase_before_cleanup(self):
+        with self.assertRaises(Failure): self.driver(mismatch=True)
+        self.assertEqual(self.journal['errorPhase'],'scope-read')
+        self.assertEqual(self.journal['lastReached'],'restore-stock-class')
+        self.assertEqual(self.journal['error']['code'],'mozilla-upstream-scope-selection')
+        self.assertEqual(self.journal['status'],'failed')
+
+    def bootstrap(self, existing=None, *, tamper=False, orphan=False):
+        source=self.task/'bootstrap';(source/'build').mkdir(parents=True)
+        raw=b"CATEGORIES={'testing':{'short':'Testing','long':'Run tests.','priority':60}}\n"
+        (source/'build/mach_initialize.py').write_bytes(raw+(b'# changed' if tamper else b''))
+        commands={'testing':{'existing-command'}} if existing is not None or orphan else {}
+        class Registrar:
+            categories={} if existing is None else {'testing':existing}
+            commands_by_category=commands
+            @classmethod
+            def register_category(cls,name,*metadata):
+                cls.categories[name]=metadata;cls.commands_by_category[name]=set()
+        module=ModuleType('mach.registrar');module.Registrar=Registrar
+        journal=upstream.InventoryJournal(self.task);journal.phase('entry')
+        receipt={'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+        with mock.patch.dict('sys.modules',{'mach.registrar':module}), \
+                mock.patch.object(upstream,'BOOTSTRAP_RECEIPT',receipt):
+            upstream.bootstrap_testing_category(source,journal)
+        return Registrar,journal
+
+    def test_category_bootstrap_registers_real_metadata_and_preserves_existing_commands(self):
+        registrar,journal=self.bootstrap(('Testing','Run tests.',60))
+        self.assertEqual(registrar.commands_by_category['testing'],{'existing-command'})
+        self.assertTrue(journal.value['categoryInitiallyPresent'])
+
+    def test_category_bootstrap_initializes_empty_registry(self):
+        registrar,journal=self.bootstrap()
+        self.assertEqual(registrar.categories['testing'],('Testing','Run tests.',60))
+        self.assertFalse(journal.value['categoryInitiallyPresent'])
+
+    def test_category_bootstrap_rejects_foreign_metadata_and_changed_source(self):
+        with self.assertRaisesRegex(Failure,'category-binding'): self.bootstrap(('foreign','private',True))
+        (self.task/'bootstrap/build/mach_initialize.py').unlink()
+        (self.task/'bootstrap/build').rmdir();(self.task/'bootstrap').rmdir()
+        with self.assertRaisesRegex(Failure,'category-source'): self.bootstrap(tamper=True)
+
+    def test_journal_preserves_primary_when_persistence_and_cleanup_fail(self):
+        journal=upstream.InventoryJournal(self.task)
+        with mock.patch.object(upstream,'write_json',side_effect=PermissionError('PRIVATE_SENTINEL')):
+            journal.phase('entry');journal.phase('imports')
+            journal.fail(ModuleNotFoundError('PRIVATE_SENTINEL',name='PRIVATE_SENTINEL'))
+            journal.fail(ValueError('PRIVATE_SENTINEL'),cleanup=True)
+        journal.persist()
+        output=upstream.inventory_diagnostic(json.loads(journal.path.read_text()))
+        self.assertEqual(output['error']['type'],'ModuleNotFoundError')
+        self.assertEqual(output['errorPhase'],'imports')
+        self.assertEqual(output['writeFailure'],'PermissionError')
+        self.assertEqual(output['cleanupError']['type'],'ValueError')
+        self.assertNotIn('PRIVATE_SENTINEL',json.dumps(output))
+
+    def test_early_stock_import_failure_records_typed_error_without_text(self):
+        with mock.patch.object(upstream,'_inventory_driver',side_effect=ImportError('PRIVATE_SENTINEL')):
+            with self.assertRaises(ImportError): upstream.inventory_driver(self.task,self.task,self.path)
+        result={};upstream.collect_inventory_diagnostic(self.task,result)
+        self.assertEqual(result['inventoryDiagnostic']['status'],'observed')
+        self.assertEqual(result['inventoryDiagnostic']['journal']['error']['type'],'ImportError')
+        self.assertNotIn('PRIVATE_SENTINEL',json.dumps(result))
+
+    def test_missing_invalid_or_private_journal_is_unknown(self):
+        result={};upstream.collect_inventory_diagnostic(self.task,result)
+        self.assertEqual(result['inventoryDiagnostic']['status'],'unavailable')
+        journal=upstream.InventoryJournal(self.task);journal.phase('entry')
+        value=dict(journal.value);value['PRIVATE_SENTINEL']='private'
+        journal.path.write_text(json.dumps(value))
+        upstream.collect_inventory_diagnostic(self.task,result)
+        self.assertEqual(result['inventoryDiagnostic']['status'],'unavailable')
+        self.assertIsNone(result['inventoryDiagnostic']['journal'])
+        self.assertNotIn('PRIVATE_SENTINEL',json.dumps(result))
+
+    def test_failed_inventory_process_still_collects_journal_and_preserves_primary(self):
+        journal=upstream.InventoryJournal(self.task);journal.phase('entry');journal.phase('imports')
+        journal.fail(ImportError('PRIVATE_SENTINEL'))
+        primary=Failure('nonzero-exit')
+        calls=[]
+        def run(name,*args,**kwargs):
+            calls.append(name)
+            if name==upstream.INVENTORY_STAGE: raise primary
+        runner=SimpleNamespace(limits={'jobMinutes':360},run=run)
+        (self.task/'effective-config.private.log').write_text(json.dumps({'substs':{'MOZ_MACBUNDLE_NAME':'Floorp.app'}}))
+        result={}
+        with mock.patch.object(upstream,'scope_plan',return_value=(self.plan,self.plan_hash)):
+            with self.assertRaises(Failure) as raised:
+                upstream.prepare(self.task,self.task,runner,{},345,result)
+        self.assertIs(raised.exception,primary)
+        self.assertEqual(result['inventoryDiagnostic']['journal']['errorPhase'],'imports')
+        self.assertEqual(result['status'],'failed')
+        self.assertIsNone(result['inventory'])
+        self.assertEqual(calls,[upstream.PREPARE_STAGE,upstream.INVENTORY_STAGE])
+
+    def test_diagnostic_exception_codes_are_fixed_and_system_exit_is_typed(self):
+        self.assertIsNone(upstream.diagnostic_error(Failure('PRIVATE_SENTINEL'))['code'])
+        self.assertEqual(upstream.diagnostic_error(SystemExit(3))['exitCode'],3)
+        self.assertIsNone(upstream.diagnostic_error(SystemExit(True))['exitCode'])
+        self.assertEqual(upstream.diagnostic_error(SystemExit('PRIVATE_SENTINEL'))['exitKind'],'other')
+
+    def test_category_bootstrap_rejects_orphan_commands_without_registration(self):
+        with self.assertRaisesRegex(Failure,'category-binding'): self.bootstrap(orphan=True)
+
+    def test_nonzero_system_exit_keeps_original_code_and_phase_across_cleanup_failure(self):
+        for cleanup_error in (False,True):
+            with self.subTest(cleanup_error=cleanup_error):
+                with self.assertRaisesRegex(Failure,'inventory-exit'):
+                    self.driver(exit_code=7,cleanup_error=cleanup_error)
+                self.assertEqual(self.journal['errorPhase'],'global-invoke')
+                self.assertEqual(self.journal['error']['type'],'SystemExit')
+                self.assertEqual(self.journal['error']['exitCode'],7)
+                if cleanup_error:self.assertEqual(self.journal['cleanupError']['type'],'PermissionError')
+                else:self.assertIsNone(self.journal['cleanupError'])
+                import shutil
+                shutil.rmtree(self.task/'source');shutil.rmtree(self.task/'task')
 
 
 if __name__=='__main__': unittest.main()

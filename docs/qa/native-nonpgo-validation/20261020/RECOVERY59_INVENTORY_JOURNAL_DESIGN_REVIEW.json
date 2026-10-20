@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "review": "RECOVERY58_INVENTORY_FAILURE_NEXT_DIAGNOSTIC_DESIGN",
+  "decision": "MINIMAL_JOURNAL_DESIGN_SUPPORTED_IMPLEMENTATION_AND_REAL_EXECUTION_NOT_REVIEWED",
+  "scope": "Read-only design for preserving a failed stock inventory call; no root-cause or real inventory qualification is established by this note.",
+  "confirmedOrdinaryAPIFacts": {
+    "run": 39367227591,
+    "job": 118446715438,
+    "attempt": 1,
+    "head": "921bb5f8cdea085691a37955ba8449ddc73012e6",
+    "runAndJob": "completed/failure",
+    "singleIntelJob": true,
+    "artifactCount": 0,
+    "completedAtUTC": "2026-10-20T04:27:53Z",
+    "initialGuardPreflightSDKAndCheckpointDownloadSteps": "success",
+    "pipelineAndFinalVerificationSteps": "failure"
+  },
+  "evidencePrecision": {
+    "rootReportedFirstFailure": {
+      "stage": "mozilla-upstream-inventory",
+      "code": "nonzero-exit"
+    },
+    "rootReportedOwnedOutcome": "exit1, exact reaped, group gone, fatal monitor null",
+    "rootReportedInventoryPrivateLog": {
+      "bytes": 1544,
+      "lines": 19,
+      "matchingClassifiedRecords": 0
+    },
+    "theseInnerFactsIndependentlyBoundToRawReceiptYet": false,
+    "unavailablePrivateChildLogContentsReconstructedFromSizeLinesOrDigest": false,
+    "underlyingExceptionOperationAndModuleBinding": "UNKNOWN",
+    "moduleImportDecoratorBuildEnvironmentManifestPrefsOrStockAssertionCauseProven": false,
+    "existingRecovery57SuccessRetroactivelyInvalidated": false,
+    "new45ScopeOrGlobalPopulationQualified": false
+  },
+  "minimumJournalContract": {
+    "separateFromQualification": true,
+    "parentPreallocation": "Attach an inventoryDiagnostic object before launching the inventory stage, with unknown fields and an explicit collecting status.",
+    "parentFinally": "Read, validate and safely project the journal after Runner cleanup on success and failure. Ordinary diagnostic read/parse/projection failures cannot replace existing Runner firstFailure.",
+    "minimalFixedPhases": [
+      "entry",
+      "stock-imports",
+      "mach-module-load",
+      "source-bindings",
+      "build-environment",
+      "install-tests",
+      "registered-manifest",
+      "global-options",
+      "global-harness",
+      "global-dump-validate",
+      "scope-options",
+      "scope-harness",
+      "scope-dump-validate",
+      "restore-stock-state",
+      "write-result",
+      "complete"
+    ],
+    "phaseMeaning": "Last reached instrumentation boundary, not proof of the failing statement, stuck API or root cause. Missing entry/journal means unavailable, not an inferred startup failure.",
+    "earlyBoundaryLimit": "If imports happen before the instrumented function, their failure cannot be localized by an entry inside that function. Either include those imports in the protected boundary or preserve explicit pre-entry unknown state.",
+    "typedFailure": "Fixed exception class enum, fixed literal Failure code allowlist or unknown; optional bounded integer errno and explicitly typed SystemExit None/int value. No exception string, traceback text, arbitrary class/module name or path.",
+    "moduleBindings": "Use a fixed small role allowlist for stock xpcshell/parser/mach/build/logging imports. Project expected source-relative identity and verified hash booleans or the matching known pin; keep actual __file__, module search paths and unknown values private.",
+    "caps": "Fixed schema, strict key/type/enumeration validation, monotonically numbered bounded events, nondecreasing elapsed values, at most a few dozen events and a small fixed byte cap.",
+    "unknowns": "Missing, truncated, duplicate, foreign, stale or unreadable journal becomes unavailable with unknown phase/error/counts, never a zero measurement.",
+    "writeFailure": "Record evidenceWriteFailure separately. Preserve original exception and nonzero status. A fixed bounded stdout fallback is optional only if the parent actually consumes it into the final public receipt; unittest/private-log print alone repeats the evidence gap.",
+    "firstAndCleanupCause": "Capture the original primary before logger/class restoration. A restoration or diagnostic-write failure remains separate and cannot overwrite it. A cleanup-only failure must still reject success.",
+    "noRetrospectiveCauseAssignment": true
+  },
+  "mustRemainUnchanged": [
+    "Original stock tests, assertions, manifests and expected statuses.",
+    "Original stock prefs/updateMozinfo/default selection and exact 45-ID binding.",
+    "Inventory no-test/no-server guards, permitted dump SystemExit values and class/logger restoration.",
+    "SDK/checkpoint normal origin/expiry/integrity/context validation.",
+    "Original job monotonic clock, shared345/platform360, resource/unknown stops and exact owned cleanup.",
+    "No journal status or successful partial global dump may qualify a failed scope or make an unavailable count PASS."
+  ],
+  "minimumMeaningfulControls": [
+    "Injected import/module-exec failure retains fixed phase and typed class without arbitrary message/path.",
+    "Build binding, install-tests, global stock call and scope stock call failures are separately locatable.",
+    "Original primary plus logger restoration failure plus write/read failure preserves primary and rejects success.",
+    "Success path keeps the same dump output, IDs/statuses/default options and zero test/server instantiation.",
+    "Missing/partial/duplicate/stale/foreign journal yields unknown and cannot make proof_complete true.",
+    "Parent actual Runner failure path still publishes the safe journal; normal post-run success-only reads are insufficient.",
+    "Public projection drops machine paths, PIDs, argv, environment, free text, private module aliases and injected sentinels."
+  ],
+  "minimalNextExecution": {
+    "usefulDiscriminatingHypothesis": "The original stage failed before inventory qualification. The next correctly bound real invocation should distinguish stock imports/module loading, configured build/install setup and each stock dump/validation boundary.",
+    "preferredBoundedRoute": "If a short diagnostic is needed, reuse the guarded actual restored/configured Mac object environment and helper preparation, stop after inventory proof and safe evidence publication; omit XUL targets and scope execution until inventory passes.",
+    "SDKlessImportControlLimit": "An import-only Mac check can validate module/site bindings but does not prove installed global population, mozinfo/prefs filtering or configured inventory.",
+    "checkpointExpiry": "Acquisition must remain through a genuinely unexpired ordinary origin with unchanged guards. Time pressure does not justify bypassing expiry or substituting a local retained download.",
+    "noNewCIStartedByReviewer": true,
+    "implementationGOGranted": false
+  },
+  "bindings": {
+    "independentTerminalAPI": {
+      "path": "floorp-recovery58-terminal-independent-api-proof.json",
+      "bytes": 4582,
+      "sha256": "7b53a6b9ebe0e3770e30bfb4772f746776c14155e0917230460c25909cc462c2"
+    },
+    "failedExecutionInventorySource": {
+      "fixture": "3c2999d115f13226da83c8285818725c6cb0ab36",
+      "path": "tools/qa/native-nonpgo/mozilla_upstream.py",
+      "bytes": 30175,
+      "sha256": "af0128f482aa550a0e159c181807f05810c69929696b0950fa385cf2060bff70"
+    },
+    "sourceImplementationReview": {
+      "path": "floorp-recovery58-implementation-review.json",
+      "bytes": 17485,
+      "sha256": "a1f74ca3aaaa3cfc458e80ae28dcbe87707a1c4238a6da595ca9f524633720d7"
+    },
+    "immutableAdmissionReview": {
+      "path": "floorp-recovery58-immutable-admission-review.json",
+      "bytes": 11551,
+      "sha256": "724eb571bba2769d61d2fde36d96224d9c588e137726d1114926f191fd5efbf7"
+    }
+  },
+  "reviewerOperations": {
+    "sourceChanged": false,
+    "CIStarted": false,
+    "remoteRefChanged": false,
+    "payloadDownloaded": false,
+    "duplicateJobLogDownload": false
+  },
+  "privacy": {
+    "rawPrivateLogOrMachinePathOrIdentityOrSignedURLOrConversationPublished": false
+  }
+}
