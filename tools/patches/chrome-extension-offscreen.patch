@@ -128,13 +128,29 @@ diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
 diff --git a/chrome/toolkit/content/extensions/parent/ext-runtime.js b/chrome/toolkit/content/extensions/parent/ext-runtime.js
 --- a/chrome/toolkit/content/extensions/parent/ext-runtime.js
 +++ b/chrome/toolkit/content/extensions/parent/ext-runtime.js
-@@ -167,11 +167,12 @@
+@@ -167,11 +167,28 @@
          }
        }
  
 +      // Filter with the same stable public ID that we return to callers.
 +      if (ctx) {
 +        ctx.contextId = this.#contextUUIDMap.get(proxyContext);
++        if (ExtensionUtils.getChromeExtensionId(extension) &&
++            typeof ctx.documentUrl === "string") {
++          // Present only own extension documents through the same public URL
++          // boundary as runtime.getURL. Native principals and origins stay real.
++          try {
++            const uri = Services.io.newURI(ctx.documentUrl);
++            if (uri.schemeIs("moz-extension") &&
++                uri.prePath === extension.baseURI.prePath) {
++              ctx.documentUrl = ExtensionUtils.getExtensionPublicURL(
++                extension, uri.pathQueryRef
++              );
++            }
++          } catch {
++            // Invalid or non-own document URLs are never promoted to aliases.
++          }
++        }
 +      }
        if (this.matchContextFilter(filter, ctx)) {
 -        results.push({

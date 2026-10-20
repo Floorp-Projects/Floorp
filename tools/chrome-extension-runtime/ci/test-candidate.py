@@ -33,6 +33,8 @@ CORE = [
     "ChromeScriptingPathsNative.test.mts",
     "ChromeDevtoolsSidebarHeightNative.test.mts",
     "ChromePublicExtensionURLNative.test.mts",
+    "ChromeWorkerOwnURLImportsNative.test.mts",
+    "ChromeOffscreenContextsNative.test.mts",
     "ChromeContentWorldsNative.test.mts",
     "ChromeCustomEventDetailNative.test.mts",
     "ChromeUserScriptsPermissionsNative.test.mts",

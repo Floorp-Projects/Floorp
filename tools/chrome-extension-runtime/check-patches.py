@@ -45,6 +45,7 @@ NATIVE_ONLY_PATCH_NAMES = (
     "chrome-extension-debugger-native.patch",
     "chrome-extension-media-native.patch",
     "chrome-extension-network-native.patch",
+    "chrome-extension-worker-url-imports.patch",
     "chrome-extension-workers.patch",
     "chrome-extension-proxy-native.patch",
     "chrome-extension-power-native.patch",

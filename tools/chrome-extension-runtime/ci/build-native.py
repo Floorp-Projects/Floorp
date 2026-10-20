@@ -41,6 +41,28 @@ def run(args, cwd, env, log=None):
         raise subprocess.CalledProcessError(code, command)
 
 
+def validate_native_picker_gtests(report):
+    expected = {
+        "TestCamerasParent.NativePickerEndpointIsNotASelectedSource",
+        "SckPickerRequestQueue.PendingOwnerAndTombstoneCannotBeReassigned",
+    }
+    observed = []
+    if (report["tests"] != 2 or report["failures"] != 0 or
+            report["disabled"] != 0 or report["errors"] != 0):
+        raise RuntimeError("Native picker gtests must execute exactly two passing tests")
+    for suite in report["testsuites"]:
+        if (suite["tests"] != len(suite["testsuite"]) or suite["failures"] != 0 or
+                suite["disabled"] != 0 or suite["errors"] != 0):
+            raise RuntimeError("Native picker gtest suite did not complete cleanly")
+        for case in suite["testsuite"]:
+            observed.append(f'{suite["name"]}.{case["name"]}')
+            if (case["status"] != "RUN" or case["result"] != "COMPLETED" or
+                    case.get("failures") or case.get("skipped")):
+                raise RuntimeError("Native picker gtest was skipped or failed")
+    if len(observed) != 2 or set(observed) != expected:
+        raise RuntimeError("Native picker gtest report has missing, duplicate or unexpected tests")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", choices=["linux", "windows", "mac"], required=True)
@@ -135,6 +157,30 @@ def main():
     if not packages:
         raise RuntimeError("Native build succeeded without a distributable package")
     _selection.select_native_package([{"name": path.name} for path in packages], args.platform)
+    if args.platform == "linux":
+        # mach lazily links xul-gtest. Run only after packaging, under the same
+        # build identity, and prove the distributable archives stay byte-exact.
+        packaged = {path: (path.stat().st_size,
+                          hashlib.file_digest(path.open("rb"), "sha256").hexdigest())
+                    for path in packages}
+        gtest_report = logs / "native-picker-gtest.json"
+        if gtest_report.exists() or gtest_report.is_symlink():
+            raise RuntimeError("Native picker gtest output must be fresh")
+        gtest_env = {**env, "MOZ_HEADLESS": "1",
+                     "GTEST_OUTPUT": f"json:{gtest_report.resolve()}"}
+        try:
+            run([sys.executable, "./mach", "--no-interactive", "gtest",
+                 "TestCamerasParent.NativePickerEndpointIsNotASelectedSource:"
+                 "SckPickerRequestQueue.PendingOwnerAndTombstoneCannotBeReassigned",
+                 "--jobs", "1", "--combine-suites"], source, gtest_env,
+                logs / "native-picker-gtest.log")
+        finally:
+            for path, expected in packaged.items():
+                actual = (path.stat().st_size,
+                          hashlib.file_digest(path.open("rb"), "sha256").hexdigest())
+                if actual != expected:
+                    raise RuntimeError("Lazy gtest build changed the already packaged candidate")
+        validate_native_picker_gtests(json.loads(gtest_report.read_text()))
     manifest = json.loads((state / "applied-source.json").read_text())
     manifest.update({"schemaVersion": 1, "platform": args.platform, "target": target,
                      "buildId": args.build_id, "productionOverlay": True,
