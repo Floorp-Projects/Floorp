@@ -27,11 +27,9 @@ export function createWorkspaceSyncIndicator(
     if (!id || !ctx.syncController?.isSelected(id)) {
       return {
         state: undefined,
-        status: i18next.t("workspaces.sync.status-local"),
+        status: "",
         error: null,
-        tooltip: id
-          ? i18next.t("workspaces.sync.indicator-local", { name: name() })
-          : name(),
+        tooltip: name(),
       };
     }
     const error = ctx.syncController.errorText(id) || null;

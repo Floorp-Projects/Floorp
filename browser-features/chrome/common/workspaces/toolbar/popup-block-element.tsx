@@ -135,14 +135,16 @@ export function PopupToolbarElement(props: {
                 value={ws().name}
                 crop="end"
               />
-              <xul:hbox class="workspace-sync-status-line">
-                <xul:box class="workspace-sync-status-icon" />
-                <xul:label
-                  class="workspace-sync-status"
-                  value={syncIndicator().status}
-                  crop="end"
-                />
-              </xul:hbox>
+              <Show when={syncIndicator().state}>
+                <xul:hbox class="workspace-sync-status-line">
+                  <xul:box class="workspace-sync-status-icon" />
+                  <xul:label
+                    class="workspace-sync-status"
+                    value={syncIndicator().status}
+                    crop="end"
+                  />
+                </xul:hbox>
+              </Show>
             </xul:vbox>
           </xul:toolbarbutton>
         ) as XULElement;

@@ -72,10 +72,8 @@
       "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again.",
       "indicator-selected": "{{name}} — Included in workspace sync",
       "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
-      "indicator-local": "{{name}} — Not included in workspace sync",
       "status-selected": "Included in sync",
-      "status-error": "Sync error",
-      "status-local": "Not included in sync"
+      "status-error": "Sync error"
     },
     "context-menu": {
       "move-up": "Move this Workspace Up",

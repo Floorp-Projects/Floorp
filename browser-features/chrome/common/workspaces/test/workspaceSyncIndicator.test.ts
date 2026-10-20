@@ -140,9 +140,24 @@ function assertPopupText(
   const statusLine = node.querySelector(".workspace-sync-status-line");
   const statusIcon = statusLine?.querySelector(".workspace-sync-status-icon");
   const statusLabel = node.querySelector(".workspace-sync-status");
+  assert(nameLabel, "popup must retain its workspace name");
+  assertEquals(
+    nameLabel.getAttribute("value"),
+    name,
+    "workspace name is preserved",
+  );
+  if (!status) {
+    assertEquals(statusLine, null, "excluded workspaces have no status row");
+    assertEquals(
+      statusLabel,
+      null,
+      "excluded workspaces have no status caption",
+    );
+    return;
+  }
   assert(
-    nameLabel && statusLine && statusIcon && statusLabel,
-    "popup must render a name and a status row with separate icon and text",
+    statusLine && statusIcon && statusLabel,
+    "included workspaces render a status row with separate icon and text",
   );
   assertEquals(
     statusLine.firstElementChild,
@@ -153,11 +168,6 @@ function assertPopupText(
     statusIcon.nextElementSibling,
     statusLabel,
     "status text is the icon's separate sibling",
-  );
-  assertEquals(
-    nameLabel.getAttribute("value"),
-    name,
-    "workspace name is the first line",
   );
   assertEquals(
     statusLabel.getAttribute("value"),
@@ -179,6 +189,37 @@ function assertStatusRendering(
 ): void {
   const status = popup.querySelector(".workspace-sync-status");
   const icon = popup.querySelector(".workspace-sync-status-icon");
+  const sidebarStyle = getComputedStyle(sidebar, "::after");
+  assert(sidebarStyle, "the sidebar must have computed styles");
+  if (state === undefined) {
+    assertEquals(
+      popup.querySelector(".workspace-sync-status-line"),
+      null,
+      "excluded workspaces must not reserve a status row",
+    );
+    const name = popup.querySelector(".workspace-name");
+    const workspaceIcon = popup.querySelector(".workspaceButtonIcon");
+    assert(name && workspaceIcon, "the workspace name and icon remain present");
+    assert(
+      workspaceIcon.getAttribute("src"),
+      "the original workspace icon remains loaded",
+    );
+    for (const element of [name, workspaceIcon]) {
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      assert(
+        bounds.width > 0 && bounds.height > 0 && style &&
+          style.display !== "none" && style.visibility === "visible",
+        "excluded workspace names and icons retain visible geometry",
+      );
+    }
+    assertEquals(
+      sidebarStyle.maskImage,
+      "none",
+      "an excluded sidebar entry has no status mask",
+    );
+    return;
+  }
   assert(
     status && icon,
     "status text and icon must be actual sibling elements",
@@ -192,24 +233,10 @@ function assertStatusRendering(
     "each localized status must have a visible text box with production styles",
   );
   const iconStyle = getComputedStyle(icon);
-  const sidebarStyle = getComputedStyle(sidebar, "::after");
   assert(
     iconStyle && sidebarStyle,
     "both mounted status icons must have computed styles",
   );
-  if (state === undefined) {
-    assertEquals(
-      iconStyle.display,
-      "none",
-      "local status has no cloud or warning icon",
-    );
-    assertEquals(
-      sidebarStyle.maskImage,
-      "none",
-      "a local sidebar entry has no status mask",
-    );
-    return;
-  }
   const iconBounds = icon.getBoundingClientRect();
   assert(
     iconStyle.display !== "none" && iconBounds.width > 0 &&
@@ -262,9 +289,13 @@ async function testToolbarUpdatesForSameWorkspaceAndPreservesContent(): Promise<
       assertIndicator(
         node,
         undefined,
-        "Alpha — Not included in workspace sync",
+        "Alpha",
       );
-      assertEquals(indicator().status, "Not included in sync", "local status");
+      assertEquals(
+        indicator().status,
+        "",
+        "excluded workspace has no status caption",
+      );
       assertEquals(
         indicator().error,
         null,
@@ -292,12 +323,12 @@ async function testToolbarUpdatesForSameWorkspaceAndPreservesContent(): Promise<
       assertIndicator(
         node,
         undefined,
-        "Alpha — Not included in workspace sync",
+        "Alpha",
       );
       assertEquals(
         indicator().status,
-        "Not included in sync",
-        "opt-out status",
+        "",
+        "opt-out removes the status caption",
       );
       assertEquals(
         node.getAttribute("label"),
@@ -430,8 +461,8 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       };
       assertBoth(
         undefined,
-        "Alpha — Not included in workspace sync",
-        "Not included in sync",
+        "Alpha",
+        "",
       );
       boundary.setSelected(new Set([boundary.firstId]));
       await settle();
@@ -487,8 +518,8 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       await settle();
       assertBoth(
         undefined,
-        "Alpha — Not included in workspace sync",
-        "Not included in sync",
+        "Alpha",
+        "",
       );
       boundary.setSelected(new Set([boundary.firstId]));
       await settle();
@@ -508,8 +539,8 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       await settle();
       assertBoth(
         undefined,
-        "Alpha — Not included in workspace sync",
-        "Not included in sync",
+        "Alpha",
+        "",
       );
       assertEquals(
         popup.getAttribute("label"),
@@ -552,8 +583,8 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       await settle();
       assertBoth(
         undefined,
-        "Beta — Not included in workspace sync",
-        "Not included in sync",
+        "Beta",
+        "",
         "Beta",
       );
       assertEquals(
@@ -593,7 +624,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       );
       boundary.setSelected(new Set<TWorkspaceID>());
       await settle();
-      assertBoth(undefined, "Beta — 同期対象外", "同期対象外", "Beta");
+      assertBoth(undefined, "Beta", "", "Beta");
     } finally {
       disposeComponents();
       popupHost.remove();
@@ -669,8 +700,12 @@ async function testIndicatorLocalizesAndTracksWorkspaceNames(): Promise<void> {
       );
       boundary.setSelected(new Set<TWorkspaceID>());
       await settle();
-      assertIndicator(node, undefined, "仕事 🌙 — 同期対象外");
-      assertEquals(indicator().status, "同期対象外", "Japanese opt-out status");
+      assertIndicator(node, undefined, "仕事 🌙");
+      assertEquals(
+        indicator().status,
+        "",
+        "opt-out removes the Japanese status caption",
+      );
       assertEquals(
         indicator().error,
         null,
@@ -740,7 +775,7 @@ async function testMissingControllerOrWorkspaceIsLocal(): Promise<void> {
         );
         assertEquals(
           missingController().tooltip,
-          "Local workspace — Not included in workspace sync",
+          "Local workspace",
           "local workspace keeps its accessible name",
         );
         const privateLike = createWorkspaceSyncIndicator(
@@ -757,7 +792,7 @@ async function testMissingControllerOrWorkspaceIsLocal(): Promise<void> {
         );
         assertEquals(
           privateLike().tooltip,
-          "Private workspace — Not included in workspace sync",
+          "Private workspace",
           "private or inactive workspace keeps its own name",
         );
         assertEquals(
@@ -767,13 +802,13 @@ async function testMissingControllerOrWorkspaceIsLocal(): Promise<void> {
         );
         assertEquals(
           privateLike().status,
-          "Not included in sync",
-          "inactive workspace exposes its local status",
+          "",
+          "inactive workspace has no status caption",
         );
         assertEquals(
           missingController().status,
-          "Not included in sync",
-          "missing controller exposes its local status",
+          "",
+          "missing controller has no status caption",
         );
       } finally {
         dispose();
@@ -879,7 +914,7 @@ async function testFocusedErrorTooltipUsesNativePopupAndCleansUp(): Promise<
       assertIndicator(
         node,
         undefined,
-        "Alpha — Not included in workspace sync",
+        "Alpha",
       );
       boundary.setSelected(new Set([boundary.firstId]));
       await settle();
@@ -946,7 +981,7 @@ async function testFocusedErrorTooltipUsesNativePopupAndCleansUp(): Promise<
       await expectClosed(
         "switching to a local workspace must hide the prior workspace's error",
       );
-      assertIndicator(node, undefined, "Beta — Not included in workspace sync");
+      assertIndicator(node, undefined, "Beta");
       assertEquals(
         indicator().error,
         null,
@@ -969,7 +1004,7 @@ async function testFocusedErrorTooltipUsesNativePopupAndCleansUp(): Promise<
       assertIndicator(
         node,
         undefined,
-        "Alpha — Not included in workspace sync",
+        "Alpha",
       );
 
       await blur();
