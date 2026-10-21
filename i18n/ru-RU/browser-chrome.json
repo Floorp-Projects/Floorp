@@ -65,11 +65,15 @@
       "new-workspace": "Новое рабочее пространство ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "Синхронизируйте эту рабочую область и её веб-вкладки с вашей учётной записью Mozilla.",
+      "error-title": "Синхронизация рабочего пространства",
+      "incoming-failed": "Некоторые синхронизированные данные не удалось прочитать. Существующие вкладки сохраняются до тех пор, пока синхронизация не завершится успешно.",
+      "invalid-workspace": "Синхронизация этой рабочей области не удалась. Укажите имя и значок длиной не более 256 символов, а затем повторите попытку. Синхронизация остальных рабочих областей продолжается.",
+      "deleted-workspace": "Эта рабочая область была удалена из Sync. Восстановите её из архива или создайте новую рабочую область, чтобы снова настроить её синхронизацию.",
+      "indicator-selected": "{{name}} — Включено в синхронизацию рабочего пространства",
+      "indicator-attention": "{{name}} — Ошибка синхронизации рабочего пространства: {{error}}",
+      "status-selected": "Включено в синхронизацию",
+      "status-error": "Ошибка синхронизации"
     },
     "context-menu": {
       "move-up": "Переместить это рабочее пространство вверх",
@@ -77,8 +81,8 @@
       "delete": "Удалить рабочее пространство",
       "manage": "Управление рабочим пространством",
       "archive": "Архивировать рабочее пространство",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "Синхронизировать эту рабочую область и её вкладки",
+      "sync-paused": "Синхронизация рабочего пространства требует внимания"
     },
     "popup": {
       "create-new": "Создать новое рабочее пространство...",
