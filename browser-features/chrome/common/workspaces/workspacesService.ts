@@ -37,6 +37,7 @@ import {
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
 import { ExplicitTabUserContextOperations } from "./utils/explicit-tab-user-context.ts";
+import type { WorkspacesSyncController } from "./workspacesSync.ts";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
   dataManagerCtx: WorkspacesDataManager;
@@ -44,6 +45,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   iconCtx: WorkspaceIcons;
   modalCtx: WorkspaceManageModal;
   archiveService: WorkspacesArchiveService;
+  syncController?: WorkspacesSyncController;
 
   private explicitTabUserContextOperations =
     new ExplicitTabUserContextOperations();
@@ -226,6 +228,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
+
+    this.syncController?.deleteWorkspace(workspaceID).catch((error: unknown) => {
+      console.error("[WorkspacesSync] Could not sync workspace deletion", error);
+    });
 
     const fallbackWorkspaceID = this.findFallbackWorkspaceID(workspaceID);
     const defaultWorkspaceID = this.getDefaultWorkspaceID();

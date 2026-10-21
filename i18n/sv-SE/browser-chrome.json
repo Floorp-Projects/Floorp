@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Ny arbetsyta ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "Flytta denna arbetsyta uppåt",
       "move-down": "Flytta denna arbetsyta nedåt",
       "delete": "Radera arbetsyta",
       "manage": "Hantera arbetsyta",
-      "archive": "Arkivera arbetsytan"
+      "archive": "Arkivera arbetsytan",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "Skapa ny arbetsyta...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "Generera QR-kod för den här sidan",
   "qrcode-generate-page-action-title": "QR-kodgenerator",
+  "firefoxSidebar": {
+    "edgeToggle": "Öppna eller fäst Firefox sidofältet",
+    "resize": "Ändra storlek på Firefox sidofältet"
+  },
   "panelSidebar": {
+    "resize": "Ändra storlek på sidopanel",
     "modal": {
       "type": "Paneltyp",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "Media",
       "open-tabs": "Öppna flikar",
       "switcher": "Växlare",
-      "history-suggestions": "Historik",
-      "bookmark-suggestions": "Bokmärken"
+      "history-suggestions": "Historik (dynamisk sökning)",
+      "bookmark-suggestions": "Bokmärken (dynamisk sökning)"
     },
     "noResults": "Inga kommandon hittades",
     "noResultsHint": "Prova en annan sökterm",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "Var att öppna",
     "bookmarkSwitcherWhereNewTab": "Ny flik",
     "bookmarkSwitcherWhereNewTabDesc": "Öppna i en ny förgrundsflik",
-    "bookmarkSwitcherWherePlaceholder": "Välj var du vill öppna..."
+    "bookmarkSwitcherWherePlaceholder": "Välj var du vill öppna...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Sök \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Sök öppna flikar",
+      "reservedBookmarkSearch": "Sök bokmärken",
+      "reservedHistorySearch": "Sökhistorik"
+    }
   },
   "commandPaletteReadings": {}
 }

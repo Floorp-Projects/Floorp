@@ -7,6 +7,8 @@
 #workspaces-toolbar-button {
   border-radius: 0px !important;
   position: relative;
+  max-inline-size: 18em;
+  min-inline-size: 0;
 
   &:hover {
     background-color: var(--toolbarbutton-hover-background) !important;
@@ -76,6 +78,61 @@
   & > label {
     display: inherit !important;
   }
+
+  & > .toolbarbutton-text {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* A cloud marks workspaces included in sync; it does not imply network activity. */
+#workspaces-toolbar-button[data-workspace-sync],
+.workspace-panel[data-workspace-sync] {
+  position: relative;
+}
+
+#workspaces-toolbar-button[data-workspace-sync]::after,
+.workspace-panel[data-workspace-sync]::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 3px;
+  inset-block-end: 3px;
+  width: 11px;
+  height: 11px;
+  background-color: currentColor;
+  mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+#workspaces-toolbar-button[data-workspace-sync][label] {
+  padding-inline-end: 24px;
+
+  &::after {
+    width: 14px;
+    height: 14px;
+    inset-inline-end: 6px;
+    inset-block-end: calc(50% - 7px);
+  }
+}
+
+#workspaces-toolbar-button[data-workspace-sync="attention"]::after,
+.workspace-panel[data-workspace-sync="attention"]::after {
+  mask-image: url("chrome://global/skin/icons/warning.svg");
+  color: var(--text-color-error, currentColor);
+}
+
+.workspace-sync-focus-tooltip {
+  max-inline-size: min(32em, calc(100vw - 24px));
+}
+
+.workspace-sync-focus-reason {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  margin: 0;
 }
 
 /* Toolbar button's Popup */
@@ -95,9 +152,88 @@
   margin: 10px;
 }
 
-.workspaceButton > .toolbarbutton-icon {
-  margin: 0px 20px 0px 0px !important;
-  height: 35px;
+.workspaceButton > .workspaceButtonIcon {
+  inline-size: 24px;
+  block-size: 24px;
+  margin: 0 !important;
+  margin-inline-end: 12px !important;
+  flex-shrink: 0;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Custom children keep one command target and replace the native one-line label. */
+.workspaceButton > .toolbarbutton-text,
+.workspaceButton > .toolbarbutton-icon:not(.workspaceButtonIcon) {
+  display: none !important;
+}
+
+.workspaceButtonContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2px;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-align: start;
+  pointer-events: none;
+
+  & label {
+    display: block;
+    margin: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+
+.workspaceButton .workspace-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.workspaceButton .workspace-sync-status-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.3;
+  opacity: 0.75;
+}
+
+.workspaceButton .workspace-sync-status {
+  flex: 1;
+}
+
+.workspaceButton .workspace-sync-status-icon {
+  display: none;
+  inline-size: 12px;
+  block-size: 12px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("./workspace-sync-cloud.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.workspaceButton[data-workspace-sync] .workspace-sync-status-icon {
+  display: block;
+}
+
+.workspaceButton[data-workspace-sync="attention"] .workspace-sync-status-line {
+  color: var(--text-color-error, currentColor);
+  opacity: 1;
+}
+
+.workspaceButton[data-workspace-sync="attention"] .workspace-sync-status-icon {
+  mask-image: url("chrome://global/skin/icons/warning.svg");
 }
 
 #workspacesCreateNewWorkspaceButton > .toolbarbutton-icon {
@@ -128,8 +264,13 @@
   margin: 0 !important;
   margin-right: 5px !important;
   width: -moz-available;
-  min-height: 40px;
-  max-height: 40px;
+  min-height: 52px;
+  max-height: 52px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
   margin-bottom: 5px !important;
   position: relative;
 
@@ -196,11 +337,10 @@
     border-left-color: var(--identity-color-gray, #9e9e9e);
   }
 
-  & label,
-  & image {
-    display: inherit !important;
+  & > .workspaceButtonIcon,
+  & > .workspaceButtonContent {
     background-color: unset !important;
-    color: var(--tab-text-color) !important;
+    color: inherit;
   }
 
   /* Drag & drop styles */
@@ -407,6 +547,7 @@
       var(--tab-selected-bgcolor, rgba(0, 0, 0, 0.1)) 50%,
       transparent
     ) !important;
-    border: 2px solid var(--toolbarbutton-active-background, rgba(0, 0, 0, 0.2));
+    border: 2px solid var(--toolbarbutton-active-background, rgba(0, 0, 0,
+      0.2));
   }
 }

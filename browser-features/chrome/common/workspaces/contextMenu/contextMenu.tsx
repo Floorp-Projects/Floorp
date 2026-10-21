@@ -15,6 +15,9 @@ const translationKeys = {
   delete: "workspaces.context-menu.delete",
   manage: "workspaces.context-menu.manage",
   archive: "workspaces.context-menu.archive",
+  sync: "workspaces.context-menu.sync",
+  syncPaused: "workspaces.context-menu.sync-paused",
+  syncHelp: "workspaces.sync.help",
 };
 
 const translate = (
@@ -28,6 +31,9 @@ const getTranslations = () => ({
   delete: translate(translationKeys.delete),
   manage: translate(translationKeys.manage),
   archive: translate(translationKeys.archive),
+  sync: translate(translationKeys.sync),
+  syncPaused: translate(translationKeys.syncPaused),
+  syncHelp: translate(translationKeys.syncHelp),
 });
 
 export function ContextMenu(props: {
@@ -71,6 +77,34 @@ export function ContextMenu(props: {
         label={texts().manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.sync"
+        type="checkbox"
+        autocheck="false"
+        disabled={!props.ctx.syncController?.isAvailable() || undefined}
+        label={props.ctx.syncController?.errorText(props.contextWorkspaceId)
+          ? texts().syncPaused
+          : texts().sync}
+        tooltiptext={props.ctx.syncController?.errorText(
+          props.contextWorkspaceId,
+        ) ?? texts().syncHelp}
+        checked={props.ctx.syncController?.isSelected(
+          props.contextWorkspaceId,
+        ) || undefined}
+        onCommand={() => {
+          const controller = props.ctx.syncController;
+          controller?.select(
+            props.contextWorkspaceId,
+            !controller.isSelected(props.contextWorkspaceId),
+          )
+            .catch((error: unknown) =>
+              console.error(
+                "[WorkspacesSync] Could not change sync selection",
+                error,
+              )
+            );
+        }}
       />
       <xul:menuseparator
         data-floorp-context-menu-key="floorp.workspaces.separator-archive"

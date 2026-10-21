@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "新工作區 ({{count}})"
     },
+    "sync": {
+      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
+      "error-title": "Workspace Sync",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+    },
     "context-menu": {
       "move-up": "向上移動此工作區",
       "move-down": "向下移動此工作區",
       "delete": "刪除工作區",
       "manage": "管理工作區",
-      "archive": "存檔工作區"
+      "archive": "存檔工作區",
+      "sync": "Sync This Workspace and Its Tabs",
+      "sync-paused": "Workspace Sync Needs Attention"
     },
     "popup": {
       "create-new": "建立新工作區...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "為此頁生成 QR 碼",
   "qrcode-generate-page-action-title": "QR 碼產生器",
+  "firefoxSidebar": {
+    "edgeToggle": "Open or pin the Firefox sidebar",
+    "resize": "Resize Firefox sidebar"
+  },
   "panelSidebar": {
+    "resize": "Resize panel sidebar",
     "modal": {
       "type": "面板類型",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "媒體",
       "open-tabs": "開啟的分頁",
       "switcher": "切換",
-      "history-suggestions": "歷史",
-      "bookmark-suggestions": "書籤"
+      "history-suggestions": "History (Dynamic Search)",
+      "bookmark-suggestions": "Bookmarks (Dynamic Search)"
     },
     "noResults": "未找到任何指令",
     "noResultsHint": "嘗試使用其它關鍵字",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "開啟位置",
     "bookmarkSwitcherWhereNewTab": "開啟新分頁",
     "bookmarkSwitcherWhereNewTabDesc": "在前景的新分頁開啟",
-    "bookmarkSwitcherWherePlaceholder": "選擇要開啟的位置……"
+    "bookmarkSwitcherWherePlaceholder": "選擇要開啟的位置……",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Search \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Search Open Tabs",
+      "reservedBookmarkSearch": "Search Bookmarks",
+      "reservedHistorySearch": "搜尋記錄"
+    }
   },
   "commandPaletteReadings": {}
 }

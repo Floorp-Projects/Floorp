@@ -64,12 +64,21 @@
     "service": {
       "new-workspace": "Novo espaço de trabalho ({{count}})"
     },
+    "sync": {
+      "help": "Sincronize este espaço de trabalho e suas abas da web com sua conta Mozilla.",
+      "error-title": "Sincronização do Espaço de Trabalho",
+      "incoming-failed": "Não foi possível ler alguns dados sincronizados. As abas existentes serão mantidas até que a sincronização seja bem-sucedida.",
+      "invalid-workspace": "Não foi possível sincronizar este espaço de trabalho. Use um nome e um ícone com no máximo 256 caracteres e tente novamente. Os demais espaços de trabalho continuam sendo sincronizados.",
+      "deleted-workspace": "Este espaço de trabalho foi excluído do Sync. Recupere-o a partir de um arquivo ou crie um novo espaço de trabalho para sincronizá-lo novamente."
+    },
     "context-menu": {
       "move-up": "Mover este espaço de trabalho para cima",
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Excluir espaço de trabalho",
       "manage": "Gerenciar espaço de trabalho",
-      "archive": "Arquivo de espaços de trabalho"
+      "archive": "Arquivo de espaços de trabalho",
+      "sync": "Sincronize este espaço de trabalho e suas abas",
+      "sync-paused": "A sincronização do espaço de trabalho requer atenção"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
@@ -285,7 +294,12 @@
   },
   "qrcode-generate-page-action": "Gerar código QR para esta página",
   "qrcode-generate-page-action-title": "Gerador de código QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Abrir ou fixar a barra lateral do Firefox",
+    "resize": "Redimensionar a barra lateral do Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionar a barra lateral do painel",
     "modal": {
       "type": "Tipo de painel",
       "typeOptions": {
@@ -510,8 +524,8 @@
       "media": "Mídia",
       "open-tabs": "Abrir abas",
       "switcher": "Console web",
-      "history-suggestions": "Histórico",
-      "bookmark-suggestions": "Marcadores"
+      "history-suggestions": "Histórico (Pesquisa dinâmica)",
+      "bookmark-suggestions": "Favoritos (Pesquisa dinâmica)"
     },
     "noResults": "Nenhum comando encontrado",
     "noResultsHint": "Experimente um termo de pesquisa diferente.",
@@ -596,7 +610,15 @@
     "bookmarkSwitcherWhereLabel": "Onde abrir",
     "bookmarkSwitcherWhereNewTab": "Nova aba",
     "bookmarkSwitcherWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
-    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir..."
+    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Pesquisar por \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Pesquisar abas abertas",
+      "reservedBookmarkSearch": "Pesquisar favoritos",
+      "reservedHistorySearch": "Pesquisar no histórico"
+    }
   },
   "commandPaletteReadings": {}
 }

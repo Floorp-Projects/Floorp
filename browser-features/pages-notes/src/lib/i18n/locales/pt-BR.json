@@ -7,6 +7,7 @@
         "welcomeContent": "Bem-vindo ao {{productName}} Notes! Veja como usá-lo.\n\n{{productName}} O Notes é um recurso de anotações que pode ser sincronizado entre dispositivos. Para ativar a sincronização, é necessário fazer login em {{productName}} com uma conta Mozilla.\n{{productName}} As anotações são armazenadas em {{productName}} e sincronizadas entre dispositivos usando o Firefox Sync. O Firefox Sync criptografa o conteúdo da sincronização com a senha da sua conta Mozilla, de modo que ninguém pode saber o seu conteúdo.",
         "new": "Nova anotação",
         "reorder": "Reordenar",
+        "export": "Exportar como markdown",
         "done": "Concluído",
         "emptyTitle": "Sem título",
         "emptyContent": "Sem conteúdo",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Falha ao carregar os dados da nota",
         "saveFailed": "Falha ao salvar os dados da nota",
+        "exportFailed": "Falha ao exportar nota",
         "indexOutOfRange": "O índice {{index}} está fora do alcance"
     }
 }
