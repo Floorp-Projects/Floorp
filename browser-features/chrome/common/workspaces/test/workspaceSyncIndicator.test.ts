@@ -613,12 +613,17 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
       await i18next.changeLanguage("ja-JP");
       setLanguage("ja-JP");
       await settle();
-      assertBoth("selected", "Beta — 同期対象", "同期対象", "Beta");
+      assertBoth(
+        "selected",
+        "Beta — ワークスペースの同期の対象",
+        "同期対象",
+        "Beta",
+      );
       boundary.setErrors(new Map([[boundary.secondId, ERROR]]));
       await settle();
       assertBoth(
         "attention",
-        `Beta — 同期エラー: ${ERROR}`,
+        `Beta — ワークスペースの同期エラー: ${ERROR}`,
         "同期エラー",
         "Beta",
       );
@@ -676,7 +681,7 @@ async function testIndicatorLocalizesAndTracksWorkspaceNames(): Promise<void> {
       await i18next.changeLanguage("ja-JP");
       setLanguage("ja-JP");
       await settle();
-      assertIndicator(node, "selected", "Alpha — 同期対象");
+      assertIndicator(node, "selected", "Alpha — ワークスペースの同期の対象");
       assertEquals(
         indicator().status,
         "同期対象",
@@ -684,13 +689,13 @@ async function testIndicatorLocalizesAndTracksWorkspaceNames(): Promise<void> {
       );
       setName("仕事 🌙");
       await settle();
-      assertIndicator(node, "selected", "仕事 🌙 — 同期対象");
+      assertIndicator(node, "selected", "仕事 🌙 — ワークスペースの同期の対象");
       boundary.setErrors(new Map([[boundary.firstId, ERROR]]));
       await settle();
       assertIndicator(
         node,
         "attention",
-        `仕事 🌙 — 同期エラー: ${ERROR}`,
+        `仕事 🌙 — ワークスペースの同期エラー: ${ERROR}`,
       );
       assertEquals(indicator().status, "同期エラー", "Japanese error status");
       assertEquals(
