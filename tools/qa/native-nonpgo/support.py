@@ -337,6 +337,8 @@ class Runner:
                                    'failureCode':reply['failureCode'],'phase':reply['phase'],
                                    'errorType':reply['errorType'],'queries':reply['queries']}}
                         if 'errno' in reply:value['queryFailure']['errno']=reply['errno']
+                        from darwin_inventory import progress_reply
+                        value['queryFailure']['helperProgress']=progress_reply('\n'.join(result.stdout.splitlines()[:-1])+'\n')
                     else:
                         inventory=''.join(str(pgid)+' '+str(pid)+'\n' for pid in reply['pids'])
                 else:
@@ -381,6 +383,8 @@ class Runner:
                     from darwin_activity import probe
                     value=probe().group(inventory,pgid)
                     value['inventoryMeasurement']=reply['measurement']
+                    from darwin_inventory import progress_reply
+                    value['helperProgress']=progress_reply('\n'.join(result.stdout.splitlines()[:-1])+'\n')
                 elif not native and sys.platform == 'darwin':
                     from darwin_activity import probe
                     value = probe().group(result.stdout, pgid)

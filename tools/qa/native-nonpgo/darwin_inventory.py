@@ -5,11 +5,23 @@ No alternate API after failure. The caller owns the 3s subprocess timeout/reap.
 No raw inventory or exception text is published by the parent.
 """
 import sys
+import time
 _PROGRESS_SEQUENCE=0
+_PROGRESS_START=time.monotonic_ns()
+_PROGRESS_CPU_START=time.process_time_ns()
+
+
+def _emit_progress(phase):
+    global _PROGRESS_SEQUENCE
+    _PROGRESS_SEQUENCE+=1
+    print('{"inventoryProgress":"%s","sequence":%d,"elapsedNanoseconds":%d,"cpuNanoseconds":%d}' %
+          (phase,_PROGRESS_SEQUENCE,time.monotonic_ns()-_PROGRESS_START,
+           time.process_time_ns()-_PROGRESS_CPU_START),flush=True)
+
+
 if __name__=='__main__':
     # Distinguish reaching the script from loading the project and ctypes APIs.
-    print('{"inventoryProgress":"project-imports","sequence":1}',flush=True)
-    _PROGRESS_SEQUENCE=1
+    _emit_progress('project-imports')
 
 import argparse
 import ctypes
@@ -23,33 +35,71 @@ import re
 from process_census import CAP,canonical,decode,load_abi,validate_layout
 from qa_core import Failure,require
 
-PHASES=('project-imports','abi-binding','reader-binding','self-bsd','self-snapshot','self-size','self-data',
+if __name__=='__main__':_emit_progress('imports-complete')
+
+MAX_PROGRESS_EVENTS=32
+MAX_PROGRESS_BYTES=65536
+ABI_PHASES=('abi-path','abi-files','abi-json','abi-schema','abi-binding-env','abi-origin-hash',
+            'abi-source-hash','abi-inventory-hash','abi-binding-check','abi-binary-hash',
+            'abi-layout','abi-complete')
+PHASES=('project-imports','imports-complete','abi-binding',*ABI_PHASES,'reader-binding','self-bsd','self-snapshot','self-size','self-data',
         'group-snapshot','group-size','group-data','group-decode')
+
+
+def timing_projection(value):
+    """Only a complete, bounded, typed timing prefix can be published."""
+    if type(value) is not dict:return None
+    rows=value.get('timings');events=value.get('events')
+    if (type(events) is not int or not 0<events<=MAX_PROGRESS_EVENTS or type(rows) is not list or
+            len(rows)!=events):return None
+    previous=(-1,-1);result=[]
+    for row in rows:
+        if type(row) is not dict or set(row)!={'phase','elapsedNanoseconds','cpuNanoseconds'}:return None
+        if type(row['phase']) is not str or row['phase'] not in PHASES:return None
+        times=(row['elapsedNanoseconds'],row['cpuNanoseconds'])
+        if any(type(n) is not int or not 0<=n<2**63 for n in times):return None
+        if any(n<before for n,before in zip(times,previous)):return None
+        result.append(dict(row));previous=times
+    if value.get('phase')!=rows[-1]['phase']:return None
+    return result
 
 
 def progress_reply(output):
     """Read fixed progress only; incomplete inventory never becomes a measurement."""
     if isinstance(output,bytes):
-        if len(output)>65536:return {'phase':'unobserved','events':0}
+        if len(output)>MAX_PROGRESS_BYTES:return {'phase':'unobserved','events':0}
         try:output=output.decode('utf-8')
         except UnicodeError:return {'phase':'unobserved','events':0}
     if not isinstance(output,str):return {'phase':'unobserved','events':0}
     try:size=len(output.encode())
     except UnicodeError:return {'phase':'unobserved','events':0}
-    if size>65536:
+    if size>MAX_PROGRESS_BYTES:
         return {'phase':'unobserved','events':0}
-    phases=[]
+    phases=[];timings=[];schema=None;previous=(-1,-1)
     for line in output.splitlines(keepends=True):
         if not line.endswith('\n'):break
         try:value=json.loads(line)
         except (ValueError,RecursionError):break
-        if (not isinstance(value,dict) or set(value)!={'inventoryProgress','sequence'} or
+        keys=set(value) if type(value) is dict else set()
+        timed=keys=={'inventoryProgress','sequence','elapsedNanoseconds','cpuNanoseconds'}
+        if (not isinstance(value,dict) or keys not in ({'inventoryProgress','sequence'},
+                {'inventoryProgress','sequence','elapsedNanoseconds','cpuNanoseconds'}) or
                 value['inventoryProgress'] not in PHASES or type(value['sequence']) is not int or
-                value['sequence']!=len(phases)+1):
+                value['sequence']!=len(phases)+1 or (schema is not None and schema!=timed)):
             break
+        if timed:
+            times=(value['elapsedNanoseconds'],value['cpuNanoseconds'])
+            if (any(type(n) is not int or not 0<=n<2**63 for n in times) or
+                    any(n<before for n,before in zip(times,previous))):break
+            timings.append({'phase':value['inventoryProgress'],'elapsedNanoseconds':times[0],
+                            'cpuNanoseconds':times[1]})
+            previous=times
+        schema=timed
         phases.append(value['inventoryProgress'])
-        if len(phases)>32:return {'phase':'unobserved','events':0}
-    return {'phase':phases[-1] if phases else 'unobserved','events':len(phases)}
+        if len(phases)>MAX_PROGRESS_EVENTS:return {'phase':'unobserved','events':0}
+    result={'phase':phases[-1] if phases else 'unobserved','events':len(phases)}
+    if schema is True:result['timings']=timings
+    return result
 
 
 def read_records(layout,selector,subject,queries,*,allow_empty=False,system=None,progress=None):
@@ -117,7 +167,7 @@ def collect(pgid,queries,*,layout=None,reader=None,system=None,progress=None,not
         progress['phase']=phase
         if notify:notify(phase)
     mark('abi-binding')
-    layout=layout or load_abi(Path(os.environ['FLOORP_CENSUS_ABI']))
+    layout=layout or load_abi(Path(os.environ['FLOORP_CENSUS_ABI']),progress=mark)
     if reader is None:
         mark('reader-binding')
         from darwin_activity import probe
@@ -187,14 +237,10 @@ def decode_reply(text,pgid):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--pgid',type=int,required=True)
-    args=parser.parse_args();queries=[];progress={};sequence=_PROGRESS_SEQUENCE
-    def emit(phase):
-        nonlocal sequence
-        sequence+=1
-        print(json.dumps({'inventoryProgress':phase,'sequence':sequence}),flush=True)
+    args=parser.parse_args();queries=[];progress={}
     try:
         require(sys.platform=='darwin','inventory-platform')
-        value=collect(args.pgid,queries,progress=progress,notify=emit)
+        value=collect(args.pgid,queries,progress=progress,notify=_emit_progress)
     except Exception as error:
         code=str(error) if isinstance(error,Failure) else 'inventory-helper-exception'
         if code.startswith('census-'):code='inventory-abi-unavailable'

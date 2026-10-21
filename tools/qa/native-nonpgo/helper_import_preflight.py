@@ -18,7 +18,7 @@ import tempfile
 import time
 
 from qa_core import Failure, require, write_json
-from darwin_inventory import PHASES, decode_reply, progress_reply
+from darwin_inventory import PHASES, MAX_PROGRESS_EVENTS, decode_reply, progress_reply, timing_projection
 from process_census import BINDING_KEYS, load_abi, prepare_abi
 
 HERE = Path(__file__).resolve().parent
@@ -310,7 +310,9 @@ def cleanup_diagnostic_projection(value):
         events = number(progress.get('events'), integer=True)
         result['helperProgress'] = {
             'phase': choice(progress.get('phase'), PHASES, 'unobserved'),
-            'events': events if events is not None and events <= len(PHASES) else None}
+            'events': events if events is not None and events <= MAX_PROGRESS_EVENTS else None}
+        timings=timing_projection(progress)
+        if timings is not None:result['helperProgress']['timings']=timings
     return result
 
 
@@ -350,6 +352,13 @@ def monitor_projection(value, *, partial=False):
             errorType=choice(value.get('errorType'), ERROR_TYPES, 'unavailable'))
         items = value.get('partialSamples')
         result['partialSamples'] = [monitor_projection(item, partial=True) for item in items[-3:]] if isinstance(items, list) else []
+    progress=value.get('helperProgress')
+    if type(progress) is dict:
+        events=number(progress.get('events'),integer=True)
+        result['helperProgress']={'phase':choice(progress.get('phase'),PHASES,'unobserved'),
+            'events':events if events is not None and events<=MAX_PROGRESS_EVENTS else None}
+        timings=timing_projection(progress)
+        if timings is not None:result['helperProgress']['timings']=timings
     failure = value.get('queryFailure')
     if isinstance(failure, dict):
         query = {'operation': choice(failure.get('operation'),
@@ -380,6 +389,8 @@ def monitor_projection(value, *, partial=False):
         if isinstance(progress, dict):
             query['helperProgress'] = {'phase': choice(progress.get('phase'), PHASES, 'unobserved'),
                                       'events': number(progress.get('events'), integer=True)}
+            timings=timing_projection(progress)
+            if timings is not None:query['helperProgress']['timings']=timings
         result['queryFailure'] = query
     return result
 

@@ -75,7 +75,7 @@ class DarwinInventoryGuards(unittest.TestCase):
 
     def test_script_entry_progress_precedes_project_import_and_is_silent_when_imported(self):
         source=Path(inv.__file__).read_text()
-        self.assertLess(source.index('"inventoryProgress":"project-imports"'),source.index('import argparse'))
+        self.assertLess(source.index("_emit_progress('project-imports')"),source.index('import argparse'))
         result=subprocess.run([sys.executable,'-c','import darwin_inventory'],check=True,capture_output=True,
                               text=True,timeout=5)
         self.assertEqual(result.stdout,'')

@@ -40,10 +40,18 @@ def validate_layout(value):
     return value
 
 
-def binding(task):
-    return {**{key:os.environ[key] for key in BINDING_KEYS},
-            'jobOriginSHA256':digest(task/'job-origin.json'), 'sourceSHA256':digest(HERE/'census_abi.c'),
-            'inventorySourceSHA256':digest(HERE/'darwin_inventory.py')}
+def binding(task,*,progress=None):
+    def mark(phase):
+        if progress:progress(phase)
+    mark('abi-binding-env')
+    value={key:os.environ[key] for key in BINDING_KEYS}
+    mark('abi-origin-hash')
+    value['jobOriginSHA256']=digest(task/'job-origin.json')
+    mark('abi-source-hash')
+    value['sourceSHA256']=digest(HERE/'census_abi.c')
+    mark('abi-inventory-hash')
+    value['inventorySourceSHA256']=digest(HERE/'darwin_inventory.py')
+    return value
 
 
 def prepare_abi(task, runner, env):
@@ -75,21 +83,34 @@ def prepare_abi(task, runner, env):
     return path
 
 
-def load_abi(path):
+def load_abi(path,*,progress=None):
+    def mark(phase):
+        if progress:progress(phase)
+    mark('abi-path')
     path = Path(path)
     task = Path(os.environ['TASK_ROOT']).resolve()
     require(path == task/'census-abi.json' and not path.is_symlink(), 'census-abi-path')
+    mark('abi-files')
     info = path.lstat()
     binary = task/'census-abi'
     require(stat.S_ISREG(info.st_mode) and info.st_uid==os.geteuid() and
             stat.S_IMODE(info.st_mode)==0o400 and info.st_size<=16384 and
             binary.is_file() and not binary.is_symlink() and binary.stat().st_uid==os.geteuid() and
             stat.S_IMODE(binary.stat().st_mode)==0o500, 'census-abi-file')
+    mark('abi-json')
     value = json.loads(path.read_text())
-    require(set(value)=={'schema','binding','binarySHA256','layout','layoutSHA256'} and value['schema']==1 and
-            value['binding']==binding(task) and value['binarySHA256']==digest(binary), 'census-abi-binding')
+    mark('abi-schema')
+    require(set(value)=={'schema','binding','binarySHA256','layout','layoutSHA256'} and value['schema']==1,
+            'census-abi-binding')
+    expected=binding(task,progress=progress)
+    mark('abi-binding-check')
+    require(value['binding']==expected,'census-abi-binding')
+    mark('abi-binary-hash')
+    require(value['binarySHA256']==digest(binary),'census-abi-binding')
+    mark('abi-layout')
     layout = validate_layout(value['layout'])
     require(value['layoutSHA256']==hashlib.sha256(canonical(layout)).hexdigest(), 'census-abi-integrity')
+    mark('abi-complete')
     return layout
 
 

@@ -773,7 +773,7 @@ class DriverTests(unittest.TestCase):
             self.assertIsNone(bad['timeoutSeconds'])
             self.assertEqual(bad['helperProgress'], {'phase': 'unobserved', 'events': None})
             self.assertNotIn('PRIVATE-SENTINEL', json.dumps(bad))
-        for bad_count in (-1, len(hp.PHASES) + 1, True):
+        for bad_count in (-1, hp.MAX_PROGRESS_EVENTS + 1, True):
             projected = hp.cleanup_diagnostic_projection({'helperProgress': {
                 'phase': 'project-imports', 'events': bad_count}})
             self.assertIsNone(projected['helperProgress']['events'])
