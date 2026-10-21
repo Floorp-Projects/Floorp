@@ -69,7 +69,11 @@
       "error-title": "Workspace Sync",
       "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
       "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again.",
+      "indicator-selected": "{{name}} — Included in workspace sync",
+      "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
+      "status-selected": "Included in sync",
+      "status-error": "Sync error"
     },
     "context-menu": {
       "move-up": "Перемістити цей робочий простір вгору",
