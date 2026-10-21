@@ -69,7 +69,11 @@
       "error-title": "Sincronização do Espaço de Trabalho",
       "incoming-failed": "Não foi possível ler alguns dados sincronizados. As abas existentes serão mantidas até que a sincronização seja bem-sucedida.",
       "invalid-workspace": "Não foi possível sincronizar este espaço de trabalho. Use um nome e um ícone com no máximo 256 caracteres e tente novamente. Os demais espaços de trabalho continuam sendo sincronizados.",
-      "deleted-workspace": "Este espaço de trabalho foi excluído do Sync. Recupere-o a partir de um arquivo ou crie um novo espaço de trabalho para sincronizá-lo novamente."
+      "deleted-workspace": "Este espaço de trabalho foi excluído do Sync. Recupere-o a partir de um arquivo ou crie um novo espaço de trabalho para sincronizá-lo novamente.",
+      "indicator-selected": "{{name}} — Incluído na sincronização do espaço de trabalho",
+      "indicator-attention": "{{name}} — Erro de sincronização do espaço de trabalho: {{error}}",
+      "status-selected": "Incluído na sincronização",
+      "status-error": "Erro de sincronização"
     },
     "context-menu": {
       "move-up": "Mover este espaço de trabalho para cima",

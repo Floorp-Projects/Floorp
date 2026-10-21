@@ -69,7 +69,11 @@
       "error-title": "Werkruimte synchroniseren",
       "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
       "invalid-workspace": "Deze werkruimte kon niet worden gesynchroniseerd. Gebruik een naam en een pictogram van maximaal 256 tekens en probeer het vervolgens opnieuw. De andere werkruimten worden gewoon verder gesynchroniseerd.",
-      "deleted-workspace": "Deze werkruimte is uit Sync verwijderd. Herstel deze vanuit een archief of maak een nieuwe werkruimte aan om deze opnieuw te synchroniseren."
+      "deleted-workspace": "Deze werkruimte is uit Sync verwijderd. Herstel deze vanuit een archief of maak een nieuwe werkruimte aan om deze opnieuw te synchroniseren.",
+      "indicator-selected": "{{name}} — Opgenomen in synchronisatie van werkruimte",
+      "indicator-attention": "{{name}} — Werkruimte-synchronisatiefout: {{error}}",
+      "status-selected": "Opgenomen in synchronisatie",
+      "status-error": "Synchronisatiefout"
     },
     "context-menu": {
       "move-up": "Deze workspace naar boven verplaatsen",
