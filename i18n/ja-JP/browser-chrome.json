@@ -70,8 +70,8 @@
       "incoming-failed": "一部の同期データを読み込めませんでした。同期が完了するまで、既存のタブは保持されます。",
       "invalid-workspace": "このワークスペースを同期できませんでした。256 文字以内の名前とアイコンを設定してから、もう一度お試しください。他のワークスペースは引き続き同期されます。",
       "deleted-workspace": "このワークスペースは同期から削除されました。アーカイブから復元するか、新しいワークスペースを作成して再度同期してください。",
-      "indicator-selected": "{{name}} — 同期対象",
-      "indicator-attention": "{{name}} — 同期エラー: {{error}}",
+      "indicator-selected": "{{name}} — ワークスペースの同期の対象",
+      "indicator-attention": "{{name}} — ワークスペースの同期エラー: {{error}}",
       "status-selected": "同期対象",
       "status-error": "同期エラー"
     },

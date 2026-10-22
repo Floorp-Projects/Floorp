@@ -116,6 +116,87 @@ async function withEnglish(test: () => void | Promise<void>): Promise<void> {
   }
 }
 
+async function withJapaneseSyncFixture(
+  test: () => void | Promise<void>,
+): Promise<void> {
+  const locale = "ja-JP";
+  const namespace = "browser-chrome";
+  for (
+    const [key, placeholders] of [
+      ["indicator-selected", ["{{name}}"]],
+      ["indicator-attention", ["{{error}}", "{{name}}"]],
+      ["status-selected", []],
+      ["status-error", []],
+    ] as const
+  ) {
+    // Check the real locale's own resources before installing the fixture, so
+    // missing Japanese translations or broken interpolation cannot be masked.
+    const value: unknown = i18next.getResource(
+      locale,
+      namespace,
+      `workspaces.sync.${key}`,
+    );
+    assert(
+      typeof value === "string" && value.trim().length > 0,
+      `Japanese sync resource ${key} must exist without language fallback`,
+    );
+    assert(
+      /[\u3040-\u30ff\u3400-\u9fff]/u.test(value),
+      `Japanese sync resource ${key} must contain Japanese text`,
+    );
+    assertEquals(
+      (value.match(/\{\{[^{}]*\}\}/g) ?? []).sort().join(","),
+      placeholders.join(","),
+      `Japanese sync resource ${key} preserves its interpolation contract`,
+    );
+  }
+  assert(
+    i18next.getResource(
+      locale,
+      namespace,
+      "workspaces.sync.status-selected",
+    ) !==
+      i18next.getResource(locale, namespace, "workspaces.sync.status-error"),
+    "Japanese selected and error status captions must differ",
+  );
+  const originalLocale = i18next.language;
+  const originalBundle: unknown = structuredClone(
+    i18next.getResourceBundle(locale, namespace),
+  );
+  try {
+    // Stable test inputs, independent of shipped translation wording. Keep the
+    // expected UI strings below as separate literals, not calls to i18next.t.
+    i18next.addResourceBundle(
+      locale,
+      namespace,
+      {
+        workspaces: {
+          sync: {
+            "indicator-selected": "{{name}} — 同期対象",
+            "indicator-attention": "{{name}} — 同期エラー: {{error}}",
+            "status-selected": "同期対象",
+            "status-error": "同期エラー",
+          },
+        },
+      },
+      true,
+      true,
+    );
+    await withEnglish(test);
+  } finally {
+    i18next.removeResourceBundle(locale, namespace);
+    i18next.addResourceBundle(locale, namespace, originalBundle);
+    // Force observers to reread the restored bundle even if the test ended in
+    // the original Japanese locale.
+    await i18next.changeLanguage("en-US");
+    setLanguage("en-US");
+    await settle();
+    await i18next.changeLanguage(originalLocale);
+    setLanguage(originalLocale);
+    await settle();
+  }
+}
+
 function assertIndicator(
   node: Element,
   state: "selected" | "attention" | undefined,
@@ -369,7 +450,7 @@ async function testToolbarUpdatesForSameWorkspaceAndPreservesContent(): Promise<
 async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
   void
 > {
-  await withEnglish(async () => {
+  await withJapaneseSyncFixture(async () => {
     await activateTestWindow();
     const boundary = createBoundary();
     const originalData = workspacesDataStore.data;
@@ -649,7 +730,7 @@ async function testPopupAndSidebarTrackStatusAndWorkspaceSwitches(): Promise<
 }
 
 async function testIndicatorLocalizesAndTracksWorkspaceNames(): Promise<void> {
-  await withEnglish(async () => {
+  await withJapaneseSyncFixture(async () => {
     const boundary = createBoundary();
     boundary.setSelected(new Set([boundary.firstId]));
     const [name, setName] = createSignal("Alpha");

@@ -65,11 +65,15 @@
       "new-workspace": "새 워크스페이스 ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "이 워크스페이스와 내부 웹사이트 탭을 Mozilla 계정에 동기화합니다.",
+      "error-title": "워크스페이스 동기화",
+      "incoming-failed": "일부 동기화한 데이터를 읽을 수 없습니다. 동기화에 성공할 때까지 기존 탭을 유지합니다.",
+      "invalid-workspace": "이 워크스페이스는 동기화할 수 없습니다. 256자 이내의 이름 및 아이콘을 사용하고 다시 시도해 주세요. 다른 워크스페이스는 계속 동기화됩니다.",
+      "deleted-workspace": "이 워크스페이스는 Sync에서 삭제되었습니다. 다시 동기화하려면 아카이브에서 복원하거나 새 워크스페이스를 생성하세요.",
+      "indicator-selected": "{{name}} — Included in workspace sync",
+      "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
+      "status-selected": "Included in sync",
+      "status-error": "Sync error"
     },
     "context-menu": {
       "move-up": "이 워크스페이스를 위로 옮기기",
@@ -77,8 +81,8 @@
       "delete": "워크스페이스 삭제",
       "manage": "워크스페이스 관리",
       "archive": "보관된 워크스페이스",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "이 워크스페이스 및 탭 동기화",
+      "sync-paused": "워크스페이스 동기화 확인 필요"
     },
     "popup": {
       "create-new": "새로운 워크스페이스 만들기...",
