@@ -65,8 +65,8 @@
       "new-workspace": "Ruang Kerja Baru ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
+      "help": "Sinkronkan ruang kerja ini beserta tab-tabnya dengan Akun Mozilla Anda.",
+      "error-title": "Sinkronisasi Ruang Kerja",
       "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
       "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
       "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again.",
