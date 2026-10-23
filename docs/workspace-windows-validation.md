@@ -162,14 +162,12 @@ ordinary Windows native matrix entry validates the Runtime artifact; it does
 not run these browser suites.
 
 Each dedicated job first runs the logging, runner ownership, and startup
-regression tests on Windows. Browser stdout and stderr write directly to files
-under `logs/test/browser-*-stdout.log` and `browser-*-stderr.log`; an asynchronous
-reader preserves the launcher output and Marionette discovery. Native browser
-console writes therefore do not depend on how quickly the parent consumes a
-pipe. The autostarted development launcher also writes directly to
+regression tests on Windows. The autostarted development launcher writes directly to
 `logs/test/launcher-*-stdout.log` and `launcher-*-stderr.log`, without forwarding
-its output through the runner's console. All raw files are included in the
-artifacts.
+its output through the runner's console. Its existing browser-output reader
+preserves native browser diagnostics and Marionette discovery. This avoids
+backpressure from forwarding the launcher's output into another console pipe.
+Both launcher files are included in the artifacts.
 
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
