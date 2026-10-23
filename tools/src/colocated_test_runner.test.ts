@@ -376,6 +376,7 @@ function reusedWindowsContentFixture() {
     100,
     TEST_FLOORP_EXE,
     `"${TEST_FLOORP_EXE}" --marionette`,
+    "2026-10-23T15:00:50.0000000Z",
   );
   const content = windowsProcess(
     7852,
@@ -839,11 +840,9 @@ Deno.test("Windows ownership retires a content PID reused by PowerShell without 
   assertEquals(state.treeKillSafe, false);
   assertEquals(reconcileWindowsFloorpOwnership(state, current), []);
 
-  // Even if this PID later names another child with the expected executable,
-  // ancestry must not restore ownership that was revoked for a reused PID.
+  // An exact path and a claimed command-line parent cannot prove ownership.
   reconcileWindowsFloorpOwnership(state, [deno, root, {
     ...replacement,
-    parentProcessId: 200,
     executablePath: TEST_FLOORP_EXE,
     commandLine: `"${TEST_FLOORP_EXE}" -contentproc -parentPid 200`,
   }]);
@@ -870,6 +869,128 @@ Deno.test("Windows readiness promotion retires a replaced content PID while reta
   assertEquals(Array.from(state.ownedFloorp.keys()), [200]);
   assertEquals(state.blockedFloorpProcessIds.has(7852), true);
   assertEquals(state.treeKillSafe, false);
+});
+
+Deno.test("Windows reused content PID requires a fresh identity and verified actual root parent", () => {
+  for (const listenerEstablished of [false, true]) {
+    const { deno, root, content, state } = reusedWindowsContentFixture();
+    if (listenerEstablished) {
+      state.listenerRoot = state.ownedFloorp.get(200) ?? null;
+    }
+    const fresh = {
+      ...content,
+      // A distinct birth within the same millisecond must retain its precision.
+      creationDate: "2026-10-23T15:00:58.1234568Z",
+    };
+    assertEquals(
+      reconcileWindowsFloorpOwnership(state, [deno, root, fresh]),
+      [],
+    );
+    assertEquals(state.ambiguousFloorp, []);
+    assertEquals(state.ownedFloorp.get(7852)?.creationDate, fresh.creationDate);
+    assertEquals(state.blockedFloorpProcessIds.has(7852), false);
+    assertEquals(state.retiredContentIdentities.has(7852), false);
+    assertEquals(state.treeKillSafe, false);
+    const events = (state.ownershipDiagnostics ?? []).map((row) =>
+      JSON.parse(row)
+    );
+    assertEquals(events.map((event) => event.action), [
+      "retired-content",
+      "adopted-content",
+    ]);
+    assertEquals(events[1].current.parentPid, 200);
+    assertEquals(events[1].parent.creationDate, root.creationDate);
+    assertEquals("commandLine" in events[1].current, false);
+  }
+});
+
+Deno.test("Windows readiness promotion admits a fresh reused content child under its listener", async () => {
+  const { deno, root, content, state } = reusedWindowsContentFixture();
+  const fresh = { ...content, creationDate: "2026-10-23T15:01:03.0000000Z" };
+  const deps: WindowsProcessControlDeps = {
+    listProcesses: () => Promise.resolve([deno, root, fresh]),
+    listListeners: () =>
+      Promise.resolve([{
+        localAddress: "127.0.0.1",
+        localPort: 2828,
+        state: "Listen",
+        owningProcess: 200,
+      }]),
+    taskkill: () => Promise.resolve({ success: true, code: 0 }),
+    isPortReachable: () => Promise.resolve(false),
+    sleep: () => Promise.resolve(),
+  };
+  await captureWindowsReadyBrowser(state, 2828, deps);
+  assertEquals(state.ownedFloorp.get(7852)?.creationDate, fresh.creationDate);
+  assertEquals(state.blockedFloorpProcessIds.has(7852), false);
+  assertEquals(state.treeKillSafe, false);
+});
+
+Deno.test("Windows reused PID recovery rejects spoofed parents, malformed dates and non-content replacements", () => {
+  const cases = [
+    { child: { parentProcessId: 9084 } },
+    { child: { parentProcessId: 100 } },
+    { child: { parentProcessId: 200, commandLine: "floorp.exe --marionette" } },
+    { child: { creationDate: "not-a-timestamp" } },
+    { child: { creationDate: "2026-02-31T15:01:03.0000000Z" } },
+    { child: { creationDate: "2026-10-23T15:00:58.1234567Z" } },
+    { child: { creationDate: "2026-10-23T15:00:58.1234566Z" } },
+    { child: {}, parentBirth: "not-a-timestamp" },
+    { child: {}, parentBirth: "2026-02-31T15:00:50.0000000Z" },
+    { child: {}, parentBirth: "2026-10-23T15:01:04.0000000Z" },
+  ];
+  for (const entry of cases) {
+    const { deno, root, content, replacement, state } =
+      reusedWindowsContentFixture();
+    if (entry.parentBirth) {
+      root.creationDate = entry.parentBirth;
+      state.ownedFloorp.get(200)!.creationDate = entry.parentBirth;
+    }
+    state.listenerRoot = state.ownedFloorp.get(200) ?? null;
+    reconcileWindowsFloorpOwnership(state, [deno, root, replacement]);
+    const fresh = {
+      ...content,
+      creationDate: "2026-10-23T15:01:03.0000000Z",
+      ...entry.child,
+    };
+    reconcileWindowsFloorpOwnership(state, [deno, root, fresh]);
+    assertEquals(state.ownedFloorp.has(7852), false);
+    assertEquals(state.blockedFloorpProcessIds.has(7852), true);
+    assertEquals(state.treeKillSafe, false);
+    assertEquals(state.ambiguousFloorp.length > 0, true);
+    assertEquals(
+      (state.ownershipDiagnostics ?? []).some((row) =>
+        JSON.parse(row).action === "rejected-reused-pid"
+      ),
+      true,
+    );
+  }
+});
+
+Deno.test("Windows reused content PID cannot recover through another owned root or a content parent", () => {
+  for (const contentParent of [false, true]) {
+    const { deno, root, content, replacement, state } =
+      reusedWindowsContentFixture();
+    const other = windowsProcess(
+      300,
+      200,
+      TEST_FLOORP_EXE,
+      contentParent
+        ? `"${TEST_FLOORP_EXE}" -contentproc -parentPid 200`
+        : `"${TEST_FLOORP_EXE}" --marionette`,
+      "2026-10-23T15:00:51.0000000Z",
+    );
+    reconcileWindowsFloorpOwnership(state, [deno, root, content, other]);
+    state.listenerRoot = state.ownedFloorp.get(200) ?? null;
+    reconcileWindowsFloorpOwnership(state, [deno, root, replacement, other]);
+    reconcileWindowsFloorpOwnership(state, [deno, root, other, {
+      ...content,
+      parentProcessId: 300,
+      creationDate: "2026-10-23T15:01:03.0000000Z",
+    }]);
+    assertEquals(state.ownedFloorp.has(7852), false);
+    assertEquals(state.blockedFloorpProcessIds.has(7852), true);
+  }
 });
 
 Deno.test("Windows content retirement requires changed readable birth and path evidence", () => {

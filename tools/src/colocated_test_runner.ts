@@ -443,6 +443,8 @@ export interface WindowsAutoStartState {
   floorpExecutablePath: string;
   ownedFloorp: Map<number, WindowsProcessIdentity>;
   blockedFloorpProcessIds: Set<number>;
+  retiredContentIdentities: Map<number, WindowsProcessIdentity>;
+  ownershipDiagnostics?: string[];
   ambiguousFloorp: string[];
   listenerRoot: WindowsProcessIdentity | null;
   port: number | null;
@@ -790,6 +792,7 @@ export function createWindowsAutoStartState(
     floorpExecutablePath,
     ownedFloorp: new Map<number, WindowsProcessIdentity>(),
     blockedFloorpProcessIds: new Set<number>(),
+    retiredContentIdentities: new Map<number, WindowsProcessIdentity>(),
     ambiguousFloorp: [],
     listenerRoot: null,
     port: null,
@@ -828,6 +831,53 @@ function addUniqueMessage(target: string[], message: string): void {
   }
 }
 
+function recordWindowsOwnershipDiagnostic(
+  state: WindowsAutoStartState,
+  action: string,
+  reason: string,
+  expected: WindowsProcessIdentity | undefined,
+  current: WindowsProcessRecord,
+  parent?: WindowsProcessRecord,
+): void {
+  const snapshot = (
+    process: WindowsProcessIdentity | WindowsProcessRecord,
+  ) => ({
+    pid: process.processId,
+    creationDate: process.creationDate,
+    executablePath: process.executablePath,
+    content: isContentProcessCommandLine(process.commandLine),
+    ...("parentProcessId" in process
+      ? { parentPid: process.parentProcessId }
+      : {}),
+  });
+  const diagnostics = state.ownershipDiagnostics ??= [];
+  addUniqueMessage(
+    diagnostics,
+    JSON.stringify({
+      action,
+      reason,
+      expected: expected ? snapshot(expected) : null,
+      current: snapshot(current),
+      parent: parent ? snapshot(parent) : null,
+    }),
+  );
+}
+
+function windowsBirthIsAfter(child: string, parent: string): boolean {
+  const preciseUtc = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{7}Z$/;
+  if (!preciseUtc.test(child) || !preciseUtc.test(parent)) return false;
+  const childMs = Date.parse(child);
+  const parentMs = Date.parse(parent);
+  if (!Number.isFinite(childMs) || !Number.isFinite(parentMs)) return false;
+  if (
+    new Date(childMs).toISOString() !== `${child.slice(0, 23)}Z` ||
+    new Date(parentMs).toISOString() !== `${parent.slice(0, 23)}Z`
+  ) return false;
+  if (childMs !== parentMs) return childMs > parentMs;
+  // CIM's invariant UTC timestamps preserve fractions beyond Date's milliseconds.
+  return child > parent;
+}
+
 function retireReusedWindowsContentProcess(
   state: WindowsAutoStartState,
   current: WindowsProcessRecord,
@@ -847,11 +897,93 @@ function retireReusedWindowsContentProcess(
   }
 
   // A different birth time proves the former content process exited. Keep the
-  // replacement outside our ownership, including any later exact-path process
-  // assigned this PID. Tree killing would bypass that identity protection.
+  // replacement outside our ownership until a fresh child is independently
+  // verified through its actual parent. Tree killing bypasses that protection.
   state.ownedFloorp.delete(identity.processId);
   state.blockedFloorpProcessIds.add(identity.processId);
+  state.retiredContentIdentities.set(identity.processId, identity);
   state.treeKillSafe = false;
+  recordWindowsOwnershipDiagnostic(
+    state,
+    "retired-content",
+    "birth-time-changed",
+    identity,
+    current,
+  );
+  return true;
+}
+
+function adoptReusedWindowsContentProcess(
+  state: WindowsAutoStartState,
+  current: WindowsProcessRecord,
+  byPid: Map<number, WindowsProcessRecord>,
+): boolean {
+  const retired = state.retiredContentIdentities.get(current.processId);
+  const parent = byPid.get(current.parentProcessId);
+  const ownedParent = state.ownedFloorp.get(current.parentProcessId);
+  const expectedParent = state.listenerRoot ??
+    ownedParent;
+  let reason = "";
+  if (!retired || !isContentProcessCommandLine(retired.commandLine)) {
+    reason = "not-a-retired-content-identity";
+  } else if (
+    current.processId === state.deno.processId ||
+    current.processId === state.listenerRoot?.processId ||
+    !isSameWindowsExecutablePath(
+      current.executablePath,
+      state.floorpExecutablePath,
+    ) ||
+    !isContentProcessCommandLine(current.commandLine) ||
+    !current.creationDate?.trim() ||
+    current.creationDate === retired.creationDate
+  ) {
+    reason = "replacement-is-not-a-fresh-content-process";
+  } else if (
+    !parent || !ownedParent || !expectedParent ||
+    parent.processId !== expectedParent.processId ||
+    state.blockedFloorpProcessIds.has(parent.processId) ||
+    !expectedParent.commandLine ||
+    isContentProcessCommandLine(expectedParent.commandLine) ||
+    !isSameWindowsExecutablePath(
+      parent.executablePath,
+      state.floorpExecutablePath,
+    ) ||
+    !matchesWindowsProcessIdentityStrict(parent, expectedParent) ||
+    !matchesWindowsProcessIdentityStrict(parent, ownedParent)
+  ) {
+    reason = "actual-parent-is-not-a-verified-owned-root";
+  } else if (
+    !windowsBirthIsAfter(current.creationDate, expectedParent.creationDate) ||
+    !windowsBirthIsAfter(current.creationDate, retired.creationDate)
+  ) {
+    reason = "replacement-birth-is-not-after-parent-and-predecessor";
+  }
+  if (reason) {
+    recordWindowsOwnershipDiagnostic(
+      state,
+      "rejected-reused-pid",
+      reason,
+      retired,
+      current,
+      parent,
+    );
+    return false;
+  }
+  const identity = captureWindowsProcessIdentity(
+    current,
+    "Replacement content",
+  );
+  state.ownedFloorp.set(current.processId, identity);
+  state.blockedFloorpProcessIds.delete(current.processId);
+  state.retiredContentIdentities.delete(current.processId);
+  recordWindowsOwnershipDiagnostic(
+    state,
+    "adopted-content",
+    "fresh-identity-with-verified-actual-parent",
+    retired,
+    current,
+    parent,
+  );
   return true;
 }
 
@@ -906,6 +1038,15 @@ export function reconcileWindowsFloorpOwnership(
       continue;
     }
     linked.add(processId);
+  }
+
+  for (const candidate of candidates) {
+    if (
+      state.blockedFloorpProcessIds.has(candidate.processId) &&
+      adoptReusedWindowsContentProcess(state, candidate, byPid)
+    ) {
+      linked.add(candidate.processId);
+    }
   }
 
   if (denoIsLive && state.listenerRoot === null) {
@@ -1234,6 +1375,7 @@ async function refreshWindowsOwnershipOrThrow(
           ...issues,
           ...state.ambiguousFloorp,
           ...(mismatches.length ? [JSON.stringify({ mismatches })] : []),
+          ...(state.ownershipDiagnostics ?? []),
         ].join(" | "),
       );
     }
@@ -2687,6 +2829,12 @@ async function main(): Promise<number> {
         );
         exitCode = 1;
       }
+    }
+
+    for (
+      const diagnostic of windowsAutoStartState?.ownershipDiagnostics ?? []
+    ) {
+      writeLine("INFO", `Windows ownership: ${diagnostic}`);
     }
 
     const finishedAt = new Date();

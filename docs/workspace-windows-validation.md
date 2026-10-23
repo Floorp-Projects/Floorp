@@ -161,6 +161,13 @@ pull-request, and main-branch workflows retain their existing behavior. The
 ordinary Windows native matrix entry validates the Runtime artifact; it does
 not run these browser suites.
 
+Each dedicated job first runs the logging, runner ownership, and startup
+regression tests on Windows. Browser stdout and stderr write directly to files
+under `logs/test/browser-*-stdout.log` and `browser-*-stderr.log`; an asynchronous
+reader preserves the launcher output and Marionette discovery. Native browser
+console writes therefore do not depend on how quickly the parent consumes a
+pipe. The raw files are included in the artifacts.
+
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
 All eight jobs must succeed for the complete 49-file coverage. Tests do not run
@@ -197,7 +204,10 @@ isolated; a partial patch cannot carry over into another suite's Runtime.
 The Windows runner verifies executable paths and full-precision UTC process
 creation times before terminating its browser processes. If an ordinary content
 process exits and Windows reuses its PID, the replacement is excluded from
-ownership and tree termination is disabled. Changes to the launcher or listener
+ownership and tree termination is disabled. A new content process can be
+tracked again only with a fresh timestamp and a verified actual browser parent;
+a command-line parent argument alone is insufficient. Ownership decisions are
+recorded in the runner log. Changes to the launcher or listener
 identity, or unreadable identity evidence, still fail validation.
 
 ### Isolate one workspace test file
