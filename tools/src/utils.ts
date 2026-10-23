@@ -3,7 +3,9 @@
 import * as path from "@std/path";
 import { spawn } from "node:child_process";
 import { closeSync, openSync } from "node:fs";
+import { constants as osConstants } from "node:os";
 import { PROJECT_ROOT as DEFINES_PROJECT_ROOT } from "./defines.ts";
+import type { FileOutputProcess } from "./process_output_types.ts";
 
 export const PROJECT_ROOT = DEFINES_PROJECT_ROOT;
 
@@ -220,6 +222,59 @@ export class Logger {
 
 /* Process utilities: stream stdout/stderr to callback */
 export const ProcessUtils = {
+  spawnCommandWithFileOutput(
+    cmd: string[],
+    files: Record<"stdout" | "stderr", string>,
+    cwd?: string,
+  ): FileOutputProcess {
+    const descriptors: number[] = [];
+    try {
+      const stdout = openSync(files.stdout, "wx", 0o600);
+      descriptors.push(stdout);
+      const stderr = openSync(files.stderr, "wx", 0o600);
+      descriptors.push(stderr);
+      const child = spawn(cmd[0], cmd.slice(1), {
+        cwd,
+        stdio: ["ignore", stdout, stderr],
+        env: Deno.env.toObject(),
+      });
+      const status = new Promise<{ code: number }>((resolve, reject) => {
+        child.once("error", reject);
+        child.once("close", (code) => resolve({ code: code ?? 1 }));
+      });
+      // A caller may wait for a readiness signal before awaiting status. Keep
+      // early spawn errors observed without changing what awaiting status does.
+      void status.catch(() => {});
+      const pid = child.pid;
+      if (pid === undefined) {
+        throw new Error(
+          `Failed to spawn ${cmd[0]}: no process ID was assigned`,
+        );
+      }
+      return {
+        pid,
+        status,
+        kill(signal = "SIGTERM") {
+          if (child.exitCode !== null || child.signalCode !== null) return;
+          const signalNumber: unknown = Reflect.get(
+            osConstants.signals,
+            signal,
+          );
+          if (typeof signalNumber !== "number") {
+            throw new TypeError(`Unsupported process signal: ${signal}`);
+          }
+          if (!child.kill(signalNumber)) {
+            throw new Error(`Failed to stop owned child process ${pid}`);
+          }
+        },
+      };
+    } finally {
+      // spawn duplicates these handles into the child. Closing only our own
+      // descriptors leaves output independent of the parent's event loop.
+      for (const descriptor of descriptors) closeSync(descriptor);
+    }
+  },
+
   async runCommandWithFileLogging(
     cmd: string[],
     cb: (stream: "stdout" | "stderr", line: string) => void,
@@ -228,31 +283,17 @@ export const ProcessUtils = {
     // Native browser console calls synchronously write to stdout. Real files
     // keep those writes independent of this process's readers and console.
     // In particular, a full Windows subprocess pipe must not freeze browser UI.
-    const descriptors: number[] = [];
     const readers: Deno.FsFile[] = [];
     let finished = false;
     const tails: Promise<void>[] = [];
     try {
-      const stdout = openSync(files.stdout, "wx", 0o600);
-      descriptors.push(stdout);
-      const stderr = openSync(files.stderr, "wx", 0o600);
-      descriptors.push(stderr);
+      const child = ProcessUtils.spawnCommandWithFileOutput(cmd, files);
       for (const stream of ["stdout", "stderr"] as const) {
         readers.push(await Deno.open(files[stream], { read: true }));
       }
-      const child = spawn(cmd[0], cmd.slice(1), {
-        stdio: ["ignore", stdout, stderr],
-        env: Deno.env.toObject(),
-      });
-      const completion = new Promise<number>((resolve, reject) => {
-        child.once("error", reject);
-        child.once("close", (code) => resolve(code ?? 1));
-      }).finally(() => {
+      const completion = child.status.finally(() => {
         finished = true;
       });
-      // spawn has duplicated the descriptors into the child. Closing our write
-      // handles also makes failure cleanup independent of the browser lifetime.
-      for (const descriptor of descriptors.splice(0)) closeSync(descriptor);
 
       const tail = async (
         file: Deno.FsFile,
@@ -285,13 +326,12 @@ export const ProcessUtils = {
         if (pending.length) cb(stream, pending + "\n");
       };
       tails.push(tail(readers[0], "stdout"), tail(readers[1], "stderr"));
-      const [code] = await Promise.all([completion, ...tails]);
-      return code;
+      const [status] = await Promise.all([completion, ...tails]);
+      return status.code;
     } finally {
       finished = true;
       await Promise.allSettled(tails);
       for (const reader of readers) reader.close();
-      for (const descriptor of descriptors) closeSync(descriptor);
     }
   },
 

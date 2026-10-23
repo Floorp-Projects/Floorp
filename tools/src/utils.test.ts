@@ -169,3 +169,80 @@ Deno.test("file-backed logging releases handles when spawning fails", async () =
     await Deno.remove(directory, { recursive: true });
   }
 });
+
+Deno.test("file-output spawn completes both streams while parent JS is blocked", async () => {
+  const directory = await Deno.makeTempDir({ prefix: "floorp-spawn-output-" });
+  const files = {
+    stdout: path.join(directory, "stdout.log"),
+    stderr: path.join(directory, "stderr.log"),
+  };
+  const marker = path.join(directory, "complete");
+  let child:
+    | ReturnType<typeof ProcessUtils.spawnCommandWithFileOutput>
+    | undefined;
+  try {
+    child = ProcessUtils.spawnCommandWithFileOutput(
+      [
+        Deno.execPath(),
+        "eval",
+        `const bytes = new Uint8Array(8192).fill(120);
+        for (const output of [Deno.stdout, Deno.stderr]) {
+          for (let i = 0; i < 1024; i++) output.writeSync(bytes);
+        }
+        Deno.writeTextFileSync(Deno.args[0], Deno.cwd());`,
+        marker,
+      ],
+      files,
+      directory,
+    );
+    assert(child.pid > 0);
+    const deadline = Date.now() + 10_000;
+    const sleep = new Int32Array(new SharedArrayBuffer(4));
+    while (!exists(marker) && Date.now() < deadline) {
+      Atomics.wait(sleep, 0, 0, 10);
+    }
+    assert(
+      exists(marker),
+      "native file output needs no parent event-loop reads",
+    );
+    assertEquals(await Deno.readTextFile(marker), directory);
+    assertEquals(await child.status, { code: 0 });
+    assertEquals((await Deno.stat(files.stdout)).size, 8 * 1024 * 1024);
+    assertEquals((await Deno.stat(files.stderr)).size, 8 * 1024 * 1024);
+  } finally {
+    if (child) {
+      child.kill();
+      await child.status.catch(() => {});
+    }
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("file-output spawn stops its owned child handle", async () => {
+  const directory = await Deno.makeTempDir({ prefix: "floorp-spawn-kill-" });
+  let child:
+    | ReturnType<typeof ProcessUtils.spawnCommandWithFileOutput>
+    | undefined;
+  try {
+    child = ProcessUtils.spawnCommandWithFileOutput(
+      [
+        Deno.execPath(),
+        "eval",
+        "await new Promise(() => setInterval(() => {}, 1000));",
+      ],
+      {
+        stdout: path.join(directory, "stdout.log"),
+        stderr: path.join(directory, "stderr.log"),
+      },
+    );
+    child.kill("SIGTERM");
+    assert((await child.status).code !== 0);
+    child.kill("SIGTERM");
+  } finally {
+    if (child) {
+      child.kill();
+      await child.status.catch(() => {});
+    }
+    await Deno.remove(directory, { recursive: true });
+  }
+});
