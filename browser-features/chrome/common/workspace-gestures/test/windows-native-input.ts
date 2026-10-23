@@ -89,14 +89,20 @@ async function sendNativeInput(
   repeatCount: number,
 ): Promise<NativeInputReply> {
   const paths = fixturePaths();
-  const powershell = Services.dirsvc.get("SysD", Ci.nsIFile);
-  for (const component of ["WindowsPowerShell", "v1.0", "powershell.exe"]) {
-    powershell.append(component);
-  }
-  assert(powershell.isFile(), "Windows PowerShell is available");
+  // PowerShell 7 compiles Add-Type in-process; Windows PowerShell 5.1 tries
+  // spawning a compiler, which the browser's child token cannot authorize.
+  const powershell = await Subprocess.pathSearch("pwsh.exe").catch(
+    (error: unknown) => {
+      throw new Error(
+        `Windows native input verification requires PowerShell 7 (pwsh.exe) on PATH: ${
+          String(error)
+        }`,
+      );
+    },
+  );
   const handle = windowHandle(win);
   const process = await Subprocess.call({
-    command: powershell.path,
+    command: powershell,
     arguments: [
       "-NoProfile",
       "-NonInteractive",

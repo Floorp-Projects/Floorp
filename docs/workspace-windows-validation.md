@@ -230,6 +230,11 @@ identity, or unreadable identity evidence, still fail validation.
 
 ### Windows OS keyboard input
 
+The OS-input case additionally requires PowerShell 7 (`pwsh.exe`) on `PATH`;
+it is installed on the hosted Windows runner. Windows PowerShell 5.1 uses an
+external compiler for `Add-Type`, which failed under the browser-created child
+process with a privilege error. PowerShell 7 compiles the helper in-process.
+
 On Windows, the gesture action test also invokes
 `tools/send_windows_workspace_input.ps1`. The helper verifies the browser's
 executable, process identity, session, native window handle, and foreground

@@ -80,6 +80,7 @@ export interface NativeInputProcess {
 }
 
 export interface NativeInputSubprocess {
+  pathSearch(command: string): Promise<string>;
   call(options: {
     command: string;
     arguments: string[];
