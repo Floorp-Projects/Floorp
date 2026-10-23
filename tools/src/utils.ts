@@ -275,66 +275,6 @@ export const ProcessUtils = {
     }
   },
 
-  async runCommandWithFileLogging(
-    cmd: string[],
-    cb: (stream: "stdout" | "stderr", line: string) => void,
-    files: Record<"stdout" | "stderr", string>,
-  ): Promise<number> {
-    // Native browser console calls synchronously write to stdout. Real files
-    // keep those writes independent of this process's readers and console.
-    // In particular, a full Windows subprocess pipe must not freeze browser UI.
-    const readers: Deno.FsFile[] = [];
-    let finished = false;
-    const tails: Promise<void>[] = [];
-    try {
-      const child = ProcessUtils.spawnCommandWithFileOutput(cmd, files);
-      for (const stream of ["stdout", "stderr"] as const) {
-        readers.push(await Deno.open(files[stream], { read: true }));
-      }
-      const completion = child.status.finally(() => {
-        finished = true;
-      });
-
-      const tail = async (
-        file: Deno.FsFile,
-        stream: "stdout" | "stderr",
-      ): Promise<void> => {
-        const decoder = new TextDecoder();
-        const bytes = new Uint8Array(64 * 1024);
-        let pending = "";
-        while (true) {
-          const count = await file.read(bytes);
-          if (count === null) {
-            if (finished) break;
-            await new Promise((resolve) => setTimeout(resolve, 50));
-            continue;
-          }
-          pending += decoder.decode(bytes.subarray(0, count), { stream: true });
-          let newline;
-          while ((newline = pending.indexOf("\n")) !== -1) {
-            cb(stream, pending.slice(0, newline + 1));
-            pending = pending.slice(newline + 1);
-          }
-          // Native output need not contain line breaks. Bound the tailer's
-          // memory while keeping the complete, unmodified bytes in the file.
-          if (pending.length >= bytes.length) {
-            cb(stream, pending);
-            pending = "";
-          }
-        }
-        pending += decoder.decode();
-        if (pending.length) cb(stream, pending + "\n");
-      };
-      tails.push(tail(readers[0], "stdout"), tail(readers[1], "stderr"));
-      const [status] = await Promise.all([completion, ...tails]);
-      return status.code;
-    } finally {
-      finished = true;
-      await Promise.allSettled(tails);
-      for (const reader of readers) reader.close();
-    }
-  },
-
   async runCommandWithLogging(
     cmd: string[],
     cb: (stream: "stdout" | "stderr", line: string) => void,

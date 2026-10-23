@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   arch,
   exists,
@@ -57,117 +57,6 @@ Deno.test("exists returns false for non-existing file", () => {
 
 Deno.test("PROJECT_ROOT is a valid directory", () => {
   assert(exists(PROJECT_ROOT), "PROJECT_ROOT should exist");
-});
-
-Deno.test("file-backed logging preserves both streams, UTF-8 and nonzero exit", async () => {
-  const directory = await Deno.makeTempDir({ prefix: "floorp-file-logging-" });
-  const files = {
-    stdout: path.join(directory, "stdout.log"),
-    stderr: path.join(directory, "stderr.log"),
-  };
-  const output = { stdout: "", stderr: "" };
-  const expected = "x".repeat(65_535) + "日\n" +
-    "Marionette\tINFO\tListening on port 28291\n";
-  try {
-    const code = await ProcessUtils.runCommandWithFileLogging(
-      [
-        Deno.execPath(),
-        "eval",
-        'Deno.stdout.writeSync(new TextEncoder().encode("x".repeat(65535) + "日\\nMarionette\\tINFO\\tListening on port 28291\\n")); Deno.stderr.writeSync(new TextEncoder().encode("stderr without newline")); Deno.exit(7);',
-      ],
-      (stream, line) => output[stream] += line,
-      files,
-    );
-    assertEquals(code, 7);
-    assertEquals(output.stdout, expected);
-    assertEquals(output.stderr, "stderr without newline\n");
-    assertEquals(await Deno.readTextFile(files.stdout), expected);
-    assertEquals(
-      await Deno.readTextFile(files.stderr),
-      "stderr without newline",
-    );
-    assertEquals(
-      output.stdout.match(/Marionette\tINFO\tListening on port (\d+)/)?.[1],
-      "28291",
-    );
-  } finally {
-    await Deno.remove(directory, { recursive: true });
-  }
-});
-
-Deno.test("native file output progresses while a log consumer is blocked", async () => {
-  const directory = await Deno.makeTempDir({
-    prefix: "floorp-output-progress-",
-  });
-  const files = {
-    stdout: path.join(directory, "stdout.log"),
-    stderr: path.join(directory, "stderr.log"),
-  };
-  const consumerStarted = path.join(directory, "consumer-started");
-  const childFinished = path.join(directory, "child-finished");
-  let blocked = false;
-  const observed = { stdout: 0, stderr: 0 };
-  const childScript = `
-    const [consumerStarted, childFinished] = Deno.args;
-    Deno.stdout.writeSync(new TextEncoder().encode("start\\n"));
-    while (true) {
-      try { await Deno.stat(consumerStarted); break; } catch {}
-      await new Promise(resolve => setTimeout(resolve, 5));
-    }
-    const bytes = new Uint8Array(8192).fill(120);
-    for (const output of [Deno.stdout, Deno.stderr]) {
-      for (let i = 0; i < 1024; i++) output.writeSync(bytes);
-    }
-    await Deno.writeTextFile(childFinished, "done");
-  `;
-  try {
-    const code = await ProcessUtils.runCommandWithFileLogging(
-      [Deno.execPath(), "eval", childScript, consumerStarted, childFinished],
-      (stream, line) => {
-        observed[stream] += line.length;
-        if (blocked) return;
-        blocked = true;
-        Deno.writeTextFileSync(consumerStarted, "started");
-        const deadline = Date.now() + 10_000;
-        const sleep = new Int32Array(new SharedArrayBuffer(4));
-        // Intentionally block this event loop. A pipe would fill before the
-        // child writes its completion marker; native file handles keep going.
-        while (!exists(childFinished) && Date.now() < deadline) {
-          Atomics.wait(sleep, 0, 0, 10);
-        }
-        assert(exists(childFinished), "child writes exceed pipe capacity");
-      },
-      files,
-    );
-    assertEquals(code, 0);
-    assert(blocked);
-    assert(observed.stdout >= 8 * 1024 * 1024);
-    assert(observed.stderr >= 8 * 1024 * 1024);
-    assertEquals((await Deno.stat(files.stdout)).size, 8 * 1024 * 1024 + 6);
-    assertEquals((await Deno.stat(files.stderr)).size, 8 * 1024 * 1024);
-  } finally {
-    await Deno.remove(directory, { recursive: true });
-  }
-});
-
-Deno.test("file-backed logging releases handles when spawning fails", async () => {
-  const directory = await Deno.makeTempDir({
-    prefix: "floorp-output-failure-",
-  });
-  try {
-    await assertRejects(() =>
-      ProcessUtils.runCommandWithFileLogging(
-        [path.join(directory, "missing-executable")],
-        () => {},
-        {
-          stdout: path.join(directory, "stdout.log"),
-          stderr: path.join(directory, "stderr.log"),
-        },
-      )
-    );
-  } finally {
-    await Deno.remove(directory, { recursive: true });
-  }
 });
 
 Deno.test("file-output spawn completes both streams while parent JS is blocked", async () => {
@@ -243,6 +132,56 @@ Deno.test("file-output spawn stops its owned child handle", async () => {
       child.kill();
       await child.status.catch(() => {});
     }
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("file-output spawn retains UTF-8, startup output and nonzero exit", async () => {
+  const directory = await Deno.makeTempDir({ prefix: "floorp-output-status-" });
+  const files = {
+    stdout: path.join(directory, "stdout.log"),
+    stderr: path.join(directory, "stderr.log"),
+  };
+  const expected = "x".repeat(65_535) + "日\n" +
+    "Marionette\tINFO\tListening on port 28291\n";
+  try {
+    const child = ProcessUtils.spawnCommandWithFileOutput(
+      [
+        Deno.execPath(),
+        "eval",
+        'Deno.stdout.writeSync(new TextEncoder().encode("x".repeat(65535) + "日\\nMarionette\\tINFO\\tListening on port 28291\\n")); Deno.stderr.writeSync(new TextEncoder().encode("stderr without newline")); Deno.exit(7);',
+      ],
+      files,
+    );
+    assertEquals(await child.status, { code: 7 });
+    assertEquals(await Deno.readTextFile(files.stdout), expected);
+    assertEquals(
+      await Deno.readTextFile(files.stderr),
+      "stderr without newline",
+    );
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("file-output spawn releases handles when spawning fails", async () => {
+  const directory = await Deno.makeTempDir({
+    prefix: "floorp-output-failure-",
+  });
+  try {
+    assertThrows(() =>
+      ProcessUtils.spawnCommandWithFileOutput(
+        [path.join(directory, "missing-executable")],
+        {
+          stdout: path.join(directory, "stdout.log"),
+          stderr: path.join(directory, "stderr.log"),
+        },
+      )
+    );
+    // The native spawn error is asynchronous on some platforms. Let its
+    // installed handler observe it before this test's resource checks.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  } finally {
     await Deno.remove(directory, { recursive: true });
   }
 });

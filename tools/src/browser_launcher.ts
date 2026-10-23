@@ -561,40 +561,22 @@ export async function run(
   const marionette = options.marionette ?? true;
   const cmd = browserCommand({ ...options, port, marionette });
 
-  // Marionette already makes the Windows launcher wait for the real browser.
-  // Keep the same lifetime when staging without Marionette and using file logs.
-  if (Deno.build.os === "windows" && !marionette) {
-    cmd.push("--wait-for-browser");
-  }
-
   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
 
-  const logLine = (_stream: "stdout" | "stderr", line: string) => {
-    const m = line.match(/Marionette\tINFO\tListening on port (\d+)/);
-    if (m) {
-      console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver");
-      Deno.writeTextFileSync(MARIONETTE_STATE_FILE, m[1]);
-      console.log(
-        `[launcher] Marionette port saved to ${MARIONETTE_STATE_FILE}`,
-      );
-    }
-    printFirefoxLog(line.trim());
-  };
-  if (Deno.build.os === "windows") {
-    const logDirectory = path.join(PROJECT_ROOT, "logs", "test");
-    await Deno.mkdir(logDirectory, { recursive: true });
-    const prefix = path.join(logDirectory, `browser-${crypto.randomUUID()}`);
-    const files = {
-      stdout: `${prefix}-stdout.log`,
-      stderr: `${prefix}-stderr.log`,
-    };
-    console.log(
-      `[launcher] Native browser output: ${files.stdout}, ${files.stderr}`,
-    );
-    await ProcessUtils.runCommandWithFileLogging(cmd, logLine, files);
-  } else {
-    await ProcessUtils.runCommandWithLogging(cmd, logLine);
-  }
+  await ProcessUtils.runCommandWithLogging(
+    cmd,
+    (_stream: "stdout" | "stderr", line: string) => {
+      const m = line.match(/Marionette\tINFO\tListening on port (\d+)/);
+      if (m) {
+        console.log("nora-{bbd11c51-3be9-4676-b912-ca4c0bdcab94}-webdriver");
+        Deno.writeTextFileSync(MARIONETTE_STATE_FILE, m[1]);
+        console.log(
+          `[launcher] Marionette port saved to ${MARIONETTE_STATE_FILE}`,
+        );
+      }
+      printFirefoxLog(line.trim());
+    },
+  );
 
   try {
     Deno.removeSync(MARIONETTE_STATE_FILE);
