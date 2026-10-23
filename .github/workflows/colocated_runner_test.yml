@@ -4,6 +4,15 @@ name: "(CI) 🧪 Browser Integration + Runner Tests"
 
 on:
   workflow_dispatch:
+    inputs:
+      windows_workspaces_only:
+        description: Run only the Windows workspace browser suites
+        type: boolean
+        default: false
+      windows_workspace_test:
+        description: Optional single workspace .test.ts filename or repository path (requires Windows-only mode)
+        type: string
+        default: ""
   pull_request:
   push:
     branches: [main]
@@ -14,6 +23,7 @@ permissions:
 jobs:
   # ── Smoke: lint / type check / test discovery (fast, no browser) ──
   smoke:
+    if: github.event_name != 'workflow_dispatch' || !inputs.windows_workspaces_only
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -428,3 +438,63 @@ jobs:
             _dist/firefox-tests/TRIAGE.md
             _dist/firefox-tests/triage.json
             browser-features/chrome/test/firefox-downloaded/generated/manifest.json
+
+  windows-workspaces:
+    if: github.event_name == 'workflow_dispatch' && inputs.windows_workspaces_only
+    name: Windows workspace / ${{ inputs.windows_workspace_test || matrix.suite }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        suite: ${{ fromJSON(inputs.windows_workspace_test != '' && '["workspaces"]' || '["workspaces", "workspace-gestures", "workspace-session-indicator", "workspace-bookmarks", "command-palette", "workspace-overrides", "pages-modal-child", "modules"]') }}
+    env:
+      FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
+      FLOORP_WINDOWS_WORKSPACE_SUITE: ${{ matrix.suite }}
+      FLOORP_WINDOWS_WORKSPACE_TEST: ${{ inputs.windows_workspace_test }}
+    steps:
+      - name: Enable long checkout paths
+        run: git config --global core.longpaths true
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
+      - run: deno install
+
+      - name: Validate and install locked Windows Runtime
+        id: runtime-install
+        shell: pwsh
+        run: |
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run ${{ matrix.suite }} browser suite
+        if: ${{ !cancelled() && steps.runtime-install.outcome == 'success' }}
+        timeout-minutes: 10
+        shell: pwsh
+        run: ./tools/run_windows_workspace_suite.ps1 -Suite "$env:FLOORP_WINDOWS_WORKSPACE_SUITE" -TestFile "$env:FLOORP_WINDOWS_WORKSPACE_TEST"
+
+      - name: Upload Windows workspace evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-workspace-tests-${{ matrix.suite }}-${{ github.run_attempt }}
+          path: |
+            _dist/windows-workspaces/
+            logs/test/
+            logs/vite-*.log
+            _dist/profile/test/prefs.js
+            _dist/profile/test/workspace-bookmarks-benchmark.json

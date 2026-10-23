@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { runTestBootstrapWithFailureReporting } from "./test_bootstrap_failure.ts";
+import {
+  startTestBootstrap,
+  waitForTestOwnerStartup,
+} from "./test_bootstrap_lifecycle.ts";
+import type { TestOwnerStartupWindow } from "./test_bootstrap_lifecycle_types.ts";
 import { claimTestRunOwnership } from "./test_run_owner.ts";
 
 const HTTP_LOADER_PREF = "nora.dev.allow_http_loader";
@@ -71,6 +75,7 @@ if (import.meta.env.MODE === "dev") {
     throw error;
   }
 } else if (import.meta.env.MODE === "test") {
+  Reflect.set(window, "__NORA_TEST_FEATURES_READY__", false);
   if (!isTestOwner) {
     // Test-created windows need the features under test, but must not consume
     // the host control request, run tests, or overwrite the owner's diagnostics.
@@ -79,8 +84,11 @@ if (import.meta.env.MODE === "dev") {
       "http://localhost:5181/loader/index.ts",
     );
     await loaderModule.default();
+    Reflect.set(window, "__NORA_TEST_FEATURES_READY__", true);
   } else {
-    await runTestBootstrapWithFailureReporting(
+    // Test execution is scheduled independently of startup module evaluation.
+    // Capture the run now, then require the actual owner window's readiness.
+    startTestBootstrap(
       {
         getStringPref: (name, fallback) =>
           Services.prefs.getStringPref(name, fallback),
@@ -91,31 +99,68 @@ if (import.meta.env.MODE === "dev") {
         savePrefFile: (prefFile) =>
           Services.prefs.savePrefFile(prefFile as unknown as nsIFile),
       },
-      async () => {
-        assertHttpLoaderAllowed();
+      {
+        async initializeFeatures() {
+          assertHttpLoaderAllowed();
 
-        const loaderModule = await importWithRetry(
-          "http://localhost:5181/loader/index.ts",
-        );
-        await loaderModule.default();
-        setStartupMarker("nora.startup.loader", "loaded");
+          const loaderModule = await importWithRetry(
+            "http://localhost:5181/loader/index.ts",
+          );
+          await loaderModule.default();
+          Reflect.set(window, "__NORA_TEST_FEATURES_READY__", true);
+          setStartupMarker("nora.startup.loader", "loaded");
+        },
+        async waitForOwnerStartup() {
+          const owner = window as unknown as TestOwnerStartupWindow;
+          const checkpoint = (phase: string) => {
+            setStartupMarker(
+              "nora.startup.test.owner_state",
+              JSON.stringify({
+                phase,
+                at: Date.now(),
+                readyState: document.readyState,
+                delayedStartupFinished:
+                  owner.gBrowserInit?.delayedStartupFinished === true,
+                featuresReady:
+                  Reflect.get(window, "__NORA_TEST_FEATURES_READY__") === true,
+              }),
+            );
+            try {
+              Services.prefs.savePrefFile(null as unknown as nsIFile);
+            } catch {
+              // A diagnostic flush must not block native startup.
+            }
+          };
+          checkpoint("waiting-for-owner-startup");
+          await waitForTestOwnerStartup(owner, (observer) => {
+            Services.obs.addObserver(
+              observer,
+              "browser-delayed-startup-finished",
+            );
+            return () =>
+              Services.obs.removeObserver(
+                observer,
+                "browser-delayed-startup-finished",
+              );
+          });
+          checkpoint("owner-startup-ready");
+        },
+        async executeTests() {
+          const testModule = await importWithRetry(
+            "http://localhost:5181/loader/test/index.ts",
+          );
+          await testModule.default();
+          setStartupMarker("nora.startup.test", "loaded");
 
-        const testModule = await importWithRetry(
-          "http://localhost:5181/loader/test/index.ts",
-        );
-        await testModule.default();
-        setStartupMarker("nora.startup.test", "loaded");
-
-        // Keep the browser alive after test completion so the host-side
-        // test runner has time to collect results from prefs.js.
-        // Without this the browser may shut down before the runner reads
-        // the final state. Use setInterval (not an unresolved Promise) to
-        // avoid blocking the event loop.
-        // The interval is cleared after 10 minutes as a safety net.
-        const keepaliveId = setInterval(() => {}, 60_000);
-        setTimeout(() => clearInterval(keepaliveId), 600_000);
+          // Keep the browser alive while the host collects the final state.
+          const keepaliveId = setInterval(() => {}, 60_000);
+          setTimeout(() => clearInterval(keepaliveId), 600_000);
+        },
+        recordStartupError: (error) =>
+          setStartupMarker("nora.startup.error", error),
+        reportRejectedBootstrap: (error) =>
+          console.error("[noraneko] Test bootstrap failed:", error),
       },
-      (error) => setStartupMarker("nora.startup.error", error),
     );
   }
 } else {

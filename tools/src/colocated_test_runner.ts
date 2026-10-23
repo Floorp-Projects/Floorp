@@ -468,7 +468,7 @@ $rows = @(
       [pscustomobject]@{
         ProcessId = [int]$_.ProcessId
         ParentProcessId = [int]$_.ParentProcessId
-        CreationDate = if ($null -eq $_.CreationDate) { $null } else { [string]$_.CreationDate }
+        CreationDate = if ($null -eq $_.CreationDate) { $null } else { $_.CreationDate.ToUniversalTime().ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
         ExecutablePath = if ($null -eq $_.ExecutablePath) { $null } else { [string]$_.ExecutablePath }
         CommandLine = if ($null -eq $_.CommandLine) { $null } else { [string]$_.CommandLine }
       }
@@ -828,6 +828,33 @@ function addUniqueMessage(target: string[], message: string): void {
   }
 }
 
+function retireReusedWindowsContentProcess(
+  state: WindowsAutoStartState,
+  current: WindowsProcessRecord,
+  identity: WindowsProcessIdentity,
+  listenerProcessId = state.listenerRoot?.processId,
+): boolean {
+  if (
+    !isContentProcessCommandLine(identity.commandLine) ||
+    identity.processId === state.deno.processId ||
+    identity.processId === listenerProcessId ||
+    current.processId !== identity.processId ||
+    !current.creationDate?.trim() ||
+    !current.executablePath?.trim() ||
+    current.creationDate === identity.creationDate
+  ) {
+    return false;
+  }
+
+  // A different birth time proves the former content process exited. Keep the
+  // replacement outside our ownership, including any later exact-path process
+  // assigned this PID. Tree killing would bypass that identity protection.
+  state.ownedFloorp.delete(identity.processId);
+  state.blockedFloorpProcessIds.add(identity.processId);
+  state.treeKillSafe = false;
+  return true;
+}
+
 export function reconcileWindowsFloorpOwnership(
   state: WindowsAutoStartState,
   processes: WindowsProcessRecord[],
@@ -870,6 +897,9 @@ export function reconcileWindowsFloorpOwnership(
       continue;
     }
     if (!matchesWindowsProcessIdentity(current, identity)) {
+      if (retireReusedWindowsContentProcess(state, current, identity)) {
+        continue;
+      }
       issues.push(
         `Owned Floorp PID ${processId} no longer matches its captured identity`,
       );
@@ -982,6 +1012,16 @@ export function promoteWindowsReadyBrowserOwnership(
       continue;
     }
     if (!matchesWindowsProcessIdentityStrict(current, identity)) {
+      if (
+        retireReusedWindowsContentProcess(
+          state,
+          current,
+          identity,
+          listenerRoot.processId,
+        )
+      ) {
+        continue;
+      }
       state.blockedFloorpProcessIds.add(processId);
       issues.push(
         `Previously owned Floorp PID ${processId} no longer matches its captured identity`,
@@ -1162,13 +1202,39 @@ async function refreshWindowsOwnershipOrThrow(
   deps: WindowsProcessControlDeps,
 ): Promise<void> {
   try {
+    const processes = await deps.listProcesses();
     const issues = reconcileWindowsFloorpOwnership(
       state,
-      await deps.listProcesses(),
+      processes,
     );
     if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+      const mismatches = [...state.ownedFloorp.values()].flatMap((expected) => {
+        const current = processes.find((row) =>
+          row.processId === expected.processId
+        );
+        return current && !matchesWindowsProcessIdentity(current, expected)
+          ? [{
+            pid: expected.processId,
+            expected: {
+              creationDate: expected.creationDate,
+              executablePath: expected.executablePath,
+              content: isContentProcessCommandLine(expected.commandLine),
+            },
+            current: {
+              creationDate: current.creationDate,
+              executablePath: current.executablePath,
+              parentPid: current.parentProcessId,
+              content: isContentProcessCommandLine(current.commandLine),
+            },
+          }]
+          : [];
+      });
       throw new Error(
-        [...issues, ...state.ambiguousFloorp].join(" | "),
+        [
+          ...issues,
+          ...state.ambiguousFloorp,
+          ...(mismatches.length ? [JSON.stringify({ mismatches })] : []),
+        ].join(" | "),
       );
     }
   } catch (error) {
@@ -1499,12 +1565,119 @@ export async function stopWindowsAutoStartedBrowser(
 
 function startTestBrowserProcess(): Deno.ChildProcess {
   const denoPath = Deno.execPath();
+  // Retain Windows launcher/pipe errors when a browser stops making progress.
+  const output = Deno.build.os === "windows" ||
+      Deno.env.get("GITHUB_ACTIONS") === "true"
+    ? "inherit"
+    : "null";
   return new Deno.Command(denoPath, {
     args: ["task", "feles-build", "test"],
     cwd: PROJECT_ROOT,
-    stdout: "null",
-    stderr: "null",
+    stdout: output,
+    stderr: output,
   }).spawn();
+}
+
+async function captureDiagnosticCommand(
+  command: string,
+  args: string[],
+  filename: string,
+  timeoutMs = 20_000,
+): Promise<string> {
+  const child = new Deno.Command(command, {
+    args,
+    cwd: PROJECT_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const timeout = setTimeout(() => {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // The diagnostic command may already have exited.
+    }
+  }, timeoutMs);
+  try {
+    const output = await child.output();
+    Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
+    const decoder = new TextDecoder();
+    Deno.writeTextFileSync(
+      filename,
+      `exitCode=${output.code}\n${decoder.decode(output.stdout)}\n${
+        decoder.decode(output.stderr)
+      }`,
+    );
+    return path.relative(PROJECT_ROOT, filename);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** Collect diagnostics before terminating an owned browser after a test failure. */
+async function captureBrowserFailureDiagnostics(
+  runId: string,
+): Promise<string> {
+  const reports: string[] = [];
+  if (
+    Deno.build.os === "windows" && Deno.env.get("GITHUB_ACTIONS") === "true"
+  ) {
+    try {
+      reports.push(
+        await captureDiagnosticCommand(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            path.join(
+              PROJECT_ROOT,
+              "tools",
+              "capture_windows_test_desktop.ps1",
+            ),
+            "-OutputDirectory",
+            TEST_LOG_DIR,
+          ],
+          path.join(TEST_LOG_DIR, `desktop-capture-${runId}.log`),
+          45_000,
+        ),
+      );
+    } catch (error) {
+      console.error(
+        `Could not capture the CI desktop: ${errorToMessage(error)}`,
+      );
+    }
+  }
+  const script = `JSON.stringify({
+    windows: Array.from(Services.wm.getEnumerator(null), win => ({
+      type: win.document?.documentElement?.getAttribute("windowtype"),
+      title: win.document?.title,
+      closed: win.closed,
+      readyState: win.document?.readyState,
+      delayedStartupFinished: win.gBrowserInit?.delayedStartupFinished,
+      tests: win.__NORA_TEST_PROGRESS__,
+    })),
+    console: Services.console.getMessageArray().slice(-100).map(message => ({
+      message: message.errorMessage || message.message || String(message),
+      source: message.sourceName,
+      line: message.lineNumber,
+    })),
+  })`;
+  reports.push(
+    await captureDiagnosticCommand(
+      Deno.execPath(),
+      [
+        "run",
+        "-A",
+        path.join(PROJECT_ROOT, "tools", "dev-tool.ts"),
+        "eval",
+        script,
+      ],
+      path.join(TEST_LOG_DIR, `diagnostics-${runId}.log`),
+    ),
+  );
+  return reports.join(", ");
 }
 
 async function waitForAutoStartedBrowser(
@@ -2430,12 +2603,40 @@ async function main(): Promise<number> {
       }
       if (failed > 0) {
         exitCode = 1;
+        if (autoStartedBrowser && ownedRunId) {
+          try {
+            const diagnostics = await captureBrowserFailureDiagnostics(
+              ownedRunId,
+            );
+            writeLine("INFO", `Browser failure diagnostics: ${diagnostics}`);
+          } catch (error) {
+            writeLine(
+              "ERROR",
+              `Could not collect browser diagnostics: ${errorToMessage(error)}`,
+            );
+          }
+        }
       }
     } catch (error) {
       writeLine(
         "ERROR",
         `Browser test collection failed: ${errorToMessage(error)}`,
       );
+      if (autoStartedBrowser && ownedRunId) {
+        try {
+          const diagnostics = await captureBrowserFailureDiagnostics(
+            ownedRunId,
+          );
+          writeLine("INFO", `Browser failure diagnostics: ${diagnostics}`);
+        } catch (diagnosticError) {
+          writeLine(
+            "ERROR",
+            `Could not collect browser diagnostics: ${
+              errorToMessage(diagnosticError)
+            }`,
+          );
+        }
+      }
       writeLine(
         "ERROR",
         `Hint: increase timeout with --timeout-ms <ms> (current: ${options.timeoutMs}) or ensure browser startup is stable.`,
@@ -2449,7 +2650,10 @@ async function main(): Promise<number> {
     try {
       await stopPageTestServers?.();
     } catch (error) {
-      writeLine("ERROR", `Failed to stop UI test servers: ${errorToMessage(error)}`);
+      writeLine(
+        "ERROR",
+        `Failed to stop UI test servers: ${errorToMessage(error)}`,
+      );
       exitCode = 1;
     }
     if (autoStartedBrowser) {
