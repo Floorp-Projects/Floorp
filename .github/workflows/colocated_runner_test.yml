@@ -437,9 +437,22 @@ jobs:
 
   windows-workspaces:
     if: github.event_name == 'workflow_dispatch' && inputs.windows_workspaces_only
-    name: Windows workspace browser tests
+    name: Windows workspace / ${{ matrix.suite }}
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        suite:
+          - workspaces
+          - workspace-gestures
+          - workspace-session-indicator
+          - workspace-bookmarks
+          - command-palette
+          - workspace-overrides
+          - pages-modal-child
+          - modules
     env:
       MOZ_HEADLESS: "1"
       FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
@@ -463,6 +476,7 @@ jobs:
       - run: deno install
 
       - name: Validate and install locked Windows Runtime
+        id: runtime-install
         shell: pwsh
         run: |
           deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
@@ -470,63 +484,17 @@ jobs:
           deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Run workspace browser suites serially
+      - name: Run ${{ matrix.suite }} browser suite
+        if: ${{ !cancelled() && steps.runtime-install.outcome == 'success' }}
+        timeout-minutes: 10
         shell: pwsh
-        run: |
-          $resultsRoot = "_dist/windows-workspaces"
-          New-Item -ItemType Directory -Force -Path $resultsRoot | Out-Null
-          git rev-parse HEAD | Set-Content "$resultsRoot/source-commit.txt"
-          $suites = @(
-            @{ name = "workspaces"; near = "browser-features/chrome/common/workspaces"; files = 24 },
-            @{ name = "workspace-gestures"; near = "browser-features/chrome/common/workspace-gestures"; files = 3 },
-            @{ name = "workspace-session-indicator"; near = "browser-features/chrome/common/workspace-session-indicator"; files = 2 },
-            @{ name = "workspace-bookmarks"; near = "browser-features/chrome/common/workspace-bookmarks"; files = 2 },
-            @{ name = "command-palette"; near = "browser-features/chrome/common/command-palette"; files = 9 },
-            @{ name = "workspace-overrides"; near = "browser-features/chrome/static/overrides/modules/workspaces"; files = 2 },
-            @{ name = "pages-modal-child"; near = "browser-features/pages-modal-child"; files = 2 },
-            @{ name = "modules"; near = "browser-features/modules/modules/test"; files = 5 }
-          )
-          $results = @()
-          foreach ($suite in $suites) {
-            $suiteDir = "$resultsRoot/$($suite.name)"
-            New-Item -ItemType Directory -Force -Path $suiteDir | Out-Null
-            Remove-Item logs/test/latest.log -ErrorAction SilentlyContinue
-            Write-Output "::group::$($suite.name)"
-            deno task test --near $suite.near --timeout-ms 300000 --startup-timeout-ms 180000 2>&1 |
-              Tee-Object -FilePath "$suiteDir/runner.log"
-            $exitCode = $LASTEXITCODE
-            $coverageVerified = $false
-            if (Test-Path logs/test/latest.log) {
-              Copy-Item logs/test/latest.log "$suiteDir/collected.log"
-              $log = Get-Content logs/test/latest.log -Raw
-              $coverageVerified = $log -match "(?m)^\[[^\r\n]+\] \[INFO\] Browser test result: $($suite.files) passed, 0 failed\r?$" -and
-                $log -match "(?m)^\[META\] exitCode=0\r?$"
-            }
-            foreach ($evidence in @("prefs.js", "workspace-bookmarks-benchmark.json")) {
-              $source = "_dist/profile/test/$evidence"
-              if (Test-Path $source) { Copy-Item $source "$suiteDir/$evidence" }
-            }
-            $results += [PSCustomObject]@{
-              suite = $suite.name
-              near = $suite.near
-              expectedFiles = $suite.files
-              exitCode = $exitCode
-              coverageVerified = $coverageVerified
-            }
-            $results | ConvertTo-Json -Depth 3 | Set-Content "$resultsRoot/results.json"
-            Write-Output "::endgroup::"
-          }
-          $failed = @($results | Where-Object { $_.exitCode -ne 0 -or !$_.coverageVerified })
-          if ($failed.Count -gt 0) {
-            $failed | Format-Table | Out-String | Write-Output
-            throw "$($failed.Count) Windows workspace suite(s) failed or had incomplete coverage."
-          }
+        run: ./tools/run_windows_workspace_suite.ps1 -Suite '${{ matrix.suite }}'
 
       - name: Upload Windows workspace evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: windows-workspace-tests-${{ github.run_attempt }}
+          name: windows-workspace-tests-${{ matrix.suite }}-${{ github.run_attempt }}
           path: |
             _dist/windows-workspaces/
             logs/test/

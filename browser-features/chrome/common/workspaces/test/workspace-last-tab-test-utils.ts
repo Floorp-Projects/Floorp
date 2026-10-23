@@ -15,6 +15,24 @@ import {
 import type { TestWindow } from "./workspace-last-tab-test-types.ts";
 
 const CLOSE_PREF = "browser.tabs.closeWindowWithLastTab";
+const PHASE_PREF = "nora.tests.last_tab.phase";
+const { setTimeout: nativeSetTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
+function recordNativePhase(phase: string): void {
+  Services.prefs.setStringPref(
+    PHASE_PREF,
+    JSON.stringify({
+      phase,
+      test: globalThis.__NORA_TEST_PROGRESS__?.testName,
+      at: new Date().toISOString(),
+    }),
+  );
+  // A native call can block the window's timers as well as the test timeout.
+  // Keep its last checkpoint available to the host-side CI artifact collector.
+  Services.prefs.savePrefFile(null as unknown as nsIFile);
+}
 
 export async function waitFor(
   predicate: () => boolean,
@@ -23,14 +41,14 @@ export async function waitFor(
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (!predicate() && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => nativeSetTimeout(resolve, 50));
   }
   assert(predicate(), message);
 }
 
 export async function settle(): Promise<void> {
   // Window closure is deliberately deferred by the workspace manager.
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  await new Promise((resolve) => nativeSetTimeout(resolve, 250));
 }
 
 export async function withWindows(
@@ -60,6 +78,8 @@ export async function withWindows(
   const hadPendingExit = Services.prefs.prefHasUserValue(
     WORKSPACE_PENDING_EXIT_PREF_NAME,
   );
+  const previousPhase = Services.prefs.getStringPref(PHASE_PREF, "");
+  const hadPhase = Services.prefs.prefHasUserValue(PHASE_PREF);
   try {
     Services.prefs.setBoolPref(WORKSPACE_ENABLED_PREF_NAME, workspaceEnabled);
     Services.prefs.setBoolPref(CLOSE_PREF, closeWithLastTab);
@@ -71,9 +91,11 @@ export async function withWindows(
       }),
     );
     await check(async () => {
+      recordNativePhase("before OpenBrowserWindow");
       const win = (globalThis as unknown as {
         OpenBrowserWindow(): TestWindow;
       }).OpenBrowserWindow();
+      recordNativePhase("after OpenBrowserWindow");
       windows.push(win);
       await waitFor(
         () => Boolean(win.gBrowserInit?.delayedStartupFinished),
@@ -93,6 +115,7 @@ export async function withWindows(
         );
       }
       await settle();
+      recordNativePhase("test window ready");
       assertEquals(
         Boolean(win.workspacesFuncs),
         workspaceEnabled,
@@ -117,7 +140,11 @@ export async function withWindows(
     );
   } finally {
     for (const win of windows) {
-      if (!win.closed) win.close();
+      if (!win.closed) {
+        recordNativePhase("before cleanup window.close");
+        win.close();
+        recordNativePhase("after cleanup window.close");
+      }
     }
     await waitFor(
       () => windows.every((win) => win.closed),
@@ -143,6 +170,8 @@ export async function withWindows(
       closeWithLastTab,
       "closing windows preserves the native preference",
     );
+    if (hadPhase) Services.prefs.setStringPref(PHASE_PREF, previousPhase);
+    else Services.prefs.clearUserPref(PHASE_PREF);
   }
 }
 
@@ -174,14 +203,18 @@ export function nativeHiddenTabTests(
         withWindows(closeWithLastTab, false, async (open) => {
           const win = await open();
           const closing = win.gBrowser.selectedTab as XULElement;
+          recordNativePhase("before addTab");
           const other = win.gBrowser.addTab("about:blank", {
             triggeringPrincipal: Services.scriptSecurityManager
               .getSystemPrincipal(),
             inBackground: true,
           }) as XULElement;
+          recordNativePhase("after addTab");
           if (hiddenKind === "collapsed-group") {
+            recordNativePhase("before addTabGroup");
             const group = win.gBrowser.addTabGroup([other]);
             group.collapsed = true;
+            recordNativePhase("after addTabGroup collapse");
             assert(
               !other.hasAttribute("hidden"),
               "collapsed group uses visibility, not the hidden attribute",
@@ -205,16 +238,20 @@ export function nativeHiddenTabTests(
                 "extension hides a tab in the current workspace",
               );
             }
+            recordNativePhase("before hideTab");
             win.gBrowser.hideTab(
               other,
               "workspace-last-tab-test@example.invalid",
             );
+            recordNativePhase("after hideTab");
             assert(
               other.hasAttribute("hidden"),
               "native hideTab hides the other tab",
             );
           }
+          recordNativePhase("before removeTab");
           win.gBrowser.removeTab(closing, { animate: false });
+          recordNativePhase("after removeTab");
           if (closeWithLastTab && hiddenKind !== "collapsed-group") {
             await waitFor(
               () => win.closed,
