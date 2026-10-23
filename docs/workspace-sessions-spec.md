@@ -424,14 +424,16 @@ A と並行して、B の URL バー・保存／削除・Sync／GUID・ネイテ
 
 Linux / Runtime 157.0（BuildID `20260926171135`）で、ワークスペース24ファイル（一括実行）、ジェスチャー3ファイル、パレットの既存9ファイル、ブックマークUIの2ファイル、Runtime連携・中核・URLバー・実Places・ネイティブ移動の5ファイルが成功した。セッション表示2ファイル、リンク処理2ファイル、モーダルページ2ファイルも含め、合計49ブラウザーテストファイルが成功した。Cookie・localStorage・IndexedDB は実タブのコンテナIDから生成した同一サイトのprincipalで、A/Bの分離、同じAを共有するワークスペース、Aのサイトデータ削除後のB保持を確認した。
 
-実Placesの100件／10,000件で20回ずつ測定したSQL検索とキャッシュ切り替えのp95は次のとおり。テスト機上の局所測定であり、全UIの応答時間や別OS・実機の性能を保証する値ではない。[測定結果のJSON](benchmarks/workspace-bookmarks-linux.json)も保存した。再実行するとテストプロファイルの `workspace-bookmarks-benchmark.json` に最新結果が保存される。
+Windows x64（OS ビルド26100、同じRuntime 157.0）でも、通常のネイティブウィンドウで同じ8系統・49ブラウザーテストファイルがすべて成功した。全成果物のソースID・件数・終了状態を照合した。[Windowsの検証結果と再現手順](workspace-windows-validation.md)に実行URL、対象コミット、プロファイル設定、実機で確認する項目を記録した。Windowsの直接3本指入力や物理タッチパッドの検証を含む結果ではない。
+
+Linuxの実Placesの100件／10,000件で20回ずつ測定したSQL検索とキャッシュ切り替えのp95は次のとおり。テスト機上の局所測定であり、全UIの応答時間や別OS・実機の性能を保証する値ではない。[測定結果のJSON](benchmarks/workspace-bookmarks-linux.json)も保存した。再実行するとテストプロファイルの `workspace-bookmarks-benchmark.json` に最新結果が保存される。
 
 | 件数 | 制限なしSQL | 表示制限付きSQL | 範囲切り替えと可視GUID取得 |
 | --- | --- | --- | --- |
 | 100 | 0.30ms | 0.41ms | 0.37ms |
 | 10,000 | 0.44ms | 5.06ms | 2.76ms |
 
-初回の可視範囲計算は10,000件で12.68msだった。ホスト側は322件が成功し、権限が必要な逆パッチの実Gitテスト2件も別途成功した。型・lint・フォーマット、対応するsource/artifactパッチ、固定Runtimeへの全commonパッチの順序適用も確認した。変更を含むloader-features・loader-modules・pages-modal-child・pages-settingsの本番バンドル4対象もすべて成功し、新しいESMのmanifest登録を確認した。
+初回の可視範囲計算は10,000件で12.68msだった。ホスト側は逆パッチの実Gitテスト2件を含む322件が成功した。型・lint・フォーマット、対応するsource/artifactパッチ、固定Runtimeへの全commonパッチの順序適用も確認した。変更を含むloader-features・loader-modules・pages-modal-child・pages-settingsの本番バンドル4対象もすべて成功し、新しいESMのmanifest登録を確認した。
 
 ネイティブの WebIDL 解析、C++ 状態機械、固定ソースへの全パッチの合成は確認した。ネイティブ全体のビルドと実機操作、macOS の実行は未実施。直接3本指入力は初期オフかつ実機の検証フラグを要求する。macOS／Windows では指本数を保証できる直接経路を実装しておらず、OS のキー変換と端停止アクションを利用する。
 

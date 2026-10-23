@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-10-23T14:46:30.952Z",
+  "measuredAt": "2026-10-23T16:13:30.965Z",
   "runtime": {
     "os": "WINNT",
     "version": "157.0",
@@ -10,17 +10,17 @@
   "reports": [
     {
       "bookmarks": 100,
-      "coldScopeMs": 0.1610000000000582,
-      "baselineQueryP95Ms": 0.16699999999946158,
-      "scopedQueryP95Ms": 0.2026000000005297,
-      "switchP95Ms": 0.2342000000007829
+      "coldScopeMs": 0.3585000000020955,
+      "baselineQueryP95Ms": 0.4742999999980384,
+      "scopedQueryP95Ms": 0.6000000000021828,
+      "switchP95Ms": 0.4753000000018801
     },
     {
       "bookmarks": 10000,
-      "coldScopeMs": 10.338199999998324,
-      "baselineQueryP95Ms": 2.657199999999648,
-      "scopedQueryP95Ms": 50.985499999998865,
-      "switchP95Ms": 2.4879000000019005
+      "coldScopeMs": 19.19409999999698,
+      "baselineQueryP95Ms": 0.30169999999998254,
+      "scopedQueryP95Ms": 11.379300000000512,
+      "switchP95Ms": 5.132400000002235
     }
   ]
 }

@@ -175,8 +175,15 @@ native-window creation otherwise blocked the browser's main thread in
 `fputs`/`fflush` → `WriteFile` on a console pipe, including with the original
 workspace implementation. This suppresses duplicate native stdout dumps from
 chrome console loggers; Console API storage, script-error reporting, and the
-test result preferences remain active. Development and staging profiles retain
-their existing console settings. No browser assertions are skipped.
+test result preferences remain active. Only Windows test startup injects this
+override. Development and staging currently reuse the same
+`_dist/profile/test` directory, so the saved value can remain in `prefs.js`
+after a test run. After a later `deno task feles-build dev` or
+`deno task feles-build stage` has regenerated `user.js`, open `about:config` in
+that developer profile and reset `devtools.console.stdout.chrome` to restore
+the Runtime default, or set a known previous value. The previous value is not
+automatically recovered. Installed user profiles are separate. No browser
+assertions are skipped.
 
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
@@ -315,7 +322,53 @@ Restore the tester's original gesture mappings after recording the results.
 
 ## Results
 
-Pending. Add the tested commit, GitHub Actions run URL, per-suite outcomes,
-Windows Runtime version/build ID, benchmark evidence, and any failures after
-the remote run completes. Record physical-device results separately; an
-automated browser success must not mark those checks complete.
+On 2026-10-23, all eight scopes passed: **49 browser test files, zero failures**.
+The tested source is `e71f90963ef88391afed4da3543e869382017442`:
+[complete Windows run](https://github.com/Floorp-Projects/Floorp/actions/runs/39983892188).
+Each artifact records that same source, the expected passing-file count,
+`selectedTestFile=null`, runner exit zero, and verified complete coverage.
+Browser result preferences also report `done` with every result successful.
+
+| Scope | Passing files |
+| --- | ---: |
+| Workspaces | 24 |
+| Workspace gestures | 3 |
+| Session indicator | 2 |
+| Workspace bookmarks | 2 |
+| Command palette | 9 |
+| Workspace link overrides | 2 |
+| Modal child page | 2 |
+| Runtime modules | 5 |
+| **Total** | **49** |
+
+The hosted environment was Windows x64, reported as
+`Microsoft Windows NT 10.0.26100.0`, with `MOZ_HEADLESS` absent. The locked native
+Runtime reported version `157.0`, BuildID `20260926171135`. All jobs also passed
+the Windows logging, process ownership, startup, and profile-generation
+regressions before launching the browser. The complete host suite passed
+322 tests on Linux, including the real-Git inverse-patch cases.
+
+The original workspace implementation plus the same test harness also passed
+the six cases in `nativeLastTabWorkspacesEnabled.test.ts` after the console
+setting change: [baseline Windows run](https://github.com/Floorp-Projects/Floorp/actions/runs/39983899024),
+source `c45c2ef9224a90bbbf8a81c4b1d8c01326b19bb9`. Before that change, both the
+feature and baseline runs blocked in the native output-flush stack described
+above. The baseline run checks that particular repeated-window failure; it is
+not additional feature coverage.
+
+The modules suite measured real Places queries with 20 samples per size. These
+are local measurements from the hosted runner, not complete UI latency or a
+cross-device performance guarantee. The [raw benchmark report](benchmarks/workspace-bookmarks-windows.json)
+was saved from that same passing source and run.
+
+| Bookmarks | Unrestricted SQL p95 | Scoped SQL p95 | Scope switch and visible GUIDs p95 |
+| --- | ---: | ---: | ---: |
+| 100 | 0.47ms | 0.60ms | 0.48ms |
+| 10,000 | 0.30ms | 11.38ms | 5.13ms |
+
+The first scope calculation for 10,000 bookmarks took 19.19ms.
+
+Physical touchpad input, gesture-to-key mappings on a real device, and native
+three-finger delivery remain unverified. Windows direct native three-finger
+input remains unimplemented. The automated success does not complete the
+physical checklist above or establish macOS runtime coverage.
