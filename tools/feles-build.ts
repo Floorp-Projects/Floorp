@@ -197,7 +197,12 @@ async function runTest(): Promise<void> {
     devPages: true,
     allowBrowserHttpLoader: true,
   });
-  DevEnvManager.setup({ allowBrowserHttpLoader: true });
+  DevEnvManager.setup({
+    allowBrowserHttpLoader: true,
+    // Preserve browser console events without synchronous native stdout writes
+    // that can block the Windows browser's UI thread on subprocess pipes.
+    chromeConsoleStdout: Deno.build.os === "windows" ? false : undefined,
+  });
 
   // Graceful shutdown
   Deno.addSignalListener("SIGINT", () => {
