@@ -166,7 +166,10 @@ regression tests on Windows. Browser stdout and stderr write directly to files
 under `logs/test/browser-*-stdout.log` and `browser-*-stderr.log`; an asynchronous
 reader preserves the launcher output and Marionette discovery. Native browser
 console writes therefore do not depend on how quickly the parent consumes a
-pipe. The raw files are included in the artifacts.
+pipe. The autostarted development launcher also writes directly to
+`logs/test/launcher-*-stdout.log` and `launcher-*-stderr.log`, without forwarding
+its output through the runner's console. All raw files are included in the
+artifacts.
 
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
@@ -189,8 +192,9 @@ Each contains:
 Inspect startup and teardown errors separately from browser assertions. A
 message that `feles-build test` exited early is not a passing browser run. Its
 launcher stdout/stderr are retained on Windows and in GitHub Actions, appearing
-in the step output and the suite's `runner.log`. Other platforms' local runs
-remain quiet. If result collection fails for an automatically started browser,
+in the raw launcher files on Windows and in the step output on other CI hosts.
+Other platforms' local runs remain quiet. If result collection fails for an
+automatically started browser,
 the runner attempts to record window state, current test progress, and recent
 browser console messages before teardown. The Marionette diagnostic has a
 20-second stop timer. Windows CI also attempts a desktop and native thread

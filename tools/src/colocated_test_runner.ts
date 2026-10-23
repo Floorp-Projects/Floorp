@@ -16,6 +16,8 @@ import {
 } from "./colocated_test_utils.ts";
 import { sleep } from "./async_utils.ts";
 import { startPageTestServers } from "./page_test_servers.ts";
+import { ProcessUtils } from "./utils.ts";
+import type { FileOutputProcess } from "./process_output_types.ts";
 import {
   type BrowserTestCollection,
   type BrowserTestResult,
@@ -1705,13 +1707,25 @@ export async function stopWindowsAutoStartedBrowser(
   }
 }
 
-function startTestBrowserProcess(): Deno.ChildProcess {
+function startTestBrowserProcess(
+  writeLog?: (level: LogLevel, message: string) => void,
+): FileOutputProcess {
   const denoPath = Deno.execPath();
-  // Retain Windows launcher/pipe errors when a browser stops making progress.
-  const output = Deno.build.os === "windows" ||
-      Deno.env.get("GITHUB_ACTIONS") === "true"
-    ? "inherit"
-    : "null";
+  if (Deno.build.os === "windows") {
+    Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
+    const prefix = path.join(TEST_LOG_DIR, `launcher-${crypto.randomUUID()}`);
+    const files = {
+      stdout: `${prefix}-stdout.log`,
+      stderr: `${prefix}-stderr.log`,
+    };
+    writeLog?.("INFO", `Launcher output: ${files.stdout}, ${files.stderr}`);
+    return ProcessUtils.spawnCommandWithFileOutput(
+      [denoPath, "task", "feles-build", "test"],
+      files,
+      PROJECT_ROOT,
+    );
+  }
+  const output = Deno.env.get("GITHUB_ACTIONS") === "true" ? "inherit" : "null";
   return new Deno.Command(denoPath, {
     args: ["task", "feles-build", "test"],
     cwd: PROJECT_ROOT,
@@ -1823,7 +1837,7 @@ async function captureBrowserFailureDiagnostics(
 }
 
 async function waitForAutoStartedBrowser(
-  child: Deno.ChildProcess,
+  child: FileOutputProcess,
   startupTimeoutMs: number,
   windowsState?: WindowsAutoStartState,
   windowsDeps?: WindowsProcessControlDeps,
@@ -1965,7 +1979,7 @@ function sanitizeKillTargets(pids: number[]): number[] {
 }
 
 async function stopPosixProcessTree(
-  child: Deno.ChildProcess,
+  child: FileOutputProcess,
   rootPid: number,
   writeLog?: (level: LogLevel, message: string) => void,
 ): Promise<void> {
@@ -2093,7 +2107,7 @@ export async function stopWindowsAutoStartedBrowserWithRootFallback(
 }
 
 async function stopAutoStartedBrowser(
-  child: Deno.ChildProcess,
+  child: FileOutputProcess,
   windowsState: WindowsAutoStartState | null,
   windowsDeps: WindowsProcessControlDeps | null,
   writeLog?: (level: LogLevel, message: string) => void,
@@ -2406,7 +2420,7 @@ async function main(): Promise<number> {
     `colocated-${formatTimestampForFile(startedAt)}.log`,
   );
   let exitCode = 0;
-  let autoStartedBrowser: Deno.ChildProcess | null = null;
+  let autoStartedBrowser: FileOutputProcess | null = null;
   let windowsAutoStartState: WindowsAutoStartState | null = null;
   let windowsProcessDeps: WindowsProcessControlDeps | null = null;
   let ownedRunId: string | undefined;
@@ -2543,7 +2557,7 @@ async function main(): Promise<number> {
             await windowsProcessDeps.listProcesses(),
           );
         }
-        autoStartedBrowser = startTestBrowserProcess();
+        autoStartedBrowser = startTestBrowserProcess(writeLine);
         if (Deno.build.os === "windows") {
           if (!windowsProcessDeps || autoStartedBrowser.pid === undefined) {
             throw new Error(
