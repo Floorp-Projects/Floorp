@@ -245,7 +245,8 @@ required choices for a user's touchpad mapping.
 The test observes trusted browser key events and checks workspace selection,
 held-key repetition, end stops, selected-tab restoration, and foreground-window
 targeting. Repetition is verified from actual `KeyboardEvent.repeat` values;
-the helper sends repeated keydowns without an intervening keyup. Windows
+the helper spaces repeated keydowns 100ms apart without an intervening keyup,
+so the native event queue can deliver observable repeat events. Windows
 desktop/input failures fail the test. The controller-only headless command
 above remains available for tests that do not require native input.
 

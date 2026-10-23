@@ -131,6 +131,14 @@ function Assert-TargetWindow {
   }
 }
 
+function Send-CheckedInput([FloorpWorkspaceInputNative+INPUT[]]$Inputs) {
+  $sent = [FloorpWorkspaceInputNative]::Send($Inputs)
+  $evidence.sentInputCount += $sent
+  if ($sent -ne $Inputs.Count) {
+    throw "SendInput inserted $sent of $($Inputs.Count) events (Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error()))."
+  }
+}
+
 try {
   $expectedExecutable = [IO.Path]::GetFullPath(
     (Join-Path $PSScriptRoot "..\_dist\bin\floorp\floorp.exe")
@@ -176,18 +184,30 @@ try {
   $inputs = [Collections.Generic.List[FloorpWorkspaceInputNative+INPUT]]::new()
   $inputs.Add([FloorpWorkspaceInputNative]::Key(0xA2, $false)) # ControlLeft
   $inputs.Add([FloorpWorkspaceInputNative]::Key(0xA0, $false)) # ShiftLeft
-  for ($index = 0; $index -lt $RepeatCount; $index++) {
-    $inputs.Add([FloorpWorkspaceInputNative]::Key($keyCode, $false))
-  }
-  $inputs.Add([FloorpWorkspaceInputNative]::Key($keyCode, $true))
-  $inputs.Add([FloorpWorkspaceInputNative]::Key(0xA0, $true))
-  $inputs.Add([FloorpWorkspaceInputNative]::Key(0xA2, $true))
-  $evidence.expectedInputCount = $inputs.Count
-  # One OS input batch includes releases, even if the caller is interrupted.
+  $inputs.Add([FloorpWorkspaceInputNative]::Key($keyCode, $false))
+  $releases = @(
+    [FloorpWorkspaceInputNative]::Key($keyCode, $true)
+    [FloorpWorkspaceInputNative]::Key(0xA0, $true)
+    [FloorpWorkspaceInputNative]::Key(0xA2, $true)
+  )
+  $evidence.expectedInputCount = $RepeatCount + 5
   $injectionAttempted = $true
-  $evidence.sentInputCount = [FloorpWorkspaceInputNative]::Send($inputs.ToArray())
-  if ($evidence.sentInputCount -ne $evidence.expectedInputCount) {
-    throw "SendInput inserted $($evidence.sentInputCount) of $($evidence.expectedInputCount) events (Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error()))."
+  if ($RepeatCount -eq 1) {
+    # A single press includes its releases in one OS input batch.
+    $inputs.AddRange([FloorpWorkspaceInputNative+INPUT[]]$releases)
+    Send-CheckedInput $inputs.ToArray()
+  } else {
+    Send-CheckedInput $inputs.ToArray()
+    for ($index = 1; $index -lt $RepeatCount; $index++) {
+      # Let Gecko process each held keydown instead of coalescing a burst.
+      Start-Sleep -Milliseconds 100
+      Assert-TargetWindow
+      if ([FloorpWorkspaceInputNative]::GetForegroundWindow() -ne $targetWindow) {
+        throw "The browser lost foreground input during the held key sequence."
+      }
+      Send-CheckedInput @([FloorpWorkspaceInputNative]::Key($keyCode, $false))
+    }
+    Send-CheckedInput $releases
   }
   Assert-TargetWindow
   if ([FloorpWorkspaceInputNative]::GetForegroundWindow() -ne $targetWindow) {
