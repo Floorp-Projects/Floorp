@@ -357,7 +357,7 @@ Restore the tester's original gesture mappings after recording the results.
 
 ## Results
 
-On 2026-10-23, all eight scopes passed: **49 browser test files, zero failures**.
+On 2026-10-24 JST (2026-10-23 UTC), all eight scopes passed: **49 browser test files, zero failures**.
 The tested source is `e71f90963ef88391afed4da3543e869382017442`:
 [complete Windows run](https://github.com/Floorp-Projects/Floorp/actions/runs/39983892188).
 Each artifact records that same source, the expected passing-file count,
@@ -402,6 +402,31 @@ was saved from that same passing source and run.
 | 10,000 | 0.30ms | 11.38ms | 5.13ms |
 
 The first scope calculation for 10,000 bookmarks took 19.19ms.
+
+### Additional OS keyboard result
+
+On 2026-10-24 JST, the additional Windows OS-input test passed all **nine native
+input steps** within the three-file gesture scope:
+[Windows OS-input run](https://github.com/Floorp-Projects/Floorp/actions/runs/39990644929),
+source `1e279cdf78b4e20f6141621f935f8b7af5753498`. The feature implementation is
+unchanged from the complete 49-file run above; this follow-up adds test and CI
+coverage.
+
+The raw evidence confirms seven actual workspace switches, both end stops,
+last-selected-tab restoration, and foreground targeting in two browser
+windows. Three held keydowns produced the actual repeat flags
+`[false, true, true]` while advancing exactly once with another workspace still
+reachable. Each step verified the native foreground target, complete OS input
+counts, and modifier-key release. The runner finished with three passing files,
+zero failures, and a successful verified teardown.
+
+The [saved verification summary](validation/workspace-windows-input.json)
+records the source/run identity and per-step counts and repeat flags. The full
+`workspace-windows-input-evidence.json`, including observed trusted key events,
+is retained in the run's `windows-workspace-tests-workspace-gestures-1` artifact.
+Linux's three gesture files and the 322 host tests also passed after adding the
+fixture. PowerShell 7 and paced native repeat delivery are prerequisites for
+reproducing the native case.
 
 Physical touchpad input, gesture-to-key mappings on a real device, and native
 three-finger delivery remain unverified. Windows direct native three-finger

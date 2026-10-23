@@ -1,0 +1,164 @@
+{
+  "workflowRunUrl": "https://github.com/Floorp-Projects/Floorp/actions/runs/39990644929",
+  "sourceCommit": "1e279cdf78b4e20f6141621f935f8b7af5753498",
+  "status": "passed",
+  "inputMethod": "Win32.SendInput",
+  "startedAt": "2026-10-23T16:56:59.948Z",
+  "finishedAt": "2026-10-23T16:57:20.260Z",
+  "localDate": "2026-10-24",
+  "localTimezone": "Asia/Tokyo",
+  "runtime": {
+    "os": "WINNT",
+    "version": "157.0",
+    "buildId": "20260926171135"
+  },
+  "environment": {
+    "os": "Microsoft Windows NT 10.0.26100.0",
+    "userInteractive": true,
+    "sessionId": 2,
+    "headlessEnvironmentPresent": false
+  },
+  "browserTestFiles": 3,
+  "nativeSteps": 9,
+  "physicalTouchpadTested": false,
+  "osTouchpadMapperTested": false,
+  "steps": [
+    {
+      "name": "B to C",
+      "target": "primary",
+      "direction": "Next",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "C to B",
+      "target": "primary",
+      "direction": "Previous",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "B to A",
+      "target": "primary",
+      "direction": "Previous",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "held next advances once",
+      "target": "primary",
+      "direction": "Next",
+      "sentInputCount": 8,
+      "expectedInputCount": 8,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 3,
+      "observedRepeatFlags": [
+        false,
+        true,
+        true
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "B to final C",
+      "target": "primary",
+      "direction": "Next",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "next stops at final C",
+      "target": "primary",
+      "direction": "Next",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 0
+    },
+    {
+      "name": "previous stops at global start",
+      "target": "primary",
+      "direction": "Previous",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 0
+    },
+    {
+      "name": "foreground secondary only",
+      "target": "secondary",
+      "direction": "Next",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    },
+    {
+      "name": "foreground primary only",
+      "target": "primary",
+      "direction": "Previous",
+      "sentInputCount": 6,
+      "expectedInputCount": 6,
+      "cleanupInputCount": 3,
+      "observedKeydowns": 1,
+      "observedRepeatFlags": [
+        false
+      ],
+      "allKeydownsTrusted": true,
+      "foregroundVerified": true,
+      "workspaceChanges": 1
+    }
+  ]
+}
