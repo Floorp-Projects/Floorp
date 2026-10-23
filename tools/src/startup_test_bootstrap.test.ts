@@ -5,6 +5,10 @@ import {
   runTestBootstrapWithFailureReporting,
   type TestBootstrapPrefs,
 } from "../../bridge/startup/src/test_bootstrap_failure.ts";
+import {
+  startTestBootstrap,
+  waitForTestOwnerStartup,
+} from "../../bridge/startup/src/test_bootstrap_lifecycle.ts";
 
 class FakePrefs implements TestBootstrapPrefs {
   runId = "";
@@ -146,4 +150,153 @@ Deno.test("run-id read failure remains uncorrelated and preserves startup failur
   assertStrictEquals(rejection, original);
   assertEquals(prefs.writes, []);
   assertEquals(prefs.saves, []);
+});
+
+function deferred() {
+  let resolve!: () => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<void>((done, fail) => {
+    resolve = done;
+    reject = fail;
+  });
+  return { promise, resolve, reject };
+}
+
+Deno.test("detached startup returns before tests and orders feature and owner readiness", async () => {
+  const prefs = new FakePrefs();
+  prefs.runId = "detached-owner";
+  const features = deferred();
+  const ownerReady = deferred();
+  const testsStarted = deferred();
+  const testsFinished = deferred();
+  const events: string[] = [];
+  const errors: unknown[] = [];
+  const returned = startTestBootstrap(prefs, {
+    initializeFeatures() {
+      events.push("features");
+      return features.promise;
+    },
+    waitForOwnerStartup() {
+      events.push("owner-ready-wait");
+      return ownerReady.promise;
+    },
+    executeTests() {
+      events.push("tests");
+      testsStarted.resolve();
+      return testsFinished.promise;
+    },
+    recordStartupError: (error) => errors.push(error),
+    reportRejectedBootstrap: (error) => errors.push(error),
+  });
+  assertEquals(returned, undefined);
+  assertEquals(events, ["features"]);
+  features.resolve();
+  await Promise.resolve();
+  assertEquals(events, ["features", "owner-ready-wait"]);
+  ownerReady.resolve();
+  await testsStarted.promise;
+  assertEquals(events, ["features", "owner-ready-wait", "tests"]);
+  testsFinished.resolve();
+  await Promise.resolve();
+  assertEquals(errors, []);
+  assertEquals(prefs.writes, []);
+});
+
+Deno.test("detached readiness rejection publishes the originally captured run and is handled", async () => {
+  const prefs = new FakePrefs();
+  prefs.runId = "original-owner";
+  const ownerReady = deferred();
+  const reported = deferred();
+  const original = new Error("owner window failed to finish startup");
+  let testsStarted = false;
+  let rejected: unknown;
+  startTestBootstrap(prefs, {
+    initializeFeatures: () => Promise.resolve(),
+    waitForOwnerStartup: () => ownerReady.promise,
+    executeTests() {
+      testsStarted = true;
+      return Promise.resolve();
+    },
+    recordStartupError: () => {},
+    reportRejectedBootstrap(error) {
+      rejected = error;
+      reported.resolve();
+      throw new Error("reporting must not create an unhandled rejection");
+    },
+  });
+  prefs.runId = "later-owner";
+  await Promise.resolve();
+  ownerReady.reject(original);
+  await reported.promise;
+  assertStrictEquals(rejected, original);
+  assertEquals(testsStarted, false);
+  assertEquals(JSON.parse(prefs.writes[0].value).runId, "original-owner");
+  assertEquals(prefs.saves, [null]);
+});
+
+class FakeOwnerWindow extends EventTarget {
+  closed = false;
+  document = { readyState: "loading" };
+  gBrowserInit = { delayedStartupFinished: false };
+}
+
+Deno.test("owner readiness requires load and that owner's delayed startup", async () => {
+  const owner = new FakeOwnerWindow();
+  const observers = new Set<(subject: unknown) => void>();
+  const pending = waitForTestOwnerStartup(owner, (observer) => {
+    observers.add(observer);
+    return () => observers.delete(observer);
+  });
+  let ready = false;
+  void pending.then(() => ready = true);
+  owner.document.readyState = "complete";
+  owner.dispatchEvent(new Event("load"));
+  await Promise.resolve();
+  assertEquals(ready, false);
+  owner.gBrowserInit.delayedStartupFinished = true;
+  for (const observer of observers) observer(new FakeOwnerWindow());
+  await Promise.resolve();
+  assertEquals(ready, false);
+  for (const observer of observers) observer(owner);
+  await pending;
+  assertEquals(ready, true);
+  assertEquals(observers.size, 0);
+});
+
+Deno.test("owner delayed startup cannot bypass an unfinished document load", async () => {
+  const owner = new FakeOwnerWindow();
+  const observers = new Set<(subject: unknown) => void>();
+  const pending = waitForTestOwnerStartup(owner, (observer) => {
+    observers.add(observer);
+    return () => observers.delete(observer);
+  });
+  let ready = false;
+  void pending.then(() => ready = true);
+  owner.gBrowserInit.delayedStartupFinished = true;
+  for (const observer of observers) observer(owner);
+  await Promise.resolve();
+  assertEquals(ready, false);
+  owner.document.readyState = "complete";
+  owner.dispatchEvent(new Event("load"));
+  await pending;
+  assertEquals(ready, true);
+  assertEquals(observers.size, 0);
+});
+
+Deno.test("owner startup closure and timeout reject and release observers", async () => {
+  for (const reason of ["closed", "timeout"]) {
+    const owner = new FakeOwnerWindow();
+    const observers = new Set<(subject: unknown) => void>();
+    const pending = waitForTestOwnerStartup(owner, (observer) => {
+      observers.add(observer);
+      return () => observers.delete(observer);
+    }, 5);
+    if (reason === "closed") {
+      owner.closed = true;
+      owner.dispatchEvent(new Event("unload"));
+    }
+    const rejection = await captureRejection(pending);
+    assertEquals(rejection instanceof Error, true);
+    assertEquals(observers.size, 0);
+  }
 });

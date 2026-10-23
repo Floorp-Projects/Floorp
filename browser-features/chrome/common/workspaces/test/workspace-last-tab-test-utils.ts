@@ -12,7 +12,10 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
   WORKSPACED_CONFIG_PREF_NAME,
 } from "../utils/workspaces-static-names.ts";
-import type { TestWindow } from "./workspace-last-tab-test-types.ts";
+import type {
+  TestWindow,
+  TestWindowClosure,
+} from "./workspace-last-tab-test-types.ts";
 
 const CLOSE_PREF = "browser.tabs.closeWindowWithLastTab";
 const PHASE_PREF = "nora.tests.last_tab.phase";
@@ -27,6 +30,11 @@ function recordNativePhase(phase: string): void {
       phase,
       test: globalThis.__NORA_TEST_PROGRESS__?.testName,
       at: new Date().toISOString(),
+      ownerReadyState: document.readyState,
+      ownerDelayedStartupFinished: Boolean(
+        (globalThis as unknown as TestWindow).gBrowserInit
+          ?.delayedStartupFinished,
+      ),
     }),
   );
   // A native call can block the window's timers as well as the test timeout.
@@ -51,6 +59,53 @@ export async function settle(): Promise<void> {
   await new Promise((resolve) => nativeSetTimeout(resolve, 250));
 }
 
+function trackWindowClosure(win: TestWindow): TestWindowClosure {
+  const browsers = new Set<unknown>();
+  let closed = false;
+  const captureBrowsers = () => {
+    // Match BrowserTestUtils.windowClosed: final SessionStore messages may
+    // arrive after win.closed becomes true. Capture before FinalClose tears
+    // down the window, including browsers created by last-tab replacement.
+    browsers.clear();
+    for (const browser of win.gBrowser?.browsers ?? []) {
+      browsers.add(browser);
+      win.gBrowser.insertBrowser(win.gBrowser.getTabForBrowser(browser));
+    }
+  };
+  const flushTopic = "sessionstore-browser-shutdown-flush";
+  const flushObserver = {
+    observe(subject: nsISupports) {
+      browsers.delete(subject);
+    },
+  };
+  const closeObserver = {
+    observe(subject: nsISupports, topic: string) {
+      if (topic === "domwindowclosed" && subject === (win as unknown)) {
+        closed = true;
+      }
+    },
+  };
+  win.addEventListener("DOMWindowClose", captureBrowsers, true);
+  Services.obs.addObserver(flushObserver, flushTopic);
+  Services.ww.registerNotification(closeObserver);
+  return {
+    async wait() {
+      await waitFor(
+        () => closed && browsers.size === 0,
+        "test window closes and flushes final SessionStore messages",
+      );
+      // Let TabStateFlusher's promises react to the final update before the
+      // next test opens a window or changes the shared workspace preferences.
+      await new Promise((resolve) => nativeSetTimeout(resolve, 0));
+    },
+    dispose() {
+      win.removeEventListener("DOMWindowClose", captureBrowsers, true);
+      Services.obs.removeObserver(flushObserver, flushTopic);
+      Services.ww.unregisterNotification(closeObserver);
+    },
+  };
+}
+
 export async function withWindows(
   closeWithLastTab: boolean,
   exitWorkspace: boolean,
@@ -58,6 +113,7 @@ export async function withWindows(
   workspaceEnabled = true,
 ): Promise<void> {
   const windows: TestWindow[] = [];
+  const closures: TestWindowClosure[] = [];
   const previousClose = Services.prefs.getBoolPref(CLOSE_PREF);
   const hadClose = Services.prefs.prefHasUserValue(CLOSE_PREF);
   const previousEnabled = Services.prefs.getBoolPref(
@@ -80,6 +136,7 @@ export async function withWindows(
   );
   const previousPhase = Services.prefs.getStringPref(PHASE_PREF, "");
   const hadPhase = Services.prefs.prefHasUserValue(PHASE_PREF);
+  const failures: unknown[] = [];
   try {
     Services.prefs.setBoolPref(WORKSPACE_ENABLED_PREF_NAME, workspaceEnabled);
     Services.prefs.setBoolPref(CLOSE_PREF, closeWithLastTab);
@@ -103,6 +160,7 @@ export async function withWindows(
       }).OpenBrowserWindow({ args });
       recordNativePhase("after OpenBrowserWindow");
       windows.push(win);
+      closures.push(trackWindowClosure(win));
       await waitFor(
         () => Boolean(win.gBrowserInit?.delayedStartupFinished),
         "test window finishes native startup",
@@ -111,6 +169,11 @@ export async function withWindows(
       await waitFor(
         () => win.gBrowser.selectedBrowser.currentURI?.spec === "about:blank",
         "temporary window loads the requested blank fixture",
+      );
+      await waitFor(
+        () => win.__NORA_TEST_FEATURES_READY__ === true,
+        "test window finishes initializing custom browser features",
+        30_000,
       );
       if (workspaceEnabled) {
         await waitFor(
@@ -148,18 +211,27 @@ export async function withWindows(
       closeWithLastTab,
       "tab and workspace changes preserve the native preference",
     );
+  } catch (error) {
+    failures.push(error);
   } finally {
-    for (const win of windows) {
-      if (!win.closed) {
-        recordNativePhase("before cleanup window.close");
-        win.close();
-        recordNativePhase("after cleanup window.close");
+    try {
+      for (const win of windows) {
+        if (!win.closed) {
+          recordNativePhase("before cleanup window.close");
+          win.close();
+          recordNativePhase("after cleanup window.close");
+        }
       }
+      await Promise.all(closures.map((closure) => closure.wait()));
+      await waitFor(
+        () => windows.every((win) => win.closed),
+        "test windows close",
+      );
+    } catch (error) {
+      failures.push(error);
+    } finally {
+      for (const closure of closures) closure.dispose();
     }
-    await waitFor(
-      () => windows.every((win) => win.closed),
-      "test windows close",
-    );
     await settle();
     const actualClose = Services.prefs.getBoolPref(CLOSE_PREF);
     Services.prefs.setStringPref(WORKSPACE_DATA_PREF_NAME, previousData);
@@ -182,6 +254,10 @@ export async function withWindows(
     );
     if (hadPhase) Services.prefs.setStringPref(PHASE_PREF, previousPhase);
     else Services.prefs.clearUserPref(PHASE_PREF);
+  }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) {
+    throw new AggregateError(failures, "Native window test and cleanup failed");
   }
 }
 
