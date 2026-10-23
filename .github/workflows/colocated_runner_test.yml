@@ -473,7 +473,7 @@ jobs:
       - run: deno install
 
       - name: Run Windows logging and runner regressions
-        run: deno test -A tools/src/utils.test.ts tools/src/colocated_test_runner.test.ts tools/src/startup_test_bootstrap.test.ts tools/src/startup_test_run_owner.test.ts
+        run: deno test -A tools/src/utils.test.ts tools/src/colocated_test_runner.test.ts tools/src/startup_test_bootstrap.test.ts tools/src/startup_test_run_owner.test.ts tools/src/dev_env_manager.test.ts
 
       - name: Validate and install locked Windows Runtime
         id: runtime-install

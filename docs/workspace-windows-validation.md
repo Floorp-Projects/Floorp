@@ -169,6 +169,15 @@ preserves native browser diagnostics and Marionette discovery. This avoids
 backpressure from forwarding the launcher's output into another console pipe.
 Both launcher files are included in the artifacts.
 
+Before browser startup, Windows test mode also writes
+`devtools.console.stdout.chrome=false` to its generated test profile. Repeated
+native-window creation otherwise blocked the browser's main thread in
+`fputs`/`fflush` → `WriteFile` on a console pipe, including with the original
+workspace implementation. This suppresses duplicate native stdout dumps from
+chrome console loggers; Console API storage, script-error reporting, and the
+test result preferences remain active. Development and staging profiles retain
+their existing console settings. No browser assertions are skipped.
+
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
 All eight jobs must succeed for the complete 49-file coverage. Tests do not run
