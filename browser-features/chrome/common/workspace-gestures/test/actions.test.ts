@@ -7,6 +7,7 @@ import { WORKSPACE_DATA_PREF_NAME } from "../../workspaces/utils/workspaces-stat
 import { waitFor } from "../../workspaces/test/workspace-last-tab-test-utils.ts";
 import { switchWorkspaceByOffset } from "../runtime.ts";
 import { getKeyboardShortcutAction } from "../../keyboard-shortcut/actions.ts";
+import { testWindowsNativeWorkspaceShortcuts } from "./windows-native-input.ts";
 import {
   assert,
   assertEquals,
@@ -95,5 +96,12 @@ export async function runAllTests(): Promise<void> {
       name: "real window end-stop actions preserve tab selection",
       fn: testRealWindowEndStopActions,
     },
+    ...(Services.appinfo.OS === "WINNT"
+      ? [{
+        name:
+          "Windows OS keyboard input switches only its foreground workspace",
+        fn: testWindowsNativeWorkspaceShortcuts,
+      }]
+      : []),
   ]);
 }

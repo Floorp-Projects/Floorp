@@ -13,6 +13,10 @@ on:
         description: Optional single workspace .test.ts filename or repository path (requires Windows-only mode)
         type: string
         default: ""
+      windows_os_input_only:
+        description: Run only the gesture suite, including Windows SendInput checks (requires Windows-only mode)
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [main]
@@ -448,12 +452,20 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        suite: ${{ fromJSON(inputs.windows_workspace_test != '' && '["workspaces"]' || '["workspaces", "workspace-gestures", "workspace-session-indicator", "workspace-bookmarks", "command-palette", "workspace-overrides", "pages-modal-child", "modules"]') }}
+        suite: ${{ fromJSON(inputs.windows_os_input_only && '["workspace-gestures"]' || inputs.windows_workspace_test != '' && '["workspaces"]' || '["workspaces", "workspace-gestures", "workspace-session-indicator", "workspace-bookmarks", "command-palette", "workspace-overrides", "pages-modal-child", "modules"]') }}
     env:
       FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
       FLOORP_WINDOWS_WORKSPACE_SUITE: ${{ matrix.suite }}
       FLOORP_WINDOWS_WORKSPACE_TEST: ${{ inputs.windows_workspace_test }}
+      FLOORP_WINDOWS_OS_INPUT_ONLY: ${{ inputs.windows_os_input_only }}
     steps:
+      - name: Validate Windows test selection
+        shell: pwsh
+        run: |
+          if ($env:FLOORP_WINDOWS_OS_INPUT_ONLY -eq 'true' -and $env:FLOORP_WINDOWS_WORKSPACE_TEST -ne '') {
+            throw "Select either windows_os_input_only or windows_workspace_test"
+          }
+
       - name: Enable long checkout paths
         run: git config --global core.longpaths true
 

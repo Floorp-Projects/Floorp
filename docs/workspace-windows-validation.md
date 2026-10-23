@@ -228,6 +228,35 @@ a command-line parent argument alone is insufficient. Ownership decisions are
 recorded in the runner log. Changes to the launcher or listener
 identity, or unreadable identity evidence, still fail validation.
 
+### Windows OS keyboard input
+
+On Windows, the gesture action test also invokes
+`tools/send_windows_workspace_input.ps1`. The helper verifies the browser's
+executable, process identity, session, native window handle, and foreground
+state before sending Ctrl+Shift+F13/F14 through Win32 `SendInput`. These unused
+test chords exercise the configured production shortcut service. They are not
+required choices for a user's touchpad mapping.
+
+The test observes trusted browser key events and checks workspace selection,
+held-key repetition, end stops, selected-tab restoration, and foreground-window
+targeting. Repetition is verified from actual `KeyboardEvent.repeat` values;
+the helper sends repeated keydowns without an intervening keyup. Windows
+desktop/input failures fail the test. The controller-only headless command
+above remains available for tests that do not require native input.
+
+To run just the three-file gesture scope, including its Windows OS-input case:
+
+```powershell
+gh workflow run colocated_runner_test.yml --repo Floorp-Projects/Floorp --ref $validationBranch -f windows_workspaces_only=true -f windows_os_input_only=true
+```
+
+Do not combine `windows_os_input_only` with `windows_workspace_test`. Leaving
+both empty/false retains the complete eight-scope matrix. Evidence is written
+to `_dist/profile/test/workspace-windows-input-evidence.json` and copied into
+the gesture-suite artifact. It records native input delivery and observed
+browser behavior; it does not establish physical gesture recognition or an
+OS touchpad mapper's behavior.
+
 ### Isolate one workspace test file
 
 For a diagnostic run, keep `windows_workspaces_only=true` and set

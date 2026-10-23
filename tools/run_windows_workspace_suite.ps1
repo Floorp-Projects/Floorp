@@ -123,7 +123,7 @@ try {
 
   # Save the result before copying optional files that can be locked on Windows.
   Copy-OptionalEvidence logs/test/latest.log "$suiteDir/collected.log"
-  foreach ($evidence in @("prefs.js", "workspace-bookmarks-benchmark.json")) {
+  foreach ($evidence in @("prefs.js", "workspace-bookmarks-benchmark.json", "workspace-windows-input-evidence.json")) {
     Copy-OptionalEvidence "_dist/profile/test/$evidence" "$suiteDir/$evidence"
   }
   $viteLogs = @(Get-ChildItem logs/vite-*.log -ErrorAction SilentlyContinue)
