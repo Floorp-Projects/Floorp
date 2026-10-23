@@ -199,7 +199,7 @@ try {
   } else {
     Send-CheckedInput $inputs.ToArray()
     for ($index = 1; $index -lt $RepeatCount; $index++) {
-      # Let Gecko process each held keydown instead of coalescing a burst.
+      # Give the native input pipeline time to process each held keydown.
       Start-Sleep -Milliseconds 100
       Assert-TargetWindow
       if ([FloorpWorkspaceInputNative]::GetForegroundWindow() -ne $targetWindow) {
@@ -207,6 +207,7 @@ try {
       }
       Send-CheckedInput @([FloorpWorkspaceInputNative]::Key($keyCode, $false))
     }
+    Start-Sleep -Milliseconds 100
     Send-CheckedInput $releases
   }
   Assert-TargetWindow
