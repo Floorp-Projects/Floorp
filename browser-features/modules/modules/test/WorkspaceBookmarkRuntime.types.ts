@@ -85,6 +85,12 @@ export interface BookmarkDialogWindow extends Window {
 }
 
 export interface BrowserForBookmarks extends Window {
+  setToolbarVisibility(
+    toolbar: XULElement,
+    visible: boolean,
+    persist: boolean,
+    animated: boolean,
+  ): void;
   gDialogBox: {
     isOpen: boolean;
     dialog:

@@ -217,6 +217,46 @@ async function waitForBookmarkUI(
   throw new Error(message);
 }
 
+async function prepareStarUIAnchor(
+  browser: BrowserForBookmarks,
+): Promise<() => void> {
+  const toolbar = browser.document.getElementById("nav-bar") as
+    | XULElement
+    | null;
+  assert(toolbar, "the native navigation toolbar exists");
+  const wasVisible = !toolbar.hasAttribute("collapsed");
+  const wasInstant = toolbar.classList.contains("instant");
+  const restore = () => {
+    try {
+      browser.setToolbarVisibility(toolbar, wasVisible, false, false);
+    } finally {
+      toolbar.classList.toggle("instant", wasInstant);
+    }
+  };
+  browser.setToolbarVisibility(toolbar, true, false, false);
+  browser.focus();
+  try {
+    await waitForBookmarkUI(
+      () =>
+        ["star-button-box", "pageActionButton", "identity-icon"].some((id) => {
+          const anchor = browser.document.getElementById(id) as
+            | XULElement
+            | null;
+          if (!anchor || anchor.hidden) return false;
+          // Native PageActions deliberately reads bounds without flushing. Wait
+          // for actual toolbar layout before asking the real StarUI to anchor.
+          const bounds = anchor.getBoundingClientRect();
+          return bounds.width > 0 && bounds.height > 0;
+        }),
+      "the real bookmark panel has a laid-out native anchor",
+    );
+    return restore;
+  } catch (error) {
+    restore();
+    throw error;
+  }
+}
+
 async function testRealStarWorkspaceSaveAndCopySelection(): Promise<void> {
   const { scopes, places, ui } = runtime();
   await scopes.ready;
@@ -232,8 +272,10 @@ async function testRealStarWorkspaceSaveAndCopySelection(): Promise<void> {
   let workspaceFolder: string | undefined;
   let fixtureFolder: string | undefined;
   let hiddenFolder: string | undefined;
+  let restoreToolbar: (() => void) | undefined;
   const cleanupGuids: string[] = [];
   try {
+    restoreToolbar = await prepareStarUIAnchor(browser);
     scopes.setWindowContext(browser, workspace, true);
     const node = await ui.promiseNodeLikeFromFetchInfo({
       guid: places.bookmarks.unsavedGuid,
@@ -357,28 +399,32 @@ async function testRealStarWorkspaceSaveAndCopySelection(): Promise<void> {
       "the hidden same-URL bookmark survives",
     );
   } finally {
-    if (browser.StarUI.panel.state !== "closed") {
-      browser.StarUI._cancelOnPopupHidden = true;
-      browser.StarUI.panel.hidePopup();
-      await waitForBookmarkUI(
-        () => browser.StarUI.panel.state === "closed",
-        "star editor closes during cleanup",
-      );
+    try {
+      if (browser.StarUI.panel.state !== "closed") {
+        browser.StarUI._cancelOnPopupHidden = true;
+        browser.StarUI.panel.hidePopup();
+        await waitForBookmarkUI(
+          () => browser.StarUI.panel.state === "closed",
+          "star editor closes during cleanup",
+        );
+      }
+      for (const guid of new Set(cleanupGuids)) {
+        await places.bookmarks.remove(guid);
+      }
+      if (hiddenFolder) await scopes.setFolderScope(hiddenFolder, null);
+      if (fixtureFolder) await places.bookmarks.remove(fixtureFolder);
+      await scopes.refresh();
+      if (workspaceFolder) {
+        await scopes.releaseCreatedWorkspaceFolder({
+          guid: workspaceFolder,
+          created: true,
+          workspaceId: workspace,
+        });
+      }
+    } finally {
+      scopes.setWindowContext(browser, before.workspaceId, before.enabled);
+      restoreToolbar?.();
     }
-    for (const guid of new Set(cleanupGuids)) {
-      await places.bookmarks.remove(guid);
-    }
-    if (hiddenFolder) await scopes.setFolderScope(hiddenFolder, null);
-    if (fixtureFolder) await places.bookmarks.remove(fixtureFolder);
-    await scopes.refresh();
-    if (workspaceFolder) {
-      await scopes.releaseCreatedWorkspaceFolder({
-        guid: workspaceFolder,
-        created: true,
-        workspaceId: workspace,
-      });
-    }
-    scopes.setWindowContext(browser, before.workspaceId, before.enabled);
   }
 }
 

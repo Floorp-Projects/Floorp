@@ -119,7 +119,15 @@ async function testRealPlacesBulkScopeQueries(): Promise<void> {
       },
     });
     await service.ready;
-    const win = { closed: false } as unknown as Window;
+    const browser = Services.wm.getMostRecentWindow("navigator:browser") as
+      | Window
+      | null;
+    assert(browser, "a native browser supplies the fixture's privacy context");
+    const win = {
+      closed: false,
+      isChromeWindow: true,
+      docShell: browser.docShell,
+    } as unknown as Window;
     service.setWindowContext(win, A, true);
     const db = await places.promiseDBConnection();
     const select = `SELECT b.guid, b.title, p.url

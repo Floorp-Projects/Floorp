@@ -132,7 +132,15 @@ async function testNativeProvidersRespectWorkspaceScope(): Promise<void> {
   const visibleKeyword = `visible${suffix}`;
   const workspace = crypto.randomUUID();
   const otherWorkspace = crypto.randomUUID();
-  const target = { closed: false } as Window;
+  const browser = Services.wm.getMostRecentWindow("navigator:browser") as
+    | Window
+    | null;
+  assert(browser, "a native browser supplies the fixture's privacy context");
+  const target = {
+    closed: false,
+    isChromeWindow: true,
+    docShell: browser.docShell,
+  } as unknown as Window;
   const prefNames = [
     "floorp.workspaces.enabled",
     "floorp.workspaces.bookmarks.enabled",

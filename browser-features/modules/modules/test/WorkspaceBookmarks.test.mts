@@ -241,8 +241,14 @@ class FakePlaces {
 }
 
 function fakeWindow(windowType = "navigator:browser"): Window {
+  const browser = Services.wm.getMostRecentWindow("navigator:browser") as
+    | Window
+    | null;
+  assert(browser, "a native browser supplies the fixture's privacy context");
   return {
     closed: false,
+    isChromeWindow: true,
+    docShell: browser.docShell,
     document: { documentElement: { getAttribute: () => windowType } },
   } as unknown as Window;
 }

@@ -1499,12 +1499,72 @@ export async function stopWindowsAutoStartedBrowser(
 
 function startTestBrowserProcess(): Deno.ChildProcess {
   const denoPath = Deno.execPath();
+  // Retain Windows launcher/pipe errors when a browser stops making progress.
+  const output = Deno.build.os === "windows" ||
+      Deno.env.get("GITHUB_ACTIONS") === "true"
+    ? "inherit"
+    : "null";
   return new Deno.Command(denoPath, {
     args: ["task", "feles-build", "test"],
     cwd: PROJECT_ROOT,
-    stdout: "null",
-    stderr: "null",
+    stdout: output,
+    stderr: output,
   }).spawn();
+}
+
+/** Collect diagnostics before terminating a test browser that stopped reporting. */
+async function captureBrowserFailureDiagnostics(
+  runId: string,
+): Promise<string> {
+  const script = `JSON.stringify({
+    windows: Array.from(Services.wm.getEnumerator(null), win => ({
+      type: win.document?.documentElement?.getAttribute("windowtype"),
+      title: win.document?.title,
+      closed: win.closed,
+      readyState: win.document?.readyState,
+      delayedStartupFinished: win.gBrowserInit?.delayedStartupFinished,
+      tests: win.__NORA_TEST_PROGRESS__,
+    })),
+    console: Services.console.getMessageArray().slice(-100).map(message => ({
+      message: message.errorMessage || message.message || String(message),
+      source: message.sourceName,
+      line: message.lineNumber,
+    })),
+  })`;
+  const child = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      "-A",
+      path.join(PROJECT_ROOT, "tools", "dev-tool.ts"),
+      "eval",
+      script,
+    ],
+    cwd: PROJECT_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const timeout = setTimeout(() => {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // The diagnostic command may already have exited.
+    }
+  }, 20_000);
+  try {
+    const output = await child.output();
+    const filename = path.join(TEST_LOG_DIR, `diagnostics-${runId}.log`);
+    Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
+    const decoder = new TextDecoder();
+    Deno.writeTextFileSync(
+      filename,
+      `exitCode=${output.code}\n${decoder.decode(output.stdout)}\n${
+        decoder.decode(output.stderr)
+      }`,
+    );
+    return path.relative(PROJECT_ROOT, filename);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function waitForAutoStartedBrowser(
@@ -2436,6 +2496,21 @@ async function main(): Promise<number> {
         "ERROR",
         `Browser test collection failed: ${errorToMessage(error)}`,
       );
+      if (autoStartedBrowser && ownedRunId) {
+        try {
+          const diagnostics = await captureBrowserFailureDiagnostics(
+            ownedRunId,
+          );
+          writeLine("INFO", `Browser failure diagnostics: ${diagnostics}`);
+        } catch (diagnosticError) {
+          writeLine(
+            "ERROR",
+            `Could not collect browser diagnostics: ${
+              errorToMessage(diagnosticError)
+            }`,
+          );
+        }
+      }
       writeLine(
         "ERROR",
         `Hint: increase timeout with --timeout-ms <ms> (current: ${options.timeoutMs}) or ensure browser startup is stable.`,
@@ -2449,7 +2524,10 @@ async function main(): Promise<number> {
     try {
       await stopPageTestServers?.();
     } catch (error) {
-      writeLine("ERROR", `Failed to stop UI test servers: ${errorToMessage(error)}`);
+      writeLine(
+        "ERROR",
+        `Failed to stop UI test servers: ${errorToMessage(error)}`,
+      );
       exitCode = 1;
     }
     if (autoStartedBrowser) {

@@ -64,7 +64,15 @@ async function testScopedPaletteWithRealPlaces(): Promise<void> {
   const A = crypto.randomUUID();
   const B = crypto.randomUUID();
   const scopeEnabled = scopes.getEnabled();
-  const target = { closed: false } as Window;
+  // Visibility resolves the owner's native privacy context on every lookup.
+  // Keep a separate window identity for the navigation spy, while supplying
+  // the real chrome docshell instead of making PrivateBrowsingUtils warn and
+  // dump a stack for every row in the tree.
+  const target = {
+    closed: false,
+    isChromeWindow: true,
+    docShell: window.docShell,
+  } as Window;
   let rootGuid: string | undefined;
   let hiddenGuid: string | undefined;
   let visibleGuid: string | undefined;

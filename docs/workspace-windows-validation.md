@@ -65,6 +65,8 @@ an extra `--` separator:
 
 ```powershell
 $env:MOZ_HEADLESS = "1"
+$env:MOZ_HEADLESS_WIDTH = "1280"
+$env:MOZ_HEADLESS_HEIGHT = "960"
 deno task test --near browser-features/chrome/common/workspace-gestures --timeout-ms 300000 --startup-timeout-ms 180000
 if ($LASTEXITCODE -ne 0) { throw "Workspace gesture tests failed" }
 ```
@@ -91,6 +93,8 @@ To reproduce the same coverage serially on a local machine:
 
 ```powershell
 $env:MOZ_HEADLESS = "1"
+$env:MOZ_HEADLESS_WIDTH = "1280"
+$env:MOZ_HEADLESS_HEIGHT = "960"
 $scopes = @(
   "browser-features/chrome/common/workspaces",
   "browser-features/chrome/common/workspace-gestures",
@@ -150,14 +154,21 @@ Each contains:
 - the suite's `result.json`, runner log, collected result log, and available
   profile evidence;
 - timestamped browser runner logs and the available Vite logs;
+- `logs/test/diagnostics-<run-id>.log` when a browser collection failure triggers
+  a diagnostic attempt;
 - profile preferences and the Places benchmark report, when produced.
 
 Inspect startup and teardown errors separately from browser assertions. A
 message that `feles-build test` exited early is not a passing browser run. Its
-child stdout/stderr are currently suppressed by the runner. A rejected artifact
-patch can leave partially modified Runtime files in that job, so use a fresh
-hosted run when retrying the failure. Matrix jobs are isolated; a partial patch
-cannot carry over into another suite's Runtime.
+launcher stdout/stderr are retained on Windows and in GitHub Actions, appearing
+in the step output and the suite's `runner.log`. Other platforms' local runs
+remain quiet. If result collection fails for an automatically started browser,
+the runner attempts to record window state, current test progress, and recent
+browser console messages before teardown. The diagnostic subprocess has a
+20-second stop timer; an unresponsive browser may yield an error instead of a
+snapshot. A rejected artifact patch can leave partially modified Runtime files
+in that job, so use a fresh hosted run when retrying the failure. Matrix jobs are
+isolated; a partial patch cannot carry over into another suite's Runtime.
 
 ## Physical Windows touchpad checks
 
