@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
+import { spawn } from "node:child_process";
+import { closeSync, openSync } from "node:fs";
 import { PROJECT_ROOT as DEFINES_PROJECT_ROOT } from "./defines.ts";
 
 export const PROJECT_ROOT = DEFINES_PROJECT_ROOT;
@@ -218,6 +220,81 @@ export class Logger {
 
 /* Process utilities: stream stdout/stderr to callback */
 export const ProcessUtils = {
+  async runCommandWithFileLogging(
+    cmd: string[],
+    cb: (stream: "stdout" | "stderr", line: string) => void,
+    files: Record<"stdout" | "stderr", string>,
+  ): Promise<number> {
+    // Native browser console calls synchronously write to stdout. Real files
+    // keep those writes independent of this process's readers and console.
+    // In particular, a full Windows subprocess pipe must not freeze browser UI.
+    const descriptors: number[] = [];
+    const readers: Deno.FsFile[] = [];
+    let finished = false;
+    const tails: Promise<void>[] = [];
+    try {
+      const stdout = openSync(files.stdout, "wx", 0o600);
+      descriptors.push(stdout);
+      const stderr = openSync(files.stderr, "wx", 0o600);
+      descriptors.push(stderr);
+      for (const stream of ["stdout", "stderr"] as const) {
+        readers.push(await Deno.open(files[stream], { read: true }));
+      }
+      const child = spawn(cmd[0], cmd.slice(1), {
+        stdio: ["ignore", stdout, stderr],
+        env: Deno.env.toObject(),
+      });
+      const completion = new Promise<number>((resolve, reject) => {
+        child.once("error", reject);
+        child.once("close", (code) => resolve(code ?? 1));
+      }).finally(() => {
+        finished = true;
+      });
+      // spawn has duplicated the descriptors into the child. Closing our write
+      // handles also makes failure cleanup independent of the browser lifetime.
+      for (const descriptor of descriptors.splice(0)) closeSync(descriptor);
+
+      const tail = async (
+        file: Deno.FsFile,
+        stream: "stdout" | "stderr",
+      ): Promise<void> => {
+        const decoder = new TextDecoder();
+        const bytes = new Uint8Array(64 * 1024);
+        let pending = "";
+        while (true) {
+          const count = await file.read(bytes);
+          if (count === null) {
+            if (finished) break;
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
+          }
+          pending += decoder.decode(bytes.subarray(0, count), { stream: true });
+          let newline;
+          while ((newline = pending.indexOf("\n")) !== -1) {
+            cb(stream, pending.slice(0, newline + 1));
+            pending = pending.slice(newline + 1);
+          }
+          // Native output need not contain line breaks. Bound the tailer's
+          // memory while keeping the complete, unmodified bytes in the file.
+          if (pending.length >= bytes.length) {
+            cb(stream, pending);
+            pending = "";
+          }
+        }
+        pending += decoder.decode();
+        if (pending.length) cb(stream, pending + "\n");
+      };
+      tails.push(tail(readers[0], "stdout"), tail(readers[1], "stderr"));
+      const [code] = await Promise.all([completion, ...tails]);
+      return code;
+    } finally {
+      finished = true;
+      await Promise.allSettled(tails);
+      for (const reader of readers) reader.close();
+      for (const descriptor of descriptors) closeSync(descriptor);
+    }
+  },
+
   async runCommandWithLogging(
     cmd: string[],
     cb: (stream: "stdout" | "stderr", line: string) => void,

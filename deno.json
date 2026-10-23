@@ -78,7 +78,7 @@
     "firefox-tests:prepare-browser": "deno run --allow-read --allow-write=browser-features/chrome/test/firefox-downloaded/generated tools/firefox-tests/prepare_firefox_browser_tests.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
     "test:firefox-tests": "deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/",
-    "test:host": "deno test --allow-read --allow-write tools/src/",
+    "test:host": "deno test --allow-read --allow-write --allow-run --allow-env tools/src/",
     "test:docs-pipeline": "deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",
     "test:os-api": "deno run -A tools/os-test/verify_os_server_full.ts",

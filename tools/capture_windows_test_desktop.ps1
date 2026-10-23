@@ -147,14 +147,21 @@ function Capture-NativeStack([object]$WindowInfo) {
     )
     $debugger = Start-Process -FilePath $cdb -ArgumentList $arguments -NoNewWindow -PassThru `
       -RedirectStandardOutput $stackOutputPath -RedirectStandardError $stackErrorPath
+    # Retain the native handle while CDB runs. Start-Process can otherwise lose
+    # its exit-code state after a redirected process exits on Windows PowerShell.
+    $debuggerHandle = $debugger.Handle
     if (!$debugger.WaitForExit(20000)) {
       $report.status = "debugger-timeout"
       $debugger.Kill()
       [void]$debugger.WaitForExit(1000)
       throw "CDB exceeded its twenty-second diagnostic deadline."
     }
-    $report.exitCode = $debugger.ExitCode
-    if ($debugger.ExitCode -ne 0) { throw "CDB exited with code $($debugger.ExitCode)." }
+    $debuggerExitCode = [uint32]0
+    if (![FloorpTestDesktopNative]::GetExitCodeProcess($debuggerHandle, [ref]$debuggerExitCode)) {
+      throw "Could not read the exited CDB process code (Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error()))."
+    }
+    $report.exitCode = $debuggerExitCode
+    if ($debuggerExitCode -ne 0) { throw "CDB exited with code $debuggerExitCode." }
     $report.status = "completed"
   } catch {
     $report.error = $_.Exception.Message
@@ -220,6 +227,10 @@ public static class FloorpTestDesktopNative {
 
   [DllImport("user32.dll")]
   public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+  [DllImport("kernel32.dll", SetLastError = true)]
+  [return: MarshalAs(UnmanagedType.Bool)]
+  public static extern bool GetExitCodeProcess(IntPtr process, out uint exitCode);
 
   [DllImport("advapi32.dll", SetLastError = true)]
   private static extern IntPtr OpenThreadWaitChainSession(uint flags, IntPtr callback);
