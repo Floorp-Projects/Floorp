@@ -91,6 +91,8 @@ export const GESTURE_ACTIONS = [
   "gecko-scroll-to-bottom",
   "gecko-workspace-next",
   "gecko-workspace-previous",
+  "floorp-workspace-next-no-wrap",
+  "floorp-workspace-previous-no-wrap",
   "floorp-toggle-zen-mode",
   "floorp-toggle-command-palette",
   "floorp-open-settings",

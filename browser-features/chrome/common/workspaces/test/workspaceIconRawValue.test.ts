@@ -439,7 +439,7 @@ async function testServiceUsesLatestWorkspaceWithoutResurrection(): Promise<
         await flushWorkspacePersistence();
         return {
           name: `Submitted ${rawCase.label}`,
-          userContextId: "7",
+          userContextId: "0",
           icon: "__floorp_workspace_icon_picker_no_change__",
         };
       };
@@ -456,7 +456,7 @@ async function testServiceUsesLatestWorkspaceWithoutResurrection(): Promise<
         `Submitted ${rawCase.label}`,
         `${rawCase.label}: submitted name`,
       );
-      assertEquals(actual.userContextId, 7, `${rawCase.label}: container`);
+      assertEquals(actual.userContextId, 0, `${rawCase.label}: container`);
       assertEquals(
         actual.isSelected,
         true,
@@ -506,7 +506,7 @@ async function testServiceUsesLatestWorkspaceWithoutResurrection(): Promise<
       await flushWorkspacePersistence();
       return {
         name: "Canonical selection",
-        userContextId: "9",
+        userContextId: "0",
         icon: "floorp-icon:v1:music",
       };
     };

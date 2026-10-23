@@ -28,8 +28,14 @@ import { isRight } from "fp-ts/Either";
 import {
   excludeTrackedReplacement,
   FirefoxTabReplacementTracker,
+  getOriginUserContextId,
   hasOriginUserContextId,
 } from "./utils/tab-replacement-lifecycle.ts";
+import { getWorkspaceSessionRuntime } from "./utils/workspace-session-runtime.ts";
+import i18next from "i18next";
+import ModalParent from "../modal-parent/index.ts";
+import type { WorkspaceSessionTabBrowser } from "./utils/workspace-session-types.ts";
+import type { TFormResult } from "../modal-parent/utils/type.ts";
 
 interface TabEvent extends Event {
   target: XULElement;
@@ -84,6 +90,7 @@ export class WorkspacesTabManager {
     const exec = () =>
       createEffect(() => {
         if (!enabled()) {
+          this.updateTabsVisibility();
           return;
         }
 
@@ -204,6 +211,7 @@ export class WorkspacesTabManager {
     const trackedReplacement = this.firefoxReplacementTracker.finishTabClose(
       tab,
     );
+    if (!enabled()) return;
 
     // Skip workspace-empty logic when bulk-removing tabs (e.g. workspace deletion)
     if (this.suppressTabCloseHandling) return;
@@ -371,6 +379,7 @@ export class WorkspacesTabManager {
         tab,
         globalThis.gBrowser.tabs as XULElement[],
       );
+      if (!enabled()) return;
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       if (!this.getWorkspaceIdFromAttribute(tab)) {
@@ -382,6 +391,20 @@ export class WorkspacesTabManager {
   };
 
   public updateTabsVisibility() {
+    if (!enabled()) {
+      for (const tab of globalThis.gBrowser.tabs) {
+        globalThis.gBrowser.showTab(tab);
+      }
+      for (const group of globalThis.gBrowser.tabGroups) {
+        group.style.display = "";
+      }
+      for (
+        const wrapper of document.querySelectorAll("tab-split-view-wrapper")
+      ) {
+        (wrapper as HTMLElement).style.display = "";
+      }
+      return;
+    }
     const currentWorkspaceId = this.dataManagerCtx.getSelectedWorkspaceID();
     const selectedTab = globalThis.gBrowser.selectedTab;
     if (
@@ -543,6 +566,12 @@ export class WorkspacesTabManager {
   ): boolean {
     try {
       const browser = globalThis.gBrowser.getBrowserForTab(tab);
+      const runtime = getWorkspaceSessionRuntime();
+      if (!runtime.isValidContext(expectedUserContextId)) {
+        return runtime.getPendingState(tab)?.userContextId ===
+            expectedUserContextId &&
+          hasOriginUserContextId(browser, 0);
+      }
       return hasOriginUserContextId(browser, expectedUserContextId);
     } catch (error) {
       console.error(
@@ -551,6 +580,11 @@ export class WorkspacesTabManager {
       );
       return false;
     }
+  }
+
+  private actualTabContextId(tab: XULElement): number {
+    return getOriginUserContextId(globalThis.gBrowser.getBrowserForTab(tab)) ??
+      Number(tab.getAttribute("usercontextid") || 0);
   }
 
   /**
@@ -636,18 +670,32 @@ export class WorkspacesTabManager {
     // Without this, replacement tabs for container workspaces are created in
     // the default container, causing proxy/VPN tabs to stop working (#2193).
     const workspace = this.dataManagerCtx.getRawWorkspace(workspaceId);
-    const userContextId = workspace?.userContextId ?? 0;
+    const requestedContext = enabled() ? workspace?.userContextId ?? 0 : 0;
+    const runtime = getWorkspaceSessionRuntime();
+    const missing = !runtime.isValidContext(requestedContext);
+    const userContextId = missing ? 0 : requestedContext;
 
-    const tab = globalThis.gBrowser.addTab(targetURL, {
-      skipAnimation: true,
-      inBackground: false,
-      userContextId: userContextId > 0 ? userContextId : undefined,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
+    const tab = (globalThis.gBrowser as unknown as WorkspaceSessionTabBrowser)
+      .addTab(
+        missing ? "about:blank" : targetURL,
+        {
+          skipAnimation: true,
+          inBackground: false,
+          userContextId,
+          floorpWorkspaceId: workspaceId,
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+        },
+      );
     this.setWorkspaceIdToAttribute(tab, workspaceId);
 
-    if (userContextId > 0) {
-      tab.setAttribute("usercontextid", String(userContextId));
+    if (missing) {
+      runtime.markPendingTab(tab, {
+        entries: [{ url: targetURL }],
+        index: 1,
+        userContextId: requestedContext,
+        floorpWorkspaceId: workspaceId,
+      });
     }
 
     if (select) {
@@ -879,18 +927,160 @@ export class WorkspacesTabManager {
    * Move tabs to workspace from tab context menu.
    * @param workspaceId The workspace id.
    */
-  public moveTabsToWorkspaceFromTabContextMenu(workspaceId: TWorkspaceID) {
+  public async moveTabsToWorkspaceFromTabContextMenu(
+    workspaceId: TWorkspaceID,
+  ) {
     const reopenedTabs = globalThis.TabContextMenu.contextTab.multiselected
       ? globalThis.gBrowser.selectedTabs
       : [globalThis.TabContextMenu.contextTab];
 
-    for (const tab of reopenedTabs) {
-      this.moveTabToWorkspace(workspaceId, tab);
-      if (tab === globalThis.gBrowser.selectedTab) {
-        this.switchToAnotherWorkspaceTab(workspaceId);
-      }
+    return await this.requestMoveTabsToWorkspace(workspaceId, reopenedTabs);
+  }
+
+  public async requestMoveTabsToWorkspace(
+    workspaceId: TWorkspaceID,
+    tabs: XULElement[],
+  ): Promise<boolean> {
+    if (!enabled() || !this.dataManagerCtx.isWorkspaceID(workspaceId)) {
+      return false;
     }
-    this.updateTabsVisibility();
+    const workspace = this.dataManagerCtx.getRawWorkspace(workspaceId);
+    if (!workspace || !tabs.length) return false;
+    const capturedTabs = tabs.map((tab) => ({
+      tab,
+      workspace: this.getWorkspaceIdFromAttribute(tab),
+      context: this.actualTabContextId(tab),
+      url: globalThis.gBrowser.getBrowserForTab(tab).currentURI?.spec ?? "",
+    }));
+    const targetContext = workspace.userContextId;
+    const different = capturedTabs.some(({ context }) =>
+      context !== targetContext
+    );
+    let action = "preserve";
+    if (different) {
+      const runtime = getWorkspaceSessionRuntime();
+      const canOpen = runtime.isValidContext(targetContext) &&
+        capturedTabs.every(({ tab, url }) =>
+          runtime.canReopenURL(url) && !runtime.getPendingState(tab)
+        );
+      const modal = ModalParent.getInstance();
+      const result = await new Promise<TFormResult | null>((resolve) => {
+        void modal.showNoraModal(
+          {
+            title: i18next.t("workspaces.session.move-title", {
+              defaultValue: "Move tabs to workspace",
+            }),
+            description: i18next.t("workspaces.session.move-description", {
+              defaultValue:
+                "Keep the original login environment, or open the URLs in the destination environment and keep the original tabs. Unsaved input is not copied.",
+            }) + (canOpen
+              ? ""
+              : " " + i18next.t("workspaces.session.move-reopen-unavailable", {
+                defaultValue:
+                  "Opening in the destination environment is unavailable because a URL depends on its original environment or the destination environment is missing.",
+              })),
+            forms: [{
+              id: "action",
+              type: "select",
+              required: true,
+              value: "preserve",
+              label: i18next.t("workspaces.session.move-action", {
+                defaultValue: "Login environment",
+              }),
+              options: [
+                {
+                  value: "preserve",
+                  label: i18next.t("workspaces.session.move-preserve", {
+                    defaultValue: "Move with the original login environment",
+                  }),
+                },
+                ...(canOpen
+                  ? [{
+                    value: "reopen",
+                    label: i18next.t("workspaces.session.move-reopen", {
+                      defaultValue:
+                        "Open new tabs in the destination environment",
+                    }),
+                  }]
+                  : []),
+              ],
+            }],
+            submitLabel: i18next.t("workspaces.modal.save"),
+            cancelLabel: i18next.t("workspaces.modal.cancel"),
+          },
+          { width: 540, height: 400 },
+          resolve,
+        ).catch(() => resolve(null));
+      });
+      if (!result) return false;
+      action = String(result.action);
+      if (action !== "preserve" && action !== "reopen") return false;
+    }
+    if (
+      !enabled() || globalThis.window.closed ||
+      this.dataManagerCtx.getRawWorkspace(workspaceId)?.userContextId !==
+        targetContext ||
+      capturedTabs.some(({ tab, workspace, context, url }) =>
+        !tab.isConnected ||
+        this.getWorkspaceIdFromAttribute(tab) !== workspace ||
+        this.actualTabContextId(tab) !== context ||
+        globalThis.gBrowser.getBrowserForTab(tab).currentURI?.spec !== url
+      )
+    ) return false;
+    if (action === "preserve") {
+      for (const tab of tabs) this.moveTabToWorkspace(workspaceId, tab);
+      this.updateTabsVisibility();
+      return true;
+    }
+    return this.openTabsInWorkspaceSession(workspaceId, tabs);
+  }
+
+  /** Explicit URL-only action; original tabs and their input remain untouched. */
+  public openTabsInWorkspaceSession(
+    workspaceId: TWorkspaceID,
+    tabs: XULElement[],
+  ): boolean {
+    if (!enabled() || globalThis.window.closed || !tabs.length) return false;
+    const targetContext = this.dataManagerCtx.getRawWorkspace(workspaceId)
+      ?.userContextId;
+    const runtime = getWorkspaceSessionRuntime();
+    if (!runtime.isValidContext(targetContext)) return false;
+    const captured = tabs.map((tab) => ({
+      tab,
+      url: globalThis.gBrowser.getBrowserForTab(tab).currentURI?.spec ?? "",
+    }));
+    if (
+      captured.some(({ tab, url }) =>
+        !tab.isConnected || !runtime.canReopenURL(url) ||
+        runtime.getPendingState(tab)
+      )
+    ) return false;
+    const browser = globalThis
+      .gBrowser as unknown as WorkspaceSessionTabBrowser;
+    const created: XULElement[] = [];
+    try {
+      for (const { tab, url } of captured) {
+        const opened = browser.addTab(url, {
+          userContextId: targetContext,
+          floorpWorkspaceId: workspaceId,
+          inBackground: true,
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+        });
+        if (!opened) throw new Error("Destination tab could not be created");
+        created.push(opened);
+        this.setWorkspaceIdToAttribute(opened, workspaceId);
+        if (tab.hasAttribute("pinned")) globalThis.gBrowser.pinTab(opened);
+      }
+      this.updateTabsVisibility();
+      return true;
+    } catch (error) {
+      for (const opened of created) {
+        browser.removeTab(opened, { animate: false, skipSessionStore: true });
+      }
+      console.error("[Workspaces] Opening tabs in destination failed", error);
+      return false;
+    }
   }
 
   /**

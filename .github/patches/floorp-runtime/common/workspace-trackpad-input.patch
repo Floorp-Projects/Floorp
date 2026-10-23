@@ -1,0 +1,552 @@
+diff --git a/dom/events/EventNameList.inc b/dom/events/EventNameList.inc
+index d591ee3..c305b28 100644
+--- a/dom/events/EventNameList.inc
++++ b/dom/events/EventNameList.inc
+@@ -461,6 +461,8 @@ WINDOW_EVENT(gamepaddisconnected, eGamepadDisconnected, EventNameType_None,
+              eBasicEventClass)
+ 
+ // Simple gesture events
++NON_IDL_EVENT(MozWorkspaceSwipeGesture, eWorkspaceSwipeGesture,
++              EventNameType_None, eSimpleGestureEventClass)
+ NON_IDL_EVENT(MozSwipeGestureMayStart, eSwipeGestureMayStart,
+               EventNameType_None, eSimpleGestureEventClass)
+ NON_IDL_EVENT(MozSwipeGestureStart, eSwipeGestureStart, EventNameType_None,
+diff --git a/dom/events/SimpleGestureEvent.cpp b/dom/events/SimpleGestureEvent.cpp
+index 1656ea4..f97a87e 100644
+--- a/dom/events/SimpleGestureEvent.cpp
++++ b/dom/events/SimpleGestureEvent.cpp
+@@ -49,6 +49,38 @@ uint32_t SimpleGestureEvent::ClickCount() const {
+   return mEvent->AsSimpleGestureEvent()->mClickCount;
+ }
+ 
++uint32_t SimpleGestureEvent::FingerCount() const {
++  return mEvent->AsSimpleGestureEvent()->mFingerCount;
++}
++
++void SimpleGestureEvent::GetPhase(nsAString& aPhase) const {
++  switch (mEvent->AsSimpleGestureEvent()->mGesturePhase) {
++    case widget::WorkspaceSwipePhase::Start:
++      aPhase.AssignLiteral("start");
++      break;
++    case widget::WorkspaceSwipePhase::Update:
++      aPhase.AssignLiteral("update");
++      break;
++    case widget::WorkspaceSwipePhase::End:
++      aPhase.AssignLiteral("end");
++      break;
++    case widget::WorkspaceSwipePhase::Cancel:
++      aPhase.AssignLiteral("cancel");
++      break;
++    default:
++      aPhase.Truncate();
++      break;
++  }
++}
++
++uint32_t SimpleGestureEvent::OperationId() const {
++  return mEvent->AsSimpleGestureEvent()->mOperationId;
++}
++
++double SimpleGestureEvent::DeltaY() const {
++  return mEvent->AsSimpleGestureEvent()->mDeltaY;
++}
++
+ void SimpleGestureEvent::InitSimpleGestureEventInternal(
+     const nsAString& aTypeArg, bool aCanBubbleArg, bool aCancelableArg,
+     nsGlobalWindowInner* aViewArg, int32_t aDetailArg, double aScreenX,
+@@ -68,6 +100,10 @@ void SimpleGestureEvent::InitSimpleGestureEventInternal(
+   simpleGestureEvent->mDirection = aDirectionArg;
+   simpleGestureEvent->mDelta = aDeltaArg;
+   simpleGestureEvent->mClickCount = aClickCountArg;
++  simpleGestureEvent->mFingerCount = 0;
++  simpleGestureEvent->mGesturePhase = widget::WorkspaceSwipePhase::None;
++  simpleGestureEvent->mOperationId = 0;
++  simpleGestureEvent->mDeltaY = 0.0;
+ }
+ 
+ }  // namespace mozilla::dom
+diff --git a/dom/events/SimpleGestureEvent.h b/dom/events/SimpleGestureEvent.h
+index 4b9f658..dce87ab 100644
+--- a/dom/events/SimpleGestureEvent.h
++++ b/dom/events/SimpleGestureEvent.h
+@@ -30,6 +30,10 @@ class SimpleGestureEvent : public MouseEvent {
+   uint32_t Direction() const;
+   double Delta() const;
+   uint32_t ClickCount() const;
++  uint32_t FingerCount() const;
++  void GetPhase(nsAString& aPhase) const;
++  uint32_t OperationId() const;
++  double DeltaY() const;
+ 
+   void InitSimpleGestureEvent(const nsAString& aType, bool aCanBubble,
+                               bool aCancelable, nsGlobalWindowInner* aView,
+diff --git a/dom/webidl/SimpleGestureEvent.webidl b/dom/webidl/SimpleGestureEvent.webidl
+index 58a2423..a90e8ba 100644
+--- a/dom/webidl/SimpleGestureEvent.webidl
++++ b/dom/webidl/SimpleGestureEvent.webidl
+@@ -105,6 +105,9 @@
+  Exposed=Window]
+ interface SimpleGestureEvent : MouseEvent
+ {
++  // Compiled protocol marker: a source-only pref cannot claim native support.
++  const unsigned long WORKSPACE_SWIPE_PROTOCOL_VERSION = 1;
++
+   /* Swipe direction constants */
+   const unsigned long DIRECTION_UP = 1;
+   const unsigned long DIRECTION_DOWN = 2;
+@@ -175,6 +178,15 @@ interface SimpleGestureEvent : MouseEvent
+    */
+   readonly attribute double delta;
+ 
++  // Native workspace swipes are a separate ChromeOnly input stream. Unknown
++  // fields on all existing gesture events are zero / the empty string.
++  readonly attribute unsigned long fingerCount;
++  readonly attribute DOMString phase;
++  readonly attribute unsigned long operationId;
++  // Workspace swipes use cumulative GTK logical-pixel displacement: right/down
++  // are positive. delta is horizontal and deltaY is vertical.
++  readonly attribute double deltaY;
++
+   /* Click count value for taps. */
+   readonly attribute unsigned long clickCount;
+ 
+diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
+index d740a89..f5b2d74 100644
+--- a/modules/libpref/init/all.js
++++ b/modules/libpref/init/all.js
+@@ -4221,3 +4221,11 @@ pref("general.smoothScroll", true, sticky);
+ #ifdef MOZ_ARTIFACT_BUILDS
+   pref("telemetry.fog.artifact_build", true);
+ #endif
++
++// Direct workspace input is opt-in and requires a verified device/environment.
++pref("floorp.workspaces.gestures.native.enabled", false);
++pref("floorp.workspaces.gestures.native.verified", false);
++#ifdef MOZ_WIDGET_GTK
++  // Diagnostic only: capability also requires the compiled DOM protocol marker.
++  pref("floorp.workspaces.gestures.native.gtk.version", 1);
++#endif
+diff --git a/widget/EventMessageList.h b/widget/EventMessageList.h
+index e67e027..6e9d928 100644
+--- a/widget/EventMessageList.h
++++ b/widget/EventMessageList.h
+@@ -322,6 +322,7 @@ NS_EVENT_MESSAGE(eVolumeChange)
+ NS_EVENT_MESSAGE(eAfterPaint)
+ 
+ // Simple gesture events
++NS_EVENT_MESSAGE(eWorkspaceSwipeGesture)
+ NS_EVENT_MESSAGE(eSwipeGestureMayStart)
+ NS_EVENT_MESSAGE(eSwipeGestureStart)
+ NS_EVENT_MESSAGE(eSwipeGestureUpdate)
+diff --git a/widget/TouchEvents.h b/widget/TouchEvents.h
+index b545036..dc65e5e 100644
+--- a/widget/TouchEvents.h
++++ b/widget/TouchEvents.h
+@@ -12,6 +12,8 @@
+ #include "mozilla/dom/Touch.h"
+ #include "nsTArray.h"
+ 
++#include "mozilla/WorkspaceSwipeGesture.h"
++
+ namespace mozilla {
+ 
+ /******************************************************************************
+@@ -102,7 +104,11 @@ class WidgetSimpleGestureEvent final : public WidgetMouseEventBase {
+         mAllowedDirections(aOther.mAllowedDirections),
+         mDirection(aOther.mDirection),
+         mClickCount(0),
+-        mDelta(aOther.mDelta) {}
++        mDelta(aOther.mDelta),
++        mFingerCount(aOther.mFingerCount),
++        mGesturePhase(aOther.mGesturePhase),
++        mOperationId(aOther.mOperationId),
++        mDeltaY(aOther.mDeltaY) {}
+ 
+   NS_DEFINE_VIRTUAL_DESTRUCTOR_CHECKING_CLASS_VALUE(WidgetSimpleGestureEvent,
+                                                     eSimpleGestureEventClass,
+@@ -127,6 +133,11 @@ class WidgetSimpleGestureEvent final : public WidgetMouseEventBase {
+   uint32_t mClickCount;
+   // Delta for magnify and rotate events
+   double mDelta;
++  // Set only by a native source which identifies the actual touch count.
++  uint32_t mFingerCount = 0;
++  widget::WorkspaceSwipePhase mGesturePhase = widget::WorkspaceSwipePhase::None;
++  uint32_t mOperationId = 0;
++  double mDeltaY = 0.0;
+ 
+   // XXX Not tested by test_assign_event_data.html
+   void AssignSimpleGestureEventData(const WidgetSimpleGestureEvent& aEvent,
+@@ -137,6 +148,10 @@ class WidgetSimpleGestureEvent final : public WidgetMouseEventBase {
+     mDirection = aEvent.mDirection;
+     mDelta = aEvent.mDelta;
+     mClickCount = aEvent.mClickCount;
++    mFingerCount = aEvent.mFingerCount;
++    mGesturePhase = aEvent.mGesturePhase;
++    mOperationId = aEvent.mOperationId;
++    mDeltaY = aEvent.mDeltaY;
+   }
+ };
+ 
+diff --git a/widget/WorkspaceSwipeGesture.h b/widget/WorkspaceSwipeGesture.h
+new file mode 100644
+index 0000000..36d2c76
+--- /dev/null
++++ b/widget/WorkspaceSwipeGesture.h
+@@ -0,0 +1,88 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#ifndef mozilla_WorkspaceSwipeGesture_h
++#define mozilla_WorkspaceSwipeGesture_h
++
++#include <cmath>
++#include <cstdint>
++
++namespace mozilla::widget {
++
++enum class WorkspaceSwipePhase : uint8_t { None, Start, Update, End, Cancel };
++
++// A raw three-finger stream is separate from APZ's two-finger history stream.
++// No finger count is inferred from wheel deltas or history-swipe events.
++class WorkspaceSwipeGestureState final {
++ public:
++  bool Update(uint32_t aFingers, WorkspaceSwipePhase aPhase, double aDeltaX,
++              double aDeltaY) {
++    if (aPhase == WorkspaceSwipePhase::Start) {
++      if (aFingers != 3 || !std::isfinite(aDeltaX) || !std::isfinite(aDeltaY)) {
++        return Cancel();
++      }
++      if (++mOperationId == 0) {
++        ++mOperationId;
++      }
++      mActive = true;
++      mDeltaX = 0.0;
++      mDeltaY = 0.0;
++    } else if (!mActive) {
++      return false;
++    }
++    if (aFingers != 3 || !std::isfinite(aDeltaX) || !std::isfinite(aDeltaY) ||
++        (aPhase != WorkspaceSwipePhase::Start &&
++         aPhase != WorkspaceSwipePhase::Update &&
++         aPhase != WorkspaceSwipePhase::End &&
++         aPhase != WorkspaceSwipePhase::Cancel)) {
++      return Cancel();
++    }
++    mDeltaX += aDeltaX;
++    mDeltaY += aDeltaY;
++    if (!std::isfinite(mDeltaX) || !std::isfinite(mDeltaY)) {
++      return Cancel();
++    }
++    mPhase = aPhase;
++    if (aPhase == WorkspaceSwipePhase::End ||
++        aPhase == WorkspaceSwipePhase::Cancel) {
++      mActive = false;
++    }
++    return true;
++  }
++
++  void Reset() {
++    mActive = false;
++    mPhase = WorkspaceSwipePhase::None;
++    mDeltaX = mDeltaY = 0.0;
++  }
++
++  uint32_t OperationId() const { return mOperationId; }
++  WorkspaceSwipePhase Phase() const { return mPhase; }
++  double DeltaX() const { return mDeltaX; }
++  double DeltaY() const { return mDeltaY; }
++
++ private:
++  bool Cancel() {
++    if (!mActive) {
++      return false;
++    }
++    mActive = false;
++    mPhase = WorkspaceSwipePhase::Cancel;
++    // Invalid input must not escape into a DOM event or preview transform.
++    if (!std::isfinite(mDeltaX) || !std::isfinite(mDeltaY)) {
++      mDeltaX = mDeltaY = 0.0;
++    }
++    return true;
++  }
++
++  bool mActive = false;
++  uint32_t mOperationId = 0;
++  WorkspaceSwipePhase mPhase = WorkspaceSwipePhase::None;
++  double mDeltaX = 0.0;
++  double mDeltaY = 0.0;
++};
++
++}  // namespace mozilla::widget
++
++#endif  // mozilla_WorkspaceSwipeGesture_h
+diff --git a/widget/gtk/nsWindow.cpp b/widget/gtk/nsWindow.cpp
+index 71d1dd1..a56ce92 100644
+--- a/widget/gtk/nsWindow.cpp
++++ b/widget/gtk/nsWindow.cpp
+@@ -148,6 +148,18 @@ constexpr gint kResizableStates =
+     GDK_WINDOW_STATE_BOTTOM_RESIZABLE | GDK_WINDOW_STATE_LEFT_RESIZABLE;
+ 
+ #if !GTK_CHECK_VERSION(3, 18, 0)
++struct _GdkEventTouchpadSwipe {
++  GdkEventType type;
++  GdkWindow* window;
++  gint8 send_event;
++  gint8 phase;
++  gint8 n_fingers;
++  guint32 time;
++  gdouble x, y, dx, dy;
++  gdouble x_root, y_root;
++  guint state;
++};
++
+ struct _GdkEventTouchpadPinch {
+   GdkEventType type;
+   GdkWindow* window;
+@@ -166,6 +178,7 @@ struct _GdkEventTouchpadPinch {
+ };
+ 
+ constexpr gint GDK_TOUCHPAD_GESTURE_MASK = 1 << 24;
++constexpr GdkEventType GDK_TOUCHPAD_SWIPE = static_cast<GdkEventType>(41);
+ constexpr GdkEventType GDK_TOUCHPAD_PINCH = static_cast<GdkEventType>(42);
+ 
+ #endif
+@@ -3902,6 +3915,55 @@ bool nsWindow::IsHandlingTouchSequence(GdkEventSequence* aSequence) {
+   return mHandleTouchEvent && mTouches.Contains(aSequence);
+ }
+ 
++gboolean nsWindow::OnWorkspaceSwipeEvent(GdkEventTouchpadSwipe* aEvent) {
++  if (!Preferences::GetBool("floorp.workspaces.gestures.native.enabled",
++                            false) ||
++      !Preferences::GetBool("floorp.workspaces.gestures.native.verified",
++                            false) ||
++      !Preferences::GetBool("floorp.workspaces.enabled", true) || IsPopup()) {
++    mWorkspaceSwipeGesture.Reset();
++    return FALSE;
++  }
++
++  widget::WorkspaceSwipePhase phase;
++  switch (aEvent->phase) {
++    case GDK_TOUCHPAD_GESTURE_PHASE_BEGIN:
++      phase = widget::WorkspaceSwipePhase::Start;
++      break;
++    case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
++      phase = widget::WorkspaceSwipePhase::Update;
++      break;
++    case GDK_TOUCHPAD_GESTURE_PHASE_END:
++      phase = widget::WorkspaceSwipePhase::End;
++      break;
++    case GDK_TOUCHPAD_GESTURE_PHASE_CANCEL:
++      phase = widget::WorkspaceSwipePhase::Cancel;
++      break;
++    default:
++      phase = widget::WorkspaceSwipePhase::None;
++      break;
++  }
++  if (!mWorkspaceSwipeGesture.Update(aEvent->n_fingers, phase, aEvent->dx,
++                                     aEvent->dy)) {
++    return FALSE;
++  }
++
++  // Dispatch exclusively to browser chrome. Web content must not observe or
++  // claim this browser action, and this stream must not trigger history APZ.
++  WidgetSimpleGestureEvent event(true, eWorkspaceSwipeGesture, this);
++  event.mFlags.mOnlyChromeDispatch = true;
++  event.mFingerCount = 3;
++  event.mGesturePhase = mWorkspaceSwipeGesture.Phase();
++  event.mOperationId = mWorkspaceSwipeGesture.OperationId();
++  event.mDelta = mWorkspaceSwipeGesture.DeltaX();
++  event.mDeltaY = mWorkspaceSwipeGesture.DeltaY();
++  event.mRefPoint = GetRefPoint(this, aEvent);
++  event.AssignEventTime(GetWidgetEventTime(aEvent->time));
++  KeymapWrapper::InitInputEvent(event, aEvent->state);
++  DispatchWindowEvent(event);
++  return event.DefaultPrevented() ? TRUE : FALSE;
++}
++
+ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
+   if (!StaticPrefs::apz_gtk_touchpad_pinch_enabled()) {
+     return TRUE;
+@@ -6382,9 +6444,13 @@ static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
+   return window->OnTouchEvent(aEvent);
+ }
+ 
+-// This function called generic because there is no signal specific to touchpad
+-// pinch events.
++// GTK has no separate signal for touchpad pinch or swipe events.
+ static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent) {
++  if (aEvent->type == GDK_TOUCHPAD_SWIPE) {
++    auto* swipe = reinterpret_cast<GdkEventTouchpadSwipe*>(aEvent);
++    RefPtr<nsWindow> window = nsWindow::FromGdkWindow(swipe->window);
++    return window ? window->OnWorkspaceSwipeEvent(swipe) : FALSE;
++  }
+   if (aEvent->type != GDK_TOUCHPAD_PINCH) {
+     return FALSE;
+   }
+@@ -7154,9 +7220,9 @@ nsresult nsWindow::SynthesizeNativeTouchpadPan(
+     return NS_OK;
+   }
+ 
+-  // This should/could maybe send GdkEventTouchpadSwipe events, however we don't
+-  // currently consume those (either real user input or testing events). So we
+-  // send gdk scroll events to be more like what we do for real user input. If
++  // This synthesis API models two-finger pan/history input. Workspace swipes
++  // consume only genuine GdkEventTouchpadSwipe events with an actual count.
++  // Send GDK scroll events to model the real two-finger input path. If
+   // we start consuming GdkEventTouchpadSwipe and get those hooked up to swipe
+   // to nav, then maybe we should test those too.
+ 
+diff --git a/widget/gtk/nsWindow.h b/widget/gtk/nsWindow.h
+index 60cf17f..e432123 100644
+--- a/widget/gtk/nsWindow.h
++++ b/widget/gtk/nsWindow.h
+@@ -98,6 +98,7 @@ class nsMenuPopupFrame;
+ #if !GTK_CHECK_VERSION(3, 18, 0)
+ struct _GdkEventTouchpadPinch;
+ typedef struct _GdkEventTouchpadPinch GdkEventTouchpadPinch;
++typedef struct _GdkEventTouchpadSwipe GdkEventTouchpadSwipe;
+ #endif
+ 
+ // 'Stable' Wayland subsurface rounding algorithm is used by all compositors
+@@ -311,6 +312,7 @@ class nsWindow : public nsIWidget {
+   gboolean OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent);
+   gboolean OnTouchEvent(GdkEventTouch* aEvent);
+   gboolean OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent);
++  gboolean OnWorkspaceSwipeEvent(GdkEventTouchpadSwipe* aEvent);
+   void OnTouchpadHoldEvent(GdkTouchpadGesturePhase aPhase, guint aTime,
+                            uint32_t aFingers);
+ 
+@@ -665,6 +667,9 @@ class nsWindow : public nsIWidget {
+     ScreenPoint mCurrentFocus;
+   };
+ 
++  // Never shares state with APZ's two-finger scrolling/history gestures.
++  mozilla::widget::WorkspaceSwipeGestureState mWorkspaceSwipeGesture;
++
+   // Used for handling touchpad pinch gestures
+   ScreenPoint mCurrentTouchpadFocus;
+ 
+diff --git a/widget/moz.build b/widget/moz.build
+index 9b0309e..d95c028 100644
+--- a/widget/moz.build
++++ b/widget/moz.build
+@@ -206,6 +206,7 @@ EXPORTS.mozilla += [
+     "VsyncDispatcher.h",
+     "WidgetUtils.h",
+     "WindowButtonType.h",
++    "WorkspaceSwipeGesture.h",
+ ]
+ 
+ EXPORTS.mozilla.widget += [
+diff --git a/widget/tests/gtest/TestWorkspaceSwipeGesture.cpp b/widget/tests/gtest/TestWorkspaceSwipeGesture.cpp
+new file mode 100644
+index 0000000..41ada91
+--- /dev/null
++++ b/widget/tests/gtest/TestWorkspaceSwipeGesture.cpp
+@@ -0,0 +1,93 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++#include <limits>
++
++#include "gtest/gtest.h"
++#include "mozilla/TouchEvents.h"
++#include "mozilla/UniquePtr.h"
++#include "mozilla/WorkspaceSwipeGesture.h"
++
++using mozilla::widget::WorkspaceSwipeGestureState;
++using mozilla::widget::WorkspaceSwipePhase;
++
++TEST(WorkspaceSwipeGesture, CumulativeStreamEndsOnce)
++{
++  WorkspaceSwipeGestureState state;
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Start, 0, 0));
++  const auto operation = state.OperationId();
++  EXPECT_NE(operation, 0U);
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Update, -20, 2));
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Update, -40, -1));
++  EXPECT_DOUBLE_EQ(state.DeltaX(), -60);
++  EXPECT_DOUBLE_EQ(state.DeltaY(), 1);
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::End, 0, 0));
++  EXPECT_EQ(state.Phase(), WorkspaceSwipePhase::End);
++  EXPECT_EQ(state.OperationId(), operation);
++  EXPECT_FALSE(state.Update(3, WorkspaceSwipePhase::Update, -50, 0));
++  EXPECT_FALSE(state.Update(3, WorkspaceSwipePhase::End, 0, 0));
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_NE(state.OperationId(), operation);
++  EXPECT_DOUBLE_EQ(state.DeltaX(), 0);
++}
++
++TEST(WorkspaceSwipeGesture, UnknownOrChangedFingerCountNeverCommits)
++{
++  WorkspaceSwipeGestureState state;
++  EXPECT_FALSE(state.Update(0, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_FALSE(state.Update(2, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_FALSE(state.Update(4, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_FALSE(state.Update(3, WorkspaceSwipePhase::End, 100, 0));
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_TRUE(state.Update(4, WorkspaceSwipePhase::Update, 100, 0));
++  EXPECT_EQ(state.Phase(), WorkspaceSwipePhase::Cancel);
++  EXPECT_FALSE(state.Update(3, WorkspaceSwipePhase::End, 0, 0));
++}
++
++TEST(WorkspaceSwipeGesture, InvalidCoordinatesAndResetCancelTheStream)
++{
++  WorkspaceSwipeGestureState state;
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Start, 0, 0));
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Update,
++                           std::numeric_limits<double>::infinity(), 0));
++  EXPECT_EQ(state.Phase(), WorkspaceSwipePhase::Cancel);
++  EXPECT_TRUE(std::isfinite(state.DeltaX()));
++  EXPECT_TRUE(state.Update(3, WorkspaceSwipePhase::Start, 0, 0));
++  state.Reset();
++  EXPECT_FALSE(state.Update(3, WorkspaceSwipePhase::End, 100, 0));
++}
++
++TEST(WorkspaceSwipeGesture, MetadataSurvivesEventCopiesAndDuplicate)
++{
++  mozilla::WidgetSimpleGestureEvent original(
++      true, mozilla::eWorkspaceSwipeGesture, nullptr);
++  original.mFlags.mOnlyChromeDispatch = true;
++  original.mFingerCount = 3;
++  original.mGesturePhase = WorkspaceSwipePhase::Update;
++  original.mOperationId = 23;
++  original.mDelta = -120;
++  original.mDeltaY = 4;
++
++  mozilla::WidgetSimpleGestureEvent copy(original);
++  EXPECT_EQ(copy.mFingerCount, 3U);
++  EXPECT_EQ(copy.mGesturePhase, WorkspaceSwipePhase::Update);
++  EXPECT_EQ(copy.mOperationId, 23U);
++  EXPECT_DOUBLE_EQ(copy.mDelta, -120);
++  EXPECT_DOUBLE_EQ(copy.mDeltaY, 4);
++
++  mozilla::UniquePtr<mozilla::WidgetEvent> duplicate(original.Duplicate());
++  const auto* event = duplicate->AsSimpleGestureEvent();
++  ASSERT_NE(event, nullptr);
++  EXPECT_TRUE(event->mFlags.mOnlyChromeDispatch);
++  EXPECT_EQ(event->mFingerCount, 3U);
++  EXPECT_EQ(event->mGesturePhase, WorkspaceSwipePhase::Update);
++  EXPECT_EQ(event->mOperationId, 23U);
++  EXPECT_DOUBLE_EQ(event->mDeltaY, 4);
++
++  mozilla::WidgetSimpleGestureEvent history(true, mozilla::eSwipeGesture,
++                                            nullptr);
++  EXPECT_EQ(history.mFingerCount, 0U);
++  EXPECT_EQ(history.mGesturePhase, WorkspaceSwipePhase::None);
++  EXPECT_EQ(history.mOperationId, 0U);
++}
+diff --git a/widget/tests/gtest/moz.build b/widget/tests/gtest/moz.build
+index c870dbd..9ca0a0e 100644
+--- a/widget/tests/gtest/moz.build
++++ b/widget/tests/gtest/moz.build
+@@ -9,6 +9,7 @@ UNIFIED_SOURCES = [
+     "TestTouchResampler.cpp",
+     "TestWidgetMouseEventCtors.cpp",
+     "TestWidgetTouchEventCtors.cpp",
++    "TestWorkspaceSwipeGesture.cpp",
+ ]
+ 
+ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":

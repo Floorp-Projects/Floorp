@@ -10,6 +10,9 @@ import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { onCleanup } from "solid-js";
 import { getWorkspaceMenuAccessKey } from "./utils/menu-accesskey.ts";
+import { getWorkspaceSessionRuntime } from "./utils/workspace-session-runtime.ts";
+import { enabled } from "./data/config.ts";
+import { getOriginUserContextId } from "./utils/tab-replacement-lifecycle.ts";
 
 const translationKeys = {
   moveTabToAnotherWorkspace: "workspaces.menu.moveTabToAnotherWorkspace",
@@ -68,6 +71,7 @@ export class WorkspacesTabContextMenu {
       }
     };
     parentElem.addEventListener("popupshown", onPopupShown);
+    parentElem.addEventListener("popupshowing", onPopupShown);
 
     // Native Fluent strings are lazy, and selection changes hide/show commands.
     const observer = new MutationObserver((mutations) => {
@@ -75,7 +79,8 @@ export class WorkspacesTabContextMenu {
         mutations.some(({ target, type }) =>
           (type === "childList" && target === parentElem) ||
           (target instanceof Element && target.parentElement === parentElem &&
-            target.id !== "context_MoveTabToOtherWorkspace")
+            target.id !== "context_MoveTabToOtherWorkspace" &&
+            target.id !== "context_OpenInWorkspaceSession")
         )
       ) {
         this.updateContextMenu();
@@ -89,11 +94,53 @@ export class WorkspacesTabContextMenu {
     });
     onCleanup(() => {
       parentElem.removeEventListener("popupshown", onPopupShown);
+      parentElem.removeEventListener("popupshowing", onPopupShown);
       observer.disconnect();
     });
   }
 
   private updateContextMenu() {
+    const reopen = document?.getElementById("context_OpenInWorkspaceSession");
+    if (reopen && this.ctx.tabManagerCtx) {
+      const tab = globalThis.TabContextMenu.contextTab;
+      const workspaceId = tab &&
+        this.ctx.tabManagerCtx.getWorkspaceIdFromAttribute(tab);
+      const workspace = workspaceId && this.ctx.getRawWorkspace(workspaceId);
+      const runtime = getWorkspaceSessionRuntime();
+      const actual = tab &&
+        (getOriginUserContextId(globalThis.gBrowser.getBrowserForTab(tab)) ??
+          Number(tab.getAttribute("usercontextid") || 0));
+      const canOpen = Boolean(
+        workspace && tab?.isConnected &&
+          runtime.isValidContext(workspace.userContextId) &&
+          runtime.canReopenURL(
+            globalThis.gBrowser.getBrowserForTab(tab).currentURI?.spec ?? "",
+          ) &&
+          !runtime.getPendingState(tab),
+      );
+      reopen.hidden = !enabled() || !workspace ||
+        actual === workspace.userContextId;
+      reopen.setAttribute(
+        "label",
+        i18next.t("workspaces.session.open-default", {
+          defaultValue:
+            "Open in this workspace's login environment in a new tab",
+        }),
+      );
+      if (canOpen) {
+        reopen.removeAttribute("disabled");
+        reopen.removeAttribute("tooltiptext");
+      } else {
+        reopen.setAttribute("disabled", "true");
+        reopen.setAttribute(
+          "tooltiptext",
+          i18next.t("workspaces.session.move-reopen-unavailable", {
+            defaultValue:
+              "Opening in the destination environment is unavailable because a URL depends on its original environment or the destination environment is missing.",
+          }),
+        );
+      }
+    }
     const menuElem = document?.getElementById(
       "context_MoveTabToOtherWorkspace",
     );
@@ -116,19 +163,40 @@ export class WorkspacesTabContextMenu {
 
   public contextMenu() {
     return (
-      <xul:menu
-        id="context_MoveTabToOtherWorkspace"
-        label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
-        accesskey={getTranslatedText(
-          translationKeys.moveTabToAnotherWorkspaceAccessKey,
-        )}
-        data-floorp-context-menu-key="floorp.workspaces.move-tab"
-      >
-        <xul:menupopup
-          id="WorkspacesTabContextMenu"
-          onPopupShowing={() => this.createTabworkspacesContextMenuItems()}
+      <>
+        <xul:menuitem
+          id="context_OpenInWorkspaceSession"
+          hidden
+          data-floorp-context-menu-key="floorp.workspaces.open-default-session"
+          label={i18next.t("workspaces.session.open-default", {
+            defaultValue:
+              "Open in this workspace's login environment in a new tab",
+          })}
+          onCommand={() => {
+            const tab = globalThis.TabContextMenu.contextTab;
+            const workspaceId = this.ctx.tabManagerCtx
+              .getWorkspaceIdFromAttribute(tab);
+            if (workspaceId) {
+              this.ctx.tabManagerCtx.openTabsInWorkspaceSession(workspaceId, [
+                tab,
+              ]);
+            }
+          }}
         />
-      </xul:menu>
+        <xul:menu
+          id="context_MoveTabToOtherWorkspace"
+          label={getTranslatedText(translationKeys.moveTabToAnotherWorkspace)}
+          accesskey={getTranslatedText(
+            translationKeys.moveTabToAnotherWorkspaceAccessKey,
+          )}
+          data-floorp-context-menu-key="floorp.workspaces.move-tab"
+        >
+          <xul:menupopup
+            id="WorkspacesTabContextMenu"
+            onPopupShowing={() => this.createTabworkspacesContextMenuItems()}
+          />
+        </xul:menu>
+      </>
     );
   }
 
@@ -188,7 +256,7 @@ export class WorkspacesTabContextMenu {
         menuitem.removeAttribute("image");
       }
       menuitem.addEventListener("command", () => {
-        this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
+        void this.ctx.tabManagerCtx.moveTabsToWorkspaceFromTabContextMenu(
           workspaceId,
         );
       });

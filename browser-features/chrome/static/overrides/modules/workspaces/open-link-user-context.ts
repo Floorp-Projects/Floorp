@@ -3,30 +3,79 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export type OpenLinkUserContextInput = {
-  userContextId?: number;
-  targetBrowser?: unknown;
-  [key: string]: unknown;
-};
+import type {
+  OpenLinkUserContextInput,
+  OpenLinkUserContextOptions,
+  WorkspaceOpenLinkUserContextResolution,
+} from "./open-link-user-context-types.ts";
 
-export type WorkspaceOpenLinkUserContextResolution = {
-  options: OpenLinkUserContextInput;
-  originalUserContextId: number | undefined;
-  shouldApplyWorkspaceContainer: boolean;
-};
+export type {
+  OpenLinkUserContextInput,
+  WorkspaceOpenLinkUserContextResolution,
+} from "./open-link-user-context-types.ts";
+
+function optionalUserContextId(value: unknown): number | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+    throw new RangeError("userContextId must be a non-negative safe integer");
+  }
+  return value;
+}
+
+function browserUserContextId(candidate: unknown): number | undefined {
+  if (typeof candidate !== "object" || candidate === null) return undefined;
+  const source = candidate as {
+    browsingContext?: { originAttributes?: { userContextId?: unknown } };
+    linkedBrowser?: {
+      browsingContext?: { originAttributes?: { userContextId?: unknown } };
+    };
+  };
+  const actual = optionalUserContextId(
+    source.browsingContext?.originAttributes?.userContextId ??
+      source.linkedBrowser?.browsingContext?.originAttributes?.userContextId,
+  );
+  if (actual !== undefined) return actual;
+  const direct = optionalUserContextId(
+    (candidate as { userContextId?: unknown }).userContextId,
+  );
+  if (direct !== undefined) return direct;
+  const browser = candidate as { getAttribute?(name: string): string | null };
+  if (typeof browser.getAttribute !== "function") return undefined;
+  return optionalUserContextId(
+    Number(browser.getAttribute("usercontextid") || 0),
+  );
+}
+
+function originatingUserContextId(
+  input: OpenLinkUserContextInput,
+): number | undefined {
+  const info = input.openWindowInfo as
+    | {
+      originAttributes?: { userContextId?: unknown };
+    }
+    | null
+    | undefined;
+  return optionalUserContextId(info?.originAttributes?.userContextId) ??
+    browserUserContextId(input.openerBrowser) ??
+    browserUserContextId(input.openerTab) ??
+    browserUserContextId(input.targetBrowser);
+}
 
 export function resolveWorkspaceOpenLinkUserContext(
   input: OpenLinkUserContextInput | undefined,
   where: string,
-  workspaceUserContextId: number,
+  workspaceUserContextId: number | (() => number),
 ): WorkspaceOpenLinkUserContextResolution {
   const baseInput = input ?? {};
-  const originalUserContextId = typeof baseInput.userContextId === "number"
-    ? baseInput.userContextId
-    : undefined;
+  const originalUserContextId = optionalUserContextId(baseInput.userContextId);
 
   if (where === "current") {
-    const options = { ...baseInput };
+    const options: OpenLinkUserContextOptions = {
+      ...baseInput,
+      userContextId: originalUserContextId,
+    };
 
     if (originalUserContextId === undefined) {
       delete options.userContextId;
@@ -41,26 +90,24 @@ export function resolveWorkspaceOpenLinkUserContext(
     };
   }
 
-  const potentialTargetBrowser = baseInput.targetBrowser;
-  const targetBrowserUserContextId =
-    typeof potentialTargetBrowser === "object" &&
-      potentialTargetBrowser !== null &&
-      typeof (potentialTargetBrowser as { userContextId?: unknown })
-          .userContextId === "number"
-      ? (potentialTargetBrowser as { userContextId: number }).userContextId
-      : undefined;
+  const originUserContextId = originalUserContextId === undefined
+    ? originatingUserContextId(baseInput)
+    : undefined;
 
-  const hasUserContextId = "userContextId" in baseInput;
-  const shouldApplyWorkspaceContainer = workspaceUserContextId > 0 &&
-    !hasUserContextId &&
-    targetBrowserUserContextId === undefined;
+  const userContextId = originalUserContextId ?? originUserContextId ??
+    optionalUserContextId(
+      typeof workspaceUserContextId === "function"
+        ? workspaceUserContextId()
+        : workspaceUserContextId,
+    ) ?? 0;
+  const shouldApplyWorkspaceContainer = userContextId > 0 &&
+    originalUserContextId === undefined &&
+    originUserContextId === undefined;
 
   return {
     options: {
       ...baseInput,
-      userContextId: shouldApplyWorkspaceContainer
-        ? workspaceUserContextId
-        : (originalUserContextId ?? targetBrowserUserContextId ?? 0),
+      userContextId,
     },
     originalUserContextId,
     shouldApplyWorkspaceContainer,

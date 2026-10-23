@@ -328,6 +328,14 @@ export const commands: Commands = {
       globalThis.gWorkspaces.changeWorkspaceToNextOrBeforeWorkspace(true),
     type: "workspaces-action",
   },
+  "floorp-workspace-next-no-wrap": {
+    command: () => globalThis.floorpWorkspaceGestureActions?.next(),
+    type: "workspaces-action",
+  },
+  "floorp-workspace-previous-no-wrap": {
+    command: () => globalThis.floorpWorkspaceGestureActions?.previous(),
+    type: "workspaces-action",
+  },
   "floorp-show-bsm": {
     command: () =>
       globalThis.gBrowserManagerSidebar.controllFunctions.toggleBMSShortcut(),

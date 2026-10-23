@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { resolveWorkspaceOpenLinkUserContext } from "../open-link-user-context.ts";
+import type { OpenLinkUserContextInput } from "../open-link-user-context-types.ts";
 import {
   assert,
   assertEquals,
@@ -69,27 +70,34 @@ function testCurrentWithTargetBrowserOmitsUserContextId(): void {
   );
 }
 
-function testCurrentWithUndefinedUserContextIdOmitsKey(): void {
-  const input = { userContextId: undefined, marker: "preserved" };
-  const resolution = resolveWorkspaceOpenLinkUserContext(
-    input,
-    "current",
-    7,
-  );
+function testCurrentWithUnspecifiedUserContextIdOmitsKey(): void {
+  for (const userContextId of [undefined, null]) {
+    const input = Object.freeze({ userContextId, marker: "preserved" });
+    const resolution = resolveWorkspaceOpenLinkUserContext(
+      input,
+      "current",
+      7,
+    );
 
-  assert(
-    !Object.hasOwn(resolution.options, "userContextId"),
-    "current navigation should remove an undefined userContextId",
-  );
-  assert(
-    Object.hasOwn(input, "userContextId"),
-    "resolving should not mutate the input object",
-  );
-  assertEquals(
-    resolution.options.marker,
-    "preserved",
-    "unrelated options should be preserved",
-  );
+    assert(
+      !Object.hasOwn(resolution.options, "userContextId"),
+      "current navigation should remove an unspecified userContextId",
+    );
+    assert(
+      Object.hasOwn(input, "userContextId"),
+      "resolving should not mutate the input object",
+    );
+    assertEquals(
+      input.userContextId,
+      userContextId,
+      "resolving should preserve the input value",
+    );
+    assertEquals(
+      resolution.options.marker,
+      "preserved",
+      "unrelated options should be preserved",
+    );
+  }
 }
 
 function testExplicitNumericUserContextIdsArePreserved(): void {
@@ -167,25 +175,214 @@ function testNonCurrentTargetBrowserUserContextIdTakesPrecedence(): void {
   );
 }
 
-function testNonCurrentUndefinedUserContextIdRetainsFallback(): void {
-  const input = { userContextId: undefined };
-  const resolution = resolveWorkspaceOpenLinkUserContext(input, "tab", 7);
+function testNonCurrentUnspecifiedUserContextIdUsesWorkspace(): void {
+  for (const userContextId of [undefined, null]) {
+    const input = Object.freeze({ userContextId });
+    const resolution = resolveWorkspaceOpenLinkUserContext(input, "tab", 7);
 
+    assertEquals(
+      resolution.options.userContextId,
+      7,
+      "an unspecified userContextId should use the workspace container",
+    );
+    assertEquals(
+      resolution.shouldApplyWorkspaceContainer,
+      true,
+      "an unspecified userContextId should allow workspace injection",
+    );
+    assertEquals(
+      input.userContextId,
+      userContextId,
+      "resolving should not mutate the unspecified input value",
+    );
+  }
+}
+
+function testUnspecifiedIdPreservesOriginIncludingStandard(): void {
+  for (const userContextId of [undefined, null]) {
+    for (const originId of [0, 3]) {
+      const resolution = resolveWorkspaceOpenLinkUserContext(
+        {
+          userContextId,
+          targetBrowser: { userContextId: originId },
+        },
+        "tab",
+        7,
+      );
+
+      assertEquals(
+        resolution.options.userContextId,
+        originId,
+        "an originating standard or container tab should beat the workspace",
+      );
+      assertEquals(
+        resolution.shouldApplyWorkspaceContainer,
+        false,
+        "origin inheritance must not be reported as workspace injection",
+      );
+    }
+  }
+}
+
+function assertInvalidUserContextId(
+  resolve: () => unknown,
+  message: string,
+): void {
+  let error: unknown;
+  try {
+    resolve();
+  } catch (caught) {
+    error = caught;
+  }
+  assert(error instanceof RangeError, message);
+}
+
+function testInvalidExplicitIdsAreRejected(): void {
+  for (
+    const userContextId of [
+      -1,
+      1.5,
+      NaN,
+      Infinity,
+      -Infinity,
+      Number.MAX_SAFE_INTEGER + 1,
+      "3",
+      false,
+    ]
+  ) {
+    for (const where of ["current", "tab"]) {
+      assertInvalidUserContextId(
+        () =>
+          resolveWorkspaceOpenLinkUserContext(
+            { userContextId } as OpenLinkUserContextInput,
+            where,
+            7,
+          ),
+        `invalid explicit ID ${
+          String(userContextId)
+        } should be rejected for ${where}`,
+      );
+    }
+  }
+}
+
+function testInvalidOriginAndWorkspaceIdsAreRejected(): void {
+  for (const userContextId of [-1, 1.5, NaN, Infinity]) {
+    assertInvalidUserContextId(
+      () =>
+        resolveWorkspaceOpenLinkUserContext(
+          {
+            targetBrowser: { userContextId },
+          },
+          "tab",
+          7,
+        ),
+      "an invalid origin context must not fall through to the workspace",
+    );
+    assertInvalidUserContextId(
+      () => resolveWorkspaceOpenLinkUserContext({}, "tab", userContextId),
+      "an invalid workspace default must not fall through to standard",
+    );
+  }
+}
+
+function testUnusedDefaultsDoNotOverrideExplicitOrCurrentContext(): void {
+  const explicit = resolveWorkspaceOpenLinkUserContext(
+    {
+      userContextId: 0,
+      targetBrowser: { userContextId: -1 },
+    },
+    "tab",
+    -1,
+  );
   assertEquals(
-    resolution.options.userContextId,
+    explicit.options.userContextId,
     0,
-    "an own undefined userContextId should retain the existing fallback",
+    "an explicit standard context should not depend on unused defaults",
+  );
+
+  const current = resolveWorkspaceOpenLinkUserContext({}, "current", -1);
+  assert(
+    !Object.hasOwn(current.options, "userContextId"),
+    "a current navigation should not depend on the workspace default",
+  );
+}
+
+function testUnusedDefaultGetterIsNotEvaluated(): void {
+  const missingDefault = (): number => {
+    throw new Error("Missing workspace session");
+  };
+  assertEquals(
+    resolveWorkspaceOpenLinkUserContext(
+      { userContextId: 0 },
+      "tab",
+      missingDefault,
+    ).options.userContextId,
+    0,
+    "an explicit standard opening does not read a missing default",
   );
   assertEquals(
-    resolution.shouldApplyWorkspaceContainer,
-    false,
-    "an own undefined userContextId should block workspace injection",
+    resolveWorkspaceOpenLinkUserContext(
+      { targetBrowser: { userContextId: 3 } },
+      "tab",
+      missingDefault,
+    ).options.userContextId,
+    3,
+    "origin inheritance does not read a missing default",
   );
-  assertEquals(
-    input.userContextId,
-    undefined,
-    "resolving should not mutate the undefined input value",
+  assert(
+    !Object.hasOwn(
+      resolveWorkspaceOpenLinkUserContext({}, "current", missingDefault)
+        .options,
+      "userContextId",
+    ),
+    "current navigation does not read a missing default",
   );
+}
+
+function testOpenerActualContextBeatsWorkspaceDefault(): void {
+  const missingDefault = (): number => {
+    throw new Error("Missing workspace default");
+  };
+  for (const userContextId of [0, 3]) {
+    for (
+      const input of [
+        { openerBrowser: { userContextId } },
+        {
+          openerBrowser: {
+            userContextId: 7,
+            browsingContext: { originAttributes: { userContextId } },
+          },
+        },
+        {
+          openerTab: {
+            userContextId: 7,
+            linkedBrowser: {
+              browsingContext: { originAttributes: { userContextId } },
+            },
+          },
+        },
+        { openerTab: { getAttribute: () => String(userContextId) } },
+        { openWindowInfo: { originAttributes: { userContextId } } },
+      ]
+    ) {
+      const result = resolveWorkspaceOpenLinkUserContext(
+        input,
+        "window",
+        missingDefault,
+      );
+      assertEquals(
+        result.options.userContextId,
+        userContextId,
+        "derived window inherits the opener's actual context",
+      );
+      assertEquals(
+        result.shouldApplyWorkspaceContainer,
+        false,
+        "origin inheritance is not a default injection",
+      );
+    }
+  }
 }
 
 function testWorkspaceZeroUsesFallback(): void {
@@ -255,8 +452,8 @@ export async function runAllTests(): Promise<void> {
       fn: testCurrentWithTargetBrowserOmitsUserContextId,
     },
     {
-      name: "current undefined userContextId omits key",
-      fn: testCurrentWithUndefinedUserContextIdOmitsKey,
+      name: "current unspecified userContextId omits key",
+      fn: testCurrentWithUnspecifiedUserContextIdOmitsKey,
     },
     {
       name: "explicit numeric userContextIds are preserved",
@@ -271,8 +468,32 @@ export async function runAllTests(): Promise<void> {
       fn: testNonCurrentTargetBrowserUserContextIdTakesPrecedence,
     },
     {
-      name: "non-current undefined userContextId fallback",
-      fn: testNonCurrentUndefinedUserContextIdRetainsFallback,
+      name: "non-current unspecified userContextId uses workspace",
+      fn: testNonCurrentUnspecifiedUserContextIdUsesWorkspace,
+    },
+    {
+      name: "unspecified userContextId preserves origin including standard",
+      fn: testUnspecifiedIdPreservesOriginIncludingStandard,
+    },
+    {
+      name: "invalid explicit userContextIds are rejected",
+      fn: testInvalidExplicitIdsAreRejected,
+    },
+    {
+      name: "invalid origin and workspace defaults are rejected",
+      fn: testInvalidOriginAndWorkspaceIdsAreRejected,
+    },
+    {
+      name: "unused defaults do not override explicit or current context",
+      fn: testUnusedDefaultsDoNotOverrideExplicitOrCurrentContext,
+    },
+    {
+      name: "unused default getter is not evaluated",
+      fn: testUnusedDefaultGetterIsNotEvaluated,
+    },
+    {
+      name: "opener actual context beats workspace default",
+      fn: testOpenerActualContextBeatsWorkspaceDefault,
     },
     {
       name: "workspace ID 0 fallback",

@@ -2,6 +2,10 @@
 
 import type { PaletteCommand } from "./types.ts";
 import type { PlacesUtilsModule, UrlLike } from "./types.ts";
+import {
+  getWorkspaceBookmarks,
+  isBookmarkContextCurrent,
+} from "../workspace-bookmarks/service.ts";
 
 const BOOKMARK_COMMAND_PREFIX = "__bookmark__";
 
@@ -35,11 +39,15 @@ function toUrlString(url: UrlLike | null): string {
 export async function searchBookmarks(
   query: string,
   limit: number = 10,
+  targetWindow: Window = window,
 ): Promise<PaletteCommand[]> {
   console.debug(
     "[command-palette/bookmark] searchBookmarks called",
   );
   try {
+    const scopes = getWorkspaceBookmarks();
+    await scopes.ready;
+    const context = scopes.getContext(targetWindow);
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
     ) as PlacesUtilsModule;
@@ -58,6 +66,7 @@ export async function searchBookmarks(
     );
 
     const results = await PlacesUtils.bookmarks.search(query);
+    if (!isBookmarkContextCurrent(targetWindow, context)) return [];
     console.debug(
       "[command-palette/bookmark] Raw results count:",
       results.length,
@@ -70,6 +79,7 @@ export async function searchBookmarks(
     const commands: PaletteCommand[] = [];
 
     for (const item of results) {
+      if (!scopes.isVisible(item.guid, context)) continue;
       if (item.type !== TYPE_BOOKMARK) {
         console.debug(
           "[command-palette/bookmark] Skipping non-bookmark item, type:",
@@ -94,7 +104,13 @@ export async function searchBookmarks(
         description: urlString,
         category: "bookmark-suggestions",
         keywords: [urlString, item.title].filter((k): k is string => !!k),
-        fn: (win) => navigateToUrl(win, urlString),
+        fn: (win) => {
+          if (
+            win !== targetWindow || !isBookmarkContextCurrent(win, context) ||
+            !scopes.isVisible(item.guid, win)
+          ) return;
+          navigateToUrl(win, urlString);
+        },
       });
 
       if (commands.length >= limit) break;

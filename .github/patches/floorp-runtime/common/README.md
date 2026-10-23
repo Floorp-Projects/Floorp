@@ -1,9 +1,11 @@
 # Common Runtime patches
 
-These patches are applied on every platform by `package.yml`, after checking out
-Floorp and before the artifact build. Keep Runtime changes here rather than
-editing a sibling Floorp-Runtime checkout. Validate patches against the source
-commit in `floorp-runtime.lock.json`, using an isolated checkout or source fixture.
+Source-compatible patches are applied on every platform by `package.yml`, after
+checking out Floorp and before the artifact build. Native-only patches require
+the separate source-build paths documented below. Keep Runtime changes here
+rather than editing a sibling Floorp-Runtime checkout. Validate patches against
+the source commit in `floorp-runtime.lock.json`, using an isolated checkout or
+source fixture.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
 session state and N-way split layouts on Firefox 157. The tabbrowser and
@@ -68,3 +70,54 @@ parent for the top WindowContext before scripts/CSS execute, caching only the
 document identity result. Neither uses the currently selected tab.
 Changing away from support restores future access; reload open blog pages to
 remove already injected content and retry requests.
+
+## Workspace sessions and bookmark display
+
+`workspace-session-routing.patch` resolves contexts before creating a browser,
+keeps explicit and origin contexts, and preserves the actual context in saved
+tab state. Missing contexts restore a recoverable blank placeholder before any
+original URL can load. The shared policy is `WorkspaceSessions.sys.mts`; Chrome
+UI uses that same policy for moving and recovering tabs.
+
+`workspace-bookmarks.patch` connects `WorkspaceBookmarks.sys.mts` to Places
+menus, toolbar, native menu rebuilding, tree and query views, StarUI, saving,
+folder transfers, deletion, and URLbar Places/autofill/keyword providers. GUID
+visibility is applied before matching, deduplication, and limits. The full
+bookmark manager remains explicitly unrestricted. Copy scope metadata is
+reserved durably before native mutation; interrupted transfers require recovery.
+These are display rules local to the profile and do not change Places Sync data.
+
+Both patches target the locked Runtime source and have matching JavaScript
+patches under `tools/patches/`, with paths relative to the unpacked Runtime.
+Their JavaScript can be delivered with prebuilt native artifacts and requires a
+browser restart. The separate GTK patch below requires a fresh native build.
+
+`workspace-external-routing.patch` snapshots the receiving window, workspace,
+context and selected tab for external URL requests. It bypasses context guesses
+from other windows, holds late requests in their captured workspace, and reuses
+a tab only when its actual context matches and it is ready. The initial-browser
+hook selects a fresh normal window's default workspace context before the first
+content browser exists, while explicit, origin and restored contexts retain
+precedence. Missing initial sessions load a blank recoverable placeholder.
+The matching development patch covers the unpacked browser modules and startup
+script; both delegate policy to `WorkspaceExternalRouting.sys.mts` and
+`WorkspaceSessions.sys.mts`. These JavaScript changes require a browser restart
+and do not require a native Runtime rebuild.
+
+## Native workspace input
+
+`workspace-trackpad-input.patch` adds a separate chrome-only GTK three-finger
+stream and compiled DOM protocol metadata. It requires a complete native
+Runtime rebuild. `package.yml` skips this patch while packaging prebuilt native
+artifacts; changing a pref cannot add the missing native bindings.
+
+The manual `workspace-native-input.yml` workflow applies it to the locked source,
+builds native libraries and bindings, runs the new GTests, and uploads an
+experimental package. It does not publish or bypass the existing authenticated
+Runtime promotion pipeline. Run
+`python3 tools/workspace-input/check-native-patch.py --runtime-dir <pinned-source>`
+for isolated patch, IDL, and native state-machine validation. See
+`docs/workspace-native-input.md` for the protocol, OS capability distinctions,
+and required physical-device verification. Direct input remains off by default;
+macOS/Windows direction or pan events without an actual finger count are not
+advertised as native three-finger support.

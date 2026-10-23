@@ -19,14 +19,14 @@ import { configStore, enabled } from "../data/config.ts";
 import Workspaces from "../index.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import { getContainerColorName } from "../utils/container-color.ts";
+import { workspaceSessionLabel } from "../../workspace-session-indicator/session-info.ts";
 
 const { CustomizableUI } = ChromeUtils.importESModule(
   "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
 );
 
-let lastDisplayedWorkspaceId: string | null = null;
-
 export class WorkspacesToolbarButton {
+  private lastDisplayedLabel: string | null = null;
   private StyleElement = () => {
     return <style>{workspacesStyles}</style>;
   };
@@ -93,12 +93,16 @@ export class WorkspacesToolbarButton {
       const currentId = ctx.getSelectedWorkspaceID();
       if (!currentId) return;
 
-      if (!force && lastDisplayedWorkspaceId === currentId) return;
-
-      lastDisplayedWorkspaceId = currentId;
-
       const workspace = ctx.getRawWorkspace(currentId);
       if (!workspace) return;
+      const label = workspaceSessionLabel(
+        workspace.name,
+        workspace.userContextId ?? 0,
+      );
+      const signature =
+        `${currentId}:${label}:${enabled()}:${configStore.showWorkspaceNameOnToolbar}`;
+      if (!force && this.lastDisplayedLabel === signature) return;
+      this.lastDisplayedLabel = signature;
       const icon = ctx.iconCtx.getWorkspaceIconUrl(workspace.icon);
       const xulElement = aNode as unknown as XULElement;
 
@@ -107,8 +111,10 @@ export class WorkspacesToolbarButton {
         icon ? `url(${icon})` : `url("chrome://branding/content/icon32.png")`,
       );
 
+      xulElement.setAttribute("tooltiptext", label);
+      xulElement.setAttribute("aria-label", label);
       if (configStore.showWorkspaceNameOnToolbar) {
-        xulElement.setAttribute("label", workspace.name);
+        xulElement.setAttribute("label", label);
       } else {
         xulElement.removeAttribute("label");
       }

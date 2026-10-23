@@ -693,7 +693,9 @@
             "floorp-split-view-swap-panes": "Swap Split Panes",
             "floorp-split-view-cycle-layout": "Cycle Split Layout",
             "floorp-split-view-add-pane": "Add Pane to Split View",
-            "floorp-split-view-remove-pane": "Remove Pane from Split View"
+            "floorp-split-view-remove-pane": "Remove Pane from Split View",
+            "floorp-workspace-next-no-wrap": "Next Workspace (Stop at End)",
+            "floorp-workspace-previous-no-wrap": "Previous Workspace (Stop at Start)"
         },
         "edit": "Edit",
         "duplicate": "Duplicate",

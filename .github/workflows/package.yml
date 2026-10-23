@@ -672,6 +672,10 @@ jobs:
           set -euo pipefail
           for patch in noraneko/.github/patches/floorp-runtime/common/*.patch; do
             [ -e "$patch" ] || continue
+            if [ "$(basename "$patch")" = "workspace-trackpad-input.patch" ]; then
+              echo "Skipping native-only workspace input patch: this job uses prebuilt native artifacts."
+              continue
+            fi
             echo "Applying Floorp Runtime patch: $(basename "$patch")"
             git apply --check "$patch"
             git apply --verbose "$patch"

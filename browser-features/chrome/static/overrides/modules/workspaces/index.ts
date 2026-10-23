@@ -76,10 +76,6 @@ export const overrides = [
         return originalOpenTrustedLinkIn.call(this, url, where, options);
       }
 
-      const gWorkspacesServices = Workspaces.getCtx();
-      const workspaceUserContextId =
-        gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
-
       const {
         options: mergedOptions,
         originalUserContextId,
@@ -87,7 +83,7 @@ export const overrides = [
       } = resolveWorkspaceOpenLinkUserContext(
         options,
         where,
-        workspaceUserContextId,
+        () => Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0,
       );
 
       console.debug("Workspaces: openTrustedLinkIn override", {
@@ -113,10 +109,6 @@ export const overrides = [
           [key: string]: unknown;
         },
       ) {
-        const gWorkspacesServices = Workspaces.getCtx();
-        const workspaceUserContextId =
-          gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
-
         const {
           options: mergedParams,
           originalUserContextId,
@@ -124,7 +116,7 @@ export const overrides = [
         } = resolveWorkspaceOpenLinkUserContext(
           params,
           where,
-          workspaceUserContextId,
+          () => Workspaces.getCtx()?.getCurrentWorkspaceUserContextId() ?? 0,
         );
 
         console.debug("Workspaces: openUILinkIn override", {

@@ -1,0 +1,26 @@
+{
+  "measuredAt": "2026-10-23T12:17:25.916Z",
+  "runtime": {
+    "os": "Linux",
+    "version": "157.0",
+    "buildId": "20260926171135"
+  },
+  "samplesPerSize": 20,
+  "units": "milliseconds",
+  "reports": [
+    {
+      "bookmarks": 100,
+      "coldScopeMs": 0.34038199999849894,
+      "baselineQueryP95Ms": 0.3042069999992236,
+      "scopedQueryP95Ms": 0.4126699999997072,
+      "switchP95Ms": 0.3698550000008254
+    },
+    {
+      "bookmarks": 10000,
+      "coldScopeMs": 12.675191999998788,
+      "baselineQueryP95Ms": 0.4431160000003729,
+      "scopedQueryP95Ms": 5.061103999998522,
+      "switchP95Ms": 2.7611679999990884
+    }
+  ]
+}

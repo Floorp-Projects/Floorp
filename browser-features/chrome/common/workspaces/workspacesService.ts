@@ -37,6 +37,22 @@ import {
   WORKSPACES_CHANGED_OBSERVER_TOPIC,
 } from "./utils/workspaces-static-names";
 import { ExplicitTabUserContextOperations } from "./utils/explicit-tab-user-context.ts";
+import {
+  getWorkspaceSessionIdentities,
+  getWorkspaceSessionName,
+  releaseUnusedWorkspaceSession,
+  resolveWorkspaceSessionSelection,
+  WorkspaceSessionError,
+} from "./utils/workspace-sessions.ts";
+import type {
+  ResolvedWorkspaceSession,
+  WorkspaceOperationWindow,
+  WorkspaceSessionReferenceWindow,
+} from "./utils/workspace-session-types.ts";
+import type { TFormResult } from "../modal-parent/utils/type.ts";
+import { enabled } from "./data/config.ts";
+import ModalParent from "../modal-parent/index.ts";
+import { getWorkspaceSessionRuntime } from "./utils/workspace-session-runtime.ts";
 
 export class WorkspacesService implements WorkspacesDataManagerBase {
   dataManagerCtx: WorkspacesDataManager;
@@ -115,6 +131,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // deno-lint-ignore no-explicit-any
     (globalThis as any).workspacesFuncs = {
       createNoNameWorkspace: this.createNoNameWorkspace.bind(this),
+      createWorkspaceFromDialog: this.createWorkspaceFromDialog.bind(this),
       changeWorkspaceToNext: this.changeWorkspaceToNext.bind(this),
       changeWorkspaceToPrevious: this.changeWorkspaceToPrevious.bind(this),
       captureWorkspaceSnapshot: this.captureWorkspaceSnapshot.bind(this),
@@ -126,6 +143,12 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       getSelectedWorkspaceID: this.getSelectedWorkspaceID.bind(this),
       changeWorkspace: this.changeWorkspace.bind(this),
       isWorkspaceID: this.isWorkspaceID.bind(this),
+      getCurrentWorkspaceUserContextId: this.getCurrentWorkspaceUserContextId
+        .bind(this),
+      recoverMissingSessionFromDialog: this.recoverMissingSessionFromDialog
+        .bind(this),
+      requestMoveTabsToWorkspace: this.tabManagerCtx.requestMoveTabsToWorkspace
+        .bind(this.tabManagerCtx),
     };
 
     if (workspacesDataStore.data.size === 0) {
@@ -218,12 +241,17 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   }
   // for override
   getCurrentWorkspaceUserContextId(): number {
+    if (!enabled()) return 0;
     const id = this.getSelectedWorkspaceID();
     return this.getRawWorkspace(id)?.userContextId ?? 0;
   }
 
   deleteWorkspace(workspaceID: TWorkspaceID): void {
     if (workspacesDataStore.data.size === 1) return;
+    if (this.isWorkspaceInUseByOtherWindow(workspaceID)) {
+      this.reportWorkspaceInUse();
+      return;
+    }
 
     const fallbackWorkspaceID = this.findFallbackWorkspaceID(workspaceID);
     const defaultWorkspaceID = this.getDefaultWorkspaceID();
@@ -260,6 +288,177 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     setWorkspacesDataStore("order", (prev) => [...prev, id]);
     this.changeWorkspace(id);
     return id;
+  }
+
+  /** Create through the UI without persisting anything until confirmation. */
+  public async createWorkspaceFromDialog(): Promise<TWorkspaceID | null> {
+    if (
+      !enabled() || globalThis.window.closed ||
+      getWorkspaceSessionRuntime().isPrivateWindow(globalThis.window)
+    ) return null;
+    const sourceWorkspace = this.getRawWorkspace(this.getSelectedWorkspaceID());
+    const seed: TWorkspace = {
+      name: i18next.t("workspaces.service.new-workspace", {
+        count: this.getWorkspaceCount(),
+      } as Record<string, unknown>) as string,
+      icon: null,
+      userContextId: sourceWorkspace?.userContextId ?? 0,
+      isSelected: null,
+      isDefault: null,
+    };
+    const result = await this.modalCtx.showCreateWorkspacesModal(seed);
+    if (
+      result === null || !enabled() || globalThis.window.closed ||
+      getWorkspaceSessionRuntime().isPrivateWindow(globalThis.window)
+    ) return null;
+
+    const previousWorkspaceId = this.getSelectedWorkspaceID();
+    const previousTab = globalThis.gBrowser.selectedTab;
+    let session: ResolvedWorkspaceSession | null = null;
+    let workspaceId: TWorkspaceID | null = null;
+    let initialTab: XULElement | null = null;
+    try {
+      const normalized = this.resolveWorkspaceSessionResult(result);
+      session = normalized.session;
+      const workspace = applyWorkspaceModalResult(seed, normalized.result);
+      if (!workspace) return null;
+
+      workspaceId = this.dataManagerCtx.createWorkspace(workspace.name, {
+        userContextId: workspace.userContextId,
+        icon: workspace.icon,
+      });
+      const createdId = workspaceId;
+      setWorkspacesDataStore("order", (prev) => [...prev, createdId]);
+
+      // Creating a tab dispatches TabOpen before its workspace attribute is
+      // assigned. Protect its real context from the previously selected WS.
+      const captureInitialTab = (event: Event): void => {
+        initialTab ??= event.target as XULElement;
+      };
+      globalThis.gBrowser.tabContainer.addEventListener(
+        "TabOpen",
+        captureInitialTab,
+        true,
+      );
+      try {
+        initialTab = this.withExplicitTabUserContext(
+          session.userContextId,
+          () => this.tabManagerCtx.createTabForWorkspace(createdId, false),
+        );
+      } finally {
+        globalThis.gBrowser.tabContainer.removeEventListener(
+          "TabOpen",
+          captureInitialTab,
+          true,
+        );
+      }
+      this.changeWorkspace(createdId);
+      if (this.getSelectedWorkspaceID() !== createdId) {
+        throw new Error("Workspace activation failed");
+      }
+      return createdId;
+    } catch (error) {
+      const rollback = (step: () => void): void => {
+        try {
+          step();
+        } catch (cleanupError) {
+          console.error("[Workspaces] Creation rollback failed", cleanupError);
+        }
+      };
+      // Restore the existing tab before closing the failed workspace's only
+      // tab, so normal last-tab handlers cannot create a replacement or close
+      // the window as part of cleanup.
+      rollback(() => {
+        if (this.isWorkspaceID(previousWorkspaceId)) {
+          this.setCurrentWorkspaceID(previousWorkspaceId);
+        }
+        if (previousTab?.isConnected) {
+          globalThis.gBrowser.selectedTab = previousTab;
+        }
+        this.tabManagerCtx.updateTabsVisibility();
+      });
+      if (initialTab) {
+        const failedTab = initialTab;
+        rollback(() => globalThis.gBrowser.removeTab(failedTab));
+      }
+      if (workspaceId) {
+        const failedId = workspaceId;
+        rollback(() => {
+          setWorkspacesDataStore(
+            "order",
+            (prev) => prev.filter((id) => id !== failedId),
+          );
+          this.dataManagerCtx.deleteWorkspace(failedId);
+        });
+      }
+      rollback(() => this.tabManagerCtx.updateTabsVisibility());
+      if (session) this.releaseUnusedSession(session);
+      this.reportWorkspaceSessionError(error);
+      return null;
+    }
+  }
+
+  private resolveWorkspaceSessionResult(result: TFormResult) {
+    if (typeof result.name !== "string" || !result.name.trim()) {
+      throw new WorkspaceSessionError("invalid");
+    }
+    const name = result.name.trim();
+    const session = resolveWorkspaceSessionSelection(
+      result.userContextId,
+      name,
+    );
+    return {
+      session,
+      result: { ...result, name, userContextId: String(session.userContextId) },
+    };
+  }
+
+  private isWorkspaceSessionReferenced(userContextId: number): boolean {
+    for (
+      const workspace of (workspacesDataStore.data as unknown as Map<
+        TWorkspaceID,
+        TWorkspace
+      >).values()
+    ) {
+      if (workspace.userContextId === userContextId) return true;
+    }
+    for (const rawWindow of Services.wm.getEnumerator("navigator:browser")) {
+      const window = rawWindow as unknown as WorkspaceSessionReferenceWindow;
+      for (const tab of window.gBrowser?.tabs ?? []) {
+        if (tab.userContextId === userContextId) return true;
+      }
+      if (
+        window.document.querySelector(
+          `browser[usercontextid="${userContextId}"]`,
+        )
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private releaseUnusedSession(session: ResolvedWorkspaceSession): void {
+    try {
+      releaseUnusedWorkspaceSession(
+        session,
+        (id) => this.isWorkspaceSessionReferenced(id),
+      );
+    } catch (error) {
+      console.error("[Workspaces] Session rollback failed", error);
+    }
+  }
+
+  private reportWorkspaceSessionError(error: unknown): void {
+    console.error("[Workspaces] Session operation failed", error);
+    const reason = error instanceof WorkspaceSessionError
+      ? error.reason
+      : "create";
+    Services.prompt.alert(
+      globalThis.window as unknown as mozIDOMWindowProxy,
+      i18next.t("workspaces.session.error-title"),
+      i18next.t(`workspaces.session.error-${reason}`),
+    );
   }
 
   /**
@@ -343,27 +542,51 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * @param workspaceId If workspaceId is provided, the dialog will select the workspace for editing.
    */
   public async manageWorkspaceFromDialog(id?: TWorkspaceID) {
+    if (
+      !enabled() || globalThis.window.closed ||
+      getWorkspaceSessionRuntime().isPrivateWindow(globalThis.window)
+    ) return null;
     const targetWorkspaceID = id ?? this.getSelectedWorkspaceID();
     if (!this.getRawWorkspace(targetWorkspaceID)) return;
     const result = await this.modalCtx.showWorkspacesModal(targetWorkspaceID);
-    if (result === null) return;
-    let didApply = false;
-    setWorkspacesDataStore("data", (prev) => {
-      const temp = this.cloneWorkspaceMap(prev);
-      const latestWorkspace = temp.get(targetWorkspaceID);
-      if (!latestWorkspace) return prev;
-      const newWorkspace = applyWorkspaceModalResult(latestWorkspace, result);
-      if (!newWorkspace) return prev;
-      temp.set(targetWorkspaceID, newWorkspace);
-      didApply = true;
-      return temp as unknown as TWorkspacesStoreData["data"];
-    });
-    if (!didApply) return;
-    this.tabManagerCtx.updateTabsVisibility();
-    return result;
+    if (
+      result === null || !enabled() || globalThis.window.closed ||
+      getWorkspaceSessionRuntime().isPrivateWindow(globalThis.window)
+    ) return null;
+    if (!this.getRawWorkspace(targetWorkspaceID)) return;
+    let session: ResolvedWorkspaceSession | null = null;
+    try {
+      const normalized = this.resolveWorkspaceSessionResult(result);
+      session = normalized.session;
+      let didApply = false;
+      setWorkspacesDataStore("data", (prev) => {
+        const temp = this.cloneWorkspaceMap(prev);
+        const latestWorkspace = temp.get(targetWorkspaceID);
+        if (!latestWorkspace) return prev;
+        const newWorkspace = applyWorkspaceModalResult(
+          latestWorkspace,
+          normalized.result,
+        );
+        if (!newWorkspace) return prev;
+        temp.set(targetWorkspaceID, newWorkspace);
+        didApply = true;
+        return temp as unknown as TWorkspacesStoreData["data"];
+      });
+      if (!didApply) {
+        this.releaseUnusedSession(session);
+        return;
+      }
+      this.tabManagerCtx.updateTabsVisibility();
+      return normalized.result;
+    } catch (error) {
+      if (session) this.releaseUnusedSession(session);
+      this.reportWorkspaceSessionError(error);
+      return null;
+    }
   }
 
   public changeWorkspace(id: TWorkspaceID) {
+    if (!enabled() || !this.isWorkspaceID(id)) return;
     this.tabManagerCtx.changeWorkspace(id);
     Services.obs.notifyObservers(
       null as unknown as nsISupports,
@@ -385,6 +608,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     if (!this.isWorkspaceID(targetWorkspaceId)) {
       return null;
     }
+    if (this.isWorkspaceInUseByOtherWindow(targetWorkspaceId)) {
+      this.reportWorkspaceInUse();
+      return null;
+    }
 
     if (this.getWorkspaceCount() <= 1) {
       console.warn(
@@ -397,9 +624,29 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     if (!snapshot) {
       return null;
     }
+    if (
+      !enabled() || globalThis.window.closed ||
+      !this.isWorkspaceID(targetWorkspaceId)
+    ) return null;
 
     const archiveId = await this.archiveService.saveSnapshot(snapshot);
+    if (
+      !enabled() || globalThis.window.closed ||
+      !this.isWorkspaceID(targetWorkspaceId) ||
+      this.isWorkspaceInUseByOtherWindow(targetWorkspaceId)
+    ) {
+      await this.archiveService.removeSnapshot(archiveId);
+      if (
+        enabled() && !globalThis.window.closed &&
+        this.isWorkspaceID(targetWorkspaceId)
+      ) this.reportWorkspaceInUse();
+      return null;
+    }
     this.deleteWorkspace(targetWorkspaceId);
+    if (this.isWorkspaceID(targetWorkspaceId)) {
+      await this.archiveService.removeSnapshot(archiveId);
+      return null;
+    }
     return archiveId;
   }
 
@@ -447,6 +694,17 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     });
 
     await this.restoreTabsFromSnapshot(restoredWorkspaceId, snapshot.tabs);
+
+    const originalWorkspaceId = snapshot.workspace.workspaceId;
+    if (!this.isWorkspaceID(originalWorkspaceId)) {
+      const { WorkspaceBookmarks } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+      ) as typeof import("#modules/modules/WorkspaceBookmarks.sys.mts");
+      await WorkspaceBookmarks.reassignWorkspace(
+        originalWorkspaceId,
+        restoredWorkspaceId,
+      );
+    }
 
     await this.archiveService.removeSnapshot(archiveId);
 
@@ -513,37 +771,71 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     let targetTab: XULElement | null = null;
 
     for (const tabSnapshot of tabs) {
-      const initialUrl = tabSnapshot.url ?? "about:blank";
-      const tab = globalThis.gBrowser.addTab(initialUrl, {
-        skipAnimation: true,
-        inBackground: true,
-        userContextId: tabSnapshot.userContextId,
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
-      });
+      const runtime = getWorkspaceSessionRuntime();
+      const storedState = tabSnapshot.state
+        ? structuredClone(tabSnapshot.state)
+        : {
+          entries: [{ url: tabSnapshot.url ?? "about:blank" }],
+          index: 1,
+          userContextId: tabSnapshot.userContextId,
+        };
+      storedState.userContextId = tabSnapshot.userContextId;
+      storedState.floorpWorkspaceId = workspaceId;
+      const extData = storedState.extData as Record<string, string> | undefined;
+      const heldState = extData?.["floorp.workspace.pendingSession"];
+      if (heldState && extData) {
+        const original = JSON.parse(heldState) as Record<string, unknown>;
+        original.floorpWorkspaceId = workspaceId;
+        const originalAttributes = original.attributes as
+          | Record<string, unknown>
+          | undefined;
+        if (originalAttributes) {
+          originalAttributes[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
+        }
+        if (tabSnapshot.lastShownWorkspaceId) {
+          original.floorpLastShowWorkspaceId = workspaceId;
+          if (originalAttributes) {
+            originalAttributes[WORKSPACE_LAST_SHOW_ID] = workspaceId;
+          }
+        }
+        extData["floorp.workspace.pendingSession"] = JSON.stringify(original);
+      }
+      const safeState = runtime.sanitizeRestoreState(storedState);
+      const tab = this.withExplicitTabUserContext(
+        safeState.userContextId ?? 0,
+        () =>
+          globalThis.gBrowser.addTab("about:blank", {
+            skipAnimation: true,
+            inBackground: true,
+            userContextId: safeState.userContextId ?? 0,
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
+          }),
+      );
 
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, workspaceId);
-      tab.setAttribute("usercontextid", String(tabSnapshot.userContextId));
+      if (safeState.extData?.["floorp.workspace.pendingSession"]) {
+        runtime.markPendingTab(tab, safeState);
+      }
 
       if (tabSnapshot.lastShownWorkspaceId) {
         tab.setAttribute(
           WORKSPACE_LAST_SHOW_ID,
-          tabSnapshot.lastShownWorkspaceId,
+          workspaceId,
         );
       } else {
         tab.removeAttribute(WORKSPACE_LAST_SHOW_ID);
       }
 
-      if (tabSnapshot.state) {
+      if (safeState) {
         try {
-          const clonedState = structuredClone(tabSnapshot.state);
+          const clonedState = structuredClone(safeState);
           const attributes =
             (clonedState.attributes as Record<string, unknown> | undefined) ??
               {};
           attributes[WORKSPACE_TAB_ATTRIBUTION_ID] = workspaceId;
           if (tabSnapshot.lastShownWorkspaceId) {
-            attributes[WORKSPACE_LAST_SHOW_ID] =
-              tabSnapshot.lastShownWorkspaceId;
+            attributes[WORKSPACE_LAST_SHOW_ID] = workspaceId;
           } else if (WORKSPACE_LAST_SHOW_ID in attributes) {
             delete attributes[WORKSPACE_LAST_SHOW_ID];
           }
@@ -554,17 +846,6 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
             "WorkspacesService: failed to restore tab state",
             error,
           );
-        }
-      } else if (tabSnapshot.url) {
-        try {
-          globalThis.gBrowser
-            .getBrowserForTab(tab)
-            .loadURI(Services.io.newURI(tabSnapshot.url), {
-              triggeringPrincipal: Services.scriptSecurityManager
-                .getSystemPrincipal(),
-            });
-        } catch (error) {
-          console.error("WorkspacesService: failed to load tab URL", error);
         }
       }
 
@@ -608,6 +889,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    * This ensures tabs opened from bookmarks, external links, etc. use the current workspace's container.
    */
   private handleTabOpen = (event: Event) => {
+    if (!enabled()) return;
     const tabEvent = event as CustomEvent;
     const tab = (tabEvent.target || tabEvent.detail) as XULElement;
     if (!tab) {
@@ -641,30 +923,144 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       }
       return;
     }
-
-    // Get the workspace ID that should be used (either existing or current)
-    const targetWorkspaceId = workspaceId || currentWorkspaceId;
-    const workspace = this.getRawWorkspace(targetWorkspaceId);
-    const workspaceUserContextId = workspace?.userContextId ?? 0;
-
-    // Only apply userContextId if:
-    // 1. Workspace has a container (userContextId > 0)
-    // 2. Tab doesn't already have a userContextId set (or it's 0/default)
-    const currentTabUserContextId = Number.parseInt(
-      tab.getAttribute("usercontextid") || "0",
-      10,
-    );
-
-    if (workspaceUserContextId > 0 && currentTabUserContextId === 0) {
-      // Apply workspace container to the tab
-      tab.setAttribute("usercontextid", String(workspaceUserContextId));
-      console.debug(
-        "WorkspacesService: Applied workspace container to new tab",
-        {
-          workspaceId: targetWorkspaceId,
-          userContextId: workspaceUserContextId,
-        },
-      );
-    }
   };
+
+  public isWorkspaceInUseByOtherWindow(workspaceId: TWorkspaceID): boolean {
+    for (const rawWindow of Services.wm.getEnumerator("navigator:browser")) {
+      const window = rawWindow as unknown as WorkspaceOperationWindow;
+      if (
+        window === globalThis.window || window.closed ||
+        getWorkspaceSessionRuntime().isPrivateWindow(window)
+      ) continue;
+      if (window.workspacesFuncs?.getSelectedWorkspaceID?.() === workspaceId) {
+        return true;
+      }
+      for (const tab of window.gBrowser?.tabs ?? []) {
+        if (tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) === workspaceId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private reportWorkspaceInUse(): void {
+    Services.prompt.alert(
+      globalThis.window as unknown as mozIDOMWindowProxy,
+      i18next.t("workspaces.session.in-use-title", {
+        defaultValue: "Workspace is in use",
+      }),
+      i18next.t("workspaces.session.in-use", {
+        defaultValue:
+          "This workspace is selected or has tabs in another window. Close those tabs and switch that window before deleting or archiving it.",
+      }),
+    );
+  }
+
+  public async recoverMissingSessionFromDialog(
+    oldId?: number,
+    workspaceId = this.getSelectedWorkspaceID(),
+  ): Promise<boolean> {
+    if (
+      !enabled() || !this.isWorkspaceID(workspaceId) ||
+      getWorkspaceSessionRuntime().isPrivateWindow(globalThis.window)
+    ) return false;
+    const workspace = this.getRawWorkspace(workspaceId);
+    if (!workspace) return false;
+    const missingId = oldId ?? workspace.userContextId;
+    const runtime = getWorkspaceSessionRuntime();
+    const pending = runtime.pendingTabs(workspaceId, missingId);
+    const modal = ModalParent.getInstance();
+    const result = await new Promise<TFormResult | null>((resolve) => {
+      void modal.showNoraModal(
+        {
+          title: i18next.t("workspaces.session.recover-title", {
+            defaultValue: "Recover login environment",
+          }),
+          description: i18next.t("workspaces.session.recover-description", {
+            defaultValue:
+              "Choose where to reopen {{count}} pending tabs in {{name}}. URLs are reopened without copying forms, history or site data.",
+            count: pending.length,
+            name: workspace.name,
+          }),
+          forms: [{
+            id: "userContextId",
+            type: "select",
+            required: true,
+            value: "",
+            label: i18next.t("workspaces.modal.container"),
+            options: [
+              {
+                value: "",
+                label: i18next.t("workspaces.modal.choose-session"),
+              },
+              {
+                value: "new",
+                label: i18next.t("workspaces.modal.new-session"),
+              },
+              { value: "0", label: i18next.t("workspaces.modal.no-container") },
+              ...getWorkspaceSessionIdentities().map((identity) => ({
+                value: String(identity.userContextId),
+                label: getWorkspaceSessionName(identity.userContextId) ??
+                  identity.name,
+              })),
+            ],
+          }],
+          submitLabel: i18next.t("workspaces.modal.save"),
+          cancelLabel: i18next.t("workspaces.modal.cancel"),
+        },
+        { width: 540, height: 430 },
+        resolve,
+      ).catch(() => resolve(null));
+    });
+    if (
+      !result || !enabled() || globalThis.window.closed ||
+      !this.isWorkspaceID(workspaceId)
+    ) return false;
+    const latestPending = runtime.pendingTabs(workspaceId, missingId);
+    if (
+      latestPending.length !== pending.length ||
+      latestPending.some(({ tab, state }) =>
+        !pending.some((captured) =>
+          captured.tab === tab &&
+          JSON.stringify(captured.state) === JSON.stringify(state)
+        )
+      )
+    ) return false;
+    let session: ResolvedWorkspaceSession | null = null;
+    try {
+      session = resolveWorkspaceSessionSelection(
+        result.userContextId,
+        workspace.name,
+      );
+      const newId = session.userContextId;
+      const recovered = runtime.recoverPendingTabs(
+        workspaceId,
+        missingId,
+        newId,
+      );
+      if (recovered.failed) {
+        throw new Error("Some pending tabs could not be recovered");
+      }
+      setWorkspacesDataStore("data", (prev) => {
+        const map = this.cloneWorkspaceMap(prev);
+        const latest = map.get(workspaceId);
+        if (latest?.userContextId === missingId) {
+          map.set(workspaceId, { ...latest, userContextId: newId });
+        }
+        return map as unknown as TWorkspacesStoreData["data"];
+      });
+      Services.obs.notifyObservers(
+        null as unknown as nsISupports,
+        WORKSPACES_CHANGED_OBSERVER_TOPIC,
+        workspaceId,
+      );
+      this.tabManagerCtx.updateTabsVisibility();
+      return true;
+    } catch (error) {
+      if (session) this.releaseUnusedSession(session);
+      this.reportWorkspaceSessionError(error);
+      return false;
+    }
+  }
 }

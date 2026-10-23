@@ -85,43 +85,47 @@ export function patchNeeded(): boolean {
   return false;
 }
 
+/** Reverse each patch atomically, newest dependency first. */
+export function reverseAppliedPatches(
+  binaryDirectory: string,
+  appliedDirectory: string,
+  execute: typeof runCommandChecked = runCommandChecked,
+): void {
+  const entries = Array.from(Deno.readDirSync(appliedDirectory))
+    .map((entry) => entry.name)
+    .filter((name) =>
+      name.endsWith(".patch") && patchAppliesToCurrentPlatform(name)
+    )
+    .sort()
+    .reverse();
+  for (const patch of entries) {
+    const patchPath = path.join(appliedDirectory, patch);
+    const result = execute("git", [
+      "apply",
+      "-R",
+      "--whitespace=fix",
+      "--unsafe-paths",
+      "--directory",
+      binaryDirectory,
+      patchPath,
+    ]);
+    if (!result.success) {
+      logger.warn(result.stderr);
+      throw new Error(`Failed to reverse patch atomically: ${patchPath}`);
+    }
+  }
+}
+
 export function applyPatches(): void {
   if (!patchNeeded()) {
     logger.info("No patches needed to apply.");
     return;
   }
 
-  // Reverse previously applied patches if any
+  // Undo dependent patches in the opposite order to their application.
   if (exists(PATCHES_TMP)) {
     logger.info("Reversing previously applied patches.");
-    let reverseIsAborted = false;
-    const entries = Array.from(Deno.readDirSync(PATCHES_TMP))
-      .map((e) => e.name)
-      .filter((name) => patchAppliesToCurrentPlatform(name))
-      .sort();
-    for (const patch of entries) {
-      const patchPath = path.join(PATCHES_TMP, patch);
-      const result = runCommandChecked(
-        "git",
-        [
-          "apply",
-          "-R",
-          "--reject",
-          "--whitespace=fix",
-          "--unsafe-paths",
-          "--directory",
-          binDir(),
-          patchPath,
-        ],
-        undefined,
-      );
-      if (!result.success) {
-        logger.warn(`Failed to reverse patch: ${patchPath}`);
-        logger.warn(result.stderr);
-        reverseIsAborted = true;
-      }
-    }
-    if (reverseIsAborted) throw new Error("Reverse Patch Failed: aborted");
+    reverseAppliedPatches(binDir(), PATCHES_TMP);
     try {
       safeRemove(PATCHES_TMP);
     } catch {

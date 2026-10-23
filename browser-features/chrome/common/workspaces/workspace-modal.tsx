@@ -21,10 +21,19 @@ import { type Accessor, createSignal } from "solid-js";
 import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
+import {
+  getWorkspaceSessionIdentities,
+  getWorkspaceSessionName,
+  WORKSPACE_NEW_SESSION_VALUE,
+} from "./utils/workspace-sessions.ts";
+import type {
+  WorkspaceModalMode,
+  WorkspaceModalTexts,
+  WorkspaceSessionFormLabels,
+  WorkspaceSessionOption,
+} from "./utils/workspace-modal-types.ts";
 
-export {
-  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
-} from "./utils/workspace-icons.ts";
+export { WORKSPACE_ICON_NO_CHANGE_SENTINEL } from "./utils/workspace-icons.ts";
 
 export const createWorkspaceIconPickerFormItem = (
   workspace: TWorkspace,
@@ -62,25 +71,43 @@ export const applyWorkspaceModalResult = (
   );
 };
 
-const { ContextualIdentityService } = ChromeUtils.importESModule(
-  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
-);
+export const createWorkspaceSessionFormItem = (
+  userContextId: number,
+  sessions: readonly WorkspaceSessionOption[],
+  labels: WorkspaceSessionFormLabels,
+  mode: WorkspaceModalMode,
+): TFormItem => {
+  const hasCurrentSession = userContextId === 0 ||
+    sessions.some((session) => session.userContextId === userContextId);
+  const options = [
+    { value: "0", label: labels.standard },
+    ...sessions.map((session) => ({
+      value: session.userContextId.toString(),
+      label: session.name,
+    })),
+  ];
+  const currentValue = userContextId.toString();
+  const currentOption = options.find((option) => option.value === currentValue);
+  const otherOptions = mode === "create" && hasCurrentSession
+    ? options.filter((option) => option.value !== currentValue)
+    : options;
 
-type Container = {
-  name: string;
-  userContextId: number;
-  l10nId?: string;
-};
-
-type I18nTextValues = {
-  name: string;
-  namePlaceholder: string;
-  container: string;
-  noContainer: string;
-  icon: string;
-  editTitle: string;
-  save: string;
-  cancel: string;
+  return {
+    id: "userContextId",
+    type: "select",
+    label: labels.label,
+    value: hasCurrentSession ? currentValue : "",
+    required: true,
+    options: [
+      ...(!hasCurrentSession
+        ? [{ value: "", label: labels.chooseSession }]
+        : mode === "create" && currentOption
+        ? [{ ...currentOption, label: labels.shareCurrent }]
+        : []),
+      { value: WORKSPACE_NEW_SESSION_VALUE, label: labels.newSession },
+      ...otherOptions,
+    ],
+  };
 };
 
 const translationKeys = {
@@ -90,11 +117,17 @@ const translationKeys = {
   noContainer: "workspaces.modal.no-container",
   icon: "workspaces.modal.icon",
   editTitle: "workspaces.modal.edit-title",
+  createTitle: "workspaces.modal.create-title",
+  createDescription: "workspaces.modal.create-description",
+  editDescription: "workspaces.modal.edit-description",
+  create: "workspaces.modal.create",
   save: "workspaces.modal.save",
   cancel: "workspaces.modal.cancel",
+  newSession: "workspaces.modal.new-session",
+  chooseSession: "workspaces.modal.choose-session",
 };
 
-const getTranslatedTexts = (): I18nTextValues => {
+const getTranslatedTexts = (): WorkspaceModalTexts => {
   return {
     name: i18next.t(translationKeys.name),
     namePlaceholder: i18next.t(translationKeys.namePlaceholder),
@@ -102,8 +135,14 @@ const getTranslatedTexts = (): I18nTextValues => {
     noContainer: i18next.t(translationKeys.noContainer),
     icon: i18next.t(translationKeys.icon),
     editTitle: i18next.t(translationKeys.editTitle),
+    createTitle: i18next.t(translationKeys.createTitle),
+    createDescription: i18next.t(translationKeys.createDescription),
+    editDescription: i18next.t(translationKeys.editDescription),
+    create: i18next.t(translationKeys.create),
     save: i18next.t(translationKeys.save),
     cancel: i18next.t(translationKeys.cancel),
+    newSession: i18next.t(translationKeys.newSession),
+    chooseSession: i18next.t(translationKeys.chooseSession),
   };
 };
 
@@ -113,8 +152,8 @@ export class WorkspaceManageModal {
   private modalParent: ModalParent;
   private iconTranslationsHandler: IconTranslationsHandler;
 
-  private texts: Accessor<I18nTextValues> = () => getTranslatedTexts();
-  private setTexts: (value: I18nTextValues) => void = () => {};
+  private texts: Accessor<WorkspaceModalTexts> = () => getTranslatedTexts();
+  private setTexts: (value: WorkspaceModalTexts) => void = () => {};
 
   constructor(ctx: WorkspacesService, iconCtx: WorkspaceIcons) {
     this.ctx = ctx;
@@ -124,7 +163,7 @@ export class WorkspaceManageModal {
     this.iconTranslationsHandler = IconTranslationsHandler.getInstance();
 
     createRootHMR(() => {
-      const [texts, setTexts] = createSignal<I18nTextValues>(
+      const [texts, setTexts] = createSignal<WorkspaceModalTexts>(
         getTranslatedTexts(),
       );
       this.texts = texts;
@@ -136,21 +175,20 @@ export class WorkspaceManageModal {
     }, import.meta.hot);
   }
 
-  private get containers(): Container[] {
-    return ContextualIdentityService.getPublicIdentities();
-  }
-
-  private getContainerName(container: Container) {
-    if (container.l10nId) {
-      return ContextualIdentityService.getUserContextLabel(
-        container.userContextId,
-      );
-    }
-    return container.name;
-  }
-
-  private createFormConfig(workspace: TWorkspace): TForm {
+  private createFormConfig(
+    workspace: TWorkspace,
+    mode: WorkspaceModalMode = "edit",
+  ): TForm {
     const texts = this.texts();
+    const sessions = getWorkspaceSessionIdentities().map((identity) => ({
+      userContextId: identity.userContextId,
+      name: getWorkspaceSessionName(identity.userContextId) ?? identity.name,
+    }));
+    const currentSessionName = workspace.userContextId === 0
+      ? texts.noContainer
+      : sessions.find((session) =>
+        session.userContextId === workspace.userContextId
+      )?.name;
 
     return {
       forms: [
@@ -162,25 +200,15 @@ export class WorkspaceManageModal {
           required: true,
           placeholder: texts.namePlaceholder,
         },
-        {
-          id: "userContextId",
-          type: "dropdown",
+        createWorkspaceSessionFormItem(workspace.userContextId, sessions, {
           label: texts.container,
-          value: workspace.userContextId?.toString() || "0",
-          required: true,
-          options: [
-            {
-              value: "0",
-              label: texts.noContainer,
-              icon: "",
-            },
-            ...this.containers.map((container) => ({
-              value: container.userContextId.toString(),
-              label: this.getContainerName(container),
-              icon: "",
-            })),
-          ],
-        },
+          standard: texts.noContainer,
+          shareCurrent: i18next.t("workspaces.modal.share-session", {
+            name: currentSessionName ?? "",
+          }),
+          newSession: texts.newSession,
+          chooseSession: texts.chooseSession,
+        }, mode),
         createWorkspaceIconPickerFormItem(
           workspace,
           this.iconCtx,
@@ -188,8 +216,11 @@ export class WorkspaceManageModal {
           texts.icon,
         ),
       ],
-      title: texts.editTitle,
-      submitLabel: texts.save,
+      title: mode === "create" ? texts.createTitle : texts.editTitle,
+      description: mode === "create"
+        ? texts.createDescription
+        : texts.editDescription,
+      submitLabel: mode === "create" ? texts.create : texts.save,
       cancelLabel: texts.cancel,
     };
   }
@@ -201,12 +232,19 @@ export class WorkspaceManageModal {
       workspaceID ?? this.ctx.getSelectedWorkspaceID(),
     );
     if (!workspace) return null;
-    const formConfig = this.createFormConfig(workspace);
-    return await new Promise((resolve) => {
-      this.modalParent.showNoraModal(formConfig, {
-        width: 540,
-        height: 700,
-      }, (result: TFormResult | null) => resolve(result));
-    });
+    return await this.showForm(this.createFormConfig(workspace));
+  }
+
+  public async showCreateWorkspacesModal(
+    seed: TWorkspace,
+  ): Promise<TFormResult | null> {
+    return await this.showForm(this.createFormConfig(seed, "create"));
+  }
+
+  private async showForm(form: TForm): Promise<TFormResult | null> {
+    return await this.modalParent.showNoraModal(form, {
+      width: 540,
+      height: 700,
+    }, () => {});
   }
 }

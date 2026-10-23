@@ -1,0 +1,2192 @@
+diff --git a/browser/chrome/browser/content/browser/browser-places.js b/browser/chrome/browser/content/browser/browser-places.js
+index 956207d..54fdc3e 100644
+--- a/browser/chrome/browser/content/browser/browser-places.js
++++ b/browser/chrome/browser/content/browser/browser-places.js
+@@ -53,6 +53,80 @@ var StarUI = {
+   // The autoclose timeout length.
+   _autoCloseTimeout: 3500,
+   _removeBookmarksOnPopupHidden: false,
++  _floorpContext: null,
++  _floorpBookmarkURL: null,
++  _floorpParentGuid: null,
++  _floorpParentScope: null,
++
++  get selectedWorkspaceBookmarkGuid() {
++    return this._itemGuids?.[0] ?? null;
++  },
++
++  getWorkspaceBookmarks() {
++    return PlacesUIUtils.workspaceBookmarks.visibleBookmarksForUrl(
++      this._floorpBookmarkURL,
++      PlacesUIUtils.workspaceBookmarkContext(window)
++    );
++  },
++
++  async selectWorkspaceBookmark(guid) {
++    const context = PlacesUIUtils.workspaceBookmarkContext(window);
++    if (!PlacesUIUtils.workspaceBookmarks.isVisible(guid, context)) {
++      return false;
++    }
++    const info = await PlacesUtils.bookmarks.fetch(guid);
++    if (
++      !info ||
++      !PlacesUIUtils.workspaceBookmarks.isCurrentContext(context, window)
++    ) {
++      return false;
++    }
++    const node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
++    if (!PlacesUIUtils.workspaceBookmarks.isCurrentContext(context, window)) {
++      return false;
++    }
++    gEditItemOverlay.uninitPanel(true);
++    this._isNewBookmark = false;
++    this._itemGuids = [guid];
++    this._floorpParentGuid = info.parentGuid;
++    this._floorpParentScope = JSON.stringify(
++      PlacesUIUtils.workspaceBookmarks.getEffectiveScope(info.parentGuid)
++    );
++    await gEditItemOverlay.initPanel({
++      node,
++      hiddenRows: ["location", "keyword"],
++      focusedElement: "preferred",
++      isNewBookmark: false,
++    });
++    document.l10n.setAttributes(
++      this._element("editBookmarkPanelRemoveButton"),
++      "bookmark-panel-remove",
++      { count: 1 }
++    );
++    return true;
++  },
++
++  _floorpMayCommit(parentGuid = this._floorpParentGuid) {
++    const current = PlacesUIUtils.workspaceBookmarkContext(window);
++    return (
++      this._floorpContext &&
++      current.windowGeneration == this._floorpContext.windowGeneration &&
++      current.workspaceId == this._floorpContext.workspaceId &&
++      current.enabled == this._floorpContext.enabled &&
++      this._floorpParentScope ==
++        JSON.stringify(
++          PlacesUIUtils.workspaceBookmarks.getEffectiveScope(
++            this._floorpParentGuid
++          )
++        ) &&
++      (!parentGuid ||
++        PlacesUIUtils.workspaceBookmarks.isVisible(parentGuid, current)) &&
++      (this._isNewBookmark ||
++        this._itemGuids?.every(guid =>
++          PlacesUIUtils.workspaceBookmarks.isVisible(guid, current)
++        ))
++    );
++  },
+ 
+   _element(aID) {
+     return document.getElementById(aID);
+@@ -189,8 +263,17 @@ var StarUI = {
+   async _handlePopupHiddenEvent() {
+     const { bookmarkState, didChangeFolder, selectedFolderGuid } =
+       gEditItemOverlay;
++    const parentGuid = bookmarkState?.parentGuid ?? selectedFolderGuid;
++    const mayCommit = this._floorpMayCommit(parentGuid);
+     gEditItemOverlay.uninitPanel(true);
+ 
++    if (!mayCommit) {
++      this._removeBookmarksOnPopupHidden = false;
++      this._itemGuids = null;
++      this._cancelOnPopupHidden = false;
++      return;
++    }
++
+     if (this._cancelOnPopupHidden) {
+       this._cancelOnPopupHidden = false;
+       return;
+@@ -200,7 +283,9 @@ var StarUI = {
+     // before we handle the next popup.
+     const removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
+     this._removeBookmarksOnPopupHidden = false;
+-    const guidsForRemoval = this._itemGuids;
++    const guidsForRemoval = this._itemGuids?.filter(guid =>
++      PlacesUIUtils.workspaceBookmarks.isVisible(guid, window)
++    );
+     this._itemGuids = null;
+ 
+     if (removeBookmarksOnPopupHidden && guidsForRemoval) {
+@@ -218,8 +303,10 @@ var StarUI = {
+       "browser.bookmarks.editDialog.showForNewBookmarks",
+       this._element("editBookmarkPanel_showForNewBookmarks").checked
+     );
+-    await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
+-    await bookmarkState.save();
++    await this._storeRecentlyUsedFolder(parentGuid, didChangeFolder);
++    if (bookmarkState._workspaceMaySave()) {
++      await bookmarkState.save();
++    }
+ 
+     if (this._isNewBookmark) {
+       this.showConfirmation();
+@@ -233,6 +320,12 @@ var StarUI = {
+       return;
+     }
+ 
++    this._floorpContext = PlacesUIUtils.workspaceBookmarkContext(window);
++    this._floorpBookmarkURL = aUrl.href ?? aUrl.spec ?? String(aUrl);
++    this._floorpParentGuid = aNode.parent?.bookmarkGuid ?? aNode.parentGuid;
++    this._floorpParentScope = JSON.stringify(
++      PlacesUIUtils.workspaceBookmarks.getEffectiveScope(this._floorpParentGuid)
++    );
+     this._isNewBookmark = aIsNewBookmark;
+     this._itemGuids = null;
+ 
+@@ -247,10 +340,10 @@ var StarUI = {
+     this._element("editBookmarkPanel_showForNewBookmarks").checked =
+       this.showForNewBookmarks;
+ 
+-    this._itemGuids = [];
+-    await PlacesUtils.bookmarks.fetch({ url: aUrl }, bookmark =>
+-      this._itemGuids.push(bookmark.guid)
+-    );
++    this._itemGuids = aIsNewBookmark ? [] : [aNode.bookmarkGuid];
++    if (!this._floorpMayCommit()) {
++      return;
++    }
+ 
+     let removeButton = this._element("editBookmarkPanelRemoveButton");
+     if (this._isNewBookmark) {
+@@ -301,6 +394,10 @@ var StarUI = {
+       isNewBookmark: this._isNewBookmark,
+     });
+ 
++    if (!this._floorpMayCommit(gEditItemOverlay.selectedFolderGuid)) {
++      gEditItemOverlay.uninitPanel(true);
++      return;
++    }
+     this.panel.openPopup(BookmarkingUI.anchor, "bottomright topright");
+   },
+ 
+@@ -323,6 +420,13 @@ var StarUI = {
+     if (!selectedFolderGuid) {
+       return;
+     }
++    PlacesUIUtils.workspaceBookmarks.rememberDefaultFolder(
++      window,
++      selectedFolderGuid
++    );
++    if (PlacesUIUtils.workspaceBookmarkContext(window).enabled) {
++      return;
++    }
+ 
+     // If we're changing where a bookmark gets saved, persist that location,
+     // unless it is the mobile root.
+@@ -410,13 +514,38 @@ var PlacesCommandHook = {
+   async bookmarkPage() {
+     let browser = gBrowser.selectedBrowser;
+     let url = URL.fromURI(Services.io.createExposableURI(browser.currentURI));
+-    let info = await PlacesUtils.bookmarks.fetch({ url });
++    await PlacesUIUtils.workspaceBookmarks.ready;
++    const workspaceContext = PlacesUIUtils.workspaceBookmarkContext(window);
++    let info = await PlacesUIUtils.workspaceBookmarkForURL(
++      url,
++      window,
++      workspaceContext
++    );
++    if (
++      !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        window
++      )
++    ) {
++      return;
++    }
+     let isNewBookmark = !info;
+     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
+     if (isNewBookmark) {
+       // This is async because we have to validate the guid
+       // coming from prefs.
+-      let parentGuid = await PlacesUIUtils.defaultParentGuid;
++      let parentGuid = await PlacesUIUtils.workspaceBookmarks.getDefaultFolder(
++        window,
++        await PlacesUIUtils.defaultParentGuid
++      );
++      if (
++        !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++          workspaceContext,
++          window
++        )
++      ) {
++        return;
++      }
+       info = { url, parentGuid };
+       // Bug 1148838 - Make this code work for full page plugins.
+       let charset = null;
+@@ -443,6 +572,14 @@ var PlacesCommandHook = {
+         console.error(e);
+       }
+ 
++      if (
++        !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++          workspaceContext,
++          window
++        )
++      ) {
++        return;
++      }
+       if (!StarUI.showForNewBookmarks) {
+         info.guid = await PlacesTransactions.NewBookmark(info).transact();
+       } else {
+@@ -467,6 +604,14 @@ var PlacesCommandHook = {
+     }
+ 
+     let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
++    if (
++      !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        window
++      )
++    ) {
++      return;
++    }
+ 
+     await StarUI.showEditBookmarkPopup(node, isNewBookmark, url);
+   },
+@@ -482,10 +627,32 @@ var PlacesCommandHook = {
+    *        The bookmark's guid if the dialog was confirmed, otherwise undefined.
+    */
+   async bookmarkLink(url, title) {
+-    let bm = await PlacesUtils.bookmarks.fetch({ url });
++    await PlacesUIUtils.workspaceBookmarks.ready;
++    const workspaceContext = PlacesUIUtils.workspaceBookmarkContext(window);
++    let bm = await PlacesUIUtils.workspaceBookmarkForURL(
++      url,
++      window,
++      workspaceContext
++    );
++    if (
++      !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        window
++      )
++    ) {
++      return undefined;
++    }
+     let guid;
+     if (bm) {
+       let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
++      if (
++        !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++          workspaceContext,
++          window
++        )
++      ) {
++        return undefined;
++      }
+       guid = await PlacesUIUtils.showBookmarkDialog(
+         { action: "edit", node },
+         window.top
+@@ -493,7 +660,18 @@ var PlacesCommandHook = {
+       return guid;
+     }
+ 
+-    let parentGuid = await PlacesUIUtils.defaultParentGuid;
++    let parentGuid = await PlacesUIUtils.workspaceBookmarks.getDefaultFolder(
++      window,
++      await PlacesUIUtils.defaultParentGuid
++    );
++    if (
++      !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        window
++      )
++    ) {
++      return undefined;
++    }
+     let defaultInsertionPoint = new PlacesInsertionPoint({
+       parentGuid,
+     });
+@@ -1812,6 +1990,43 @@ var BookmarkingUI = {
+   },
+ 
+   init() {
++    this._floorpWorkspaceObserver = () => {
++      this.updateStarState();
++      const current = PlacesUIUtils.workspaceBookmarkContext(window);
++      if (
++        StarUI._floorpContext &&
++        current.windowGeneration == StarUI._floorpContext.windowGeneration &&
++        current.enabled == StarUI._floorpContext.enabled &&
++        !current.ready &&
++        PlacesUIUtils.workspaceBookmarks.getStatus().state == "loading"
++      ) {
++        return;
++      }
++      if (
++        ["open", "showing"].includes(
++          document.getElementById("editBookmarkPanel")?.state
++        ) &&
++        StarUI._floorpContext &&
++        !StarUI._floorpMayCommit(gEditItemOverlay.selectedFolderGuid)
++      ) {
++        StarUI._cancelOnPopupHidden = true;
++        document.getElementById("editBookmarkPanel")?.hidePopup();
++      }
++    };
++    Services.obs.addObserver(
++      this._floorpWorkspaceObserver,
++      "floorp.workspace-bookmarks.changed"
++    );
++    window.addEventListener(
++      "unload",
++      () => {
++        Services.obs.removeObserver(
++          this._floorpWorkspaceObserver,
++          "floorp.workspace-bookmarks.changed"
++        );
++      },
++      { once: true }
++    );
+     CustomizableUI.addListener(this);
+     let importButton = document.getElementById("import-button");
+     if (importButton) {
+@@ -1855,17 +2070,35 @@ var BookmarkingUI = {
+   updateStarState: function BUI_updateStarState() {
+     this._uri = gBrowser.currentURI;
+     this._itemGuids.clear();
++    this._updateStar();
+     let guids = new Set();
++    const workspaceContext = PlacesUIUtils.workspaceBookmarkContext(window);
+ 
+     // those objects are use to check if we are in the current iteration before
+     // returning any result.
+     let pendingUpdate = (this._pendingUpdate = {});
+ 
+     PlacesUtils.bookmarks
+-      .fetch({ url: this._uri }, b => guids.add(b.guid), { concurrent: true })
++      .fetch(
++        { url: this._uri },
++        b => {
++          if (
++            PlacesUIUtils.workspaceBookmarks.isVisible(b.guid, workspaceContext)
++          ) {
++            guids.add(b.guid);
++          }
++        },
++        { concurrent: true }
++      )
+       .catch(console.error)
+       .then(() => {
+-        if (pendingUpdate != this._pendingUpdate) {
++        if (
++          pendingUpdate != this._pendingUpdate ||
++          !PlacesUIUtils.workspaceBookmarks.isCurrentContext(
++            workspaceContext,
++            window
++          )
++        ) {
+           return;
+         }
+ 
+@@ -1873,7 +2106,7 @@ var BookmarkingUI = {
+         // calls back.  For such an edge case, retain all unique entries from the
+         // array.
+         if (this._itemGuids.size > 0) {
+-          this._itemGuids = new Set(...this._itemGuids, ...guids);
++          this._itemGuids = new Set([...this._itemGuids, ...guids]);
+         } else {
+           this._itemGuids = guids;
+         }
+@@ -1907,6 +2140,11 @@ var BookmarkingUI = {
+   },
+ 
+   _updateStar: function BUI__updateStar() {
++    this._itemGuids = new Set(
++      [...this._itemGuids].filter(guid =>
++        PlacesUIUtils.workspaceBookmarks.isVisible(guid, window)
++      )
++    );
+     let starred = this._itemGuids.size > 0;
+ 
+     // Update the image for all elements.
+diff --git a/moz-src/browser/components/places/PlacesUIUtils.sys.mjs b/moz-src/browser/components/places/PlacesUIUtils.sys.mjs
+index 43173a6..2cb293b 100644
+--- a/moz-src/browser/components/places/PlacesUIUtils.sys.mjs
++++ b/moz-src/browser/components/places/PlacesUIUtils.sys.mjs
+@@ -21,6 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
+     "moz-src:///browser/components/tabbrowser/OpenInTabsUtils.sys.mjs",
+   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
+   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
++  WorkspaceBookmarks: "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+   Weave: "resource://services-sync/main.sys.mjs",
+   WebNavigationManager: "resource://gre/modules/WebNavigation.sys.mjs",
+@@ -229,7 +230,45 @@ class BookmarkState {
+    *
+    * @returns {Promise<string>} bookmark.guid
+    */
++  setWorkspaceWindow(ownerWindow, context = null, parentScope = null) {
++    this._workspaceWindow = ownerWindow;
++    this._workspaceContext =
++      context ?? lazy.WorkspaceBookmarks.getContext(ownerWindow);
++    this._workspaceParentScope =
++      parentScope ??
++      JSON.stringify(
++        lazy.WorkspaceBookmarks.getEffectiveScope(
++          this._originalState.parentGuid
++        )
++      );
++  }
++
++  _workspaceMaySave() {
++    if (!this._workspaceWindow) {
++      return true;
++    }
++    const context = lazy.WorkspaceBookmarks.getContext(this._workspaceWindow);
++    return (
++      context.windowGeneration == this._workspaceContext.windowGeneration &&
++      context.workspaceId == this._workspaceContext.workspaceId &&
++      context.enabled == this._workspaceContext.enabled &&
++      lazy.WorkspaceBookmarks.isVisible(this.parentGuid, context) &&
++      this._workspaceParentScope ==
++        JSON.stringify(
++          lazy.WorkspaceBookmarks.getEffectiveScope(
++            this._originalState.parentGuid
++          )
++        ) &&
++      (this._guid == lazy.PlacesUtils.bookmarks.unsavedGuid ||
++        !this._guid ||
++        lazy.WorkspaceBookmarks.isVisible(this._guid, context))
++    );
++  }
++
+   async save() {
++    if (!this._workspaceMaySave()) {
++      return undefined;
++    }
+     if (this._guid === lazy.PlacesUtils.bookmarks.unsavedGuid) {
+       return this._isFolder ? this._createFolder() : this._createBookmark();
+     }
+@@ -300,11 +339,70 @@ class BookmarkState {
+       }
+     }
+     if (transactions.length) {
+-      await lazy.PlacesTransactions.batch(transactions, "BookmarkState::save");
++      let plan;
++      const service = lazy.WorkspaceBookmarks;
++      const context = this._workspaceWindow
++        ? service.getContext(this._workspaceWindow)
++        : null;
++      if (
++        this._newState.parentGuid &&
++        context &&
++        (context.enabled || context.ready)
++      ) {
++        plan = await service.captureTransferScopes(
++          [{ itemGuid: this._guid }],
++          this._newState.parentGuid,
++          false,
++          context
++        );
++        if (
++          plan.requiresConfirmation &&
++          !(await PlacesUIUtils.confirmWorkspaceBookmarkOperation(
++            this._workspaceWindow,
++            {
++              kind: "transfer",
++              count: 1,
++              hiddenCount: plan.hiddenDescendantCount,
++              sourceGuids: plan.sourceGuids,
++              targetParentGuid: plan.targetParentGuid,
++            }
++          ))
++        ) {
++          return undefined;
++        }
++        if (
++          !this._workspaceMaySave() ||
++          !service.isCurrentContext(context, this._workspaceWindow)
++        ) {
++          return undefined;
++        }
++        await service.beginTransferScopes(plan);
++      }
++      try {
++        await lazy.PlacesTransactions.batch(
++          transactions,
++          "BookmarkState::save"
++        );
++        if (plan) {
++          await service.applyTransferScopes(plan, { [this._guid]: this._guid });
++        }
++      } catch (error) {
++        if (plan) {
++          service.abortTransferScopes(plan, error);
++        }
++        throw error;
++      }
+     }
+ 
+     this._originalState = { ...this._originalState, ...this._newState };
+     this._newState = {};
++    if (this._workspaceWindow) {
++      this._workspaceParentScope = JSON.stringify(
++        lazy.WorkspaceBookmarks.getEffectiveScope(
++          this._originalState.parentGuid
++        )
++      );
++    }
+     return this._guid;
+   }
+ 
+@@ -350,6 +448,118 @@ class BookmarkState {
+ }
+ 
+ export var PlacesUIUtils = {
++  get workspaceBookmarks() {
++    return lazy.WorkspaceBookmarks;
++  },
++
++  workspaceBookmarkContext(window) {
++    return lazy.WorkspaceBookmarks.getContext(window);
++  },
++
++  isWorkspaceBookmarkNodeVisible(node, window) {
++    if (!node) {
++      return false;
++    }
++    const context = this.workspaceBookmarkContext(window);
++    if (!context.enabled || context.allItems) {
++      return true;
++    }
++    if (
++      !node.bookmarkGuid &&
++      lazy.PlacesUtils.nodeIsTagQuery(node) &&
++      !lazy.PlacesUtils.hasChildURIs(node, uri =>
++        lazy.WorkspaceBookmarks.isUrlVisible(uri, context)
++      )
++    ) {
++      return false;
++    }
++    const visibleGuid = guid =>
++      !guid ||
++      lazy.PlacesUtils.bookmarks.isVirtualRootItem(guid) ||
++      lazy.PlacesUtils.isVirtualLeftPaneItem(guid) ||
++      lazy.WorkspaceBookmarks.isVisible(guid, context);
++    for (let current = node; current; current = current.parent) {
++      if (!visibleGuid(current.bookmarkGuid)) {
++        return false;
++      }
++      if (
++        lazy.PlacesUtils.nodeIsFolderOrShortcut(current) &&
++        !visibleGuid(lazy.PlacesUtils.getConcreteItemGuid(current))
++      ) {
++        return false;
++      }
++      if (
++        !node.bookmarkGuid &&
++        lazy.PlacesUtils.nodeIsURI(node) &&
++        lazy.PlacesUtils.nodeIsQuery(current) &&
++        lazy.PlacesUtils.asQuery(current).queryOptions.queryType ==
++          Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS
++      ) {
++        return lazy.WorkspaceBookmarks.isUrlVisible(node.uri, context);
++      }
++    }
++    return true;
++  },
++
++  workspaceBookmarkQuery(query, options, ownerWindow) {
++    const context = this.workspaceBookmarkContext(ownerWindow);
++    let searchTerms = "";
++    let maxResults = 0;
++    if (
++      context.enabled &&
++      !context.allItems &&
++      (query.parentCount ||
++        options.queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS)
++    ) {
++      query = query.clone();
++      options = options.clone();
++      searchTerms = query.searchTerms;
++      maxResults = options.maxResults;
++      query.searchTerms = "";
++      options.maxResults = 0;
++      if ((searchTerms || maxResults) && query.parentCount == 1) {
++        // Keep recursive SQL queries off the native simple-folder fast path.
++        const parents = query.getParents();
++        query.setParents([...parents, ...parents]);
++      }
++      if (searchTerms) {
++        options.excludeQueries = true;
++      }
++    }
++    return { query, options, searchTerms, maxResults };
++  },
++
++  workspaceBookmarkMatches(node, searchTerms) {
++    if (!searchTerms) {
++      return true;
++    }
++    const text =
++      `${node.title ?? ""} ${node.uri ?? ""} ${node.tags ?? ""}`.toLocaleLowerCase();
++    return searchTerms
++      .toLocaleLowerCase()
++      .split(/[\s"]+/u)
++      .filter(Boolean)
++      .every(term => text.includes(term));
++  },
++
++  async workspaceBookmarkForURL(url, window, context = null) {
++    const scope = context ?? this.workspaceBookmarkContext(window);
++    const records = await lazy.WorkspaceBookmarks.visibleBookmarksForUrl(
++      url.href ?? url.spec ?? String(url),
++      scope
++    );
++    return records.length
++      ? lazy.PlacesUtils.bookmarks.fetch(records[0].guid)
++      : null;
++  },
++
++  async confirmWorkspaceBookmarkOperation(window, request) {
++    const browserWindow = getBrowserWindow(window) ?? window;
++    return Boolean(
++      await browserWindow.floorpWorkspaceBookmarksUI?.confirmOperation(request)
++    );
++  },
++
+   BookmarkState,
+   _bookmarkToolbarTelemetryListening: false,
+   LAST_USED_FOLDERS_META_KEY: "bookmarks/lastusedfolders",
+@@ -397,6 +607,7 @@ export var PlacesUIUtils = {
+    */
+   async showBookmarkDialog(aInfo, aParentWindow = null) {
+     this.lastBookmarkDialogDeferred = Promise.withResolvers();
++    const workspaceTarget = aInfo.node?.bookmarkGuid;
+ 
+     let dialogURL = "chrome://browser/content/places/bookmarkProperties.xhtml";
+     let features = "centerscreen,chrome,modal,resizable=no";
+@@ -406,6 +617,43 @@ export var PlacesUIUtils = {
+       aParentWindow = Services.wm.getMostRecentWindow(null);
+     }
+ 
++    await lazy.WorkspaceBookmarks.ready;
++    const workspaceContext = this.workspaceBookmarkContext(aParentWindow);
++    if (
++      workspaceTarget &&
++      !lazy.WorkspaceBookmarks.isVisible(workspaceTarget, workspaceContext)
++    ) {
++      this.lastBookmarkDialogDeferred.resolve(undefined);
++      return undefined;
++    }
++    if (aInfo.action == "add") {
++      if (aInfo.defaultInsertionPoint) {
++        if (
++          !lazy.WorkspaceBookmarks.isVisible(
++            aInfo.defaultInsertionPoint.guid,
++            workspaceContext
++          )
++        ) {
++          this.lastBookmarkDialogDeferred.resolve(undefined);
++          return undefined;
++        }
++      } else {
++        const guid = await lazy.WorkspaceBookmarks.getDefaultFolder(
++          aParentWindow,
++          await this.defaultParentGuid
++        );
++        aInfo.defaultInsertionPoint = { guid, getIndex: async () => -1 };
++      }
++      if (
++        !lazy.WorkspaceBookmarks.isCurrentContext(
++          workspaceContext,
++          aParentWindow
++        )
++      ) {
++        this.lastBookmarkDialogDeferred.resolve(undefined);
++        return undefined;
++      }
++    }
+     if (aParentWindow.gDialogBox) {
+       await aParentWindow.gDialogBox.open(dialogURL, aInfo);
+     } else {
+@@ -413,6 +661,28 @@ export var PlacesUIUtils = {
+     }
+ 
+     if (aInfo.bookmarkState) {
++      const current = this.workspaceBookmarkContext(aParentWindow);
++      if (
++        workspaceContext &&
++        (current.windowGeneration != workspaceContext.windowGeneration ||
++          current.workspaceId != workspaceContext.workspaceId ||
++          current.enabled != workspaceContext.enabled ||
++          (workspaceTarget &&
++            !lazy.WorkspaceBookmarks.isVisible(workspaceTarget, current)))
++      ) {
++        this.lastBookmarkDialogDeferred.resolve(undefined);
++        return undefined;
++      }
++      const parentGuid =
++        aInfo.bookmarkState._newState.parentGuid ??
++        aInfo.bookmarkState._originalState.parentGuid;
++      if (
++        parentGuid &&
++        !lazy.WorkspaceBookmarks.isVisible(parentGuid, current)
++      ) {
++        this.lastBookmarkDialogDeferred.resolve(undefined);
++        return undefined;
++      }
+       bookmarkGuid = await aInfo.bookmarkState.save();
+       this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
+       return bookmarkGuid;
+@@ -754,6 +1024,16 @@ export var PlacesUIUtils = {
+    *   The window associated with the event.
+    */
+   openTabset(aItemsToOpen, aEvent, aWindow) {
++    const scope = this.workspaceBookmarkContext(aWindow);
++    aItemsToOpen = aItemsToOpen.filter(
++      item =>
++        !item.isBookmark ||
++        !scope.enabled ||
++        scope.allItems ||
++        (item.guid
++          ? lazy.WorkspaceBookmarks.isVisible(item.guid, scope)
++          : lazy.WorkspaceBookmarks.isUrlVisible(item.uri, scope))
++    );
+     if (!aItemsToOpen.length) {
+       return;
+     }
+@@ -845,14 +1125,52 @@ export var PlacesUIUtils = {
+     let urlsToOpen = [];
+ 
+     if (lazy.PlacesUtils.nodeIsContainer(nodeOrNodes)) {
+-      urlsToOpen = lazy.PlacesUtils.getURLsForContainerNode(nodeOrNodes);
++      if (!this.isWorkspaceBookmarkNodeVisible(nodeOrNodes, window)) {
++        return;
++      }
++      const root = lazy.PlacesUtils.getContainerNodeWithOptions(
++        nodeOrNodes,
++        false,
++        true
++      );
++      const result = root.parentResult;
++      const wasOpen = root.containerOpen;
++      const wasSuppressed = result.suppressNotifications;
++      if (!wasOpen) {
++        result.suppressNotifications = true;
++        root.containerOpen = true;
++      }
++      try {
++        for (let index = 0; index < root.childCount; index++) {
++          const child = root.getChild(index);
++          if (
++            lazy.PlacesUtils.nodeIsURI(child) &&
++            this.isWorkspaceBookmarkNodeVisible(child, window)
++          ) {
++            urlsToOpen.push({
++              uri: child.uri,
++              isBookmark: lazy.PlacesUtils.nodeIsBookmark(child),
++              guid: child.bookmarkGuid,
++            });
++          }
++        }
++      } finally {
++        if (!wasOpen) {
++          root.containerOpen = false;
++          result.suppressNotifications = wasSuppressed;
++        }
++      }
+     } else {
+       for (var i = 0; i < nodeOrNodes.length; i++) {
+         // Skip over separators and folders.
+-        if (lazy.PlacesUtils.nodeIsURI(nodeOrNodes[i])) {
++        if (
++          lazy.PlacesUtils.nodeIsURI(nodeOrNodes[i]) &&
++          this.isWorkspaceBookmarkNodeVisible(nodeOrNodes[i], window)
++        ) {
+           urlsToOpen.push({
+             uri: nodeOrNodes[i].uri,
+             isBookmark: lazy.PlacesUtils.nodeIsBookmark(nodeOrNodes[i]),
++            guid: nodeOrNodes[i].bookmarkGuid,
+           });
+         }
+       }
+@@ -923,6 +1241,7 @@ export var PlacesUIUtils = {
+   ) {
+     if (
+       aNode &&
++      this.isWorkspaceBookmarkNodeVisible(aNode, aWindow) &&
+       this.checkURLSecurity(aNode, aWindow) &&
+       this.isURILike(aNode)
+     ) {
+@@ -1143,6 +1462,66 @@ export var PlacesUIUtils = {
+    *   an array of copied or moved guids.
+    */
+   async handleTransferItems(items, insertionPoint, doCopy, view) {
++    const workspaceWindow = view.ownerWindow;
++    await lazy.WorkspaceBookmarks.ready;
++    const workspaceContext = this.workspaceBookmarkContext(workspaceWindow);
++    if (
++      !lazy.WorkspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        workspaceWindow
++      )
++    ) {
++      return [];
++    }
++    if (
++      insertionPoint.isTag &&
++      workspaceContext.enabled &&
++      !workspaceContext.allItems &&
++      items.some(
++        item =>
++          item.itemGuid &&
++          !lazy.WorkspaceBookmarks.isVisible(item.itemGuid, workspaceContext)
++      )
++    ) {
++      return [];
++    }
++    const effectiveCopy =
++      doCopy ||
++      items.some(
++        item =>
++          item.instanceId != lazy.PlacesUtils.instanceId ||
++          !canMoveUnwrappedNode(item)
++      );
++    const transferPlan =
++      insertionPoint.isTag ||
++      (!workspaceContext.enabled && !workspaceContext.ready)
++        ? null
++        : await lazy.WorkspaceBookmarks.captureTransferScopes(
++            items,
++            insertionPoint.guid,
++            effectiveCopy,
++            workspaceContext
++          );
++    if (
++      transferPlan?.requiresConfirmation &&
++      !(await this.confirmWorkspaceBookmarkOperation(workspaceWindow, {
++        kind: "transfer",
++        count: items.length,
++        hiddenCount: transferPlan.hiddenDescendantCount,
++        sourceGuids: transferPlan.sourceGuids,
++        targetParentGuid: insertionPoint.guid,
++      }))
++    ) {
++      return [];
++    }
++    if (
++      !lazy.WorkspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        workspaceWindow
++      )
++    ) {
++      return [];
++    }
+     let transactions;
+     let itemsCount;
+     if (insertionPoint.isTag) {
+@@ -1158,7 +1537,7 @@ export var PlacesUIUtils = {
+         items,
+         insertionIndex,
+         insertionPoint.guid,
+-        !doCopy
++        !effectiveCopy
+       );
+     }
+ 
+@@ -1168,15 +1547,51 @@ export var PlacesUIUtils = {
+       return [];
+     }
+ 
+-    let guidsToSelect = await this.batchUpdatesForNode(
+-      getResultForBatching(view),
+-      itemsCount,
+-      async () =>
+-        lazy.PlacesTransactions.batch(transactions, "handleTransferItems")
+-    );
++    if (
++      !lazy.WorkspaceBookmarks.isCurrentContext(
++        workspaceContext,
++        workspaceWindow
++      )
++    ) {
++      return [];
++    }
++    if (transferPlan) {
++      await lazy.WorkspaceBookmarks.beginTransferScopes(transferPlan);
++    }
++    try {
++      let guidsToSelect = await this.batchUpdatesForNode(
++        getResultForBatching(view),
++        itemsCount,
++        async () =>
++          lazy.PlacesTransactions.batch(transactions, "handleTransferItems")
++      );
+ 
+-    // If we're inserting into a tag, we don't get the resulting guids.
+-    return insertionPoint.isTag ? [] : guidsToSelect.flat();
++      const selectedGuids = insertionPoint.isTag ? [] : guidsToSelect.flat();
++      if (transferPlan) {
++        const mapping = Object.fromEntries(
++          transferPlan.sourceGuids.map(guid => {
++            const selected =
++              selectedGuids[items.findIndex(item => item.itemGuid == guid)];
++            if (effectiveCopy && !selected) {
++              throw new Error(
++                "The copy transaction did not return a bookmark GUID"
++              );
++            }
++            return [guid, selected ?? guid];
++          })
++        );
++        await lazy.WorkspaceBookmarks.applyTransferScopes(
++          transferPlan,
++          mapping
++        );
++      }
++      return selectedGuids;
++    } catch (error) {
++      if (transferPlan) {
++        lazy.WorkspaceBookmarks.abortTransferScopes(transferPlan, error);
++      }
++      throw error;
++    }
+   },
+ 
+   onSidebarTreeClick(event) {
+diff --git a/browser/chrome/browser/content/browser/places/browserPlacesViews.js b/browser/chrome/browser/content/browser/places/browserPlacesViews.js
+index 262bfad..10c815b 100644
+--- a/browser/chrome/browser/content/browser/places/browserPlacesViews.js
++++ b/browser/chrome/browser/content/browser/places/browserPlacesViews.js
+@@ -23,6 +23,19 @@ class PlacesViewBase {
+     this._controller = new PlacesController(this);
+     this.place = placesUrl;
+     this._viewElt.controllers.appendController(this._controller);
++    this._floorpScopeObserver = () => {
++      if (!this._resultNode) {
++        return;
++      }
++      for (let element of this._domNodes.values()) {
++        element.hidePopup?.();
++      }
++      this.place = this.place;
++    };
++    Services.obs.addObserver(
++      this._floorpScopeObserver,
++      "floorp.workspace-bookmarks.changed"
++    );
+   }
+ 
+   // The xul element that holds the entire view.
+@@ -65,10 +78,38 @@ class PlacesViewBase {
+     let query = {},
+       options = {};
+     history.queryStringToQuery(val, query, options);
+-    let result = history.executeQuery(query.value, options.value);
++    const prepared = PlacesUIUtils.workspaceBookmarkQuery(
++      query.value,
++      options.value,
++      window
++    );
++    this._floorpVisibleLimit = prepared.maxResults;
++    this._floorpSearchTerms = prepared.searchTerms;
++    let result = history.executeQuery(prepared.query, prepared.options);
+     result.addObserver(this);
+   }
+ 
++  _floorpScoped() {
++    const context = PlacesUIUtils.workspaceBookmarkContext(window);
++    return context.enabled && !context.allItems;
++  }
++
++  _floorpChildren(container) {
++    const children = [];
++    for (let index = 0; index < container.childCount; index++) {
++      const node = container.getChild(index);
++      if (
++        PlacesUIUtils.isWorkspaceBookmarkNodeVisible(node, window) &&
++        PlacesUIUtils.workspaceBookmarkMatches(node, this._floorpSearchTerms)
++      ) {
++        children.push(node);
++      }
++    }
++    return this._floorpVisibleLimit && container == this._resultNode
++      ? children.slice(0, this._floorpVisibleLimit)
++      : children;
++  }
++
+   _result = null;
+   get result() {
+     return this._result;
+@@ -343,12 +384,13 @@ class PlacesViewBase {
+ 
+     this._cleanPopup(aPopup);
+ 
+-    let cc = resultNode.childCount;
++    const children = this._floorpChildren(resultNode);
++    let cc = children.length;
+     if (cc > 0) {
+       this._setEmptyPopupStatus(aPopup, false);
+       let fragment = document.createDocumentFragment();
+       for (let i = 0; i < cc; ++i) {
+-        let child = resultNode.getChild(i);
++        let child = children[i];
+         this._insertNewItemToPopup(child, fragment);
+       }
+       aPopup.insertBefore(fragment, aPopup._endMarker);
+@@ -514,11 +556,11 @@ class PlacesViewBase {
+   }
+ 
+   nodeTitleChanged(aPlacesNode, aNewTitle) {
+-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
++    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+ 
+     // There's no UI representation for the root node, thus there's
+     // nothing to be done when the title changes.
+-    if (elt == this._rootElt) {
++    if (!elt || elt == this._rootElt) {
+       return;
+     }
+ 
+@@ -538,6 +580,10 @@ class PlacesViewBase {
+   }
+ 
+   nodeRemoved(aParentPlacesNode, aPlacesNode) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(aParentPlacesNode);
++      return;
++    }
+     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+ 
+@@ -571,6 +617,10 @@ class PlacesViewBase {
+   batching() {}
+ 
+   nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(aParentPlacesNode);
++      return;
++    }
+     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+     if (!parentElt._built) {
+       return;
+@@ -596,6 +646,10 @@ class PlacesViewBase {
+     aNewParentPlacesNode,
+     aNewIndex
+   ) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(aNewParentPlacesNode);
++      return;
++    }
+     // Note: the current implementation of moveItem does not actually
+     // use this notification when the item in question is moved from one
+     // folder to another.  Instead, it calls nodeRemoved and nodeInserted
+@@ -650,7 +704,10 @@ class PlacesViewBase {
+   }
+ 
+   invalidateContainer(aPlacesNode) {
+-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
++    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
++    if (!elt) {
++      return;
++    }
+     elt._built = false;
+ 
+     // If the menupopup is open we should live-update it.
+@@ -660,6 +717,10 @@ class PlacesViewBase {
+   }
+ 
+   uninit() {
++    Services.obs.removeObserver(
++      this._floorpScopeObserver,
++      "floorp.workspace-bookmarks.changed"
++    );
+     if (this._result) {
+       this._result.removeObserver(this);
+       this._resultNode.containerOpen = false;
+@@ -764,6 +825,7 @@ class PlacesViewBase {
+     if (
+       numURINodes > 0 &&
+       ContentSharingUtils.isEnabled &&
++      !this._floorpScoped() &&
+       !aPopup._endOptShareFolder
+     ) {
+       // Add the "Share Folder" menuitem.
+@@ -785,7 +847,7 @@ class PlacesViewBase {
+       aPopup.appendChild(aPopup._endOptShareFolder);
+     } else if (
+       aPopup._endOptShareFolder &&
+-      (!ContentSharingUtils.isEnabled || !numURINodes)
++      (!ContentSharingUtils.isEnabled || this._floorpScoped() || !numURINodes)
+     ) {
+       aPopup.removeChild(aPopup._endOptShareFolder);
+       aPopup._endOptShareFolder = null;
+@@ -1076,7 +1138,9 @@ class PlacesToolbar extends PlacesViewBase {
+       this._rootElt.firstChild.remove();
+     }
+ 
+-    let cc = this._resultNode.childCount;
++    const context = PlacesUIUtils.workspaceBookmarkContext(window);
++    const children = this._floorpChildren(this._resultNode);
++    let cc = children.length;
+     if (cc > 0) {
+       // There could be a lot of nodes, but we only want to build the ones that
+       // are more likely to be shown, not all of them.
+@@ -1085,17 +1149,17 @@ class PlacesToolbar extends PlacesViewBase {
+       // the first non-separator node (because separators have flexible size).
+       let startIndex = 0;
+       let limit = await this._runBeforeFrameRender(() => {
+-        if (!this._isAlive) {
+-          return cc;
++        if (
++          !this._isAlive ||
++          !PlacesUIUtils.workspaceBookmarks.isCurrentContext(context, window)
++        ) {
++          return 0;
+         }
+ 
+         // Look for the first non-separator node.
+         let elt;
+         while (startIndex < cc) {
+-          elt = this._insertNewItem(
+-            this._resultNode.getChild(startIndex),
+-            this._rootElt
+-          );
++          elt = this._insertNewItem(children[startIndex], this._rootElt);
+           ++startIndex;
+           if (elt.localName != "toolbarseparator") {
+             break;
+@@ -1120,12 +1184,15 @@ class PlacesToolbar extends PlacesViewBase {
+ 
+       let fragment = document.createDocumentFragment();
+       for (let i = startIndex; i < limit; ++i) {
+-        this._insertNewItem(this._resultNode.getChild(i), fragment);
++        this._insertNewItem(children[i], fragment);
+       }
+       await new Promise(resolve => window.requestAnimationFrame(resolve));
+       if (!this._isAlive) {
+         return;
+       }
++      if (!PlacesUIUtils.workspaceBookmarks.isCurrentContext(context, window)) {
++        return;
++      }
+       this._rootElt.appendChild(fragment);
+       this.updateNodesVisibility();
+     }
+@@ -1428,6 +1495,10 @@ class PlacesToolbar extends PlacesViewBase {
+   }
+ 
+   nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._resultNode);
++      return;
++    }
+     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+     if (parentElt == this._rootElt) {
+       // Node is on the toolbar.
+@@ -1475,6 +1546,10 @@ class PlacesToolbar extends PlacesViewBase {
+   }
+ 
+   nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._resultNode);
++      return;
++    }
+     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+     if (parentElt == this._rootElt) {
+       // Node is on the toolbar.
+@@ -1514,6 +1589,10 @@ class PlacesToolbar extends PlacesViewBase {
+     aNewParentPlacesNode,
+     aNewIndex
+   ) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._resultNode);
++      return;
++    }
+     let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
+     if (parentElt == this._rootElt) {
+       // Node is on the toolbar.
+@@ -1691,7 +1770,7 @@ class PlacesToolbar extends PlacesViewBase {
+           // Drop before this folder.
+           dropPoint.ip = new PlacesInsertionPoint({
+             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
+-            index: eltIndex,
++            index: this._resultNode.getChildIndex(elt._placesNode),
+             orientation: Ci.nsITreeView.DROP_BEFORE,
+           });
+           dropPoint.beforeIndex = eltIndex;
+@@ -1717,7 +1796,12 @@ class PlacesToolbar extends PlacesViewBase {
+ 
+           dropPoint.ip = new PlacesInsertionPoint({
+             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
+-            index: beforeIndex,
++            index:
++              beforeIndex < 0
++                ? -1
++                : this._resultNode.getChildIndex(
++                    this._rootElt.children[beforeIndex]._placesNode
++                  ),
+             orientation: Ci.nsITreeView.DROP_BEFORE,
+           });
+           dropPoint.beforeIndex = beforeIndex;
+@@ -1734,7 +1818,7 @@ class PlacesToolbar extends PlacesViewBase {
+           // Drop before this bookmark.
+           dropPoint.ip = new PlacesInsertionPoint({
+             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
+-            index: eltIndex,
++            index: this._resultNode.getChildIndex(elt._placesNode),
+             orientation: Ci.nsITreeView.DROP_BEFORE,
+           });
+           dropPoint.beforeIndex = eltIndex;
+@@ -1744,7 +1828,12 @@ class PlacesToolbar extends PlacesViewBase {
+             eltIndex == this._rootElt.children.length - 1 ? -1 : eltIndex + 1;
+           dropPoint.ip = new PlacesInsertionPoint({
+             parentGuid: PlacesUtils.getConcreteItemGuid(this._resultNode),
+-            index: beforeIndex,
++            index:
++              beforeIndex < 0
++                ? -1
++                : this._resultNode.getChildIndex(
++                    this._rootElt.children[beforeIndex]._placesNode
++                  ),
+             orientation: Ci.nsITreeView.DROP_BEFORE,
+           });
+           dropPoint.beforeIndex = beforeIndex;
+@@ -1779,7 +1868,9 @@ class PlacesToolbar extends PlacesViewBase {
+         );
+         if (canInsertHere(aEvent.clientX, childRect)) {
+           dropPoint.beforeIndex = i;
+-          dropPoint.ip.index = i;
++          dropPoint.ip.index = this._resultNode.getChildIndex(
++            this._rootElt.children[i]._placesNode
++          );
+           break;
+         }
+       }
+diff --git a/browser/chrome/browser/content/browser/places/controller.js b/browser/chrome/browser/content/browser/places/controller.js
+index 1faf824..5602742 100644
+--- a/browser/chrome/browser/content/browser/places/controller.js
++++ b/browser/chrome/browser/content/browser/places/controller.js
+@@ -853,7 +853,13 @@ PlacesController.prototype = {
+ 
+     for (var i = 0; i < range.length; ++i) {
+       var node = range[i];
+-      if (this._shouldSkipNode(node, removedFolders)) {
++      if (
++        this._shouldSkipNode(node, removedFolders) ||
++        !PlacesUIUtils.isWorkspaceBookmarkNodeVisible(
++          node,
++          this._view.ownerWindow
++        )
++      ) {
+         continue;
+       }
+ 
+@@ -881,9 +887,16 @@ PlacesController.prototype = {
+         // must only remove the query node.
+         let tag = node.title;
+         let urls = new Set();
+-        await PlacesUtils.bookmarks.fetch({ tags: [tag] }, b =>
+-          urls.add(b.url)
+-        );
++        await PlacesUtils.bookmarks.fetch({ tags: [tag] }, b => {
++          if (
++            PlacesUIUtils.workspaceBookmarks.isUrlVisible(
++              b.url.href,
++              this._view.ownerWindow
++            )
++          ) {
++            urls.add(b.url);
++          }
++        });
+         transactions.push(
+           PlacesTransactions.Untag({ tag, urls: Array.from(urls) })
+         );
+@@ -925,6 +938,44 @@ PlacesController.prototype = {
+ 
+   async _removeRowsFromBookmarks() {
+     let ranges = this._view.removableSelectionRanges;
++    const ownerWindow = this._view.ownerWindow;
++    const service = PlacesUIUtils.workspaceBookmarks;
++    await service.ready;
++    const context = service.getContext(ownerWindow);
++    const sourceGuids = [];
++    const hidden = new Set();
++    for (const node of ranges.flat()) {
++      if (!PlacesUIUtils.isWorkspaceBookmarkNodeVisible(node, ownerWindow)) {
++        return;
++      }
++      if (node.bookmarkGuid) {
++        sourceGuids.push(node.bookmarkGuid);
++      }
++      if (PlacesUtils.nodeIsFolderOrShortcut(node)) {
++        const tree = await PlacesUtils.promiseBookmarksTree(node.bookmarkGuid);
++        const visit = item => {
++          if (!service.isVisible(item.guid, context)) {
++            hidden.add(item.guid);
++          }
++          item.children?.forEach(visit);
++        };
++        tree?.children?.forEach(visit);
++      }
++    }
++    if (
++      hidden.size &&
++      !(await PlacesUIUtils.confirmWorkspaceBookmarkOperation(ownerWindow, {
++        kind: "delete",
++        count: sourceGuids.length,
++        hiddenCount: hidden.size,
++        sourceGuids,
++      }))
++    ) {
++      return;
++    }
++    if (!service.isCurrentContext(context, ownerWindow)) {
++      return;
++    }
+     let transactions = [];
+     let removedFolders = [];
+     let totalItems = 0;
+@@ -937,7 +988,7 @@ PlacesController.prototype = {
+       );
+     }
+ 
+-    if (transactions.length) {
++    if (transactions.length && service.isCurrentContext(context, ownerWindow)) {
+       await PlacesUIUtils.batchUpdatesForNode(
+         this._view.result,
+         totalItems,
+diff --git a/browser/chrome/browser/content/browser/places/editBookmark.js b/browser/chrome/browser/content/browser/places/editBookmark.js
+index d3180c5..c266dbe 100644
+--- a/browser/chrome/browser/content/browser/places/editBookmark.js
++++ b/browser/chrome/browser/content/browser/places/editBookmark.js
+@@ -272,6 +272,7 @@ var gEditItemOverlay = {
+    */
+   async initPanel(aInfo) {
+     const deferred = (this._initPanelDeferred = Promise.withResolvers());
++    const workspaceContext = PlacesUIUtils.workspaceBookmarkContext(window);
+     try {
+       if (typeof aInfo != "object" || aInfo === null) {
+         throw new Error("aInfo must be an object.");
+@@ -311,6 +312,10 @@ var gEditItemOverlay = {
+         onPanelReady,
+       } = this._setPaneInfo(aInfo);
+ 
++      const workspaceParentScope = JSON.stringify(
++        PlacesUIUtils.workspaceBookmarks.getEffectiveScope(parentGuid)
++      );
++
+       // initPanel can be called multiple times in a row,
+       // and awaits Promises. If the reference to `instance`
+       // changes, it must mean another caller has called
+@@ -464,10 +469,16 @@ var gEditItemOverlay = {
+         isFolder:
+           aInfo.node != null && PlacesUtils.nodeIsFolderOrShortcut(aInfo.node),
+       });
++      this._bookmarkState.setWorkspaceWindow(
++        window.browsingContext?.topChromeWindow ?? window,
++        workspaceContext,
++        workspaceParentScope
++      );
+       if (isBookmark || bulkTagging) {
+         await this._initAllTags();
+         await this._rebuildTagsSelectorList();
+       }
++      this._observeWorkspaceContext();
+     } finally {
+       deferred.resolve();
+       if (this._initPanelDeferred === deferred) {
+@@ -586,7 +597,7 @@ var gEditItemOverlay = {
+     this._recentFolders = [];
+     for (let guid of lastUsedFolderGuids) {
+       let bm = await PlacesUtils.bookmarks.fetch(guid);
+-      if (bm) {
++      if (bm && PlacesUIUtils.workspaceBookmarks.isVisible(guid, window)) {
+         let title = PlacesUtils.bookmarks.getLocalizedTitle(bm);
+         this._recentFolders.push({ guid, title });
+       }
+@@ -636,7 +647,45 @@ var gEditItemOverlay = {
+     return document.getElementById("editBMPanel_" + aID);
+   },
+ 
++  _observeWorkspaceContext() {
++    if (
++      document.documentURI !=
++      "chrome://browser/content/places/bookmarkProperties.xhtml"
++    ) {
++      return;
++    }
++    const observer = () => {
++      if (this._floorpWorkspaceObserver != observer || !this._bookmarkState) {
++        return;
++      }
++      const service = PlacesUIUtils.workspaceBookmarks;
++      const current = service.getContext(window);
++      const previous = this._bookmarkState._workspaceContext;
++      if (
++        current.windowGeneration == previous.windowGeneration &&
++        current.enabled == previous.enabled &&
++        !current.ready &&
++        service.getStatus().state == "loading"
++      ) {
++        return;
++      }
++      if (!this._bookmarkState._workspaceMaySave()) {
++        document.getElementById("bookmarkpropertiesdialog")?.cancelDialog();
++      }
++    };
++    this._floorpWorkspaceObserver = observer;
++    Services.obs.addObserver(observer, "floorp.workspace-bookmarks.changed");
++    Services.tm.dispatchToMainThread(observer);
++  },
++
+   uninitPanel(aHideCollapsibleElements) {
++    if (this._floorpWorkspaceObserver) {
++      Services.obs.removeObserver(
++        this._floorpWorkspaceObserver,
++        "floorp.workspace-bookmarks.changed"
++      );
++      this._floorpWorkspaceObserver = null;
++    }
+     if (aHideCollapsibleElements) {
+       // Hide the folder tree if it was previously visible.
+       var folderTreeRow = this._element("folderTreeRow");
+@@ -965,6 +1014,9 @@ var gEditItemOverlay = {
+ 
+     // Move the item
+     let containerGuid = this._folderMenuList.selectedItem.folderGuid;
++    if (!PlacesUIUtils.workspaceBookmarks.isVisible(containerGuid, window)) {
++      return;
++    }
+     if (this._bookmarkState.parentGuid != containerGuid) {
+       this._bookmarkState._parentGuidChanged(containerGuid);
+ 
+diff --git a/browser/chrome/browser/content/browser/places/places-tree.js b/browser/chrome/browser/content/browser/places/places-tree.js
+index e51d68c..a530ce6 100644
+--- a/browser/chrome/browser/content/browser/places/places-tree.js
++++ b/browser/chrome/browser/content/browser/places/places-tree.js
+@@ -466,7 +466,19 @@
+     }
+ 
+     load(query, options) {
+-      let result = PlacesUtils.history.executeQuery(query, options);
++      this._floorpOriginalQuery = query.clone();
++      this._floorpOriginalOptions = options.clone();
++      const prepared = PlacesUIUtils.workspaceBookmarkQuery(
++        query,
++        options,
++        window
++      );
++      this._floorpSearchTerms = prepared.searchTerms;
++      this._floorpVisibleLimit = prepared.maxResults;
++      let result = PlacesUtils.history.executeQuery(
++        prepared.query,
++        prepared.options
++      );
+ 
+       if (!this._controller) {
+         this._controller = new PlacesController(this);
+diff --git a/browser/chrome/browser/content/browser/places/treeView.js b/browser/chrome/browser/content/browser/places/treeView.js
+index 28e584f..d6a0be6 100644
+--- a/browser/chrome/browser/content/browser/places/treeView.js
++++ b/browser/chrome/browser/content/browser/places/treeView.js
+@@ -41,6 +41,22 @@ function PlacesTreeView(aContainer) {
+   this._nodeDetails = new Map();
+   this._element = aContainer;
+   this._controller = aContainer._controller;
++  this._floorpScopeObserver = () => {
++    if (this._element._floorpOriginalQuery) {
++      this._element.load(
++        this._element._floorpOriginalQuery,
++        this._element._floorpOriginalOptions
++      );
++      return;
++    }
++    if (this._rootNode) {
++      this.invalidateContainer(this._rootNode);
++    }
++  };
++  Services.obs.addObserver(
++    this._floorpScopeObserver,
++    "floorp.workspace-bookmarks.changed"
++  );
+ }
+ 
+ PlacesTreeView.prototype = {
+@@ -79,7 +95,16 @@ PlacesTreeView.prototype = {
+     }
+   },
+ 
++  _floorpScoped() {
++    const context = PlacesUIUtils.workspaceBookmarkContext(window);
++    return context.enabled && !context.allItems;
++  },
++
+   uninit() {
++    Services.obs.removeObserver(
++      this._floorpScopeObserver,
++      "floorp.workspace-bookmarks.changed"
++    );
+     if (this._editingObservers) {
+       for (let observer of this._editingObservers.values()) {
+         observer.disconnect();
+@@ -115,6 +140,9 @@ PlacesTreeView.prototype = {
+    * @returns {boolean} true if aContainer is a plain container, false otherwise.
+    */
+   _isPlainContainer: function PTV__isPlainContainer(aContainer) {
++    if (this._floorpScoped()) {
++      return false;
++    }
+     // We don't know enough about non-query containers.
+     if (!(aContainer instanceof Ci.nsINavHistoryQueryResultNode)) {
+       return false;
+@@ -354,6 +382,20 @@ PlacesTreeView.prototype = {
+ 
+       let row = aFirstChildRow + rowsInserted;
+ 
++      if (
++        !PlacesUIUtils.isWorkspaceBookmarkNodeVisible(curChild, window) ||
++        !PlacesUIUtils.workspaceBookmarkMatches(
++          curChild,
++          this._element._floorpSearchTerms
++        ) ||
++        (aContainer == this._rootNode &&
++          this._element._floorpVisibleLimit &&
++          rowsInserted >= this._element._floorpVisibleLimit)
++      ) {
++        this._rows.splice(row, 1);
++        continue;
++      }
++
+       // Don't display separators when sorted.
+       if (curChildType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
+         if (sortingMode != Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
+@@ -677,6 +719,10 @@ PlacesTreeView.prototype = {
+ 
+   // nsINavHistoryResultObserver
+   nodeInserted: function PTV_nodeInserted(aParentNode, aNode, aNewIndex) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._rootNode);
++      return;
++    }
+     console.assert(this._result, "Got a notification but have no result!");
+     if (!this._tree || !this._result) {
+       return;
+@@ -768,6 +814,10 @@ PlacesTreeView.prototype = {
+    *   The old index of the node in the parent.
+    */
+   nodeRemoved: function PTV_nodeRemoved(aParentNode, aNode, aOldIndex) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._rootNode);
++      return;
++    }
+     console.assert(this._result, "Got a notification but have no result!");
+     if (!this._tree || !this._result) {
+       return;
+@@ -837,6 +887,10 @@ PlacesTreeView.prototype = {
+     aNewParent,
+     aNewIndex
+   ) {
++    if (this._floorpScoped()) {
++      this.invalidateContainer(this._rootNode);
++      return;
++    }
+     console.assert(this._result, "Got a notification but have no result!");
+     if (!this._tree || !this._result) {
+       return;
+@@ -988,6 +1042,14 @@ PlacesTreeView.prototype = {
+       return;
+     }
+ 
++    if (
++      aContainer != this._rootNode &&
++      this._floorpScoped() &&
++      this._rows.indexOf(aContainer) < 0
++    ) {
++      return;
++    }
++
+     // If we are currently editing, don't invalidate the container until we
+     // finish.
+     if (this._tree.getAttribute("editing")) {
+@@ -1632,6 +1694,7 @@ PlacesTreeView.prototype = {
+         // detach from result when we are detaching from the tree.
+         // This breaks the reference cycle between us and the result.
+         if (!aTree) {
++          this.uninit();
+           // Close the root container to free up memory and stop live updates.
+           this._rootNode.containerOpen = false;
+         }
+diff --git a/moz-src/browser/components/urlbar/UrlbarParentController.sys.mjs b/moz-src/browser/components/urlbar/UrlbarParentController.sys.mjs
+index dc24c78..e9f3cf8 100644
+--- a/moz-src/browser/components/urlbar/UrlbarParentController.sys.mjs
++++ b/moz-src/browser/components/urlbar/UrlbarParentController.sys.mjs
+@@ -19,6 +19,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+ const lazy = {};
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  WorkspaceBookmarks: "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+   AppProvidedConfigEngine:
+     "moz-src:///toolkit/components/search/ConfigSearchEngine.sys.mjs",
+@@ -268,6 +269,8 @@ export class UrlbarParentController {
+    * @returns {Promise<UrlbarResult>} The heuristic result.
+    */
+   async getHeuristicResult(queryContext) {
++    queryContext.floorpWorkspaceBookmarkContext =
++      lazy.WorkspaceBookmarks.getContext(this.browserWindow);
+     await this.manager.startQuery(queryContext);
+     return queryContext.heuristicResult;
+   }
+@@ -396,6 +399,8 @@ export class UrlbarParentController {
+    *   The updated query context.
+    */
+   async startQuery(queryContext) {
++    queryContext.floorpWorkspaceBookmarkContext =
++      lazy.WorkspaceBookmarks.getContext(this.browserWindow);
+     // Cancel any running query.
+     this.cancelQuery();
+ 
+@@ -765,6 +770,15 @@ export class UrlbarParentController {
+    * @param {UrlbarQueryContext} queryContext The query details.
+    */
+   receiveResults(queryContext) {
++    if (
++      queryContext.floorpWorkspaceBookmarkContext &&
++      !lazy.WorkspaceBookmarks.isCurrentContext(
++        queryContext.floorpWorkspaceBookmarkContext
++      )
++    ) {
++      this.cancelQuery();
++      return;
++    }
+     if (queryContext.lastResultCount < 1 && queryContext.results.length >= 1) {
+       Glean.urlbar.autocompleteFirstResultTime.stopAndAccumulate(
+         queryContext.firstTimerId
+diff --git a/moz-src/browser/components/urlbar/UrlbarProviderAutofill.sys.mjs b/moz-src/browser/components/urlbar/UrlbarProviderAutofill.sys.mjs
+index 5da00ee..2e59696 100644
+--- a/moz-src/browser/components/urlbar/UrlbarProviderAutofill.sys.mjs
++++ b/moz-src/browser/components/urlbar/UrlbarProviderAutofill.sys.mjs
+@@ -21,6 +21,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ const lazy = {};
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  WorkspaceBookmarks: "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+   AboutPagesUtils: "resource://gre/modules/AboutPagesUtils.sys.mjs",
+   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
+@@ -55,6 +56,65 @@ function effectiveSources(queryContext) {
+   };
+ }
+ 
++const SQL_FLOORP_VISIBLE_BOOKMARK = `
++  (:floorpVisibleGuids IS NULL OR b.guid IN (
++    SELECT value FROM json_each(:floorpVisibleGuids)
++  ))`;
++
++function floorpBookmarkCount(place) {
++  return `CASE WHEN :floorpVisibleGuids IS NULL
++    THEN ${place}.foreign_count ELSE (
++      SELECT count(*) FROM moz_bookmarks b WHERE b.fk = ${place}.id
++        AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
++    ) END`;
++}
++
++const SQL_FLOORP_ORIGIN_BOOKMARK_COUNT = `
++  CASE WHEN :floorpVisibleGuids IS NULL THEN (
++    SELECT total(foreign_count) FROM moz_places WHERE origin_id = o.id
++  ) ELSE (
++    SELECT count(*) FROM moz_bookmarks b
++    JOIN moz_places p ON p.id = b.fk
++    WHERE p.origin_id = o.id AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
++  ) END`;
++
++const SQL_FLOORP_ORIGIN_ELIGIBLE = `
++  (:floorpVisibleGuids IS NULL OR EXISTS (
++    SELECT 1 FROM moz_places p WHERE p.origin_id = o.id AND (
++      p.visit_count > 0 OR (:floorpBookmarksAllowed AND EXISTS (
++        SELECT 1 FROM moz_bookmarks b WHERE b.fk = p.id
++          AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
++      ))
++    )
++  ))`;
++
++function floorpBookmarkTitle(place) {
++  return `(SELECT title FROM moz_bookmarks b WHERE b.fk = ${place}.id
++    AND title NOTNULL AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
++    ORDER BY lastModified DESC LIMIT 1)`;
++}
++
++function floorpContext(queryContext = {}) {
++  return (queryContext.floorpWorkspaceBookmarkContext ??=
++    lazy.WorkspaceBookmarks.getContext(null));
++}
++
++function floorpQueryParams(queryContext, origin = false) {
++  return {
++    floorpVisibleGuids: lazy.WorkspaceBookmarks.getVisibleBookmarkGuidsJSON(
++      floorpContext(queryContext)
++    ),
++    ...(origin
++      ? {
++          floorpBookmarksAllowed: effectiveSources(queryContext)
++            .bookmarksAllowed
++            ? 1
++            : 0,
++        }
++      : {}),
++  };
++}
++
+ // AutoComplete query type constants.
+ // Describes the various types of queries that we can process rows for.
+ const QUERYTYPE = {
+@@ -117,8 +177,8 @@ function originQuery(where, { preferHttps = false } = {}) {
+   let selectTitle;
+   let joinBookmarks;
+   if (where.includes("n_bookmarks")) {
+-    selectTitle = "ifnull(b.title, iif(h.frecency <> 0, h.title, NULL))";
+-    joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = h.id";
++    selectTitle = `ifnull(${floorpBookmarkTitle("h")}, iif(h.frecency <> 0, h.title, NULL))`;
++    joinBookmarks = "";
+   } else {
+     selectTitle = "iif(h.frecency <> 0, h.title, NULL)";
+     joinBookmarks = "";
+@@ -153,11 +213,12 @@ function originQuery(where, { preferHttps = false } = {}) {
+       total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)),
+       ${ORIGIN_FRECENCY_FIELD},
+       total(
+-        (SELECT total(foreign_count) FROM moz_places WHERE origin_id = o.id)
++        ${SQL_FLOORP_ORIGIN_BOOKMARK_COUNT}
+       ) OVER (PARTITION BY fixup_url(host)),
+       ${selectAnyRecentTyped}
+       FROM moz_origins o
+       WHERE prefix NOT IN ('about:', 'place:')
++        AND ${SQL_FLOORP_ORIGIN_ELIGIBLE}
+         AND ((host BETWEEN :searchString AND :searchString || X'FFFF')
+           OR (host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'))
+         AND (:adaptiveAutofillEnabled = 0 OR o.block_until_ms IS NULL OR o.block_until_ms <= :nowMs)
+@@ -210,8 +271,8 @@ function urlQuery(where1, where2, isBookmarkContained) {
+   let selectTitle;
+   let joinBookmarks;
+   if (isBookmarkContained) {
+-    selectTitle = "ifnull(b.title, matched_url.title)";
+-    joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = matched_url.id";
++    selectTitle = `ifnull(${floorpBookmarkTitle("matched_url")}, matched_url.title)`;
++    joinBookmarks = "";
+   } else {
+     selectTitle = "matched_url.title";
+     joinBookmarks = "";
+@@ -221,25 +282,27 @@ function urlQuery(where1, where2, isBookmarkContained) {
+       SELECT url,
+              title,
+              frecency,
+-             foreign_count AS n_bookmarks,
++             ${floorpBookmarkCount("moz_places")} AS n_bookmarks,
+              visit_count > 0 AS visited,
+              strip_prefix_and_userinfo(url) AS stripped_url,
+              strip_prefix_and_userinfo(url) = strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
+              id
+       FROM moz_places
+       WHERE rev_host = :revHost
++            AND (:floorpVisibleGuids IS NULL OR visit_count > 0 OR n_bookmarks > 0)
+             ${where1}
+       UNION ALL
+       SELECT url,
+              title,
+              frecency,
+-             foreign_count AS n_bookmarks,
++             ${floorpBookmarkCount("moz_places")} AS n_bookmarks,
+              visit_count > 0 AS visited,
+              strip_prefix_and_userinfo(url) AS stripped_url,
+              strip_prefix_and_userinfo(url) = 'www.' || strip_prefix_and_userinfo(:strippedURL) AS is_exact_match,
+              id
+       FROM moz_places
+       WHERE rev_host = :revHost || 'www.'
++            AND (:floorpVisibleGuids IS NULL OR visit_count > 0 OR n_bookmarks > 0)
+             ${where2}
+       ORDER BY is_exact_match DESC, frecency DESC, id DESC
+       LIMIT 1
+@@ -395,6 +458,14 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+    */
+   async isActive(queryContext) {
+     let instance = this.queryInstance;
++    const bookmarkContext = floorpContext(queryContext);
++    await lazy.WorkspaceBookmarks.ready;
++    if (
++      instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(bookmarkContext)
++    ) {
++      return false;
++    }
+ 
+     // This is usually reset on canceling or completing the query, but since we
+     // query in isActive, it may not have been canceled by the previous call.
+@@ -456,7 +527,11 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+     // will be guaranteed to return a result very quickly using this approach.
+     // Bug 1651101 is filed to improve this behaviour.
+     let result = await this._getAutofillResult(queryContext);
+-    if (!result || instance != this.queryInstance) {
++    if (
++      !result ||
++      instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(bookmarkContext)
++    ) {
+       return false;
+     }
+     this._autofillData = { ...result, instance };
+@@ -485,7 +560,8 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+     // in isActive and clear _autofillData in cancelQuery, but we sanity check it.
+     if (
+       !this._autofillData ||
+-      this._autofillData.instance != this.queryInstance
++      this._autofillData.instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(floorpContext(queryContext))
+     ) {
+       this.logger.error("startQuery invoked with an invalid _autofillData");
+       return;
+@@ -592,10 +668,18 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+    *   host, or null if not found.
+    */
+   static async getTopHostOverThreshold(queryContext, hosts) {
++    const bookmarkContext = floorpContext(queryContext);
++    await lazy.WorkspaceBookmarks.ready;
++    if (!lazy.WorkspaceBookmarks.isCurrentContext(bookmarkContext)) {
++      return null;
++    }
+     let db = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
+     let conditions = [];
+     // Pay attention to the order of params, since they are not named.
+-    let params = [...hosts];
++    let params = floorpQueryParams(queryContext, true);
++    hosts.forEach((host, index) => {
++      params[`host${index}`] = host;
++    });
+     let sources = queryContext.sources;
+     if (
+       sources.includes(lazy.UrlbarShared.RESULT_SOURCE.HISTORY) &&
+@@ -625,13 +709,14 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+           total(${ORIGIN_FRECENCY_FIELD}) OVER (PARTITION BY fixup_url(host)),
+           ${ORIGIN_FRECENCY_FIELD},
+           total(
+-            (SELECT total(foreign_count) FROM moz_places WHERE origin_id = o.id)
++            ${SQL_FLOORP_ORIGIN_BOOKMARK_COUNT}
+           ) OVER (PARTITION BY fixup_url(host)),
+           MAX(EXISTS(
+             SELECT 1 FROM moz_places WHERE origin_id = o.id AND visit_count > 0
+           )) OVER (PARTITION BY fixup_url(host))
+           FROM moz_origins o
+-          WHERE o.host IN (${new Array(hosts.length).fill("?").join(",")})
++          WHERE o.host IN (${hosts.map((_, i) => `:host${i}`).join(",")})
++            AND ${SQL_FLOORP_ORIGIN_ELIGIBLE}
+         )
+         SELECT host
+         FROM origins
+@@ -641,7 +726,10 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+       `,
+       params
+     );
+-    if (!rows.length) {
++    if (
++      !rows.length ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(bookmarkContext)
++    ) {
+       return null;
+     }
+     return rows[0].getResultByName("host");
+@@ -671,6 +759,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+       : this._searchString;
+ 
+     let opts = {
++      ...floorpQueryParams(queryContext, true),
+       query_type: QUERYTYPE.AUTOFILL_ORIGIN,
+       searchString: searchStr.toLowerCase(),
+       nowMs: Date.now(),
+@@ -746,6 +835,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+     strippedURL = host + strippedURL.substr(host.length);
+ 
+     let opts = {
++      ...floorpQueryParams(queryContext),
+       query_type: QUERYTYPE.AUTOFILL_URL,
+       searchString: this._searchString,
+       revHost,
+@@ -793,30 +883,29 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+     let sourceCondition;
+     let params = {};
+     if (historyAllowed && bookmarksAllowed) {
+-      sourceCondition =
+-        "((:adaptiveAutofillEnabled = 0 AND h.foreign_count > 0) OR h.frecency > :pageFrecencyThreshold)";
++      sourceCondition = `((:adaptiveAutofillEnabled = 0 AND ${floorpBookmarkCount("h")} > 0) OR h.frecency > :pageFrecencyThreshold)`;
+       params.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
+     } else if (historyAllowed) {
+-      sourceCondition =
+-        "((h.visit_count > 0 OR h.foreign_count = 0) AND h.frecency > :pageFrecencyThreshold)";
++      sourceCondition = `((h.visit_count > 0 OR ${floorpBookmarkCount("h")} = 0) AND h.frecency > :pageFrecencyThreshold)`;
+       params.pageFrecencyThreshold = lazy.pageFrecencyThreshold;
+     } else if (bookmarksAllowed) {
+-      sourceCondition = "h.foreign_count > 0";
++      sourceCondition = `${floorpBookmarkCount("h")} > 0`;
+     } else {
+       return [];
+     }
+ 
+     let selectTitle;
+     let joinBookmarks;
+-    if (lazy.UrlbarShared.RESULT_SOURCE.BOOKMARKS) {
+-      selectTitle = "ifnull(b.title, matched.title)";
+-      joinBookmarks = "LEFT JOIN moz_bookmarks b ON b.fk = matched.id";
++    if (bookmarksAllowed) {
++      selectTitle = `ifnull(${floorpBookmarkTitle("matched")}, matched.title)`;
++      joinBookmarks = "";
+     } else {
+       selectTitle = "matched.title";
+       joinBookmarks = "";
+     }
+ 
+     params = Object.assign(params, {
++      ...floorpQueryParams(queryContext),
+       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
+       // `fullSearchString` is the value the user typed including a prefix if
+       // they typed one. `searchString` has been stripped of the prefix.
+@@ -850,6 +939,8 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+         WHERE LENGTH(i.input) != 0
+           AND :fullSearchString BETWEEN i.input AND i.input || X'FFFF'
+           AND ${sourceCondition}
++          AND (:floorpVisibleGuids IS NULL OR h.visit_count > 0
++            OR ${floorpBookmarkCount("h")} > 0)
+           AND i.use_count >= :useCountThreshold
+           AND (:strippedPrefix = '' OR get_prefix(h.url) = :strippedPrefix)
+           AND (
+@@ -1136,7 +1227,8 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+           if (result) {
+             let fallbackResult = await this._getFallbackOriginResult(
+               conn,
+-              result.payload.url
++              result.payload.url,
++              queryContext
+             );
+             return { result, fallbackResult };
+           }
+@@ -1199,7 +1291,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+    * @returns {Promise<UrlbarResult?>}
+    *   The fallback origin result, or null if no fallback is appropriate.
+    */
+-  async _getFallbackOriginResult(conn, autofillUrl) {
++  async _getFallbackOriginResult(conn, autofillUrl, queryContext) {
+     if (lazy.UrlbarShared.isOriginUrl(autofillUrl)) {
+       return null;
+     }
+@@ -1216,8 +1308,10 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
+       JOIN moz_origins o ON o.id = h.origin_id
+       WHERE h.url_hash = hash(:url) AND h.url = :url AND h.frecency > 0
+         AND (o.block_until_ms IS NULL OR o.block_until_ms <= :nowMs)
++        AND (:floorpVisibleGuids IS NULL OR h.visit_count > 0
++          OR ${floorpBookmarkCount("h")} > 0)
+     `,
+-      { url: originUrl, nowMs: Date.now() }
++      { ...floorpQueryParams(queryContext), url: originUrl, nowMs: Date.now() }
+     );
+     if (!rows.length) {
+       return null;
+diff --git a/moz-src/browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs b/moz-src/browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs
+index 60d60c4..93359db 100644
+--- a/moz-src/browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs
++++ b/moz-src/browser/components/urlbar/UrlbarProviderBookmarkKeywords.sys.mjs
+@@ -14,6 +14,7 @@ import {
+ const lazy = {};
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  WorkspaceBookmarks: "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
+   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+   UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
+@@ -56,6 +57,17 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
+    *   Callback invoked by the provider to add a new result.
+    */
+   async startQuery(queryContext, addCallback) {
++    let instance = this.queryInstance;
++    queryContext.floorpWorkspaceBookmarkContext ??=
++      lazy.WorkspaceBookmarks.getContext(null);
++    const floorpContext = queryContext.floorpWorkspaceBookmarkContext;
++    await lazy.WorkspaceBookmarks.ready;
++    if (
++      instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(floorpContext)
++    ) {
++      return;
++    }
+     let keyword = queryContext.tokens[0]?.value;
+ 
+     let searchString = UrlbarUtils.substringAfter(
+@@ -66,7 +78,11 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
+       keyword,
+       searchString
+     );
+-    if (!entry || !url) {
++    if (
++      !entry ||
++      !url ||
++      !lazy.WorkspaceBookmarks.isUrlVisible(entry.url, floorpContext)
++    ) {
+       return;
+     }
+ 
+@@ -88,7 +104,21 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
+       title = lazy.UrlbarShared.prepareUrlForDisplay(url);
+     }
+ 
+-    let bookmark = await lazy.PlacesUtils.bookmarks.fetch({ url: entry.url });
++    let [visibleBookmark] =
++      await lazy.WorkspaceBookmarks.visibleBookmarksForUrl(
++        entry.url,
++        floorpContext
++      );
++    let bookmark = visibleBookmark
++      ? await lazy.PlacesUtils.bookmarks.fetch(visibleBookmark.guid)
++      : null;
++    if (
++      !bookmark ||
++      instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(floorpContext)
++    ) {
++      return;
++    }
+     let result = new lazy.UrlbarResult({
+       type: lazy.UrlbarShared.RESULT_TYPE.KEYWORD,
+       source: lazy.UrlbarShared.RESULT_SOURCE.BOOKMARKS,
+diff --git a/moz-src/browser/components/urlbar/UrlbarProviderPlaces.sys.mjs b/moz-src/browser/components/urlbar/UrlbarProviderPlaces.sys.mjs
+index d4f7db9..1354eab 100644
+--- a/moz-src/browser/components/urlbar/UrlbarProviderPlaces.sys.mjs
++++ b/moz-src/browser/components/urlbar/UrlbarProviderPlaces.sys.mjs
+@@ -24,15 +24,27 @@ const NOTIFYRESULT_DELAY_MS = 16;
+ //     since epoch. Zero if not bookmarked.
+ //   - btitle: The bookmark title
+ //   - tags: The bookmark tags
++const SQL_FLOORP_VISIBLE_BOOKMARK = `
++  (:floorpVisibleGuids IS NULL OR b.guid IN (
++    SELECT value FROM json_each(:floorpVisibleGuids)
++  ))`;
++
+ const SQL_BOOKMARK_TAGS_FRAGMENT = `
+-   ( SELECT dateAdded FROM moz_bookmarks WHERE fk = h.id ) AS bookmarkDate,
+-   ( SELECT title FROM moz_bookmarks WHERE fk = h.id AND title NOTNULL
++   ( SELECT dateAdded FROM moz_bookmarks b
++     WHERE b.fk = h.id AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
++     ORDER BY b.dateAdded DESC LIMIT 1
++   ) AS bookmarkDate,
++   ( SELECT title FROM moz_bookmarks b WHERE b.fk = h.id AND title NOTNULL
++     AND ${SQL_FLOORP_VISIBLE_BOOKMARK}
+      ORDER BY lastModified DESC LIMIT 1
+    ) AS btitle,
+    ( SELECT GROUP_CONCAT(t.title ORDER BY t.title)
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks t ON t.id = +b.parent AND t.parent = :parent
+-     WHERE b.fk = h.id
++     WHERE b.fk = h.id AND (:floorpVisibleGuids IS NULL OR EXISTS (
++       SELECT 1 FROM moz_bookmarks fb WHERE fb.fk = h.id
++         AND fb.guid IN (SELECT value FROM json_each(:floorpVisibleGuids))
++     ))
+    ) AS tags`;
+ 
+ // TODO bug 412736: in case of a frecency tie, we might break it with h.typed
+@@ -52,6 +64,8 @@ function defaultQuery(conditions = "") {
+         (:switchTabsEnabled AND t.open_count > 0) OR
+         ${lazy.PAGES_FRECENCY_FIELD} <> 0
+        )
++       AND (:floorpVisibleGuids IS NULL OR h.visit_count > 0
++         OR t.open_count > 0 OR bookmarkDate IS NOT NULL)
+        AND CASE WHEN bookmarkDate
+          THEN
+            AUTOCOMPLETE_MATCH(:searchString, h.url,
+@@ -95,6 +109,7 @@ import {
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+ 
+ const lazy = XPCOMUtils.declareLazy({
++  WorkspaceBookmarks: "resource://noraneko/modules/WorkspaceBookmarks.sys.mjs",
+   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
+   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+@@ -457,6 +472,7 @@ class Search {
+    *   The UrlbarProviderPlaces instance that started this search.
+    */
+   constructor(queryContext, listener, provider) {
++    this.#floorpBookmarkContext = queryContext.floorpWorkspaceBookmarkContext;
+     // We want to store the original string for case sensitive searches.
+     this.#originalSearchString = queryContext.searchString;
+     this.#trimmedOriginalSearchString = queryContext.trimmedSearchString;
+@@ -800,6 +816,8 @@ class Search {
+   #listener;
+   #matches = [];
+   #provider;
++
++  #floorpBookmarkContext;
+   #searchModeEngine;
+   #searchTokens;
+   #userContextId;
+@@ -833,7 +851,13 @@ class Search {
+       this.#heuristicToken,
+       this.#originalSearchString
+     );
+-    if (entry) {
++    if (
++      entry &&
++      lazy.WorkspaceBookmarks.isUrlVisible(
++        entry.url.spec,
++        this.#floorpBookmarkContext
++      )
++    ) {
+       this.#filterOnHost = entry.url.host;
+       return true;
+     }
+@@ -842,6 +866,13 @@ class Search {
+   }
+ 
+   #onResultRow(row, cancel) {
++    if (
++      !lazy.WorkspaceBookmarks.isCurrentContext(this.#floorpBookmarkContext)
++    ) {
++      this.#provider.cancelQuery();
++      cancel();
++      return;
++    }
+     this.#addFilteredQueryMatch(row);
+ 
+     // If the search has been canceled by the user or by #addMatch, or we
+@@ -1367,6 +1398,9 @@ class Search {
+   get #searchQuery() {
+     let params = {
+       parent: lazy.PlacesUtils.tagsFolderId,
++      floorpVisibleGuids: lazy.WorkspaceBookmarks.getVisibleBookmarkGuidsJSON(
++        this.#floorpBookmarkContext
++      ),
+       matchBehavior: this.#matchBehavior,
+       searchBehavior: this.#behavior,
+       // We only want to search the tokens that we are left with - not the
+@@ -1535,11 +1569,27 @@ export class UrlbarProviderPlaces extends UrlbarProvider {
+    * @param {(provider: UrlbarProvider, result: UrlbarResult) => void} addCallback
+    *   Callback invoked by the provider to add a new result.
+    */
+-  startQuery(queryContext, addCallback) {
++  async startQuery(queryContext, addCallback) {
+     let instance = this.queryInstance;
++    queryContext.floorpWorkspaceBookmarkContext ??=
++      lazy.WorkspaceBookmarks.getContext(null);
++    await lazy.WorkspaceBookmarks.ready;
++    if (
++      instance != this.queryInstance ||
++      !lazy.WorkspaceBookmarks.isCurrentContext(
++        queryContext.floorpWorkspaceBookmarkContext
++      )
++    ) {
++      return;
++    }
+     let urls = new Set();
+     this.#startLegacyQuery(queryContext, matches => {
+-      if (instance != this.queryInstance) {
++      if (
++        instance != this.queryInstance ||
++        !lazy.WorkspaceBookmarks.isCurrentContext(
++          queryContext.floorpWorkspaceBookmarkContext
++        )
++      ) {
+         return;
+       }
+       let results = convertLegacyMatches(queryContext, matches, urls);

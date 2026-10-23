@@ -36,6 +36,7 @@ export interface TFormItem {
 export interface TForm {
   forms: TFormItem[];
   title: string;
+  description?: string;
   submitLabel?: string;
   cancelLabel?: string;
 }

@@ -10,6 +10,9 @@ import { configStore } from "../data/config.ts";
 import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import i18next from "i18next";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
+import { showBookmarkScopeManager } from "../../workspace-bookmarks/ui.ts";
+import { showWorkspaceGestureSettings } from "../../workspace-gestures/settings.ts";
+import type { BookmarkEditingWindow } from "../../workspace-bookmarks/types.ts";
 import type { WorkspaceArchiveSummary } from "../utils/archive-types.ts";
 
 const translationKeys = {
@@ -299,13 +302,35 @@ export function PopupElement(props: { ctx: WorkspacesService }) {
           </xul:vbox>
         </xul:arrowscrollbox>
         <xul:toolbarseparator id="workspacesPopupSeparator" />
+        <xul:toolbarbutton
+          id="workspacesBookmarkScopesButton"
+          class="toolbarbutton-1"
+          label={i18next.t("workspaceBookmarks.manage", {
+            defaultValue: "Bookmark display in workspaces…",
+          })}
+          onCommand={() => {
+            void showBookmarkScopeManager(window as BookmarkEditingWindow);
+          }}
+        />
+        <xul:toolbarbutton
+          id="workspacesGestureSettingsButton"
+          class="toolbarbutton-1"
+          label={i18next.t("workspaceGestures.settings", {
+            defaultValue: "Workspace switching gestures…",
+          })}
+          onCommand={() => {
+            void showWorkspaceGestureSettings(window);
+          }}
+        />
         <xul:hbox id="workspacesPopupFooter" align="center" pack="center">
           <xul:toolbarbutton
             id="workspacesCreateNewWorkspaceButton"
             class="toolbarbutton-1 chromeclass-toolbar-additional"
             label={texts().createNew}
             context="tab-stacks-toolbar-item-context-menu"
-            onCommand={() => props.ctx.createNoNameWorkspace()}
+            onCommand={() => {
+              void props.ctx.createWorkspaceFromDialog();
+            }}
             flex="1"
           />
           <xul:hbox align="center" class="workspaceFooterButtons">

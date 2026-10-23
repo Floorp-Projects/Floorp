@@ -16,6 +16,10 @@ import {
   parseUserContextChoice,
   resolvePaletteTarget,
 } from "#features-chrome/common/command-palette/utils/targetContext.ts";
+import {
+  getWorkspaceBookmarks,
+  isBookmarkContextCurrent,
+} from "../../../workspace-bookmarks/service.ts";
 
 const PAGE_SIZE = 50;
 const MAX_PATH_LENGTH = 80;
@@ -33,15 +37,23 @@ function flattenBookmarks(
   parentPath: string,
   results: CommandStepChoice[],
   maxResults: number,
+  isVisible: (guid: string) => boolean,
 ): void {
   for (const node of nodes) {
+    if (!isVisible(node.guid)) continue;
     if (results.length >= maxResults) return;
 
     if (node.type === "text/x-moz-place-container") {
       const folderTitle = node.title || "Untitled";
       const currentPath = buildPath(parentPath, folderTitle);
       if (node.children) {
-        flattenBookmarks(node.children, currentPath, results, maxResults);
+        flattenBookmarks(
+          node.children,
+          currentPath,
+          results,
+          maxResults,
+          isVisible,
+        );
       }
     } else if (node.type === "text/x-moz-place" && node.uri) {
       results.push({
@@ -54,10 +66,13 @@ function flattenBookmarks(
   }
 }
 
-export async function loadBookmarks(): Promise<
+export async function loadBookmarks(targetWindow: Window = window): Promise<
   CommandStepChoice[] | StepChoicesResult
 > {
   try {
+    const scopes = getWorkspaceBookmarks();
+    await scopes.ready;
+    const context = scopes.getContext(targetWindow);
     const { PlacesUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PlacesUtils.sys.mjs",
     ) as PlacesUtilsModule;
@@ -77,7 +92,14 @@ export async function loadBookmarks(): Promise<
     );
 
     const allBookmarks: CommandStepChoice[] = [];
-    flattenBookmarks(userRoots, "", allBookmarks, Infinity);
+    if (!isBookmarkContextCurrent(targetWindow, context)) return [];
+    flattenBookmarks(
+      userRoots,
+      "",
+      allBookmarks,
+      Infinity,
+      (guid) => scopes.isVisible(guid, context),
+    );
 
     // Capture snapshot so loadMore doesn't reference mutable global
     const snapshot = allBookmarks;
@@ -93,6 +115,9 @@ export async function loadBookmarks(): Promise<
           choices: CommandStepChoice[];
           hasMore: boolean;
         }> => {
+          if (!isBookmarkContextCurrent(targetWindow, context)) {
+            return Promise.resolve({ choices: [], hasMore: false });
+          }
           const nextBatch = snapshot.slice(
             offset,
             offset + PAGE_SIZE,
@@ -229,6 +254,8 @@ export const bookmarkSwitcherCommand: PaletteCommand = {
     }
 
     try {
+      const scopes = getWorkspaceBookmarks();
+      if (!scopes.isUrlVisible(url, targetWindow)) return;
       const target = resolvePaletteTarget(targetWindow);
       if (!target) {
         console.error("[BookmarkSwitcher] Target is unavailable");

@@ -19,7 +19,7 @@ import type {
   TFormResult,
 } from "../../modal-parent/utils/type.ts";
 import { WorkspaceManageModal } from "../workspace-modal.tsx";
-import type { TWorkspaceID } from "../utils/type.ts";
+import type { TWorkspace, TWorkspaceID } from "../utils/type.ts";
 
 class CallerActor implements ModalActorLike {
   readonly requests: ModalShowRequest[] = [];
@@ -132,10 +132,56 @@ async function testWorkspaceRapidReplacement(): Promise<void> {
   manager.dispose();
 }
 
+async function testCreationUsesSeedWithoutPersistedWorkspace(): Promise<void> {
+  const actor = new CallerActor();
+  const manager = createManager(actor);
+  parentState.modalManager = manager;
+  const caller = createCaller(parent);
+  const seed: TWorkspace = {
+    name: "New project",
+    userContextId: 4,
+    isSelected: null,
+    isDefault: null,
+  };
+  const state = caller as unknown as {
+    ctx: {
+      getRawWorkspace(): never;
+      getSelectedWorkspaceID(): never;
+    };
+    createFormConfig(workspace: TWorkspace, mode: string): object;
+  };
+  state.ctx = {
+    getRawWorkspace: () => {
+      throw new Error("creation must not look up a persisted workspace");
+    },
+    getSelectedWorkspaceID: () => {
+      throw new Error("creation must not recapture the selected workspace");
+    },
+  };
+  state.createFormConfig = (workspace, mode) => {
+    assertEquals(workspace, seed, "creation uses the captured seed");
+    assertEquals(mode, "create", "creation uses its dedicated form mode");
+    return { forms: [], title: "Create Workspace" };
+  };
+
+  try {
+    const shown = caller.showCreateWorkspacesModal(seed);
+    assertEquals(actor.requests.length, 1, "creation reaches the actor");
+    parent.hideNoraModal();
+    assertEquals(await shown, null, "cancelling returns no creation result");
+  } finally {
+    manager.dispose();
+  }
+}
+
 const tests: TestCase[] = [
   { name: "workspace submit", fn: testWorkspaceSubmit },
   { name: "workspace cancel returns null", fn: testWorkspaceCancelReturnsNull },
   { name: "workspace rapid replacement", fn: testWorkspaceRapidReplacement },
+  {
+    name: "creation uses seed without persisted workspace",
+    fn: testCreationUsesSeedWithoutPersistedWorkspace,
+  },
 ];
 
 export async function runAllTests(): Promise<void> {

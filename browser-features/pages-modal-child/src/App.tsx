@@ -200,7 +200,10 @@ const FormField = ({ item, control }: FormFieldProps) => {
       return (
         <div className="mb-4 w-full">
           {item.label && (
-            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+            <label
+              htmlFor={item.id}
+              className="block text-sm font-medium mb-2 text-gray-900 dark:text-white"
+            >
               {item.label}
             </label>
           )}
@@ -212,6 +215,8 @@ const FormField = ({ item, control }: FormFieldProps) => {
             render={({ field }) => (
               <select
                 {...field}
+                id={item.id}
+                required={item.required}
                 className={`w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
                   item.classList || ""
                 }`}
@@ -467,13 +472,30 @@ function App() {
           <form
             id="dynamic-form"
             className="w-full flex flex-col bg-white dark:bg-[#2B2A33] p-4"
+            aria-labelledby={formConfig?.title ? "nora-modal-title" : undefined}
+            aria-describedby={formConfig?.description
+              ? "nora-modal-description"
+              : undefined}
             onSubmit={methods.handleSubmit(onSubmit)}
           >
             {formConfig?.title && (
               <div className="flex-none py-3 px-1 border-b border-gray-200 dark:border-gray-700">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h1
+                  id="nora-modal-title"
+                  className="text-xl font-bold text-gray-900 dark:text-white"
+                >
                   {formConfig.title}
                 </h1>
+                {formConfig.description
+                  ? (
+                    <p
+                      id="nora-modal-description"
+                      className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+                    >
+                      {formConfig.description}
+                    </p>
+                  )
+                  : null}
               </div>
             )}
 

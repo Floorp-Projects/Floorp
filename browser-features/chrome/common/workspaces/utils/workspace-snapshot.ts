@@ -13,6 +13,7 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
 } from "./workspaces-static-names.ts";
 import type { WorkspacesDataManagerBase } from "../workspacesDataManagerBase.tsx";
+import { getOriginUserContextId } from "./tab-replacement-lifecycle.ts";
 
 interface SessionStoreModule {
   promiseInitialized: Promise<void> | undefined;
@@ -60,7 +61,9 @@ export const toNumber = (value: string | null, fallback = 0): number => {
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
-export const extractUrlFromState = (state: Record<string, unknown>): string | null => {
+export const extractUrlFromState = (
+  state: Record<string, unknown>,
+): string | null => {
   const entries = state.entries;
   if (!Array.isArray(entries)) {
     return null;
@@ -173,20 +176,20 @@ const toWorkspaceSnapshotTab = (
   state: Record<string, unknown> | null,
   dataManager: WorkspacesDataManagerBase,
 ): TWorkspaceSnapshotTab => {
-  const pinned =
-    tab.hasAttribute("pinned") ||
+  const pinned = tab.hasAttribute("pinned") ||
     Boolean((tab as unknown as { pinned?: boolean }).pinned);
   const sessionState = state ?? null;
   const title = extractTitleFromTab(tab, sessionState);
   const url = extractUrlFromTab(tab, sessionState);
-  const userContextId = toNumber(tab.getAttribute("usercontextid"));
+  const userContextId =
+    getOriginUserContextId(globalThis.gBrowser.getBrowserForTab(tab)) ??
+      toNumber(tab.getAttribute("usercontextid"));
   const lastShownRaw = tab.getAttribute(WORKSPACE_LAST_SHOW_ID);
-  const lastShownWorkspaceId =
-    typeof lastShownRaw === "string" &&
-    lastShownRaw.length > 0 &&
-    dataManager.isWorkspaceID(lastShownRaw)
-      ? lastShownRaw
-      : null;
+  const lastShownWorkspaceId = typeof lastShownRaw === "string" &&
+      lastShownRaw.length > 0 &&
+      dataManager.isWorkspaceID(lastShownRaw)
+    ? lastShownRaw
+    : null;
 
   return {
     state: sessionState,

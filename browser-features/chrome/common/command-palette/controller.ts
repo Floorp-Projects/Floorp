@@ -27,6 +27,11 @@ import {
   isPaletteTargetAvailable,
   resolvePaletteTarget,
 } from "./utils/targetContext.ts";
+import {
+  BOOKMARK_SCOPES_CHANGED,
+  getWorkspaceBookmarks,
+  isBookmarkContextCurrent,
+} from "../workspace-bookmarks/service.ts";
 
 function looksLikeUrl(query: string): boolean {
   if (query.startsWith("http://") || query.startsWith("https://")) return true;
@@ -55,7 +60,22 @@ export class CommandPaletteController {
       true, // capture phase
     );
     this.eventListenersAttached = true;
+    Services.obs.addObserver(
+      this.bookmarkScopeObserver,
+      BOOKMARK_SCOPES_CHANGED,
+    );
   }
+
+  private bookmarkScopeObserver = {
+    observe: () => {
+      if (!this.state.isVisible()) return;
+      this.stepChoicesLoadGeneration++;
+      this.hidePalette();
+      this.state.setFilteredCommands([]);
+      this.state.setStepChoicesBase([]);
+      this.state.setFilteredStepChoices([]);
+    },
+  };
 
   public destroy(): void {
     this.stepChoicesLoadGeneration++;
@@ -66,6 +86,10 @@ export class CommandPaletteController {
         true,
       );
       this.eventListenersAttached = false;
+      Services.obs.removeObserver(
+        this.bookmarkScopeObserver,
+        BOOKMARK_SCOPES_CHANGED,
+      );
     }
     this.clearAnimOutTimer();
     if (this.historySearchTimer) {
@@ -1017,7 +1041,12 @@ export class CommandPaletteController {
   private async performBookmarkSearch(query: string): Promise<void> {
     console.debug("[command-palette] performBookmarkSearch called");
     try {
-      const results = await searchBookmarkCommands(query, 10);
+      const context = getWorkspaceBookmarks().getContext(this.targetWindow);
+      const results = await searchBookmarkCommands(
+        query,
+        10,
+        this.targetWindow,
+      );
       console.debug(
         "[command-palette] Bookmark search returned:",
         results.length,
@@ -1025,7 +1054,10 @@ export class CommandPaletteController {
       );
 
       // Only apply if query hasn't changed since we started
-      if (query !== this.currentSearchQuery) {
+      if (
+        query !== this.currentSearchQuery || !this.state.isVisible() ||
+        !isBookmarkContextCurrent(this.targetWindow, context)
+      ) {
         console.debug("[command-palette] Bookmark search stale");
         return;
       }

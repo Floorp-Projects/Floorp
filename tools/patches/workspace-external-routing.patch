@@ -1,0 +1,118 @@
+diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserDOMWindow.sys.mjs
+--- a/browser/modules/BrowserDOMWindow.sys.mjs
++++ b/browser/modules/BrowserDOMWindow.sys.mjs
+@@ -11,4 +11,5 @@
+ 
+ ChromeUtils.defineESModuleGetters(lazy, {
++  WorkspaceExternalRouting: "resource://noraneko/modules/WorkspaceExternalRouting.sys.mjs",
+   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+@@ -248,14 +249,14 @@
+       aFlags & Ci.nsIBrowserDOMWindow.OPEN_FORCE_ALLOW_DATA_URI
+     );
+-    var guessUserContextIdEnabled =
+-      isExternal &&
+-      !Services.prefs.getBoolPref(
+-        "browser.link.force_default_user_context_id_for_external_opens",
+-        false
+-      );
+-    var openingUserContextId =
+-      (guessUserContextIdEnabled &&
+-        lazy.URILoadingHelper.guessUserContextId(aURI)) ||
+-      Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
++    // The receiver's workspace is fixed before preferences or deferred loads
++    // can change selection. URL history must not choose another workspace.
++    const floorpExternalWindow = isExternal &&
++      (!this.win.toolbar.visible || lazy.TaskbarTabsUtils.isTaskbarTabWindow(this.win))
++      ? BrowserWindowTracker.getTopWindow({ private: PrivateBrowsingUtils.isWindowPrivate(this.win) }) || this.win
++      : this.win;
++    const floorpRequest = isExternal
++      ? lazy.WorkspaceExternalRouting.capture(floorpExternalWindow)
++      : null;
++    var openingUserContextId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+ 
+     if (aOpenWindowInfo && isExternal) {
+@@ -317,4 +318,15 @@
+       ? aOpenWindowInfo.originAttributes.privateBrowsingId != 0
+       : PrivateBrowsingUtils.isWindowPrivate(this.win);
++
++    if (isExternal && aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
++      return lazy.WorkspaceExternalRouting.open(floorpExternalWindow, aURI, {
++        where: aWhere,
++        request: floorpRequest,
++        triggeringPrincipal: aTriggeringPrincipal,
++        policyContainer: aPolicyContainer,
++        referrerInfo,
++        forceAllowDataURI,
++      });
++    }
+ 
+     switch (aWhere) {
+diff --git a/browser/modules/BrowserContentHandler.sys.mjs b/browser/modules/BrowserContentHandler.sys.mjs
+--- a/browser/modules/BrowserContentHandler.sys.mjs
++++ b/browser/modules/BrowserContentHandler.sys.mjs
+@@ -16,4 +16,5 @@
+   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
++  WorkspaceExternalRouting: "resource://noraneko/modules/WorkspaceExternalRouting.sys.mjs",
+   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+   HeadlessShell: "moz-src:///browser/components/shell/HeadlessShell.sys.mjs",
+@@ -1309,6 +1310,8 @@
+   }
+ 
+-  let openInWindow = ({ browserDOMWindow }) => {
+-    browserDOMWindow.openURI(
++  let floorpRequest;
++  let openInWindow = window => {
++    floorpRequest ??= lazy.WorkspaceExternalRouting.capture(window);
++    lazy.WorkspaceExternalRouting.withRequest(window, floorpRequest, () => window.browserDOMWindow.openURI(
+       uri,
+       null,
+@@ -1319,5 +1322,5 @@
+           : 0),
+       triggeringPrincipal
+-    );
++    ));
+   };
+ 
+@@ -1342,4 +1345,5 @@
+     // catching exceptions it can throw in some cases and some of those callers
+     // cannot be made async.
++    floorpRequest = lazy.WorkspaceExternalRouting.capture(null, allowPrivate);
+     pending.then(openInWindow);
+     return;
+diff --git a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+--- a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -79,4 +79,5 @@
+     "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
+   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
++  WorkspaceExternalRouting: "resource://noraneko/modules/WorkspaceExternalRouting.sys.mjs",
+   webrtcUI: "resource:///modules/webrtcUI.sys.mjs",
+ });
+@@ -700,4 +701,8 @@
+     }
+ 
++    userContextId = lazy.WorkspaceExternalRouting.prepareInitialWindow(this.documentGlobal, {
++      userContextId, openWindowInfo, tabArgument,
++    });
++
+     let remoteTypeOptions = { window: this.documentGlobal, userContextId };
+     if (triggeringRemoteType) {
+@@ -801,4 +806,5 @@
+     tab._fullyOpen = true;
+     tab.linkedBrowser = browser;
++    lazy.WorkspaceExternalRouting.finishInitialTab(this.documentGlobal, tab);
+ 
+     if (userContextId) {
+diff --git a/browser/chrome/browser/content/browser/browser-init.js b/browser/chrome/browser/content/browser/browser-init.js
+--- a/browser/chrome/browser/content/browser/browser-init.js
++++ b/browser/chrome/browser/content/browser/browser-init.js
+@@ -833,4 +833,7 @@
+   _handleURIToLoad() {
+     this._callWithURIToLoad(uriToLoad => {
++      uriToLoad = ChromeUtils.importESModule(
++        "resource://noraneko/modules/WorkspaceExternalRouting.sys.mjs"
++      ).WorkspaceExternalRouting.prepareInitialLoad(window, uriToLoad);
+       if (!uriToLoad) {
+         // We don't check whether window.arguments[5] (userContextId) is set

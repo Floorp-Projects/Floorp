@@ -18,6 +18,7 @@ import { selectedWorkspaceID, workspacesDataStore } from "../data/data.ts";
 import type { TWorkspaceID } from "../utils/type.ts";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import i18next from "i18next";
+import { workspaceSessionLabel } from "../../workspace-session-indicator/session-info.ts";
 
 const translationKeys = {
   createNew: "workspaces.popup.create-new" as const,
@@ -55,6 +56,12 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
   const workspaceName = createMemo(() =>
     (workspace() as { name?: string } | undefined)?.name ?? ""
   );
+  const workspaceLabel = () =>
+    workspaceSessionLabel(
+      workspaceName(),
+      (workspace() as { userContextId?: number } | undefined)?.userContextId ??
+        0,
+    );
   const isSelected = () => selectedWorkspaceID() === props.workspaceId;
 
   const handleActivate = () => {
@@ -150,8 +157,8 @@ const WorkspacePanelButton = (props: WorkspacePanelButtonProps) => {
         data-workspace-id={props.workspaceId}
         role="button"
         tabIndex={0}
-        title={workspaceName()}
-        aria-label={workspaceName()}
+        title={workspaceLabel()}
+        aria-label={workspaceLabel()}
         draggable="true"
         onClick={handleActivate}
         onKeyDown={handleKeyDown}
@@ -241,7 +248,9 @@ export function WorkspacesPanels(props: { ctx?: WorkspacesService } = {}) {
     onCleanup(() => globalThis.clearInterval(intervalId));
   });
 
-  const handleCreateWorkspace = () => ctx()?.createNoNameWorkspace();
+  const handleCreateWorkspace = () => {
+    void ctx()?.createWorkspaceFromDialog();
+  };
   return (
     <Show when={shouldShow() ? ctx() : null} keyed>
       {(service) => (

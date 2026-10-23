@@ -1,0 +1,85 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+.floorp-session-badge,
+.floorp-pane-session-badge {
+  font: menu;
+  font-size: 10px;
+  line-height: 1.3;
+  margin: 0;
+  appearance: none;
+  display: inline-block;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  padding: 1px 4px;
+  color: var(--toolbar-color);
+  background: var(--toolbar-bgcolor);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-inline-size: 0;
+  flex: 0 1 auto;
+}
+.floorp-session-badge {
+  max-inline-size: min(8rem, 40%);
+}
+.browserStack:has(> .floorp-pane-session-badge) {
+  position: relative;
+}
+.floorp-pane-session-badge {
+  position: absolute;
+  z-index: 9;
+  inset-inline-end: 8px;
+  top: 8px;
+  font-size: 12px;
+  padding: 5px 8px;
+  max-inline-size: min(20rem, calc(100% - 16px));
+  pointer-events: none;
+}
+.floorp-session-badge[data-pending],
+.floorp-pane-session-badge[data-pending] {
+  cursor: pointer;
+  color: var(--text-color-deemphasized, currentColor);
+  background: var(--arrowpanel-background);
+}
+.floorp-pane-session-badge[data-pending] {
+  pointer-events: auto;
+}
+
+/* Native pinned positions and the collapsed vertical rail use an icon width.
+ * Keep a compact exception marker there; the selected page always names the
+ * actual session in full instead of widening or overflowing the native tab. */
+.tabbrowser-tab[pinned] .floorp-session-badge,
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .floorp-session-badge {
+  position: absolute;
+  inset-inline-end: 3px;
+  inset-block-end: 6px;
+  inline-size: 8px;
+  block-size: 8px;
+  min-inline-size: 8px;
+  max-inline-size: 8px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0;
+  background: var(--toolbar-bgcolor);
+}
+.tabbrowser-tab[pinned] .floorp-session-badge::after,
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .floorp-session-badge::after {
+  content: "";
+  display: block;
+  inline-size: 4px;
+  block-size: 4px;
+  margin: 1px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.tabbrowser-tab[pinned] .floorp-session-badge[data-unavailable]::after,
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .floorp-session-badge[data-unavailable]::after {
+  content: "!";
+  inline-size: 6px;
+  block-size: 6px;
+  margin: 0;
+  font-size: 8px;
+  line-height: 6px;
+  text-align: center;
+  background: transparent;
+}

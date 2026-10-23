@@ -1,0 +1,150 @@
+# SPDX-License-Identifier: MPL-2.0
+
+name: "(CI) Workspace native input source build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: "Native Linux runner architecture"
+        type: choice
+        options: [x86_64, aarch64]
+        default: x86_64
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  source-build:
+    runs-on: ${{ inputs.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 360
+    env:
+      MOZ_HEADLESS: "1"
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      MOZ_OBJDIR: obj-workspace-native
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          path: floorp
+          persist-credentials: false
+
+      - name: Resolve the pinned Runtime source
+        id: lock
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          lock = json.loads(Path("floorp/floorp-runtime.lock.json").read_text())
+          revision = lock["source"]["commit"]
+          if lock["source"]["repository"] != "Floorp-Projects/Floorp-Runtime":
+              raise SystemExit("Unexpected Runtime repository")
+          if not re.fullmatch(r"[0-9a-f]{40}", revision):
+              raise SystemExit("Invalid locked Runtime revision")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"revision={revision}\n")
+          PY
+
+      - name: Free hosted-runner tools unused by this native build
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h .
+
+      - name: Checkout pinned Runtime
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          repository: Floorp-Projects/Floorp-Runtime
+          ref: ${{ steps.lock.outputs.revision }}
+          path: runtime
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Validate the native patch against the locked source
+        shell: bash
+        run: |
+          python3 floorp/tools/workspace-input/check-native-patch.py \
+            --runtime-dir runtime \
+            --report workspace-native-input-validation.json
+
+      - name: Apply all common Floorp Runtime source patches in order
+        working-directory: runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          for patch in ../floorp/.github/patches/floorp-runtime/common/*.patch; do
+            [ -e "$patch" ] || continue
+            if git apply --check "$patch"; then
+              git apply --verbose "$patch"
+            elif git apply --reverse --check "$patch"; then
+              echo "Runtime already contains $(basename "$patch")"
+            else
+              echo "Runtime source patch does not apply: $(basename "$patch")" >&2
+              exit 1
+            fi
+          done
+
+      - name: Configure a full native build
+        working-directory: runtime
+        shell: bash
+        run: |
+          cat > .mozconfig <<'EOF'
+          mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-workspace-native
+          ac_add_options --enable-application=browser
+          ac_add_options --with-app-name=floorp
+          ac_add_options --with-app-basename=Floorp
+          ac_add_options --enable-bootstrap
+          ac_add_options --enable-tests
+          ac_add_options --disable-debug-symbols
+          ac_add_options --disable-crashreporter
+          EOF
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Compile the native implementation and generated DOM bindings
+        working-directory: runtime
+        shell: bash
+        run: ./mach build --jobs=4
+
+      - name: Run native state and event-copy tests
+        working-directory: runtime
+        shell: bash
+        run: ./mach gtest 'WorkspaceSwipeGesture.*'
+
+      - name: Package the source-built Runtime
+        working-directory: runtime
+        shell: bash
+        run: ./mach package
+
+      - name: Record the completed native build
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import configparser, hashlib, json
+          from pathlib import Path
+          report_path = Path("workspace-native-input-validation.json")
+          report = json.loads(report_path.read_text())
+          binary_root = Path("runtime/obj-workspace-native/dist/bin")
+          application = configparser.ConfigParser()
+          application.read(binary_root / "application.ini")
+          report["nativeBuildCompleted"] = True
+          report["nativeBuildId"] = application["App"]["BuildID"]
+          report["validated"].extend(["full-native-build", "native-event-gtest"])
+          report["nativeLibrarySha256"] = hashlib.sha256(
+              (binary_root / "libxul.so").read_bytes()
+          ).hexdigest()
+          report_path.write_text(json.dumps(report, indent=2) + "\n")
+          PY
+
+      # The normal package workflow accepts only its existing authenticated
+      # Runtime artifacts. This separate test artifact is never promoted by
+      # setting a capability pref or by applying a source-only patch there.
+      - name: Upload the experimental native build and validation report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: workspace-native-input-linux-${{ inputs.arch }}
+          if-no-files-found: error
+          path: |
+            runtime/obj-workspace-native/dist/*.tar.xz
+            workspace-native-input-validation.json

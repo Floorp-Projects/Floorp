@@ -13,6 +13,7 @@ import {
 } from "./data/data";
 import type { TWorkspaceID } from "./utils/type";
 import { isRight } from "fp-ts/Either";
+import type { WorkspaceCreationOptions } from "./utils/workspace-session-types.ts";
 
 export interface WorkspacesDataManagerBase {
   createWorkspace(name: string): TWorkspaceID;
@@ -30,11 +31,10 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     excludeId: TWorkspaceID,
   ): TWorkspaceID | null {
     for (
-      const id
-        of (workspacesDataStore.data as unknown as Map<
-          TWorkspaceID,
-          TWorkspace
-        >).keys()
+      const id of (workspacesDataStore.data as unknown as Map<
+        TWorkspaceID,
+        TWorkspace
+      >).keys()
     ) {
       if (id !== excludeId) {
         return id;
@@ -50,7 +50,10 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
    * @returns The new workspace id.
    * @deprecated Use WorkspacesServices.createWorkspace
    */
-  public createWorkspace(name: string): TWorkspaceID {
+  public createWorkspace(
+    name: string,
+    initial?: WorkspaceCreationOptions,
+  ): TWorkspaceID {
     const idResult = zWorkspaceID.decode(
       Services.uuid.generateUUID().toString().replaceAll(/[{}]/g, ""),
     );
@@ -60,8 +63,8 @@ export class WorkspacesDataManager implements WorkspacesDataManagerBase {
     const id = idResult.right;
     const workspace: TWorkspace = {
       name,
-      icon: null,
-      userContextId: 0,
+      icon: initial?.icon ?? null,
+      userContextId: initial?.userContextId ?? 0,
       isSelected: null,
       isDefault: null,
     };

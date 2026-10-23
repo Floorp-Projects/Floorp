@@ -8,6 +8,7 @@ import type { TWorkspaceID } from "../utils/type.js";
 import type { WorkspacesService } from "../workspacesService";
 import { getContainerColorName } from "../utils/container-color";
 import { workspacesDataStore } from "../data/data.ts";
+import { workspaceSessionLabel } from "../../workspace-session-indicator/session-info.ts";
 
 export function PopupToolbarElement(props: {
   workspaceId: TWorkspaceID;
@@ -86,7 +87,9 @@ export function PopupToolbarElement(props: {
         return (
           <xul:toolbarbutton
             id={`workspace-${props.workspaceId}`}
-            label={ws().name}
+            label={workspaceSessionLabel(ws().name, userContextId())}
+            tooltiptext={workspaceSessionLabel(ws().name, userContextId())}
+            aria-label={workspaceSessionLabel(ws().name, userContextId())}
             context="workspaces-toolbar-item-context-menu"
             class="toolbarbutton-1 chromeclass-toolbar-additional workspaceButton"
             style={{

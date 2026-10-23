@@ -693,7 +693,9 @@
             "floorp-split-view-swap-panes": "分割ビューの区分けを入れ替える",
             "floorp-split-view-cycle-layout": "分割ビューの区分けを回す",
             "floorp-split-view-add-pane": "分割ビューに区分けを追加",
-            "floorp-split-view-remove-pane": "分割ビューから区分けを削除"
+            "floorp-split-view-remove-pane": "分割ビューから区分けを削除",
+            "floorp-workspace-next-no-wrap": "次のワークスペースへ（端で停止）",
+            "floorp-workspace-previous-no-wrap": "前のワークスペースへ（端で停止）"
         },
         "edit": "編集",
         "duplicate": "複製",

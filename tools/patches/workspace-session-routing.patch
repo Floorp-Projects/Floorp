@@ -1,0 +1,73 @@
+diff --git a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+--- a/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
++++ b/moz-src/browser/components/tabbrowser/Tabbrowser.sys.mjs
+@@ -8,2 +8,3 @@
+ const lazy = XPCOMUtils.declareLazy({
++  WorkspaceSessions: "resource://noraneko/modules/WorkspaceSessions.sys.mjs",
+   AIWindow:
+@@ -3698,2 +3699,3 @@
+       eventDetail,
++      floorpWorkspaceId,
+       focusUrlBar,
+@@ -3779,2 +3781,10 @@
+       null;
++
++    // Resolve the actual browser context before the browser or first load exists.
++    const floorpSession = lazy.WorkspaceSessions.resolveNewTab(this.documentGlobal, {
++      userContextId, openerTab, openerBrowser, openWindowInfo, uriString, skipLoad,
++      floorpWorkspaceId,
++    });
++    userContextId = floorpSession.userContextId;
++    uriString = floorpSession.uriString;
+ 
+@@ -3895,2 +3905,9 @@
+       return null;
++    }
++
++    if (floorpSession.workspaceId) {
++      t.setAttribute("floorpWorkspaceId", floorpSession.workspaceId);
++    }
++    if (floorpSession.pending) {
++      lazy.WorkspaceSessions.markPendingTab(t, floorpSession.pending);
+     }
+@@ -5022,2 +5039,3 @@
+ 
++      tabDataList[i] = tabData = lazy.WorkspaceSessions.sanitizeRestoreState(tabData);
+       let userContextId = tabData.userContextId;
+diff --git a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+--- a/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/moz-src/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -242,2 +242,3 @@
+ const lazy = XPCOMUtils.declareLazy({
++  WorkspaceSessions: "resource://noraneko/modules/WorkspaceSessions.sys.mjs",
+   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+@@ -6557,2 +6558,7 @@
+   #restoreTab(tab, tabData, options = {}) {
++    tabData = lazy.WorkspaceSessions.sanitizeRestoreState(tabData);
++    if (tabData.extData?.["floorp.workspace.pendingSession"]) {
++      lazy.WorkspaceSessions.markPendingTab(tab, tabData);
++      options = { ...options, loadArguments: undefined };
++    }
+     let browser = tab.linkedBrowser;
+diff --git a/moz-src/browser/components/sessionstore/TabState.sys.mjs b/moz-src/browser/components/sessionstore/TabState.sys.mjs
+--- a/moz-src/browser/components/sessionstore/TabState.sys.mjs
++++ b/moz-src/browser/components/sessionstore/TabState.sys.mjs
+@@ -240,2 +240,7 @@
+ 
++    // Save the browser's actual origin context, including tabs whose old
++    // workspace code changed only the DOM label after browser creation.
++    tabData.userContextId =
++      browser.browsingContext?.originAttributes?.userContextId ?? tabData.userContextId;
++
+     // After copyFromCache() was called we check for properties that are kept
+@@ -265,2 +270,10 @@
+         : 0;
++    }
++
++    const floorpPending = tab.getAttribute("floorpPendingSessionState");
++    if (floorpPending) {
++      tabData.extData = {
++        ...(tabData.extData || {}),
++        ["floorp.workspace.pendingSession"]: floorpPending,
++      };
+     }
