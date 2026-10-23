@@ -92,9 +92,11 @@ export async function withWindows(
     );
     await check(async () => {
       recordNativePhase("before OpenBrowserWindow");
+      // Match browser-chrome's blank startup fixture instead of loading the
+      // user's homepage or session-startup pages in each temporary window.
       const win = (globalThis as unknown as {
-        OpenBrowserWindow(): TestWindow;
-      }).OpenBrowserWindow();
+        OpenBrowserWindow(options: { loadURIString: string }): TestWindow;
+      }).OpenBrowserWindow({ loadURIString: "about:blank" });
       recordNativePhase("after OpenBrowserWindow");
       windows.push(win);
       await waitFor(

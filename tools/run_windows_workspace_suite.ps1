@@ -44,6 +44,12 @@ New-Item -ItemType Directory -Force -Path $suiteDir | Out-Null
 $revision = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw "Could not record the source revision" }
 $revision | Set-Content "$resultsRoot/source-commit.txt"
+[PSCustomObject]@{
+  os = [Environment]::OSVersion.VersionString
+  userInteractive = [Environment]::UserInteractive
+  sessionId = (Get-Process -Id $PID).SessionId
+  headlessEnvironmentPresent = Test-Path Env:MOZ_HEADLESS
+} | ConvertTo-Json | Set-Content "$resultsRoot/environment.json"
 Remove-Item logs/test/latest.log -ErrorAction SilentlyContinue
 
 $startedAt = [DateTime]::UtcNow.ToString("o")

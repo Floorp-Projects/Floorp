@@ -1162,13 +1162,39 @@ async function refreshWindowsOwnershipOrThrow(
   deps: WindowsProcessControlDeps,
 ): Promise<void> {
   try {
+    const processes = await deps.listProcesses();
     const issues = reconcileWindowsFloorpOwnership(
       state,
-      await deps.listProcesses(),
+      processes,
     );
     if (issues.length > 0 || state.ambiguousFloorp.length > 0) {
+      const mismatches = [...state.ownedFloorp.values()].flatMap((expected) => {
+        const current = processes.find((row) =>
+          row.processId === expected.processId
+        );
+        return current && !matchesWindowsProcessIdentity(current, expected)
+          ? [{
+            pid: expected.processId,
+            expected: {
+              creationDate: expected.creationDate,
+              executablePath: expected.executablePath,
+              content: isContentProcessCommandLine(expected.commandLine),
+            },
+            current: {
+              creationDate: current.creationDate,
+              executablePath: current.executablePath,
+              parentPid: current.parentProcessId,
+              content: isContentProcessCommandLine(current.commandLine),
+            },
+          }]
+          : [];
+      });
       throw new Error(
-        [...issues, ...state.ambiguousFloorp].join(" | "),
+        [
+          ...issues,
+          ...state.ambiguousFloorp,
+          ...(mismatches.length ? [JSON.stringify({ mismatches })] : []),
+        ].join(" | "),
       );
     }
   } catch (error) {

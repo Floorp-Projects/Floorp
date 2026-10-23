@@ -53,20 +53,23 @@ if ($LASTEXITCODE -ne 0) { throw "Windows Runtime installation failed" }
 patches and builds the current TypeScript sources. Installing the Runtime alone
 does not execute any browser tests.
 
-## Automated headless browser tests
+## Automated browser tests with native Windows widgets
 
 Close a previously launched test or development browser before starting. Each
 scoped run writes its filter before browser startup, starts a fresh browser, and
 verifies teardown. The test profile is `_dist/profile/test`, separate from an
 installed Floorp profile.
 
+Use a normal Windows desktop browser window for the complete 49-file suite,
+with `MOZ_HEADLESS` unset. The dedicated CI matrix also uses native Windows
+widgets. Windows headless mode can report zero-sized native popup anchors, so
+it does not provide the full suite's native UI coverage.
+
 The runner takes its options directly after `deno task test`; do **not** insert
 an extra `--` separator:
 
 ```powershell
-$env:MOZ_HEADLESS = "1"
-$env:MOZ_HEADLESS_WIDTH = "1280"
-$env:MOZ_HEADLESS_HEIGHT = "960"
+Remove-Item Env:MOZ_HEADLESS -ErrorAction SilentlyContinue
 deno task test --near browser-features/chrome/common/workspace-gestures --timeout-ms 300000 --startup-timeout-ms 180000
 if ($LASTEXITCODE -ne 0) { throw "Workspace gesture tests failed" }
 ```
@@ -92,9 +95,7 @@ tasks.
 To reproduce the same coverage serially on a local machine:
 
 ```powershell
-$env:MOZ_HEADLESS = "1"
-$env:MOZ_HEADLESS_WIDTH = "1280"
-$env:MOZ_HEADLESS_HEIGHT = "960"
+Remove-Item Env:MOZ_HEADLESS -ErrorAction SilentlyContinue
 $scopes = @(
   "browser-features/chrome/common/workspaces",
   "browser-features/chrome/common/workspace-gestures",
@@ -115,8 +116,24 @@ The suite exercises real Windows browser APIs for workspace/session routing,
 container storage isolation and sharing, session recovery, bookmark visibility
 and editing, UI labels, palette integration, and the common gesture controller
 and end-stop actions. It also measures real Places queries with 100 and 10,000
-bookmarks. A headless pass does not verify a physical touchpad, OS gesture
-delivery, visible desktop composition, or Windows native three-finger input.
+bookmarks. Automated native-widget coverage does not verify a physical
+touchpad, OS gesture delivery, or Windows native three-finger input.
+
+For a limited controller or storage check that does not depend on native UI
+geometry, headless mode is optional. For example, this selects only the pure
+gesture controller test file:
+
+```powershell
+$env:MOZ_HEADLESS = "1"
+deno task test --near browser-features/chrome/common/workspace-gestures/test/controller.test.ts --timeout-ms 300000 --startup-timeout-ms 180000
+$controllerExit = $LASTEXITCODE
+Remove-Item Env:MOZ_HEADLESS -ErrorAction SilentlyContinue
+if ($controllerExit -ne 0) { throw "Headless controller check failed" }
+```
+
+This limited result does not establish native popup, dialog, label geometry, or
+complete 49-file UI coverage. Clear `MOZ_HEADLESS` before returning to the full
+suite or physical checks.
 
 Local runner logs are in `logs/test/colocated-*.log`; `latest.log` is replaced
 after each run. The Places measurement is written to
@@ -136,11 +153,12 @@ gh run list --repo Floorp-Projects/Floorp --workflow colocated_runner_test.yml -
 ```
 
 This opt-in dispatch runs the `windows-workspaces` matrix on `windows-latest`
-and skips the normal smoke/native matrix. Each job name includes its suite, so
-completed suite logs and artifacts can be inspected while other jobs are still
-running. The default dispatch, pull-request, and main-branch workflows retain
-their existing behavior. The ordinary Windows native matrix entry validates
-the Runtime artifact; it does not run these browser suites.
+with standard native Windows widgets and skips the normal smoke/native matrix.
+Each job name includes its suite, so completed suite logs and artifacts can be
+inspected while other jobs are still running. The default dispatch,
+pull-request, and main-branch workflows retain their existing behavior. The
+ordinary Windows native matrix entry validates the Runtime artifact; it does
+not run these browser suites.
 
 Check the run's `headSha` against the intended revision. Each job requires its
 scope's exact passing-file count, a successful runner exit, and no skipped files.
@@ -171,6 +189,8 @@ in that job, so use a fresh hosted run when retrying the failure. Matrix jobs ar
 isolated; a partial patch cannot carry over into another suite's Runtime.
 
 ## Physical Windows touchpad checks
+
+Physical Windows touchpad verification remains pending.
 
 Record the Windows version/build, display scale, touchpad model, driver/version,
 Precision Touchpad status, configured OS gestures, and exact tested commit. For
@@ -220,8 +240,8 @@ and cannot recover physical gesture boundaries from a repeated key stream.
   switching gestures configured by Windows or the driver.
 - [ ] Inspect normal, pinned, collapsed vertical, and split-view session labels
   on the visible desktop at the tested display scale; check the pending-session
-  recovery button and keyboard focus. Headless geometry checks do not replace
-  this visual check.
+  recovery button and keyboard focus. Automated native-widget checks do not
+  replace this visual check.
 - [ ] If testing optional sidebar horizontal swipe, disable the OS mapping for
   that check and enable only sidebar mode. Verify one switch, stopping at ends,
   and that page content/form controls do not become workspace swipe targets.
@@ -234,4 +254,4 @@ Restore the tester's original gesture mappings after recording the results.
 Pending. Add the tested commit, GitHub Actions run URL, per-suite outcomes,
 Windows Runtime version/build ID, benchmark evidence, and any failures after
 the remote run completes. Record physical-device results separately; an
-automated headless success must not mark those checks complete.
+automated browser success must not mark those checks complete.

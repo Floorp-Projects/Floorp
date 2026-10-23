@@ -454,9 +454,6 @@ jobs:
           - pages-modal-child
           - modules
     env:
-      MOZ_HEADLESS: "1"
-      MOZ_HEADLESS_WIDTH: "1280"
-      MOZ_HEADLESS_HEIGHT: "960"
       FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Enable long checkout paths
