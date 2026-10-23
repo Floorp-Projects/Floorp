@@ -9,6 +9,10 @@ on:
         description: Run only the Windows workspace browser suites
         type: boolean
         default: false
+      windows_workspace_test:
+        description: Optional single workspace .test.ts filename or repository path (requires Windows-only mode)
+        type: string
+        default: ""
   pull_request:
   push:
     branches: [main]
@@ -437,24 +441,18 @@ jobs:
 
   windows-workspaces:
     if: github.event_name == 'workflow_dispatch' && inputs.windows_workspaces_only
-    name: Windows workspace / ${{ matrix.suite }}
+    name: Windows workspace / ${{ inputs.windows_workspace_test || matrix.suite }}
     runs-on: windows-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        suite:
-          - workspaces
-          - workspace-gestures
-          - workspace-session-indicator
-          - workspace-bookmarks
-          - command-palette
-          - workspace-overrides
-          - pages-modal-child
-          - modules
+        suite: ${{ fromJSON(inputs.windows_workspace_test != '' && '["workspaces"]' || '["workspaces", "workspace-gestures", "workspace-session-indicator", "workspace-bookmarks", "command-palette", "workspace-overrides", "pages-modal-child", "modules"]') }}
     env:
       FLOORP_RUNTIME_GITHUB_TOKEN: ${{ github.token }}
+      FLOORP_WINDOWS_WORKSPACE_SUITE: ${{ matrix.suite }}
+      FLOORP_WINDOWS_WORKSPACE_TEST: ${{ inputs.windows_workspace_test }}
     steps:
       - name: Enable long checkout paths
         run: git config --global core.longpaths true
@@ -487,7 +485,7 @@ jobs:
         if: ${{ !cancelled() && steps.runtime-install.outcome == 'success' }}
         timeout-minutes: 10
         shell: pwsh
-        run: ./tools/run_windows_workspace_suite.ps1 -Suite '${{ matrix.suite }}'
+        run: ./tools/run_windows_workspace_suite.ps1 -Suite "$env:FLOORP_WINDOWS_WORKSPACE_SUITE" -TestFile "$env:FLOORP_WINDOWS_WORKSPACE_TEST"
 
       - name: Upload Windows workspace evidence
         if: always()

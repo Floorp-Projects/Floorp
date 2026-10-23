@@ -94,15 +94,23 @@ export async function withWindows(
       recordNativePhase("before OpenBrowserWindow");
       // Match browser-chrome's blank startup fixture instead of loading the
       // user's homepage or session-startup pages in each temporary window.
+      const args = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString,
+      );
+      args.data = "about:blank";
       const win = (globalThis as unknown as {
-        OpenBrowserWindow(options: { loadURIString: string }): TestWindow;
-      }).OpenBrowserWindow({ loadURIString: "about:blank" });
+        OpenBrowserWindow(options: { args: nsISupportsString }): TestWindow;
+      }).OpenBrowserWindow({ args });
       recordNativePhase("after OpenBrowserWindow");
       windows.push(win);
       await waitFor(
         () => Boolean(win.gBrowserInit?.delayedStartupFinished),
         "test window finishes native startup",
         30_000,
+      );
+      await waitFor(
+        () => win.gBrowser.selectedBrowser.currentURI?.spec === "about:blank",
+        "temporary window loads the requested blank fixture",
       );
       if (workspaceEnabled) {
         await waitFor(

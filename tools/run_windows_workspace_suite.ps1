@@ -12,7 +12,8 @@ param(
     "pages-modal-child",
     "modules"
   )]
-  [string]$Suite
+  [string]$Suite,
+  [string]$TestFile = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,6 +39,32 @@ $suites = @{
   "modules" = @{ near = "browser-features/modules/modules/test"; files = 5 }
 }
 $target = $suites[$Suite]
+$selectedTestFile = $null
+if ($TestFile -ne "") {
+  if ($Suite -ne "workspaces") {
+    throw "-TestFile is supported only for the workspaces suite"
+  }
+  $testRoot = "browser-features/chrome/common/workspaces/test"
+  $normalized = $TestFile.Replace('\', '/')
+  $prefix = "$testRoot/"
+  $filename = if ($normalized.StartsWith($prefix, [StringComparison]::Ordinal)) {
+    $normalized.Substring($prefix.Length)
+  } else {
+    $normalized
+  }
+  if ($filename -cnotmatch '^[A-Za-z0-9][A-Za-z0-9._-]*\.test\.ts$') {
+    throw "-TestFile must name a .test.ts file directly under $testRoot"
+  }
+  $selectedTestFile = "$testRoot/$filename"
+  if (!(Test-Path -LiteralPath $selectedTestFile -PathType Leaf)) {
+    throw "Workspace test file does not exist: $selectedTestFile"
+  }
+  $entry = Get-Item -LiteralPath $selectedTestFile -Force
+  if ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+    throw "Workspace test file must not be a symbolic link: $selectedTestFile"
+  }
+  $target = @{ near = $selectedTestFile; files = 1 }
+}
 $resultsRoot = "_dist/windows-workspaces"
 $suiteDir = Join-Path $resultsRoot $Suite
 New-Item -ItemType Directory -Force -Path $suiteDir | Out-Null
@@ -77,6 +104,7 @@ try {
   $result = [PSCustomObject]@{
     suite = $Suite
     near = $target.near
+    selectedTestFile = $selectedTestFile
     expectedFiles = $target.files
     exitCode = $exitCode
     coverageVerified = $coverageVerified

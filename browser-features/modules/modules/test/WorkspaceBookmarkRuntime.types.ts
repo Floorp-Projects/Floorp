@@ -114,6 +114,42 @@ export interface BrowserForBookmarks extends Window {
   ) => BookmarkMenu;
 }
 
+export interface BookmarkAnchorElementDiagnostics {
+  id: string;
+  present: boolean;
+  hidden?: boolean;
+  collapsed?: string | null;
+  bounds?: { x: number; y: number; width: number; height: number };
+  style?: Record<string, string>;
+  ancestors?: BookmarkAnchorElementDiagnostics[];
+}
+
+export interface BookmarkAnchorDiagnostics {
+  phase: string;
+  at: string;
+  window: {
+    state: number;
+    outerWidth: number;
+    outerHeight: number;
+    innerWidth: number;
+    innerHeight: number;
+    screenX: number;
+    screenY: number;
+    fullScreen: boolean;
+    documentHidden: boolean;
+    visibilityState: string;
+    readyState: string;
+    screenWidth: number;
+    screenHeight: number;
+    pageURI: string | null;
+    urlbarProxyState: string | null;
+    inputContainerProxyState: string | null;
+    userTyping: boolean;
+  };
+  toolbar: BookmarkAnchorElementDiagnostics;
+  anchors: BookmarkAnchorElementDiagnostics[];
+}
+
 export interface BookmarkRuntime {
   scopes: WorkspaceBookmarksService;
   places: PlacesFixture;

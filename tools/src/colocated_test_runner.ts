@@ -1538,10 +1538,75 @@ function startTestBrowserProcess(): Deno.ChildProcess {
   }).spawn();
 }
 
-/** Collect diagnostics before terminating a test browser that stopped reporting. */
+async function captureDiagnosticCommand(
+  command: string,
+  args: string[],
+  filename: string,
+): Promise<string> {
+  const child = new Deno.Command(command, {
+    args,
+    cwd: PROJECT_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const timeout = setTimeout(() => {
+    try {
+      child.kill("SIGKILL");
+    } catch {
+      // The diagnostic command may already have exited.
+    }
+  }, 20_000);
+  try {
+    const output = await child.output();
+    Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
+    const decoder = new TextDecoder();
+    Deno.writeTextFileSync(
+      filename,
+      `exitCode=${output.code}\n${decoder.decode(output.stdout)}\n${
+        decoder.decode(output.stderr)
+      }`,
+    );
+    return path.relative(PROJECT_ROOT, filename);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** Collect diagnostics before terminating an owned browser after a test failure. */
 async function captureBrowserFailureDiagnostics(
   runId: string,
 ): Promise<string> {
+  const reports: string[] = [];
+  if (
+    Deno.build.os === "windows" && Deno.env.get("GITHUB_ACTIONS") === "true"
+  ) {
+    try {
+      reports.push(
+        await captureDiagnosticCommand(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            path.join(
+              PROJECT_ROOT,
+              "tools",
+              "capture_windows_test_desktop.ps1",
+            ),
+            "-OutputDirectory",
+            TEST_LOG_DIR,
+          ],
+          path.join(TEST_LOG_DIR, `desktop-capture-${runId}.log`),
+        ),
+      );
+    } catch (error) {
+      console.error(
+        `Could not capture the CI desktop: ${errorToMessage(error)}`,
+      );
+    }
+  }
   const script = `JSON.stringify({
     windows: Array.from(Services.wm.getEnumerator(null), win => ({
       type: win.document?.documentElement?.getAttribute("windowtype"),
@@ -1557,40 +1622,20 @@ async function captureBrowserFailureDiagnostics(
       line: message.lineNumber,
     })),
   })`;
-  const child = new Deno.Command(Deno.execPath(), {
-    args: [
-      "run",
-      "-A",
-      path.join(PROJECT_ROOT, "tools", "dev-tool.ts"),
-      "eval",
-      script,
-    ],
-    cwd: PROJECT_ROOT,
-    stdout: "piped",
-    stderr: "piped",
-  }).spawn();
-  const timeout = setTimeout(() => {
-    try {
-      child.kill("SIGKILL");
-    } catch {
-      // The diagnostic command may already have exited.
-    }
-  }, 20_000);
-  try {
-    const output = await child.output();
-    const filename = path.join(TEST_LOG_DIR, `diagnostics-${runId}.log`);
-    Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
-    const decoder = new TextDecoder();
-    Deno.writeTextFileSync(
-      filename,
-      `exitCode=${output.code}\n${decoder.decode(output.stdout)}\n${
-        decoder.decode(output.stderr)
-      }`,
-    );
-    return path.relative(PROJECT_ROOT, filename);
-  } finally {
-    clearTimeout(timeout);
-  }
+  reports.push(
+    await captureDiagnosticCommand(
+      Deno.execPath(),
+      [
+        "run",
+        "-A",
+        path.join(PROJECT_ROOT, "tools", "dev-tool.ts"),
+        "eval",
+        script,
+      ],
+      path.join(TEST_LOG_DIR, `diagnostics-${runId}.log`),
+    ),
+  );
+  return reports.join(", ");
 }
 
 async function waitForAutoStartedBrowser(
@@ -2516,6 +2561,19 @@ async function main(): Promise<number> {
       }
       if (failed > 0) {
         exitCode = 1;
+        if (autoStartedBrowser && ownedRunId) {
+          try {
+            const diagnostics = await captureBrowserFailureDiagnostics(
+              ownedRunId,
+            );
+            writeLine("INFO", `Browser failure diagnostics: ${diagnostics}`);
+          } catch (error) {
+            writeLine(
+              "ERROR",
+              `Could not collect browser diagnostics: ${errorToMessage(error)}`,
+            );
+          }
+        }
       }
     } catch (error) {
       writeLine(

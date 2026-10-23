@@ -7,6 +7,8 @@ import {
   runTests,
 } from "../../../chrome/test/utils/test_harness.ts";
 import type {
+  BookmarkAnchorDiagnostics,
+  BookmarkAnchorElementDiagnostics,
   BookmarkDialogWindow,
   BookmarkNode,
   BookmarkRuntime,
@@ -224,18 +226,128 @@ async function prepareStarUIAnchor(
     | XULElement
     | null;
   assert(toolbar, "the native navigation toolbar exists");
+  const previousTab = browser.gBrowser.selectedTab;
+  let fixtureTab: typeof previousTab | undefined;
   const wasVisible = !toolbar.hasAttribute("collapsed");
   const wasInstant = toolbar.classList.contains("instant");
+  const snapshots: BookmarkAnchorDiagnostics[] = [];
+  const readElement = (
+    id: string,
+    element: Element | null,
+    includeAncestors = true,
+  ): BookmarkAnchorElementDiagnostics => {
+    if (!element) return { id, present: false };
+    const bounds = element.getBoundingClientRect();
+    const style = browser.getComputedStyle(element);
+    const ancestors: BookmarkAnchorElementDiagnostics[] = [];
+    if (includeAncestors) {
+      for (
+        let parent = element.parentElement;
+        parent && ancestors.length < 4;
+        parent = parent.parentElement
+      ) {
+        ancestors.push(
+          readElement(parent.id || parent.nodeName, parent, false),
+        );
+      }
+    }
+    return {
+      id,
+      present: true,
+      hidden: Boolean((element as XULElement).hidden),
+      collapsed: element.getAttribute("collapsed"),
+      bounds: {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+      },
+      style: {
+        display: style?.display ?? "",
+        visibility: style?.visibility ?? "",
+        opacity: style?.opacity ?? "",
+        position: style?.position ?? "",
+        width: style?.width ?? "",
+        height: style?.height ?? "",
+        overflow: style?.overflow ?? "",
+      },
+      ...(includeAncestors ? { ancestors } : {}),
+    };
+  };
+  const record = (phase: string) => {
+    snapshots.push({
+      phase,
+      at: new Date().toISOString(),
+      window: {
+        state: browser.windowState,
+        outerWidth: browser.outerWidth,
+        outerHeight: browser.outerHeight,
+        innerWidth: browser.innerWidth,
+        innerHeight: browser.innerHeight,
+        screenX: browser.screenX,
+        screenY: browser.screenY,
+        fullScreen: browser.fullScreen,
+        documentHidden: browser.document.hidden,
+        visibilityState: browser.document.visibilityState,
+        readyState: browser.document.readyState,
+        screenWidth: browser.screen.width,
+        screenHeight: browser.screen.height,
+        pageURI: browser.gBrowser?.selectedBrowser?.currentURI?.spec ?? null,
+        urlbarProxyState:
+          browser.document.getElementById("urlbar")?.getAttribute(
+            "pageproxystate",
+          ) ?? null,
+        inputContainerProxyState: browser.document.querySelector(
+          ".urlbar-input-container",
+        )?.getAttribute("pageproxystate") ?? null,
+        userTyping: browser.document.getElementById("urlbar")?.hasAttribute(
+          "usertyping",
+        ) ?? false,
+      },
+      toolbar: readElement("nav-bar", toolbar),
+      anchors: ["star-button-box", "pageActionButton", "identity-icon"].map(
+        (id) => readElement(id, browser.document.getElementById(id)),
+      ),
+    });
+    Services.prefs.setStringPref(
+      "nora.tests.bookmark_anchor",
+      JSON.stringify(snapshots),
+    );
+    Services.prefs.savePrefFile(null as unknown as nsIFile);
+  };
   const restore = () => {
     try {
-      browser.setToolbarVisibility(toolbar, wasVisible, false, false);
+      if (fixtureTab?.isConnected) {
+        browser.gBrowser.removeTab(fixtureTab, { animate: false });
+      }
+      if (previousTab?.isConnected) browser.gBrowser.selectedTab = previousTab;
     } finally {
-      toolbar.classList.toggle("instant", wasInstant);
+      try {
+        browser.setToolbarVisibility(toolbar, wasVisible, false, false);
+      } finally {
+        toolbar.classList.toggle("instant", wasInstant);
+      }
     }
   };
-  browser.setToolbarVisibility(toolbar, true, false, false);
-  browser.focus();
   try {
+    record("before native bookmark page preparation");
+    browser.setToolbarVisibility(toolbar, true, false, false);
+    // Initial pages deliberately hide all PageActions anchors. Use a real,
+    // local bookmarkable page instead of depending on a previously used profile.
+    fixtureTab = browser.gBrowser.addTab("about:robots", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    browser.gBrowser.selectedTab = fixtureTab;
+    await waitForBookmarkUI(
+      () =>
+        browser.gBrowser.selectedBrowser.currentURI.spec === "about:robots" &&
+        browser.document.querySelector(".urlbar-input-container")?.getAttribute(
+            "pageproxystate",
+          ) === "valid",
+      "a real bookmarkable page supplies a valid native URL bar context",
+    );
+    browser.focus();
+    record("after native bookmarkable page navigation");
     await waitForBookmarkUI(
       () =>
         ["star-button-box", "pageActionButton", "identity-icon"].some((id) => {
@@ -250,9 +362,14 @@ async function prepareStarUIAnchor(
         }),
       "the real bookmark panel has a laid-out native anchor",
     );
+    record("native bookmark anchor is ready");
     return restore;
   } catch (error) {
-    restore();
+    try {
+      record("native bookmark anchor preparation failed");
+    } finally {
+      restore();
+    }
     throw error;
   }
 }

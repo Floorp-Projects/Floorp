@@ -62,8 +62,9 @@ installed Floorp profile.
 
 Use a normal Windows desktop browser window for the complete 49-file suite,
 with `MOZ_HEADLESS` unset. The dedicated CI matrix also uses native Windows
-widgets. Windows headless mode can report zero-sized native popup anchors, so
-it does not provide the full suite's native UI coverage.
+widgets so Windows APIs receive real native window handles. UI fixtures also
+load a bookmarkable page before opening StarUI; a fresh blank/home page can
+hide the native URL-bar anchors independently of the rendering mode.
 
 The runner takes its options directly after `deno task test`; do **not** insert
 an extra `--` separator:
@@ -187,6 +188,37 @@ browser console messages before teardown. The diagnostic subprocess has a
 snapshot. A rejected artifact patch can leave partially modified Runtime files
 in that job, so use a fresh hosted run when retrying the failure. Matrix jobs are
 isolated; a partial patch cannot carry over into another suite's Runtime.
+
+### Isolate one workspace test file
+
+For a diagnostic run, keep `windows_workspaces_only=true` and set
+`windows_workspace_test` to a filename or repository-relative path directly
+under `browser-features/chrome/common/workspaces/test/`. For example:
+
+```powershell
+$testFile = "browser-features/chrome/common/workspaces/test/nativeLastTabDisabledKeepOpen.test.ts"
+gh workflow run colocated_runner_test.yml --repo Floorp-Projects/Floorp --ref $validationBranch -f windows_workspaces_only=true -f "windows_workspace_test=$testFile"
+```
+
+With this nonempty input, the matrix contains only `workspaces`, the helper runs
+`--near` that file, and exactly one passing browser test file is required. The
+helper rejects missing files, nested paths, paths outside the workspace test
+directory, symbolic links, and files without the `.test.ts` suffix. The input is
+passed through an environment variable rather than inserted into PowerShell
+source. The artifact's `near`, `selectedTestFile`, and `expectedFiles` identify
+the restricted coverage.
+
+To reproduce this diagnostic locally with native Windows widgets:
+
+```powershell
+Remove-Item Env:MOZ_HEADLESS -ErrorAction SilentlyContinue
+./tools/run_windows_workspace_suite.ps1 -Suite workspaces -TestFile "$testFile"
+```
+
+An isolated pass does not establish the complete 24-file workspace suite or the
+49-file matrix. Compare it with the normal batch when investigating effects
+from earlier tests. Leave `windows_workspace_test` empty to retain the default
+eight-suite, 49-file matrix; ordinary CI behavior is unchanged.
 
 ## Physical Windows touchpad checks
 
