@@ -53,18 +53,23 @@ function Save-Evidence {
 }
 
 function Capture-NativeStack([object]$WindowInfo) {
-  $report = [ordered]@{
+  $report = [PSCustomObject][ordered]@{
     processId = $WindowInfo.processId
     status = "starting"
     uiThreadId = $null
     executable = $null
     threads = @()
+    waitChain = $null
     debugger = $null
+    log = $null
     stdout = $null
     stderr = $null
     exitCode = $null
     error = $null
   }
+  # Checkpoint the same report object before any native query or debugger work.
+  $evidence.nativeStacks = @($evidence.nativeStacks) + @($report)
+  Save-Evidence
   $target = $null
   $debugger = $null
   try {
@@ -85,6 +90,10 @@ function Capture-NativeStack([object]$WindowInfo) {
       $target.MainWindowHandle, [ref]$windowProcessId
     )
     if ($windowProcessId -ne $target.Id) { throw "The window process identity changed." }
+    $report.status = "collecting-wait-chain"
+    Save-Evidence
+    $report.waitChain = [FloorpTestDesktopNative]::CaptureWaitChainBounded($report.uiThreadId, 2000)
+    Save-Evidence
     $threadRows = [Collections.Generic.List[object]]::new()
     foreach ($thread in $target.Threads) {
       try {
@@ -103,6 +112,7 @@ function Capture-NativeStack([object]$WindowInfo) {
       }
     }
     $report.threads = $threadRows.ToArray()
+    Save-Evidence
     $candidates = @(
       (Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\Debuggers\x64\cdb.exe"),
       (Join-Path $env:ProgramFiles "Windows Kits\10\Debuggers\x64\cdb.exe")
@@ -112,31 +122,36 @@ function Capture-NativeStack([object]$WindowInfo) {
       $report.status = "debugger-unavailable"
       return [PSCustomObject]$report
     }
-    # Leave time for cleanup inside the caller's 20-second subprocess deadline.
-    if ($captureClock.ElapsedMilliseconds -gt 10000) {
+    # Leave time for cleanup inside the caller's 45-second subprocess deadline.
+    if ($captureClock.ElapsedMilliseconds -gt 20000) {
       $report.status = "capture-budget-exhausted"
       return [PSCustomObject]$report
     }
     $report.debugger = $cdb
     $stackPath = "$basePath-native-$($target.Id)-stack.txt"
+    $stackOutputPath = "$basePath-native-$($target.Id)-stdout.txt"
     $stackErrorPath = "$basePath-native-$($target.Id)-stderr.txt"
-    $report.stdout = [IO.Path]::GetFileName($stackPath)
+    $report.log = [IO.Path]::GetFileName($stackPath)
+    $report.stdout = [IO.Path]::GetFileName($stackOutputPath)
     $report.stderr = [IO.Path]::GetFileName($stackErrorPath)
+    $report.status = "collecting-cdb-stack"
+    Save-Evidence
     # Non-invasive attach, local symbols only, stack addresses/module names only.
     # No dump or arbitrary memory-read commands and no symbol-server requests.
     $commands = "lm; ~* k 0n64; .detach; q"
     $arguments = @(
+      "-logo", ('"{0}"' -f $stackPath),
       "-pv", "-sins", "-netsyms:no", "-nosqm", "-noshell", "-p", [string]$target.Id,
       "-y", ('"{0}"' -f [IO.Path]::GetDirectoryName($report.executable)),
       "-c", ('"{0}"' -f $commands)
     )
     $debugger = Start-Process -FilePath $cdb -ArgumentList $arguments -NoNewWindow -PassThru `
-      -RedirectStandardOutput $stackPath -RedirectStandardError $stackErrorPath
-    if (!$debugger.WaitForExit(5000)) {
+      -RedirectStandardOutput $stackOutputPath -RedirectStandardError $stackErrorPath
+    if (!$debugger.WaitForExit(20000)) {
       $report.status = "debugger-timeout"
       $debugger.Kill()
       [void]$debugger.WaitForExit(1000)
-      throw "CDB exceeded its five-second diagnostic deadline."
+      throw "CDB exceeded its twenty-second diagnostic deadline."
     }
     $report.exitCode = $debugger.ExitCode
     if ($debugger.ExitCode -ne 0) { throw "CDB exited with code $($debugger.ExitCode)." }
@@ -168,7 +183,31 @@ try {
   $evidence.sessionId = (Get-Process -Id $PID).SessionId
   Add-Type -TypeDefinition @'
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+
+public sealed class FloorpWaitChainNode {
+  public string objectType { get; set; }
+  public int objectTypeCode { get; set; }
+  public string objectStatus { get; set; }
+  public int objectStatusCode { get; set; }
+  public uint? processId { get; set; }
+  public uint? threadId { get; set; }
+  public uint? waitTime { get; set; }
+  public uint? contextSwitches { get; set; }
+  public string objectName { get; set; }
+  public long? timeout100ns { get; set; }
+  public bool? alertable { get; set; }
+}
+
+public sealed class FloorpWaitChainResult {
+  public string status { get; set; }
+  public int? errorCode { get; set; }
+  public string error { get; set; }
+  public bool? cycle { get; set; }
+  public FloorpWaitChainNode[] nodes { get; set; }
+}
 
 public static class FloorpTestDesktopNative {
   [DllImport("user32.dll")]
@@ -181,6 +220,97 @@ public static class FloorpTestDesktopNative {
 
   [DllImport("user32.dll")]
   public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+  [DllImport("advapi32.dll", SetLastError = true)]
+  private static extern IntPtr OpenThreadWaitChainSession(uint flags, IntPtr callback);
+
+  [DllImport("advapi32.dll", SetLastError = true)]
+  [return: MarshalAs(UnmanagedType.Bool)]
+  private static extern bool GetThreadWaitChain(
+    IntPtr session, IntPtr context, uint flags, uint threadId, ref uint nodeCount,
+    IntPtr nodes, [MarshalAs(UnmanagedType.Bool)] out bool cycle);
+
+  [DllImport("advapi32.dll")]
+  private static extern void CloseThreadWaitChainSession(IntPtr session);
+
+  public static FloorpWaitChainResult CaptureWaitChainBounded(uint threadId, int timeoutMs) {
+    // WCT has no synchronous deadline. Its worker makes no PowerShell callbacks,
+    // so a stalled query cannot consume the debugger's time budget.
+    Task<FloorpWaitChainResult> task = Task.Run(() => CaptureWaitChain(threadId));
+    if (!task.Wait(timeoutMs)) {
+      return new FloorpWaitChainResult { status = "timeout", nodes = new FloorpWaitChainNode[0] };
+    }
+    return task.Result;
+  }
+
+  private static FloorpWaitChainResult CaptureWaitChain(uint threadId) {
+    FloorpWaitChainResult result = new FloorpWaitChainResult {
+      status = "starting", nodes = new FloorpWaitChainNode[0]
+    };
+    IntPtr session = IntPtr.Zero;
+    IntPtr buffer = IntPtr.Zero;
+    try {
+      session = OpenThreadWaitChainSession(0, IntPtr.Zero);
+      if (session == IntPtr.Zero) {
+        result.status = "failed";
+        result.errorCode = Marshal.GetLastWin32Error();
+        return result;
+      }
+      // WAITCHAIN_NODE_INFO: two DWORD enums, then an 8-byte aligned union.
+      // WCHAR[128], LARGE_INTEGER, BOOL occupy the largest arm (size 280).
+      const int nodeSize = 280;
+      const int maxNodes = 16;
+      buffer = Marshal.AllocHGlobal(nodeSize * maxNodes);
+      Marshal.Copy(new byte[nodeSize * maxNodes], 0, buffer, nodeSize * maxNodes);
+      uint count = maxNodes;
+      bool cycle;
+      // Flags 0 follow only this process; the first foreign thread is reported
+      // but its wait chain is not traversed. No COM callbacks are registered.
+      bool success = GetThreadWaitChain(session, IntPtr.Zero, 0, threadId, ref count, buffer, out cycle);
+      int error = success ? 0 : Marshal.GetLastWin32Error();
+      result.errorCode = error;
+      if (!success && error != 234) { // ERROR_MORE_DATA still returns a partial chain.
+        result.status = "failed";
+        return result;
+      }
+      result.status = success ? "completed" : "partial";
+      result.cycle = cycle;
+      string[] types = { "Invalid", "CriticalSection", "SendMessage", "Mutex", "Alpc", "Com",
+        "ThreadWait", "ProcessWait", "Thread", "ComActivation", "Unknown", "SocketIo", "SmbIo" };
+      string[] statuses = { "Invalid", "NoAccess", "Running", "Blocked", "PidOnly", "PidOnlyRpcss",
+        "Owned", "NotOwned", "Abandoned", "Unknown", "Error" };
+      List<FloorpWaitChainNode> rows = new List<FloorpWaitChainNode>();
+      for (int i = 0; i < Math.Min(count, (uint)maxNodes); i++) {
+        IntPtr node = IntPtr.Add(buffer, i * nodeSize);
+        int type = Marshal.ReadInt32(node, 0);
+        int status = Marshal.ReadInt32(node, 4);
+        FloorpWaitChainNode row = new FloorpWaitChainNode {
+          objectTypeCode = type, objectType = type >= 0 && type < types.Length ? types[type] : "Unrecognized",
+          objectStatusCode = status,
+          objectStatus = status >= 0 && status < statuses.Length ? statuses[status] : "Unrecognized"
+        };
+        if (type == 8) { // WctThreadType selects the ThreadObject union arm.
+          row.processId = unchecked((uint)Marshal.ReadInt32(node, 8));
+          row.threadId = unchecked((uint)Marshal.ReadInt32(node, 12));
+          row.waitTime = unchecked((uint)Marshal.ReadInt32(node, 16));
+          row.contextSwitches = unchecked((uint)Marshal.ReadInt32(node, 20));
+        } else {
+          row.objectName = Marshal.PtrToStringUni(IntPtr.Add(node, 8), 128).TrimEnd('\0');
+          row.timeout100ns = Marshal.ReadInt64(node, 264);
+          row.alertable = Marshal.ReadInt32(node, 272) != 0;
+        }
+        rows.Add(row);
+      }
+      result.nodes = rows.ToArray();
+    } catch (Exception error) {
+      result.status = "failed";
+      result.error = error.Message;
+    } finally {
+      if (buffer != IntPtr.Zero) Marshal.FreeHGlobal(buffer);
+      if (session != IntPtr.Zero) CloseThreadWaitChainSession(session);
+    }
+    return result;
+  }
 }
 '@
   $evidence.dpiAware = [FloorpTestDesktopNative]::SetProcessDPIAware()
@@ -254,11 +384,9 @@ public static class FloorpTestDesktopNative {
   $evidence.processWindows = $windows.ToArray()
   $evidence.status = "collecting-native-stacks"
   Save-Evidence
-  $nativeStacks = [Collections.Generic.List[object]]::new()
   foreach ($window in $windows) {
     if ($window.responding -eq $false -and $window.processName -match "^(floorp|noraneko)(-bin)?$") {
-      $nativeStacks.Add((Capture-NativeStack $window))
-      $evidence.nativeStacks = $nativeStacks.ToArray()
+      [void](Capture-NativeStack $window)
       Save-Evidence
     }
   }

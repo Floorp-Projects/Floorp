@@ -175,6 +175,8 @@ Each contains:
 - timestamped browser runner logs and the available Vite logs;
 - `logs/test/diagnostics-<run-id>.log` when a browser collection failure triggers
   a diagnostic attempt;
+- Windows CI desktop PNG/JSON, thread wait information, and available native
+  debugger logs when a test failure leaves the browser unresponsive;
 - profile preferences and the Places benchmark report, when produced.
 
 Inspect startup and teardown errors separately from browser assertions. A
@@ -183,11 +185,20 @@ launcher stdout/stderr are retained on Windows and in GitHub Actions, appearing
 in the step output and the suite's `runner.log`. Other platforms' local runs
 remain quiet. If result collection fails for an automatically started browser,
 the runner attempts to record window state, current test progress, and recent
-browser console messages before teardown. The diagnostic subprocess has a
-20-second stop timer; an unresponsive browser may yield an error instead of a
+browser console messages before teardown. The Marionette diagnostic has a
+20-second stop timer. Windows CI also attempts a desktop and native thread
+capture with a 45-second limit; the screenshot is saved before querying the
+unresponsive process. Native debugger output depends on the tools installed on
+the runner. An unresponsive browser may yield an error instead of a complete
 snapshot. A rejected artifact patch can leave partially modified Runtime files
 in that job, so use a fresh hosted run when retrying the failure. Matrix jobs are
 isolated; a partial patch cannot carry over into another suite's Runtime.
+
+The Windows runner verifies executable paths and full-precision UTC process
+creation times before terminating its browser processes. If an ordinary content
+process exits and Windows reuses its PID, the replacement is excluded from
+ownership and tree termination is disabled. Changes to the launcher or listener
+identity, or unreadable identity evidence, still fail validation.
 
 ### Isolate one workspace test file
 

@@ -369,6 +369,36 @@ function denoProcess(): WindowsProcessRecord {
   );
 }
 
+function reusedWindowsContentFixture() {
+  const deno = denoProcess();
+  const root = windowsProcess(
+    200,
+    100,
+    TEST_FLOORP_EXE,
+    `"${TEST_FLOORP_EXE}" --marionette`,
+  );
+  const content = windowsProcess(
+    7852,
+    200,
+    TEST_FLOORP_EXE,
+    `"${TEST_FLOORP_EXE}" -contentproc -parentPid 200`,
+    "2026-10-23T15:00:58.1234567Z",
+  );
+  const replacement = windowsProcess(
+    7852,
+    9084,
+    "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "powershell.exe -NoProfile -NonInteractive -Command Get-CimInstance",
+    "2026-10-23T15:01:02.7654321Z",
+  );
+  const state = createWindowsAutoStartState(
+    selectWindowsDenoIdentity([deno], 100, TEST_DENO_EXE),
+    TEST_FLOORP_EXE,
+  );
+  reconcileWindowsFloorpOwnership(state, [deno, root, content]);
+  return { deno, root, content, replacement, state };
+}
+
 Deno.test("Windows snapshot parsers accept singleton and array JSON shapes", () => {
   const singleton = JSON.stringify({
     ProcessId: 100,
@@ -800,6 +830,101 @@ Deno.test("Windows readiness owns an exact-path sibling currently descended from
   assertEquals(state.treeKillSafe, true);
 });
 
+Deno.test("Windows ownership retires a content PID reused by PowerShell without adopting its replacement", () => {
+  const { deno, root, replacement, state } = reusedWindowsContentFixture();
+  const current = [deno, root, replacement];
+  assertEquals(reconcileWindowsFloorpOwnership(state, current), []);
+  assertEquals(state.ownedFloorp.has(7852), false);
+  assertEquals(state.blockedFloorpProcessIds.has(7852), true);
+  assertEquals(state.treeKillSafe, false);
+  assertEquals(reconcileWindowsFloorpOwnership(state, current), []);
+
+  // Even if this PID later names another child with the expected executable,
+  // ancestry must not restore ownership that was revoked for a reused PID.
+  reconcileWindowsFloorpOwnership(state, [deno, root, {
+    ...replacement,
+    parentProcessId: 200,
+    executablePath: TEST_FLOORP_EXE,
+    commandLine: `"${TEST_FLOORP_EXE}" -contentproc -parentPid 200`,
+  }]);
+  assertEquals(state.ownedFloorp.has(7852), false);
+});
+
+Deno.test("Windows readiness promotion retires a replaced content PID while retaining its listener root", async () => {
+  const { deno, root, replacement, state } = reusedWindowsContentFixture();
+  const deps: WindowsProcessControlDeps = {
+    listProcesses: () => Promise.resolve([deno, root, replacement]),
+    listListeners: () =>
+      Promise.resolve([{
+        localAddress: "127.0.0.1",
+        localPort: 2828,
+        state: "Listen",
+        owningProcess: 200,
+      }]),
+    taskkill: () => Promise.resolve({ success: true, code: 0 }),
+    isPortReachable: () => Promise.resolve(false),
+    sleep: () => Promise.resolve(),
+  };
+  await captureWindowsReadyBrowser(state, 2828, deps);
+  assertEquals(state.listenerRoot?.processId, 200);
+  assertEquals(Array.from(state.ownedFloorp.keys()), [200]);
+  assertEquals(state.blockedFloorpProcessIds.has(7852), true);
+  assertEquals(state.treeKillSafe, false);
+});
+
+Deno.test("Windows content retirement requires changed readable birth and path evidence", () => {
+  const variants: Array<Partial<WindowsProcessRecord>> = [
+    { creationDate: null },
+    { creationDate: "" },
+    { creationDate: "   " },
+    { executablePath: null },
+    { executablePath: "   " },
+    { creationDate: "2026-10-23T15:00:58.1234567Z" },
+  ];
+  for (const variant of variants) {
+    const { deno, root, replacement, state } = reusedWindowsContentFixture();
+    const issues = reconcileWindowsFloorpOwnership(state, [deno, root, {
+      ...replacement,
+      ...variant,
+    }]);
+    assertEquals(
+      issues.some((issue) => issue.includes("no longer matches")),
+      true,
+    );
+    assertEquals(state.ownedFloorp.has(7852), true);
+    assertEquals(state.treeKillSafe, false);
+  }
+});
+
+Deno.test("Windows readiness cannot retire the current listener as an exited content process", async () => {
+  const { deno, root, replacement, state } = reusedWindowsContentFixture();
+  const listener = {
+    ...replacement,
+    parentProcessId: 100,
+    executablePath: TEST_FLOORP_EXE,
+    commandLine: `"${TEST_FLOORP_EXE}" --marionette`,
+  };
+  const deps: WindowsProcessControlDeps = {
+    listProcesses: () => Promise.resolve([deno, root, listener]),
+    listListeners: () =>
+      Promise.resolve([{
+        localAddress: "127.0.0.1",
+        localPort: 2828,
+        state: "Listen",
+        owningProcess: 7852,
+      }]),
+    taskkill: () => Promise.resolve({ success: true, code: 0 }),
+    isPortReachable: () => Promise.resolve(false),
+    sleep: () => Promise.resolve(),
+  };
+  await assertRejects(
+    () => captureWindowsReadyBrowser(state, 2828, deps),
+    Error,
+    "Previously owned Floorp PID 7852 no longer matches",
+  );
+  assertEquals(state.treeKillSafe, false);
+});
+
 Deno.test("Windows readiness blocks a present previously-owned identity mismatch", async () => {
   const deno = denoProcess();
   const originalLauncher = windowsProcess(
@@ -1180,6 +1305,35 @@ Deno.test("Windows teardown disables Deno tree kill when a sibling is ambiguous"
   ]);
   assertEquals(live.has(300), true);
   assertEquals(state.treeKillSafe, false);
+});
+
+Deno.test("Windows teardown never kills a PowerShell replacement of an owned content PID", async () => {
+  const { deno, root, replacement, state } = reusedWindowsContentFixture();
+  state.listenerRoot = state.ownedFloorp.get(200) ?? null;
+  state.port = 2828;
+  const live = new Map(
+    [deno, root, replacement].map((process) => [process.processId, process]),
+  );
+  const kills: Array<{ processId: number; includeTree: boolean }> = [];
+  const deps: WindowsProcessControlDeps = {
+    listProcesses: () => Promise.resolve(Array.from(live.values())),
+    listListeners: () => Promise.resolve([]),
+    taskkill: (processId, includeTree) => {
+      kills.push({ processId, includeTree });
+      live.delete(processId);
+      return Promise.resolve({ success: true, code: 0 });
+    },
+    isPortReachable: () => Promise.resolve(false),
+    sleep: () => Promise.resolve(),
+  };
+  await stopWindowsAutoStartedBrowser(state, deps);
+  assertEquals(kills, [
+    { processId: 100, includeTree: false },
+    { processId: 200, includeTree: false },
+  ]);
+  assertEquals(live.has(7852), true);
+  assertEquals(state.ownedFloorp.has(7852), false);
+  assertEquals(state.blockedFloorpProcessIds.has(7852), true);
 });
 
 Deno.test("Windows teardown revalidates Floorp identity immediately before taskkill", async () => {

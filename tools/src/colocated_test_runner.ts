@@ -468,7 +468,7 @@ $rows = @(
       [pscustomobject]@{
         ProcessId = [int]$_.ProcessId
         ParentProcessId = [int]$_.ParentProcessId
-        CreationDate = if ($null -eq $_.CreationDate) { $null } else { [string]$_.CreationDate }
+        CreationDate = if ($null -eq $_.CreationDate) { $null } else { $_.CreationDate.ToUniversalTime().ToString('o', [Globalization.CultureInfo]::InvariantCulture) }
         ExecutablePath = if ($null -eq $_.ExecutablePath) { $null } else { [string]$_.ExecutablePath }
         CommandLine = if ($null -eq $_.CommandLine) { $null } else { [string]$_.CommandLine }
       }
@@ -828,6 +828,33 @@ function addUniqueMessage(target: string[], message: string): void {
   }
 }
 
+function retireReusedWindowsContentProcess(
+  state: WindowsAutoStartState,
+  current: WindowsProcessRecord,
+  identity: WindowsProcessIdentity,
+  listenerProcessId = state.listenerRoot?.processId,
+): boolean {
+  if (
+    !isContentProcessCommandLine(identity.commandLine) ||
+    identity.processId === state.deno.processId ||
+    identity.processId === listenerProcessId ||
+    current.processId !== identity.processId ||
+    !current.creationDate?.trim() ||
+    !current.executablePath?.trim() ||
+    current.creationDate === identity.creationDate
+  ) {
+    return false;
+  }
+
+  // A different birth time proves the former content process exited. Keep the
+  // replacement outside our ownership, including any later exact-path process
+  // assigned this PID. Tree killing would bypass that identity protection.
+  state.ownedFloorp.delete(identity.processId);
+  state.blockedFloorpProcessIds.add(identity.processId);
+  state.treeKillSafe = false;
+  return true;
+}
+
 export function reconcileWindowsFloorpOwnership(
   state: WindowsAutoStartState,
   processes: WindowsProcessRecord[],
@@ -870,6 +897,9 @@ export function reconcileWindowsFloorpOwnership(
       continue;
     }
     if (!matchesWindowsProcessIdentity(current, identity)) {
+      if (retireReusedWindowsContentProcess(state, current, identity)) {
+        continue;
+      }
       issues.push(
         `Owned Floorp PID ${processId} no longer matches its captured identity`,
       );
@@ -982,6 +1012,16 @@ export function promoteWindowsReadyBrowserOwnership(
       continue;
     }
     if (!matchesWindowsProcessIdentityStrict(current, identity)) {
+      if (
+        retireReusedWindowsContentProcess(
+          state,
+          current,
+          identity,
+          listenerRoot.processId,
+        )
+      ) {
+        continue;
+      }
       state.blockedFloorpProcessIds.add(processId);
       issues.push(
         `Previously owned Floorp PID ${processId} no longer matches its captured identity`,
@@ -1542,6 +1582,7 @@ async function captureDiagnosticCommand(
   command: string,
   args: string[],
   filename: string,
+  timeoutMs = 20_000,
 ): Promise<string> {
   const child = new Deno.Command(command, {
     args,
@@ -1555,7 +1596,7 @@ async function captureDiagnosticCommand(
     } catch {
       // The diagnostic command may already have exited.
     }
-  }, 20_000);
+  }, timeoutMs);
   try {
     const output = await child.output();
     Deno.mkdirSync(TEST_LOG_DIR, { recursive: true });
@@ -1599,6 +1640,7 @@ async function captureBrowserFailureDiagnostics(
             TEST_LOG_DIR,
           ],
           path.join(TEST_LOG_DIR, `desktop-capture-${runId}.log`),
+          45_000,
         ),
       );
     } catch (error) {
