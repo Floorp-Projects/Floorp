@@ -11,8 +11,10 @@ import { WebsitePanelWindowChild } from "./website-panel-window-child";
 import { PanelSidebarAddModal } from "./components/panel-sidebar-modal";
 import { PanelSidebarFloating } from "./components/floating";
 import { PanelSidebarHover } from "./components/overlay-hover";
+import { WebPanelPopupNotifications } from "./utils/web-panel-popup-notifications";
+import { selectedPanelId } from "./data/data";
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
-import { onCleanup } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { observeWebPanelRequests } from "./utils/webRequest.ts";
 
 //TODO: refactor needed
@@ -27,6 +29,12 @@ export default class PanelSidebar extends NoraComponentBase {
 
     onCleanup(observeWebPanelRequests(window));
     migratePanelSidebarData();
+    const popupRouter = WebPanelPopupNotifications.install();
+    // Show the prompts a web panel asked for while it was in the background.
+    createEffect(() => {
+      selectedPanelId();
+      popupRouter.refresh();
+    });
 
     const ctx = new CPanelSidebar();
     new PanelSidebarElem(ctx);

@@ -556,6 +556,27 @@ const JS_WINDOW_ACTORS: {
     // 154 rejects actors without this opt-in from web/webIsolated processes.
     safeForUntrustedWebProcess: true,
   },
+  NRWebPanelClipboard: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebPanelClipboardParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRWebPanelClipboardChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["http://*/*", "https://*/*"],
+    remoteTypes: WEB_REMOTE_TYPES,
+    allFrames: true,
+    // The parent only answers for focused web panel browsers, after the user
+    // confirms Gecko's paste menu, exactly like a clipboard read in a tab.
+    safeForUntrustedWebProcess: true,
+  },
 };
 
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
