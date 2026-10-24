@@ -15,22 +15,26 @@
  */
 
 import type {
+  AddonInstallListener,
+  ChromeConversionReport,
+  ConversionResult,
   ExtensionMetadata,
+  GeckoAddonManager,
   InstallRequest,
   InstallResult,
-  AddonInstallListener,
-  GeckoAddonManager,
-  CRXConverterModule,
   nsIFile,
 } from "../modules/chrome-web-store/types.ts";
+import {
+  ChromeExtensionUpdateRegistry,
+  createVerifiedUpdateProof,
+  type VerifiedUpdateProof,
+} from "../modules/chrome-web-store/ChromeExtensionUpdateRegistry.sys.mts";
 
 import {
-  CRX_DOWNLOAD_URLS,
-  CRX_MAGIC,
-  CRX_VERSIONS,
-  INSTALL_ERROR_MESSAGE_KEYS,
   CWS_I18N_KEYS,
   generateFirefoxId,
+  INSTALL_ERROR_MESSAGE_KEYS,
+  isChromeExtensionId,
 } from "../modules/chrome-web-store/Constants.sys.mts";
 
 import type { TranslationProvider } from "../modules/i18n/I18n-Utils.sys.mts";
@@ -38,7 +42,8 @@ import type { TranslationProvider } from "../modules/i18n/I18n-Utils.sys.mts";
 // Lazy-loaded modules
 const lazy: {
   AddonManager?: GeckoAddonManager;
-  CRXConverter?: CRXConverterModule;
+  CRXConverterClass?: typeof import("../modules/chrome-web-store/CRXConverter.sys.mts").CRXConverterClass;
+  downloadChromeExtension?: (id: string) => Promise<ArrayBuffer>;
   setTimeout?: (callback: () => void, ms: number) => nsITimer;
   clearTimeout?: (timer: nsITimer) => void;
 } = {};
@@ -52,8 +57,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // Dynamically import our CRX converter
 try {
   ChromeUtils.defineESModuleGetters(lazy, {
-    CRXConverter:
+    CRXConverterClass:
       "resource://noraneko/modules/chrome-web-store/CRXConverter.sys.mjs",
+    downloadChromeExtension:
+      "resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdater.sys.mjs",
   });
 } catch {
   // CRXConverter module not available
@@ -191,6 +198,9 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     const { extensionId, metadata } = request;
 
     try {
+      if (!isChromeExtensionId(extensionId) || metadata.id !== extensionId) {
+        throw new Error("Invalid Chrome extension ID");
+      }
       // Step 1: Check if already installed
       const existingAddon = await this.checkExistingAddon(extensionId);
       if (existingAddon) {
@@ -214,8 +224,25 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
 
       // Step 3: Convert CRX to XPI (async to prevent UI freezing)
       let xpiData: ArrayBuffer | null = null;
+      let report: ChromeConversionReport | undefined;
       try {
-        xpiData = await this.convertCRXtoXPI(crxData, extensionId, metadata);
+        const converted = await this.convertCRXtoXPI(
+          crxData,
+          extensionId,
+          metadata,
+        );
+        if (
+          !converted.success ||
+          !converted.xpiData ||
+          !converted.report?.signature
+        ) {
+          throw (
+            converted.error ??
+            new Error("Authenticated conversion metadata is missing")
+          );
+        }
+        xpiData = converted.xpiData;
+        report = converted.report;
       } catch (conversionError) {
         const errorMsg =
           conversionError instanceof Error
@@ -237,7 +264,13 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
       }
 
       // Step 4: Install the XPI
-      const installResult = await this.installXPI(xpiData, metadata);
+      const proof = await createVerifiedUpdateProof(
+        generateFirefoxId(extensionId),
+        report!.originalVersion,
+        xpiData,
+        report!.signature!.publicKeySha256,
+      );
+      const installResult = await this.installXPI(xpiData, metadata, proof);
 
       return installResult;
     } catch (error) {
@@ -278,147 +311,42 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
   }
 
   private async downloadCRX(extensionId: string): Promise<ArrayBuffer | null> {
-    const urls = [
-      CRX_DOWNLOAD_URLS.primary(extensionId),
-      CRX_DOWNLOAD_URLS.fallback(extensionId),
-    ];
-
-    for (const url of urls) {
-      try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            // Mimic Chrome's User-Agent for compatibility
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-            Accept: "application/x-chrome-extension",
-          },
-          redirect: "follow",
-        });
-
-        if (!response.ok) {
-          continue;
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-
-        // Verify it's a CRX file (magic number check)
-        if (this.verifyCRXHeader(arrayBuffer)) {
-          return arrayBuffer;
-        }
-      } catch {
-        // Download error, try next URL
+    try {
+      if (!lazy.downloadChromeExtension) {
+        throw new Error("Chrome extension downloader is unavailable");
       }
+      return await lazy.downloadChromeExtension(extensionId);
+    } catch (error) {
+      console.error("[ChromeWebStore] Download failed", error);
+      return null;
     }
-
-    return null;
-  }
-
-  /**
-   * Verify that the data is a valid CRX file
-   * @param data - Raw file data
-   * @returns true if valid CRX file
-   */
-  private verifyCRXHeader(data: ArrayBuffer): boolean {
-    if (data.byteLength < 16) {
-      return false;
-    }
-
-    const view = new DataView(data);
-
-    // CRX files start with "Cr24" magic number
-    const magic = String.fromCharCode(
-      view.getUint8(0),
-      view.getUint8(1),
-      view.getUint8(2),
-      view.getUint8(3),
-    );
-
-    if (magic !== CRX_MAGIC) {
-      return false;
-    }
-
-    // Check CRX version (should be 2 or 3)
-    const version = view.getUint32(4, true);
-    if (!(CRX_VERSIONS as readonly number[]).includes(version)) {
-      return false;
-    }
-
-    return true;
   }
 
   /**
    * Convert CRX to XPI format (async to prevent UI freezing)
-   * Uses CRXConverter module if available, falls back to inline conversion
+   * Requires the authenticated CRXConverter pipeline
    */
   private async convertCRXtoXPI(
     crxData: ArrayBuffer,
     extensionId: string,
     metadata: ExtensionMetadata,
-  ): Promise<ArrayBuffer | null> {
+  ): Promise<ConversionResult> {
     // Use our CRX converter module if available
-    if (lazy.CRXConverter) {
-      return await lazy.CRXConverter.convert(crxData, extensionId, metadata);
+    if (lazy.CRXConverterClass) {
+      return await new lazy.CRXConverterClass().convert(
+        crxData,
+        extensionId,
+        metadata,
+      );
     }
 
-    // Fallback: inline conversion
-    return this.inlineConvertCRXtoXPI(crxData, extensionId, metadata);
-  }
-
-  private inlineConvertCRXtoXPI(
-    crxData: ArrayBuffer,
-    _extensionId: string,
-    _metadata: ExtensionMetadata,
-  ): ArrayBuffer | null {
-    try {
-      const view = new DataView(crxData);
-      const version = view.getUint32(4, true);
-
-      let zipOffset: number;
-
-      if (version === 2) {
-        // CRX2 format
-        const publicKeyLength = view.getUint32(8, true);
-        const signatureLength = view.getUint32(12, true);
-        zipOffset = 16 + publicKeyLength + signatureLength;
-      } else if (version === 3) {
-        // CRX3 format
-        const headerLength = view.getUint32(8, true);
-        zipOffset = 12 + headerLength;
-      } else {
-        throw new Error(`Unsupported CRX version: ${version}`);
-      }
-
-      console.log(`[NRChromeWebStore] ZIP data starts at offset ${zipOffset}`);
-
-      // Extract the ZIP portion
-      const zipData = crxData.slice(zipOffset);
-
-      // Verify ZIP signature
-      const zipView = new DataView(zipData);
-      const zipSignature = zipView.getUint32(0, true);
-      if (zipSignature !== 0x04034b50) {
-        // "PK\x03\x04"
-        throw new Error("Invalid ZIP signature in CRX");
-      }
-
-      // For now, return the raw ZIP data
-      // In production, we would modify the manifest.json inside the ZIP
-      // to add Firefox-specific settings
-
-      // TODO: Modify manifest.json to add browser_specific_settings.gecko.id
-      // This requires ZIP manipulation which is complex without a library
-      // For now, we'll return the ZIP as-is and rely on Firefox's compatibility
-
-      return zipData;
-    } catch {
-      return null;
-    }
+    throw new Error("Chrome extension conversion runtime is unavailable");
   }
 
   private async installXPI(
     xpiData: ArrayBuffer,
     metadata: ExtensionMetadata,
+    proof: VerifiedUpdateProof,
   ): Promise<InstallResult> {
     if (!lazy.AddonManager) {
       return {
@@ -427,6 +355,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
       };
     }
 
+    let tempFile: nsIFile | undefined;
     try {
       // Get the browser window for the installation prompt
       const browserWindow = this.browsingContext
@@ -439,7 +368,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
         };
       }
 
-      const tempFile = await this.createTempXPIFileAsync(xpiData, metadata.id);
+      tempFile = await this.createTempXPIFileAsync(xpiData, metadata.id);
 
       // Use AddonManager.getInstallForFile for file-based installation
       const install = await lazy.AddonManager.getInstallForFile(
@@ -461,7 +390,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
       // Set up install listeners with timeout
       const INSTALL_TIMEOUT_MS = 60000; // 60 seconds timeout
 
-      return new Promise((resolve) => {
+      return await new Promise((resolve) => {
         let resolved = false;
         let timeoutId: nsITimer | null = null;
 
@@ -477,6 +406,13 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
           if (!resolved) {
             resolved = true;
             cleanup();
+            if (!result.success) {
+              try {
+                install.cancel();
+              } catch {
+                /* Native installation may already be terminal. */
+              }
+            }
             resolve(result);
           }
         };
@@ -486,10 +422,14 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
             // Installation started
           },
           onInstallEnded: (_install, addon) => {
-            safeResolve({
-              success: true,
-              addonId: addon.id,
-            });
+            void ChromeExtensionUpdateRegistry.recordInstalled(proof)
+              .catch((error) =>
+                console.error(
+                  "[ChromeWebStore] Failed to enroll verified installed package",
+                  error,
+                ),
+              )
+              .finally(() => safeResolve({ success: true, addonId: addon.id }));
           },
 
           onInstallFailed: (installObj) => {
@@ -562,8 +502,10 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
             install,
           );
         } else {
-          // Fallback to silent installation if browser element is not available
-          install.install();
+          safeResolve({
+            success: false,
+            error: t(CWS_I18N_KEYS.error.noBrowserWindow),
+          });
         }
       });
     } catch (error) {
@@ -573,6 +515,8 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
         success: false,
         error: t(CWS_I18N_KEYS.error.xpiInstallError, { error: errorMessage }),
       };
+    } finally {
+      if (tempFile) await IOUtils.remove(tempFile.path, { ignoreAbsent: true });
     }
   }
 
@@ -590,6 +534,7 @@ export class NRChromeWebStoreParent extends JSWindowActorParent {
     const tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
     const tempFile = tempDir.clone();
     tempFile.append(`floorp-cws-${extensionId}.xpi`);
+    tempFile.createUnique(0, 0o600);
 
     // Use IOUtils for fast async write
     const uint8Array = new Uint8Array(xpiData);

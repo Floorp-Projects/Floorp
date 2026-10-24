@@ -8,10 +8,11 @@
  */
 
 import {
-  GECKO_MIN_VERSION,
   EXTENSION_ID_SUFFIX,
-  isPermissionSupported,
+  GECKO_MIN_VERSION,
   isOptionalPermissionAllowed,
+  isPermissionSupported,
+  STORE_DOWNLOAD_CLIENT_VERSION,
 } from "./Constants.sys.mts";
 import type { ChromeManifest, TransformOptions } from "./types.ts";
 
@@ -68,21 +69,15 @@ export function transformManifestFull(
 
   // Handle Manifest V3 specific transformations
   if (manifest.manifest_version === 3) {
-    const bgWarning = transformMV3Background(transformed);
+    const bgWarning = transformMV3Background(transformed, options.nativeWorker === true);
     if (bgWarning) warnings.push(bgWarning);
 
     transformMV3WebAccessibleResources(transformed);
   }
 
-  // Inject Offscreen API polyfill if needed
-  if (manifest.permissions?.includes("offscreen")) {
-    injectOffscreenPolyfill(transformed);
-  }
-
-  // Inject DocumentId polyfill if needed (for scripting API with documentId support)
-  if (manifest.permissions?.includes("scripting")) {
-    injectDocumentIdPolyfill(transformed);
-  }
+  // documentId is implemented by Gecko and offscreen is provided by the
+  // compatibility runtime. Injecting scripts here would shadow native APIs and
+  // tie offscreen documents to the background page's lifetime.
 
   // Remove unsupported permissions
   const permWarnings = filterUnsupportedPermissions(transformed);
@@ -129,6 +124,13 @@ export function validateManifest(
     return false;
   }
 
+  if (
+    m.minimum_chrome_version !== undefined &&
+    !parseChromeVersion(m.minimum_chrome_version)
+  ) {
+    return false;
+  }
+
   return true;
 }
 
@@ -137,12 +139,23 @@ export function validateManifest(
  * @param manifest - Manifest to check
  * @returns Array of compatibility issues (empty if compatible)
  */
-export function checkCompatibility(manifest: ChromeManifest): string[] {
+export function checkCompatibility(
+  manifest: ChromeManifest,
+  options: Pick<TransformOptions, "nativeWorker"> = {},
+): string[] {
   const issues: string[] = [];
+  const chromeVersionIssue = checkChromeVersionRequirement(manifest);
+  if (chromeVersionIssue) issues.push(chromeVersionIssue);
 
   // Check for service worker in MV2
   if (manifest.manifest_version === 2 && manifest.background?.service_worker) {
     issues.push("MV2 does not support service workers");
+  }
+
+  if (manifest.manifest_version === 3 && manifest.background?.service_worker && !options.nativeWorker) {
+    issues.push(
+      "MV3 service workers use a background event-page fallback; service-worker lifecycle and worker-only APIs are unavailable",
+    );
   }
 
   // Check for unsupported APIs in permissions
@@ -154,6 +167,44 @@ export function checkCompatibility(manifest: ChromeManifest): string[] {
   }
 
   return issues;
+}
+
+/**
+ * Bound package requirements to the evaluated Chrome reference. Passing this
+ * check is not proof that the extension's APIs are implemented by Floorp.
+ */
+export function checkChromeVersionRequirement(
+  manifest: ChromeManifest,
+): string | null {
+  const required = manifest.minimum_chrome_version;
+  if (required === undefined) return null;
+  const minimum = parseChromeVersion(required);
+  if (!minimum) {
+    return "minimum_chrome_version must contain one to four numeric version components";
+  }
+  const reference = parseChromeVersion(STORE_DOWNLOAD_CLIENT_VERSION)!;
+  for (let index = 0; index < 4; index++) {
+    const difference = (minimum[index] ?? 0) - (reference[index] ?? 0);
+    if (difference > 0) {
+      return `Extension requires Chrome ${
+        String(required)
+      }; the evaluated Chrome reference is ${STORE_DOWNLOAD_CLIENT_VERSION}. Newer minimum_chrome_version requirements are not supported`;
+    }
+    if (difference < 0) return null;
+  }
+  return null;
+}
+
+function parseChromeVersion(value: unknown): number[] | null {
+  if (typeof value !== "string" || !/^\d+(?:\.\d+){0,3}$/.test(value)) {
+    return null;
+  }
+  const components = value.split(".").map(Number);
+  return components.every((component) =>
+      Number.isInteger(component) && component <= 0xFFFFFFFF
+    )
+    ? components
+    : null;
 }
 
 // =============================================================================
@@ -168,32 +219,49 @@ function addGeckoSettings(
   extensionId: string,
   minVersion?: string,
 ): void {
+  const existing = manifest.browser_specific_settings;
   manifest.browser_specific_settings = {
+    ...existing,
     gecko: {
+      ...existing?.gecko,
       id: `${extensionId}${EXTENSION_ID_SUFFIX}`,
-      strict_min_version: minVersion ?? GECKO_MIN_VERSION,
+      strict_min_version: minVersion ?? existing?.gecko?.strict_min_version ??
+        GECKO_MIN_VERSION,
+      floorp_chrome_extension: {
+        schema_version: 1,
+        original_id: extensionId,
+      },
     },
   };
 }
 
 /**
- * Convert MV3 service_worker to background scripts
- * Firefox doesn't support service_worker in the same way as Chrome
+ * Preserve the native MV3 worker when the running browser compiled its API
+ * bindings. Otherwise select an honest document fallback. Chrome defaults to
+ * classic scripts; the original type and every packaged source stay unchanged.
  * @returns Warning message if conversion was performed
  */
-function transformMV3Background(manifest: ChromeManifest): string | null {
-  if (!manifest.background?.service_worker) {
+function transformMV3Background(manifest: ChromeManifest, nativeWorker: boolean): string | null {
+  if (!manifest.background?.service_worker || nativeWorker) {
     return null;
   }
 
-  const serviceWorker = manifest.background.service_worker;
+  const { service_worker: serviceWorker, ...background } = manifest.background;
+  const hasDocument = Boolean(background.page || background.scripts?.length);
 
-  manifest.background = {
-    scripts: [serviceWorker],
-    type: "module",
-  };
+  // A cross-browser manifest may already include a Firefox document fallback.
+  // Prefer it to executing worker source in a document context.
+  if (!hasDocument) {
+    background.scripts = [serviceWorker];
+  }
+  manifest.background = background;
 
-  return `Converted service_worker (${serviceWorker}) to background scripts`;
+  const selection = hasDocument
+    ? `Using the existing background document instead of service worker (${serviceWorker})`
+    : `Converted service worker (${serviceWorker}) to a ${
+      background.type ?? "classic"
+    } background event page`;
+  return `${selection}; service-worker lifecycle and worker-only APIs are unavailable`;
 }
 
 /**
@@ -219,11 +287,13 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
   // Firefox requires "*" or addon IDs matching specific patterns:
   // - UUID format: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
   // - Email-like format: name@domain
-  for (const entry of resources as Array<{
-    resources: string[];
-    matches?: string[];
-    extension_ids?: string[];
-  }>) {
+  for (
+    const entry of resources as Array<{
+      resources: string[];
+      matches?: string[];
+      extension_ids?: string[];
+    }>
+  ) {
     // Filter out chrome-extension:// patterns from matches
     // Firefox doesn't support chrome-extension:// scheme in web_accessible_resources
     if (entry.matches && Array.isArray(entry.matches)) {
@@ -241,9 +311,10 @@ function transformMV3WebAccessibleResources(manifest: ChromeManifest): void {
         // Check if already in Firefox-compatible format
         if (
           id.includes("@") ||
-          /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i.test(
-            id,
-          )
+          /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i
+            .test(
+              id,
+            )
         ) {
           return id;
         }
@@ -303,81 +374,6 @@ function removeUnsupportedFields(manifest: ChromeManifest): void {
   // Remove differential_fingerprint (Chrome specific)
   if ("differential_fingerprint" in manifest) {
     delete manifest.differential_fingerprint;
-  }
-}
-
-/**
- * Inject the Offscreen API polyfill into the background scripts
- */
-function injectOffscreenPolyfill(manifest: ChromeManifest): void {
-  const polyfillPath = "__floorp_polyfills__/OffscreenPolyfill.js";
-
-  if (!manifest.background) {
-    manifest.background = {
-      scripts: [polyfillPath],
-      type: "module",
-    };
-    return;
-  }
-
-  // Ensure type is module to allow import/export if needed (though our polyfill is self-executing)
-  // But more importantly, if it is service_worker, we already converted it to scripts in transformMV3Background
-  if (manifest.background.service_worker) {
-    manifest.background.scripts = [manifest.background.service_worker];
-    delete manifest.background.service_worker;
-    manifest.background.type = "module";
-  }
-
-  if (manifest.background.scripts) {
-    // Add polyfill at the beginning
-    if (!manifest.background.scripts.includes(polyfillPath)) {
-      manifest.background.scripts.unshift(polyfillPath);
-    }
-  } else {
-    // Should not happen if transformMV3Background ran, but handled just in case
-    manifest.background.scripts = [polyfillPath];
-  }
-
-  // Ensure background type is module since we might be mixing things
-  if (!manifest.background.type) {
-    manifest.background.type = "module";
-  }
-}
-
-/**
- * Inject the DocumentId API polyfill into the background scripts
- * This is needed for extensions using chrome.scripting.executeScript with documentIds
- */
-function injectDocumentIdPolyfill(manifest: ChromeManifest): void {
-  const polyfillPath = "__floorp_polyfills__/DocumentIdPolyfill.js";
-
-  if (!manifest.background) {
-    manifest.background = {
-      scripts: [polyfillPath],
-      type: "module",
-    };
-    return;
-  }
-
-  // Handle service_worker conversion (should already be done by transformMV3Background)
-  if (manifest.background.service_worker) {
-    manifest.background.scripts = [manifest.background.service_worker];
-    delete manifest.background.service_worker;
-    manifest.background.type = "module";
-  }
-
-  if (manifest.background.scripts) {
-    // Add polyfill at the beginning (before Offscreen if present)
-    if (!manifest.background.scripts.includes(polyfillPath)) {
-      manifest.background.scripts.unshift(polyfillPath);
-    }
-  } else {
-    manifest.background.scripts = [polyfillPath];
-  }
-
-  // Ensure background type is module
-  if (!manifest.background.type) {
-    manifest.background.type = "module";
   }
 }
 

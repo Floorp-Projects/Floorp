@@ -1,0 +1,218 @@
+diff --git a/modules/NativeManifests.sys.mjs b/modules/NativeManifests.sys.mjs
+index 48d7d50..db3fc22 100644
+--- a/modules/NativeManifests.sys.mjs
++++ b/modules/NativeManifests.sys.mjs
+@@ -190,6 +190,146 @@ export var NativeManifests = {
+     return null;
+   },
+ 
++  /**
++   * Opt in per extension. The original ID is never a replacement for the Gecko
++   * addon ID used for permissions, storage, or the Firefox native host protocol.
++   *
++   * @param {object} context Extension API context.
++   * @returns {string|null} The canonical Chrome origin, or null.
++   */
++  getChromeExtensionOrigin(context) {
++    const extension = context.extension;
++    const compatibility =
++      extension.manifest?.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    const id = compatibility?.original_id;
++    return compatibility?.schema_version === 1 &&
++      typeof id === "string" &&
++      /^[a-p]{32}$/.test(id) &&
++      extension.id === `${id}@chromium-extension`
++      ? `chrome-extension://${id}/`
++      : null;
++  },
++
++  _chromeManifestDirectories() {
++    const home = Services.dirsvc.get("Home", Ci.nsIFile).path;
++    if (AppConstants.platform === "macosx") {
++      return [
++        PathUtils.join(
++          home,
++          "Library",
++          "Application Support",
++          "Google",
++          "Chrome",
++          "NativeMessagingHosts"
++        ),
++        "/Library/Google/Chrome/NativeMessagingHosts",
++        PathUtils.join(
++          home,
++          "Library",
++          "Application Support",
++          "Chromium",
++          "NativeMessagingHosts"
++        ),
++        "/Library/Application Support/Chromium/NativeMessagingHosts",
++      ];
++    }
++    let config = Services.env.get("XDG_CONFIG_HOME");
++    if (!config || !PathUtils.isAbsolute(config)) {
++      config = PathUtils.join(home, ".config");
++    }
++    return [
++      PathUtils.join(config, "google-chrome", "NativeMessagingHosts"),
++      "/etc/opt/chrome/native-messaging-hosts",
++      PathUtils.join(config, "chromium", "NativeMessagingHosts"),
++      "/etc/chromium/native-messaging-hosts",
++    ];
++  },
++
++  _chromeManifestRegistryPath(name) {
++    const REGISTRY = Ci.nsIWindowsRegKey;
++    for (const browser of ["Google\\Chrome", "Chromium"]) {
++      for (const root of [
++        REGISTRY.ROOT_KEY_CURRENT_USER,
++        REGISTRY.ROOT_KEY_LOCAL_MACHINE,
++      ]) {
++        for (const view of [REGISTRY.WOW64_32, REGISTRY.WOW64_64]) {
++          const path = lazy.WindowsRegistry.readRegKey(
++            root,
++            `Software\\${browser}\\NativeMessagingHosts\\${name}`,
++            "",
++            view
++          );
++          if (path !== undefined && path !== null) {
++            // A broken or denied higher-precedence registration must not select
++            // a different executable from another registry view or browser.
++            return typeof path === "string" && path
++              ? path.replaceAll("/", "\\")
++              : "";
++          }
++        }
++      }
++    }
++    return null;
++  },
++
++  async _lookupChromeManifest(name, context, chromeOrigin) {
++    let paths;
++    if (AppConstants.platform === "win") {
++      const path = this._chromeManifestRegistryPath(name);
++      paths = path ? [path] : [];
++    } else {
++      paths = this._chromeManifestDirectories().map(dir =>
++        PathUtils.join(dir, `${name}.json`)
++      );
++    }
++    for (const path of paths) {
++      let data;
++      try {
++        data = await IOUtils.readJSON(path);
++      } catch (error) {
++        if (DOMException.isInstance(error) && error.name === "NotFoundError") {
++          continue;
++        }
++        Cu.reportError(error);
++        return null;
++      }
++      if (
++        !data ||
++        data.type !== "stdio" ||
++        !Array.isArray(data.allowed_origins) ||
++        !data.allowed_origins.length ||
++        !data.allowed_origins.every(
++          origin =>
++            typeof origin === "string" &&
++            /^chrome-extension:\/\/[a-p]{32}\/$/.test(origin)
++        ) ||
++        !data.allowed_origins.includes(chromeOrigin)
++      ) {
++        Cu.reportError(
++          `This extension does not have permission to use native manifest ${path}`
++        );
++        return null;
++      }
++      // Reuse Gecko's validation of the host name, executable path and type.
++      // This translation happens only after exact Chrome-origin authorization.
++      const manifestData = {
++        ...data,
++        allowed_extensions: [context.extension.id],
++      };
++      delete manifestData.allowed_origins;
++      const manifest = await this.parseManifest(
++        "stdio",
++        path,
++        name,
++        context,
++        manifestData
++      );
++      return manifest ? { path, manifest, chromeOrigin } : null;
++    }
++    return null;
++  },
++
+   /**
+    * Search for a valid native manifest of the given type and name.
+    * The directories searched and rules for manifest validation are all
+@@ -201,7 +341,14 @@ export var NativeManifests = {
+    * @returns {object} The contents of the validated manifest, or null if
+    *                   no valid manifest can be found for this type and name.
+    */
+-  lookupManifest(type, name, context) {
+-    return this.init().then(() => this._lookup(type, name, context));
++  async lookupManifest(type, name, context) {
++    await this.init();
++    const origin = type === "stdio" && this.getChromeExtensionOrigin(context);
++    // Browser registrations are independent authorization namespaces. A vendor
++    // may register one executable for both browsers with different allowlists.
++    // Never let a denied host in either namespace choose another namespace.
++    return origin
++      ? this._lookupChromeManifest(name, context, origin)
++      : this._lookup(type, name, context);
+   },
+ };
+diff --git a/modules/NativeMessaging.sys.mjs b/modules/NativeMessaging.sys.mjs
+index d4e1b79..bf17a56 100644
+--- a/modules/NativeMessaging.sys.mjs
++++ b/modules/NativeMessaging.sys.mjs
+@@ -129,11 +129,17 @@ export class NativeApp extends EventEmitter {
+ 
+         let subprocessOpts = {
+           command: command,
+-          arguments: [hostInfo.path, context.extension.id],
++          arguments: hostInfo.chromeOrigin
++            ? [hostInfo.chromeOrigin]
++            : [hostInfo.path, context.extension.id],
+           workdir: PathUtils.parent(command),
+           stderr: "pipe",
+           disclaim: true,
+         };
++        if (hostInfo.chromeOrigin && AppConstants.platform === "win") {
++          // No native parent window is available for a background API context.
++          subprocessOpts.arguments.push("--parent-window=0");
++        }
+ 
+         return lazy.Subprocess.call(subprocessOpts);
+       })
+diff --git a/chrome/toolkit/content/extensions/schemas/manifest.json b/chrome/toolkit/content/extensions/schemas/manifest.json
+index 000e5fc..607424c 100644
+--- a/chrome/toolkit/content/extensions/schemas/manifest.json
++++ b/chrome/toolkit/content/extensions/schemas/manifest.json
+@@ -641,6 +641,22 @@
+             "optional": true
+           },
+ 
++          "floorp_chrome_extension": {
++            "type": "object",
++            "optional": true,
++            "properties": {
++              "schema_version": {
++                "type": "integer",
++                "minimum": 1,
++                "maximum": 1
++              },
++              "original_id": {
++                "type": "string",
++                "pattern": "^[a-p]{32}$"
++              }
++            }
++          },
++
+           "update_url": {
+             "type": "string",
+             "format": "url",

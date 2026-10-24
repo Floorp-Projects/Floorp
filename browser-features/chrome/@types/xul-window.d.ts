@@ -187,6 +187,8 @@ declare namespace globalThis {
   };
   var SidebarController: {
     currentID: string;
+    isOpen: import("../common/firefox-sidebar/types.ts").NativeSidebarController["isOpen"];
+    hide: import("../common/firefox-sidebar/types.ts").NativeSidebarController["hide"];
     sidebars?: unknown;
     reversePosition?: boolean;
   };

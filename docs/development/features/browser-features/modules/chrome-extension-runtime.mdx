@@ -1,0 +1,186 @@
+---
+title: "Chrome Extension Compatibility Runtime"
+sidebar_label: "Chrome Extensions"
+---
+
+# Chrome Extension Compatibility Runtime
+
+Chrome Extension Runtime v2 integrates package authentication, native extension
+Service Workers, browser APIs, Floorp UI, and updates in one candidate. The source
+baseline is Floorp Runtime 158, commit
+`7dd619742b25567e479eeda97ae071d10542ad0b`, as recorded in
+`floorp-runtime.lock.json`. The comparison browser is official Chrome
+`155.0.8059.84`; its executable and signed repository metadata are pinned in
+`tools/chrome-extension-runtime/chrome-reference.json`.
+
+Implementation, source validation, and execution qualification are separate
+claims. JavaScript development-artifact results cannot establish support for
+new C++ or WebIDL code. The native candidate workflow builds and executes actual
+Linux, Windows, and macOS packages. Qualification of the frozen 50-extension
+corpus remains incomplete until its recorded primary operations and package
+gates pass; no compatibility percentage is inferred from API fixture counts.
+
+## Package authentication and compatibility identity
+
+`CRXConverterClass.convert()` snapshots and authenticates the package before
+exposing ZIP contents. CRX2 verifies RSA/SHA-1; CRX3 verifies its signed header
+and RSA/SHA-256 or P-256 ECDSA/SHA-256 proofs. The verified developer key must
+derive the requested Chrome ID. Downloading is credential-free and bounded to
+100 MiB. Conversion separately bounds expanded files to 50 MiB each, 500 MiB
+total, and 10,000 entries, with path validation.
+
+Package requests use the actual process OS/architecture and the pinned Chrome
+version. Unsupported platforms and newer `minimum_chrome_version` requirements
+fail explicitly. The original manifest and conversion report are retained under
+`__floorp_chrome__/`; source archives cannot claim this reserved directory.
+
+The internal Gecko identity remains `<chrome-id>@chromium-extension`, retaining
+storage and permission keys. A versioned
+`browser_specific_settings.gecko.floorp_chrome_extension` marker selects
+compatibility behavior only when its original ID and installed ID agree.
+Converted extension contexts expose the original 32-character Chrome
+`runtime.id`; native permission and storage routing continue to use Gecko IDs.
+Ordinary Firefox extensions retain their existing API behavior and public IDs.
+Converted content-script worlds resolve detached timer calls with a null or
+undefined receiver to their Window. Other receivers retain native validation;
+the page and other extensions keep their original timer methods.
+
+The marker and packaged report are selectors and diagnostics, not proof of
+Store provenance. A protected per-profile registry separately enrolls the
+verified developer key and installed-package hash for automatic update and
+migration eligibility. Copying a marker or report cannot enroll a package.
+Legacy installations require explicit authenticated reconversion before they
+become managed.
+
+## Native execution and browser integration
+
+| Area | Implemented behavior | Qualification boundary |
+| --- | --- | --- |
+| MV3 | Native classic/module Service Workers, original script type/path, event wake-up, idle termination, callbacks/Promises, lastError, gesture transport, and native API bindings. | Requires `--enable-extensions-webidl-bindings`. Conversion uses the actual compiled capability; old binaries receive an explicitly reported document fallback. |
+| Documents and scripts | Native document UUIDs across navigation, scripting, messages, and contexts; MAIN/ISOLATED injection, callable serialization, dynamic scripts and userScripts. | Navigation and stale-document negative tests must run on the candidate. IDs are never rewritten into a different document's frame target. |
+| Offscreen | Extension-owned host independent of background lifetime; singleton reservation, own-origin validation, runtime-only APIs, native contexts, cancellation, audio-silence cleanup. | Real device/media operation is a separate gate from host lifetime. |
+| Capture | Document-bound tab video/audio tokens, consumer-tab restrictions, Offscreen consumption, native desktop selection, real MediaStream/MediaRecorder output and revocation. | OS audio routing and actual screen/window selection require platform execution. Synthetic API returns or chooser opening alone are insufficient. |
+| Side Panel | Native retained tab/global/window-scoped documents, Chrome methods/events, action integration, pinning, shortcuts, and Floorp sidebar rendering. | Scope inheritance, private windows, navigation, shutdown, and existing sidebar/workspace behavior have independent tests. |
+| DNR and WebRequest | Static/dynamic/session rules, Chrome quotas, safe/unsafe rule budgets, bounded native Rust regex, response-header conditions, rule priorities, and extraHeaders/auth callbacks. | Matching and real request effects are compared with Chrome; unsupported values reject rather than weakening a rule. |
+| Proxy | Direct/system/auto-detect/fixed/PAC, full bypass rules, mandatory PAC, regular/private scopes and restoration through native network/PAC backends. | Private PAC selection and network effects require the rebuilt native backend; ordinary Firefox ownership rules remain intact. |
+| Identity and external messaging | Browser OAuth flows, token/scoping/cache handling, original-ID extension messages/Ports, webpage allowlists, sender validation, and lifecycle cleanup. | Provider client registration, accounts, and service authorization remain external prerequisites and are reported separately. |
+| Native Messaging | Chrome-compatible callers use Chrome/Chromium host namespaces and exact original-ID allowed_origins; Firefox callers use Mozilla host namespaces and Firefox argv. | Denials are terminal within their own namespace. A separate Firefox registration cannot authorize or block the Chrome namespace. Platform lookup/launch requires OS execution. |
+| Debugger | Real DevTools/RDP adapters for the explicitly inventoried Runtime/Page/DOM/Network/Input/Target commands and events, targets/sessions, native input, screenshots, CSP/focus handling and cleanup. | The command inventory is the support contract, not an entire-CDP claim. Unknown commands fail; cross-addon principals remain inaccessible. |
+| Auxiliary APIs | DeclarativeContent, native tab groups, font preferences/rendering, real TTS queue/events/controls, action, notifications, storage access levels, management, window bounds, and Power. | Compiled notification/font/speech/Power paths and actual OS effects have mandatory native tests. |
+| File storage | Profile-backed legacy filesystem entries/writers, bounded writes/quota, filesystem URLs, native file/download integration and lifecycle cleanup. | The compatibility broker is document-only; Worker access without a usable policy container fails closed. See the filesystem notes. |
+
+The Worker implementation also exposes genuine existing Gecko backends for
+bookmarks, commands, history, i18n, idle, sessions, topSites, omnibox and extension
+access checks. Synchronous API and multi-shot callback conventions are preserved;
+no empty namespace or successful no-op substitutes for an unavailable API.
+
+Capture authorization comes from an actual native action invocation or the
+native chooser, never hover/preload or a fabricated gesture. Tokens are
+single-use and expiring, identify the extension and source document, and revoke
+on source navigation/closure or consumer shutdown. Ordinary camera access still
+uses the browser's native permission prompt. Successful media tests decode
+pixels/audio and inspect playable output bytes.
+
+Power uses real native wake locks: CPU requests inhibit system idle sleep and
+display requests remain effective without a visible extension document. The
+implementation owns locks per extension, retains them across Worker suspension,
+and releases them on permission revocation, disable or uninstall. Platform
+backends use GTK inhibition, macOS IOPM assertions, and Windows power requests.
+
+The filesystem broker validates owning principals and instances, enforces CSP,
+sequences deletion against pending writes, and prevents private-session or
+uninstall cleanup from resurrecting data. Filesystem URLs do not bypass the
+extension's content policy. Detailed boundaries are documented in
+`tools/chrome-extension-runtime/docs/filesystem.md` and `docs/power.md` in the
+same tools directory.
+
+## Updates, migration, and management UI
+
+`ChromeExtensionUpdater` prepares authenticated candidates and installs through
+the normal Add-on Manager permission flow. Same-version reconversion is an
+explicit operation. Superseded checks, downgrades, expired candidates, unexpected
+installed versions, and mismatched enrolled signing keys are rejected.
+Postponed updates retain their source until completion or cancellation.
+
+The scheduler checks enrolled opted-in packages at startup and daily, with
+bounded retries/backoff. Added permissions still require the native consent
+flow. Update and migration fixtures check stable IDs, storage/grants retention,
+old-context termination, rejected permissions, competing installs and postponed
+installation.
+
+The existing `about:addons` details page shows source ID/version, runtime/report
+schema, selected background mode, update status and live contexts. It supports
+reload, check/reapply/install, panel pinning, shortcut navigation, opt-in update
+control, and JSON diagnostics export, with English/Japanese strings. Reading
+diagnostics does not wake an idle Worker. Export copies recognized fields and
+never treats packaged provenance claims as authenticated evidence. Ordinary
+Firefox extensions do not gain the Chrome-specific section.
+
+## Maintained source and native packages
+
+Runtime changes live under `.github/patches/floorp-runtime/common/`; JavaScript
+and resource changes have corresponding `tools/patches` development patches.
+Native-only C++/WebIDL/IPC patches require compilation. Never edit the sibling
+Runtime checkout as an implementation path.
+
+Source preparation composes the locked Runtime upstream patches, maintained
+common patches, and production packaging changes in an isolated checkout.
+Byte-identical inherited upstream patches are applied once. Divergent overlaps
+fail validation. Incremental preparation checks prior postimages and preserves
+unchanged file timestamps; it refuses unexpected checkout modifications.
+
+```sh
+python3 tools/chrome-extension-runtime/check-patches.py --all-source
+python3 tools/chrome-extension-runtime/prepare-native-source.py --production --check-only
+```
+
+`.github/workflows/chrome-extension-runtime.yml` builds native candidates for
+Linux x86-64, Windows x86-64, and macOS ARM64 with the real Floorp overlay and
+branding. Candidate manifests bind the Floorp commit, Runtime source, patch
+hashes, package hashes, platform, build ID and compiled binding flag. Test jobs
+verify that identity and launch the extracted package on its matching OS.
+A changed source patch or lock alone cannot qualify an old prebuilt binary.
+
+The core gate exercises package/update APIs, Worker lifecycles, documents,
+Side Panel, debugger authorization, DNR/proxy/PAC, Power, filesystem/private
+cleanup and regressions. The media gate provisions real OS audio facilities and
+requires native speech voices/controls, fonts, capture and playable media.
+Environment setup belongs to CI/test profiles, not to the distributed product.
+
+Each operating system also runs `test-native-messaging-candidate.py` against its
+authenticated package. It registers an owned host in the actual platform search
+location, exercises public one-shot and persistent messaging from document and
+Worker contexts, checks original-ID authorization and denied callers, and
+removes its registration. Nested UTF-8 payloads, launch arguments and host exit
+records are retained. This authored host gate does not count as a real-extension
+primary operation.
+
+## Chrome comparison and frozen real-extension corpus
+
+`corpus-lock.json` fixes 50 selected IDs, primary operations, versions and signed
+package hashes. Forty-six authentic packages were obtained; four unavailable
+packages remain in the denominator. Account/service/OS prerequisites are also
+retained as explicit results. The 90% goal is not met by counting skips, API
+fixtures, UI inspection, or authored companion-host tests as real-package
+primary operations.
+
+Reference and Floorp runners use separate profiles, original vendor scripts,
+real UI input and authored page/data fixtures. Script integrity is checked
+against the frozen signed archive. Controlled local services, private test CAs
+and authored API payloads are identified in reports; they do not establish the
+availability of the corresponding public service. Native candidate reruns must
+retain the exact candidate/build identity and the selected background context.
+
+```sh
+python3 tools/chrome-extension-runtime/fetch-chrome-reference.py
+node tools/chrome-extension-runtime/test-corpus-browser-tools.mjs --id chphlpgkkbolifaimnlloiipkdnihall --headed
+python3 tools/chrome-extension-runtime/run-browser-tests.py --browser /path/to/native/floorp --headed \
+  --actor-module browser-features/modules/modules/chrome-web-store/test/helpers/UserScriptsConsentUIChild.sys.mjs \
+  --test browser-features/modules/modules/chrome-web-store/test/workers/WorkerNative.test.mts
+```
+
+The API/reference recipes and per-area real-package runners are documented in
+`tools/chrome-extension-runtime/REFERENCE.md`. Their reports distinguish
+operation passes, implementation failures, external dependencies and missing
+packages. Historical Firefox 157 development-artifact reports are useful
+regression evidence; they do not qualify the Runtime 158 native candidate.

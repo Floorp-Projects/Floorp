@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "browserVersion": "155.0.8059.84",
+  "platform": "linux-x86_64",
+  "package": {
+    "name": "google-chrome-stable",
+    "version": "155.0.8059.84-1",
+    "url": "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_155.0.8059.84-1_amd64.deb",
+    "size": 144080360,
+    "sha256": "8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de"
+  },
+  "binary": {
+    "relativePath": "opt/google/chrome/chrome",
+    "sha256": "cb19b59995072b86cc7f887b3b1c7ab1f63518a7f2ed9f0d33249e1a040e2c76"
+  },
+  "vendorMetadata": {
+    "indexUrl": "https://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages.gz",
+    "indexSha256": "5ab3e3f3355c2531a8c84465fbe9e3beaeb6445f6da3dafc3238eec1359dae56",
+    "indexLastModified": "Sat, 17 Oct 2026 09:03:45 GMT",
+    "sourceUrl": "https://dl.google.com/linux/chrome/deb/dists/stable/Release.gpg",
+    "releaseSha256": "8a892c20e3c25b2292ef0daecde10c3395be3935e15c28d0397e6c9ea173c9dd",
+    "keySourceUrl": "https://dl.google.com/linux/linux_signing_key.pub",
+    "primaryFingerprint": "EB4C1BFD4F042F6DDDCCEC917721F63BD38B4796",
+    "signingSubkeyFingerprint": "0E225917414670F4442C250DFD533C07C264648F",
+    "signatureVerified": true,
+    "releaseIndexSha256Verified": true
+  },
+  "comparisonScope": "One self-authored unpacked API fixture. No Chrome Web Store installs or real-extension compatibility rate."
+}

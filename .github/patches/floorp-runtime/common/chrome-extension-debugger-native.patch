@@ -1,0 +1,280 @@
+diff --git a/docshell/base/BrowsingContext.cpp b/docshell/base/BrowsingContext.cpp
+index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d044516f7b9 100644
+--- a/docshell/base/BrowsingContext.cpp
++++ b/docshell/base/BrowsingContext.cpp
+@@ -28,6 +28,8 @@
+ #include "mozilla/dom/ContentChild.h"
+ #include "mozilla/dom/ContentParent.h"
+ #include "mozilla/dom/Document.h"
++#include "mozilla/ExtensionPolicyService.h"
++#include "mozilla/extensions/WebExtensionPolicy.h"
+ #include "mozilla/dom/DocumentPictureInPicture.h"
+ #include "mozilla/dom/Element.h"
+ #include "mozilla/dom/HTMLEmbedElement.h"
+@@ -4345,6 +4347,56 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
+   return true;
+ }
+ 
++bool BrowsingContext::ChromeDebuggerOverridesAllowed(
++    nsIURI* aURI, nsIPrincipal* aPrincipal) const {
++  if (!aURI || !aPrincipal || !NS_IsMainThread()) return false;
++  if (aPrincipal->GetIsAddonOrExpandedAddonPrincipal() ||
++      (!aPrincipal->GetIsContentPrincipal() &&
++       !aPrincipal->GetIsNullPrincipal())) {
++    return false;
++  }
++  const auto* top = Top();
++  if (top->GetChromeDebuggerOwner().IsEmpty()) return false;
++  const auto* policy = ExtensionPolicyService::GetSingleton().GetByID(
++      top->GetChromeDebuggerOwner());
++  if (!policy || !policy->Active() || !policy->HasPermission(u"debugger"_ns))
++    return false;
++  if (!(aURI->SchemeIs("http") || aURI->SchemeIs("https") ||
++        aURI->SchemeIs("data") ||
++        (aURI->SchemeIs("file") && policy->FileSchemeAllowed()))) {
++    nsAutoCString spec;
++    if (!aURI->SchemeIs("about") || NS_FAILED(aURI->GetSpec(spec)) ||
++        !spec.EqualsLiteral("about:blank"))
++      return false;
++  }
++  return !extensions::WebExtensionPolicy::IsRestrictedURI(aURI) &&
++         !policy->QuarantinedFromURI(aURI) &&
++         policy->CheckGuarded(aURI).IsNull();
++}
++
++bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerOwner>,
++                             const nsString&, ContentParent* aSource) {
++  return IsTop() && XRE_IsParentProcess() && !aSource;
++}
++bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool,
++                             ContentParent* aSource) {
++  return IsTop() && XRE_IsParentProcess() && !aSource;
++}
++void BrowsingContext::DidSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>,
++                             bool) {
++  PreOrderWalk([](BrowsingContext* context) {
++    if (auto* window = context->GetDOMWindow()) {
++      if (auto* document = window->GetExtantDoc())
++        document->PostVisibilityUpdateEvent();
++    }
++  });
++}
++
++bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerBypassCSP>, bool,
++                             ContentParent* aSource) {
++  return IsTop() && XRE_IsParentProcess() && !aSource;
++}
++
+ bool BrowsingContext::CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
+                              ContentParent* aSource) {
+   return XRE_IsParentProcess() && !aSource;
+diff --git a/docshell/base/BrowsingContext.h b/docshell/base/BrowsingContext.h
+index e910da61612ded9b45d85baa00dfe34e4fec9332..bf12c5a2a05401f1f352368340563c36700140b4 100644
+--- a/docshell/base/BrowsingContext.h
++++ b/docshell/base/BrowsingContext.h
+@@ -111,6 +111,9 @@ struct EmbedderColorSchemes {
+ //    which calls `Set`, and the parent process, and will kill the misbehaving
+ //    process if it fails.
+ #define MOZ_EACH_BC_FIELD(FIELD)                                              \
++  FIELD(ChromeDebuggerOwner, nsString)                                        \
++  FIELD(ChromeDebuggerFocusEmulation, bool)                                   \
++  FIELD(ChromeDebuggerBypassCSP, bool)                                        \
+   FIELD(Name, nsString)                                                       \
+   FIELD(Closed, bool)                                                         \
+   FIELD(ExplicitActive, ExplicitActiveStatus)                                 \
+@@ -683,6 +686,18 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+   bool IsActive() const;
+   bool ForceOffline() const { return GetForceOffline(); }
+ 
++  // Parent-owned debugger overrides are effective only for an active, permitted
++  // owner.
++  void GetChromeDebuggerOwner(nsAString& aOwner) const {
++    aOwner = GetChromeDebuggerOwner();
++  }
++  bool ChromeDebuggerFocusEmulation() const {
++    return GetChromeDebuggerFocusEmulation();
++  }
++  bool ChromeDebuggerBypassCSP() const { return GetChromeDebuggerBypassCSP(); }
++  bool ChromeDebuggerOverridesAllowed(nsIURI* aURI,
++                                      nsIPrincipal* aPrincipal) const;
++
+   nsILoadInfo::IPAddressSpace GetCurrentIPAddressSpace() const {
+     return GetIPAddressSpace();
+   }
+@@ -1579,6 +1594,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+   bool CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
+               ContentParent* aSource);
+ 
++  bool CanSet(FieldIndex<IDX_ChromeDebuggerOwner>, const nsString&,
++              ContentParent* aSource);
++  bool CanSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool,
++              ContentParent* aSource);
++  void DidSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool);
++  bool CanSet(FieldIndex<IDX_ChromeDebuggerBypassCSP>, bool,
++              ContentParent* aSource);
++
+   bool CanSet(FieldIndex<IDX_InnerSizeSpoofedForRFP>, const CSSIntSize&,
+               ContentParent*) {
+     return IsTop();
+diff --git a/dom/base/Document.cpp b/dom/base/Document.cpp
+index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..d40d1f988260279df5aeabbac7b6c12898c183cf 100644
+--- a/dom/base/Document.cpp
++++ b/dom/base/Document.cpp
+@@ -4930,6 +4930,11 @@ bool Document::HasFocus(ErrorResult& rv) const {
+     return false;
+   }
+ 
++  if (bc->Top()->GetChromeDebuggerFocusEmulation() &&
++      bc->ChromeDebuggerOverridesAllowed(GetDocumentURI(), NodePrincipal())) {
++    return true;
++  }
++
+   if (!fm->IsInActiveWindow(bc)) {
+     return false;
+   }
+@@ -17577,8 +17582,15 @@ VisibilityState Document::ComputeVisibilityState() const {
+   //     in some cases.
+   // 3)  Is our outer window background?  If so, we're hidden.
+   // Otherwise, we're visible.
+-  if (!IsVisible() || !mWindow || !mWindow->GetOuterWindow() ||
+-      mWindow->GetOuterWindow()->IsBackground()) {
++  if (!IsVisible() || !mWindow || !mWindow->GetOuterWindow()) {
++    return dom::VisibilityState::Hidden;
++  }
++  if (auto* context = GetBrowsingContext();
++      context && context->Top()->GetChromeDebuggerFocusEmulation() &&
++      context->ChromeDebuggerOverridesAllowed(GetDocumentURI(), NodePrincipal())) {
++    return dom::VisibilityState::Visible;
++  }
++  if (mWindow->GetOuterWindow()->IsBackground()) {
+     return dom::VisibilityState::Hidden;
+   }
+ 
+diff --git a/dom/chrome-webidl/BrowsingContext.webidl b/dom/chrome-webidl/BrowsingContext.webidl
+index 7b3dca8a55d75a51bc1bf5c2d4d82e226a863236..0ea61368165760947357d217644aff87670c30ed 100644
+--- a/dom/chrome-webidl/BrowsingContext.webidl
++++ b/dom/chrome-webidl/BrowsingContext.webidl
+@@ -158,6 +158,11 @@ interface BrowsingContext {
+    */
+   [SetterThrows] attribute boolean forceOffline;
+ 
++  // Exclusive Chrome-compatible debugger owner. Only the parent may set these.
++  [SetterThrows] attribute DOMString chromeDebuggerOwner;
++  [SetterThrows] attribute boolean chromeDebuggerFocusEmulation;
++  [SetterThrows] attribute boolean chromeDebuggerBypassCSP;
++
+   /**
+    * Sets whether this is an app tab. Non-same-origin link navigations from app
+    * tabs may be forced to open in new contexts, rather than in the same context.
+diff --git a/dom/security/nsCSPContext.cpp b/dom/security/nsCSPContext.cpp
+index c04aabf72a2d0a475393babbd80b97c49933b947..c7c66c56e7a9190b2db1afdcb4c7edb370850e63 100644
+--- a/dom/security/nsCSPContext.cpp
++++ b/dom/security/nsCSPContext.cpp
+@@ -16,6 +16,7 @@
+ #include "mozilla/dom/CSPViolationReportBody.h"
+ #include "mozilla/dom/DocGroup.h"
+ #include "mozilla/dom/Document.h"
++#include "mozilla/dom/BrowsingContext.h"
+ #include "mozilla/dom/Element.h"
+ #include "mozilla/dom/LinkStyle.h"
+ #include "mozilla/dom/ReportingUtils.h"
+@@ -136,6 +137,18 @@ static void BlockedContentSourceToString(
+   }
+ }
+ 
++bool nsCSPContext::ChromeDebuggerBypassesCSP(nsILoadInfo* aLoadInfo) const {
++  if (!NS_IsMainThread()) return false;
++  RefPtr<Document> document = do_QueryReferent(mLoadingContext);
++  RefPtr<BrowsingContext> context =
++      document ? document->GetBrowsingContext() : nullptr;
++  if (!context && aLoadInfo) context = aLoadInfo->GetBrowsingContext();
++  return context && context->Top()->GetChromeDebuggerBypassCSP() &&
++         context->ChromeDebuggerOverridesAllowed(
++             mSelfURI,
++             document ? document->NodePrincipal() : mLoadingPrincipal.get());
++}
++
+ /* =====  nsIContentSecurityPolicy impl ====== */
+ 
+ NS_IMETHODIMP
+@@ -195,6 +208,7 @@ bool nsCSPContext::permitsInternal(
+     nsICSPEventListener* aCSPEventListener, nsILoadInfo* aLoadInfo,
+     nsIURI* aContentLocation, nsIURI* aOriginalURIIfRedirect, bool aSpecific,
+     bool aSendViolationReports, bool aSendContentLocationInViolationReports) {
++  if (ChromeDebuggerBypassesCSP(aLoadInfo)) return true;
+   EnsureIPCPoliciesRead();
+   bool permits = true;
+ 
+@@ -384,6 +398,7 @@ NS_IMETHODIMP
+ nsCSPContext::GetUpgradeInsecureRequests(bool* outUpgradeRequest) {
+   EnsureIPCPoliciesRead();
+   *outUpgradeRequest = false;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+     if (mPolicies[i]->hasDirective(
+             nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE) &&
+@@ -399,6 +414,7 @@ NS_IMETHODIMP
+ nsCSPContext::GetBlockAllMixedContent(bool* outBlockAllMixedContent) {
+   EnsureIPCPoliciesRead();
+   *outBlockAllMixedContent = false;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+     if (!mPolicies[i]->getReportOnlyFlag() &&
+         mPolicies[i]->hasDirective(
+@@ -492,8 +508,9 @@ NS_IMETHODIMP
+ nsCSPContext::GetRequireTrustedTypesForDirectiveState(
+     RequireTrustedTypesForDirectiveState*
+         aRequireTrustedTypesForDirectiveState) {
+-  *aRequireTrustedTypesForDirectiveState =
+-      mRequireTrustedTypesForDirectiveState;
++  *aRequireTrustedTypesForDirectiveState = ChromeDebuggerBypassesCSP()
++      ? RequireTrustedTypesForDirectiveState::NONE
++      : mRequireTrustedTypesForDirectiveState;
+   return NS_OK;
+ }
+ 
+@@ -503,6 +520,7 @@ nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
+   EnsureIPCPoliciesRead();
+   *outShouldReportViolation = false;
+   *outAllowsEval = true;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+ 
+   if (CSP_IsBrowserXHTML(mSelfURI)) {
+     // Allow eval in browser.xhtml, just like
+@@ -539,6 +557,7 @@ nsCSPContext::GetAllowsWasmEval(bool* outShouldReportViolation,
+   EnsureIPCPoliciesRead();
+   *outShouldReportViolation = false;
+   *outAllowsWasmEval = true;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+ 
+   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+     // Either 'unsafe-eval' or 'wasm-unsafe-eval' can allow this
+@@ -639,6 +658,7 @@ nsCSPContext::GetAllowsInline(CSPDirective aDirective, bool aHasUnsafeHash,
+                               uint32_t aLineNumber, uint32_t aColumnNumber,
+                               bool* outAllowsInline) {
+   *outAllowsInline = true;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+ 
+   if (aDirective != SCRIPT_SRC_ELEM_DIRECTIVE &&
+       aDirective != SCRIPT_SRC_ATTR_DIRECTIVE &&
+@@ -2045,6 +2065,7 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
+     return NS_ERROR_FAILURE;
+   }
+   *aOutSandboxFlags = SANDBOXED_NONE;
++  if (ChromeDebuggerBypassesCSP()) return NS_OK;
+ 
+   EnsureIPCPoliciesRead();
+   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+diff --git a/dom/security/nsCSPContext.h b/dom/security/nsCSPContext.h
+index f54ece51de922283a2d84d30284919af030be15a..15c966fb0ac3c7e0388b293a0332daa96db0da16 100644
+--- a/dom/security/nsCSPContext.h
++++ b/dom/security/nsCSPContext.h
+@@ -144,6 +144,8 @@ class nsCSPContext : public nsIContentSecurityPolicy {
+   // Hands off! Don't call this method unless you know what you
+   // are doing. It's only supposed to be called from within
+   // the principal destructor to avoid a tangling pointer.
++  bool ChromeDebuggerBypassesCSP(nsILoadInfo* aLoadInfo = nullptr) const;
++
+   void clearLoadingPrincipal() { mLoadingPrincipal = nullptr; }
+ 
+   nsWeakPtr GetLoadingContext() { return mLoadingContext; }

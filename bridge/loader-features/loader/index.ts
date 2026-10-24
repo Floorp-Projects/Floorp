@@ -13,6 +13,7 @@ import { initI18NForBrowserChrome } from "#i18n/config-browser-chrome.ts";
 import { isWebPanelChildWindow } from "#features-chrome/common/panel-sidebar/utils/web-panel-context.ts";
 
 import { MODULES, MODULES_KEYS } from "./modules.ts";
+import type { BrowserStartupWindow } from "./browser-window-startup-types.ts";
 import {
   _registerModuleLoadState,
   _rejectOtherLoadStates,
@@ -124,8 +125,49 @@ async function loadEnabledModules(
   return results.filter((m): m is LoaderModule => m !== null);
 }
 
+// SessionStore initialization is process-wide; later browser windows still need
+// their own native startup before normal feature constructors can use gBrowser.
+async function waitForBrowserWindowStartup(
+  browserWindow: BrowserStartupWindow,
+): Promise<boolean> {
+  const topic = "browser-delayed-startup-finished";
+  const ready = () =>
+    Boolean(browserWindow.gBrowserInit?.delayedStartupFinished);
+  if (browserWindow.closed) return false;
+  if (ready()) return true;
+
+  let registered = false;
+  let observer: { observe(subject: unknown, observedTopic: string): void };
+  let onUnload: () => void;
+  try {
+    return await new Promise<boolean>((resolve) => {
+      onUnload = () => resolve(false);
+      observer = {
+        observe(subject, observedTopic) {
+          if (
+            observedTopic === topic && subject === browserWindow && ready()
+          ) resolve(!browserWindow.closed);
+        },
+      };
+      browserWindow.addEventListener("unload", onUnload, { once: true });
+      Services.obs.addObserver(observer, topic);
+      registered = true;
+      // Cover startup or closure between the initial check and registration.
+      if (browserWindow.closed) resolve(false);
+      else if (ready()) resolve(true);
+    });
+  } finally {
+    try {
+      if (registered) Services.obs.removeObserver(observer!, topic);
+    } finally {
+      browserWindow.removeEventListener("unload", onUnload!);
+    }
+  }
+}
+
 async function initializeModules(modules: LoaderModule[]) {
   const isWebPanelChild = isWebPanelChildWindow();
+  const browserWindow = window as BrowserStartupWindow;
 
   for (const module of modules) {
     try {
@@ -141,12 +183,17 @@ async function initializeModules(modules: LoaderModule[]) {
   if (!isWebPanelChild) {
     // @ts-expect-error SessionStore type not defined
     await SessionStore.promiseInitialized;
+    if (!(await waitForBrowserWindowStartup(browserWindow))) {
+      return;
+    }
   }
 
   for (const module of modules) {
+    if (browserWindow.closed) return;
     try {
       if (module?.init) {
         await module.init();
+        if (browserWindow.closed) return;
       }
       if (module?.default) {
         new module.default();

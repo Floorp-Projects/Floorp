@@ -1,0 +1,268 @@
+diff --git a/gfx/src/nsFontMetrics.cpp b/gfx/src/nsFontMetrics.cpp
+index 3f329cf..0daf008 100644
+--- a/gfx/src/nsFontMetrics.cpp
++++ b/gfx/src/nsFontMetrics.cpp
+@@ -149,9 +149,10 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
+   aFont.AddFontVariationsToStyle(&style);
+ 
+   gfxFloat devToCssSize = gfxFloat(mP2A) / gfxFloat(AppUnitsPerCSSPixel());
+-  mFontGroup = new gfxFontGroup(
+-      mPresContext, aFont.family.families, &style, mLanguage, mExplicitLanguage,
+-      aParams.textPerf, aParams.userFontSet, devToCssSize, aFont.variantEmoji);
++  mFontGroup = new gfxFontGroup(mPresContext, aFont.family.families, &style,
++                                mLanguage, mExplicitLanguage, aParams.textPerf,
++                                aParams.userFontSet, devToCssSize,
++                                aFont.variantEmoji, aFont.family.is_initial);
+ }
+ 
+ nsFontMetrics::~nsFontMetrics() {
+diff --git a/gfx/thebes/gfxPlatformFontList.cpp b/gfx/thebes/gfxPlatformFontList.cpp
+index cabecff..1826b1a 100644
+--- a/gfx/thebes/gfxPlatformFontList.cpp
++++ b/gfx/thebes/gfxPlatformFontList.cpp
+@@ -188,6 +188,7 @@ class gfxFontListPrefObserver final : public nsIObserver {
+ };
+ 
+ static void FontListPrefChanged(const char* aPref, void* aData = nullptr) {
++  gfxFontGroup::UpdateChromeFontPreferences();
+   // XXX this could be made to only clear out the cache for the prefs that were
+   // changed but it probably isn't that big a deal.
+   gfxPlatformFontList::PlatformFontList()->ClearLangGroupPrefFonts();
+@@ -329,6 +330,7 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
+   NS_ADDREF(gFontListPrefObserver);
+ 
+   Preferences::RegisterPrefixCallbacks(FontListPrefChanged, kObservedPrefs);
++  gfxFontGroup::UpdateChromeFontPreferences();
+ 
+   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+   if (obs) {
+diff --git a/gfx/thebes/gfxTextRun.cpp b/gfx/thebes/gfxTextRun.cpp
+index 39153aa..379de54 100644
+--- a/gfx/thebes/gfxTextRun.cpp
++++ b/gfx/thebes/gfxTextRun.cpp
+@@ -14,9 +14,12 @@
+ #include "gfxHarfBuzzShaper.h"
+ #include "gfxPlatformFontList.h"
+ #include "gfxUserFontSet.h"
++#include "mozilla/Atomics.h"
+ #include "mozilla/ClearOnShutdown.h"
++#include "mozilla/RWLock.h"
+ #include "mozilla/Likely.h"
+ #include "mozilla/MruCache.h"
++#include "mozilla/Preferences.h"
+ #include "mozilla/ServoStyleSet.h"
+ #include "mozilla/Sprintf.h"
+ #include "mozilla/StaticPresData.h"
+@@ -30,6 +33,7 @@
+ #include "mozilla/intl/String.h"
+ #include "mozilla/intl/UnicodeProperties.h"
+ #include "nsLayoutUtils.h"
++#include "nsReadableUtils.h"
+ #include "nsStyleConsts.h"
+ #include "nsStyleUtil.h"
+ #include "nsUnicodeProperties.h"
+@@ -1856,11 +1860,14 @@ gfxFontGroup::gfxFontGroup(FontVisibilityProvider* aFontVisibilityProvider,
+                            bool aExplicitLanguage,
+                            gfxTextPerfMetrics* aTextPerf,
+                            gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize,
+-                           StyleFontVariantEmoji aVariantEmoji)
++                           StyleFontVariantEmoji aVariantEmoji,
++                           bool aIsInitialFont, bool aChromeOverridesApplied)
+     : mFontVisibilityProvider(
+           aFontVisibilityProvider),  // Note that mFontVisibilityProvider may be
+                                      // null!
+       mFamilyList(aFontFamilyList),
++      mIsInitialFont(aIsInitialFont),
++      mChromeOverridesApplied(aChromeOverridesApplied),
+       mStyle(*aStyle),
+       mLanguage(aLanguage),
+       mDevToCssSize(aDevToCssSize),
+@@ -3589,6 +3596,107 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
+   return candidateFont.forget();
+ }
+ 
++static StaticRWLock sChromeFontConfigLock;
++static UniquePtr<nsTHashMap<nsCStringHashKey, nsCString>> sChromeFontConfig;
++static Atomic<bool, Relaxed> sChromeFontConfigEnabled(false);
++
++void gfxFontGroup::UpdateChromeFontPreferences() {
++  MOZ_ASSERT(NS_IsMainThread());
++  auto config = MakeUnique<nsTHashMap<nsCStringHashKey, nsCString>>();
++  nsTArray<nsCString> prefs;
++  Preferences::GetRootBranch()->GetChildList("font.chrome.", prefs);
++  for (const auto& pref : prefs) {
++    nsAutoCString value;
++    if (NS_SUCCEEDED(Preferences::GetCString(pref.get(), value)) &&
++        !value.IsEmpty()) {
++      config->InsertOrUpdate(pref, value);
++    }
++  }
++  StaticAutoWriteLock lock(sChromeFontConfigLock);
++  if (!sChromeFontConfig) {
++    ClearOnShutdown(&sChromeFontConfig);
++  }
++  sChromeFontConfig = std::move(config);
++  sChromeFontConfigEnabled = !sChromeFontConfig->IsEmpty();
++}
++
++static nsCString ChromeScriptFont(Script aScript, const char* aGeneric,
++                                  nsAtom* aLanguage) {
++  uint32_t tag = GetScriptTagForCode(aScript);
++  char code[] = {char(tag >> 24), char(tag >> 16), char(tag >> 8), char(tag),
++                 0};
++  if (code[0] >= 'a' && code[0] <= 'z') {
++    code[0] -= 'a' - 'A';
++  }
++  nsAutoCString language;
++  if (aLanguage) {
++    aLanguage->ToUTF8String(language);
++  }
++  ToLowerCase(language);
++  const char* composite = nullptr;
++  if (aScript == Script::HAN) {
++    if (StringBeginsWith(language, "ja"_ns)) {
++      composite = "Jpan";
++    } else if (StringBeginsWith(language, "ko"_ns)) {
++      composite = "Hang";
++    } else if (StringBeginsWith(language, "zh"_ns)) {
++      composite = language.Find("tw") >= 0 || language.Find("hk") >= 0 ||
++                          language.Find("hant") >= 0
++                      ? "Hant"
++                      : "Hans";
++    }
++  } else if (aScript == Script::HIRAGANA || aScript == Script::KATAKANA) {
++    composite = "Jpan";
++  }
++  nsAutoCString prefix("font.chrome.");
++  prefix.Append(aGeneric);
++  prefix.Append('.');
++  nsAutoCString name;
++  nsAutoCString pref;
++  StaticAutoReadLock lock(sChromeFontConfigLock);
++  if (!sChromeFontConfig) {
++    return name;
++  }
++  const auto lookup = [&](const nsACString& key) {
++    auto entry = sChromeFontConfig->Lookup(key);
++    if (entry) {
++      name = entry.Data();
++    }
++  };
++  if (composite) {
++    pref = prefix + nsDependentCString(composite);
++    lookup(pref);
++  }
++  if (name.IsEmpty()) {
++    pref = prefix + nsDependentCString(code);
++    lookup(pref);
++  }
++  if (name.IsEmpty()) {
++    pref = prefix + "Zyyy"_ns;
++    lookup(pref);
++  }
++  return name;
++}
++
++static const char* ChromeGenericName(StyleGenericFontFamily aGeneric) {
++  switch (aGeneric) {
++    case StyleGenericFontFamily::Serif:
++      return "serif";
++    case StyleGenericFontFamily::SansSerif:
++      return "sansserif";
++    case StyleGenericFontFamily::Monospace:
++      return "fixed";
++    case StyleGenericFontFamily::Cursive:
++      return "cursive";
++    case StyleGenericFontFamily::Fantasy:
++      return "fantasy";
++    case StyleGenericFontFamily::Math:
++      return "math";
++    default:
++      return nullptr;
++  }
++}
++
+ template <typename T>
+ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
+                                  uint32_t aLength, Script aRunScript,
+@@ -3596,6 +3704,37 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
+   MOZ_ASSERT(aRanges.IsEmpty(), "aRanges must be initially empty");
+   MOZ_ASSERT(aLength > 0, "don't call ComputeRanges for zero-length text");
+ 
++  if (!mChromeOverridesApplied && sChromeFontConfigEnabled) {
++    nsTArray<StyleSingleFontFamily> families;
++    bool changed = false;
++    for (const auto& family : mFamilyList.list.AsSpan()) {
++      if (family.IsGeneric()) {
++        const char* generic =
++            mIsInitialFont ? "standard" : ChromeGenericName(family.AsGeneric());
++        if (generic) {
++          nsCString name = ChromeScriptFont(aRunScript, generic, mLanguage);
++          if (!name.IsEmpty()) {
++            families.AppendElement(StyleSingleFontFamily::FamilyName(
++                StyleFamilyName{StyleAtom(NS_Atomize(name)),
++                                StyleFontFamilyNameSyntax::Quoted}));
++            changed = true;
++          }
++        }
++      }
++      families.AppendElement(family);
++    }
++    if (changed) {
++      RefPtr<gfxFontGroup> group = new gfxFontGroup(
++          mFontVisibilityProvider,
++          StyleFontFamilyList::WithNames(std::move(families)), &mStyle,
++          mLanguage, mExplicitLanguage, mTextPerf, mUserFontSet, mDevToCssSize,
++          mFontVariantEmoji, mIsInitialFont, true);
++      group->EnsureFontList();
++      group->ComputeRanges(aRanges, aString, aLength, aRunScript, aOrientation);
++      return;
++    }
++  }
++
+   const uint32_t maxIndex = aLength - 1;  // max valid index into aString
+ 
+   uint32_t prevCh = 0;
+diff --git a/gfx/thebes/gfxTextRun.h b/gfx/thebes/gfxTextRun.h
+index 75f380c..d772df9 100644
+--- a/gfx/thebes/gfxTextRun.h
++++ b/gfx/thebes/gfxTextRun.h
+@@ -922,6 +922,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
+   friend class nsCaseTransformTextRunFactory;
+   friend class gfxPlatformFontList;
+ 
++  static void UpdateChromeFontPreferences();
++
+   static void
+   Shutdown();  // platform must call this to release the languageAtomService
+ 
+@@ -930,7 +932,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
+                const gfxFontStyle* aStyle, nsAtom* aLanguage,
+                bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
+                gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize,
+-               mozilla::StyleFontVariantEmoji aVariantEmoji);
++               mozilla::StyleFontVariantEmoji aVariantEmoji,
++               bool aIsInitialFont = false,
++               bool aChromeOverridesApplied = false);
+ 
+   virtual ~gfxFontGroup();
+ 
+@@ -1386,6 +1390,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
+   // List of font families, either named or generic.
+   // Generic names map to system pref fonts based on language.
+   mozilla::StyleFontFamilyList mFamilyList;
++  bool mIsInitialFont = false;
++  bool mChromeOverridesApplied = false;
+ 
+   // Fontlist containing a font entry for each family found. gfxFont objects
+   // are created as needed and userfont loads are initiated when needed.
+diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
+index c31bb3d..07e0308 100644
+--- a/modules/libpref/init/all.js
++++ b/modules/libpref/init/all.js
+@@ -4244,3 +4244,5 @@ pref("general.smoothScroll", true, sticky);
+ #ifdef MOZ_ARTIFACT_BUILDS
+   pref("telemetry.fog.artifact_build", true);
+ #endif
++
++pref("floorp.chrome.fontSettings.native", true);

@@ -21,8 +21,8 @@ import type { CRXHeader } from "./types.ts";
 // Constants
 // =============================================================================
 
-/** Minimum size for a valid CRX file (header only) */
-const MIN_CRX_SIZE = 16;
+/** Minimum fixed header size (CRX3; CRX2 requires four more bytes). */
+const MIN_CRX_SIZE = 12;
 
 /** Minimum size for ZIP data */
 const MIN_ZIP_SIZE = 4;
@@ -90,7 +90,8 @@ export function extractZipFromCRX(crxData: ArrayBuffer): ArrayBuffer | null {
 }
 
 /**
- * Verify if data is a valid CRX file
+ * Check CRX header structure only. This does not authenticate the package;
+ * installation must use verifyCRX from CRXVerifier.sys.mts.
  * @param data - Data to verify
  * @returns true if data is a valid CRX file
  */
@@ -118,10 +119,16 @@ function readMagicNumber(view: DataView): string {
  * Parse CRX2 format header
  * Format: [magic(4)][version(4)][pubkeyLen(4)][sigLen(4)][pubkey][sig][zip]
  */
-function parseCRX2Header(view: DataView): CRXHeader {
+function parseCRX2Header(view: DataView): CRXHeader | null {
+  if (view.byteLength < 16) {
+    return null;
+  }
   const publicKeyLength = view.getUint32(8, true);
   const signatureLength = view.getUint32(12, true);
   const zipOffset = 16 + publicKeyLength + signatureLength;
+  if (zipOffset > view.byteLength) {
+    return null;
+  }
 
   return {
     version: 2,
@@ -135,9 +142,12 @@ function parseCRX2Header(view: DataView): CRXHeader {
  * Parse CRX3 format header
  * Format: [magic(4)][version(4)][headerLen(4)][header protobuf][zip]
  */
-function parseCRX3Header(view: DataView): CRXHeader {
+function parseCRX3Header(view: DataView): CRXHeader | null {
   const headerLength = view.getUint32(8, true);
   const zipOffset = 12 + headerLength;
+  if (zipOffset > view.byteLength) {
+    return null;
+  }
 
   return {
     version: 3,

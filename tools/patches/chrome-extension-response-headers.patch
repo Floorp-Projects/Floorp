@@ -1,0 +1,701 @@
+diff --git a/modules/ExtensionDNR.sys.mjs b/modules/ExtensionDNR.sys.mjs
+index 9a55f12..4cb61ba 100644
+--- a/modules/ExtensionDNR.sys.mjs
++++ b/modules/ExtensionDNR.sys.mjs
+@@ -39,8 +39,7 @@ function getChromeMatchedRules(extension, filter = {}) {
+   return rules.filter(
+     info =>
+       (filter.tabId == null || info.tabId === filter.tabId) &&
+-      (filter.minTimeStamp == null ||
+-        info.timeStamp >= filter.minTimeStamp)
++      (filter.minTimeStamp == null || info.timeStamp >= filter.minTimeStamp)
+   );
+ }
+ function recordChromeMatchedRules(channel, matches) {
+@@ -181,6 +180,142 @@ const PRECEDENCE_SESSION_RULESET = 1;
+ const PRECEDENCE_DYNAMIC_RULESET = 2;
+ const PRECEDENCE_STATIC_RULESETS_BASE = 3;
+ 
++// Chromium155 HeaderInfo uses ASCII-insensitive glob matching. '?' matches zero
++// or one code point; backslash escapes the next code point. Like Chromium's
++// base::MatchPattern, consume literal segments left-to-right without retrying
++// earlier segments. A RegExp/backtracking glob would accept different values.
++const gChromeHeaderPatterns = new WeakMap();
++function chromeHeaderPatternMatches(value, pattern, condition) {
++  const lowerASCII = text => text.replace(/[A-Z]/g, c => c.toLowerCase());
++  let cache = gChromeHeaderPatterns.get(condition);
++  if (!cache) {
++    cache = new Map();
++    gChromeHeaderPatterns.set(condition, cache);
++  }
++  let tokens = cache.get(pattern);
++  if (!tokens) {
++    tokens = [];
++    const input = Array.from(lowerASCII(pattern));
++    for (let i = 0; i < input.length; ++i) {
++      const character = input[i];
++      if (character === "\\") {
++        if (++i < input.length) tokens.push({ literal: input[i] });
++      } else if (character === "*" || character === "?") {
++        tokens.push(character);
++      } else {
++        tokens.push({ literal: character });
++      }
++    }
++    // Cache only for the lifetime of this registered HeaderInfo condition.
++    cache.set(pattern, tokens);
++  }
++  const characters = Array.from(lowerASCII(value));
++  let position = 0;
++  let index = 0;
++  do {
++    let distance = 0;
++    while (index < tokens.length && typeof tokens[index] === "string") {
++      if (tokens[index] === "*") distance = Infinity;
++      else if (distance !== Infinity) ++distance;
++      ++index;
++    }
++    const literal = [];
++    while (index < tokens.length && typeof tokens[index] !== "string") {
++      literal.push(tokens[index++].literal);
++    }
++    const final = index === tokens.length;
++    const maximum = Math.min(
++      distance,
++      characters.length - position - literal.length
++    );
++    let offset = final ? characters.length - position - literal.length : 0;
++    let found = false;
++    for (; offset >= 0 && offset <= maximum; ++offset) {
++      if (
++        literal.every(
++          (character, i) => character === characters[position + offset + i]
++        )
++      ) {
++        position += offset + literal.length;
++        found = true;
++        break;
++      }
++      if (final) break;
++    }
++    if (!found) return false;
++  } while (index < tokens.length);
++  return true;
++}
++
++const CHROME_NON_COALESCING_HEADERS = new Set([
++  "date",
++  "expires",
++  "last-modified",
++  "location",
++  "retry-after",
++  "set-cookie",
++  "www-authenticate",
++  "proxy-authenticate",
++  "strict-transport-security",
++]);
++function chromeResponseHeaderValues(headers, name) {
++  name = name.toLowerCase();
++  const values = [];
++  for (const header of headers) {
++    if (header.name.toLowerCase() !== name) continue;
++    const value = header.value;
++    if (CHROME_NON_COALESCING_HEADERS.has(name)) {
++      values.push(value);
++      continue;
++    }
++    let quoted = false;
++    let escaped = false;
++    let start = 0;
++    for (let i = 0; i <= value.length; ++i) {
++      const character = value[i];
++      if (i === value.length || (character === "," && !quoted)) {
++        values.push(value.slice(start, i).replace(/^[\t ]+|[\t ]+$/g, ""));
++        start = i + 1;
++      } else if (escaped) {
++        escaped = false;
++      } else if (character === "\\" && quoted) {
++        escaped = true;
++      } else if (character === '"') {
++        quoted = !quoted;
++      }
++    }
++  }
++  return values;
++}
++function chromeHeaderConditionsMatch(headers, conditions) {
++  return conditions.some(condition => {
++    const values = chromeResponseHeaderValues(headers, condition.header);
++    if (!values.length) return false;
++    const matches = pattern =>
++      values.some(value =>
++        chromeHeaderPatternMatches(value, pattern, condition)
++      );
++    return (
++      !condition.excludedValues?.some(matches) &&
++      (!condition.values?.length || condition.values.some(matches))
++    );
++  });
++}
++function originalChromeResponseHeaders(channel) {
++  if (!channel) return undefined;
++  try {
++    const headers = [];
++    channel.QueryInterface(Ci.nsIHttpChannel).visitOriginalResponseHeaders({
++      visitHeader(name, value) {
++        headers.push({ name, value });
++      },
++    });
++    return headers;
++  } catch {
++    return undefined;
++  }
++}
++
+ // The RuleCondition class represents a rule's "condition" type as described in
+ // schemas/declarative_net_request.json. This class exists to allow the JS
+ // engine to use one Shape for all Rule instances.
+@@ -203,6 +338,12 @@ class RuleCondition {
+     this.domainType = cond.domainType;
+     this.tabIds = cond.tabIds;
+     this.excludedTabIds = cond.excludedTabIds;
++    this.responseHeaders = cond.responseHeaders;
++    this.excludedResponseHeaders = cond.excludedResponseHeaders;
++  }
++
++  get hasResponseHeaders() {
++    return !!(this.responseHeaders || this.excludedResponseHeaders);
+   }
+ 
+   // See CompiledUrlFilter for documentation.
+@@ -1047,6 +1188,7 @@ class RuleValidator {
+         !this.#checkCondRequestMethods(rule) ||
+         !this.#checkCondTabIds(rule) ||
+         !this.#checkCondUrlFilterAndRegexFilter(rule) ||
++        !this.#checkCondResponseHeaders(rule) ||
+         !this.#checkAction(rule)
+       ) {
+         continue;
+@@ -1068,6 +1210,46 @@ class RuleValidator {
+   // is constructed, we temporarily cache the result.
+   #lastCompiledRegexFilter;
+ 
++  #checkCondResponseHeaders(rule) {
++    const { responseHeaders, excludedResponseHeaders } = rule.condition;
++    if (!responseHeaders && !excludedResponseHeaders) return true;
++    const reject = message => {
++      this.#collectInvalidRule(rule, message);
++      return false;
++    };
++    if (!ExtensionUtils.getChromeExtensionId(this.extension)) {
++      return reject("response header conditions require Chrome compatibility");
++    }
++    if (rule.action.requestHeaders) {
++      return reject("Response header conditions cannot modify request headers");
++    }
++    for (const list of [responseHeaders, excludedResponseHeaders]) {
++      if (list && !list.length)
++        return reject("Response header condition list must not be empty");
++      for (const info of list ?? []) {
++        if (!/^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/.test(info.header)) {
++          return reject("Invalid response header condition name");
++        }
++        for (const pattern of [
++          ...(info.values ?? []),
++          ...(info.excludedValues ?? []),
++        ]) {
++          if (/[\r\n\0]/.test(pattern))
++            return reject("Invalid response header condition value");
++        }
++      }
++    }
++    const names = new Set(responseHeaders?.map(info => info.header));
++    for (const info of excludedResponseHeaders ?? []) {
++      if (!info.values && !info.excludedValues && names.has(info.header)) {
++        return reject(
++          "A response header cannot be required and excluded by name"
++        );
++      }
++    }
++    return true;
++  }
++
+   // Checks: resourceTypes & excludedResourceTypes
+   #checkCondResourceTypes(rule) {
+     const { resourceTypes, excludedResourceTypes } = rule.condition;
+@@ -1551,6 +1733,8 @@ class RequestDetails {
+     this.method = method;
+     this.tabId = tabId;
+     this.browsingContext = browsingContext;
++    this.responseHeaders = undefined;
++    this.responseStage = false;
+ 
+     let requestDomain = this.#domainFromURI(requestURI);
+     let initiatorDomain = initiatorURI
+@@ -1669,6 +1853,9 @@ class RequestDetails {
+         // but be derived from unnecessarily repeated request evaluations.
+         browsingContext: null,
+       });
++      requestDetails.responseHeaders = originalChromeResponseHeaders(
++        bc.currentWindowGlobal?.documentChannel
++      );
+       this.#ancestorRequestDetails.unshift(requestDetails);
+     }
+     return this.#ancestorRequestDetails;
+@@ -1752,8 +1939,17 @@ class RequestEvaluator {
+     this.canModify = request.canExtensionModify(ruleManager.extension);
+ 
+     // These values are initialized by findMatchingRules():
+-    this.matchedRule = null;
+-    this.matchedModifyHeadersRules = [];
++    const earlier = request.responseStage
++      ? (request.previousMatches?.filter(
++          match => match.ruleManager === ruleManager
++        ) ?? [])
++      : [];
++    this.matchedRule =
++      earlier.find(match => match.rule.isAllowOrAllowAllRequestsAction()) ??
++      null;
++    this.matchedModifyHeadersRules = earlier.filter(
++      match => match.rule.action.type === "modifyHeaders"
++    );
+     this.didCheckAncestors = false;
+     this.findMatchingRules();
+   }
+@@ -1976,6 +2172,8 @@ class RequestEvaluator {
+       if (ruleset.disabledRuleIds?.has(rule.id)) {
+         continue;
+       }
++      if (this.req.responseStage && !rule.condition.hasResponseHeaders)
++        continue;
+       if (!this.#matchesRuleCondition(rule.condition)) {
+         continue;
+       }
+@@ -2005,6 +2203,20 @@ class RequestEvaluator {
+    * @returns {boolean} Whether the condition matched.
+    */
+   #matchesRuleCondition(cond) {
++    if (cond.hasResponseHeaders) {
++      const headers = this.req.responseHeaders;
++      if (!headers) return false;
++      if (
++        cond.excludedResponseHeaders &&
++        chromeHeaderConditionsMatch(headers, cond.excludedResponseHeaders)
++      )
++        return false;
++      if (
++        cond.responseHeaders &&
++        !chromeHeaderConditionsMatch(headers, cond.responseHeaders)
++      )
++        return false;
++    }
+     if (cond.resourceTypes) {
+       if (!cond.resourceTypes.includes(this.req.type)) {
+         return false;
+@@ -2224,6 +2436,10 @@ const NetworkIntegration = {
+         );
+       }
+     }
++    channel._dnrChromeResponseManagers = ruleManagers.filter(rm =>
++      ExtensionUtils.getChromeExtensionId(rm.extension)
++    );
++    channel._dnrChromeResponseAction = null;
+     let matchedRules;
+     if (ruleManagers.length) {
+       const evaluateRulesTimerId =
+@@ -2300,6 +2516,45 @@ const NetworkIntegration = {
+   },
+ 
+   onHeadersReceived(channel) {
++    const managers = channel._dnrChromeResponseManagers?.filter(
++      rm =>
++        !rm.extension.hasShutdown &&
++        gRuleManagers.includes(rm) &&
++        rm.hasRulesWithResponseHeaders &&
++        (!channel.loadInfo.originAttributes.privateBrowsingId ||
++          rm.extension.privateBrowsingAllowed)
++    );
++    if (channel.canModify && managers?.length) {
++      const request = RequestDetails.fromChannelWrapper(channel);
++      request.responseHeaders = originalChromeResponseHeaders(channel.channel);
++      request.responseStage = true;
++      request.previousMatches = channel._dnrMatchedRules ?? [];
++      const responseMatches = RequestEvaluator.evaluateRequest(
++        request,
++        managers
++      );
++      const first = responseMatches[0];
++      if (
++        first &&
++        ["block", "redirect", "upgradeScheme"].includes(first.rule.action.type)
++      ) {
++        channel._dnrChromeResponseAction = first;
++        recordChromeMatchedRules(channel, responseMatches);
++        return;
++      }
++      const retained = (channel._dnrMatchedRules ?? []).filter(
++        match => !managers.includes(match.ruleManager)
++      );
++      channel._dnrMatchedRules = [...retained, ...responseMatches].sort(
++        (a, b) =>
++          gRuleManagers.indexOf(a.ruleManager) -
++          gRuleManagers.indexOf(b.ruleManager)
++      );
++      recordChromeMatchedRules(
++        channel,
++        responseMatches.filter(match => match.rule.condition.hasResponseHeaders)
++      );
++    }
+     let matchedRules = channel._dnrMatchedRules;
+     if (!matchedRules?.length) {
+       return;
+@@ -2307,6 +2562,29 @@ const NetworkIntegration = {
+     ModifyResponseHeaders.maybeApplyModifyHeaders(channel, matchedRules);
+   },
+ 
++  applyChromeResponseAction(channel) {
++    const match = channel._dnrChromeResponseAction;
++    channel._dnrChromeResponseAction = null;
++    switch (match?.rule.action.type) {
++      case "block":
++        this.applyBlock(channel, match);
++        return true;
++      case "redirect":
++        this.applyRedirect(channel, match);
++        return true;
++      case "upgradeScheme":
++        if (!channel.finalURI.schemeIs("http")) return false;
++        channel.redirectTo(
++          channel.finalURI.mutate().setScheme("https").finalize()
++        );
++        channel.channel
++          .QueryInterface(Ci.nsIWritablePropertyBag)
++          .setProperty("redirectedByExtension", match.ruleManager.extension.id);
++        return true;
++    }
++    return false;
++  },
++
+   applyBlock(channel, matchedRule) {
+     // TODO bug 1802259: Consider a DNR-specific reason.
+     channel.cancel(
+@@ -2430,6 +2708,7 @@ class RuleManager {
+     this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
+     this.hasRulesWithTabIds = false;
+     this.hasRulesWithAllowAllRequests = false;
++    this.hasRulesWithResponseHeaders = false;
+     this.totalRulesCount = 0;
+   }
+ 
+@@ -2565,6 +2844,13 @@ class RuleManager {
+   }
+ 
+   #updateAllowAllRequestRules() {
++    this.hasRulesWithResponseHeaders = [
++      this.sessionRules,
++      this.dynamicRules,
++      ...this.enabledStaticRules,
++    ].some(ruleset =>
++      ruleset.rules.some(rule => rule.condition.hasResponseHeaders)
++    );
+     const filterAAR = rule => rule.action.type === "allowAllRequests";
+     this.hasRulesWithAllowAllRequests =
+       this.sessionRules.rules.some(filterAAR) ||
+@@ -2650,6 +2936,22 @@ function getMatchedRulesForRequest(request, extension) {
+     const extUuid = initiatorURI.host;
+     ruleManagers = ruleManagers.filter(rm => rm.extension.uuid === extUuid);
+   }
++  const matches = RequestEvaluator.evaluateRequest(
++    requestDetails,
++    ruleManagers
++  );
++  if (
++    !ExtensionUtils.getChromeExtensionId(extension) ||
++    matches.some(match =>
++      ["block", "redirect", "upgradeScheme"].includes(match.rule.action.type)
++    )
++  )
++    return matches;
++  requestDetails.responseHeaders = Object.entries(
++    request.responseHeaders ?? {}
++  ).flatMap(([name, values]) => values.map(value => ({ name, value })));
++  requestDetails.responseStage = true;
++  requestDetails.previousMatches = matches;
+   return RequestEvaluator.evaluateRequest(requestDetails, ruleManagers);
+ }
+ 
+@@ -2690,6 +2992,8 @@ function handleRequest(channel, kind) {
+     if (kind === "onBeforeRequest") {
+       return NetworkIntegration.onBeforeRequest(channel);
+     }
++    if (kind === "onHeadersReceived")
++      return NetworkIntegration.applyChromeResponseAction(channel);
+   } catch (e) {
+     Cu.reportError(e);
+   }
+diff --git a/chrome/toolkit/content/extensions/parent/ext-declarativeNetRequest.js b/chrome/toolkit/content/extensions/parent/ext-declarativeNetRequest.js
+index 3bc5916..cbe5c60 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-declarativeNetRequest.js
++++ b/chrome/toolkit/content/extensions/parent/ext-declarativeNetRequest.js
+@@ -58,6 +58,14 @@ this.declarativeNetRequest = class extends ExtensionAPIPersistent {
+ 
+   getAPI(context) {
+     const { extension } = this;
++    const exportedRules = rules =>
++      ExtensionUtils.getChromeExtensionId(extension)
++        ? JSON.parse(
++            JSON.stringify(rules, (_key, value) =>
++              value === null ? undefined : value
++            )
++          )
++        : rules;
+     const ensureChrome = () => {
+       if (!ExtensionUtils.getChromeExtensionId(extension))
+         throw new ExtensionError(
+@@ -160,8 +168,10 @@ this.declarativeNetRequest = class extends ExtensionAPIPersistent {
+ 
+         async getDynamicRules(details) {
+           await ExtensionDNR.ensureInitialized(extension);
+-          return ExtensionDNR.getRuleManager(extension).getDynamicRules(
+-            details?.ruleIds
++          return exportedRules(
++            ExtensionDNR.getRuleManager(extension).getDynamicRules(
++              details?.ruleIds
++            )
+           );
+         },
+ 
+@@ -170,8 +180,10 @@ this.declarativeNetRequest = class extends ExtensionAPIPersistent {
+           // When these are structurally cloned (to send them to the child),
+           // the enumerable public fields of the class instances are copied to
+           // plain objects, as desired.
+-          return ExtensionDNR.getRuleManager(extension).getSessionRules(
+-            details?.ruleIds
++          return exportedRules(
++            ExtensionDNR.getRuleManager(extension).getSessionRules(
++              details?.ruleIds
++            )
+           );
+         },
+ 
+@@ -228,6 +240,14 @@ this.declarativeNetRequest = class extends ExtensionAPIPersistent {
+               );
+           } else
+             ensureDNRFeedbackEnabled("declarativeNetRequest.testMatchOutcome");
++          if (
++            request.responseHeaders !== undefined &&
++            !ExtensionUtils.getChromeExtensionId(extension)
++          ) {
++            throw new ExtensionError(
++              "responseHeaders requires Chrome compatibility"
++            );
++          }
+           let { url, initiator, ...req } = request;
+           req.requestURI = Services.io.newURI(url);
+           if (initiator) {
+diff --git a/chrome/toolkit/content/extensions/schemas/declarative_net_request.json b/chrome/toolkit/content/extensions/schemas/declarative_net_request.json
+index 1a3320e..5a7c744 100644
+--- a/chrome/toolkit/content/extensions/schemas/declarative_net_request.json
++++ b/chrome/toolkit/content/extensions/schemas/declarative_net_request.json
+@@ -7,9 +7,7 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": [
+-              "declarativeNetRequest"
+-            ]
++            "enum": ["declarativeNetRequest"]
+           }
+         ]
+       },
+@@ -18,9 +16,7 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": [
+-              "declarativeNetRequestFeedback"
+-            ]
++            "enum": ["declarativeNetRequestFeedback"]
+           }
+         ]
+       },
+@@ -29,9 +25,7 @@
+         "choices": [
+           {
+             "type": "string",
+-            "enum": [
+-              "declarativeNetRequestWithHostAccess"
+-            ]
++            "enum": ["declarativeNetRequestWithHostAccess"]
+           }
+         ]
+       },
+@@ -116,10 +110,7 @@
+         "id": "UnsupportedRegexReason",
+         "type": "string",
+         "description": "Describes the reason why a given regular expression isn't supported.",
+-        "enum": [
+-          "syntaxError",
+-          "memoryLimitExceeded"
+-        ]
++        "enum": ["syntaxError", "memoryLimitExceeded"]
+       },
+       {
+         "id": "MatchedRule",
+@@ -149,11 +140,7 @@
+             "type": "string",
+             "optional": true,
+             "description": "The new scheme for the request.",
+-            "enum": [
+-              "http",
+-              "https",
+-              "moz-extension"
+-            ]
++            "enum": ["http", "https", "moz-extension"]
+           },
+           "username": {
+             "type": "string",
+@@ -229,6 +216,29 @@
+           }
+         }
+       },
++      {
++        "id": "HeaderInfo",
++        "type": "object",
++        "properties": {
++          "header": {
++            "type": "string"
++          },
++          "values": {
++            "type": "array",
++            "optional": true,
++            "items": {
++              "type": "string"
++            }
++          },
++          "excludedValues": {
++            "type": "array",
++            "optional": true,
++            "items": {
++              "type": "string"
++            }
++          }
++        }
++      },
+       {
+         "id": "Rule",
+         "type": "object",
+@@ -340,10 +350,7 @@
+                 "type": "string",
+                 "optional": true,
+                 "description": "Specifies whether the network request is first-party or third-party to the domain from which it originated. If omitted, all requests are matched.",
+-                "enum": [
+-                  "firstParty",
+-                  "thirdParty"
+-                ]
++                "enum": ["firstParty", "thirdParty"]
+               },
+               "tabIds": {
+                 "type": "array",
+@@ -361,6 +368,24 @@
+                 "items": {
+                   "type": "integer"
+                 }
++              },
++              "responseHeaders": {
++                "type": "array",
++                "optional": true,
++                "minItems": 1,
++                "items": {
++                  "$ref": "HeaderInfo"
++                },
++                "description": "Chrome compatibility: response header conditions evaluated after the server response is received."
++              },
++              "excludedResponseHeaders": {
++                "type": "array",
++                "optional": true,
++                "minItems": 1,
++                "items": {
++                  "$ref": "HeaderInfo"
++                },
++                "description": "Chrome compatibility: response header conditions evaluated after the server response is received."
+               }
+             }
+           },
+@@ -422,11 +447,7 @@
+                     "operation": {
+                       "type": "string",
+                       "description": "The operation to be performed on a header.",
+-                      "enum": [
+-                        "append",
+-                        "set",
+-                        "remove"
+-                      ]
++                      "enum": ["append", "set", "remove"]
+                     },
+                     "value": {
+                       "type": "string",
+@@ -451,11 +472,7 @@
+                     "operation": {
+                       "type": "string",
+                       "description": "The operation to be performed on a header.",
+-                      "enum": [
+-                        "append",
+-                        "set",
+-                        "remove"
+-                      ]
++                      "enum": ["append", "set", "remove"]
+                     },
+                     "value": {
+                       "type": "string",
+@@ -838,9 +855,7 @@
+         "name": "testMatchOutcome",
+         "type": "function",
+         "description": "Checks if any of the extension's declarativeNetRequest rules would match a hypothetical request.",
+-        "permissions": [
+-          "declarativeNetRequestFeedback"
+-        ],
++        "permissions": ["declarativeNetRequestFeedback"],
+         "async": "callback",
+         "parameters": [
+           {
+@@ -872,6 +887,16 @@
+                 "description": "The ID of the tab in which the hypothetical request takes place. Does not need to correspond to a real tab ID. Default is -1, meaning that the request isn't related to a tab.",
+                 "optional": true,
+                 "default": -1
++              },
++              "responseHeaders": {
++                "type": "object",
++                "optional": true,
++                "additionalProperties": {
++                  "type": "array",
++                  "items": {
++                    "type": "string"
++                  }
++                }
+               }
+             }
+           },
+@@ -912,10 +937,7 @@
+       {
+         "name": "getMatchedRules",
+         "type": "function",
+-        "permissions": [
+-          "declarativeNetRequestFeedback",
+-          "activeTab"
+-        ],
++        "permissions": ["declarativeNetRequestFeedback", "activeTab"],
+         "async": "callback",
+         "parameters": [
+           {
+@@ -1016,9 +1038,7 @@
+       {
+         "name": "onRuleMatchedDebug",
+         "type": "function",
+-        "permissions": [
+-          "declarativeNetRequestFeedback"
+-        ],
++        "permissions": ["declarativeNetRequestFeedback"],
+         "parameters": [
+           {
+             "name": "info",

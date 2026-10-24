@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>Authored native media operation</title>
+<style>body{font:18px sans-serif;margin:20px}#player{width:480px;padding:8px;background:#ddd}#movie_player{position:relative}video{width:480px;height:270px}button{padding:10px}.ytp-right-controls{height:35px}#top-level-buttons-computed{display:flex;gap:20px}ytd-watch-flexy{display:block}</style>
+<div id="title"><h1><yt-formatted-string class="ytd-watch-metadata">Authored native HTML video fixture</yt-formatted-string></h1></div>
+<p>This page supplies native media and authored metadata, with no browser API replacements.</p>
+<button id="play">Play authored video</button>
+<ytd-watch-flexy video-id="FloorpTest1"><div id="player" loading="false"><div id="movie_player">
+<video class="html5-main-video" src="/native.webm" controls muted preload="auto"></video>
+<div class="ytp-right-controls"><button class="ytp-settings-button">Player settings</button></div>
+</div></div>
+<div id="top-level-buttons-computed"><like-button-view-model><button aria-label="Like"><yt-formatted-string id="text">321</yt-formatted-string></button></like-button-view-model><dislike-button-view-model><button aria-label="Dislike"><yt-formatted-string id="text">Dislike</yt-formatted-string></button></dislike-button-view-model></div>
+</ytd-watch-flexy>
+<script>document.querySelector('#play').addEventListener('click',()=>document.querySelector('video').play());</script>

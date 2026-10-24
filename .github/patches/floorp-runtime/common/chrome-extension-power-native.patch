@@ -1,0 +1,205 @@
+diff --git a/dom/power/nsIPowerManagerService.idl b/dom/power/nsIPowerManagerService.idl
+--- a/dom/power/nsIPowerManagerService.idl
++++ b/dom/power/nsIPowerManagerService.idl
+@@ -15,7 +15,7 @@
+ /**
+  * For use with non-content code.
+  */
+-[scriptable, builtinclass, uuid(ba7ca4c1-9d92-4425-a83b-85dd7fa953f7)]
++[scriptable, builtinclass, uuid(b8f9c541-4033-4f4b-a9a8-539970f44079)]
+ interface nsIPowerManagerService : nsISupports
+ {
+   void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+@@ -28,4 +28,8 @@
+    * always considered invisible.
+    */
+   nsIWakeLock newWakeLock(in AString aTopic, [optional] in mozIDOMWindow aWindow);
++
++  // Privileged Chrome-extension broker only. A display request must remain
++  // effective after the extension document is hidden or its worker suspends.
++  nsIWakeLock newWakeLockForChromeExtension(in AString aTopic);
+ };
+diff --git a/dom/power/WakeLock.h b/dom/power/WakeLock.h
+--- a/dom/power/WakeLock.h
++++ b/dom/power/WakeLock.h
+@@ -39,7 +39,8 @@
+   // Initialize this wake lock on behalf of the given window.  Null windows are
+   // allowed; a lock without an associated window is always considered
+   // invisible.
+-  nsresult Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow);
++  nsresult Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow,
++                bool aAlwaysForeground = false);
+ 
+   // WebIDL methods
+ 
+diff --git a/dom/power/WakeLock.cpp b/dom/power/WakeLock.cpp
+--- a/dom/power/WakeLock.cpp
++++ b/dom/power/WakeLock.cpp
+@@ -32,7 +32,8 @@
+   DetachEventListener();
+ }
+ 
+-nsresult WakeLock::Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow) {
++nsresult WakeLock::Init(const nsAString& aTopic, nsPIDOMWindowInner* aWindow,
++                        bool aAlwaysForeground) {
+   // Don't Init() a WakeLock twice.
+   MOZ_ASSERT(mTopic.IsEmpty());
+ 
+@@ -52,6 +53,13 @@
+     nsCOMPtr<Document> doc = aWindow->GetExtantDoc();
+     NS_ENSURE_STATE(doc);
+     mHidden = doc->Hidden();
++  }
++
++  // Only the privileged extension broker uses a foreground windowless screen
++  // lock. Ordinary document wake locks retain visibility and pagehide handling.
++  if (aAlwaysForeground) {
++    MOZ_ASSERT(!aWindow);
++    mHidden = false;
+   }
+ 
+   AttachEventListener();
+diff --git a/dom/power/PowerManagerService.cpp b/dom/power/PowerManagerService.cpp
+--- a/dom/power/PowerManagerService.cpp
++++ b/dom/power/PowerManagerService.cpp
+@@ -11,6 +11,7 @@
+ #include "mozilla/ModuleUtils.h"
+ #include "mozilla/Preferences.h"
+ #include "mozilla/dom/ContentParent.h"
++#include "nsError.h"
+ #include "nsIDOMWakeLockListener.h"
+ 
+ // For _exit().
+@@ -134,4 +135,17 @@
+   return NS_OK;
+ }
+ 
++NS_IMETHODIMP
++PowerManagerService::NewWakeLockForChromeExtension(const nsAString& aTopic,
++                                                   nsIWakeLock** aWakeLock) {
++  if (!aTopic.EqualsLiteral("cpu") && !aTopic.EqualsLiteral("screen")) {
++    return NS_ERROR_INVALID_ARG;
++  }
++  RefPtr<WakeLock> lock = new WakeLock();
++  nsresult rv = lock->Init(aTopic, nullptr, aTopic.EqualsLiteral("screen"));
++  NS_ENSURE_SUCCESS(rv, rv);
++  lock.forget(aWakeLock);
++  return NS_OK;
++}
++
+ }  // namespace mozilla::dom::power
+diff --git a/widget/gtk/WakeLockListener.cpp b/widget/gtk/WakeLockListener.cpp
+--- a/widget/gtk/WakeLockListener.cpp
++++ b/widget/gtk/WakeLockListener.cpp
+@@ -175,6 +175,7 @@
+         {"video-playing", "WakeLockVideoPlaying", "Playing video"},
+         {"audio-playing", "WakeLockAudioPlaying", "Playing audio"},
+         {"screen", "WakeLockScreenLock", "Screen lock"},
++        {"cpu", "WakeLockExtensionActivity", "Extension activity"},
+         {"autoscroll", "WakeLockAutoscroll", "Autoscroll"},
+         {"download-in-progress", "WakeLockDownload", "Download in progress"},
+     };
+@@ -1119,7 +1120,7 @@
+                 NS_ConvertUTF16toUTF8(state).get());
+   if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns) &&
+       !topic.Equals(u"autoscroll"_ns) && !topic.Equals(u"audio-playing"_ns) &&
+-      !topic.Equals(u"download-in-progress"_ns)) {
++      !topic.Equals(u"download-in-progress"_ns) && !topic.Equals(u"cpu"_ns)) {
+     return NS_OK;
+   }
+ 
+diff --git a/dom/locales/en-US/chrome/dom/dom.properties b/dom/locales/en-US/chrome/dom/dom.properties
+--- a/dom/locales/en-US/chrome/dom/dom.properties
++++ b/dom/locales/en-US/chrome/dom/dom.properties
+@@ -502,6 +502,7 @@
+ WakeLockVideoPlaying=Playing video
+ WakeLockAudioPlaying=Playing audio
+ WakeLockScreenLock=Screen lock
++WakeLockExtensionActivity=Extension activity
+ WakeLockAutoscroll=Autoscroll
+ WakeLockDownload=Download in progress
+ 
+diff --git a/widget/cocoa/nsAppShell.mm b/widget/cocoa/nsAppShell.mm
+--- a/widget/cocoa/nsAppShell.mm
++++ b/widget/cocoa/nsAppShell.mm
+@@ -81,12 +81,13 @@
+ 
+   TopicAssertion mAudioAssertion{kIOPMAssertionTypeNoIdleSleep};
+   TopicAssertion mDownloadAssertion{kIOPMAssertionTypeNoIdleSleep};
++  TopicAssertion mCPUAssertion{kIOPMAssertionTypeNoIdleSleep};
+ 
+   NS_IMETHOD Callback(const nsAString& aTopic,
+                       const nsAString& aState) override {
+     if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
+         !aTopic.EqualsASCII("video-playing") &&
+-        !aTopic.EqualsASCII("download-in-progress")) {
++        !aTopic.EqualsASCII("download-in-progress") && !aTopic.EqualsASCII("cpu")) {
+       return NS_OK;
+     }
+ 
+@@ -104,6 +105,7 @@
+         aTopic.EqualsASCII("screen")          ? mScreenAssertion
+         : aTopic.EqualsASCII("video-playing") ? mVideoAssertion
+         : aTopic.EqualsASCII("audio-playing") ? mAudioAssertion
++        : aTopic.EqualsASCII("cpu")           ? mCPUAssertion
+                                               : mDownloadAssertion;
+     WAKE_LOCK_LOG("topic=%s, state=%s", NS_ConvertUTF16toUTF8(aTopic).get(),
+                   NS_ConvertUTF16toUTF8(aState).get());
+@@ -114,7 +116,8 @@
+     // the lock for them despite the state that would otherwise release it.
+     if (aState.EqualsASCII("locked-foreground") ||
+         (aState.EqualsASCII("locked-background") &&
+-         aTopic.EqualsASCII("download-in-progress"))) {
++         (aTopic.EqualsASCII("download-in-progress") ||
++          aTopic.EqualsASCII("cpu")))) {
+       if (assertion.id != kIOPMNullAssertionID) {
+         WAKE_LOCK_LOG("already has a lock");
+         return NS_OK;
+diff --git a/widget/windows/nsAppShell.cpp b/widget/windows/nsAppShell.cpp
+--- a/widget/windows/nsAppShell.cpp
++++ b/widget/windows/nsAppShell.cpp
+@@ -66,6 +66,7 @@
+   HANDLE mVideoHandle = nullptr;
+   HANDLE mAudioHandle = nullptr;
+   HANDLE mDownloadsHandle = nullptr;
++  HANDLE mCPUHandle = nullptr;
+ 
+   struct TopicSleepRequest {
+     const char* topic;
+@@ -82,6 +83,8 @@
+        &WinWakeLockListener::mAudioHandle},
+       {"download-in-progress", PowerRequestExecutionRequired,
+        &WinWakeLockListener::mDownloadsHandle},
++      {"cpu", PowerRequestSystemRequired,
++       &WinWakeLockListener::mCPUHandle},
+   };
+ 
+   void SetHandle(HANDLE aHandle, const TopicSleepRequest& aTopicLock) {
+@@ -118,6 +121,8 @@
+     switch (aType) {
+       case PowerRequestDisplayRequired:
+         return const_cast<LPWSTR>(L"display request");  // -Wwritable-strings
++      case PowerRequestSystemRequired:
++        return const_cast<LPWSTR>(L"system request");  // -Wwritable-strings
+       case PowerRequestExecutionRequired:
+         return const_cast<LPWSTR>(
+             L"non-display request");  // -Wwritable-strings
+@@ -131,6 +136,8 @@
+     switch (aType) {
+       case PowerRequestDisplayRequired:
+         return "display request";
++      case PowerRequestSystemRequired:
++        return "system request";
+       case PowerRequestExecutionRequired:
+         return "non-display request";
+       default:
+@@ -203,7 +210,8 @@
+     }
+ 
+     const bool isNonDisplayLock =
+-        topicLock->type == PowerRequestExecutionRequired;
++        topicLock->type == PowerRequestExecutionRequired ||
++        topicLock->type == PowerRequestSystemRequired;
+ 
+     bool requestLock = false;
+     if (isNonDisplayLock) {
