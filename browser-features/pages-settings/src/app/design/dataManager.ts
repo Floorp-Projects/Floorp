@@ -5,6 +5,12 @@ import {
   type ChromeExtrasKey,
   type ChromeExtrasSettings,
 } from "#features-chrome/common/designs/chrome-extras.ts";
+import {
+  normalizeTabbarStyle,
+  resolveTabbarStyleFromNative,
+  type TabbarStyle,
+  VERTICAL_TABS_PREF,
+} from "#features-chrome/common/designs/utils/tabbar-style-sync.ts";
 
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
 const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
@@ -130,6 +136,18 @@ async function saveDesignSettingsUnqueued(
     return null;
   }
   const oldData = JSON.parse(result);
+  const { hasTabStyleChanged = false } = options;
+
+  // Keep the stored style authoritative unless the user changed it. Reading
+  // the native pref here prevents an unrelated edit from writing back a style
+  // that a Firefox-side toggle already changed in another window.
+  const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
+  const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
+  const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+  const tabbarStyle =
+    !hasTabStyleChanged && nativeVerticalTabs !== null
+      ? resolveTabbarStyleFromNative(nativeVerticalTabs, requestedStyle)
+      : requestedStyle;
 
   const newData = {
     ...oldData,
@@ -141,7 +159,7 @@ async function saveDesignSettingsUnqueued(
     tabbar: {
       ...oldData.tabbar,
       tabbarPosition: settings.position,
-      tabbarStyle: settings.style,
+      tabbarStyle,
       multiRowTabBar: {
         ...oldData.tabbar.multiRowTabBar,
         maxRowEnabled: settings.maxRowEnabled,
@@ -203,15 +221,11 @@ async function saveDesignSettingsUnqueued(
     settings.tabDragToSplitCreate,
   );
 
-  const { hasTabStyleChanged = false } = options;
-
   if (hasTabStyleChanged && settings.style !== undefined) {
-    const isVertical = settings.style === "vertical";
-    await rpc.setBoolPref("sidebar.verticalTabs", isVertical);
-
-    if (!isVertical) {
-      await rpc.setBoolPref("sidebar.revamp", false);
-    }
+    // Firefox derives `sidebar.revamp` from `sidebar.verticalTabs` by itself,
+    // so this is the only pref to write. Writing `sidebar.revamp` here used to
+    // break that invariant.
+    await rpc.setBoolPref(VERTICAL_TABS_PREF, requestedStyle === "vertical");
   }
 }
 
@@ -225,10 +239,18 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
   const splitViewDndCreateEnabled = await rpc.getBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
   );
+  // `null` means the pref does not exist in this build, in which case the
+  // stored design config is authoritative.
+  const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+  const tabbarStyle: TabbarStyle = normalizeTabbarStyle(
+    data.tabbar?.tabbarStyle,
+  );
   const formData: DesignFormData = {
     design: data.globalConfigs.userInterface,
     position: data.tabbar.tabbarPosition,
-    style: data.tabbar.tabbarStyle,
+    style: nativeVerticalTabs === null
+      ? tabbarStyle
+      : resolveTabbarStyleFromNative(nativeVerticalTabs, tabbarStyle),
     tabOpenPosition: data.tab.tabOpenPosition,
     tabMinHeight: data.tab.tabMinHeight,
     tabMinWidth: data.tab.tabMinWidth,
