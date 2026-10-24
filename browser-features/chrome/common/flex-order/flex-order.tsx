@@ -101,8 +101,10 @@ export namespace gFlexOrder {
       return;
     }
     const atEnd = untrack(orders).floorpSidebar > 0;
+    // Flex order follows the inline direction; DOMRects use physical edges.
+    const onRight = atEnd !== (getComputedStyle(browser)?.direction === "rtl");
     const browserRect = browser.getBoundingClientRect();
-    let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
+    let occupiedEdge = onRight ? browserRect.right : browserRect.left;
     let hasVisiblePanel = false;
     for (
       const id of [
@@ -119,7 +121,10 @@ export namespace gFlexOrder {
         style.position === "fixed"
       ) continue;
       const rect = element.getBoundingClientRect();
-      occupiedEdge = atEnd
+      // Boxless elements (for example display:contents) have an empty rect at
+      // the origin. Counting it would reserve the entire right-side viewport.
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      occupiedEdge = onRight
         ? Math.min(occupiedEdge, rect.left)
         : Math.max(occupiedEdge, rect.right);
       hasVisiblePanel = true;
@@ -127,7 +132,7 @@ export namespace gFlexOrder {
     const width = hasVisiblePanel
       ? Math.max(
         0,
-        atEnd
+        onRight
           ? browserRect.right - occupiedEdge
           : occupiedEdge - browserRect.left,
       )

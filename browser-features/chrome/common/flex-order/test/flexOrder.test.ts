@@ -285,6 +285,14 @@ export async function runAllTests(): Promise<void> {
         fn: testFirefoxSidebarGroupRemainsCoherent,
       },
       {
+        name: "boxless panels do not move the right hover anchor",
+        fn: testEmptyPanelHoverOffset,
+      },
+      {
+        name: "hover anchor follows logical placement in LTR and RTL",
+        fn: testDirectionalHoverAnchor,
+      },
+      {
         name: "position updates reuse the rendered style",
         fn: testPositionCanBeUpdatedWithoutRenderingAnotherStyle,
       },
@@ -293,5 +301,143 @@ export async function runAllTests(): Promise<void> {
     cleanupFlexOrderStyle();
     if (originalStyle) document.head.appendChild(originalStyle);
     gFlexOrder.applyFlexOrder(originalFloorpAtRight);
+  }
+}
+
+async function nextLayout(): Promise<void> {
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+async function testEmptyPanelHoverOffset(): Promise<void> {
+  initializeFlexOrder();
+  const style = document.createElement("style");
+  style.textContent = `
+    #panel-sidebar-box, #panel-sidebar-splitter { display: none !important; }
+    #panel-sidebar-select-box { display: contents !important; }
+  `;
+  document.head.appendChild(style);
+  try {
+    gFlexOrder.applyFlexOrder(true);
+    await nextLayout();
+    const rail = document.getElementById("panel-sidebar-select-box");
+    assert(rail, "Floorp rail should exist");
+    assertEquals(
+      rail.getBoundingClientRect().width,
+      0,
+      "display:contents has no box",
+    );
+    assertEquals(
+      document.getElementById("browser")?.style.getPropertyValue(
+        "--floorp-panel-end-width",
+      ),
+      "0px",
+      "empty rect must not reserve the whole browser width",
+    );
+  } finally {
+    style.remove();
+    cleanupFlexOrderStyle();
+  }
+}
+
+async function testDirectionalHoverAnchor(): Promise<void> {
+  initializeFlexOrder();
+  const root = document.documentElement;
+  const browser = document.getElementById("browser");
+  const launcher = document.getElementById("sidebar-container");
+  assert(browser && launcher, "native browser and launcher should exist");
+  const savedDirection = root.getAttribute("dir");
+  const attributes = [
+    "sidebar-positionend",
+    "sidebar-launcher-expanded",
+    "sidebar-ongoing-animations",
+  ];
+  const saved = attributes.map((name) => launcher.getAttribute(name));
+  const savedHover = root.getAttribute("sidebar-expand-on-hover");
+  const style = document.createElement("style");
+  style.textContent = `
+    #sidebar-container { display: flex !important; width: 58px !important; min-width: 58px !important; max-width: 58px !important; }
+    #panel-sidebar-box, #panel-sidebar-splitter { display: none !important; }
+  `;
+  document.head.appendChild(style);
+  try {
+    root.setAttribute("sidebar-expand-on-hover", "");
+    for (const direction of ["ltr", "rtl"]) {
+      root.setAttribute("dir", direction);
+      for (const floorpAtEnd of [false, true]) {
+        gFlexOrder.applyFlexOrder(floorpAtEnd);
+        for (const firefoxAtEnd of [false, true]) {
+          launcher.toggleAttribute("sidebar-positionend", firefoxAtEnd);
+          // Keep native flex ordering consistent with its position attribute.
+          const savedOrder = launcher.style.order;
+          launcher.style.order = firefoxAtEnd ? "999" : "0";
+          try {
+            launcher.removeAttribute("sidebar-launcher-expanded");
+            launcher.removeAttribute("sidebar-ongoing-animations");
+            await nextLayout();
+            const onRight = firefoxAtEnd !== (direction === "rtl");
+            const edge = () => {
+              const rect = launcher.getBoundingClientRect();
+              return onRight ? rect.right : rect.left;
+            };
+            const collapsed = edge();
+            const property = floorpAtEnd
+              ? "--floorp-panel-end-width"
+              : "--floorp-panel-start-width";
+            const collapsedOffset = browser.style.getPropertyValue(property);
+            for (
+              const state of [
+                "sidebar-launcher-expanded",
+                "sidebar-ongoing-animations",
+              ]
+            ) {
+              launcher.setAttribute(state, "");
+              await nextLayout();
+              assert(
+                Math.abs(edge() - collapsed) <= 1,
+                `stable anchor: ${direction}, Floorp end=${floorpAtEnd}, Firefox end=${firefoxAtEnd}, ${state}`,
+              );
+              const rail = document.getElementById("panel-sidebar-select-box");
+              assert(rail, "Floorp rail should exist");
+              const railStyle = rail.style.cssText;
+              try {
+                for (const dimension of ["width", "min-width", "max-width"]) {
+                  rail.style.setProperty(dimension, "84px", "important");
+                }
+                await nextLayout();
+                assertEquals(
+                  browser.style.getPropertyValue(property),
+                  collapsedOffset,
+                  "ResizeObserver must retain the collapsed offset during hover",
+                );
+              } finally {
+                rail.style.cssText = railStyle;
+                await nextLayout();
+              }
+              launcher.removeAttribute(state);
+              await nextLayout();
+              assert(
+                Math.abs(edge() - collapsed) <= 1,
+                "collapse restores anchor",
+              );
+            }
+          } finally {
+            launcher.style.order = savedOrder;
+          }
+        }
+      }
+    }
+  } finally {
+    style.remove();
+    if (savedDirection === null) root.removeAttribute("dir");
+    else root.setAttribute("dir", savedDirection);
+    if (savedHover === null) root.removeAttribute("sidebar-expand-on-hover");
+    else root.setAttribute("sidebar-expand-on-hover", savedHover);
+    attributes.forEach((name, index) => {
+      const value = saved[index];
+      if (value === null) launcher.removeAttribute(name);
+      else launcher.setAttribute(name, value);
+    });
+    cleanupFlexOrderStyle();
   }
 }
