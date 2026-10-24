@@ -1,0 +1,121 @@
+{
+  "sourceSha256": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115",
+  "nativeExecution": false,
+  "network": false,
+  "credentials": false,
+  "limits": {
+    "wallSeconds": 40,
+    "memoryMiB": 256,
+    "fileMiB": 16
+  },
+  "cases": [
+    {
+      "name": "supervisor SIGKILL",
+      "injectedSignal": 9,
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "source supervisor did not complete",
+      "elapsedSeconds": 0.114,
+      "ownedBirths": {
+        "supervisor": [
+          49501,
+          4170641
+        ],
+        "child": [
+          49502,
+          4170648
+        ]
+      },
+      "ownedChildAliveAfterExecute": true,
+      "supervisorAliveAfterExecute": false,
+      "independentOwnedCleanupComplete": true
+    },
+    {
+      "name": "supervisor SIGSTOP",
+      "injectedSignal": 19,
+      "acceptedPass": false,
+      "raised": "TimeoutExpired",
+      "error": "Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3', '-I', '-B', '/workspace/qa-review-v030/fix-qa309/evidence/workflow-review-floorp-candidate-01-source.py', '_owned', '5', '0.35', '/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3', '-I', '-B', '-c', \"\\nimport json,os,pathlib,signal,sys,time\\ndef identity(pid):\\n    stat=pathlib.Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()\\n    return [pid,int(stat[19])]\\nsupervisor=identity(os.getppid())\\nchild=identity(os.getpid())\\npathlib.Path(sys.argv[1]).write_text(json.dumps({'supervisor':supervisor,'child':child}))\\nfd=os.pidfd_open(supervisor[0])\\ntry:\\n    if identity(supervisor[0]) == supervisor:\\n        signal.pidfd_send_signal(fd,int(sys.argv[2]))\\nfinally:\\n    os.close(fd)\\ntime.sleep(35)\\n\", '/tmp/workflow-review-owned-n6146ura/supervisor SIGSTOP.json', '19']' timed out after 8.35 seconds",
+      "elapsedSeconds": 14.352,
+      "ownedBirths": {
+        "supervisor": [
+          49503,
+          4170655
+        ],
+        "child": [
+          49504,
+          4170661
+        ]
+      },
+      "ownedChildAliveAfterExecute": true,
+      "supervisorAliveAfterExecute": false,
+      "independentOwnedCleanupComplete": true
+    },
+    {
+      "name": "SIGTERM during cleanup after exit code recorded",
+      "receipt": {
+        "exitCode": 0,
+        "error": null
+      },
+      "acceptedPass": true
+    },
+    {
+      "name": "protocol empty",
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "source supervisor did not complete"
+    },
+    {
+      "name": "protocol truncated JSON",
+      "acceptedPass": false,
+      "raised": "JSONDecodeError",
+      "error": "Expecting property name enclosed in double quotes: line 1 column 15 (char 14)"
+    },
+    {
+      "name": "protocol missing fields",
+      "acceptedPass": false,
+      "raised": "KeyError",
+      "error": "'error'"
+    },
+    {
+      "name": "protocol nonobject",
+      "acceptedPass": false,
+      "raised": "TypeError",
+      "error": "list indices must be integers or slices, not str"
+    },
+    {
+      "name": "protocol boolean exit code",
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "source supervisor lacks a command result"
+    },
+    {
+      "name": "protocol null exit code",
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "source supervisor lacks a command result"
+    },
+    {
+      "name": "protocol error with zero exit",
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "incomplete cleanup"
+    },
+    {
+      "name": "protocol oversized",
+      "acceptedPass": false,
+      "raised": "ValueError",
+      "error": "source supervisor did not complete"
+    },
+    {
+      "name": "protocol valid nonzero",
+      "acceptedPass": false,
+      "returnCode": 124
+    },
+    {
+      "name": "protocol valid zero",
+      "acceptedPass": true,
+      "returnCode": 0
+    }
+  ]
+}

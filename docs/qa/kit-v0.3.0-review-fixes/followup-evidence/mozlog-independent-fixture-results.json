@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "label": "formal-valid-subtest-0",
+      "bytes": 283,
+      "sha256": "5c7c38d161411a6a2b7017242e43df6f9fdc9b25900d57bff072c9e9a61daea0",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-valid-subtest-1",
+      "bytes": 281,
+      "sha256": "c67b958b1ae7309887f5645ca19923fcebb754b5912ee4564ab8580d30910afc",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-valid-subtest-2",
+      "bytes": 282,
+      "sha256": "646bb5d27777a3376b7aa67861c0e56d8a09ee83ad352f067ccb8e487b23523f",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-valid-subtest-3",
+      "bytes": 287,
+      "sha256": "bb1b432833df5a816618445399d7c0f0fdb036a018e38d30371678bfc063c1ca",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-valid-subtest-4",
+      "bytes": 299,
+      "sha256": "4e4c5cb3603d2de6e97951eca6d305e2ea4cf037908cfd7de1adbf82ef8c87a7",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-valid-subtest-5",
+      "bytes": 287,
+      "sha256": "155a81ea9c6d2db25346d88bf74ae50178ff7e0099f3e20a275b97d1bab28017",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "formal-invalid-subtest-missing",
+      "bytes": 268,
+      "sha256": "06e150c8de2d66a29f640a0d8bb831247c0147831affb0a3a538ee5d49910bb0",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-integer",
+      "bytes": 280,
+      "sha256": "608d45e431a6c195058c088d22258c7c2fe5f513f4302ce99b4a63aba757b35c",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-negative-integer",
+      "bytes": 281,
+      "sha256": "6a1edf20b7c90d1a94cc1afef1aee619cdfb78231f38dffee1ec019a82813fd1",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-float",
+      "bytes": 282,
+      "sha256": "1658215f5456cf5ad441399bfda9cfe3e6b63c459a1f764d5611f8c76b5ee5bc",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-true",
+      "bytes": 283,
+      "sha256": "9cb544a4aaed7a73e0730fee57f7fd42ef237ea872d8b84d9cd124d0c2012b94",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-false",
+      "bytes": 284,
+      "sha256": "2cc4c1ff35cbb696cef1480b399de31549ea0950615ccdbe9b9e6a6df865eaee",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-empty-list",
+      "bytes": 281,
+      "sha256": "c46dff5071cd4e2546d1ebc4fa54a5946a95e8db301a2a709d056f27fa9520cb",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-list",
+      "bytes": 287,
+      "sha256": "162c684ca5557b1da387c7c72c03987f337dec095fa157a56c3245e9fbc3a30b",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "formal-invalid-subtest-dict",
+      "bytes": 281,
+      "sha256": "fd92c6de8d28eb9f29195b093135334f9486b6b6590dd2800df9df22028b5388",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "missing or untyped assertion subtest"
+    },
+    {
+      "label": "byte-bound-LF-1048575",
+      "bytes": 1048860,
+      "sha256": "45da0e82c061f38a93d7ac32b569994a6f7d5deba867cdf129cca8ef0dd9f3a3",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 6,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "byte-bound-LF-1048576",
+      "bytes": 1048861,
+      "sha256": "301c67c0002238e470b72e83028f9919525bbf6998c00efa115258e83f902141",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 6,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "byte-bound-LF-1048577",
+      "bytes": 1048862,
+      "sha256": "d35368ee92ab080ea33d6ab6e2f935916dcc2340077e7e5c61d7242b8daeb21d",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "raw mozlog event budget exceeded"
+    },
+    {
+      "label": "byte-bound-CRLF-1048575",
+      "bytes": 1048860,
+      "sha256": "c4140def9a5b3b859d6428cad9de2a07db07562dc5b033be3e3dc97d11775123",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 6,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "byte-bound-CRLF-1048576",
+      "bytes": 1048861,
+      "sha256": "db1fb86d07e23d6c1f3813a409902dc9b3b84d295ed22611573318006a9f4095",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 6,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "byte-bound-CRLF-1048577",
+      "bytes": 1048862,
+      "sha256": "4461ebc61cd0623d95a901610db03b7f8c9e4e21caf0ae33b69c8e9be6981eda",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "raw mozlog event budget exceeded"
+    },
+    {
+      "label": "utf8-byte-bound-1048576",
+      "bytes": 1048861,
+      "sha256": "6a703099b1a6af32ffd2682d4404f481de6dd1d6b7d509ceac7007cf3f959153",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 6,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "utf8-byte-bound-1048577",
+      "bytes": 1048862,
+      "sha256": "5b21864c3468344b7e26fafd32ce9ccf04efe5fb480bb838dd7a95dffaafdf78",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "raw mozlog event budget exceeded"
+    },
+    {
+      "label": "complete-CRLF",
+      "bytes": 290,
+      "sha256": "8afe2b524488265e537a4d5cb0e7cfd11a62b30c66594131513912f15edffffb",
+      "shouldAccept": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "label": "missing-last-LF",
+      "bytes": 284,
+      "sha256": "b0ee583649a425054528be8228d81dc420f0f84687b4be80f6eb91a7d67631e6",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "unterminated raw mozlog event"
+    },
+    {
+      "label": "valid-JSON-at-EOF-without-LF",
+      "bytes": 316,
+      "sha256": "7a99d27127a82d39221c9caf08795d6ffaa49e3c701bcfbdb23263cc6234ef3b",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "unterminated raw mozlog event"
+    },
+    {
+      "label": "partial-JSON",
+      "bytes": 300,
+      "sha256": "f6eca27287cc07dfa47097215bd3b5c71b3c71ca9a3d1ad1889053e2450c5da2",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "unterminated raw mozlog event"
+    },
+    {
+      "label": "CR-only-at-EOF",
+      "bytes": 317,
+      "sha256": "19b8320c809e52df9c9b78ccef7d26143870cc533f861c0d4b3989b2b1d4564b",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "unterminated raw mozlog event"
+    },
+    {
+      "label": "truncated-UTF8-with-LF",
+      "bytes": 317,
+      "sha256": "b0d30fd27d4a3a78e2ae77326b00bdcabc0032520919b86cab7bd3259b53aef2",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "REST response is not valid UTF-8"
+    },
+    {
+      "label": "truncated-UTF8-without-LF",
+      "bytes": 314,
+      "sha256": "9fd7d0b20d0e8f954b0077e14edbbd88357622cb5c72987810698d75c81bb13c",
+      "shouldAccept": false,
+      "accepted": false,
+      "error": "unterminated raw mozlog event"
+    }
+  ],
+  "stream": [
+    {
+      "label": "actual-3MiB-line-bounded-before-parse",
+      "inputBytes": 3146020,
+      "shouldAccept": false,
+      "requests": [
+        1048577,
+        1048577,
+        1048577,
+        1048577,
+        1048577,
+        1048577
+      ],
+      "returned": [
+        57,
+        53,
+        87,
+        65,
+        23,
+        1048577
+      ],
+      "parsedLineBytes": [
+        57,
+        53,
+        87,
+        65,
+        23
+      ],
+      "accepted": false,
+      "error": "raw mozlog event budget exceeded"
+    }
+  ],
+  "count": [
+    {
+      "events": 1000000,
+      "shouldAccept": true,
+      "readCalls": 1000001,
+      "returnedEvents": 1000000,
+      "parseCalls": 1000000,
+      "requestedSizes": [
+        1048577
+      ],
+      "maxReturnedBytes": 87,
+      "elapsedSeconds": 4.006471255001088,
+      "syntheticLazyStream": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 1000000,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "events": 1000001,
+      "shouldAccept": false,
+      "readCalls": 1000001,
+      "returnedEvents": 1000001,
+      "parseCalls": 1000000,
+      "requestedSizes": [
+        1048577
+      ],
+      "maxReturnedBytes": 87,
+      "elapsedSeconds": 3.796390885996516,
+      "syntheticLazyStream": true,
+      "accepted": false,
+      "error": "raw mozlog event budget exceeded"
+    }
+  ],
+  "metadata": [
+    {
+      "statSize": 0,
+      "shouldAccept": false,
+      "openCalls": 0,
+      "syntheticMetadataOnly": true,
+      "accepted": false,
+      "error": "missing or oversized complete raw mozlog"
+    },
+    {
+      "statSize": 2147483648,
+      "shouldAccept": true,
+      "openCalls": 1,
+      "syntheticMetadataOnly": true,
+      "accepted": true,
+      "result": {
+        "id": "independent/test.js",
+        "suite": "xpcshell",
+        "assertions": 1,
+        "rawEvents": 5,
+        "verdict": "PASS",
+        "canaryPhase": null,
+        "canaryReason": null
+      }
+    },
+    {
+      "statSize": 2147483649,
+      "shouldAccept": false,
+      "openCalls": 0,
+      "syntheticMetadataOnly": true,
+      "accepted": false,
+      "error": "missing or oversized complete raw mozlog"
+    }
+  ],
+  "nativeExecuted": false,
+  "credentialsInherited": false,
+  "caseCount": 36,
+  "mismatches": []
+}

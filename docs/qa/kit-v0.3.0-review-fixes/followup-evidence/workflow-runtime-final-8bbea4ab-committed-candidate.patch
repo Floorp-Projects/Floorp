@@ -1,0 +1,608 @@
+diff --git a/.github/workflows/scripts/qa3_native_io.py b/.github/workflows/scripts/qa3_native_io.py
+index a8a231959a1..9a490830b9c 100644
+--- a/.github/workflows/scripts/qa3_native_io.py
++++ b/.github/workflows/scripts/qa3_native_io.py
+@@ -2,7 +2,9 @@
+ 
+ import builtins
+ import ctypes
++import errno
+ import json
++import math
+ import os
+ import select
+ import selectors
+@@ -563,26 +565,117 @@ def _wait_supervisor(pid, timeout, on_error=None):
+     return None
+ 
+ 
+-def _supervise(command, timeout, io_budget):
++def _supervisor_reply(reply, io_budget, expected, allow_nonzero):
++    if type(reply) is not dict or set(reply) != {"result", "error", "budgetUsed"}:
++        raise ValueError("invalid owned supervisor envelope")
++    error = reply["error"]
++    result = reply["result"]
++    if error is None:
++        fields = {
++            "name",
++            "argv",
++            "exit",
++            "stop",
++            "durationSeconds",
++            "stdoutSha256",
++            "stderrSha256",
++            "ownedCleanupComplete",
++            "stdoutIsData",
++        }
++        if type(result) is not dict or set(result) != fields:
++            raise ValueError("invalid owned supervisor result")
++        if (
++            type(result["name"]) is not str
++            or not result["name"]
++            or "/" in result["name"]
++            or type(result["argv"]) is not list
++            or not result["argv"]
++            or any(type(item) is not str for item in result["argv"])
++            or type(result["exit"]) is not int
++            or result["exit"] != 0
++            and not allow_nonzero
++            or result["stop"] is not None
++            or result["ownedCleanupComplete"] is not True
++            or type(result["stdoutIsData"]) is not bool
++            or type(result["durationSeconds"]) not in {int, float}
++            or not math.isfinite(result["durationSeconds"])
++            or result["durationSeconds"] < 0
++        ):
++            raise ValueError("owned supervisor did not prove successful cleanup")
++        for name in ("stdoutSha256", "stderrSha256"):
++            value = result[name]
++            if (
++                type(value) is not str
++                or len(value) != 64
++                or any(char not in "0123456789abcdef" for char in value)
++            ):
++                raise ValueError("invalid owned supervisor stream hash")
++        if expected and any(result[key] != value for key, value in expected.items()):
++            raise ValueError("owned supervisor result changed its command")
++    else:
++        if (
++            result is not None
++            or type(error) is not dict
++            or set(error) != {"type", "args", "errno", "filename", "message"}
++            or type(error["type"]) is not str
++            or type(error["args"]) is not list
++            or type(error["message"]) is not str
++            or error["errno"] is not None
++            and type(error["errno"]) is not int
++            or error["filename"] is not None
++            and type(error["filename"]) is not str
++        ):
++            raise ValueError("invalid owned supervisor error")
++        kind = getattr(builtins, error["type"], None)
++        if not isinstance(kind, type) or not issubclass(kind, Exception):
++            raise ValueError("unsafe owned supervisor exception type")
++    used = reply["budgetUsed"]
++    if io_budget:
++        if type(used) is not int or not io_budget.used <= used <= io_budget.maximum:
++            raise ValueError("owned supervisor changed the staging budget")
++        io_budget.used = used
++    elif used is not None:
++        raise ValueError("unexpected owned supervisor staging budget")
++    if error is not None:
++        if issubclass(kind, OSError) and error["filename"] is not None:
++            raise kind(*error["args"], error["filename"])
++        raise kind(*error["args"])
++    return result
++
++
++def _supervise(command, timeout, io_budget, *, expected=None, allow_nonzero=False):
+     """Isolate orphan adoption; hard kill/stop recovery needs the external job scope."""
++    if (
++        signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
++        or len(list(Path("/proc/self/task").iterdir())) != 1
++    ):
++        raise ValueError("owned supervisor requires one thread and default SIGCHLD")
++    if type(allow_nonzero) is not bool:
++        raise ValueError("allow_nonzero must be an explicit boolean")
+     reader, writer = os.pipe()
+     try:
+         pid = os.fork()
+     except BaseException:
+-        os.close(reader)
+-        os.close(writer)
++        for fd in (reader, writer):
++            for _ in range(2):
++                try:
++                    os.close(fd)
++                    break
++                except BaseException:
++                    pass
+         raise
+     if pid == 0:
+-        os.close(reader)
+         cancel_requested = False
++        exitcode = 1
+ 
+         def cancelled(signum, frame):
+             nonlocal cancel_requested
+             cancel_requested = True
+ 
+-        signal.signal(signal.SIGTERM, cancelled)
+-        signal.signal(signal.SIGINT, cancelled)
+         try:
++            os.close(reader)
++            signal.signal(signal.SIGTERM, cancelled)
++            signal.signal(signal.SIGINT, cancelled)
+             try:
+                 result = command(lambda: cancel_requested)
+                 if cancel_requested:
+@@ -607,22 +700,74 @@ def _supervise(command, timeout, io_budget):
+                 raise ValueError("owned supervisor reply exceeds limit")
+             while data:
+                 data = data[os.write(writer, data) :]
++            exitcode = 0
+         except BaseException:
+-            os._exit(1)
+-        os.close(writer)
+-        os._exit(0)
++            pass
++        finally:
++            try:
++                os.close(writer)
++            except BaseException:
++                exitcode = 1
++            os._exit(exitcode)
+     status = None
+     failure = None
++    cleanup_errors = {}
+     data = bytearray()
+-    birth = None
++    pidfd = None
+ 
+-    def cleanup_error(exc):
++    def cleanup_error(exc, phase="WAIT"):
+         nonlocal failure
+-        failure = failure or (exc, exc.__traceback__)
++        if failure is None:
++            failure = (exc, exc.__traceback__)
++        elif phase not in cleanup_errors:
++            cleanup_errors[phase] = {
++                "type": type(exc).__name__,
++                "errno": getattr(exc, "errno", None),
++                "message": str(exc)[:1024],
++            }
++
++    def close_control(fd, phase):
++        if fd is None:
++            return
++        for _ in range(2):
++            try:
++                os.close(fd)
++                return
++            except BaseException as exc:
++                cleanup_error(exc, phase)
++                if isinstance(exc, OSError) and exc.errno == errno.EBADF:
++                    return
++
++    def signal_supervisor(sig):
++        phase = "TERM" if sig == signal.SIGTERM else "KILL"
++        if pidfd is not None:
++            try:
++                signal.pidfd_send_signal(pidfd, sig)
++                return
++            except ProcessLookupError:
++                return
++            except BaseException as exc:
++                cleanup_error(exc, phase + "_PIDFD")
++        try:
++            # WNOWAIT retains our exclusive fork-child lifetime without /proc.
++            exited = os.waitid(os.P_PID, pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
++            if exited is None:
++                os.kill(pid, sig)
++        except ProcessLookupError:
++            pass
++        except BaseException as exc:
++            cleanup_error(exc, phase + "_HELD_CHILD")
+ 
+     try:
+-        birth = _proc(pid)
+         os.close(writer)
++        writer = None
++        if callable(getattr(os, "pidfd_open", None)) and callable(
++            getattr(signal, "pidfd_send_signal", None)
++        ):
++            pidfd = os.pidfd_open(pid)
++        initial = _proc(pid)
++        if initial is not None and initial[0] != os.getpid():
++            raise RuntimeError("owned supervisor is not our fork child")
+         os.set_blocking(reader, False)
+         deadline = time.monotonic() + timeout + 12
+         while time.monotonic() < deadline:
+@@ -640,21 +785,12 @@ def _supervise(command, timeout, io_budget):
+     except BaseException as exc:
+         failure = (exc, exc.__traceback__)
+     finally:
+-        try:
+-            os.close(reader)
+-        except OSError:
+-            pass
++        close_control(writer, "CLOSE_WRITER")
++        close_control(reader, "CLOSE_READER")
+         for sig, interval in ((signal.SIGTERM, 10), (signal.SIGKILL, 2)):
+             if status is not None:
+                 break
+-            try:
+-                current = _proc(pid)
+-                if birth and current and current[2] == birth[2]:
+-                    os.kill(pid, sig)
+-            except ProcessLookupError:
+-                pass
+-            except BaseException as exc:
+-                cleanup_error(exc)
++            signal_supervisor(sig)
+             try:
+                 status = _wait_supervisor(pid, interval, cleanup_error)
+             except ChildProcessError as exc:
+@@ -662,25 +798,19 @@ def _supervise(command, timeout, io_budget):
+                 break
+             except BaseException as exc:
+                 cleanup_error(exc)
++        close_control(pidfd, "CLOSE_PIDFD")
++        if status is None:
++            cleanup_error(TimeoutError("owned supervisor was not reaped"))
+     if failure:
+         exc, traceback = failure
++        if cleanup_errors:
++            exc.add_note(json.dumps({"ownedSupervisorCleanupErrors": cleanup_errors}))
+         raise exc.with_traceback(traceback)
+     if status != 0:
+         raise RuntimeError("owned supervisor failed to retain its result")
+-    reply = dict(parse_rest_json(bytes(data)))
+-    if io_budget:
+-        used = reply["budgetUsed"]
+-        if type(used) is not int or not io_budget.used <= used <= io_budget.maximum:
+-            raise ValueError("owned supervisor changed the staging budget")
+-        io_budget.used = used
+-    if error := reply["error"]:
+-        kind = getattr(builtins, error["type"], RuntimeError)
+-        if not isinstance(kind, type) or not issubclass(kind, BaseException):
+-            kind = RuntimeError
+-        if issubclass(kind, OSError) and error["filename"] is not None:
+-            raise kind(*error["args"], error["filename"])
+-        raise kind(*error["args"])
+-    return reply["result"]
++    return _supervisor_reply(
++        parse_rest_json(bytes(data)), io_budget, expected, allow_nonzero
++    )
+ 
+ 
+ def run_owned(
+@@ -717,6 +847,8 @@ def run_owned(
+         ),
+         timeout,
+         io_budget,
++        expected={"name": name, "argv": argv, "stdoutIsData": data_stdout},
++        allow_nonzero=allow_nonzero,
+     )
+ 
+ 
+diff --git a/.github/workflows/scripts/test_qa3_native_io.py b/.github/workflows/scripts/test_qa3_native_io.py
+index fd67b6ed7fb..2de17f89cb1 100644
+--- a/.github/workflows/scripts/test_qa3_native_io.py
++++ b/.github/workflows/scripts/test_qa3_native_io.py
+@@ -840,5 +840,315 @@ class ProcessFailureTests(unittest.TestCase):
+         self.assertEqual(current.value, original.value)
+ 
+ 
++class SupervisorBoundaryTests(unittest.TestCase):
++    setUp = ProcessFailureTests.setUp
++    reap_fixture_children = ProcessFailureTests.reap_fixture_children
++    spawn = ProcessFailureTests.spawn
++    command = ProcessFailureTests.command
++
++    def parent_failure(self, mode, extra=None):
++        caller = os.getpid()
++        original_fork = os.fork
++        original_pipe = os.pipe
++        original_blocking = os.set_blocking
++        original_close = os.close
++        controls = []
++        supervisors = []
++        failed = False
++        failure = OSError(errno.EIO, "parent " + mode + " failed")
++        libc = ctypes.CDLL(None, use_errno=True)
++        prior = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
++        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
++
++        def pipe():
++            pair = original_pipe()
++            if os.getpid() == caller:
++                controls.extend((fd, os.fstat(fd)) for fd in pair)
++            return pair
++
++        def fork():
++            pid = original_fork()
++            if pid > 0 and os.getpid() == caller:
++                supervisors.append(pid)
++                self.owned[pid] = self.original_proc(pid)[2]
++                deadline = time.monotonic() + 2
++                while not self.ready.exists() and time.monotonic() < deadline:
++                    time.sleep(0.005)
++                self.assertTrue(self.ready.exists(), "own command did not start")
++            return pid
++
++        def proc(pid):
++            if os.getpid() == caller and pid in supervisors:
++                if mode == "snapshot":
++                    raise failure
++                if mode in {"reader", "fallback"}:
++                    return None
++            return self.original_proc(pid)
++
++        def blocking(fd, value):
++            if os.getpid() == caller and mode in {"reader", "fallback"}:
++                raise failure
++            return original_blocking(fd, value)
++
++        def close(fd):
++            nonlocal failed
++            if (
++                os.getpid() == caller
++                and mode == "writer"
++                and controls
++                and fd == controls[1][0]
++                and not failed
++            ):
++                failed = True
++                raise failure
++            return original_close(fd)
++
++        try:
++            with mock.patch.object(
++                qa3_native_io.os, "pipe", side_effect=pipe
++            ), mock.patch.object(
++                qa3_native_io.os, "fork", side_effect=fork
++            ), mock.patch.object(
++                qa3_native_io, "_proc", side_effect=proc
++            ), mock.patch.object(
++                qa3_native_io.os, "set_blocking", side_effect=blocking
++            ), mock.patch.object(qa3_native_io.os, "close", side_effect=close):
++                if extra:
++                    with extra(failure):
++                        with self.assertRaises(OSError) as caught:
++                            self.command(timeout=20)
++                else:
++                    with self.assertRaises(OSError) as caught:
++                        self.command(timeout=20)
++            self.assertEqual(caught.exception.args, failure.args)
++            for fd, stat in controls:
++                try:
++                    current = os.fstat(fd)
++                except OSError:
++                    continue
++                self.assertNotEqual(
++                    (current.st_dev, current.st_ino),
++                    (stat.st_dev, stat.st_ino),
++                    "parent left its own control descriptor open",
++                )
++            self.assertFalse(owned_alive(self.owned))
++            for path in self.root.glob("*.identity"):
++                self.assertIsNone(self.original_proc(read_json(path)["pid"]))
++            receipt = read_json(self.root / "logs/fixture.process.json")
++            self.assertTrue(receipt["ownedCleanupComplete"])
++            self.assertTrue(receipt["cancelled"])
++            return caught.exception
++        finally:
++            for fd, stat in controls:
++                try:
++                    current = os.fstat(fd)
++                except OSError:
++                    continue
++                if (current.st_dev, current.st_ino) == (stat.st_dev, stat.st_ino):
++                    original_close(fd)
++            self.reap_fixture_children()
++            self.assertEqual(libc.prctl(36, prior.value, 0, 0, 0), 0)
++
++    def test_parent_snapshot_error_closes_control_and_reaps(self):
++        self.parent_failure("snapshot")
++
++    def test_parent_reader_error_with_missing_snapshot_reaps(self):
++        self.parent_failure("reader")
++
++    def test_parent_writer_close_error_is_retried_and_reaps(self):
++        self.parent_failure("writer")
++
++    def test_parent_pidfd_open_error_uses_held_child_cleanup(self):
++        self.parent_failure(
++            "pidfd",
++            lambda failure: mock.patch.object(
++                qa3_native_io.os, "pidfd_open", side_effect=failure
++            ),
++        )
++
++    def test_parent_no_pidfd_uses_held_child_cleanup(self):
++        self.parent_failure(
++            "fallback",
++            lambda failure: mock.patch.object(qa3_native_io.os, "pidfd_open", None),
++        )
++
++    def test_parent_pidfd_signal_error_keeps_first_error_and_reaps(self):
++        caller = os.getpid()
++        original = signal.pidfd_send_signal
++        failed = False
++
++        def signal_pidfd(fd, sig, *args):
++            nonlocal failed
++            if os.getpid() == caller and not failed:
++                failed = True
++                raise OSError(errno.EMFILE, "secondary parent signal failed")
++            return original(fd, sig, *args)
++
++        exception = self.parent_failure(
++            "reader",
++            lambda failure: mock.patch.object(
++                qa3_native_io.signal, "pidfd_send_signal", side_effect=signal_pidfd
++            ),
++        )
++        self.assertTrue(failed)
++        self.assertIn("TERM_PIDFD", exception.__notes__[0])
++        self.assertIn(str(errno.EMFILE), exception.__notes__[0])
++
++    def valid_reply(self):
++        return {
++            "result": {
++                "name": "fake-only",
++                "argv": ["fixture-only"],
++                "exit": 0,
++                "stop": None,
++                "durationSeconds": 0.001,
++                "stdoutSha256": "a" * 64,
++                "stderrSha256": "b" * 64,
++                "ownedCleanupComplete": True,
++                "stdoutIsData": False,
++            },
++            "error": None,
++            "budgetUsed": None,
++        }
++
++    def reply(self, value, **kwargs):
++        encoded = __import__("json").dumps(value)
++        with mock.patch.object(qa3_native_io.json, "dumps", return_value=encoded):
++            return qa3_native_io._supervise(
++                lambda cancelled: self.valid_reply()["result"], 1, None, **kwargs
++            )
++
++    def test_private_envelope_rejects_false_errors_extra_keys_and_bad_results(self):
++        valid = self.valid_reply()
++        cases = [valid | {"error": error} for error in ({}, False, 0, "")]
++        cases += [valid | {"extra": True}]
++        cases += [valid | {"result": result} for result in (None, "success", 0, [])]
++        for field, value in (
++            ("ownedCleanupComplete", False),
++            ("ownedCleanupComplete", 1),
++            ("exit", True),
++            ("exit", 0.0),
++            ("exit", "0"),
++            ("stop", "CLEANUP_FAILED"),
++            ("stdoutIsData", 0),
++        ):
++            cases.append(valid | {"result": valid["result"] | {field: value}})
++        for i, value in enumerate(cases):
++            with self.subTest(i=i), self.assertRaises(Exception):
++                self.reply(value)
++
++    def test_private_envelope_never_reconstructs_system_exit_zero(self):
++        value = self.valid_reply() | {
++            "result": None,
++            "error": {
++                "type": "SystemExit",
++                "args": [0],
++                "errno": None,
++                "filename": None,
++                "message": "zero",
++            },
++        }
++        with self.assertRaises(Exception):
++            self.reply(value)
++
++    def test_private_envelope_valid_result_and_oserror_survive(self):
++        self.assertEqual(self.reply(self.valid_reply()), self.valid_reply()["result"])
++        value = self.valid_reply() | {
++            "result": None,
++            "error": {
++                "type": "OSError",
++                "args": [errno.EDQUOT, "fixture quota"],
++                "errno": errno.EDQUOT,
++                "filename": "/fixture-only",
++                "message": "fixture quota",
++            },
++        }
++        with self.assertRaises(OSError) as caught:
++            self.reply(value)
++        self.assertEqual(caught.exception.errno, errno.EDQUOT)
++        self.assertEqual(caught.exception.filename, "/fixture-only")
++
++    def test_private_envelope_explicit_nonzero_and_expected_command(self):
++        valid = self.valid_reply()
++        for exitcode in (True, 0.0, "0", None, 1):
++            value = valid | {"result": valid["result"] | {"exit": exitcode}}
++            with self.subTest(exitcode=exitcode), self.assertRaises(ValueError):
++                self.reply(value)
++        value = valid | {"result": valid["result"] | {"exit": 1}}
++        self.assertEqual(self.reply(value, allow_nonzero=True)["exit"], 1)
++        with self.assertRaises(ValueError):
++            self.reply(value, allow_nonzero="true")
++        with self.assertRaises(ValueError):
++            self.reply(valid, expected={"argv": ["changed-command"]})
++        with self.assertRaises(ValueError):
++            self.reply(valid | {"budgetUsed": 0})
++
++    def test_private_envelope_staging_budget_is_typed_and_monotone(self):
++        valid = self.valid_reply()
++        budget = IOBudget(self.root, 10)
++        budget.used = 2
++        for used in (True, 1, 11, None, "4", 4.0):
++            with self.subTest(used=used), self.assertRaises(ValueError):
++                qa3_native_io._supervisor_reply(
++                    valid | {"budgetUsed": used}, budget, None, False
++                )
++            self.assertEqual(budget.used, 2)
++        qa3_native_io._supervisor_reply(valid | {"budgetUsed": 4}, budget, None, False)
++        self.assertEqual(budget.used, 4)
++
++    def test_single_owner_guard_runs_before_fork(self):
++        with mock.patch.object(
++            qa3_native_io.signal, "getsignal", return_value=signal.SIG_IGN
++        ), mock.patch.object(qa3_native_io.os, "fork") as fork:
++            with self.assertRaises(ValueError):
++                self.reply(self.valid_reply())
++            fork.assert_not_called()
++        with mock.patch.object(
++            Path, "iterdir", return_value=iter([Path("1"), Path("2")])
++        ), mock.patch.object(qa3_native_io.os, "fork") as fork:
++            with self.assertRaises(ValueError):
++                self.reply(self.valid_reply())
++            fork.assert_not_called()
++
++    def test_fork_failure_closes_both_fds_even_if_first_close_fails(self):
++        original_pipe = os.pipe
++        original_close = os.close
++        descriptors = []
++        failed = False
++        initial = OSError(errno.EAGAIN, "initial fork failed")
++
++        def pipe():
++            pair = original_pipe()
++            descriptors.extend(pair)
++            return pair
++
++        def close(fd):
++            nonlocal failed
++            if fd in descriptors and not failed:
++                failed = True
++                raise OSError(errno.EIO, "secondary fork cleanup failed")
++            return original_close(fd)
++
++        try:
++            with mock.patch.object(
++                qa3_native_io.os, "pipe", side_effect=pipe
++            ), mock.patch.object(
++                qa3_native_io.os, "fork", side_effect=initial
++            ), mock.patch.object(qa3_native_io.os, "close", side_effect=close):
++                with self.assertRaises(OSError) as caught:
++                    self.reply(self.valid_reply())
++            self.assertEqual(caught.exception.args, initial.args)
++            for fd in descriptors:
++                with self.assertRaises(OSError):
++                    os.fstat(fd)
++        finally:
++            for fd in descriptors:
++                try:
++                    original_close(fd)
++                except OSError:
++                    pass
++
++
+ if __name__ == "__main__":
+     unittest.main()

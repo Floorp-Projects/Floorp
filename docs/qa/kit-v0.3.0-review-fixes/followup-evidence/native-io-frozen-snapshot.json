@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "baseHead": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "ownedFiles": [
+    {
+      "path": ".github/workflows/scripts/qa3_native_io.py",
+      "sha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+      "bytes": 33369
+    },
+    {
+      "path": ".github/workflows/scripts/test_qa3_native_io.py",
+      "sha256": "f1bfacc36f844e3f4d0aab51066b41aaab30b58f8c57d2d676ddf2fb40283888",
+      "bytes": 33272
+    }
+  ],
+  "patchSha256": "a66fd61bfd775ef7823a0361f79f6702d2ba3290d2c8545033b3292c3ffea923",
+  "gitStatus": " M .github/workflows/scripts/qa3_mozlog.py\n M .github/workflows/scripts/qa3_native_io.py\n M .github/workflows/scripts/test_qa3_mozlog.py\n M .github/workflows/scripts/test_qa3_native_io.py\n",
+  "testMethodCounts": {
+    "NativeIOTests": 19,
+    "ProcessFailureTests": 15
+  },
+  "ruffVersion": "ruff 0.16.10",
+  "targetedMachLint": {
+    "exitCode": 0,
+    "log": "native-io-mach-targeted-frozen.log"
+  },
+  "allModifiedMachLint": {
+    "status": "BLOCKED",
+    "exitCode": 1,
+    "log": "native-io-mach-all-modified-retry.log",
+    "reason": "sparse checkout lacks third_party/node/pnpm-lock.yaml while registering pnpm-audit"
+  },
+  "commitPushPerformed": false,
+  "nativeQualification": "UNVERIFIED",
+  "publicationAuthorized": false
+}
