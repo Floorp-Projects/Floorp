@@ -81,7 +81,9 @@ function getComponentRegistrar(): nsIComponentRegistrar | null {
 }
 
 const executedFunctions = new Set<string>();
-const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}`;
+const RELEASE_NOTES_URL = `https://blog.floorp.app/release/${NoranekoConstants.version2}?current_version=${
+  encodeURIComponent(AppConstants.MOZ_APP_VERSION_DISPLAY)
+}`;
 
 export function executeOnce(id: string, callback: () => void): boolean {
   if (executedFunctions.has(id)) {
