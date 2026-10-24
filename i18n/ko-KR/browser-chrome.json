@@ -70,10 +70,10 @@
       "incoming-failed": "일부 동기화한 데이터를 읽을 수 없습니다. 동기화에 성공할 때까지 기존 탭을 유지합니다.",
       "invalid-workspace": "이 워크스페이스는 동기화할 수 없습니다. 256자 이내의 이름 및 아이콘을 사용하고 다시 시도해 주세요. 다른 워크스페이스는 계속 동기화됩니다.",
       "deleted-workspace": "이 워크스페이스는 Sync에서 삭제되었습니다. 다시 동기화하려면 아카이브에서 복원하거나 새 워크스페이스를 생성하세요.",
-      "indicator-selected": "{{name}} — Included in workspace sync",
-      "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
-      "status-selected": "Included in sync",
-      "status-error": "Sync error"
+      "indicator-selected": "{{name}} — 워크스페이스 동기화에 포함됨",
+      "indicator-attention": "{{name}} — 워크스페이스 동기화 오류: {{error}}",
+      "status-selected": "동기화에 포함됨",
+      "status-error": "동기화 오류"
     },
     "context-menu": {
       "move-up": "이 워크스페이스를 위로 옮기기",
