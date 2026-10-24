@@ -21,6 +21,11 @@ permissions:
   contents: write
 
 jobs:
+  source-qa-shadow:
+    uses: ./.github/workflows/qa3-source-shadow.yml
+    permissions:
+      contents: read
+
   package-windows:
     uses: ./.github/workflows/package.yml
     with:
