@@ -41,6 +41,8 @@ const TAB_OWNER_KEY = "floorp-workspace-sync-owner";
 const TAB_PENDING_URL_KEY = "floorp-workspace-sync-url";
 const PROGRESS_FLAGS = Ci
   .nsIWebProgressListener as unknown as WorkspaceSyncProgressFlags;
+const HISTORY_LOAD_COMMAND = Ci.nsIDocShell.LOAD_CMD_HISTORY as number;
+const PUSHSTATE_LOAD_COMMAND = Ci.nsIDocShell.LOAD_CMD_PUSHSTATE as number;
 
 /** Adapts window-local browser tabs to the profile's encrypted Sync collection. */
 export class WorkspacesSyncController implements WorkspaceSyncProvider {
@@ -117,16 +119,14 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           const incoming = this.navigationFor(browser);
           if (incoming) {
             const requested = this.requestURL(request);
+            // The old page can change its URL while this load is pending.
+            // Native loadType distinguishes push/replaceState from Back/Forward.
             const owned = requested === incoming.url ||
-              location.spec === incoming.url;
-            const historyIndex = this.historyIndex(browser);
+              (location.spec === incoming.url &&
+                !(progress.loadType & PUSHSTATE_LOAD_COMMAND));
             if (
               owned ||
-              (flags &
-                PROGRESS_FLAGS.LOCATION_CHANGE_SAME_DOCUMENT) ||
-              (incoming.historyIndex !== undefined &&
-                historyIndex !== undefined &&
-                historyIndex !== incoming.historyIndex)
+              (progress.loadType & HISTORY_LOAD_COMMAND)
             ) {
               incoming.finish(
                 owned &&
@@ -318,14 +318,6 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     }
   }
 
-  private historyIndex(browser: WorkspaceSyncBrowser): number | undefined {
-    try {
-      return browser.browsingContext?.sessionHistory?.index;
-    } catch {
-      return undefined;
-    }
-  }
-
   private navigateIncoming(
     tab: XULElement,
     url: string,
@@ -357,7 +349,6 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     const incoming: IncomingWorkspaceNavigation = {
       url: uri.spec,
       title,
-      historyIndex: this.historyIndex(this.tabBrowser.getBrowserForTab(tab)),
       signal,
       promise,
       finish: (error) => {
@@ -638,8 +629,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           continue;
         }
         const browser = gBrowser.getBrowserForTab(tab);
+        const remoteSpec = Services.io.newURI(remoteTab.url).spec;
         const incoming = this.incomingNavigations.get(tab);
-        if (incoming && incoming.url !== remoteTab.url) {
+        if (incoming && incoming.url !== remoteSpec) {
           // A newer remote value may equal the still-visible old page. Stop the
           // superseded owned load before accepting that already-current URL.
           incoming.cancel(
@@ -647,7 +639,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           );
         }
         if (
-          browser.currentURI?.spec !== remoteTab.url ||
+          browser.currentURI?.spec !== remoteSpec ||
           this.incomingNavigations.has(tab)
         ) {
           navigations.push(

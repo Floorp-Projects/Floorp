@@ -569,6 +569,21 @@ async function runScenario() {
       "a failed uncommitted tab remains retryable rather than being acknowledged as an internal page",
     );
     await navigate(retryTab, "about:blank");
+    for (let attempt = 0; attempt < 200; attempt++) {
+      if (
+        SessionStore.getCustomTabValue(
+          retryTab,
+          "floorp-workspace-sync-url",
+        ) ===
+          ""
+      ) break;
+      await new Promise((resolve) => win.setTimeout(resolve, 20));
+    }
+    assert(
+      SessionStore.getCustomTabValue(retryTab, "floorp-workspace-sync-url") ===
+        "",
+      "explicit internal navigation clears the failed retry target before apply",
+    );
     await controller.apply(retryDocument, new Set());
     assert(
       win.gBrowser.getBrowserForTab(retryTab).currentURI.spec ===
@@ -628,6 +643,125 @@ async function runScenario() {
             "floorp-workspace-sync-url",
           ) === "",
       "retry after interruption commits in the original tab and clears its pending target",
+    );
+    const historyTarget = slowURL(2000);
+    const historyNoiseURL =
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-history-noise?target=" +
+      encodeURIComponent(historyTarget);
+    win.workspacesFuncs.changeWorkspace(incomingWorkspace);
+    win.gBrowser.selectedTab = incomingTab;
+    await navigate(incomingTab, historyNoiseURL);
+    const historyEvents = [];
+    const historyProgress = {
+      onLocationChange(browser, progress, _request, location, flags) {
+        if (
+          browser === incomingBrowser && progress.isTopLevel &&
+          (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+        ) {
+          historyEvents.push({
+            url: location.spec,
+            loadType: progress.loadType,
+          });
+        }
+      },
+    };
+    win.gBrowser.addTabsProgressListener(historyProgress);
+    const historyApply = controller.apply(
+      incomingDocument(historyTarget),
+      new Set(),
+    );
+    let historySettled = false;
+    historyApply.then(() => historySettled = true, () => historySettled = true);
+    try {
+      for (
+        let attempt = 0;
+        attempt < 75 && historyEvents.length < 3;
+        attempt++
+      ) {
+        await new Promise((resolve) => win.setTimeout(resolve, 20));
+      }
+    } finally {
+      win.gBrowser.removeTabsProgressListener(historyProgress);
+    }
+    const historyIntent = controller.incomingNavigations.get(incomingTab);
+    const historyCaptured = controller.capture(incomingWorkspace, new Set())
+      .tabs.find((tab) => tab.id === incomingID);
+    assert(
+      historyEvents.length >= 3 &&
+        historyEvents.every((event) =>
+          event.loadType & Ci.nsIDocShell.LOAD_CMD_PUSHSTATE
+        ) &&
+        incomingBrowser.currentURI.spec === historyTarget &&
+        !historySettled && historyIntent &&
+        historyCaptured?.url === historyTarget &&
+        historyCaptured.title === "Incoming intended title",
+      "old-page pushState and replaceState do not release a still-loading incoming URL: " +
+        JSON.stringify({
+          uri: incomingBrowser.currentURI.spec,
+          intent: historyIntent?.url,
+          captured: historyCaptured,
+          target: historyTarget,
+          events: historyEvents,
+        }),
+    );
+    await historyApply;
+    await waitForNavigation(incomingTab, historyTarget);
+    const sameDocumentPrevious = historyTarget + "#previous";
+    await navigate(incomingTab, sameDocumentPrevious);
+    await navigate(incomingTab, historyTarget + "#current");
+    const sameDocumentApply = controller.apply(
+      incomingDocument(slowURL(400)),
+      new Set(),
+    );
+    sameDocumentApply.catch(() => {});
+    await new Promise((resolve) => win.setTimeout(resolve, 50));
+    incomingBrowser.goBack();
+    await sameDocumentApply;
+    await waitForNavigation(incomingTab, sameDocumentPrevious);
+    assert(
+      !controller.incomingNavigations.has(incomingTab) &&
+        controller.capture(incomingWorkspace, new Set()).tabs.find((tab) =>
+            tab.id === incomingID
+          )?.url === sameDocumentPrevious,
+      "same-document Back supersedes a pending incoming URL and remains capturable",
+    );
+    const canonicalTarget = slowURL(400);
+    const rawTarget = canonicalTarget.replace("http:", "HTTP:");
+    let canonicalStarts = 0;
+    let canonicalStops = 0;
+    await withObservedBrowserMethod(
+      incomingBrowser,
+      "loadURI",
+      (uri) => {
+        if (uri.spec === canonicalTarget) canonicalStarts++;
+      },
+      () =>
+        withObservedBrowserMethod(
+          incomingBrowser,
+          "stop",
+          () => canonicalStops++,
+          async () => {
+            await withShortSyncDeadline(() =>
+              mustReject(
+                controller.apply(incomingDocument(rawTarget), new Set()),
+                "noncanonical URL reaches a pending native load",
+              )
+            );
+            await controller.apply(incomingDocument(rawTarget), new Set());
+            await waitForNavigation(incomingTab, canonicalTarget);
+            assert(
+              canonicalStarts === 1 && canonicalStops === 0,
+              "retry compares canonical URL specs and preserves the original load",
+            );
+          },
+        ),
+    );
+    const sameDocumentTarget = canonicalTarget + "#incoming-fragment";
+    await controller.apply(incomingDocument(sameDocumentTarget), new Set());
+    assert(
+      incomingBrowser.currentURI.spec === sameDocumentTarget &&
+        !controller.incomingNavigations.has(incomingTab),
+      "an incoming same-document URL commits through native normal load semantics",
     );
     const safeWorkspace = fixtureWorkspace("Internal navigation regression");
     const safeURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/safe";
@@ -726,6 +860,7 @@ async function runScenario() {
     );
     return {
       passed: true,
+      historyLocationEvidence: historyEvents,
       cases: [
         "native tab creation and local container",
         "SessionStore stable IDs",
@@ -748,6 +883,10 @@ async function runScenario() {
         "HTTP 204 in one tab preserves a slow sibling through its eventual native commit",
         "new HTTP 204 tabs remain retryable until explicit internal navigation",
         "new incoming tabs interrupted before first commit recover in place on retry",
+        "old-page same-document history activity preserves a still-pending incoming target",
+        "noncanonical equivalent remote URL retries reuse one native load",
+        "incoming same-document URLs complete without a network document load",
+        "native same-document Back supersedes a pending remote load",
       ],
     };
   } finally {

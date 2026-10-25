@@ -126,6 +126,12 @@ const server = Deno.serve(
     if (url.pathname === "/sync-no-content") {
       return new Response(null, { status: 204 });
     }
+    if (url.pathname === "/sync-history-noise") {
+      return new Response(
+        '<!doctype html><title>History noise</title><script>let n=0;const target=new URLSearchParams(location.search).get("target");setTimeout(()=>setInterval(()=>{history.pushState(null,"","#state-"+(++n));history.replaceState(null,"","#replace-"+n);if(target)history.replaceState(null,"",target)},25),150)</script>',
+        { headers: { "content-type": "text/html" } },
+      );
+    }
     return new Response(
       "<!doctype html><title>Sync test</title><p>Workspace Sync test</p>",
       { headers: { "content-type": "text/html" } },

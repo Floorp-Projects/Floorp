@@ -8,7 +8,6 @@ import type {
 export interface IncomingWorkspaceNavigation {
   url: string;
   title: string;
-  historyIndex?: number;
   signal?: AbortSignal;
   promise: Promise<void>;
   finish(error?: Error): void;
@@ -18,13 +17,13 @@ export interface IncomingWorkspaceNavigation {
 
 export interface WorkspaceSyncBrowser {
   currentURI?: { spec: string };
-  browsingContext?: { sessionHistory?: { index: number } | null } | null;
   stop(flags: number): void;
 }
 
 export interface WorkspaceSyncProgress {
   isTopLevel: boolean;
   isLoadingDocument: boolean;
+  loadType: number;
 }
 
 export interface WorkspaceSyncProgressListener {

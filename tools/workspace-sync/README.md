@@ -25,7 +25,7 @@ No account credentials or authenticated cloud service are required. A temporary
 loopback HTTP server supplies the test pages. Results and the isolated profile
 remain in the generated directory for inspection.
 
-The harness exercises 67 cases: 23 model/wire, 27 native engine and 17 adapter
+The harness exercises 75 cases: 23 model/wire, 27 native engine and 25 adapter
 cases. Native engine scenarios cover CryptoWrapper encryption round trips,
 per-tab uploads, independent additions, delete wins,
 unacknowledged/partial/successful tombstone GC, local unsubscribe,
@@ -71,6 +71,10 @@ that wait. An accelerated apply deadline also verifies that a still-live native
 load keeps its URL/title intent, same-target retries do not restart it, and a
 sibling's HTTP 204 cannot stop it. The fixture server supplies bounded
 `/sync-slow` and `/sync-no-content` responses without authenticated transport.
+Foreground old-page pushState/replaceState notifications also verify that the
+native load type preserves a pending incoming target while Back still works.
+Equivalent noncanonical URL retries reuse the existing load, and incoming
+same-document URLs complete without requiring a new document load.
 
 At revision `78aedc2cc830`, all 58 cases and the full smoke task passed. Nine
 isolated negative controls confirmed that removing the corresponding review
