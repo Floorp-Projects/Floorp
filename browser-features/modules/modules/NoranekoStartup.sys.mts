@@ -458,13 +458,22 @@ class CustomAboutPage {
 
 async function registerCustomAboutPages(): Promise<void> {
   const customAboutPages = await getCustomAboutPages();
+  // Newtab's resource mapping and Activity Stream share the native readiness signal.
+  const newTabRedirector = customAboutPages.newtab
+    ? Cc["@mozilla.org/network/protocol/about;1?what=newtab"]
+      .getService(Ci.nsIAboutModule).wrappedJSObject
+    : undefined;
 
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
       createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
-        return new CustomAboutPage(customAboutPages[aboutKey]).QueryInterface(
-          iid,
-        );
+        const page = new CustomAboutPage(customAboutPages[aboutKey]);
+        if (aboutKey === "newtab") {
+          Object.defineProperty(page, "wrappedJSObject", {
+            value: newTabRedirector,
+          });
+        }
+        return page.QueryInterface(iid);
       },
     };
 
