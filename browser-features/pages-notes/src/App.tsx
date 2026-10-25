@@ -11,7 +11,6 @@ import {
   notesDataToNotes,
   notesToNotesData,
   saveNotes,
-  saveSyncState,
   syncStateFromNotes,
 } from "./lib/dataManager.ts";
 import { addPrefObserver, removePrefObserver, rpc } from "./lib/rpc/rpc.ts";
@@ -25,6 +24,10 @@ import { AlertCircle, Download } from "lucide-react";
 import { noteToMarkdown } from "./lib/exportMarkdown.ts";
 import { toExportFilename } from "./lib/exportFilename.ts";
 import { saveTextFile } from "./lib/fileSink.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesSyncContext,
+} from "../../modules/common/notes-storage-types.ts";
 
 type SaveStatusType = "idle" | "saving" | "saved" | "error";
 
@@ -41,6 +44,7 @@ function App() {
   const [exportError, setExportError] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notesRef = useRef<Note[]>([]);
+  const acknowledgedValueRef = useRef<string | null>(null);
   const selectedNoteRef = useRef<Note | null>(null);
   const hasLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -74,19 +78,27 @@ function App() {
     return task;
   }, []);
 
-  const writeNotesPref = useCallback(async (notesToSave: Note[]) => {
-    const data = notesToNotesData(notesToSave);
-    const value = JSON.stringify(data);
-    const ownWrites = ownWriteValuesRef.current;
-    ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
-    try {
-      await saveNotes(data);
-    } finally {
-      const remaining = (ownWrites.get(value) ?? 1) - 1;
-      if (remaining === 0) ownWrites.delete(value);
-      else ownWrites.set(value, remaining);
-    }
-  }, []);
+  const writeNotesPref = useCallback(
+    async (
+      notesToSave: Note[],
+      context?: NotesSyncContext,
+      baseValue = acknowledgedValueRef.current,
+    ) => {
+      const data = notesToNotesData(notesToSave);
+      const value = JSON.stringify(data);
+      const ownWrites = ownWriteValuesRef.current;
+      ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
+      try {
+        const written = await saveNotes(data, context, baseValue);
+        acknowledgedValueRef.current = written.value;
+      } finally {
+        const remaining = (ownWrites.get(value) ?? 1) - 1;
+        if (remaining === 0) ownWrites.delete(value);
+        else ownWrites.set(value, remaining);
+      }
+    },
+    [],
+  );
 
   // Auto-reset "saved" status after 2 seconds
   useEffect(() => {
@@ -108,8 +120,10 @@ function App() {
     const loadNotes = async () => {
       try {
         setIsLoading(true);
-        const notesData = await getNotes(t);
+        const snapshot = await rpc.getNotesSnapshot();
+        const notesData = await getNotes(t, snapshot.value);
         if (disposed) return;
+        acknowledgedValueRef.current = snapshot.value;
 
         const convertedNotes: Note[] = notesData.titles.map((
           noteTitle,
@@ -152,7 +166,7 @@ function App() {
 
     const applyExternalPrefChange = async (
       prefName: string,
-      remoteStr: string | null,
+      snapshot: NotesPreferenceSnapshot,
     ) => {
       console.info(
         `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
@@ -160,20 +174,26 @@ function App() {
 
       try {
         // Read the externally observed preference snapshot.
-        if (!remoteStr) return; // Empty or null — nothing to merge
+        if (!snapshot.value) return; // Empty or null — nothing to merge
         const remoteNotes = notesDataToNotes(
-          JSON.parse(remoteStr) as NotesData,
+          JSON.parse(snapshot.incomingValue ?? snapshot.value) as NotesData,
         );
 
         // Read the current local state after the asynchronous base lookup.
-        const syncState = await loadSyncState();
+        const { state: syncState, context } = await loadSyncState(snapshot);
         if (disposed) return;
         const localNotes = notesRef.current;
 
+        const base = snapshot.origin === "sync" &&
+            snapshot.incomingValue === acknowledgedValueRef.current
+          ? syncStateFromNotes(
+            notesDataToNotes(JSON.parse(snapshot.incomingValue) as NotesData),
+          ).lastSyncedSnapshots
+          : syncState.lastSyncedSnapshots;
         const result = mergeNotesThreeWay(
           localNotes,
           remoteNotes,
-          syncState.lastSyncedSnapshots,
+          base,
         );
 
         // Publish before awaiting writes so later edits build on this merge.
@@ -187,11 +207,8 @@ function App() {
           : result.merged[0];
         selectCurrentNote(newSelected ?? result.merged[0] ?? null);
 
-        await writeNotesPref(result.merged);
+        await writeNotesPref(result.merged, context, snapshot.value);
         if (disposed) return;
-
-        // Preserve the existing external-snapshot base policy.
-        await saveSyncState(syncStateFromNotes(remoteNotes));
 
         if (result.hadConflicts) {
           console.warn(
@@ -205,26 +222,31 @@ function App() {
       }
     };
 
-    // Capture each server-delivered value as soon as its observer fires, then
-    // apply snapshots in notification order. Direct pref observers do not await
-    // async callbacks, so allowing merges to overlap could let an older callback
-    // overwrite a newer server-confirmed merge base.
+    // Capture each immutable observed snapshot before any async work.
     let syncMergeQueue: Promise<void> = Promise.resolve();
-    const onPrefChanged = (prefName: string) => {
+    let lastSnapshotKey = "";
+    const onPrefChanged = (
+      prefName: string,
+      snapshot: NotesPreferenceSnapshot,
+    ) => {
+      const key = `${snapshot.epoch}:${snapshot.revision}`;
+      if (key === lastSnapshotKey) return;
+      lastSnapshotKey = key;
       const ownWriteValues = new Set(ownWriteValuesRef.current.keys());
 
       syncMergeQueue = Promise.all([
         syncMergeQueue,
-        rpc.getStringPref(NOTES_PREF_NAME),
+        Promise.resolve(snapshot),
       ])
-        .then(([, remoteStr]) => {
+        .then(([, captured]) => {
           if (
-            disposed || (remoteStr !== null && ownWriteValues.has(remoteStr))
+            disposed ||
+            (captured.value !== null && ownWriteValues.has(captured.value))
           ) {
             return;
           }
           return enqueuePersistence(() =>
-            applyExternalPrefChange(prefName, remoteStr)
+            applyExternalPrefChange(prefName, captured)
           );
         })
         .catch((err) => {
