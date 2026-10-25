@@ -110,9 +110,11 @@ Scoop repository provided by [@SegoCode](https://github.com/SegoCode)
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
-- Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
+Homebrew install command:
 
-- Floorp provides a Universal build for both architectures.
+```
+brew install --cask floorp
+```
 
 **After version 11.0.0, Floorp has obtained Apple Notarization & Certification. This means that you can install Floorp without any warning messages. Additionally, Floorp now includes an auto-update system.**
 
