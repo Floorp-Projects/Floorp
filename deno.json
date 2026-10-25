@@ -81,6 +81,7 @@
     "test:host": "deno test --allow-read --allow-write tools/src/",
     "test:docs-pipeline": "deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",
+    "test:tab-stacks-session": "deno run -A tools/tab-stacks-session-regression.ts",
     "test:os-api": "deno run -A tools/os-test/verify_os_server_full.ts",
     "test:os-api:wrapper": "deno run -A tools/os-test/run_verify_os_server_full_wrapper.ts",
     "test:os-api:network-idle": "deno run -A tools/os-test/verify_network_idle_rigorous.ts",
