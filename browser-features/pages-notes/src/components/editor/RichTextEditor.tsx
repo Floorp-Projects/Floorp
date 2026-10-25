@@ -150,7 +150,10 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
         try {
             const nextDocument = editor.schema.nodeFromJSON(content);
             if (editor.state.doc.eq(nextDocument)) return;
-            editor.commands.setContent(nextDocument, false);
+            editor.chain()
+                .setContent(nextDocument, false)
+                .setMeta("addToHistory", false)
+                .run();
         } catch (error) {
             console.error("[Floorp Notes] Failed to apply editor content:", error);
         }
