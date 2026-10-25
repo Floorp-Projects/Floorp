@@ -110,11 +110,9 @@ Scoop repository provided by [@SegoCode](https://github.com/SegoCode)
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
-Homebrew install command:
+- Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-```
-brew install --cask floorp
-```
+- Floorp provides a Universal build for both architectures.
 
 **After version 11.0.0, Floorp has obtained Apple Notarization & Certification. This means that you can install Floorp without any warning messages. Additionally, Floorp now includes an auto-update system.**
 
@@ -179,6 +177,8 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 Please also check [`CONTRIBUTING.md`](https://github.com/Floorp-Projects/Floorp/blob/main/.github/CONTRIBUTING.md) for more details on how to contribute.
 
+For localization contributions, see [Localization](.github/CONTRIBUTING.md#localization).
+
 ### 🧰 How to Start Development
 
 Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
@@ -235,7 +235,7 @@ Notice: if you are a developer of "userChromeCSS Loader", please contact us so t
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
 
-Notice: If you are a maintainer of any listed component and your name or license is missing or incorrect, please contact us.
+Notice: If you are a maintainer of any listed component and your name or license is missing, please contact us.
 
 ### 📦 Fushra Pulse
 
