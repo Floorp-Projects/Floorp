@@ -142,8 +142,33 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       onStateChange: (browser, progress, request, flags, _status) => {
         if (!progress.isTopLevel) return;
         const incoming = this.navigationFor(browser);
-        if (!incoming) return;
         const requested = this.requestURL(request);
+        if (!incoming) {
+          if (
+            requested && (flags & PROGRESS_FLAGS.STATE_START) &&
+            (flags & PROGRESS_FLAGS.STATE_IS_DOCUMENT)
+          ) {
+            const tab = [...gBrowser.tabs].find((tab) =>
+              this.tabBrowser.getBrowserForTab(tab) === browser
+            );
+            if (tab) {
+              const pending = this.sessionStore.getCustomTabValue(
+                tab,
+                TAB_PENDING_URL_KEY,
+              );
+              // A real navigation abandons a failed incoming blank tab's retry
+              // target. An initial blank location notification alone does not.
+              if (pending && pending !== requested) {
+                this.sessionStore.setCustomTabValue(
+                  tab,
+                  TAB_PENDING_URL_KEY,
+                  "",
+                );
+              }
+            }
+          }
+          return;
+        }
         if (
           (flags & PROGRESS_FLAGS.STATE_START) &&
           (flags & PROGRESS_FLAGS.STATE_IS_DOCUMENT) &&
@@ -343,7 +368,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         try {
           if (
             this.sessionStore.getCustomTabValue(tab, TAB_PENDING_URL_KEY) ===
-              url
+              url &&
+            !(error &&
+              this.tabBrowser.getBrowserForTab(tab).currentURI?.spec ===
+                "about:blank")
           ) this.sessionStore.setCustomTabValue(tab, TAB_PENDING_URL_KEY, "");
         } catch (error) {
           console.error("[WorkspacesSync] Could not clear pending URL", error);

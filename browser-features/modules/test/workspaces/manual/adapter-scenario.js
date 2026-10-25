@@ -543,6 +543,92 @@ async function runScenario() {
         );
       },
     );
+    const retryWorkspace = fixtureWorkspace("Uncommitted incoming retry");
+    const retryID = uuid();
+    const retryURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-no-content";
+    const retryDocument = {
+      ...incomingDocument(retryURL),
+      workspaceId: retryWorkspace,
+      tabs: [{ ...incomingDocument(retryURL).tabs[0], id: retryID }],
+    };
+    await mustReject(
+      controller.apply(retryDocument, new Set([retryID])),
+      "a newly created HTTP 204 tab rejects its first apply",
+    );
+    const retryTab = [...win.gBrowser.tabs].find((tab) =>
+      SessionStore.getCustomTabValue(tab, "floorp-workspace-sync-id") ===
+        retryID
+    );
+    assert(
+      retryTab && win.gBrowser.getBrowserForTab(retryTab).currentURI.spec ===
+          "about:blank",
+      "the new no-content tab has not committed a document",
+    );
+    await mustReject(
+      controller.apply(retryDocument, new Set()),
+      "a failed uncommitted tab remains retryable rather than being acknowledged as an internal page",
+    );
+    await navigate(retryTab, "about:blank");
+    await controller.apply(retryDocument, new Set());
+    assert(
+      win.gBrowser.getBrowserForTab(retryTab).currentURI.spec ===
+          "about:blank" &&
+        SessionStore.getCustomTabValue(
+            retryTab,
+            "floorp-workspace-sync-url",
+          ) === "",
+      "explicit internal navigation after failure abandons the old retry target",
+    );
+    const interruptedWorkspace = fixtureWorkspace("Interrupted incoming retry");
+    const interruptedID = uuid();
+    const interruptedURL = slowURL(400);
+    const interruptedDocument = {
+      ...incomingDocument(interruptedURL),
+      workspaceId: interruptedWorkspace,
+      tabs: [{
+        ...incomingDocument(interruptedURL).tabs[0],
+        id: interruptedID,
+      }],
+    };
+    const firstSignal = new win.AbortController();
+    const interrupted = controller.apply(
+      interruptedDocument,
+      new Set([interruptedID]),
+      firstSignal.signal,
+    );
+    const interruptedTab = [...win.gBrowser.tabs].find((tab) =>
+      SessionStore.getCustomTabValue(tab, "floorp-workspace-sync-id") ===
+        interruptedID
+    );
+    firstSignal.abort();
+    await mustReject(
+      interrupted,
+      "cancelling before first commit rejects the incoming tab apply",
+    );
+    assert(
+      interruptedTab &&
+        win.gBrowser.getBrowserForTab(interruptedTab).currentURI.spec ===
+          "about:blank",
+      "the interrupted incoming tab remains at its initial document",
+    );
+    const nextSignal = new win.AbortController();
+    await controller.apply(
+      interruptedDocument,
+      new Set(),
+      nextSignal.signal,
+    );
+    await waitForNavigation(interruptedTab, interruptedURL);
+    assert(
+      [...win.gBrowser.tabs].filter((tab) =>
+            SessionStore.getCustomTabValue(tab, "floorp-workspace-sync-id") ===
+              interruptedID
+          ).length === 1 &&
+        SessionStore.getCustomTabValue(
+            interruptedTab,
+            "floorp-workspace-sync-url",
+          ) === "",
+      "retry after interruption commits in the original tab and clears its pending target",
+    );
     const safeWorkspace = fixtureWorkspace("Internal navigation regression");
     const safeURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/safe";
     const safeTab = open(safeWorkspace, safeURL);
@@ -660,6 +746,8 @@ async function runScenario() {
         "real user TabOpen remains explicit during a pending remote apply",
         "Sync wait expiry preserves live navigation; same-target retry and newer-target replacement respect intent",
         "HTTP 204 in one tab preserves a slow sibling through its eventual native commit",
+        "new HTTP 204 tabs remain retryable until explicit internal navigation",
+        "new incoming tabs interrupted before first commit recover in place on retry",
       ],
     };
   } finally {
