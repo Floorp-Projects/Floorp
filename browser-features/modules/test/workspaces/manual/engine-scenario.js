@@ -342,6 +342,137 @@ async function runScenario() {
   await api.capture();
   Services.prefs.setBoolPref("floorp.workspaces.enabled", true);
   completed.push("disabled feature never blocks Sync");
+  const disabledParent = uuid(), disabledChild = uuid();
+  const disabledRecords = [
+    record(disabledParent, metaEntity(disabledParent)),
+    record(disabledChild, tabEntity(disabledChild, disabledParent)),
+  ];
+  const incomingTelemetry = { addIncomingFailedReason: () => {} };
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", false);
+  const disabledFailures = await engine._applyRecords(
+    disabledRecords,
+    incomingTelemetry,
+  );
+  assert(
+    disabledFailures.includes(disabledParent) &&
+      disabledFailures.includes(disabledChild) &&
+      !snapshots.has(disabledParent) && !api.isSelected(disabledParent),
+    "an incoming download completing after disable changes neither selection nor UI",
+  );
+  assert(
+    cache.data.incomingFailures.includes(disabledParent) &&
+      cache.data.incomingFailures.includes(disabledChild),
+    "disabled incoming IDs retain independent persisted retry markers",
+  );
+  let outgoingWhileDisabled = false;
+  try {
+    await engine._store.createRecord(tabA, "floorp-workspaces");
+    outgoingWhileDisabled = true;
+  } catch { /* A previously started native upload may not read more tabs. */ }
+  assert(!outgoingWhileDisabled, "disabled outgoing reads reject");
+  Services.prefs.setStringPref(
+    "services.sync.floorp-workspaces.lastSync",
+    "12345",
+  );
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", true);
+  await api.capture();
+  assert(
+    Services.prefs.getStringPref("services.sync.floorp-workspaces.lastSync") ===
+      "0",
+    "re-enabling refetches even if the native download advanced lastSync",
+  );
+  const disabledOriginalProcess = SyncEngine.prototype._processIncoming;
+  try {
+    SyncEngine.prototype._processIncoming = async () => {};
+    engine.previousFailedIn.clear();
+    engine.toFetch.clear();
+    await engine._processIncoming();
+    assert(
+      engine.toFetch.has(disabledParent) && engine.toFetch.has(disabledChild),
+      "disabled records remain fetchable after native repeated-failure pruning",
+    );
+  } finally {
+    SyncEngine.prototype._processIncoming = disabledOriginalProcess;
+  }
+  assert(
+    (await engine._applyRecords(disabledRecords, incomingTelemetry)).length ===
+        0 &&
+      api.isSelected(disabledParent) &&
+      snapshots.get(disabledParent)?.tabs.some((tab) =>
+        tab.id === disabledChild
+      ),
+    "replaying disabled records applies the complete workspace on re-enable",
+  );
+  completed.push("disabled in-flight records persist and replay on re-enable");
+
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", false);
+  assert(
+    (await engine._applyRecords([tomb(disabledChild)], incomingTelemetry))
+      .includes(disabledChild) &&
+      !api.isRetired(disabledChild) &&
+      snapshots.get(disabledParent)?.tabs.some((tab) =>
+        tab.id === disabledChild
+      ),
+    "incoming tab tombstones do not alter disabled local state",
+  );
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", true);
+  await api.capture();
+  assert(
+    (await engine._applyRecords([tomb(disabledChild)], incomingTelemetry))
+      .length === 0,
+    "the disabled tombstone is replayed after re-enable",
+  );
+  await engine._flushIncomingTabs();
+  assert(
+    !snapshots.get(disabledParent)?.tabs.some((tab) =>
+      tab.id === disabledChild
+    ),
+    "replayed tab closure flushes after enabled incoming completion",
+  );
+  completed.push("disabled tombstones retain local content until replay");
+
+  const disabledApplyParent = uuid();
+  let enteredDisabledApply, releaseDisabledApply;
+  const disabledApplyEntered = new Promise((resolve) => {
+    enteredDisabledApply = resolve;
+  });
+  const disabledApplyRelease = new Promise((resolve) => {
+    releaseDisabledApply = resolve;
+  });
+  nextApplyGate = {
+    entered: enteredDisabledApply,
+    release: disabledApplyRelease,
+  };
+  const disabledApplyRecords = [
+    record(disabledApplyParent, metaEntity(disabledApplyParent)),
+  ];
+  const pendingDisabledApply = engine._applyRecords(
+    disabledApplyRecords,
+    incomingTelemetry,
+  );
+  await disabledApplyEntered;
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", false);
+  releaseDisabledApply();
+  assert(
+    (await pendingDisabledApply).includes(disabledApplyParent) &&
+      !snapshots.has(disabledApplyParent) &&
+      cache.data.pendingApplies.includes(disabledApplyParent),
+    "disable aborts an awaited provider apply and retains its desired state",
+  );
+  await api.capture();
+  assert(
+    !snapshots.has(disabledApplyParent),
+    "ordinary capture cannot retry UI work while disabled",
+  );
+  Services.prefs.setBoolPref("floorp.workspaces.enabled", true);
+  await api.capture();
+  assert(
+    snapshots.has(disabledApplyParent) &&
+      (await engine._applyRecords(disabledApplyRecords, incomingTelemetry))
+          .length === 0,
+    "re-enable resumes desired UI state and clears replay failures",
+  );
+  completed.push("disable aborts pending UI work and resumes after re-enable");
   await api.select(workspace, true);
   const bad = uuid();
   snapshots.set(bad, { ...makeSnapshot(bad, []), name: "x".repeat(257) });
