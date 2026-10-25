@@ -11,6 +11,14 @@ import {
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
 
+// Floorp's mode-aware startup opens the versioned release notes. Firefox's
+// separate milestone-update page ignores that choice and can open a second tab.
+// Set the default before command-line startup; preserve explicit user overrides.
+Services.prefs.getDefaultBranch("").setStringPref(
+  "startup.homepage_override_url",
+  "",
+);
+
 // Keep the existing browser UI during the Firefox 157 transition. Locking the
 // preferences masks a profile's prior Nova opt-in without deleting it.
 for (
