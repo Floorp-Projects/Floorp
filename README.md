@@ -179,6 +179,8 @@ For more detailed information and guidance, check out our [Floorp Documentation 
 
 Please also check [`CONTRIBUTING.md`](https://github.com/Floorp-Projects/Floorp/blob/main/.github/CONTRIBUTING.md) for more details on how to contribute.
 
+For localization contributions, see [Localization](.github/CONTRIBUTING.md#localization).
+
 ### 🧰 How to Start Development
 
 Floorp's dev workflow is orchestrated by `feles-build` (a Deno task).
