@@ -239,11 +239,11 @@ index 4916c301f8b..d5d465bdf91 100644
 +  if (mAPZC) {
 +    APZEventResult result = mAPZC->Bridge()->ReceiveInputEvent(aEvent);
 +    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) return;
-+    WidgetWheelEvent event = MayStartSwipeForAPZ(aEvent, result);
++    WidgetWheelEvent event = MayStartSwipe(aEvent, result);
 +    if (!Destroyed() && event.mMessage == eWheel &&
 +        (event.mDeltaX != 0 || event.mDeltaY != 0))
 +      ProcessUntransformedAPZEvent(&event, result);
-+  } else if (!MayStartSwipeForNonAPZ(aEvent) && !Destroyed()) {
++  } else if (!Destroyed()) {
 +    WidgetWheelEvent event = aEvent.ToWidgetEvent(this);
 +    if (event.mMessage == eWheel && (event.mDeltaX != 0 || event.mDeltaY != 0))
 +      DispatchEvent(&event);
