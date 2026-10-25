@@ -27,13 +27,20 @@ import {
 import { extractUrlFromState } from "./utils/workspace-snapshot.ts";
 
 import type {
+  IncomingWorkspaceNavigation,
   SyncSessionStore,
   WorkspaceSyncAPI,
+  WorkspaceSyncBrowser,
+  WorkspaceSyncProgressFlags,
+  WorkspaceSyncProgressListener,
+  WorkspaceSyncTabBrowser,
 } from "./workspacesSyncTypes.ts";
 
 const TAB_ID_KEY = "floorp-workspace-sync-id";
 const TAB_OWNER_KEY = "floorp-workspace-sync-owner";
 const TAB_PENDING_URL_KEY = "floorp-workspace-sync-url";
+const PROGRESS_FLAGS = Ci
+  .nsIWebProgressListener as unknown as WorkspaceSyncProgressFlags;
 
 /** Adapts window-local browser tabs to the profile's encrypted Sync collection. */
 export class WorkspacesSyncController implements WorkspaceSyncProvider {
@@ -49,6 +56,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   private explicitlyOpened = new WeakSet<XULElement>();
   private openedAfterStartup = new WeakSet<XULElement>();
   private physicalOrder = new Map<string, string[]>();
+  private incomingNavigations = new Map<
+    XULElement,
+    IncomingWorkspaceNavigation
+  >();
 
   constructor(private ctx: WorkspacesService) {
     const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
@@ -64,6 +75,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     if (this.privateWindow) return;
 
     const onChange = (event?: Event) => {
+      if (event?.type === "TabClose" && event.target) {
+        this.incomingNavigations.get(event.target as XULElement)?.finish();
+      }
       if (
         event?.type === "TabOpen" && this.active && !this.applying &&
         event.target
@@ -97,11 +111,60 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       "TabAttrModified",
       "SSTabRestored",
     ];
-    const progressListener = { onLocationChange: () => this.scheduleCapture() };
+    const progressListener: WorkspaceSyncProgressListener = {
+      onLocationChange: (browser, progress, request, location, flags) => {
+        if (progress.isTopLevel) {
+          const incoming = this.navigationFor(browser);
+          if (incoming) {
+            const requested = this.requestURL(request);
+            const owned = requested === incoming.url ||
+              location.spec === incoming.url;
+            const historyIndex = this.historyIndex(browser);
+            if (
+              owned ||
+              (flags &
+                PROGRESS_FLAGS.LOCATION_CHANGE_SAME_DOCUMENT) ||
+              (incoming.historyIndex !== undefined &&
+                historyIndex !== undefined &&
+                historyIndex !== incoming.historyIndex)
+            ) {
+              incoming.finish(
+                owned &&
+                  (flags & PROGRESS_FLAGS.LOCATION_CHANGE_ERROR_PAGE)
+                  ? new Error("Incoming workspace navigation failed")
+                  : undefined,
+              );
+            }
+          }
+        }
+        this.scheduleCapture();
+      },
+      onStateChange: (browser, progress, request, flags, _status) => {
+        if (!progress.isTopLevel) return;
+        const incoming = this.navigationFor(browser);
+        if (!incoming) return;
+        const requested = this.requestURL(request);
+        if (
+          (flags & PROGRESS_FLAGS.STATE_START) &&
+          (flags & PROGRESS_FLAGS.STATE_IS_DOCUMENT) &&
+          requested && requested !== incoming.url
+        ) {
+          incoming.finish();
+        } else if (
+          (flags & PROGRESS_FLAGS.STATE_STOP) &&
+          (flags &
+            (PROGRESS_FLAGS.STATE_IS_NETWORK |
+              PROGRESS_FLAGS.STATE_IS_DOCUMENT)) &&
+          requested === incoming.url
+        ) {
+          incoming.checkStopped(progress);
+        }
+      },
+    };
     for (const event of events) {
       gBrowser.tabContainer.addEventListener(event, onChange);
     }
-    gBrowser.addTabsProgressListener(progressListener);
+    this.tabBrowser.addTabsProgressListener(progressListener);
     const workspaceMoves = new MutationObserver(() => this.scheduleCapture());
     workspaceMoves.observe(gBrowser.tabContainer as Node, {
       attributes: true,
@@ -139,6 +202,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
 
     onCleanup(() => {
       this.stopped = true;
+      for (const incoming of this.incomingNavigations.values()) {
+        incoming.cancel(new Error("Workspace window is shutting down"));
+      }
       registration.abort();
       this.window.clearTimeout(retryTimer);
       unregister?.();
@@ -146,7 +212,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       for (const event of events) {
         gBrowser.tabContainer.removeEventListener(event, onChange);
       }
-      gBrowser.removeTabsProgressListener(progressListener);
+      this.tabBrowser.removeTabsProgressListener(progressListener);
       workspaceMoves.disconnect();
       Services.prefs.removeObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
       Services.obs.removeObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
@@ -206,6 +272,127 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     );
   }
 
+  private get tabBrowser(): WorkspaceSyncTabBrowser {
+    return gBrowser as unknown as WorkspaceSyncTabBrowser;
+  }
+
+  private navigationFor(
+    browser: WorkspaceSyncBrowser,
+  ): IncomingWorkspaceNavigation | undefined {
+    for (const [tab, incoming] of this.incomingNavigations) {
+      if (this.tabBrowser.getBrowserForTab(tab) === browser) return incoming;
+    }
+    return undefined;
+  }
+
+  private requestURL(request: nsIRequest | null): string | undefined {
+    try {
+      return request?.QueryInterface?.(Ci.nsIChannel).originalURI?.spec;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private historyIndex(browser: WorkspaceSyncBrowser): number | undefined {
+    try {
+      return browser.browsingContext?.sessionHistory?.index;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private navigateIncoming(
+    tab: XULElement,
+    url: string,
+    title: string,
+    signal?: AbortSignal,
+    alreadyLoading = false,
+  ): IncomingWorkspaceNavigation {
+    this.incomingNavigations.get(tab)?.finish(
+      new Error("Incoming workspace navigation was replaced"),
+    );
+    const uri = Services.io.newURI(url);
+    let resolve!: () => void;
+    let reject!: (error: Error) => void;
+    const promise = new Promise<void>((done, fail) => {
+      resolve = done;
+      reject = fail;
+    });
+    let stoppedTimer: number | undefined;
+    const abort = () =>
+      incoming.cancel(new Error("Workspace Sync account changed"));
+    const incoming: IncomingWorkspaceNavigation = {
+      url: uri.spec,
+      title,
+      historyIndex: this.historyIndex(this.tabBrowser.getBrowserForTab(tab)),
+      promise,
+      finish: (error) => {
+        if (this.incomingNavigations.get(tab) !== incoming) return;
+        this.incomingNavigations.delete(tab);
+        this.window.clearTimeout(timer);
+        this.window.clearTimeout(stoppedTimer);
+        signal?.removeEventListener("abort", abort);
+        try {
+          if (
+            this.sessionStore.getCustomTabValue(tab, TAB_PENDING_URL_KEY) ===
+              url
+          ) this.sessionStore.setCustomTabValue(tab, TAB_PENDING_URL_KEY, "");
+        } catch (error) {
+          console.error("[WorkspacesSync] Could not clear pending URL", error);
+        }
+        if (error) reject(error);
+        else resolve();
+      },
+      cancel: (error) => {
+        if (this.incomingNavigations.get(tab) !== incoming) return;
+        incoming.finish(error);
+        try {
+          this.tabBrowser.getBrowserForTab(tab).stop(
+            Ci.nsIWebNavigation.STOP_ALL as number,
+          );
+        } catch (stopError) {
+          console.error(
+            "[WorkspacesSync] Could not stop incoming load",
+            stopError,
+          );
+        }
+      },
+      checkStopped: (progress) => {
+        this.window.clearTimeout(stoppedTimer);
+        stoppedTimer = this.window.setTimeout(() => {
+          if (!progress.isLoadingDocument) {
+            incoming.finish(
+              gBrowser.getBrowserForTab(tab).currentURI?.spec === incoming.url
+                ? undefined
+                : new Error("Incoming workspace navigation did not commit"),
+            );
+          }
+        }, 0);
+      },
+    };
+    const timer = this.window.setTimeout(
+      () =>
+        incoming.cancel(new Error("Incoming workspace navigation timed out")),
+      30_000,
+    );
+    this.incomingNavigations.set(tab, incoming);
+    signal?.addEventListener("abort", abort, { once: true });
+    try {
+      if (signal?.aborted) abort();
+      else if (!alreadyLoading) {
+        gBrowser.getBrowserForTab(tab).loadURI(uri, {
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+        });
+      }
+    } catch (error) {
+      incoming.finish(
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    }
+    return incoming;
+  }
+
   private tabId(tab: XULElement, seenIds?: Set<string>): string {
     const previous = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
     const owner = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) ?? "";
@@ -237,6 +424,8 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   }
 
   private syncableURL(tab: XULElement): string | undefined {
+    const incoming = this.incomingNavigations.get(tab);
+    if (incoming) return incoming.url;
     const current = gBrowser.getBrowserForTab(tab).currentURI?.spec;
     if (isSyncableWorkspaceURL(current)) return current;
     // Explicit internal/file navigation must not fall back to stale HTTP
@@ -294,9 +483,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       tabs.push({
         id: this.tabId(tab, seenIds),
         url,
-        title: isSyncableWorkspaceURL(browser.currentURI?.spec)
-          ? (tab.getAttribute("label") ?? "").slice(0, 1024).toWellFormed()
-          : known?.title ?? "",
+        title: this.incomingNavigations.get(tab)?.title ??
+          (isSyncableWorkspaceURL(browser.currentURI?.spec)
+            ? (tab.getAttribute("label") ?? "").slice(0, 1024).toWellFormed()
+            : known?.title ?? ""),
         pinned: tab.hasAttribute("pinned"),
       });
       this.explicitlyOpened.delete(tab);
@@ -318,14 +508,17 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     };
   }
 
-  apply(
+  async apply(
     document: WorkspaceSyncDocument,
     missingTabIds: ReadonlySet<string>,
     signal?: AbortSignal,
   ): Promise<void> {
     if (signal?.aborted) {
-      return Promise.reject(new Error("Workspace Sync account changed"));
+      throw new Error("Workspace Sync account changed");
     }
+    if (this.stopped) throw new Error("Workspace window is shutting down");
+    const navigations: IncomingWorkspaceNavigation[] = [];
+    let completed = false;
     this.applying = true;
     this.window.clearTimeout(this.timer);
     try {
@@ -360,6 +553,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       let previousTab: XULElement | undefined;
       for (const remoteTab of liveWorkspaceSyncTabs(document)) {
         let tab = local.get(remoteTab.id);
+        let created = false;
         if (!tab && missingTabIds.has(remoteTab.id)) {
           tab = this.ctx.withExplicitTabUserContext(
             localContainerId,
@@ -380,6 +574,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
             remoteTab.url,
           );
           this.ctx.tabManagerCtx.setWorkspaceIdToAttribute(tab, id);
+          created = true;
         }
         if (!tab) continue;
         if (!this.syncableURL(tab)) {
@@ -390,10 +585,15 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         }
         const browser = gBrowser.getBrowserForTab(tab);
         if (browser.currentURI?.spec !== remoteTab.url) {
-          browser.loadURI(Services.io.newURI(remoteTab.url), {
-            triggeringPrincipal: Services.scriptSecurityManager
-              .getSystemPrincipal(),
-          });
+          navigations.push(
+            this.navigateIncoming(
+              tab,
+              remoteTab.url,
+              remoteTab.title,
+              signal,
+              created,
+            ),
+          );
         }
         if (remoteTab.pinned && !tab.hasAttribute("pinned")) {
           gBrowser.pinTab(tab);
@@ -414,9 +614,16 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           !this.api.isRetired(tabId)
         ),
       );
-      return Promise.resolve();
-    } finally {
       this.applying = false;
+      await Promise.all(navigations.map((incoming) => incoming.promise));
+      completed = true;
+    } finally {
+      for (const incoming of navigations) {
+        incoming.cancel(new Error("Workspace apply did not finish"));
+      }
+      await Promise.allSettled(navigations.map((incoming) => incoming.promise));
+      this.applying = false;
+      if (completed) this.scheduleCapture();
     }
   }
 }

@@ -247,12 +247,8 @@ async function runScenario() {
       tab.setAttribute("floorpWorkspaceId", id);
       return tab;
     };
-    const navigate = async (tab, url) => {
+    const waitForNavigation = async (tab, url) => {
       const browser = win.gBrowser.getBrowserForTab(tab);
-      browser.loadURI(Services.io.newURI(url), {
-        triggeringPrincipal: Services.scriptSecurityManager
-          .getSystemPrincipal(),
-      });
       for (let attempt = 0; attempt < 200; attempt++) {
         if (
           browser.currentURI?.spec === url &&
@@ -262,6 +258,140 @@ async function runScenario() {
       }
       throw new Error("Regression page did not finish loading");
     };
+    const navigate = async (tab, url) => {
+      win.gBrowser.getBrowserForTab(tab).loadURI(Services.io.newURI(url), {
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
+      });
+      await waitForNavigation(tab, url);
+    };
+    const mustReject = async (promise, message) => {
+      let rejected = false;
+      try {
+        await promise;
+      } catch {
+        rejected = true;
+      }
+      assert(rejected, message);
+    };
+    const incomingWorkspace = fixtureWorkspace(
+      "Incoming navigation regression",
+    );
+    const originalURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/incoming-original";
+    const incomingTab = open(incomingWorkspace, originalURL);
+    await waitForNavigation(incomingTab, originalURL);
+    const originalSnapshot = controller.capture(incomingWorkspace, new Set());
+    const incomingID = originalSnapshot.tabs[0].id;
+    const incomingDocument = (url) => ({
+      version: 1,
+      workspaceId: incomingWorkspace,
+      name: "Incoming navigation regression",
+      icon: null,
+      metadata: { modifiedAt: 300, modifiedBy: device },
+      tabs: [{
+        id: incomingID,
+        url,
+        title: "Incoming intended title",
+        pinned: false,
+        position: 0,
+        deleted: false,
+        modifiedAt: 300,
+        modifiedBy: device,
+      }],
+    });
+    const slowURL = () =>
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-slow?delay=1500&token=" + uuid();
+    const remoteURL = slowURL();
+    const receiving = controller.apply(incomingDocument(remoteURL), new Set());
+    let received = false;
+    receiving.then(() => received = true, () => received = true);
+    await new Promise((resolve) => win.setTimeout(resolve, 50));
+    const beforeCommit = controller.capture(incomingWorkspace, new Set());
+    assert(
+      !received &&
+        win.gBrowser.getBrowserForTab(incomingTab).currentURI.spec ===
+          originalURL &&
+        beforeCommit.tabs[0].url === remoteURL &&
+        beforeCommit.tabs[0].title === "Incoming intended title",
+      "an existing slow remote load retains its URL and title intent before native commit",
+    );
+    const explicitDuringReceive = open(
+      otherWorkspace,
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/explicit-open-during-receive",
+    );
+    assert(
+      controller.explicitlyOpened.has(explicitDuringReceive) &&
+        controller.openedAfterStartup.has(explicitDuringReceive),
+      "real user TabOpen remains explicit while the remote navigation waits",
+    );
+    await receiving;
+    await waitForNavigation(incomingTab, remoteURL);
+    win.gBrowser.getBrowserForTab(incomingTab).goBack();
+    await waitForNavigation(incomingTab, originalURL);
+    const afterBack = controller.capture(incomingWorkspace, new Set());
+    assert(
+      afterBack.tabs[0].url === originalURL &&
+        afterBack.tabs[0].id === incomingID,
+      "native Back to the exact original URL is captured with its stable ID",
+    );
+    const superseded = controller.apply(
+      incomingDocument(slowURL()),
+      new Set(),
+    );
+    superseded.catch(() => {});
+    await new Promise((resolve) => win.setTimeout(resolve, 50));
+    await navigate(incomingTab, originalURL);
+    await superseded;
+    assert(
+      controller.capture(incomingWorkspace, new Set()).tabs[0].url ===
+        originalURL,
+      "explicit navigation to the exact pre-apply URL supersedes remote intent successfully",
+    );
+    const previousURL =
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/incoming-history-previous";
+    await navigate(incomingTab, previousURL);
+    await navigate(incomingTab, originalURL);
+    const backDuringReceive = controller.apply(
+      incomingDocument(slowURL()),
+      new Set(),
+    );
+    backDuringReceive.catch(() => {});
+    await new Promise((resolve) => win.setTimeout(resolve, 50));
+    win.gBrowser.getBrowserForTab(incomingTab).goBack();
+    await waitForNavigation(incomingTab, previousURL);
+    await backDuringReceive;
+    assert(
+      controller.capture(incomingWorkspace, new Set()).tabs[0].url ===
+        previousURL,
+      "native history Back during a slow incoming load preserves the actual previous URL",
+    );
+    await navigate(incomingTab, originalURL);
+    await mustReject(
+      controller.apply(
+        incomingDocument(
+          "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-no-content",
+        ),
+        new Set(),
+      ),
+      "a successful HTTP response without a document commit rejects the incoming apply",
+    );
+    const navigationAbort = new AbortController();
+    const aborted = controller.apply(
+      incomingDocument(slowURL()),
+      new Set(),
+      navigationAbort.signal,
+    );
+    const abortedResult = mustReject(aborted, "aborted incoming load rejects");
+    await new Promise((resolve) => win.setTimeout(resolve, 50));
+    navigationAbort.abort();
+    await abortedResult;
+    await new Promise((resolve) => win.setTimeout(resolve, 1600));
+    assert(
+      controller.incomingNavigations.size === 0 &&
+        win.gBrowser.getBrowserForTab(incomingTab).currentURI.spec ===
+          originalURL,
+      "abort clears the transient intent and stops its owned load before later commit",
+    );
     const safeWorkspace = fixtureWorkspace("Internal navigation regression");
     const safeURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/safe";
     const safeTab = open(safeWorkspace, safeURL);
@@ -371,6 +501,12 @@ async function runScenario() {
         "return to a public page retains its stable ID",
         "source-first workspace move replaces a retired ID",
         "private-window profile-wide metadata deletion",
+        "slow existing-tab remote navigation preserves URL and title before commit",
+        "native Back and explicit same-original-URL navigation clear remote intent",
+        "HTTP 204 without commit rejects instead of claiming applied",
+        "account abort stops pending navigation and releases its intent",
+        "native Back during slow incoming navigation preserves history intent",
+        "real user TabOpen remains explicit during a pending remote apply",
       ],
     };
   } finally {

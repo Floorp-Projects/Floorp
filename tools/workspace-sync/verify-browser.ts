@@ -114,11 +114,23 @@ const port = (listener.addr as Deno.NetAddr).port;
 listener.close();
 const server = Deno.serve(
   { hostname: "127.0.0.1", port: 0, onListen: () => {} },
-  () =>
-    new Response(
+  async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname === "/sync-slow") {
+      const milliseconds = Number(url.searchParams.get("delay") ?? "1500");
+      const bounded = Number.isFinite(milliseconds)
+        ? Math.min(Math.max(milliseconds, 0), 5000)
+        : 0;
+      await new Promise((resolve) => setTimeout(resolve, bounded));
+    }
+    if (url.pathname === "/sync-no-content") {
+      return new Response(null, { status: 204 });
+    }
+    return new Response(
       "<!doctype html><title>Sync test</title><p>Workspace Sync test</p>",
       { headers: { "content-type": "text/html" } },
-    ),
+    );
+  },
 );
 const origin = `http://127.0.0.1:${(server.addr as Deno.NetAddr).port}`;
 await Deno.writeTextFile(
