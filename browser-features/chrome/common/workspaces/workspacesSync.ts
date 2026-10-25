@@ -308,16 +308,24 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     signal?: AbortSignal,
     alreadyLoading = false,
   ): IncomingWorkspaceNavigation {
-    this.incomingNavigations.get(tab)?.finish(
+    const uri = Services.io.newURI(url);
+    const previous = this.incomingNavigations.get(tab);
+    if (previous?.url === uri.spec && previous.signal === signal) {
+      previous.title = title;
+      return previous;
+    }
+    previous?.cancel(
       new Error("Incoming workspace navigation was replaced"),
     );
-    const uri = Services.io.newURI(url);
     let resolve!: () => void;
     let reject!: (error: Error) => void;
     const promise = new Promise<void>((done, fail) => {
       resolve = done;
       reject = fail;
     });
+    // A bounded apply may return before this navigation ends. Keep its eventual
+    // failure handled even when no apply is currently waiting for it.
+    void promise.catch(() => {});
     let stoppedTimer: number | undefined;
     const abort = () =>
       incoming.cancel(new Error("Workspace Sync account changed"));
@@ -325,11 +333,11 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       url: uri.spec,
       title,
       historyIndex: this.historyIndex(this.tabBrowser.getBrowserForTab(tab)),
+      signal,
       promise,
       finish: (error) => {
         if (this.incomingNavigations.get(tab) !== incoming) return;
         this.incomingNavigations.delete(tab);
-        this.window.clearTimeout(timer);
         this.window.clearTimeout(stoppedTimer);
         signal?.removeEventListener("abort", abort);
         try {
@@ -341,7 +349,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           console.error("[WorkspacesSync] Could not clear pending URL", error);
         }
         if (error) reject(error);
-        else resolve();
+        else {
+          resolve();
+          this.scheduleCapture();
+        }
       },
       cancel: (error) => {
         if (this.incomingNavigations.get(tab) !== incoming) return;
@@ -370,11 +381,6 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         }, 0);
       },
     };
-    const timer = this.window.setTimeout(
-      () =>
-        incoming.cancel(new Error("Incoming workspace navigation timed out")),
-      30_000,
-    );
     this.incomingNavigations.set(tab, incoming);
     signal?.addEventListener("abort", abort, { once: true });
     try {
@@ -391,6 +397,26 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       );
     }
     return incoming;
+  }
+
+  private async waitForIncoming(
+    navigations: IncomingWorkspaceNavigation[],
+  ): Promise<void> {
+    if (!navigations.length) return;
+    let timer: number | undefined;
+    try {
+      await Promise.race([
+        Promise.all(navigations.map((incoming) => incoming.promise)),
+        new Promise<never>((_, reject) => {
+          timer = this.window.setTimeout(
+            () => reject(new Error("Incoming workspace navigation timed out")),
+            30_000,
+          );
+        }),
+      ]);
+    } finally {
+      this.window.clearTimeout(timer);
+    }
   }
 
   private tabId(tab: XULElement, seenIds?: Set<string>): string {
@@ -584,7 +610,18 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           continue;
         }
         const browser = gBrowser.getBrowserForTab(tab);
-        if (browser.currentURI?.spec !== remoteTab.url) {
+        const incoming = this.incomingNavigations.get(tab);
+        if (incoming && incoming.url !== remoteTab.url) {
+          // A newer remote value may equal the still-visible old page. Stop the
+          // superseded owned load before accepting that already-current URL.
+          incoming.cancel(
+            new Error("Incoming workspace navigation was replaced"),
+          );
+        }
+        if (
+          browser.currentURI?.spec !== remoteTab.url ||
+          this.incomingNavigations.has(tab)
+        ) {
           navigations.push(
             this.navigateIncoming(
               tab,
@@ -615,13 +652,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         ),
       );
       this.applying = false;
-      await Promise.all(navigations.map((incoming) => incoming.promise));
+      await this.waitForIncoming(navigations);
       completed = true;
     } finally {
-      for (const incoming of navigations) {
-        incoming.cancel(new Error("Workspace apply did not finish"));
-      }
-      await Promise.allSettled(navigations.map((incoming) => incoming.promise));
       this.applying = false;
       if (completed) this.scheduleCapture();
     }

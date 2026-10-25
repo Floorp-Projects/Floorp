@@ -299,8 +299,9 @@ async function runScenario() {
         modifiedBy: device,
       }],
     });
-    const slowURL = () =>
-      "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-slow?delay=1500&token=" + uuid();
+    const slowURL = (delay = 1500) =>
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-slow?delay=" + delay + "&token=" +
+      uuid();
     const remoteURL = slowURL();
     const receiving = controller.apply(incomingDocument(remoteURL), new Set());
     let received = false;
@@ -391,6 +392,156 @@ async function runScenario() {
         win.gBrowser.getBrowserForTab(incomingTab).currentURI.spec ===
           originalURL,
       "abort clears the transient intent and stops its owned load before later commit",
+    );
+    const withObservedBrowserMethod = async (
+      browser,
+      key,
+      observe,
+      operation,
+    ) => {
+      const descriptor = Object.getOwnPropertyDescriptor(browser, key);
+      const original = browser[key];
+      browser[key] = function (...args) {
+        observe(...args);
+        return original.apply(this, args);
+      };
+      try {
+        return await operation();
+      } finally {
+        if (descriptor) Object.defineProperty(browser, key, descriptor);
+        else delete browser[key];
+      }
+    };
+    const withShortSyncDeadline = async (operation) => {
+      const descriptor = Object.getOwnPropertyDescriptor(win, "setTimeout");
+      const original = win.setTimeout;
+      let deadlines = 0;
+      win.setTimeout = function (callback, delay, ...args) {
+        if (delay === 30_000) {
+          deadlines++;
+          delay = 100;
+        }
+        return original.call(this, callback, delay, ...args);
+      };
+      try {
+        await operation();
+        assert(
+          deadlines > 0,
+          "the production 30-second Sync wait was exercised",
+        );
+      } finally {
+        if (descriptor) Object.defineProperty(win, "setTimeout", descriptor);
+        else delete win.setTimeout;
+      }
+    };
+    const incomingBrowser = win.gBrowser.getBrowserForTab(incomingTab);
+    const retainedURL = slowURL(400);
+    let retainedStarts = 0;
+    let retainedStops = 0;
+    await withObservedBrowserMethod(
+      incomingBrowser,
+      "loadURI",
+      (uri) => {
+        if (uri.spec === retainedURL) retainedStarts++;
+      },
+      () =>
+        withObservedBrowserMethod(
+          incomingBrowser,
+          "stop",
+          () => retainedStops++,
+          async () => {
+            await withShortSyncDeadline(() =>
+              mustReject(
+                controller.apply(incomingDocument(retainedURL), new Set()),
+                "Sync wait expiry rejects without declaring a native navigation failure",
+              )
+            );
+            const retained = controller.capture(incomingWorkspace, new Set());
+            assert(
+              incomingBrowser.currentURI.spec === originalURL &&
+                retained.tabs[0].url === retainedURL &&
+                retained.tabs[0].title === "Incoming intended title" &&
+                retainedStarts === 1 && retainedStops === 0,
+              "an expired Sync wait retains the live navigation and URL/title intent",
+            );
+            await controller.apply(incomingDocument(retainedURL), new Set());
+            await waitForNavigation(incomingTab, retainedURL);
+            assert(
+              retainedStarts === 1 && retainedStops === 0 &&
+                !controller.incomingNavigations.has(incomingTab) &&
+                SessionStore.getCustomTabValue(
+                    incomingTab,
+                    "floorp-workspace-sync-id",
+                  ) === incomingID,
+              "same-target retry reuses one native load and late commit releases intent with the stable ID",
+            );
+            await withShortSyncDeadline(() =>
+              mustReject(
+                controller.apply(incomingDocument(slowURL(400)), new Set()),
+                "the replacement regression reaches the retained-navigation state",
+              )
+            );
+            await controller.apply(incomingDocument(retainedURL), new Set());
+            await new Promise((resolve) => win.setTimeout(resolve, 450));
+            assert(
+              retainedStops === 1 &&
+                incomingBrowser.currentURI.spec === retainedURL &&
+                !controller.incomingNavigations.has(incomingTab),
+              "a newer remote target equal to currentURI stops the older retained load before it can commit",
+            );
+          },
+        ),
+    );
+    await navigate(incomingTab, originalURL);
+    const siblingOriginal =
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/incoming-sibling-original";
+    const siblingTab = open(incomingWorkspace, siblingOriginal);
+    await waitForNavigation(siblingTab, siblingOriginal);
+    const siblingID =
+      controller.capture(incomingWorkspace, new Set()).tabs.find((tab) =>
+        tab.url === siblingOriginal
+      ).id;
+    const siblingURL = slowURL(400);
+    const siblingBrowser = win.gBrowser.getBrowserForTab(siblingTab);
+    const siblings = incomingDocument(
+      "__WORKSPACE_SYNC_TEST_ORIGIN__/sync-no-content",
+    );
+    siblings.tabs.push({
+      ...siblings.tabs[0],
+      id: siblingID,
+      url: siblingURL,
+      title: "Sibling intended title",
+      position: 1,
+    });
+    let siblingStops = 0;
+    await withObservedBrowserMethod(
+      siblingBrowser,
+      "stop",
+      () => siblingStops++,
+      async () => {
+        await mustReject(
+          controller.apply(siblings, new Set()),
+          "one HTTP 204 rejects the batch apply",
+        );
+        const siblingPending = controller.capture(incomingWorkspace, new Set())
+          .tabs.find((tab) => tab.id === siblingID);
+        assert(
+          siblingStops === 0 &&
+            siblingBrowser.currentURI.spec === siblingOriginal &&
+            siblingPending?.url === siblingURL &&
+            siblingPending.title === "Sibling intended title",
+          "a failed tab does not stop or clear a sibling's pending remote URL/title intent",
+        );
+        await waitForNavigation(siblingTab, siblingURL);
+        assert(
+          siblingStops === 0 &&
+            !controller.incomingNavigations.has(siblingTab) &&
+            controller.capture(incomingWorkspace, new Set()).tabs.find((tab) =>
+                tab.id === siblingID
+              )?.url === siblingURL,
+          "the sibling commits normally after its batch's other tab failed",
+        );
+      },
     );
     const safeWorkspace = fixtureWorkspace("Internal navigation regression");
     const safeURL = "__WORKSPACE_SYNC_TEST_ORIGIN__/safe";
@@ -507,6 +658,8 @@ async function runScenario() {
         "account abort stops pending navigation and releases its intent",
         "native Back during slow incoming navigation preserves history intent",
         "real user TabOpen remains explicit during a pending remote apply",
+        "Sync wait expiry preserves live navigation; same-target retry and newer-target replacement respect intent",
+        "HTTP 204 in one tab preserves a slow sibling through its eventual native commit",
       ],
     };
   } finally {

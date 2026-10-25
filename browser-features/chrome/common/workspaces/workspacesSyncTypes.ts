@@ -9,6 +9,7 @@ export interface IncomingWorkspaceNavigation {
   url: string;
   title: string;
   historyIndex?: number;
+  signal?: AbortSignal;
   promise: Promise<void>;
   finish(error?: Error): void;
   cancel(error: Error): void;

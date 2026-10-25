@@ -187,12 +187,17 @@ download advanced it; pending UI state is retried while deferred closures still
 require a completed incoming pass.
 
 An incoming URL change retains its URL and title intent until a top-level native
-navigation commits. The provider awaits that bounded transition, rather than
-letting a capture publish the previous page as a newer local edit. Failure,
-no-document responses, abort, timeout and window disposal reject the apply and
-release the transient intent. Genuine local navigation and Back supersede the
-intent without masking subsequent local capture. The wait does not classify
-user-created tabs as incoming tabs.
+navigation commits, so a capture cannot publish the previous page as a newer
+local edit. Each provider apply waits at most 30 seconds; that wait's timeout or
+another tab's failure leaves a still-owned load and its capture intent intact. A
+retry reuses the live navigation only for the same URL and cancellation signal.
+A newer remote URL supersedes the prior owned load, including when it equals the
+still-visible old page. Real navigation failures and no-document responses
+release only their own intent. Account or feature abort and window disposal stop
+owned loads. Genuine local navigation and Back supersede the intent without
+masking subsequent local capture. The wait does not classify user-created tabs
+as incoming tabs, and late completion schedules capture and pending-apply
+recovery.
 
 `weave:service:start-over` synchronously invalidates the account session and
 aborts pending provider work before queuing the cached-state reset. Incoming

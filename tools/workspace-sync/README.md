@@ -67,8 +67,10 @@ Delayed HTTP fixtures also verify that an existing tab retains its incoming URL
 and title until native commit. Native Back (including during the pending load),
 explicit navigation to the exact original URL, HTTP 204 without a commit and
 account abort exercise intent cleanup. User-created tabs remain explicit during
-that wait. The fixture server supplies bounded `/sync-slow` and
-`/sync-no-content` responses without authenticated transport.
+that wait. An accelerated apply deadline also verifies that a still-live native
+load keeps its URL/title intent, same-target retries do not restart it, and a
+sibling's HTTP 204 cannot stop it. The fixture server supplies bounded
+`/sync-slow` and `/sync-no-content` responses without authenticated transport.
 
 At revision `78aedc2cc830`, all 58 cases and the full smoke task passed. Nine
 isolated negative controls confirmed that removing the corresponding review
