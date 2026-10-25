@@ -255,6 +255,25 @@ Deno.test("Notes local compare-and-merge preserves another window and never ackn
   }
 });
 
+Deno.test("Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions", async () => {
+  const p = await profile();
+  try {
+    const submitted = encodeNotes([note()]);
+    const unseen = { ...note("other window", 2), id: "note-b" };
+    p.store.writeLocal(encodeNotes([note(), unseen]));
+    const first = p.store.writeLocal(submitted, undefined, submitted);
+    assertEquals(JSON.parse(first.value!).ids, ["note-a", "note-b"]);
+    // The caller still displays only its submitted note, so its next ancestor
+    // is the submitted UI value, not the larger returned storage snapshot.
+    p.store.writeLocal(submitted, undefined, submitted);
+    assertEquals(p.contents(), ["base", "other window"]);
+    p.store.writeLocal(encodeNotes([]), undefined, submitted);
+    assertEquals(p.contents(), ["other window"]);
+  } finally {
+    p.close();
+  }
+});
+
 Deno.test("Notes failed native setters and account changes cannot acknowledge incoming state", async () => {
   const p = await profile();
   try {

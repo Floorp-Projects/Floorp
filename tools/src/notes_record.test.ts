@@ -9,6 +9,19 @@ import {
 } from "../../browser-features/modules/common/notes-record.ts";
 import { mergeNotesThreeWay } from "../../browser-features/pages-notes/src/lib/merge.ts";
 
+Deno.test("Notes remote ordering includes reserved IDs in the acknowledged base", () => {
+  const local = [
+    { id: "ordinary", title: "A", content: "A", createdAt: 1, updatedAt: 1 },
+    { id: "__proto__", title: "B", content: "B", createdAt: 2, updatedAt: 2 },
+  ];
+  const base = decodeNotesBase(JSON.stringify({
+    lastSyncedSnapshots: notesBase(local),
+  }));
+  const result = mergeNotesThreeWay(local, local.toReversed(), base);
+  assertEquals(result.merged.map((note) => note.id), ["__proto__", "ordinary"]);
+  assertEquals(result.hadConflicts, false);
+});
+
 const notes = [
   {
     id: "note-a",
@@ -224,6 +237,48 @@ Deno.test("Notes base retains only the acknowledged user content and timestamp",
     decodeNotesBase(JSON.stringify({ lastSyncedSnapshots: base })),
     base,
   );
+});
+
+Deno.test("Notes base preserves reserved property names as ordinary own identities", () => {
+  const reservedNotes = ["__proto__", "constructor", "toString"].map(
+    (id, index) => ({
+      id,
+      title: `Reserved identity ${index}`,
+      content: `<p>${id}</p>`,
+      createdAt: index,
+      updatedAt: index + 10,
+    }),
+  );
+  const base = notesBase(reservedNotes);
+  const encoded = JSON.stringify({ lastSyncedSnapshots: base });
+  const decoded = decodeNotesBase(encoded);
+  assert(Object.getPrototypeOf(decoded) === Object.prototype);
+  assertEquals(Object.keys(decoded), reservedNotes.map((note) => note.id));
+  for (const note of reservedNotes) {
+    assert(Object.hasOwn(decoded, note.id));
+    assertEquals(decoded[note.id], base[note.id]);
+  }
+  assertEquals(JSON.stringify(decoded), JSON.stringify(base));
+  const roundTripped = decodeNotesBase(
+    JSON.stringify({ lastSyncedSnapshots: decoded }),
+  );
+  assert(Object.getPrototypeOf(roundTripped) === Object.prototype);
+  assertEquals(Object.keys(roundTripped), Object.keys(decoded));
+  assertEquals(roundTripped, decoded);
+  assertEquals(
+    mergeNotesThreeWay(reservedNotes, [], roundTripped).merged,
+    [],
+    "An acknowledged unchanged note with a reserved ID must obey remote deletion",
+  );
+});
+
+Deno.test("Empty or rejected Notes bases retain a safe ordinary object prototype", () => {
+  for (const value of [null, "", "{}", "{", '{"lastSyncedSnapshots":{}}']) {
+    const decoded = decodeNotesBase(value);
+    assert(Object.getPrototypeOf(decoded) === Object.prototype);
+    assertEquals(Object.keys(decoded), []);
+    assertEquals(JSON.stringify(decoded), "{}");
+  }
 });
 
 Deno.test("Malformed or absent Notes bases never authorize a remote deletion", () => {

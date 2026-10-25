@@ -89,8 +89,11 @@ function App() {
       const ownWrites = ownWriteValuesRef.current;
       ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
       try {
-        const written = await saveNotes(data, context, baseValue);
-        acknowledgedValueRef.current = written.value;
+        await saveNotes(data, context, baseValue);
+        // CAS may persist changes from another window which notesRef has not
+        // observed yet. Only the submitted UI state can be our next ancestor;
+        // otherwise a later flush would treat those unseen notes as deletions.
+        acknowledgedValueRef.current = value;
       } finally {
         const remaining = (ownWrites.get(value) ?? 1) - 1;
         if (remaining === 0) ownWrites.delete(value);

@@ -82,7 +82,7 @@ export function decodeNotesBase(
       typeof raw.lastSyncedSnapshots !== "object" ||
       raw.lastSyncedSnapshots === null || Array.isArray(raw.lastSyncedSnapshots)
     ) return {};
-    const result: Record<string, NoteSnapshot> = {};
+    const entries: [string, NoteSnapshot][] = [];
     for (const [key, item] of Object.entries(raw.lastSyncedSnapshots)) {
       if (
         typeof item !== "object" || item === null || !("id" in item) ||
@@ -92,14 +92,14 @@ export function decodeNotesBase(
         typeof item.updatedAt !== "number" ||
         !Number.isSafeInteger(item.updatedAt) || item.updatedAt < 0
       ) return {};
-      result[key] = {
+      entries.push([key, {
         id: key,
         title: item.title,
         content: item.content,
         updatedAt: item.updatedAt,
-      };
+      }]);
     }
-    return result;
+    return Object.fromEntries(entries);
   } catch {
     return {};
   }
