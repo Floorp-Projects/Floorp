@@ -237,7 +237,7 @@ Notice: if you are a developer of "userChromeCSS Loader", please contact us so t
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
 
-Notice: If you are a maintainer of any listed component and your name or license is missing, please contact us.
+Notice: If you are a maintainer of any listed component and your name or license is missing or incorrect, please contact us.
 
 ### 📦 Fushra Pulse
 
