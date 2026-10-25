@@ -1,4 +1,4 @@
-import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
+import type { NotesPrefFunctions } from "./types.ts";
 import { createBirpc } from "birpc";
 
 // deno-lint-ignore no-explicit-any
@@ -75,7 +75,7 @@ function removeDirectPrefObserver(callback: PrefChangeCallback): void {
 // RPC functions (existing)
 // ──────────────────────────────────────────────────────────
 
-const directServicesFunctions: NRSettingsParentFunctions = {
+const directServicesFunctions: NotesPrefFunctions = {
   getBoolPref: (prefName) => {
     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
       return Promise.resolve(null);
@@ -109,7 +109,7 @@ const directServicesFunctions: NRSettingsParentFunctions = {
 };
 
 export const rpc = isLocalhost5188
-  ? createBirpc<NRSettingsParentFunctions, Record<string, never>>(
+  ? createBirpc<NotesPrefFunctions, Record<string, never>>(
       {},
       {
         post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
