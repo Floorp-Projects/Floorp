@@ -5,7 +5,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ResizableImage } from "./ResizableImage.tsx";
 import { Toolbar } from "./Toolbar.tsx";
 import { Selection as PmSelection } from "@tiptap/pm/state";
@@ -55,7 +55,7 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
 
     const parsedContent = useMemo(
         () => migrateLexicalContent(initialContent),
-        // initialContent is only used on mount (component is keyed by note id)
+        // Prop updates are applied below without replacing an unchanged document.
         [],
     );
 
@@ -140,6 +140,21 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
             },
         },
     });
+
+    useEffect(() => {
+        if (!editor || editor.isDestroyed) return;
+        const content = migrateLexicalContent(initialContent) ?? {
+            type: "doc",
+            content: [{ type: "paragraph" }],
+        };
+        try {
+            const nextDocument = editor.schema.nodeFromJSON(content);
+            if (editor.state.doc.eq(nextDocument)) return;
+            editor.commands.setContent(nextDocument, false);
+        } catch (error) {
+            console.error("[Floorp Notes] Failed to apply editor content:", error);
+        }
+    }, [editor, initialContent]);
 
     return (
         <div className="flex flex-col h-full">
