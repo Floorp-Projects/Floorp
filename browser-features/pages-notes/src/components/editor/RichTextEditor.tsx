@@ -5,7 +5,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Image from "@tiptap/extension-image";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import { ResizableImage } from "./ResizableImage.tsx";
 import { Toolbar } from "./Toolbar.tsx";
 import { Selection as PmSelection } from "@tiptap/pm/state";
@@ -141,7 +141,7 @@ export const RichTextEditor = ({ onChange, initialContent }: RichTextEditorProps
         },
     });
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!editor || editor.isDestroyed) return;
         const content = migrateLexicalContent(initialContent) ?? {
             type: "doc",
