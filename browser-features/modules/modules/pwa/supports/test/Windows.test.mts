@@ -2,7 +2,6 @@
 // @colocated-env browser
 
 import type { WindowsSupport } from "../Windows.sys.mts";
-import type { Manifest } from "../../type.ts";
 import {
   assert,
   assertEquals,
@@ -12,50 +11,19 @@ import {
   deferred,
   recordWindowsRaceEvidence,
   until,
-  type WindowsRaceStore,
   within,
   withWindowsRaceFixture,
 } from "./windowsRaceTestUtils.ts";
-interface WindowsCoordinator {
-  withMutation<T>(id: string, operation: () => Promise<T>): Promise<T>;
-  withStoreMutation<T>(operation: () => Promise<T>): Promise<T>;
-}
-
-interface StoreAwareWindowsSupport {
-  install(
-    app: Manifest,
-    store?: WindowsRaceStore,
-    integrate?: boolean,
-  ): Promise<void>;
-  uninstall(
-    app: Manifest,
-    store?: WindowsRaceStore,
-    integrate?: boolean,
-  ): Promise<void>;
-  rename(
-    app: Manifest,
-    newName: string,
-    store?: WindowsRaceStore,
-  ): Promise<boolean>;
-}
+import type {
+  MockShell,
+  StoreAwareSupport,
+  StoreAwareWindowsSupport,
+  WindowsCoordinator,
+} from "./types.ts";
 
 function coordinator(Support: typeof WindowsSupport): WindowsCoordinator {
   return Support as unknown as WindowsCoordinator;
 }
-
-type StoreAwareSupport = {
-  rename(
-    app: Manifest,
-    newName: string,
-    store?: WindowsRaceStore,
-  ): Promise<boolean>;
-};
-
-type MockShell = {
-  createShortcut: (...args: unknown[]) => Promise<unknown>;
-  pinShortcutToTaskbar: (...args: unknown[]) => Promise<void>;
-  unpinShortcutFromTaskbar: (...args: unknown[]) => void;
-};
 
 export async function runAllTests(): Promise<void> {
   const { AppConstants } = ChromeUtils.importESModule(

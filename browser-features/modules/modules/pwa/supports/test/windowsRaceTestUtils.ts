@@ -2,6 +2,11 @@
 
 import type { Manifest } from "../../type.ts";
 import type { WindowsSupport } from "../Windows.sys.mts";
+import type {
+  OwnedWindowsApp,
+  WindowsRaceFixture,
+  WindowsRaceStore,
+} from "./types.ts";
 import {
   assert,
   assertEquals,
@@ -45,12 +50,6 @@ export function recordWindowsRaceEvidence(
   return result;
 }
 
-export interface WindowsRaceStore {
-  getCurrentSsbData(): Promise<Record<string, Manifest>>;
-  saveSsbData(app: Manifest): Promise<void>;
-  removeSsbData(key: string): Promise<void>;
-}
-
 export function deferred() {
   let resolve!: () => void;
   const promise = new Promise<void>((done) => {
@@ -90,26 +89,6 @@ export async function until(
     assert(Date.now() < deadline, label);
     await delay(10);
   }
-}
-
-export interface OwnedWindowsApp {
-  app: Manifest;
-  key: string;
-  directory: string;
-  shortcut: string;
-}
-
-export interface WindowsRaceFixture extends OwnedWindowsApp {
-  Support: typeof WindowsSupport;
-  store: WindowsRaceStore;
-  pinCalls: string[];
-  unpinCalls: string[];
-  ownName(name: string): Promise<string>;
-  ownApp(suffix: string): Promise<OwnedWindowsApp>;
-  track<T>(operation: Promise<T>): Promise<T>;
-  pauseIconLoads(): { entered: Promise<void>; release: () => void };
-  removeLikeManager(support: WindowsSupport): Promise<void>;
-  assertRemoved(): Promise<void>;
 }
 
 /** Real ICO/store/Start Menu files in the collector profile; only pin UI and
