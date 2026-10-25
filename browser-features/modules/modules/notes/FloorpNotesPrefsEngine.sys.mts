@@ -63,10 +63,12 @@ class NotesPrefStore extends NativePrefsEngine.prototype._storeObj {
       }
       return result;
     }
+    let applied = false;
     try {
       const outcome = await FloorpNotesStorage.applyIncoming(
         raw,
         async (merged) => {
+          applied = true;
           const result = await super.update({
             id: record.id,
             value: { ...record.value, [NOTES_PREF]: merged },
@@ -79,6 +81,20 @@ class NotesPrefStore extends NativePrefsEngine.prototype._storeObj {
       return outcome.result;
     } catch (error) {
       this.engine.notesChanged(record.id, expected);
+      if (
+        !applied && FloorpNotesStorage.getSnapshot().epoch === expected
+      ) {
+        const values = { ...record.value };
+        delete values[NOTES_PREF];
+        try {
+          await super.update({ id: record.id, value: values });
+        } catch (fallbackError) {
+          console.error(
+            "[Floorp Notes] Failed to apply unrelated preferences.",
+            fallbackError,
+          );
+        }
+      }
       throw error;
     } finally {
       this._incomingPrefs = record.value;
