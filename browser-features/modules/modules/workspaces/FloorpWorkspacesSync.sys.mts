@@ -158,6 +158,15 @@ const ready = (): Promise<void> =>
 // Invalidate synchronously: Firefox startOver does not wait for an active sync.
 let accountEpoch = 0;
 let accountAbort = new AbortController();
+let providerAbort = new AbortController();
+function workspacesEnabled(): boolean {
+  return Services.prefs.getBoolPref("floorp.workspaces.enabled", true);
+}
+function assertWorkspacesEnabled(): void {
+  if (!workspacesEnabled()) {
+    throw new Error("Workspace Sync is disabled");
+  }
+}
 function assertAccountEpoch(expected: number): void {
   if (expected !== accountEpoch) {
     throw new Error("Workspace Sync account session was invalidated");
@@ -218,7 +227,7 @@ interface RegistrationWaiter {
 }
 const registrationWaiters = new Set<RegistrationWaiter>();
 function providersReady(): boolean {
-  if (!Services.prefs.getBoolPref("floorp.workspaces.enabled", true)) {
+  if (!workspacesEnabled()) {
     return true;
   }
   const registered = new Set([...providers].map((provider) => provider.window));
@@ -269,7 +278,25 @@ function waitForProviders(signal?: AbortSignal): Promise<void> {
   });
 }
 Services.obs.addObserver(registrationChanged, "domwindowclosed");
-Services.prefs.addObserver("floorp.workspaces.enabled", registrationChanged);
+Services.prefs.addObserver("floorp.workspaces.enabled", () => {
+  registrationChanged();
+  if (!workspacesEnabled()) {
+    // Native Sync only checks enabled before starting its network request.
+    // Abort UI work already in flight; rejected incoming IDs retain native and
+    // persisted retry markers instead of being acknowledged and forgotten.
+    providerAbort.abort();
+    return;
+  }
+  if (providerAbort.signal.aborted) providerAbort = new AbortController();
+  // A completed native download may have advanced lastSync while disabled.
+  // Refetch on the next Sync as well as retaining failed incoming IDs.
+  Services.prefs.setStringPref("services.sync.floorp-workspaces.lastSync", "0");
+  if (initialized) {
+    FloorpWorkspacesSync.capture().catch((error: unknown) =>
+      console.error("[WorkspacesSync] Could not resume pending work", error)
+    );
+  }
+});
 Services.obs.addObserver(() => {
   for (const waiter of [...registrationWaiters]) {
     waiter.reject(new Error("Browser is shutting down"));
@@ -281,7 +308,8 @@ async function apply(
   expected = accountEpoch,
 ): Promise<void> {
   assertAccountEpoch(expected);
-  const signal = accountAbort.signal;
+  assertWorkspacesEnabled();
+  const signal = providerAbort.signal;
   const targets = [...providers].filter((provider) => !provider.window.closed);
   if (!targets.length) throw new Error("No workspace window is available");
   const known = new Set(
@@ -296,12 +324,14 @@ async function apply(
   for (let index = 0; index < targets.length; index++) {
     if (!targets[index].window.closed) {
       assertAccountEpoch(expected);
+      assertWorkspacesEnabled();
       await targets[index].apply(
         document,
         !applied ? missing : new Set(),
         signal,
       );
       assertAccountEpoch(expected);
+      assertWorkspacesEnabled();
       applied = true;
     }
   }
@@ -422,7 +452,7 @@ function pendingSnapshot(
   return snapshot;
 }
 function captureNow(): void {
-  if (!Services.prefs.getBoolPref("floorp.workspaces.enabled", true)) return;
+  if (!workspacesEnabled()) return;
   const seenIds = new Set<string>(Object.keys(state().records));
   for (const id of state().selected) {
     try {
@@ -510,6 +540,7 @@ async function applySelected(
   changed(id);
 }
 async function retryPendingApplies(expected: number): Promise<void> {
+  if (!workspacesEnabled()) return;
   for (const id of [...state().pendingApplies]) {
     assertAccountEpoch(expected);
     const document = state().records[id];
@@ -531,6 +562,8 @@ async function disarmAccount(): Promise<void> {
   ++accountEpoch;
   accountAbort.abort();
   accountAbort = new AbortController();
+  providerAbort.abort();
+  providerAbort = new AbortController();
   await ready();
   await mutate(() => {
     file.data = emptyState();
@@ -716,6 +749,7 @@ class FloorpWorkspaceStore extends Store {
     const expected = this.engine.accountSessionEpoch;
     await ready();
     this.engine.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     const ids = [...Object.keys(state().deleted)];
     for (const id of state().selected) {
       if (!state().records[id] || captureErrors.has(id)) continue;
@@ -732,6 +766,7 @@ class FloorpWorkspaceStore extends Store {
     const expected = this.engine.accountSessionEpoch;
     await ready();
     this.engine.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     if (state().records[id]) return state().selected.includes(id);
     const entry = findTab(id);
     return Boolean(
@@ -746,6 +781,7 @@ class FloorpWorkspaceStore extends Store {
     const expected = this.engine.accountSessionEpoch;
     await ready();
     this.engine.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     const record = new FloorpWorkspaceRecord(collection, id);
     if (Object.hasOwn(state().deleted, id)) {
       record.deleted = true;
@@ -771,9 +807,11 @@ class FloorpWorkspaceStore extends Store {
       this.engine.accountSessionEpoch;
     await ready();
     this.engine.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     await waitForProviders(accountAbort.signal);
     await mutate(async () => {
       this.engine.assertAccountSession(expected);
+      assertWorkspacesEnabled();
       const entity = parseWorkspaceSyncRecord(record.entity);
       if (
         record.id !==
@@ -871,8 +909,10 @@ class FloorpWorkspaceStore extends Store {
       this.engine.accountSessionEpoch;
     await ready();
     this.engine.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     await mutate(() => {
       this.engine.assertAccountSession(expected);
+      assertWorkspacesEnabled();
       delete state().deleted[record.id];
       retire(record.id);
       if (state().records[record.id]) {
@@ -962,7 +1002,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
   }
   get enabled(): boolean {
     return super.enabled &&
-      Services.prefs.getBoolPref("floorp.workspaces.enabled", true);
+      workspacesEnabled();
   }
   set enabled(value: boolean) {
     super.enabled = value;
@@ -970,6 +1010,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
   async _processIncoming(): Promise<void> {
     const expected = this.accountSessionEpoch;
     this.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     await super._processIncoming();
     this.assertAccountSession(expected);
     // The base engine can resolve with failed or backlogged records. A parent
@@ -1074,9 +1115,11 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     const expected = this.accountSessionEpoch;
     await ready();
     this.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     await waitForProviders(accountAbort.signal);
     await mutate(async () => {
       this.assertAccountSession(expected);
+      assertWorkspacesEnabled();
       captureNow();
       for (const [id, tabs] of Object.entries(state().pendingCloses)) {
         const document = state().records[id];
@@ -1098,6 +1141,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     const expected = this.accountSessionEpoch;
     await ready();
     this.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     const tracked = await this._tracker.getChangedIDs() as Record<
       string,
       number
@@ -1115,6 +1159,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     );
   }
   async _syncStartup(): Promise<void> {
+    assertWorkspacesEnabled();
     let expected = accountEpoch;
     await accountReset;
     assertAccountEpoch(expected);
@@ -1127,6 +1172,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     }
     await ready();
     assertAccountEpoch(expected);
+    assertWorkspacesEnabled();
     if (state().accountUid && state().accountUid !== user.uid) {
       const reset = disarmAccount();
       expected = accountEpoch;
@@ -1151,6 +1197,7 @@ export class FloorpWorkspacesEngine extends SyncEngine {
     recordEpochs.set(record, expected);
     await ready();
     this.assertAccountSession(expected);
+    assertWorkspacesEnabled();
     if (!isWorkspaceSyncId(record.id)) {
       throw new Error("Invalid incoming Sync record ID");
     }
