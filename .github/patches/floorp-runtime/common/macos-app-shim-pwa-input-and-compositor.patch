@@ -220,7 +220,7 @@ index 4916c301f8b..d5d465bdf91 100644
 +#include "mozilla/SwipeTracker.h"
  #include "mozilla/gfx/GPUProcessManager.h"
  #include "mozilla/layers/CompositorThread.h"
-+#include "mozilla/layers/APZInputBridge.h"
++#include "mozilla/layers/APZBridge.h"
 +#include "mozilla/layers/IAPZCTreeManager.h"
  #include "mozilla/layers/NativeLayerRootRemoteMacParent.h"
  #include "mozilla/layers/PNativeLayerRemote.h"
@@ -237,7 +237,7 @@ index 4916c301f8b..d5d465bdf91 100644
 +    return;
 +  if (Destroyed()) return;
 +  if (mAPZC) {
-+    APZEventResult result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
++    APZEventResult result = mAPZC->Bridge()->ReceiveInputEvent(aEvent);
 +    if (result.GetStatus() == nsEventStatus_eConsumeNoDefault) return;
 +    WidgetWheelEvent event = MayStartSwipeForAPZ(aEvent, result);
 +    if (!Destroyed() && event.mMessage == eWheel &&
