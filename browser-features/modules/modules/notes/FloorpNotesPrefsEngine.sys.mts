@@ -80,7 +80,7 @@ class NotesPrefStore extends NativePrefsEngine.prototype._storeObj {
       if (outcome.needsUpload) this.engine.notesChanged(record.id, expected);
       return outcome.result;
     } catch (error) {
-      this.engine.notesChanged(record.id, expected);
+      this.engine.notesFailed(record.id, expected);
       if (
         !applied && FloorpNotesStorage.getSnapshot().epoch === expected
       ) {
@@ -104,6 +104,7 @@ class NotesPrefStore extends NativePrefsEngine.prototype._storeObj {
 
 export class FloorpNotesPrefsEngine extends NativePrefsEngine {
   private notesPending = new Map<string, number>();
+  private notesFailures = new Map<string, number>();
   private notesUpload: {
     context: NotesSyncContext;
     record?: { id: string; value: string };
@@ -115,6 +116,12 @@ export class FloorpNotesPrefsEngine extends NativePrefsEngine {
     this._tracker.modified = true;
   }
 
+  notesFailed(id: string, expected: number): void {
+    if (FloorpNotesStorage.getSnapshot().epoch !== expected) return;
+    this.notesFailures.set(id, expected);
+    this.notesChanged(id, expected);
+  }
+
   async _processIncoming(...args: unknown[]): Promise<unknown> {
     try {
       return await super._processIncoming(...args);
@@ -124,6 +131,18 @@ export class FloorpNotesPrefsEngine extends NativePrefsEngine {
         if (expected === currentEpoch) this._modified.set(id, 0);
       }
       this.notesPending.clear();
+      // Native Sync drops repeatedly failing IDs after two attempts. Keep this
+      // whole prefs record backlogged until its Notes can actually be applied.
+      const failed = this.previousFailedIn;
+      let retain = false;
+      for (const [id, expected] of this.notesFailures) {
+        if (expected === currentEpoch) {
+          failed.add(id);
+          retain = true;
+        }
+      }
+      if (retain) this.previousFailedIn = failed;
+      this.notesFailures.clear();
     }
   }
 
@@ -145,7 +164,7 @@ export class FloorpNotesPrefsEngine extends NativePrefsEngine {
           );
           if (outcome.needsUpload) this.notesChanged(record.id, expected);
         } catch (error) {
-          this.notesChanged(record.id, expected);
+          this.notesFailed(record.id, expected);
           throw error;
         }
       }
@@ -154,17 +173,29 @@ export class FloorpNotesPrefsEngine extends NativePrefsEngine {
   }
 
   async _uploadOutgoing(): Promise<unknown> {
-    if (
-      !enabled() || this._modified.count() === 0 ||
-      !validNotes(FloorpNotesStorage.getSnapshot().value)
-    ) return await super._uploadOutgoing();
-    this.notesUpload = {
-      context: await FloorpNotesStorage.prepareUpload(),
-    };
+    const expected = FloorpNotesStorage.getSnapshot().epoch;
+    const deferred = new Map<string, number>();
+    for (const id of this._modified.ids()) {
+      if (this.previousFailedIn.has(id)) {
+        deferred.set(id, this._modified.getModifiedTimestamp(id));
+        this._modified.delete(id);
+      }
+    }
     try {
+      if (
+        !enabled() || this._modified.count() === 0 ||
+        !validNotes(FloorpNotesStorage.getSnapshot().value)
+      ) return await super._uploadOutgoing();
+      this.notesUpload = {
+        context: await FloorpNotesStorage.prepareUpload(),
+      };
       return await super._uploadOutgoing();
     } finally {
       this.notesUpload = null;
+      if (FloorpNotesStorage.getSnapshot().epoch === expected) {
+        for (const [id, timestamp] of deferred) this._modified.set(id, timestamp);
+        if (deferred.size) this._tracker.modified = true;
+      }
     }
   }
 
