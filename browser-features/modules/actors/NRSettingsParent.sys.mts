@@ -44,6 +44,7 @@ function openExternalLinkInBrowser(
 
 //TODO: make reject when the name is invalid
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
+import type { NotesPreferenceSnapshot, NotesStorageService, NotesSyncContext } from "../common/notes-storage-types.ts";
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
@@ -56,6 +57,10 @@ const { ContextMenuCatalogService } = ChromeUtils.importESModule(
   "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
 ) as ContextMenuCatalogServiceModule;
 
+const { FloorpNotesStorage } = ChromeUtils.importESModule(
+  "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
+) as { FloorpNotesStorage: NotesStorageService };
+
 export class NRSettingsParent extends JSWindowActorParent {
   constructor() {
     super();
@@ -66,6 +71,13 @@ export class NRSettingsParent extends JSWindowActorParent {
   ): Promise<unknown> {
     const data = message.data as Record<string, unknown> | undefined;
     switch (message.name) {
+      case "getNotesSnapshot":
+        return FloorpNotesStorage.getSnapshot();
+      case "readNotesSyncState":
+        return FloorpNotesStorage.readSyncState(data?.snapshot as NotesPreferenceSnapshot);
+      case "writeNotesPref":
+        if (typeof data?.value !== "string") throw new TypeError("Invalid Notes value");
+        return FloorpNotesStorage.writeLocal(data.value, data.context as NotesSyncContext | undefined, data.baseValue as string | null | undefined);
       case "getContextMenuCatalog":
         return ContextMenuCatalogService.getSnapshot();
       case "getContextMenuCatalogRevision":
@@ -119,6 +131,7 @@ export class NRSettingsParent extends JSWindowActorParent {
       case "getStringPref": {
         const name = data && typeof data.name === "string" ? data.name : null;
         if (!name) return null;
+        if (name === "floorp.browser.note.memos") return FloorpNotesStorage.getSnapshot().value;
         if (Services.prefs.getPrefType(name) != Services.prefs.PREF_STRING) {
           return null;
         }
@@ -177,7 +190,8 @@ export class NRSettingsParent extends JSWindowActorParent {
             ? data.prefValue
             : null;
           if (!name || val === null) return null;
-          Services.prefs.setStringPref(name, val);
+          if (name === "floorp.browser.note.memos") FloorpNotesStorage.writeLocal(val);
+          else Services.prefs.setStringPref(name, val);
         }
         break;
       }

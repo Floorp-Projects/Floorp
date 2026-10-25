@@ -39,9 +39,9 @@ Deno.test("Notes production UI exposes stable automation hooks", async () => {
     localSaveSection.includes("saveSyncState"),
     "A local pref write must not advance the server-confirmed merge base",
   );
-  assertStringIncludes(
-    appSource,
-    "saveSyncState(syncStateFromNotes(remoteNotes))",
+  assertFalse(
+    appSource.includes("saveSyncState("),
+    "Only actual native Sync delivery may advance the base",
   );
   assertStringIncludes(
     appSource,
