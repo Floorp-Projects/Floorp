@@ -29,6 +29,21 @@ async function testNativePrivateReopenPositionAndStaleContext(): Promise<void> {
     typeof privateId === "number" && privateId > 0,
     "Private container exists",
   );
+  const initiallyHasPrivateTab = Array.from(initial).some((tab) =>
+    Number(tab.getAttribute("usercontextid")) === privateId
+  );
+  let privateClearNotifications = 0;
+  const clearObserver = {
+    observe(_subject: unknown, _topic: string, data: string | null) {
+      try {
+        if (JSON.parse(data ?? "{}").userContextId === privateId) {
+          privateClearNotifications++;
+        }
+      } catch {
+        // Only the private-container origin-attribute notification is relevant.
+      }
+    },
+  };
   const nonce = crypto.randomUUID();
   const urls = [0, 1, 2, 3].map((n) =>
     `about:blank#floorp-private-position-${nonce}-${n}`
@@ -39,6 +54,7 @@ async function testNativePrivateReopenPositionAndStaleContext(): Promise<void> {
       userContextId: 0,
     })
   );
+  Services.obs.addObserver(clearObserver, "clear-origin-attributes-data");
   try {
     await until(
       () =>
@@ -100,12 +116,41 @@ async function testNativePrivateReopenPositionAndStaleContext(): Promise<void> {
       "Stale context cannot reorder or remove current tabs",
     );
   } finally {
-    globalThis.TabContextMenu.contextTab = originalContext;
-    if (originalSelected.isConnected && gb.tabs.includes(originalSelected)) {
-      gb.selectedTab = originalSelected;
-    }
-    for (const tab of Array.from(gb.tabs)) {
-      if (!initial.has(tab)) gb.removeTab(tab, { animate: false });
+    try {
+      globalThis.TabContextMenu.contextTab = originalContext;
+      if (originalSelected.isConnected && gb.tabs.includes(originalSelected)) {
+        gb.selectedTab = originalSelected;
+      }
+      for (const tab of Array.from(gb.tabs)) {
+        if (!initial.has(tab)) gb.removeTab(tab, { animate: false });
+      }
+      await until(
+        () => Array.from(gb.tabs).every((tab) => initial.has(tab)),
+        "All native private-reopen fixture tabs close",
+      );
+      // Production removeDataIfPrivateContainerTabNotExist schedules each
+      // TabClose clear after 400ms. Queue this barrier after all of this
+      // fixture's closes, beyond that delay, so none of its SessionStore
+      // clear-origin-attributes-data mutations can reach the next fixture.
+      // ClearDataService sends that notification synchronously when called.
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 401));
+      if (!initiallyHasPrivateTab) {
+        assert(
+          privateClearNotifications > 0,
+          "The real private-container clear notification settles before the next test",
+        );
+      } else {
+        assertEquals(
+          privateClearNotifications,
+          0,
+          "An existing private tab keeps its container data after fixture cleanup",
+        );
+      }
+    } finally {
+      Services.obs.removeObserver(
+        clearObserver,
+        "clear-origin-attributes-data",
+      );
     }
   }
 }
