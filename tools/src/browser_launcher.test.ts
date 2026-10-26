@@ -712,7 +712,10 @@ for (
     if (descriptor === undefined) {
       throw new Error("Deno.Command is unavailable");
     }
-    const previous = Deno.env.get("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS");
+    const parentEnvironment = {
+      MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "0",
+      FLOORP_LAUNCH_TEST_SENTINEL: "inherited",
+    };
     let captured: Deno.CommandOptions | undefined;
     const emptyOutput = () =>
       new ReadableStream<Uint8Array>({
@@ -733,8 +736,27 @@ for (
         };
       }
     }
+    const replacements: [object, string, unknown][] = [
+      [Deno.env, "toObject", () => ({ ...parentEnvironment })],
+      [Deno.env, "set", () => {
+        throw new Error("Parent environment mutation");
+      }],
+      [Deno.env, "delete", () => {
+        throw new Error("Parent environment mutation");
+      }],
+      [Deno, "removeSync", () => {}],
+    ];
+    const originals = replacements.map(([object, name]) => {
+      const original = Object.getOwnPropertyDescriptor(object, name);
+      if (original === undefined) {
+        throw new Error(`Missing mock boundary ${name}`);
+      }
+      return original;
+    });
     try {
-      Deno.env.set("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS", "0");
+      for (const [index, [object, name, value]] of replacements.entries()) {
+        Object.defineProperty(object, name, { ...originals[index], value });
+      }
       Object.defineProperty(Deno, "Command", {
         configurable: descriptor.configurable,
         enumerable: descriptor.enumerable,
@@ -746,12 +768,13 @@ for (
         marionette,
       });
       assertEquals(captured?.env?.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, expected);
-      assertEquals(Deno.env.get("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS"), "0");
+      assertEquals(captured?.env?.FLOORP_LAUNCH_TEST_SENTINEL, "inherited");
+      assertEquals(parentEnvironment.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, "0");
     } finally {
       Object.defineProperty(Deno, "Command", descriptor);
-      if (previous === undefined) {
-        Deno.env.delete("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS");
-      } else Deno.env.set("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS", previous);
+      for (const [index, [object, name]] of replacements.entries()) {
+        Object.defineProperty(object, name, originals[index]);
+      }
     }
   });
 }
