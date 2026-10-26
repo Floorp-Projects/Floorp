@@ -2,13 +2,18 @@
 
 import i18next from "i18next";
 import type {
-  PaletteCommand,
   CommandStepChoice,
+  PaletteCommand,
   StepChoicesResult,
 } from "#features-chrome/common/command-palette/types.ts";
 import { getJapaneseReadings } from "#features-chrome/common/command-palette/utils/getJapaneseReadings.ts";
 import { getEnglishStepCommandKeywords } from "#features-chrome/common/command-palette/utils/getEnglishKeywords.ts";
 import { getSegmentedKeywordsFromI18nKeys } from "#features-chrome/common/command-palette/utils/budouxSegmenter.ts";
+import {
+  getLiveTabIndex,
+  getTabIdentity,
+  isTabOpen,
+} from "#features-chrome/utils/tab-identity.ts";
 
 interface ChromeWindow extends Window {
   gBrowser?: GBrowser;
@@ -18,11 +23,13 @@ interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;
 }
 
-export function loadTabs(): Promise<
+export function loadTabs(
+  win: Window = globalThis as unknown as Window,
+): Promise<
   CommandStepChoice[] | StepChoicesResult
 > {
   try {
-    const gBrowser = (globalThis as unknown as ChromeWindow).gBrowser;
+    const gBrowser = (win as ChromeWindow).gBrowser;
     if (!gBrowser?.tabs) return Promise.resolve([]);
 
     const selectedTab = gBrowser.selectedTab;
@@ -45,7 +52,7 @@ export function loadTabs(): Promise<
 
     for (const tab of gBrowser.tabs) {
       const browser = tab.linkedBrowser as BrowserWithContent | undefined;
-      if (!browser) continue;
+      if (!browser || !isTabOpen(tab)) continue;
 
       const label = tab.getAttribute("label") || browser.contentTitle || "";
       const url = browser.currentURI?.spec || "";
@@ -67,7 +74,7 @@ export function loadTabs(): Promise<
 
       choices.push({
         label,
-        value: String(tab._tPos),
+        value: getTabIdentity(tab),
         description,
       });
     }
@@ -93,8 +100,14 @@ export const tabSwitcherCommand: PaletteCommand = {
     "tab",
     "change tab",
     "go to tab",
-    ...getEnglishStepCommandKeywords("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.tabSwitcher", "commandPalette.tabSwitcherDescription"),
+    ...getEnglishStepCommandKeywords(
+      "commandPalette.tabSwitcher",
+      "commandPalette.tabSwitcherDescription",
+    ),
+    ...getSegmentedKeywordsFromI18nKeys(
+      "commandPalette.tabSwitcher",
+      "commandPalette.tabSwitcherDescription",
+    ),
     ...getJapaneseReadings("floorp-tab-switcher"),
   ],
   steps: [
@@ -109,16 +122,21 @@ export const tabSwitcherCommand: PaletteCommand = {
       choicesLoader: loadTabs,
     },
   ],
-  fn: (_win: Window, args?: Record<string, string>) => {
+  fn: (win: Window, args?: Record<string, string>) => {
     try {
-      const tabPos = Number(args?.tab);
-      if (isNaN(tabPos)) return;
+      const tabIdentity = args?.tab;
+      if (!tabIdentity) return;
 
-      const gBrowser = (globalThis as unknown as ChromeWindow).gBrowser;
+      const gBrowser = (win as ChromeWindow).gBrowser;
       if (!gBrowser?.tabs) return;
 
-      const tab = gBrowser.tabs[tabPos];
-      if (tab) {
+      const tabIndex = /^\d+$/.test(tabIdentity) ? Number(tabIdentity) : -1;
+      const tab = Number.isSafeInteger(tabIndex) && tabIndex >= 0
+        ? gBrowser.tabs[tabIndex]
+        : gBrowser.tabs.find((candidate) =>
+          getTabIdentity(candidate) === tabIdentity
+        );
+      if (tab && getLiveTabIndex(gBrowser.tabs, tab) >= 0) {
         gBrowser.selectedTab = tab;
       }
     } catch (err) {
