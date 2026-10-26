@@ -32,6 +32,13 @@ UNCOMPRESSED_TAR = {'bytes': 760518144,
 CONTENT_KEYS = ('name', 'entry', 'tarBytes', 'version', 'draftReaderTreeSHA256')
 SOURCE_KEYS = frozenset(('schema', 'qualification', 'baselinePlanSHA256', 'baselineTarSHA256',
                          'runtimeRef', 'producerJob', 'pin', 'uncompressedTar'))
+CURRENT_PRODUCER_REF = '0ac255739cdd64e100cd6913329247421b0ec2ea'
+CURRENT_PRODUCER_JOB = 121368405809
+CURRENT_PRODUCER_NAME = 'Mac build [PGO] / download-macos-sdk'
+CURRENT_PIN = {**PIN, 'artifact': 12624490543, 'run': 40259426572,
+    'zipSHA256': '4090088d6c29b7ca8e6fdcae46c491827c575764d2aea0734d422ef55f9a7bb6',
+    'tarSHA256': 'f30c8e392d8c01d595313ec1e53d4d8d8fe62f2e5f8c65638ac4146b52899add',
+    'expiresObserved': '2026-10-27T02:31:18Z'}
 MAX_UNCOMPRESSED_BYTES = 1024**3
 MAX_COMPRESSED_BYTES = 512 * 1024**2
 
@@ -82,21 +89,29 @@ def load_sdk_source(plan_path, source_path=None):
     if source_path is None:
         return result
     value, source_sha = _source_json(source_path)
-    require(type(value) is dict and set(value) == SOURCE_KEYS and
-            type(value.get('schema')) is int and value['schema'] == 1, 'sdk-source-shape')
+    current = type(value) is dict and type(value.get('schema')) is int and value['schema'] == 2
+    require(type(value) is dict and set(value) == (SOURCE_KEYS | {'producerRef'} if current else SOURCE_KEYS) and
+            type(value.get('schema')) is int and value['schema'] == (2 if current else 1), 'sdk-source-shape')
     require(_same(value['qualification'], QUALIFICATION), 'sdk-source-qualification')
     require(_same(value['baselinePlanSHA256'], BASELINE_PLAN_SHA256) and
             result['baselinePlanSHA256'] == value['baselinePlanSHA256'], 'sdk-source-plan-binding')
     require(type(pin) is dict and _same(value['baselineTarSHA256'], BASELINE_TAR_SHA256) and
             _same(pin.get('tarSHA256'), value['baselineTarSHA256']), 'sdk-source-baseline-tar')
     require(_same(value['runtimeRef'], RUNTIME_REF) and _same(runtime, RUNTIME_REF), 'sdk-source-runtime')
-    require(_same(value['producerJob'], PRODUCER_JOB), 'sdk-source-producer')
-    require(_same(value['pin'], PIN), 'sdk-source-pin')
+    producer_job = CURRENT_PRODUCER_JOB if current else PRODUCER_JOB
+    producer_name = CURRENT_PRODUCER_NAME if current else PRODUCER_NAME
+    expected_pin = CURRENT_PIN if current else PIN
+    require(_same(value['producerJob'], producer_job), 'sdk-source-producer')
+    if current:
+        require(_same(value['producerRef'], CURRENT_PRODUCER_REF), 'sdk-source-producer-ref')
+    require(_same(value['pin'], expected_pin), 'sdk-source-pin')
     require(all(_same(value['pin'][key], pin.get(key)) for key in CONTENT_KEYS), 'sdk-source-content-binding')
     require(_same(value['uncompressedTar'], UNCOMPRESSED_TAR), 'sdk-source-uncompressed-anchor')
-    result['pin'].update({key: value['pin'][key] for key in PIN})
-    result.update(producerJob=PRODUCER_JOB, producerName=PRODUCER_NAME, uncompressedTar=dict(UNCOMPRESSED_TAR),
+    result['pin'].update({key: value['pin'][key] for key in expected_pin})
+    result.update(producerJob=producer_job, producerName=producer_name, uncompressedTar=dict(UNCOMPRESSED_TAR),
                   sourceSHA256=source_sha, qualification=QUALIFICATION)
+    if current:
+        result['producerRef'] = CURRENT_PRODUCER_REF
     return result
 
 
@@ -161,7 +176,16 @@ def acquisition_receipt(spec):
     if _alternate(spec):
         result.update(sourceSHA256=spec['sourceSHA256'], baselinePlanSHA256=spec['baselinePlanSHA256'],
                       qualification=spec['qualification'], uncompressedTar=copy.deepcopy(spec['uncompressedTar']))
+        if 'producerRef' in spec:
+            result['producerRef'] = spec['producerRef']
     return result
+
+
+def source_provenance(spec):
+    fields = ('qualification', 'sourceSHA256', 'baselinePlanSHA256', 'uncompressedTar', 'producerJob')
+    if 'producerRef' in spec:
+        fields += ('producerRef',)
+    return {key: copy.deepcopy(spec[key]) for key in fields}
 
 
 def validate_acquisition_receipt(value, spec):

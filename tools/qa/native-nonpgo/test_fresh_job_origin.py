@@ -69,6 +69,36 @@ class FreshJobOriginTests(unittest.TestCase):
         with self.assertRaisesRegex(Failure,'^fresh-origin-task-exists-or-unavailable$'):self.invoke()
         self.assertEqual(marker.read_text(),'old')
 
+    def test_continuation_route_requires_explicit_selection_and_bound_api_branch(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.CONTINUATION_BRANCH
+        self.run['head_branch']=origin.CONTINUATION_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):self.invoke()
+        self.assertEqual(self.requests,[])
+        record=origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,continuation=True)
+        self.assertEqual(record['profile'],'fresh-firefox45-job-origin-20261026-v1')
+        self.assertEqual(record['ref'],'refs/heads/b/qa-fresh45-20261026')
+        self.assertEqual((record['platformMinutes'],record['workDeadlineMinutes']),(360,345))
+        self.assertIs(record['clockResetAllowed'],False)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()),940)
+
+    def test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch(self):
+        for selector in (None,1,'true'):
+            with self.assertRaises(Failure):
+                origin.initialize(self.task,environment=self.env,opener=self.client,continuation=selector)
+        for key,value in (('GITHUB_REF',self.env['GITHUB_REF']),('GITHUB_REF','refs/heads/main'),
+                          ('GITHUB_RUN_ATTEMPT','2'),('GITHUB_EVENT_NAME','workflow_dispatch'),
+                          ('FRESH_PUSH_CREATED','false'),('FRESH_PUSH_BEFORE','a'*40)):
+            env={**self.env,'GITHUB_REF':'refs/heads/'+origin.CONTINUATION_BRANCH,key:value}
+            with self.subTest(key=key,value=value),self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=env,opener=self.client,continuation=True)
+        self.assertEqual(self.requests,[]);self.assertFalse(self.task.exists())
+        self.env['GITHUB_REF']='refs/heads/'+origin.CONTINUATION_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-provenance'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,continuation=True,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono)
+        self.assertFalse(self.task.exists())
+
     def test_symlink_to_existing_task_cannot_reset_its_clock(self):
         actual=self.root/'actual';actual.mkdir();(actual/'started').write_text('old')
         self.task.symlink_to(actual)

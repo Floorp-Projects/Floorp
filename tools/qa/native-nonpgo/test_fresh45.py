@@ -188,6 +188,9 @@ class Fresh45Flow(unittest.TestCase):
         self.assertFalse(any(stage in fresh.FORBIDDEN_STAGES for stage in stages))
         self.assertEqual(result['mozillaUpstream']['case']['harness']['counts']['executed'],42)
         self.assertEqual(result['mozillaUpstream']['case']['harness']['counts']['skipped'],3)
+        ledger=result['mozillaUpstreamExecution']
+        self.assertEqual(ledger['counts']['executed'],42);self.assertEqual(ledger['counts']['skipped'],3)
+        self.assertEqual(ledger['status'],'recorded');self.assertFalse(ledger['productQualification'])
         self.assertFalse(result['fullHostQualification']);self.assertEqual(result['nativeAuthentication'],'NOT_TESTED')
         self.assertEqual((self.task/'started-monotonic').read_bytes(),self.origin)
         self.assertIn(upstream.CHILD_LIBS_STAGE,result['targetStageLogs'])
@@ -228,6 +231,12 @@ class Fresh45Flow(unittest.TestCase):
         self.assertEqual(result['firstFailure']['stage'],upstream.CHILD_LIBS_STAGE)
         self.assertNotIn(upstream.RESOURCE_STAGE,[row[0] for row in self.launches])
         self.assertIsNone(result['mozillaUpstream']['case'])
+        ledger=result['mozillaUpstreamExecution']
+        self.assertEqual(ledger['status'],'not-executed')
+        self.assertEqual(ledger['counts']['notExecuted'],42)
+        self.assertEqual(ledger['counts']['manifestDisabled'],3)
+        self.assertEqual(ledger['counts']['skipped'],0);self.assertEqual(ledger['counts']['passed'],0)
+        self.assertTrue(all(row['actual'] is None for row in ledger['tests']))
 
     def test_asset_failure_retains_first_false_predicate_and_no_executed45_counts(self):
         def failed(diagnostic):
@@ -313,9 +322,12 @@ class Fresh45Flow(unittest.TestCase):
 
     def test_first_failed_summary_cannot_be_promoted_by_writer_callback(self):
         self.fail_stage=target.STAGES[0]
-        self.writer_after=lambda value:value.update(status=fresh.STATUS,firstFailure=None)
+        self.writer_after=lambda value:value.update(status=fresh.STATUS,firstFailure=None,
+            mozillaUpstreamExecution={'status':'passed','productQualification':True})
         code,result=self.invoke();self.assertEqual(code,1)
         self.assertEqual(result['status'],'failed');self.assertEqual(result['firstFailure']['code'],'controlled-functional-failure')
+        self.assertEqual(result['mozillaUpstreamExecution']['status'],'not-executed')
+        self.assertFalse(result['mozillaUpstreamExecution']['productQualification'])
 
 
 class Fresh45PureGuards(unittest.TestCase):

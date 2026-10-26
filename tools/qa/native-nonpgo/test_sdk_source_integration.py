@@ -144,6 +144,50 @@ class SDKSourceIntegration(unittest.TestCase):
         self.assertEqual(self.run['conclusion'], 'failure')
         self.assertEqual(self.producer['conclusion'], 'success')
 
+    def configure_current_origin(self):
+        self.config.update(schema=2,producerRef=sdk_source.CURRENT_PRODUCER_REF,
+                           producerJob=sdk_source.CURRENT_PRODUCER_JOB)
+        self.config['pin'].update(artifact=12624490543,run=40259426572,
+                                  expiresObserved='2026-10-27T02:31:18Z')
+        self.save_source()
+        current=self.config['pin']
+        self.artifact.update(id=current['artifact'],workflow_run={'id':current['run']})
+        self.run['head_sha']=self.config['producerRef']
+        self.producer.update(id=self.config['producerJob'],run_id=current['run'],
+                            name='Mac build [PGO] / download-macos-sdk')
+        return mock.patch.object(sdk_source,'CURRENT_PIN',copy.deepcopy(current))
+
+    def test_current_sdk_uses_producer_head_without_changing_compilation_source(self):
+        with self.configure_current_origin():
+            self.assertEqual(self.fetch(),0)
+            spec=load_sdk_source(self.plan_path,self.source_path)
+            self.assertEqual(spec['runtimeRef'],self.plan['runtime']['ref'])
+            self.assertNotEqual(spec['runtimeRef'],spec['producerRef'])
+            receipt=json.loads((self.root/'sdk-download/receipt.json').read_text())
+            self.assertEqual(receipt,acquisition_receipt(spec))
+            self.assertEqual(receipt['producerRef'],'0ac255739cdd64e100cd6913329247421b0ec2ea')
+            self.assertEqual(self.materialize(),0)
+            self.assertEqual(self.api_opener.open.call_count,4)
+
+    def test_current_sdk_rejects_wrong_run_head_attempt_producer_and_expiry_before_download(self):
+        with self.configure_current_origin():
+            current_run=copy.deepcopy(self.run);current_producer=copy.deepcopy(self.producer)
+            variants=[('run','head_sha',self.plan['runtime']['ref'],'sdk-run-provenance'),
+                      ('run','run_attempt',True,'sdk-run-provenance'),
+                      ('producer','id',True,'sdk-producer-provenance'),
+                      ('producer','name','Mac build / download-macos-sdk','sdk-producer-provenance'),
+                      ('producer','conclusion','failure','sdk-producer-provenance')]
+            for subject,key,bad,code in variants:
+                self.run=copy.deepcopy(current_run);self.producer=copy.deepcopy(current_producer)
+                getattr(self,subject)[key]=bad
+                with self.subTest(subject=subject,key=key),self.assertRaisesRegex(Failure,code):self.fetch()
+                self.download_opener.open.assert_not_called()
+                self.assertFalse((self.root/'sdk-download').exists())
+            self.run=current_run;self.producer=current_producer
+            self.artifact['expires_at']=(self.now-datetime.timedelta(seconds=1)).isoformat()
+            with self.assertRaisesRegex(Failure,'sdk-expired'):self.fetch()
+            self.download_opener.open.assert_not_called()
+
     def test_no_opt_in_keeps_original_artifact_guard(self):
         with self.assertRaisesRegex(Failure, 'sdk-artifact-provenance'):
             self.fetch(alternate=False)

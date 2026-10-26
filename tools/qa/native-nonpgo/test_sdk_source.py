@@ -91,6 +91,49 @@ class SDKSourceTests(unittest.TestCase):
         spec['pin']['private']['PRIVATE-SENTINEL'] = 2
         self.assertEqual(plan['sdk']['private']['PRIVATE-SENTINEL'],1)
 
+    def current_source(self):
+        return json.loads(Path(sdk.__file__).with_name('sdk_source-20261026.json').read_text())
+
+    def test_current_sdk_has_explicit_separate_producer_identity_and_same_content_anchors(self):
+        config=self.current_source();self.source(config)
+        spec=self.alternate()
+        self.assertEqual(config['schema'],2)
+        self.assertEqual(spec['runtimeRef'],'7dd619742b25567e479eeda97ae071d10542ad0b')
+        self.assertEqual(spec['producerRef'],'0ac255739cdd64e100cd6913329247421b0ec2ea')
+        self.assertEqual(spec['producerJob'],121368405809)
+        self.assertEqual(spec['producerName'],'Mac build [PGO] / download-macos-sdk')
+        self.assertEqual(spec['pin']['artifact'],12624490543)
+        self.assertEqual(spec['pin']['run'],40259426572)
+        self.assertEqual(spec['pin']['tarSHA256'],
+            'f30c8e392d8c01d595313ec1e53d4d8d8fe62f2e5f8c65638ac4146b52899add')
+        self.assertEqual(spec['uncompressedTar'],sdk.UNCOMPRESSED_TAR)
+        self.assertTrue(all(spec['pin'][key]==self.config['pin'][key] for key in sdk.CONTENT_KEYS))
+        self.assertNotIn('producerRef',sdk.load_sdk_source(self.plan_path))
+        receipt=sdk.acquisition_receipt(spec)
+        self.assertEqual(receipt['producerRef'],spec['producerRef'])
+        self.assertEqual(sdk.source_provenance(spec)['producerRef'],spec['producerRef'])
+        legacy_source=self.root/'legacy-source.json';legacy_source.write_bytes(self.source_raw)
+        legacy=sdk.load_sdk_source(self.plan_path,legacy_source)
+        self.assertNotIn('producerRef',sdk.source_provenance(legacy))
+        self.assertEqual(sdk.validate_acquisition_receipt(receipt,spec),receipt)
+        receipt['producerRef']=spec['runtimeRef']
+        self.assert_fixed_failure('acquisition-receipt',lambda:sdk.validate_acquisition_receipt(receipt,spec))
+
+    def test_current_sdk_rejects_foreign_producer_and_cross_schema_pin_mixing(self):
+        config=self.current_source()
+        for field,replacement,code in (('producerJob',True,'producer'),
+                ('producerJob',sdk.PRODUCER_JOB,'producer'),('producerRef',sdk.RUNTIME_REF,'producer-ref'),
+                ('producerRef','f'*40,'producer-ref'),('runtimeRef',config['producerRef'],'runtime'),
+                ('pin',self.config['pin'],'pin'),('uncompressedTar',{'bytes':1,'sha256':'0'*64},'uncompressed-anchor')):
+            self.source({**config,field:replacement});self.assert_fixed_failure(code,self.alternate)
+        self.source({**self.config,'producerRef':config['producerRef']})
+        self.assert_fixed_failure('shape',self.alternate)
+        self.source({**config,'schema':1})
+        self.assert_fixed_failure('shape',self.alternate)
+        for field,old in config['pin'].items():
+            changed=copy.deepcopy(config);changed['pin'][field]=True if type(old) is int else '0'*64
+            self.source(changed);self.assert_fixed_failure('pin',self.alternate)
+
     def test_plan_read_failures_have_fixed_codes_without_path_or_json_text(self):
         self.plan_path.unlink()
         self.assert_fixed_failure('plan-read',lambda:sdk.load_sdk_source(self.plan_path))

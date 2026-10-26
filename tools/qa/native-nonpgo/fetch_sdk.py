@@ -76,7 +76,8 @@ def main():
     require(artifact['id'] == pin['artifact'] and artifact['name'] == pin['name'] and
             artifact['size_in_bytes'] == pin['zipBytes'] and artifact['digest'] == 'sha256:' + pin['zipSHA256'] and
             artifact['expired'] is False and artifact['workflow_run']['id'] == pin['run'], 'sdk-artifact-provenance')
-    require(type(run['run_attempt']) is int and run['run_attempt'] == pin['attempt'] and run['head_sha'] == source['runtimeRef'] and
+    require(type(run['run_attempt']) is int and run['run_attempt'] == pin['attempt'] and
+            run['head_sha'] == source.get('producerRef', source['runtimeRef']) and
             run['status'] == 'completed', 'sdk-run-provenance')
     expires = datetime.datetime.fromisoformat(artifact['expires_at'].replace('Z', '+00:00'))
     now = datetime.datetime.now(datetime.timezone.utc)

@@ -649,6 +649,117 @@ def inventory_counts(value):
             file_receipt(value.get('dump'),16*1024**2))
 
 
+def execution_ledger(value):
+    """Explain every planned case without granting a qualification or inventing skips."""
+    ledger = {'schema': 1, 'contract': 'upstream-xpcom-execution-ledger-v1',
+        'status': 'unverified', 'reason': 'inventory-unverified',
+        'scope': SCOPE, 'plannedSource': None, 'planSHA256': None,
+        'inventoryVerified': False, 'terminalLogObserved': False,
+        'processEvidenceComplete': False, 'productQualification': False,
+        'counts': {'planned': None, 'eligible': None, 'manifestDisabled': None,
+            'recorded': None, 'executed': None, 'passed': None, 'expectedFailures': None,
+            'unexpectedResults': None, 'skipped': None, 'notExecuted': None,
+            'unverified': None}, 'tests': []}
+    try:
+        plan, checksum = plan_definition()
+        ids = {SCOPE + '/' + name for name in plan['tests']}
+        ledger.update(plannedSource=plan['source'], planSHA256=checksum)
+        ledger['counts'].update(planned=len(ids), unverified=len(ids))
+        ledger['tests'] = [{'id': name, 'expected': None, 'actual': None,
+            'execution': 'UNVERIFIED', 'reason': 'inventory-unverified'} for name in sorted(ids)]
+        require(type(value) is dict and value.get('contract') == CONTRACT and
+                value.get('scope') == SCOPE and value.get('planSHA256') == checksum,
+                'mozilla-upstream-inventory-proof')
+        inventory = value['inventory']
+        raw = (json.dumps(inventory, sort_keys=True, indent=2) + '\n').encode()
+        require(file_receipt(value.get('inventoryReceipt'), 1024**2) and
+                value['inventoryReceipt'] == {'bytes': len(raw),
+                    'sha256': hashlib.sha256(raw).hexdigest()} and
+                inventory.get('status') == 'observed' and inventory.get('contract') == CONTRACT and
+                inventory.get('planSHA256') == checksum and
+                inventory.get('temporaryPrefsOwnership') == 'stock-obj-temp-not-removed' and
+                all(type(inventory.get(key)) is int and inventory[key] == 0
+                    for key in ('serverProcessesStarted', 'testsExecuted')),
+                'mozilla-upstream-inventory-proof')
+        tests = inventory['scopeTests']
+        require(type(tests) is list and len(tests) == len(ids) and
+                all(type(row) is dict and set(row) == {'id', 'expected'} and
+                    type(row['id']) is str and row['id'] in ids and
+                    type(row['expected']) is str and row['expected'] in ('PASS', 'FAIL', 'SKIP')
+                    for row in tests) and {row['id'] for row in tests} == ids,
+                'mozilla-upstream-scope-selection')
+        expected = {row['id']: row['expected'] for row in tests}
+        enabled = sum(status != 'SKIP' for status in expected.values())
+        disabled = len(ids) - enabled
+        scope, whole = inventory['scope'], inventory['global']
+        require(inventory_counts(scope) and inventory_counts(whole) and
+                whole['registeredRecords'] == scope['registeredRecords'] and
+                whole['activeRecords'] >= scope['activeRecords'] == len(ids) and
+                whole['manifestEnabledRecords'] >= scope['manifestEnabledRecords'] == enabled > 0 and
+                scope['manifestDisabledRecords'] == disabled and
+                scope['expectedFailureRecords'] == sum(status == 'FAIL' for status in expected.values()) and
+                scope['uniqueIds'] == scope['uniqueFiles'] == len(ids) and
+                scope['uniqueEnabledIds'] == enabled, 'mozilla-upstream-inventory-proof')
+        ledger['inventoryVerified'] = True
+        ledger['counts'].update(eligible=enabled, manifestDisabled=disabled, unverified=enabled)
+        ledger['tests'] = [{'id': name, 'expected': expected[name], 'actual': None,
+            'execution': 'MANIFEST_DISABLED' if expected[name] == 'SKIP' else 'UNVERIFIED',
+            'reason': 'upstream-manifest' if expected[name] == 'SKIP' else 'harness-unverified'}
+            for name in sorted(ids)]
+        if 'case' in value and value['case'] is None:
+            ledger.update(status='not-executed', reason='before-harness')
+            ledger['counts'].update(recorded=0, executed=0, passed=0, expectedFailures=0,
+                unexpectedResults=0, skipped=0, notExecuted=enabled, unverified=0)
+            for row in ledger['tests']:
+                if row['expected'] != 'SKIP':
+                    row.update(execution='NOT_EXECUTED', reason='before-harness')
+            return ledger
+        ledger['reason'] = 'harness-unverified'
+        case = value['case']
+        harness = case['harness']
+        observed, counts = harness['tests'], harness['counts']
+        require(harness.get('completeLog') is True and harness.get('status') in ('passed', 'failed') and
+                file_receipt(harness, 16*1024**2) and type(observed) is list and len(observed) == len(ids) and
+                all(type(row) is dict and set(row) == {'id', 'expected', 'actual', 'satisfied'} and
+                    type(row['id']) is str and row['id'] in expected and
+                    row['expected'] == expected[row['id']] and type(row['actual']) is str and
+                    row['actual'] in END_STATUSES and type(row['satisfied']) is bool and
+                    row['satisfied'] is (row['actual'] == row['expected']) for row in observed) and
+                {row['id'] for row in observed} == ids, 'mozilla-upstream-test-binding')
+        totals = {'selected': len(ids), 'executed': sum(row['actual'] != 'SKIP' for row in observed),
+            'passed': sum(row['actual'] == 'PASS' for row in observed),
+            'expectedFailures': sum(row['expected'] == row['actual'] == 'FAIL' for row in observed),
+            'unexpectedResults': sum(not row['satisfied'] for row in observed),
+            'skipped': sum(row['actual'] == 'SKIP' for row in observed), 'unsupported': 0, 'unattempted': 0}
+        require(type(counts) is dict and all(type(counts.get(key)) is int and counts[key] == count
+                for key, count in totals.items()) and all(type(counts.get(key)) is int and counts[key] >= 0
+                for key in ('crashes', 'timeouts', 'errorLogs')), 'mozilla-upstream-counts')
+        lifecycle = counts['rawLifecycle']
+        require(type(lifecycle) is dict and all(type(lifecycle.get(key)) is int and lifecycle[key] == count
+                for key, count in {'suiteStarts': 1, 'suiteEnds': 1, 'listedTests': len(ids),
+                    'expectedTests': len(ids), 'testStarts': len(ids), 'testEnds': len(ids)}.items()) and
+                type(lifecycle.get('testEndStatuses')) is dict and
+                set(lifecycle['testEndStatuses']) == set(END_STATUSES) and
+                all(type(lifecycle['testEndStatuses'][status]) is int and
+                    lifecycle['testEndStatuses'][status] == sum(row['actual'] == status for row in observed)
+                    for status in END_STATUSES), 'mozilla-upstream-counts')
+        ledger.update(status='recorded', reason='terminal-log', terminalLogObserved=True)
+        process = case.get('process', {})
+        ledger['processEvidenceComplete'] = (type(process) is dict and process.get('available') is True and
+            type(process.get('exitCode')) is int and all(process.get(key) is True
+                for key in ('exactReaped', 'groupGone', 'cleanupClean', 'monitorFailureAbsent')) and
+            case.get('monitorFailureObserved') is False and case.get('monitorFailure') is None)
+        ledger['counts'].update({key: count for key, count in totals.items()
+                                 if key in ledger['counts']})
+        ledger['counts'].update(recorded=len(observed), notExecuted=0, unverified=0)
+        ledger['tests'] = [{'id': row['id'], 'expected': row['expected'], 'actual': row['actual'],
+            'execution': 'RECORDED', 'reason': 'terminal-log'}
+            for row in sorted(observed, key=lambda row: row['id'])]
+    except (Failure, OSError, ValueError, KeyError, TypeError, AttributeError, RecursionError):
+        pass
+    return ledger
+
+
 def proof_complete(value, rows):
     from mozilla_target_build import stage_complete
     try:

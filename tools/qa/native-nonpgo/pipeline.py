@@ -18,7 +18,7 @@ from support import (Failure, Runner, clean_environment, digest, download,
                      extract_tar, require, scan_tar, write_json)
 from owned_native import OwnedNative
 from checkpoint_public import public_restore
-from sdk_source import load_sdk_source, validate_acquisition_receipt
+from sdk_source import load_sdk_source, validate_acquisition_receipt, source_provenance
 from consumer_time import select_consumer_time, select_fresh45_time
 from build_completion import start_snapshot, collect as collect_build_completion
 
@@ -739,9 +739,7 @@ def main():
                             value.update({'artifact': acquired['artifact'], 'sourceRun': acquired['run'],
                                           'attempt': acquired['attempt'], 'zipSHA256': acquired['zipSHA256'],
                                           'tarSHA256': acquired['tarSHA256'],
-                                          'acquisitionSource': {key: sdk_source[key] for key in
-                                              ('qualification', 'sourceSHA256', 'baselinePlanSHA256',
-                                               'uncompressedTar', 'producerJob')},
+                                          'acquisitionSource': source_provenance(sdk_source),
                                           'baselineTarSHA256': plan['sdk']['tarSHA256']})
                     report[key] = value
             except (Failure, ValueError, OSError) as error:
@@ -848,6 +846,9 @@ def main():
         if args.fresh_firefox45:
             return fresh45.finish(task, runner, report, fresh_origin, fresh_deadline,
                                   fresh_time['evidence'])
+        if args.mozilla_upstream_xpcom:
+            from mozilla_upstream import execution_ledger
+            report['mozillaUpstreamExecution'] = execution_ledger(report.get('mozillaUpstream'))
         try:
             write_json(task / 'summary.json', report)
             if args.mozilla_targeted and report['status'] == 'mozilla-target-ready' and not (

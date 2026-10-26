@@ -11,6 +11,7 @@ import unittest
 from unittest import mock
 
 import build_completion as bc
+from build_completion_contract import fixture_clock_barrier
 
 
 META = {'product': 'mach', 'version': 27, 'preprocessedProfileVersion': 47}
@@ -57,6 +58,7 @@ class CompletionTests(unittest.TestCase):
         self.directory.mkdir(parents=True)
         self.snapshot = bc.start_snapshot(self.task)
         self.assertEqual(self.snapshot['status'], 'captured')
+        fixture_clock_barrier(self.task, self.snapshot)
 
     def write(self, raw, name=NAME):
         path = self.directory / name
@@ -194,6 +196,7 @@ class CompletionTests(unittest.TestCase):
     def test_snapshot_can_precede_creation_of_expected_directories(self):
         with tempfile.TemporaryDirectory(prefix='floorp-build-completion-new-') as temp:
             task = Path(temp).resolve();snapshot = bc.start_snapshot(task)
+            fixture_clock_barrier(task, snapshot)
             directory = task.joinpath(*bc.PARTS);directory.mkdir(parents=True)
             (directory / NAME).write_bytes(jsonl([marker()]))
             self.assertEqual(bc.collect(task, snapshot)['status'], 'observed')

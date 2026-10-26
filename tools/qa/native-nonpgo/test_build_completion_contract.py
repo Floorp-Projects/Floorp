@@ -184,6 +184,32 @@ class ContractTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name).resolve()
 
+    def test_fixture_clock_barrier_preserves_freshness_check_and_removes_owned_marker(self):
+        snapshot=contract.start_snapshot(self.root)
+        contract.fixture_clock_barrier(self.root,snapshot)
+        self.assertEqual(list(self.root.iterdir()),[])
+        directory=self.root/'obj/.mozbuild/logs/build';directory.mkdir(parents=True)
+        path=directory/contract.PROFILE_NAME
+        path.write_text(''.join(json.dumps(row)+'\n' for row in profile_rows('positive')))
+        self.assertEqual(contract.collect(self.root,snapshot)['status'],'observed')
+        os.utime(path,ns=(1,1))
+        result=contract.collect(self.root,snapshot)
+        self.assertEqual(result['status'],'unconfirmed')
+        self.assertEqual(result['reason'],'build-completion-profile-stale')
+
+    def test_fixture_clock_barrier_is_bounded_and_invalid_snapshots_create_nothing(self):
+        snapshot={'status':'captured','wallTimeNs':1}
+        with mock.patch.object(contract.os,'fstat',return_value=types.SimpleNamespace(st_mtime_ns=0,st_ctime_ns=0)), \
+                mock.patch.object(contract.time,'sleep') as pause:
+            with self.assertRaisesRegex(contract.Failure,'^contract-fixture-clock$'):
+                contract.fixture_clock_barrier(self.root,snapshot)
+            self.assertEqual(pause.call_count,200)
+        self.assertEqual(list(self.root.iterdir()),[])
+        for value in (None,{}, {'status':'captured','wallTimeNs':True}):
+            with self.assertRaisesRegex(contract.Failure,'^contract-fixture-clock$'):
+                contract.fixture_clock_barrier(self.root,value)
+        self.assertEqual(list(self.root.iterdir()),[])
+
     def run_fixture(self, task=None, serializer=fixture_serializer, *, large_whole=False):
         with mock.patch.object(contract, 'load_serializer', return_value=object()), \
                 mock.patch.object(contract, 'serialize', side_effect=serializer):

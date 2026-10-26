@@ -15,7 +15,7 @@ import time
 from qa_core import Failure, require
 from mozilla_target_build import stage_complete, proof_complete as targets_complete, STAGES
 from mozilla_upstream import (EXTRA_STAGES, proof_complete as upstream_complete,
-                              asset_precondition_evidence)
+                              asset_precondition_evidence, execution_ledger)
 
 STATUS = 'mozilla-fresh45-ready'
 QUALIFICATION = 'fresh-job-current-source-upstream-xpcom-v1'
@@ -228,6 +228,7 @@ def finish(task, runner, report, origin, deadline, budget):
                           monitorFailure=state['monitor'])
         report['stages'], report['nativeCleanup'] = runner.records, runner.native_cleanup
         report['validationOutcome'] = validation_outcome(report)
+        report['mozillaUpstreamExecution'] = execution_ledger(report.get('mozillaUpstream'))
 
     def persist():
         check()
