@@ -110,10 +110,12 @@ class HostProcess:
             command = ["/usr/bin/open", "-n", "-W", "-a", str(browser),
                        "--stdout", str(output / "browser.stdout.log"),
                        "--stderr", str(output / "browser.stderr.log"),
-                       "--env", "MOZ_CRASHREPORTER_DISABLE=1", "--args",
+                       "--env", "MOZ_CRASHREPORTER_DISABLE=1",
+                       "--env", "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1", "--args",
                        *self.command[1:]]
         self.process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-            env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1"})
+            env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1",
+                 "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS": "1"})
         if not launch_services:
             self.pid = self.process.pid
 
