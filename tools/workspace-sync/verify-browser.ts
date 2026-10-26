@@ -160,7 +160,11 @@ const child = new Deno.Command(binary, {
     realProfile,
     "about:blank",
   ],
-  env: { MOZ_HEADLESS: "1", MOZ_MARIONETTE: "1" },
+  env: {
+    MOZ_HEADLESS: "1",
+    MOZ_MARIONETTE: "1",
+    MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1",
+  },
   stdout: "null",
   stderr: "null",
 }).spawn();

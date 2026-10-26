@@ -13,6 +13,7 @@ import {
   createIsolatedBrowserPairLaunch,
   type IsolatedBrowserChild,
   type IsolatedBrowserProcessControl,
+  run as runBrowser,
   startIsolatedBrowser,
   startIsolatedBrowserPair,
 } from "./browser_launcher.ts";
@@ -186,6 +187,7 @@ Deno.test("isolated browser process clears inherited secrets and cleans its prof
     environment: {
       FLOORP_FXA_TEST_SECRET: "must-not-reach-browser",
       HOME: "/private/tmp/floorp-home",
+      MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "0",
       PATH: "/usr/bin:/bin",
     },
     processControl: mockProcessControl(),
@@ -209,6 +211,7 @@ Deno.test("isolated browser process clears inherited secrets and cleans its prof
     assertEquals(captured.options.stderr, "null");
     assertEquals(captured.options.env.FLOORP_FXA_TEST_SECRET, undefined);
     assertEquals(captured.options.env.HOME, "/private/tmp/floorp-home");
+    assertEquals(captured.options.env.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, "1");
     assertEquals(captured.options.env.PATH, "/usr/bin:/bin");
 
     await running.stop();
@@ -269,6 +272,7 @@ Deno.test("isolated Windows browser normalizes safe environment names and delega
     assertEquals(capturedEnvironment, {
       COMSPEC: "C:\\Windows\\System32\\cmd.exe",
       DISPLAY: ":99",
+      MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1",
       PATH: "C:\\Windows\\System32",
       SYSTEMROOT: "C:\\Windows",
       WAYLAND_DISPLAY: "wayland-0",
@@ -695,3 +699,59 @@ Deno.test("browser command retains the ordinary single-profile default", () => {
   assertEquals(command.includes("--marionette"), false);
   assertEquals(command.includes("--no-remote"), false);
 });
+
+for (
+  const { name, marionette, expected } of [
+    { name: "default", marionette: undefined, expected: "1" },
+    { name: "enabled", marionette: true, expected: "1" },
+    { name: "disabled", marionette: false, expected: "0" },
+  ]
+) {
+  Deno.test(`ordinary browser ${name} Marionette launch scopes system access to its child`, async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command");
+    if (descriptor === undefined) {
+      throw new Error("Deno.Command is unavailable");
+    }
+    const previous = Deno.env.get("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS");
+    let captured: Deno.CommandOptions | undefined;
+    const emptyOutput = () =>
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close();
+        },
+      });
+    class MockCommand {
+      constructor(_executable: string, options: Deno.CommandOptions) {
+        captured = options;
+      }
+
+      spawn() {
+        return {
+          stdout: emptyOutput(),
+          stderr: emptyOutput(),
+          status: Promise.resolve({ code: 0, signal: null, success: true }),
+        };
+      }
+    }
+    try {
+      Deno.env.set("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS", "0");
+      Object.defineProperty(Deno, "Command", {
+        configurable: descriptor.configurable,
+        enumerable: descriptor.enumerable,
+        value: MockCommand,
+      });
+      await runBrowser({
+        binaryPath: "/mock/floorp",
+        profilePath: "/mock/profile",
+        marionette,
+      });
+      assertEquals(captured?.env?.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, expected);
+      assertEquals(Deno.env.get("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS"), "0");
+    } finally {
+      Object.defineProperty(Deno, "Command", descriptor);
+      if (previous === undefined) {
+        Deno.env.delete("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS");
+      } else Deno.env.set("MOZ_REMOTE_ALLOW_SYSTEM_ACCESS", previous);
+    }
+  });
+}

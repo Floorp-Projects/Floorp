@@ -575,6 +575,7 @@ async function cold(binary: string): Promise<void> {
         ...(privateWindow ? ["--private-window"] : []),
         ...urls,
       ],
+      env: { MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1" },
       stdout: "null",
       stderr: "null",
     }).spawn();
