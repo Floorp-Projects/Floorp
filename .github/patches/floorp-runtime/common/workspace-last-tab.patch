@@ -24,3 +24,9 @@ diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/componen
        if (closeWindow) {
          // We've already called beforeunload on all the relevant tabs if we get here,
          // so avoid calling it again:
+@@ -6830,3 +6849,5 @@ export class Tabbrowser {
+     if (newTab) {
+       this.addTrustedTab(this.documentGlobal.BROWSER_NEW_TAB_URL, {
++        // Floorp: bind the keep-alive tab to this exact closing transaction.
++        eventDetail: { floorpReplacementForTab: aTab },
+         skipAnimation: true,

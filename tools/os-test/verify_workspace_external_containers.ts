@@ -135,7 +135,7 @@ return {url: location.href, ready: document.readyState === 'complete' && !!windo
     }
     assert(
       await this.chrome<boolean>(
-        `const helper = ChromeUtils.importESModule('resource:///modules/BrowserContentHandler.sys.mjs');
+        `const helper = ChromeUtils.importESModule('moz-src:///browser/components/BrowserContentHandler.sys.mjs');
       return typeof helper.getWorkspaceUserContextIdForExternalOpen === 'function' &&
         (!arguments[0] || typeof window.workspacesFuncs?.getCurrentWorkspaceUserContextId === 'function');`,
         [requireOverlay],

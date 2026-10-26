@@ -71,8 +71,11 @@ Deno.test("external workspace Runtime patches agree for development and packagin
   assertEquals(
     local,
     source.replaceAll(
-      "browser/components/BrowserContentHandler.sys.mjs",
-      "browser/modules/BrowserContentHandler.sys.mjs",
+      "a/browser/components/BrowserContentHandler.sys.mjs",
+      "a/moz-src/browser/components/BrowserContentHandler.sys.mjs",
+    ).replaceAll(
+      "b/browser/components/BrowserContentHandler.sys.mjs",
+      "b/moz-src/browser/components/BrowserContentHandler.sys.mjs",
     ),
   );
   assertEquals(
@@ -83,6 +86,23 @@ Deno.test("external workspace Runtime patches agree for development and packagin
     ],
     "only existing JavaScript modules change; no native rebuild is needed",
   );
+  assertEquals(
+    [...local.matchAll(/^\+\+\+ b\/(.+)$/gm)].map((match) => match[1]),
+    [
+      "moz-src/browser/components/BrowserContentHandler.sys.mjs",
+      "browser/modules/BrowserDOMWindow.sys.mjs",
+    ],
+    "Firefox 159 packages BrowserContentHandler under moz-src",
+  );
+  for (const patch of [source, local]) {
+    assert(
+      patch.includes(
+        '+    "moz-src:///browser/components/BrowserContentHandler.sys.mjs",',
+      ),
+      "the helper uses the native Firefox 159 module URI in both patch paths",
+    );
+    assert(!patch.includes("moz-src:///moz-src/"));
+  }
 });
 
 Deno.test("Firefox's valid default-container guess stays distinct from no host guess", async () => {
