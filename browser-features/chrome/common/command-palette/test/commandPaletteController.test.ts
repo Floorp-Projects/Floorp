@@ -2818,12 +2818,16 @@ const rawTests: TestCase[] = [
         // Select the already-mounted command before its 30ms search runs.
         ctrl.executeCommand(STEP_COMMAND_WITH_LOADER);
         await Promise.resolve();
-        assertEquals(ctrl.state.filteredStepChoices().length, 2);
-        assertEquals(ctrl.state.query(), "");
+        assertEquals(
+          ctrl.state.filteredStepChoices().length,
+          2,
+          "async choices should load before the old command timer",
+        );
+        assertEquals(ctrl.state.query(), "", "the new step should start empty");
 
         // Model a user considering a choice after the command timer was due.
         await new Promise((resolve) => setTimeout(resolve, 100));
-        assertEquals(ctrl.state.mode(), "input");
+        assertEquals(ctrl.state.mode(), "input", "the step should stay active");
         assertEquals(
           ctrl.state.query(),
           "",
@@ -2847,18 +2851,38 @@ const rawTests: TestCase[] = [
         ctrl.updateSearch("stale command query");
         ctrl.executeCommand(STEP_COMMAND_WITH_CHOICES);
         ctrl.updateSearch("alp");
-        assertEquals(ctrl.state.query(), "alp");
-        assertEquals(ctrl.state.filteredStepChoices()[0]?.value, "a");
+        assertEquals(
+          ctrl.state.query(),
+          "alp",
+          "step input should apply immediately",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices()[0]?.value,
+          "a",
+          "step input should immediately filter to Alpha",
+        );
 
         await new Promise((resolve) => setTimeout(resolve, 100));
-        assertEquals(ctrl.state.mode(), "input");
+        assertEquals(
+          ctrl.state.mode(),
+          "input",
+          "the filtered step should stay active",
+        );
         assertEquals(
           ctrl.state.query(),
           "alp",
           "current-step input must remain synchronous and survive the old timer",
         );
-        assertEquals(ctrl.state.filteredStepChoices().length, 1);
-        assertEquals(ctrl.state.filteredStepChoices()[0]?.value, "a");
+        assertEquals(
+          ctrl.state.filteredStepChoices().length,
+          1,
+          "the current filter should retain exactly one choice",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices()[0]?.value,
+          "a",
+          "Alpha should remain selected by the current step filter",
+        );
       } finally {
         ctrl.destroy();
       }
