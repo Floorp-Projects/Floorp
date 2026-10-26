@@ -252,7 +252,11 @@ class Browser {
         "--marionette",
         "--remote-allow-system-access",
       ],
-      env: { MOZ_HEADLESS: "1", MOZ_NO_REMOTE: "1" },
+      env: {
+        MOZ_HEADLESS: "1",
+        MOZ_NO_REMOTE: "1",
+        MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1",
+      },
       stdin: "null",
       stdout: "piped",
       stderr: "piped",
