@@ -37,45 +37,52 @@ function makeReplacementSource(id = "closing"): FakeTab {
   return {
     id,
     closing: true,
-    _endRemoveArgs: [false, true],
   };
 }
 
 function testFirefoxReplacementSignalIsCapabilityChecked(): void {
+  const closing = makeReplacementSource();
+  const detail = { floorpReplacementForTab: closing };
   assertEquals(hasFirefoxReplacementSignal(null), false, "null is not a tab");
   assertEquals(
-    hasFirefoxReplacementSignal({ closing: true }),
+    hasFirefoxReplacementSignal(closing),
     false,
-    "missing private removal args must fail safe",
+    "a closing tab without native event detail must fail safe",
   );
   assertEquals(
     hasFirefoxReplacementSignal({
       closing: true,
-      _endRemoveArgs: { 1: true },
-    }),
-    false,
-    "non-array private removal args must fail safe",
-  );
-  assertEquals(
-    hasFirefoxReplacementSignal({
-      closing: true,
-      _endRemoveArgs: [false, false],
-    }),
-    false,
-    "a close without Firefox's new-tab signal is not a replacement source",
-  );
-  assertEquals(
-    hasFirefoxReplacementSignal({
-      closing: false,
       _endRemoveArgs: [false, true],
     }),
     false,
-    "the tab must also be actively closing",
+    "legacy removal args alone cannot authorize a Firefox 159 replacement",
+  );
+  for (
+    const invalidDetail of [
+      null,
+      "closing",
+      {},
+      { floorpReplacementForTab: {} },
+    ]
+  ) {
+    assertEquals(
+      hasFirefoxReplacementSignal(closing, invalidDetail),
+      false,
+      "only a detail marker referencing this exact closing tab is authoritative",
+    );
+  }
+  const notClosing = { id: "not-closing", closing: false };
+  assertEquals(
+    hasFirefoxReplacementSignal(notClosing, {
+      floorpReplacementForTab: notClosing,
+    }),
+    false,
+    "the marked source must also be actively closing",
   );
   assertEquals(
-    hasFirefoxReplacementSignal(makeReplacementSource()),
+    hasFirefoxReplacementSignal(closing, detail),
     true,
-    "closing plus _endRemoveArgs[1] === true is the required signal",
+    "the native detail must name the exact actively closing source",
   );
 }
 
@@ -206,7 +213,9 @@ function testNativeReplacementIsCapturedByExactIdentity(): void {
   const closing = makeReplacementSource();
   const replacement = { id: "native-replacement", url: "about:newtab" };
 
-  tracker.observeTabOpen(replacement, [closing, replacement]);
+  tracker.observeTabOpen(replacement, [closing, replacement], {
+    floorpReplacementForTab: closing,
+  });
 
   assertEquals(
     tracker.finishTabClose(closing),
@@ -215,23 +224,67 @@ function testNativeReplacementIsCapturedByExactIdentity(): void {
   );
 }
 
-function testAmbiguousClosingSourcesFailSafe(): void {
+function testExplicitSourceDisambiguatesClosingTabs(): void {
   const tracker = new FirefoxTabReplacementTracker<FakeTab>();
   const closingA = makeReplacementSource("closing-a");
   const closingB = makeReplacementSource("closing-b");
   const opened = { id: "opened", url: "about:newtab" };
 
-  tracker.observeTabOpen(opened, [closingA, closingB, opened]);
+  tracker.observeTabOpen(opened, [closingA, closingB, opened], {
+    floorpReplacementForTab: closingB,
+  });
 
   assertEquals(
     tracker.finishTabClose(closingA),
     null,
-    "ambiguous lifecycle must not classify the opened tab",
+    "another closing source cannot claim the marked replacement",
   );
   assertEquals(
     tracker.finishTabClose(closingB),
+    opened,
+    "the exact native source remains authoritative with multiple closing tabs",
+  );
+}
+
+function testUnmarkedAndForeignSourcesFailSafe(): void {
+  const closing = makeReplacementSource();
+  const foreign = makeReplacementSource("another-window");
+  const ordinaryNewtab = { id: "ordinary-newtab", url: "about:newtab" };
+
+  for (const detail of [undefined, {}, { floorpReplacementForTab: foreign }]) {
+    const tracker = new FirefoxTabReplacementTracker<FakeTab>();
+    tracker.observeTabOpen(ordinaryNewtab, [closing, ordinaryNewtab], detail);
+    assertEquals(
+      tracker.finishTabClose(closing),
+      null,
+      "an ordinary same-URL tab or a source outside this window must not be captured",
+    );
+    assertEquals(
+      tracker.finishTabClose(foreign),
+      null,
+      "a native marker cannot bind a source absent from current window tabs",
+    );
+  }
+
+  const tracker = new FirefoxTabReplacementTracker<FakeTab>();
+  const notClosing = { id: "not-closing", closing: false };
+  tracker.observeTabOpen(ordinaryNewtab, [notClosing, ordinaryNewtab], {
+    floorpReplacementForTab: notClosing,
+  });
+  assertEquals(
+    tracker.finishTabClose(notClosing),
     null,
-    "neither ambiguous source may claim the opened tab",
+    "a source in this window must still be actively closing",
+  );
+
+  const foreignOpenedTracker = new FirefoxTabReplacementTracker<FakeTab>();
+  foreignOpenedTracker.observeTabOpen(ordinaryNewtab, [closing], {
+    floorpReplacementForTab: closing,
+  });
+  assertEquals(
+    foreignOpenedTracker.finishTabClose(closing),
+    null,
+    "the opened replacement must also belong to this window's current tabs",
   );
 }
 
@@ -239,7 +292,7 @@ function testOpenedTabCannotBeItsOwnClosingSource(): void {
   const tracker = new FirefoxTabReplacementTracker<FakeTab>();
   const opened = makeReplacementSource("opened");
 
-  tracker.observeTabOpen(opened, [opened]);
+  tracker.observeTabOpen(opened, [opened], { floorpReplacementForTab: opened });
 
   assertEquals(
     tracker.finishTabClose(opened),
@@ -254,8 +307,12 @@ function testFirstCapturedTabCannotBeOverwritten(): void {
   const replacement = { id: "native-replacement" };
   const laterOpened = { id: "later-opened" };
 
-  tracker.observeTabOpen(replacement, [closing, replacement]);
-  tracker.observeTabOpen(laterOpened, [closing, replacement, laterOpened]);
+  tracker.observeTabOpen(replacement, [closing, replacement], {
+    floorpReplacementForTab: closing,
+  });
+  tracker.observeTabOpen(laterOpened, [closing, replacement, laterOpened], {
+    floorpReplacementForTab: closing,
+  });
 
   assertEquals(
     tracker.finishTabClose(closing),
@@ -338,7 +395,9 @@ function testSuppressedCloseStillConsumesTransaction(): void {
   const tracker = new FirefoxTabReplacementTracker<FakeTab>();
   const closing = makeReplacementSource();
   const replacement = { id: "native-replacement" };
-  tracker.observeTabOpen(replacement, [closing, replacement]);
+  tracker.observeTabOpen(replacement, [closing, replacement], {
+    floorpReplacementForTab: closing,
+  });
 
   assertEquals(
     tracker.finishTabClose(closing),
@@ -356,7 +415,9 @@ function testTerminalGuardRejectsManagerCreatedReentrancy(): void {
   const tracker = new FirefoxTabReplacementTracker<FakeTab>();
   const closing = makeReplacementSource();
   const replacement = { id: "native-replacement" };
-  tracker.observeTabOpen(replacement, [closing, replacement]);
+  tracker.observeTabOpen(replacement, [closing, replacement], {
+    floorpReplacementForTab: closing,
+  });
   tracker.finishTabClose(closing);
 
   const managerCreated = {
@@ -364,7 +425,9 @@ function testTerminalGuardRejectsManagerCreatedReentrancy(): void {
     url: "about:newtab",
     userContextId: 7,
   };
-  tracker.observeTabOpen(managerCreated, [closing, managerCreated]);
+  tracker.observeTabOpen(managerCreated, [closing, managerCreated], {
+    floorpReplacementForTab: closing,
+  });
 
   assertEquals(
     tracker.finishTabClose(closing),
@@ -392,8 +455,12 @@ export async function runAllTests(): Promise<void> {
       fn: testNativeReplacementIsCapturedByExactIdentity,
     },
     {
-      name: "ambiguous closing sources fail safe",
-      fn: testAmbiguousClosingSourcesFailSafe,
+      name: "explicit native source disambiguates closing tabs",
+      fn: testExplicitSourceDisambiguatesClosingTabs,
+    },
+    {
+      name: "unmarked and foreign sources fail safe",
+      fn: testUnmarkedAndForeignSourcesFailSafe,
     },
     {
       name: "opened tab cannot be its own closing source",
