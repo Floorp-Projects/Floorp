@@ -2809,6 +2809,62 @@ const rawTests: TestCase[] = [
     },
   },
 
+  {
+    name: "pending command query cannot erase loaded step choices after 100ms",
+    async fn() {
+      const ctrl = createController();
+      try {
+        ctrl.updateSearch("stale command query");
+        // Select the already-mounted command before its 30ms search runs.
+        ctrl.executeCommand(STEP_COMMAND_WITH_LOADER);
+        await Promise.resolve();
+        assertEquals(ctrl.state.filteredStepChoices().length, 2);
+        assertEquals(ctrl.state.query(), "");
+
+        // Model a user considering a choice after the command timer was due.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        assertEquals(ctrl.state.mode(), "input");
+        assertEquals(
+          ctrl.state.query(),
+          "",
+          "the previous command query must not enter the current step",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices().map((choice) => choice.value).join(),
+          "la,lb",
+          "loaded choices must remain available while the user considers them",
+        );
+      } finally {
+        ctrl.destroy();
+      }
+    },
+  },
+  {
+    name: "pending command query cannot overwrite a new step filter",
+    async fn() {
+      const ctrl = createController();
+      try {
+        ctrl.updateSearch("stale command query");
+        ctrl.executeCommand(STEP_COMMAND_WITH_CHOICES);
+        ctrl.updateSearch("alp");
+        assertEquals(ctrl.state.query(), "alp");
+        assertEquals(ctrl.state.filteredStepChoices()[0]?.value, "a");
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        assertEquals(ctrl.state.mode(), "input");
+        assertEquals(
+          ctrl.state.query(),
+          "alp",
+          "current-step input must remain synchronous and survive the old timer",
+        );
+        assertEquals(ctrl.state.filteredStepChoices().length, 1);
+        assertEquals(ctrl.state.filteredStepChoices()[0]?.value, "a");
+      } finally {
+        ctrl.destroy();
+      }
+    },
+  },
+
   // --- advanceStep progression ---
   {
     name: "advanceStep progresses through steps",
