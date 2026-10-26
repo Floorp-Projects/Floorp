@@ -27,6 +27,7 @@ import {
   setShortcuts,
 } from "#features-chrome/common/command-palette/config.ts";
 import { getTabCommands } from "#features-chrome/common/command-palette/tab-provider.ts";
+import { getTabIdentity } from "#features-chrome/utils/tab-identity.ts";
 
 function makeStepCommand(
   steps: CommandStep[],
@@ -1113,14 +1114,12 @@ const tabSearchTests: TestCase[] = [
         ctrl.updateSearch("@t ");
         await flushDebounce();
         const filtered = ctrl.state.filteredCommands();
-        // Match the command id the same way tab-provider builds it
-        // (`tab.tabId ?? tab._tPos`).
-        const tabId = (targetTab as unknown as { tabId?: number }).tabId ??
-          (targetTab as unknown as { _tPos?: number })._tPos;
-        const targetCmd = filtered.find((c) => c.id === `__tab__${tabId}`);
+        const targetCmd = filtered.find((c) =>
+          c.id === `__tab__${getTabIdentity(targetTab)}`
+        );
         assert(
           targetCmd !== undefined,
-          `tab command "__tab__${tabId}" should be in the @t list`,
+          "target tab command should be in the @t list",
         );
         ctrl.executeCommand(targetCmd);
         assertEquals(

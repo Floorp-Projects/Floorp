@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { PaletteCommand } from "#features-chrome/common/command-palette/types.ts";
+import {
+  getLiveTabIndex,
+  getTabIdentity,
+  isTabOpen,
+} from "#features-chrome/utils/tab-identity.ts";
 
 const TAB_COMMAND_PREFIX = "__tab__";
 
@@ -12,10 +17,6 @@ interface BrowserWithContent extends XULBrowserElement {
   contentTitle?: string;
 }
 
-interface TabWithId extends XULElement {
-  tabId?: number;
-}
-
 export function getTabCommands(win: Window): PaletteCommand[] {
   const { gBrowser } = win as ChromeWindow;
   if (!gBrowser?.tabs) return [];
@@ -23,11 +24,11 @@ export function getTabCommands(win: Window): PaletteCommand[] {
   const commands: PaletteCommand[] = [];
   for (const tab of gBrowser.tabs) {
     const browser = tab.linkedBrowser as BrowserWithContent | undefined;
-    if (!browser) continue;
+    if (!browser || !isTabOpen(tab)) continue;
 
     const title = tab.getAttribute("label") || browser.contentTitle || "";
     const url = browser.currentURI?.spec || "";
-    const tabId = (tab as TabWithId).tabId ?? tab._tPos;
+    const tabId = getTabIdentity(tab);
 
     commands.push({
       id: `${TAB_COMMAND_PREFIX}${tabId}`,
@@ -37,7 +38,9 @@ export function getTabCommands(win: Window): PaletteCommand[] {
       keywords: [url, title],
       fn: (w) => {
         const gb = (w as ChromeWindow).gBrowser;
-        if (gb) gb.selectedTab = tab;
+        if (gb && getLiveTabIndex(gb.tabs, tab) >= 0) {
+          gb.selectedTab = tab;
+        }
       },
     });
   }
