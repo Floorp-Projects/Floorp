@@ -38,6 +38,8 @@
   },
   "exclude": [
     "tools/build/tasks/inject/wasm/nora-inject.js",
+    "tools/qa/native-nonpgo/mozilla-smoke/negative/test_expected_failure.js",
+    "tools/qa/native-nonpgo/mozilla-smoke/positive/test_current_debug.js",
     "**/_dist/**/*",
     "**/*.timestamp-*.mjs",
     "libs/@types/gecko/**/*",

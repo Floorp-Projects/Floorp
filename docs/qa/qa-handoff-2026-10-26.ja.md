@@ -56,3 +56,8 @@ Macの103件成功とは区別する。修正前のFIFO待機と、容量不足�
 Runtimeのinitial-push-only条件と公開前承認条件は保持する。
 この修正のmacOS実行、fresh Firefox45の原因解明、Windows現headの検証、
 現mainとの統合、最終配布物のQAは引き続き未完了。
+
+初回PR CI [40300804331](https://github.com/Floorp-Projects/Floorp/actions/runs/40300804331)は、
+xpcshell専用の正負2 fixtureにDenoの型検査が適用され、Firefox固有globalの未定義9件で失敗した。
+この2ファイルだけをDenoの対象外にする。fixture本体・hash・xpcshell manifestは変更せず、
+ネイティブ側の実行と検証を維持する。元CIの失敗は保存し、同じrunの再実行はしない。
