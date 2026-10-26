@@ -3,6 +3,7 @@
 """Launch the explicitly prepared QA apps with their exact dedicated profiles."""
 import argparse
 import json
+import os
 from pathlib import Path
 import plistlib
 import socket
@@ -44,7 +45,8 @@ def main():
         process = subprocess.Popen([
             item["binary"], "--no-remote", "--remote-allow-system-access", "--marionette",
             "--profile", item["profile"], "about:preferences#sync",
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+            env={**os.environ, "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS": "1"})
         processes.append({"name": item["name"], "pid": process.pid,
                           "profile": item["profile"], "port": item["marionettePort"], "app": item["app"]})
     (setup_file.parent / "processes.json").write_text(json.dumps(processes, indent=2))
