@@ -3,10 +3,14 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { Note } from "../../browser-features/pages-notes/src/lib/merge.ts";
 import {
+  decodeNotes,
   encodeNotes,
   notesBase,
 } from "../../browser-features/modules/common/notes-record.ts";
-import type { NotesStorageService } from "../../browser-features/modules/common/notes-storage-types.ts";
+import type {
+  NotesPreferenceSnapshot,
+  NotesStorageService,
+} from "../../browser-features/modules/common/notes-storage-types.ts";
 
 const NOTES = "floorp.browser.note.memos";
 const BASE = "floorp.browser.note.syncState";
@@ -75,8 +79,12 @@ async function profile(
         const previous = prefs.get(key);
         prefs.set(key, value);
         if (key === NOTES && previous !== value) {
-          for (const observer of prefObservers) {
-            observer.observe(null, "nsPref:changed", key);
+          // Native Preferences snapshots callbacks and notifies the newest
+          // registration first. A page observer runs before the storage one.
+          for (const observer of [...prefObservers].reverse()) {
+            if (prefObservers.has(observer)) {
+              observer.observe(null, "nsPref:changed", key);
+            }
           }
         }
       },
@@ -161,6 +169,134 @@ async function profile(
     },
   };
 }
+
+Deno.test("Notes consumers see current unauthenticated create, title and body snapshots before storage notification", async () => {
+  const p = await profile([note()], [], null);
+  try {
+    const observed: NotesPreferenceSnapshot[][] = [[], []];
+    for (const snapshots of observed) {
+      p.services.prefs.addObserver(NOTES, {
+        observe() {
+          snapshots.push(p.store.getSnapshot());
+        },
+      });
+    }
+    const created: Note = {
+      ...note("", 2),
+      id: "note-new",
+      title: "New Note",
+    };
+    const titled = { ...created, title: "QA title", updatedAt: 3 };
+    const body = { ...titled, content: "QA body", updatedAt: 4 };
+    for (const edited of [created, titled, body]) {
+      const before = p.store.getSnapshot();
+      const value = encodeNotes([note(), edited]);
+      const saved = p.store.writeLocal(value, undefined, before.value);
+      for (const snapshots of observed) {
+        const captured = snapshots.at(-1)!;
+        assertEquals(captured.value, value, "never echo the preceding save");
+        assertEquals(captured.origin, "local");
+        assertEquals(captured.baseNotesValue, before.value);
+        assertEquals(captured.epoch, before.epoch);
+        assertEquals(captured.revision, before.revision + 1);
+        assertEquals(
+          captured,
+          saved,
+          "late storage notification is idempotent",
+        );
+      }
+      assertEquals(p.store.getSnapshot(), saved);
+      const read = await p.store.readSyncState(saved);
+      assertEquals(read.context.accountUid, null);
+      assertEquals(
+        JSON.parse(read.value!).lastSyncedSnapshots,
+        notesBase(decodeNotes(before.value!)),
+      );
+    }
+    assertEquals(observed.map((snapshots) => snapshots.length), [3, 3]);
+    assertEquals(p.contents(), ["base", "QA body"]);
+  } finally {
+    p.close();
+  }
+});
+
+Deno.test("Notes consumers retain external provenance and one revision per native change", async () => {
+  const p = await profile();
+  try {
+    const observed: NotesPreferenceSnapshot[][] = [[], []];
+    for (const snapshots of observed) {
+      p.services.prefs.addObserver(NOTES, {
+        observe() {
+          snapshots.push(p.store.getSnapshot());
+        },
+      });
+    }
+    const before = p.store.writeLocal(encodeNotes([note("local", 2)]));
+    const external = encodeNotes([note("other window", 3)]);
+    p.services.prefs.setStringPref(NOTES, external);
+    const after = p.store.getSnapshot();
+    assertEquals(after.value, external);
+    assertEquals(after.origin, "external");
+    assertEquals(
+      after.baseNotesValue,
+      undefined,
+      "no previous local base leaks",
+    );
+    assertEquals(after.revision, before.revision + 1);
+    for (const snapshots of observed) assertEquals(snapshots.at(-1), after);
+  } finally {
+    p.close();
+  }
+});
+
+Deno.test("Notes early consumers retain incoming source and acknowledge each delivery once", async () => {
+  const p = await profile();
+  try {
+    const observed: NotesPreferenceSnapshot[][] = [[], []];
+    let contextChanges = 0;
+    p.services.obs.addObserver({
+      observe() {
+        ++contextChanges;
+      },
+    }, "floorp-notes:context-changed");
+    for (const snapshots of observed) {
+      p.services.prefs.addObserver(NOTES, {
+        observe() {
+          snapshots.push(p.store.getSnapshot());
+        },
+      });
+    }
+    const before = p.store.getSnapshot();
+    const base = p.prefs.get(BASE);
+    const remote = encodeNotes([note("remote", 2)]);
+    await p.apply([note("remote", 2)]);
+    const after = p.store.getSnapshot();
+    assertEquals(after.value, remote);
+    assertEquals(after.origin, "sync");
+    assertEquals(after.incomingValue, remote);
+    assertEquals(after.baseValue, base);
+    assertEquals(after.accountUid, "account-a");
+    assertEquals(after.revision, before.revision + 1);
+    for (const snapshots of observed) assertEquals(snapshots, [after]);
+    assertEquals(
+      contextChanges,
+      0,
+      "early read marks the pref delivery observed",
+    );
+    const acknowledgedBase = p.prefs.get(BASE);
+    await p.apply([note("remote", 2)]);
+    assertEquals(p.store.getSnapshot().revision, after.revision + 1);
+    assertEquals(p.store.getSnapshot().baseValue, acknowledgedBase);
+    assertEquals(
+      contextChanges,
+      1,
+      "identical delivery still publishes context",
+    );
+    for (const snapshots of observed) assertEquals(snapshots, [after]);
+  } finally {
+    p.close();
+  }
+});
 
 Deno.test("Notes closed-page merge retains offline edits, conflicts and deletions", async () => {
   for (const local of [[note("offline", 3)], []]) {
