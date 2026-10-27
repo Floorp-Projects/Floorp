@@ -39,6 +39,13 @@ development, `deno task feles-build dev` applies
 `tools/patches/workspace-external-containers.patch`. Packaging applies the
 matching common source patch and checks the installed patch; macOS also
 synchronizes the patched modules into the packaged omnijar.
+On Firefox 159, the extracted BrowserContentHandler module lives at
+`moz-src/browser/components/BrowserContentHandler.sys.mjs`; BrowserDOMWindow stays
+at `browser/modules/BrowserDOMWindow.sys.mjs`. The lazy getter and hot runner
+import the helper through
+`moz-src:///browser/components/BrowserContentHandler.sys.mjs`, matching the native
+component registration. Source-to-artifact path mapping changes patch headers
+only, so it does not rewrite this module URI.
 
 With that development browser running on an exclusive test display:
 

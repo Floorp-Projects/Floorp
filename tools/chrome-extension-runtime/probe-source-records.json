@@ -1,14 +1,14 @@
 {
   "messageJSONProbeSource": {
-    "file": "native-message-json-probe.js",
+    "file": "native-message-json-probe.js.txt",
     "sha256": "10f386ade6d97fccaa1377687aef0f7be53a6bf04cf3928e023dc436a62f96e4"
   },
   "messageOverloadProbeSource": {
-    "file": "native-message-overload-probe.js",
+    "file": "native-message-overload-probe.js.txt",
     "sha256": "5388c62dc9d3cbffe772382371313bd66257424484c8f491321a812d871a889b"
   },
   "messageEdgeProbeSource": {
-    "file": "native-message-edge-probe.js",
+    "file": "native-message-edge-probe.js.txt",
     "sha256": "f53e7922839cb170a57718e68ca4f0af88810a13a9ddc2a49555ea31135d4825"
   },
   "messageJSONReferenceSource": {

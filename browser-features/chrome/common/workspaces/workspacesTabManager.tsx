@@ -370,6 +370,7 @@ export class WorkspacesTabManager {
       this.firefoxReplacementTracker.observeTabOpen(
         tab,
         globalThis.gBrowser.tabs as XULElement[],
+        (event as CustomEvent<unknown>).detail,
       );
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();

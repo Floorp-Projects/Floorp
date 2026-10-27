@@ -18,8 +18,8 @@ spec = importlib.util.spec_from_file_location("quiet_native_registration", HERE 
 base = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(base)
 PROBES = {
-    "quietNativeWorkerProbeSource": ("quiet-native-worker-probe.js", "bdbb9a97d9000ca1c9411e75ad72ae53ec1719c599ff2cbb6aea9df2bfefef8f"),
-    "quietNativeDocumentProbeSource": ("quiet-native-document-probe.js", "c03bb528d43c7b85b5eeb4887cfab1460df9b305c4583506dd07458651290dcf"),
+    "quietNativeWorkerProbeSource": ("quiet-native-worker-probe.js.txt", "bdbb9a97d9000ca1c9411e75ad72ae53ec1719c599ff2cbb6aea9df2bfefef8f"),
+    "quietNativeDocumentProbeSource": ("quiet-native-document-probe.js.txt", "c03bb528d43c7b85b5eeb4887cfab1460df9b305c4583506dd07458651290dcf"),
 }
 HOST_SHA256 = "7771303939e19651810117130b7e759950af61ea94069c587b3a3c9d1026392e"
 

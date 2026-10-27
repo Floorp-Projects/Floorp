@@ -143,14 +143,15 @@ diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserD
 index 21bd771..b742f84 100644
 --- a/browser/modules/BrowserDOMWindow.sys.mjs
 +++ b/browser/modules/BrowserDOMWindow.sys.mjs
-@@ -10,6 +10,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+@@ -10,7 +10,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  let lazy = {};
 
  ChromeUtils.defineESModuleGetters(lazy, {
 +  getWorkspaceUserContextIdForExternalOpen:
-+    "resource:///modules/BrowserContentHandler.sys.mjs",
++    "moz-src:///browser/components/BrowserContentHandler.sys.mjs",
    NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-   TaskbarTabsUtils: "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
+   TaskbarTabsUtils:
+     "moz-src:///browser/components/taskbartabs/TaskbarTabsUtils.sys.mjs",
    URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
 @@ -73,7 +75,7 @@ export class BrowserDOMWindow {
     * @param {boolean} aIsPrivate

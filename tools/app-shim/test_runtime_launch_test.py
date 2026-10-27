@@ -16,6 +16,39 @@ runtime = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runtime)
 
 
+class HostProcessEnvironmentTests(unittest.TestCase):
+    def launch_host(self, launch_services):
+        browser = Path("/tmp/Exact Test.app")
+        profile = Path("/tmp/private unique/profile")
+        # A caller's disabled value must not defeat this isolated test launch.
+        with patch.dict(runtime.os.environ, {
+            "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS": "0", "HOST_TEST_SENTINEL": "inherited",
+        }, clear=True), patch.object(runtime.subprocess, "Popen") as launch:
+            host = runtime.HostProcess(browser, browser / "Contents/MacOS/firefox",
+                                       profile, profile.parent, Mock(), launch_services)
+            self.assertEqual(runtime.os.environ["MOZ_REMOTE_ALLOW_SYSTEM_ACCESS"], "0")
+        return host, launch.call_args
+
+    def test_direct_child_receives_system_access_environment(self):
+        host, call = self.launch_host(False)
+        self.assertEqual(call.args[0], host.command)
+        self.assertEqual(call.kwargs["env"]["MOZ_REMOTE_ALLOW_SYSTEM_ACCESS"], "1")
+        self.assertEqual(call.kwargs["env"]["MOZ_CRASHREPORTER_DISABLE"], "1")
+        self.assertEqual(call.kwargs["env"]["HOST_TEST_SENTINEL"], "inherited")
+        self.assertIn("--remote-allow-system-access", host.command)
+
+    def test_launch_services_explicitly_forwards_system_access_environment(self):
+        host, call = self.launch_host(True)
+        argv = call.args[0]
+        args_index = argv.index("--args")
+        forwarded = [argv[i + 1] for i in range(args_index) if argv[i] == "--env"]
+        self.assertEqual(forwarded, ["MOZ_CRASHREPORTER_DISABLE=1",
+                                     "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1"])
+        self.assertEqual(argv[args_index + 1:], host.command[1:])
+        self.assertEqual(call.kwargs["env"]["MOZ_REMOTE_ALLOW_SYSTEM_ACCESS"], "1")
+        self.assertIn("--remote-allow-system-access", host.command)
+
+
 class HostProcessTests(unittest.TestCase):
     def setUp(self):
         self.browser = Path("/tmp/Exact Test.app")

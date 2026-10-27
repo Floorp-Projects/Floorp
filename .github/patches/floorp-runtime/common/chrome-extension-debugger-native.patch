@@ -1,8 +1,7 @@
 diff --git a/docshell/base/BrowsingContext.cpp b/docshell/base/BrowsingContext.cpp
-index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d044516f7b9 100644
 --- a/docshell/base/BrowsingContext.cpp
 +++ b/docshell/base/BrowsingContext.cpp
-@@ -28,6 +28,8 @@
+@@ -29,6 +29,8 @@
  #include "mozilla/dom/ContentChild.h"
  #include "mozilla/dom/ContentParent.h"
  #include "mozilla/dom/Document.h"
@@ -11,8 +10,8 @@ index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d04
  #include "mozilla/dom/DocumentPictureInPicture.h"
  #include "mozilla/dom/Element.h"
  #include "mozilla/dom/HTMLEmbedElement.h"
-@@ -4345,6 +4347,56 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
-   return true;
+@@ -4320,6 +4322,43 @@
+   }
  }
  
 +bool BrowsingContext::ChromeDebuggerOverridesAllowed(
@@ -42,14 +41,6 @@ index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d04
 +         policy->CheckGuarded(aURI).IsNull();
 +}
 +
-+bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerOwner>,
-+                             const nsString&, ContentParent* aSource) {
-+  return IsTop() && XRE_IsParentProcess() && !aSource;
-+}
-+bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool,
-+                             ContentParent* aSource) {
-+  return IsTop() && XRE_IsParentProcess() && !aSource;
-+}
 +void BrowsingContext::DidSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>,
 +                             bool) {
 +  PreOrderWalk([](BrowsingContext* context) {
@@ -60,29 +51,26 @@ index fc3768fa48b374f856c0a75166bf3ec728b25bb4..4ed5c1def728a56e35125c451f750d04
 +  });
 +}
 +
-+bool BrowsingContext::CanSet(FieldIndex<IDX_ChromeDebuggerBypassCSP>, bool,
-+                             ContentParent* aSource) {
-+  return IsTop() && XRE_IsParentProcess() && !aSource;
-+}
-+
- bool BrowsingContext::CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
-                              ContentParent* aSource) {
-   return XRE_IsParentProcess() && !aSource;
+ void BrowsingContext::DidSet(FieldIndex<IDX_ForceOffline>, bool aOldValue) {
+   const bool newValue = ForceOffline();
+   if (newValue == aOldValue) {
 diff --git a/docshell/base/BrowsingContext.h b/docshell/base/BrowsingContext.h
-index e910da61612ded9b45d85baa00dfe34e4fec9332..bf12c5a2a05401f1f352368340563c36700140b4 100644
 --- a/docshell/base/BrowsingContext.h
 +++ b/docshell/base/BrowsingContext.h
-@@ -111,6 +111,9 @@ struct EmbedderColorSchemes {
- //    which calls `Set`, and the parent process, and will kill the misbehaving
- //    process if it fails.
- #define MOZ_EACH_BC_FIELD(FIELD)                                              \
-+  FIELD(ChromeDebuggerOwner, nsString)                                        \
-+  FIELD(ChromeDebuggerFocusEmulation, bool)                                   \
-+  FIELD(ChromeDebuggerBypassCSP, bool)                                        \
-   FIELD(Name, nsString)                                                       \
-   FIELD(Closed, bool)                                                         \
-   FIELD(ExplicitActive, ExplicitActiveStatus)                                 \
-@@ -683,6 +686,18 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
+@@ -113,6 +113,12 @@
+ //
+ // Initial values are configured with `.mDefault` and `ComputeInitialFields`.
+ #define MOZ_EACH_BC_FIELD(FIELD)                                               \
++  FIELD(ChromeDebuggerOwner, nsString,                                        \
++        {.mTopOnly = true, .mCanSet = CanSet::ParentOnly})                    \
++  FIELD(ChromeDebuggerFocusEmulation, bool,                                   \
++        {.mTopOnly = true, .mCanSet = CanSet::ParentOnly})                    \
++  FIELD(ChromeDebuggerBypassCSP, bool,                                        \
++        {.mTopOnly = true, .mCanSet = CanSet::ParentOnly})                    \
+   FIELD(Name, nsString, {.mCanSet = CanSet::Unrestricted})                     \
+   FIELD(Closed, bool, {.mCanSet = CanSet::Unrestricted})                       \
+   FIELD(ExplicitActive, ExplicitActiveStatus,                                  \
+@@ -745,6 +751,18 @@
    bool IsActive() const;
    bool ForceOffline() const { return GetForceOffline(); }
  
@@ -101,21 +89,15 @@ index e910da61612ded9b45d85baa00dfe34e4fec9332..bf12c5a2a05401f1f352368340563c36
    nsILoadInfo::IPAddressSpace GetCurrentIPAddressSpace() const {
      return GetIPAddressSpace();
    }
-@@ -1579,6 +1594,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
-   bool CanSet(FieldIndex<IDX_ForceOffline>, bool aNewValue,
-               ContentParent* aSource);
+@@ -1494,6 +1512,8 @@
  
-+  bool CanSet(FieldIndex<IDX_ChromeDebuggerOwner>, const nsString&,
-+              ContentParent* aSource);
-+  bool CanSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool,
-+              ContentParent* aSource);
+   void DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>, bool aOldValue);
+ 
 +  void DidSet(FieldIndex<IDX_ChromeDebuggerFocusEmulation>, bool);
-+  bool CanSet(FieldIndex<IDX_ChromeDebuggerBypassCSP>, bool,
-+              ContentParent* aSource);
 +
-   bool CanSet(FieldIndex<IDX_InnerSizeSpoofedForRFP>, const CSSIntSize&,
-               ContentParent*) {
-     return IsTop();
+   void DidSet(FieldIndex<IDX_ForceOffline>, bool aOldValue);
+ 
+   void DidSet(FieldIndex<IDX_IsDocumentPiP>, bool aWasPiP) {
 diff --git a/dom/base/Document.cpp b/dom/base/Document.cpp
 index 5e997a5de5592ab164f61d6ebeb37febd29bbff2..d40d1f988260279df5aeabbac7b6c12898c183cf 100644
 --- a/dom/base/Document.cpp

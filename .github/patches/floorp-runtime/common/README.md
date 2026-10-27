@@ -14,12 +14,15 @@ freshly compiled Runtime artifacts.
 creating a browser for external URL opens, including cold launch and new windows.
 It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
 modules; native rebuilding is not required. The matching `tools/patches` patch
-maps BrowserContentHandler to the unpacked artifact's `browser/modules` path.
+maps BrowserContentHandler to the unpacked artifact's
+`moz-src/browser/components` path on Firefox 159; BrowserDOMWindow remains in
+`browser/modules`. Both paths import the helper through its native
+`moz-src:///browser/components/BrowserContentHandler.sys.mjs` module URI.
 Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
 in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
-session state and N-way split layouts on Firefox 157. The tabbrowser and
+session state and N-way split layouts on Firefox 159. The tabbrowser and
 sessionstore implementations now live in `moz-src` modules; SessionStore is a
 class with private methods. Matching `tools/patches` files cover local builds.
 Packaging checks for an exact reverse-applicable patch before applying it, so

@@ -904,12 +904,12 @@
         "open": "設定を見る",
         "manage": "ブラウザーの管理",
         "descriptions": {
-            "tabAndAppearance": "テーマとタブの外観を調整します",
+            "tabAndAppearance": "テーマとタブの外観を調整できます",
             "workspaces": "仕事とプライベートでタブバーを切り替えられます",
             "browserSidebar": "現在のページの横に別のサイトを開けます",
             "mouseGesture": "マウスの動きにアクションを割り当てられます",
             "keyboardShortcuts": "キーボードショートカットにアクションを割り当てられます",
-            "performance": "メモリー使用量を調整します"
+            "performance": "メモリー使用量を調整できます"
         },
         "resources": {
             "privacy": "プライバシーについて",

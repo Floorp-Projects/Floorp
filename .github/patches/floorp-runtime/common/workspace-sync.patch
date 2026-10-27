@@ -1,10 +1,14 @@
 diff --git a/services/sync/modules/service.sys.mjs b/services/sync/modules/service.sys.mjs
 --- a/services/sync/modules/service.sys.mjs
 +++ b/services/sync/modules/service.sys.mjs
-@@ -85,6 +85,10 @@ function getEngineModules() {
+@@ -85,6 +85,14 @@ function getEngineModules() {
      result.Form = { module: "forms.sys.mjs", symbol: "FormEngine" };
      result.History = { module: "history.sys.mjs", symbol: "HistoryEngine" };
      result.Tab = { module: "tabs.sys.mjs", symbol: "TabEngine" };
++    result.Prefs = {
++      module: "resource://noraneko/modules/notes/FloorpNotesPrefsEngine.sys.mjs",
++      symbol: "FloorpNotesPrefsEngine",
++    };
 +    result.FloorpWorkspaces = {
 +      module: "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
 +      symbol: "FloorpWorkspacesEngine",

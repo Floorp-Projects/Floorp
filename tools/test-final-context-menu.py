@@ -110,11 +110,11 @@ const done = arguments[arguments.length - 1];
       return node;
     });
   const before = fixtures.map((node) => node.outerHTML);
-  const l10n = new win.Localization(["browser/tabContextMenu.ftl"], true);
-  const translated = l10n.formatMessagesSync([{ id: "reload-tab" }])[0]
-    ?.attributes?.find((attribute) => attribute.name === "label")?.value;
-  assert(translated, "native Fluent reload-tab label resolves");
-
+  const readNativeLabel = () => {
+    const l10n = new win.Localization(["browser/tabContextMenu.ftl"], true);
+    return l10n.formatMessagesSync([{ id: "reload-tab" }])[0]
+      ?.attributes?.find((attribute) => attribute.name === "label")?.value;
+  };
   await refresh([entry()]);
   await checkState(
     "default enrolled enabled variant activates shipped controller",
@@ -132,6 +132,9 @@ const done = arguments[arguments.length - 1];
     labels().includes(missingKey),
     "missing Fluent key retains fallback row",
   );
+  const translated = readNativeLabel();
+  const translatedLocale = Services.locale.appLocaleAsBCP47;
+  assert(translated, "native Fluent reload-tab label resolves");
   assert(
     labels().includes(translated),
     "valid Fluent label resolves after missing key",
@@ -145,6 +148,7 @@ const done = arguments[arguments.length - 1];
       "shipped catalog bounds missing Fluent keys and continues native translation",
     fallback: missingKey,
     translatedLabel: translated,
+    locale: translatedLocale,
   });
 
   // Exercise the real native popup as well as its startup seeding path.
@@ -233,15 +237,23 @@ const done = arguments[arguments.length - 1];
   );
   const initialResident = memory.resident;
   const residentSamples = [];
+  const nativeLabelObservations = [];
   for (let i = 0; i < 12; i++) {
     Services.prefs.setBoolPref(master, false);
     await wait(() => !enabled(), `repeat ${i} disable`);
     Services.prefs.setBoolPref(master, true);
     await wait(enabled, `repeat ${i} missing-key catalog rebuild`);
+    const expectedLabel = readNativeLabel();
+    assert(expectedLabel, `repeat ${i} native Fluent reload-tab label resolves`);
     assert(
-      labels().includes(missingKey) && labels().includes(translated),
+      labels().includes(missingKey) && labels().includes(expectedLabel),
       "rebuild preserves both diagnostic rows",
     );
+    nativeLabelObservations.push({
+      iteration: i + 1,
+      locale: Services.locale.appLocaleAsBCP47,
+      translatedLabel: expectedLabel,
+    });
     residentSamples.push(memory.resident);
   }
   assert(
@@ -255,6 +267,7 @@ const done = arguments[arguments.length - 1];
   checks.push({
     name: "repeated missing-key rebuilds stay responsive and preserve layout",
     repetitions: 12,
+    nativeLabelObservations,
     initialResident,
     residentSamples,
     growthCeilingBytes: 512 * 1024 * 1024,

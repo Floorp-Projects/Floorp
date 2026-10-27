@@ -766,10 +766,10 @@ diff --git a/toolkit/mozapps/extensions/test/browser/browser.toml b/toolkit/moza
 index 977d126..f01405c 100644
 --- a/toolkit/mozapps/extensions/test/browser/browser.toml
 +++ b/toolkit/mozapps/extensions/test/browser/browser.toml
-@@ -235,3 +235,5 @@ skip-if = [
- skip-if = [
-   "os == 'win' && os_version == '11.26200' && asan", # Bug 2019745
- ]
+@@ -218,3 +218,5 @@
+ ["browser_webext_icon.js"]
+ 
+ ["browser_webext_incognito.js"]
 +
 +["browser_html_floorp_chrome_diagnostics.js"]
 diff --git a/toolkit/mozapps/extensions/test/browser/browser_html_floorp_chrome_diagnostics.js b/toolkit/mozapps/extensions/test/browser/browser_html_floorp_chrome_diagnostics.js

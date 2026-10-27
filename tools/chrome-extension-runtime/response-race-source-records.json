@@ -1,6 +1,6 @@
 {
   "responseRaceProbeSource": {
-    "file": "native-response-race-probe.js",
+    "file": "native-response-race-probe.js.txt",
     "sha256": "dfd50501aa1125b2b3e157ce9e972027d082c73ace75e32589fa3e5f08719083",
     "bytes": 2976
   },

@@ -65,11 +65,15 @@
       "new-workspace": "Nouvel espace de travail ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "Synchronisez cet espace de travail et ses onglets Web avec votre compte Mozilla.",
+      "error-title": "Synchronisation de l'espace de travail",
+      "incoming-failed": "Certaines données synchronisées n'ont pas pu être lues. Les onglets existants sont conservés jusqu'à ce que la synchronisation aboutisse.",
+      "invalid-workspace": "Cet espace de travail n'a pas pu être synchronisé. Choisissez un nom et une icône ne dépassant pas 256 caractères, puis réessayez. La synchronisation des autres espaces de travail continue.",
+      "deleted-workspace": "Cet espace de travail a été supprimé de Sync. Restaurez-le à partir d'une archive ou créez un nouvel espace de travail pour le synchroniser à nouveau.",
+      "indicator-selected": "{{name}} — Inclus dans la synchronisation de l'espace de travail",
+      "indicator-attention": "{{name}} — Erreur de synchronisation de l'espace de travail : {{error}}",
+      "status-selected": "Inclus dans la synchronisation",
+      "status-error": "Erreur de synchronisation"
     },
     "context-menu": {
       "move-up": "Déplacer cet espace de travail vers le haut",
@@ -77,8 +81,8 @@
       "delete": "Supprimer l’espace de travail",
       "manage": "Gérer l'espace de travail",
       "archive": "Archiver l'espace de travail",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "Synchroniser cet espace de travail et ses onglets",
+      "sync-paused": "La synchronisation de l'espace de travail nécessite une attention particulière"
     },
     "popup": {
       "create-new": "Créer un nouvel espace de travail...",

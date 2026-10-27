@@ -278,6 +278,7 @@ function isolatedBrowserEnvironment(
       filtered[allowedName] = value;
     }
   }
+  filtered.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
   return filtered;
 }
 
@@ -560,6 +561,10 @@ export async function run(
   const port = options.port ?? 5180;
   const marionette = options.marionette ?? true;
   const cmd = browserCommand({ ...options, port, marionette });
+  const environment = Deno.env.toObject();
+  if (marionette) {
+    environment.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
+  }
 
   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
 
@@ -576,6 +581,7 @@ export async function run(
       }
       printFirefoxLog(line.trim());
     },
+    environment,
   );
 
   try {

@@ -215,6 +215,8 @@ jobs:
         run: deno install --frozen --allow-scripts
       - name: Verify authored extension fixture bytes and syntax
         run: node --test tools/chrome-extension-runtime/test-authored-fixture-sources.mjs
+      - name: Verify original browser fixture HTTP URLs and content types
+        run: python3 tools/chrome-extension-runtime/test-authored-fixture-http.py
       - name: Strictly check Chrome extension regression tests
         run: >-
           deno check --frozen --sloppy-imports

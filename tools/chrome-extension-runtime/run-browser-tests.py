@@ -66,6 +66,25 @@ class UserScriptsParserBarriers:
 
 
 class FixtureHandler(SimpleHTTPRequestHandler):
+    # The exact authored programs are data for browser realms. Their .txt
+    # witnesses stay outside host program discovery, while URLs stay unchanged.
+    AUTHORED_SCRIPT_PATHS = frozenset(
+        f"/{realm}/{name}.js"
+        for realm in ("content-worlds", "custom-event-detail")
+        for name in ("observe-detail", "probe", "publish")
+    )
+
+    def translate_path(self, path):
+        translated = super().translate_path(path)
+        if urlsplit(path).path in self.AUTHORED_SCRIPT_PATHS:
+            return translated + ".txt"
+        return translated
+
+    def guess_type(self, path):
+        if str(path).endswith(".js.txt"):
+            return "text/javascript"
+        return super().guess_type(path)
+
     def log_message(self, *args):
         pass
 

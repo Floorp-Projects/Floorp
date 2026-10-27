@@ -5,21 +5,21 @@ docs/**/*.mdx text eol=lf
 browser-features/pages-notes/test/fixtures/floorp-notes-merge-v1.json text eol=lf
 
 # Chrome reference programs and contracts are verified byte for byte.
-tools/chrome-extension-runtime/native-message-json-probe.js text eol=lf
-tools/chrome-extension-runtime/native-message-overload-probe.js text eol=lf
-tools/chrome-extension-runtime/native-message-edge-probe.js text eol=lf
+tools/chrome-extension-runtime/native-message-json-probe.js.txt text eol=lf
+tools/chrome-extension-runtime/native-message-overload-probe.js.txt text eol=lf
+tools/chrome-extension-runtime/native-message-edge-probe.js.txt text eol=lf
 tools/chrome-extension-runtime/native-message-json-chrome-reference.json text eol=lf
 tools/chrome-extension-runtime/native-message-overload-chrome-reference.json text eol=lf
 tools/chrome-extension-runtime/native-message-edge-chrome-reference.json text eol=lf
-tools/chrome-extension-runtime/native-response-race-probe.js text eol=lf
+tools/chrome-extension-runtime/native-response-race-probe.js.txt text eol=lf
 tools/chrome-extension-runtime/native-response-race-chrome-reference.json text eol=lf
-tools/chrome-extension-runtime/native-port-state-stress-probe.js text eol=lf
-tools/chrome-extension-runtime/native-port-state-incoming-probe.js text eol=lf
+tools/chrome-extension-runtime/native-port-state-stress-probe.js.txt text eol=lf
+tools/chrome-extension-runtime/native-port-state-incoming-probe.js.txt text eol=lf
 tools/chrome-extension-runtime/native-port-state-candidate-host.py text eol=lf
 
 # Pinned public Chrome quiet-lifetime programs and shared framed host.
-tools/chrome-extension-runtime/quiet-native-worker-probe.js text eol=lf
-tools/chrome-extension-runtime/quiet-native-document-probe.js text eol=lf
+tools/chrome-extension-runtime/quiet-native-worker-probe.js.txt text eol=lf
+tools/chrome-extension-runtime/quiet-native-document-probe.js.txt text eol=lf
 tools/chrome-extension-runtime/native-messaging-candidate-host.py text eol=lf
 
 # Shared authored resource/sidebar programs must keep the measured bytes.

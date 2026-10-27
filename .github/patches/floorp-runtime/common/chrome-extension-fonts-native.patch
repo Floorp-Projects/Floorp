@@ -40,11 +40,12 @@ diff --git a/gfx/thebes/gfxTextRun.cpp b/gfx/thebes/gfxTextRun.cpp
 index 39153aa..379de54 100644
 --- a/gfx/thebes/gfxTextRun.cpp
 +++ b/gfx/thebes/gfxTextRun.cpp
-@@ -14,9 +14,12 @@
+@@ -14,10 +14,13 @@
  #include "gfxHarfBuzzShaper.h"
  #include "gfxPlatformFontList.h"
  #include "gfxUserFontSet.h"
 +#include "mozilla/Atomics.h"
+ #include "mozilla/CheckedInt.h"
  #include "mozilla/ClearOnShutdown.h"
 +#include "mozilla/RWLock.h"
  #include "mozilla/Likely.h"
@@ -260,9 +261,11 @@ diff --git a/modules/libpref/init/all.js b/modules/libpref/init/all.js
 index c31bb3d..07e0308 100644
 --- a/modules/libpref/init/all.js
 +++ b/modules/libpref/init/all.js
-@@ -4244,3 +4244,5 @@ pref("general.smoothScroll", true, sticky);
- #ifdef MOZ_ARTIFACT_BUILDS
-   pref("telemetry.fog.artifact_build", true);
+@@ -4237,5 +4237,7 @@
  #endif
-+
+ 
 +pref("floorp.chrome.fontSettings.native", true);
++
+ // Captcha Detection
+ pref("captchadetection.loglevel", "Warn");
+ pref("captchadetection.actor.enabled", true);

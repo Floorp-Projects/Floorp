@@ -25,7 +25,7 @@ No account credentials or authenticated cloud service are required. A temporary
 loopback HTTP server supplies the test pages. Results and the isolated profile
 remain in the generated directory for inspection.
 
-The harness exercises 58 cases: 23 model/wire, 24 native engine and 11 adapter
+The harness exercises 75 cases: 23 model/wire, 27 native engine and 25 adapter
 cases. Native engine scenarios cover CryptoWrapper encryption round trips,
 per-tab uploads, independent additions, delete wins,
 unacknowledged/partial/successful tombstone GC, local unsubscribe,
@@ -40,6 +40,12 @@ pre-apply values as new local edits. Further cases cover no normal-window
 provider, one UI apply per changed workspace in an incoming batch, batch
 failures and intervening local edits, unsubscribed deferred closures, and
 invalid persisted baseline recovery.
+
+Disabling workspaces during incoming processing rejects and retains those record
+IDs for retry, aborts pending provider work, and suppresses UI retries until
+re-enabled. Tests verify re-fetch after an advanced native cursor,
+repeated-failure pruning, tombstone replay and recovery of partially applied
+workspace state.
 
 The engine scenario uses actual native Sync classes and record encryption. It
 simulates the base engine's repeated-failure pruning around real reconciliation
@@ -56,6 +62,19 @@ from a private-window controller, and unsupported-page navigation. The latter
 preserves the canonical web record and stable ID, never captures an internal
 page's title, keeps the local page intact during incoming updates, and resumes
 synchronization on returning to HTTP(S).
+
+Delayed HTTP fixtures also verify that an existing tab retains its incoming URL
+and title until native commit. Native Back (including during the pending load),
+explicit navigation to the exact original URL, HTTP 204 without a commit and
+account abort exercise intent cleanup. User-created tabs remain explicit during
+that wait. An accelerated apply deadline also verifies that a still-live native
+load keeps its URL/title intent, same-target retries do not restart it, and a
+sibling's HTTP 204 cannot stop it. The fixture server supplies bounded
+`/sync-slow` and `/sync-no-content` responses without authenticated transport.
+Foreground old-page pushState/replaceState notifications also verify that the
+native load type preserves a pending incoming target while Back still works.
+Equivalent noncanonical URL retries reuse the existing load, and incoming
+same-document URLs complete without requiring a new document load.
 
 At revision `78aedc2cc830`, all 58 cases and the full smoke task passed. Nine
 isolated negative controls confirmed that removing the corresponding review

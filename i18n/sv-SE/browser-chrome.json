@@ -65,11 +65,15 @@
       "new-workspace": "Ny arbetsyta ({{count}})"
     },
     "sync": {
-      "help": "Sync this workspace and its web tabs with your Mozilla Account.",
-      "error-title": "Workspace Sync",
-      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
-      "invalid-workspace": "This workspace could not sync. Use a name and icon of at most 256 characters, then try again. Other workspaces continue syncing.",
-      "deleted-workspace": "This workspace was deleted from Sync. Restore it from an archive or create a new workspace to sync it again."
+      "help": "Synkronisera den här arbetsytan och dess webbläsarflikar med ditt Mozilla-konto.",
+      "error-title": "Arbetsyta synkronisering",
+      "incoming-failed": "Vissa synkroniserade data kunde inte läsas. Befintliga flikar behålls tills synkroniseringen lyckas.",
+      "invalid-workspace": "Denna arbetsyta kunde inte synkroniseras. Använd ett namn och en ikon på högst 256 tecken och försök igen. Andra arbetsytor fortsätter att synkroniseras.",
+      "deleted-workspace": "Denna arbetsyta har tagits bort från Sync. Återställ den från ett arkiv eller skapa en ny arbetsyta för att synkronisera den igen.",
+      "indicator-selected": "{{name}} — Ingår i synkroniseringen av arbetsytan",
+      "indicator-attention": "{{name}} — Synkroniseringsfel för arbetsytan: {{error}}",
+      "status-selected": "Ingår i synkronisering",
+      "status-error": "Synkroniseringsfel"
     },
     "context-menu": {
       "move-up": "Flytta denna arbetsyta uppåt",
@@ -77,8 +81,8 @@
       "delete": "Radera arbetsyta",
       "manage": "Hantera arbetsyta",
       "archive": "Arkivera arbetsytan",
-      "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync": "Synkronisera denna arbetsyta och dess flikar",
+      "sync-paused": "Synkroniseringen av arbetsytan kräver uppmärksamhet"
     },
     "popup": {
       "create-new": "Skapa ny arbetsyta...",

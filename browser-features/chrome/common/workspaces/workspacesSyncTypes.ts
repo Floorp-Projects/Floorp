@@ -5,6 +5,59 @@ import type {
   WorkspaceSyncSnapshot,
 } from "#modules/common/workspace-sync-types.ts";
 
+export interface IncomingWorkspaceNavigation {
+  url: string;
+  title: string;
+  signal?: AbortSignal;
+  promise: Promise<void>;
+  finish(error?: Error): void;
+  cancel(error: Error): void;
+  checkStopped(progress: WorkspaceSyncProgress): void;
+}
+
+export interface WorkspaceSyncBrowser {
+  currentURI?: { spec: string };
+  stop(flags: number): void;
+}
+
+export interface WorkspaceSyncProgress {
+  isTopLevel: boolean;
+  isLoadingDocument: boolean;
+  loadType: number;
+}
+
+export interface WorkspaceSyncProgressListener {
+  onLocationChange(
+    browser: WorkspaceSyncBrowser,
+    progress: WorkspaceSyncProgress,
+    request: nsIRequest | null,
+    location: nsIURI,
+    flags: number,
+  ): void;
+  onStateChange(
+    browser: WorkspaceSyncBrowser,
+    progress: WorkspaceSyncProgress,
+    request: nsIRequest | null,
+    flags: number,
+    status: number,
+  ): void;
+}
+
+export interface WorkspaceSyncTabBrowser {
+  getBrowserForTab(tab: XULElement): WorkspaceSyncBrowser;
+  addTabsProgressListener(listener: WorkspaceSyncProgressListener): void;
+  removeTabsProgressListener(listener: WorkspaceSyncProgressListener): void;
+}
+
+export interface WorkspaceSyncProgressFlags {
+  STATE_START: number;
+  STATE_STOP: number;
+  STATE_IS_DOCUMENT: number;
+  STATE_IS_NETWORK: number;
+  LOCATION_CHANGE_ERROR_PAGE: number;
+  LOCATION_CHANGE_SAME_DOCUMENT: number;
+}
+
 export interface SyncSessionStore {
   promiseAllWindowsRestored: Promise<void>;
   getCustomTabValue(tab: XULElement, key: string): string;
