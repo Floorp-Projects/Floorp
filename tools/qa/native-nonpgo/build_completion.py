@@ -6,6 +6,7 @@ cache hits, an active phase, remaining work, or a duration to completion.
 """
 from contextlib import ExitStack
 from functools import lru_cache
+import hashlib
 import json
 import math
 import os
@@ -612,8 +613,21 @@ def _parse(stream, size, deadline):
     return completed.result(kind, size)
 
 
+def _content_digest(descriptor, size, deadline):
+    value, offset = hashlib.sha256(), 0
+    while offset < size:
+        _budget(deadline)
+        raw = os.pread(descriptor, min(1024**2, size - offset), offset)
+        _need(bool(raw), 'file-changed')
+        value.update(raw)
+        offset += len(raw)
+    _need(not os.pread(descriptor, 1, size), 'file-changed')
+    _budget(deadline)
+    return value.digest()
+
+
 def collect(task, snapshot):
-    """Read once after exact leader reap and verified group cleanup; return safe evidence."""
+    """Read after exact leader reap and verified group cleanup; return safe evidence."""
     try:
         _need(type(snapshot) is dict and type(snapshot.get('schema')) is int and snapshot['schema'] == 1 and
               snapshot.get('status') == 'captured' and type(snapshot.get('wallTimeNs')) is int and
@@ -644,7 +658,9 @@ def collect(task, snapshot):
             stream = stack.enter_context(os.fdopen(opened, 'rb', closefd=False))
             _need(_identity(before, True) == _identity(os.fstat(stream.fileno()), True) == profiles[name],
                   'file-changed')
+            content = _content_digest(opened, before.st_size, deadline)
             result = _parse(stream, before.st_size, deadline)
+            _need(_content_digest(opened, before.st_size, deadline) == content, 'file-changed')
             _need(_identity(before, True) == _identity(os.fstat(stream.fileno()), True) ==
                   _identity(os.stat(name, dir_fd=descriptor, follow_symlinks=False), True), 'file-changed')
             _, final_identities = _directories(stack, task)

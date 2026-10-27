@@ -645,7 +645,28 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(result['inventoryDiagnostic']['journal']['errorPhase'],'imports')
         self.assertEqual(result['status'],'failed')
         self.assertIsNone(result['inventory'])
-        self.assertEqual(calls,[upstream.PREPARE_STAGE,upstream.INVENTORY_STAGE])
+        self.assertEqual(calls,list(upstream.PREPARE_STAGES))
+
+    def test_helper_install_failure_stops_before_inventory_under_original_deadline(self):
+        calls=[]
+        primary=Failure('controlled-install-failure')
+        def run(stage,command,cwd,env,limit,**kwargs):
+            calls.append(stage)
+            self.assertEqual(limit,360)
+            self.assertEqual(kwargs['phase_deadline_minutes'],345)
+            if stage==upstream.HELPER_INSTALL_STAGE:
+                self.assertEqual(command[1:],['mach','build','-j3','-C','xpcom/tests','misc'])
+                raise primary
+        runner=SimpleNamespace(limits={'jobMinutes':360},run=run)
+        with mock.patch.object(upstream,'scope_plan',return_value=(self.plan,self.plan_hash)):
+            with self.assertRaises(Failure) as raised:
+                upstream.prepare(self.task,self.task,runner,{},345,{})
+        self.assertIs(raised.exception,primary)
+        self.assertEqual(calls,[upstream.PREPARE_STAGE,upstream.HELPER_INSTALL_STAGE])
+
+    def test_build_without_helper_install_cannot_qualify(self):
+        rows=[stage(name) for name in upstream.EXTRA_STAGES if name!=upstream.HELPER_INSTALL_STAGE]
+        self.assertFalse(upstream.proof_complete(self.proof(),rows))
 
     def test_diagnostic_exception_codes_are_fixed_and_system_exit_is_typed(self):
         self.assertIsNone(upstream.diagnostic_error(Failure('PRIVATE_SENTINEL'))['code'])

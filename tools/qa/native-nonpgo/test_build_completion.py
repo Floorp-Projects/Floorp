@@ -624,6 +624,26 @@ class CompletionTests(unittest.TestCase):
         self.unknown(result)
         self.assertEqual(result['reason'], 'build-completion-file-changed')
 
+    def test_same_size_rewrite_is_rejected_when_metadata_identity_is_unchanged(self):
+        parse,identity=bc._parse,bc._identity
+        for raw in (jsonl([marker()]),json.dumps(whole([marker()])).encode()):
+            with self.subTest(format='jsonl' if raw.startswith(b'{"type"') else 'whole'):
+                path=self.write(raw);before=path.stat()
+                fixed=identity(before,True)
+                def change(*args):
+                    result=parse(*args)
+                    replaced=raw.replace(b'MacWebAppService.o',b'X'*len(b'MacWebAppService.o'))
+                    self.assertNotEqual(replaced,raw)
+                    with path.open('r+b') as stream:stream.write(replaced)
+                    os.utime(path,ns=(before.st_atime_ns,before.st_mtime_ns))
+                    return result
+                with mock.patch.object(bc,'_parse',side_effect=change), \
+                     mock.patch.object(bc,'_identity',side_effect=lambda value,full=False:
+                         fixed if full else identity(value)):
+                    result=bc.collect(self.task,self.snapshot)
+                self.unknown(result)
+                self.assertEqual(result['reason'],'build-completion-file-changed')
+
     def test_snapshot_validation_and_input_are_not_mutated(self):
         self.write(jsonl([marker()]));original = copy.deepcopy(self.snapshot)
         self.assertEqual(bc.collect(self.task, self.snapshot)['status'], 'observed')

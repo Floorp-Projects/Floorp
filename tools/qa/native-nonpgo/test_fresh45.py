@@ -132,7 +132,7 @@ class Fresh45Flow(unittest.TestCase):
 
     def prepare(self, source, task, runner, env, deadline, result):
         result.update(copy.deepcopy(self.upstream));result.update(status='failed',assets=None,case=None)
-        for stage in upstream.EXTRA_STAGES[:2]:runner.run(stage,[],source,env,360,phase_deadline_minutes=deadline)
+        for stage in upstream.PREPARE_STAGES:runner.run(stage,[],source,env,360,phase_deadline_minutes=deadline)
 
     def scope(self, source, task, runner, env, deadline, result):
         self.assertEqual(deadline,345)
@@ -182,8 +182,9 @@ class Fresh45Flow(unittest.TestCase):
         self.assertEqual(result['qualification'],fresh.QUALIFICATION)
         self.assertTrue(result['freshObjdir']);self.assertTrue(result['sameJob']);self.assertFalse(result['checkpointUsed'])
         stages=[row[0] for row in self.launches]
-        self.assertEqual(stages[-15:],['configure','effective-config',fresh.EXPORT_STAGE,
-            *upstream.EXTRA_STAGES[:2],*target.STAGES,*upstream.EXTRA_STAGES[2:]])
+        expected=['configure','effective-config',fresh.EXPORT_STAGE,
+            *upstream.PREPARE_STAGES,*target.STAGES,*upstream.EXTRA_STAGES[len(upstream.PREPARE_STAGES):]]
+        self.assertEqual(stages[-len(expected):],expected)
         self.assertTrue(all(row[2]==345 for row in self.launches))
         self.assertFalse(any(stage in fresh.FORBIDDEN_STAGES for stage in stages))
         self.assertEqual(result['mozillaUpstream']['case']['harness']['counts']['executed'],42)

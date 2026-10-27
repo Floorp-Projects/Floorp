@@ -25,11 +25,13 @@ SCOPE = 'xpcom/tests/unit'
 HELPERS = ('TestArguments', 'TestBlockingProcess', 'TestPRIntN',
            'TestQuickReturn', 'TestUnicodeArguments')
 PREPARE_STAGE = 'mozilla-upstream-helpers-build'
+HELPER_INSTALL_STAGE = 'mozilla-upstream-helpers-install'
 INVENTORY_STAGE = 'mozilla-upstream-inventory'
 CHILD_STAGE = 'mozilla-upstream-child-build'
 CHILD_LIBS_STAGE = 'mozilla-upstream-child-libs'
 RESOURCE_STAGE = 'mozilla-upstream-resources-build'
-EXTRA_STAGES = (PREPARE_STAGE, INVENTORY_STAGE, CHILD_STAGE, CHILD_LIBS_STAGE, RESOURCE_STAGE)
+PREPARE_STAGES = (PREPARE_STAGE, HELPER_INSTALL_STAGE, INVENTORY_STAGE)
+EXTRA_STAGES = (*PREPARE_STAGES, CHILD_STAGE, CHILD_LIBS_STAGE, RESOURCE_STAGE)
 
 
 def plan_definition():
@@ -381,6 +383,9 @@ def prepare(source, task, runner, env, deadline, result):
                   fullHostQualification=False, nativeAuthentication='NOT_TESTED')
     runner.run(PREPARE_STAGE, [sys.executable,'mach','build','-j3','-C','.',
                'xpcom/tests/target'], source, env, runner.limits['jobMinutes'],
+               phase_deadline_minutes=deadline)
+    runner.run(HELPER_INSTALL_STAGE, [sys.executable,'mach','build','-j3','-C','xpcom/tests',
+               'misc'], source, env, runner.limits['jobMinutes'],
                phase_deadline_minutes=deadline)
     config = json.loads((task/'effective-config.private.log').read_text())['substs']
     bundle = config.get('MOZ_MACBUNDLE_NAME')

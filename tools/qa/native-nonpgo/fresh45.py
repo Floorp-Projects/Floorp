@@ -14,7 +14,7 @@ import time
 
 from qa_core import Failure, require
 from mozilla_target_build import stage_complete, proof_complete as targets_complete, STAGES
-from mozilla_upstream import (EXTRA_STAGES, proof_complete as upstream_complete,
+from mozilla_upstream import (EXTRA_STAGES, PREPARE_STAGES, proof_complete as upstream_complete,
                               asset_precondition_evidence, execution_ledger)
 
 STATUS = 'mozilla-fresh45-ready'
@@ -111,8 +111,8 @@ def final_problem(task, runner, report, origin, deadline, budget):
                 not any(row['stage'] in FORBIDDEN_STAGES or row['stage'].startswith('checkpoint-')
                         for row in records) and
                 [row['stage'] for row in records if row['stage'] in required] ==
-                    ['configure', 'effective-config', EXPORT_STAGE, *EXTRA_STAGES[:2],
-                     *STAGES, *EXTRA_STAGES[2:]]):
+                    ['configure', 'effective-config', EXPORT_STAGE, *PREPARE_STAGES,
+                     *STAGES, *EXTRA_STAGES[len(PREPARE_STAGES):]]):
             problem = 'fresh-stage-proof-incomplete'
         else:
             upstream = report.get('mozillaUpstream', {})
