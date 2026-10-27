@@ -73,10 +73,7 @@
       "indicator-selected": "{{name}} — ワークスペースの同期の対象",
       "indicator-attention": "{{name}} — ワークスペースの同期エラー: {{error}}",
       "status-selected": "同期対象",
-      "status-error": "同期エラー",
-      "status-paused": "同期停止中",
-      "indicator-paused": "{{name}} — ワークスペースの同期停止中: {{error}}",
-      "engine-disabled": "ワークスペース同期がオフになっています。ワークスペースのメニューで「ワークスペース同期を再開」を選ぶと、選択済みのワークスペースを同期します。"
+      "status-error": "同期エラー"
     },
     "context-menu": {
       "move-up": "このワークスペースを上に移動",
@@ -85,8 +82,7 @@
       "manage": "ワークスペースを管理",
       "archive": "ワークスペースをアーカイブ",
       "sync": "このワークスペースとその中のタブを同期",
-      "sync-paused": "ワークスペースの同期には注意が必要です",
-      "sync-resume": "ワークスペース同期を再開"
+      "sync-paused": "ワークスペースの同期には注意が必要です"
     },
     "popup": {
       "create-new": "新しいワークスペースを作成...",
