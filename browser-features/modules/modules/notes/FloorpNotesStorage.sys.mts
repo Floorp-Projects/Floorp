@@ -151,29 +151,37 @@ function syncSnapshot(
     accountUid: source.accountUid,
   };
 }
+function refreshSnapshot(): void {
+  const value = readNotes();
+  // Native pref observers run newest-first. A page registered after this
+  // service can read during the setter, before our observer has run. Publish
+  // the current value with the active write's provenance on either path;
+  // subsequent consumers and the late observer must share the same revision.
+  if (currentSnapshot.value === value) return;
+  if (localWrite) {
+    currentSnapshot = {
+      value,
+      epoch,
+      revision: ++revision,
+      origin: "local",
+      baseNotesValue: localWrite.baseValue,
+    };
+  } else if (incoming && value === incoming.merged) {
+    incoming.delivered = true;
+    currentSnapshot = syncSnapshot(value, incoming);
+  } else {
+    currentSnapshot = {
+      value,
+      epoch,
+      revision: ++revision,
+      origin: "external",
+    };
+  }
+}
 const observer = {
   observe(_subject: unknown, topic: string, data: string) {
     if (topic === "nsPref:changed" && data === NOTES_PREF) {
-      const value = readNotes();
-      if (localWrite) {
-        currentSnapshot = {
-          value,
-          epoch,
-          revision: ++revision,
-          origin: "local",
-          baseNotesValue: localWrite.baseValue,
-        };
-      } else if (incoming && value === incoming.merged) {
-        incoming.delivered = true;
-        currentSnapshot = syncSnapshot(value, incoming);
-      } else {
-        currentSnapshot = {
-          value,
-          epoch,
-          revision: ++revision,
-          origin: "external",
-        };
-      }
+      refreshSnapshot();
     } else if (ACCOUNT_TOPICS.includes(topic)) invalidateAccount();
     else if (topic === "profile-before-change") {
       Services.prefs.removeObserver(NOTES_PREF, observer);
@@ -198,6 +206,7 @@ export const FloorpNotesStorage = {
         if (normalized !== value) this.writeLocal(normalized);
       } catch { /* Preserve unreadable local data for recovery. */ }
     }
+    refreshSnapshot();
     return { ...currentSnapshot };
   },
 
