@@ -128,7 +128,64 @@ class FreshJobOriginTests(unittest.TestCase):
                                     '--install-repair-20261027']), \
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
-        initialize.assert_called_once_with(self.task, continuation=False, install_repair=True)
+        initialize.assert_called_once_with(self.task, continuation=False, install_repair=True,
+                                           monitor_repair=False)
+
+    def test_monitor_repair_requires_initial_bound_branch_and_keeps_original_budget(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
+        self.run['head_branch']=origin.MONITOR_REPAIR_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):self.invoke()
+        self.assertEqual(self.requests,[])
+        record=origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertEqual(record['profile'],'fresh-firefox45-monitor-job-origin-20261028-v1')
+        self.assertEqual(record['ref'],'refs/heads/b/qa-fresh45-monitor-20261028')
+        self.assertEqual((record['platformMinutes'],record['workDeadlineMinutes']),(360,345))
+        self.assertIs(record['clockResetAllowed'],False)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()),940)
+
+    def test_monitor_repair_rejects_routes_reruns_dispatch_and_ambiguous_selectors(self):
+        for key,value in (('GITHUB_REF','refs/heads/'+origin.BRANCH),
+                ('GITHUB_REF','refs/heads/'+origin.CONTINUATION_BRANCH),
+                ('GITHUB_REF','refs/heads/'+origin.INSTALL_REPAIR_BRANCH),
+                ('GITHUB_REF','refs/heads/main'),('GITHUB_RUN_ATTEMPT','2'),
+                ('GITHUB_EVENT_NAME','workflow_dispatch'),('FRESH_PUSH_CREATED','false'),
+                ('FRESH_PUSH_BEFORE','a'*40)):
+            env={**self.env,'GITHUB_REF':'refs/heads/'+origin.MONITOR_REPAIR_BRANCH,key:value}
+            with self.subTest(key=key,value=value),self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=env,opener=self.client,monitor_repair=True)
+        for selection in (None,1,'true'):
+            with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=self.env,monitor_repair=selection)
+        for other in ('continuation','install_repair'):
+            with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=self.env,monitor_repair=True,**{other:True})
+        self.assertEqual(self.requests,[]);self.assertFalse(self.task.exists())
+
+    def test_monitor_repair_requires_authenticated_run_branch_and_never_reuses_task(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-provenance'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertFalse(self.task.exists())
+        self.requests.clear();self.run['head_branch']=origin.MONITOR_REPAIR_BRANCH
+        origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        before={p.name:p.read_bytes() for p in self.task.iterdir()}
+        self.requests.clear()
+        with self.assertRaisesRegex(Failure,'task-exists-or-unavailable'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertEqual({p.name:p.read_bytes() for p in self.task.iterdir()},before)
+
+    def test_cli_monitor_repair_selects_only_explicit_new_profile(self):
+        with mock.patch.object(origin,'initialize') as initialize, \
+             mock.patch('sys.argv',['fresh_job_origin.py','--task',str(self.task),
+                                    '--monitor-repair-20261028']), \
+             mock.patch('sys.stdout',new_callable=io.StringIO):
+            self.assertEqual(origin.main(),0)
+        initialize.assert_called_once_with(self.task,continuation=False,install_repair=False,
+                                           monitor_repair=True)
 
     def test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch(self):
         for selector in (None,1,'true'):

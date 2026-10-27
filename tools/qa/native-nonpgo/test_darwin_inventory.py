@@ -11,6 +11,7 @@ import unittest
 from unittest import mock
 
 import darwin_inventory as inv
+import primary_anchor
 from process_census import BINDING_KEYS
 from support import Failure,Runner
 from test_process_census import layout,raw
@@ -75,7 +76,7 @@ class DarwinInventoryGuards(unittest.TestCase):
 
     def test_script_entry_progress_precedes_project_import_and_is_silent_when_imported(self):
         source=Path(inv.__file__).read_text()
-        self.assertLess(source.index("_emit_progress('project-imports')"),source.index('import argparse'))
+        self.assertLess(source.index("_emit_progress('project-imports')"),source.index('import ctypes'))
         result=subprocess.run([sys.executable,'-c','import darwin_inventory'],check=True,capture_output=True,
                               text=True,timeout=5)
         self.assertEqual(result.stdout,'')
@@ -182,7 +183,8 @@ class DarwinInventoryGuards(unittest.TestCase):
         self.assertTrue(value['sampleComplete'])
         argv=command.call_args.args[0]
         self.assertEqual(argv[0],sys.executable)
-        self.assertTrue(argv[1].endswith('darwin_inventory.py'))
+        self.assertEqual(argv[1],'-S')
+        self.assertTrue(argv[2].endswith('darwin_inventory.py'))
         self.assertNotIn('/bin/ps',argv)
         self.assertEqual(command.call_args.kwargs['timeout'],3)
         self.assertNotIn('GITHUB_TOKEN',command.call_args.kwargs['env'])
@@ -284,7 +286,8 @@ class DarwinInventoryGuards(unittest.TestCase):
         def launch(*args,**kwargs):
             child=original_popen(*args,**kwargs);children.append(child);return child
         def query(args,**kwargs):
-            self.assertTrue(args[1].endswith('darwin_inventory.py'))
+            self.assertEqual(args[1],'-S')
+            self.assertTrue(args[2].endswith('darwin_inventory.py'))
             self.assertEqual(kwargs['timeout'],3)
             if not children:
                 return original_run([sys.executable,'-c','import time;time.sleep(30)'],

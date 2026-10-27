@@ -325,7 +325,7 @@ class Runner:
                     env['PYTHONDONTWRITEBYTECODE']='1'
                     if not all(key in env for key in (*BINDING_KEYS,'TASK_ROOT','FLOORP_CENSUS_ABI')):
                         raise Failure('inventory-abi-missing')
-                    result=subprocess.run([sys.executable,str(Path(__file__).with_name('darwin_inventory.py')),
+                    result=subprocess.run([sys.executable,'-S',str(Path(__file__).with_name('darwin_inventory.py')),
                                            '--pgid',str(pgid)],capture_output=True,check=True,timeout=3,
                                           text=True,env=env)
                     reply=decode_reply(result.stdout,pgid)

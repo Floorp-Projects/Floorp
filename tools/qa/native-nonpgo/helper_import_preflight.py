@@ -529,7 +529,7 @@ def sample(variant, phase, ordinal, env, pgid):
     started = time.monotonic()
     output = None
     try:
-        result = subprocess.run([sys.executable, '-c', WRAPPER, variant,
+        result = subprocess.run([sys.executable, '-S', '-c', WRAPPER, variant,
             str(HERE/'darwin_inventory.py'), str(pgid)], capture_output=True, check=True,
             timeout=TIMEOUT, text=True, env=helper_environment(env), cwd=HERE)
         value['cleanup'].update(reaped=True, killedOnTimeout=False)
