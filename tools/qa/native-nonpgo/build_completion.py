@@ -311,6 +311,7 @@ class _JSONStream:
         self.base, self.buffer, self.index = start, b'', {}
         self.text = None
         self.failed_batch_base = None
+        self.batch_validation_cache = {}
         self.validated = validated
         self.decoder = _VALIDATED_DECODER if validated else _DECODER
 
@@ -409,6 +410,7 @@ class _JSONStream:
         # Validate a complete comma-terminated prefix in C. A failed candidate
         # falls back once per chunk, including delimiters inside strings or
         # nested containers. Never batch a child whose span must be indexed.
+        _budget(self.deadline)
         self.whitespace()
         if not self.buffered() or self.text is None or self.failed_batch_base == self.base:
             return _UNDECODED
@@ -421,15 +423,24 @@ class _JSONStream:
             cut += 1
         if cut <= start:
             return _UNDECODED
+        payload = self.buffer[start:cut]
+        context = (depth, MAX_DEPTH, MAX_OBJECT_KEYS, MAX_KEY_BYTES, MAX_ROWS,
+                   MAX_LINE_BYTES, READ_BYTES, payload)
+        known = not self.validated and context in self.batch_validation_cache
+        decoder = _VALIDATED_DECODER if known else self.decoder
         try:
-            values = self.decoder.decode((b'[' + self.buffer[start:cut] + b']').decode('utf-8'))
+            values = decoder.decode((b'[' + payload + b']').decode('utf-8'))
         except (_Unknown, ValueError, UnicodeError, RecursionError):
             self.failed_batch_base = self.base
             return _UNDECODED
         if not values:
             return _UNDECODED
-        if not self.validated:
+        if not self.validated and not known:
             _bounded_decoded(values, depth)
+            # Cache only exact bytes and bounds, never caller-mutable decoded values.
+            if len(self.batch_validation_cache) == 2:
+                del self.batch_validation_cache[next(iter(self.batch_validation_cache))]
+            self.batch_validation_cache[context] = True
         self.pos = self.base + cut + 1
         return values
 

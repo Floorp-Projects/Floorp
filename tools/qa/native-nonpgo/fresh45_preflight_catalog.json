@@ -33,6 +33,8 @@
   ],
   "schema": 1,
   "tests": [
+    "test_build_completion.CompletionTests.test_batch_validation_cache_keeps_fresh_values_bounds_and_deadline",
+    "test_build_completion.CompletionTests.test_batch_validation_cache_retains_at_most_two_bounded_prefixes",
     "test_build_completion.CompletionTests.test_boolean_nonfinite_negative_and_reversed_times_fail_closed",
     "test_build_completion.CompletionTests.test_changed_file_after_parse_discards_all_counts",
     "test_build_completion.CompletionTests.test_complete_empty_marker_coverage_is_not_cache_or_build_proof",
@@ -53,6 +55,7 @@
     "test_build_completion.CompletionTests.test_parent_replacement_changes_binding",
     "test_build_completion.CompletionTests.test_processing_budget_returns_unknown_without_partial_counts",
     "test_build_completion.CompletionTests.test_read_failure_preserves_fixed_private_error_code",
+    "test_build_completion.CompletionTests.test_repeated_batches_still_reject_changed_duplicate_nonfinite_deep_and_long_keys",
     "test_build_completion.CompletionTests.test_resource_rows_do_not_consume_completed_marker_cap_but_have_total_bound",
     "test_build_completion.CompletionTests.test_same_size_rewrite_is_rejected_when_metadata_identity_is_unchanged",
     "test_build_completion.CompletionTests.test_snapshot_can_precede_creation_of_expected_directories",
