@@ -4,18 +4,10 @@
 import { createRoot } from "solid-js";
 import { StatusBarManager } from "../statusbar-manager.tsx";
 import { assertEquals, runTests } from "../../../test/utils/test_harness.ts";
+import type { Fixture } from "./types.ts";
 
 const pref = "noraneko.statusbar.enable";
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-type Fixture = {
-  setEnabled: (enabled: boolean) => void;
-  panel: HTMLElement;
-  text: HTMLElement;
-  label: HTMLElement;
-  writes: () => number;
-  dispose: () => void;
-};
 
 // Keep native MutationObservers and Solid ownership. Chrome stubs exist only
 // during synchronous manager calls; every awaited delivery uses restored globals.
