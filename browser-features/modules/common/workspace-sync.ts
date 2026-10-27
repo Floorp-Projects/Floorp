@@ -9,6 +9,8 @@ import type {
 
 export const WORKSPACE_SYNC_COLLECTION = "floorp-workspaces";
 export const WORKSPACE_SYNC_CHANGED = "floorp.workspaces.sync.changed";
+export const WORKSPACE_SYNC_ENGINE_PREF =
+  `services.sync.engine.${WORKSPACE_SYNC_COLLECTION}`;
 
 export function isWorkspaceSyncId(value: unknown): value is string {
   return typeof value === "string" &&

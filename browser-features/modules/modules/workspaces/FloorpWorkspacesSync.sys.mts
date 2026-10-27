@@ -8,6 +8,7 @@ import {
   updateWorkspaceSyncDocument,
   WORKSPACE_SYNC_CHANGED,
   WORKSPACE_SYNC_COLLECTION,
+  WORKSPACE_SYNC_ENGINE_PREF,
 } from "../../common/workspace-sync.ts";
 import {
   parseWorkspaceSyncRecord,
@@ -687,6 +688,15 @@ export const FloorpWorkspacesSync = {
         Services.prefs.setStringPref(
           "services.sync.floorp-workspaces.lastSync",
           "0",
+        );
+        // Existing accounts have no meta/global entry for this new engine, so
+        // Gecko can disable it during reconciliation despite our default=true.
+        // Selecting a workspace is an explicit local opt-in: enable transport
+        // and mark that choice so the next reconciliation preserves it.
+        Services.prefs.setBoolPref(WORKSPACE_SYNC_ENGINE_PREF, true);
+        Services.prefs.setBoolPref(
+          `services.sync.engineStatusChanged.${WORKSPACE_SYNC_COLLECTION}`,
+          true,
         );
       } else {
         state().selected = state().selected.filter((value) => value !== id);

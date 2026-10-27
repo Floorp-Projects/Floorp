@@ -17,6 +17,8 @@ const translationKeys = {
   archive: "workspaces.context-menu.archive",
   sync: "workspaces.context-menu.sync",
   syncPaused: "workspaces.context-menu.sync-paused",
+  syncResume: "workspaces.context-menu.sync-resume",
+  syncDisabled: "workspaces.sync.engine-disabled",
   syncHelp: "workspaces.sync.help",
 };
 
@@ -33,6 +35,8 @@ const getTranslations = () => ({
   archive: translate(translationKeys.archive),
   sync: translate(translationKeys.sync),
   syncPaused: translate(translationKeys.syncPaused),
+  syncResume: translate(translationKeys.syncResume),
+  syncDisabled: translate(translationKeys.syncDisabled),
   syncHelp: translate(translationKeys.syncHelp),
 });
 
@@ -83,20 +87,30 @@ export function ContextMenu(props: {
         type="checkbox"
         autocheck="false"
         disabled={!props.ctx.syncController?.isAvailable() || undefined}
-        label={props.ctx.syncController?.errorText(props.contextWorkspaceId)
+        label={props.ctx.syncController?.isSelected(props.contextWorkspaceId) &&
+            !props.ctx.syncController.isEnabled()
+          ? texts().syncResume
+          : props.ctx.syncController?.errorText(props.contextWorkspaceId)
           ? texts().syncPaused
           : texts().sync}
-        tooltiptext={props.ctx.syncController?.errorText(
-          props.contextWorkspaceId,
-        ) ?? texts().syncHelp}
-        checked={props.ctx.syncController?.isSelected(
-          props.contextWorkspaceId,
-        ) || undefined}
+        tooltiptext={props.ctx.syncController?.isSelected(
+            props.contextWorkspaceId,
+          ) &&
+            !props.ctx.syncController.isEnabled()
+          ? texts().syncDisabled
+          : props.ctx.syncController?.errorText(
+            props.contextWorkspaceId,
+          ) ?? texts().syncHelp}
+        checked={(props.ctx.syncController?.isEnabled() &&
+          props.ctx.syncController.isSelected(
+            props.contextWorkspaceId,
+          )) || undefined}
         onCommand={() => {
           const controller = props.ctx.syncController;
           controller?.select(
             props.contextWorkspaceId,
-            !controller.isSelected(props.contextWorkspaceId),
+            !controller.isSelected(props.contextWorkspaceId) ||
+              !controller.isEnabled(),
           )
             .catch((error: unknown) =>
               console.error(

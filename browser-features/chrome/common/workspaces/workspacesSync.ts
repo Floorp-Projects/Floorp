@@ -12,6 +12,7 @@ import {
   isWorkspaceSyncId,
   liveWorkspaceSyncTabs,
   WORKSPACE_SYNC_CHANGED,
+  WORKSPACE_SYNC_ENGINE_PREF,
 } from "#modules/common/workspace-sync.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.ts";
@@ -198,6 +199,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     });
     Services.prefs.addObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
     Services.obs.addObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
+    Services.prefs.addObserver(WORKSPACE_SYNC_ENGINE_PREF, onSyncChange);
 
     const registration = new AbortController();
     let unregister: (() => void) | undefined;
@@ -241,6 +243,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       workspaceMoves.disconnect();
       Services.prefs.removeObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
       Services.obs.removeObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
+      Services.prefs.removeObserver(WORKSPACE_SYNC_ENGINE_PREF, onSyncChange);
     });
   }
 
@@ -252,6 +255,11 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   isSelected(id: TWorkspaceID): boolean {
     this.revision[0]();
     return this.active && this.api.isSelected(id);
+  }
+
+  isEnabled(): boolean {
+    this.revision[0]();
+    return Services.prefs.getBoolPref(WORKSPACE_SYNC_ENGINE_PREF, true);
   }
 
   async select(id: TWorkspaceID, selected: boolean): Promise<void> {

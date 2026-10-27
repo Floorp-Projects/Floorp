@@ -73,7 +73,10 @@
       "indicator-selected": "{{name}} — Included in workspace sync",
       "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
       "status-selected": "Included in sync",
-      "status-error": "Sync error"
+      "status-error": "Sync error",
+      "status-paused": "Sync paused",
+      "indicator-paused": "{{name}} — Workspace sync paused: {{error}}",
+      "engine-disabled": "Workspace sync is turned off. Choose Resume Workspace Sync in the workspace menu to sync your selected workspaces."
     },
     "context-menu": {
       "move-up": "Move this Workspace Up",
@@ -82,7 +85,8 @@
       "manage": "Manage Workspace",
       "archive": "Archive Workspace",
       "sync": "Sync This Workspace and Its Tabs",
-      "sync-paused": "Workspace Sync Needs Attention"
+      "sync-paused": "Workspace Sync Needs Attention",
+      "sync-resume": "Resume Workspace Sync"
     },
     "popup": {
       "create-new": "Create New Workspace...",

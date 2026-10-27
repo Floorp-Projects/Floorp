@@ -13,7 +13,10 @@ import type {
   TWorkspaceID,
   TWorkspacesStoreData,
 } from "../utils/type.ts";
-import { WORKSPACE_SYNC_CHANGED } from "#modules/common/workspace-sync.ts";
+import {
+  WORKSPACE_SYNC_CHANGED,
+  WORKSPACE_SYNC_ENGINE_PREF,
+} from "#modules/common/workspace-sync.ts";
 import {
   WORKSPACE_DATA_PREF_NAME,
   WORKSPACE_ENABLED_PREF_NAME,
@@ -46,6 +49,13 @@ async function testRealWindowsKeepIndependentIndicators(): Promise<void> {
   ) as { FloorpWorkspacesSync: WorkspaceSyncAPI };
   await api.ready();
   const originalSelected = api.isSelected;
+  const hadEnginePreference = Services.prefs.prefHasUserValue(
+    WORKSPACE_SYNC_ENGINE_PREF,
+  );
+  const originalEnginePreference = Services.prefs.getBoolPref(
+    WORKSPACE_SYNC_ENGINE_PREF,
+    true,
+  );
   const originalError = api.errorFor;
   for (const key of ["isSelected", "errorFor"]) {
     assert(
@@ -197,6 +207,26 @@ async function testRealWindowsKeepIndependentIndicators(): Promise<void> {
     notify();
     await check(owned[0], 0, "selected", "initial first selected");
     await check(owned[1], 1, null, "initial survivor local");
+    Services.prefs.setBoolPref(WORKSPACE_SYNC_ENGINE_PREF, false);
+    await check(
+      owned[0],
+      0,
+      "attention",
+      "engine disabled without ledger change",
+    );
+    await check(
+      owned[1],
+      1,
+      null,
+      "engine pause preserves unselected workspace",
+    );
+    Services.prefs.setBoolPref(WORKSPACE_SYNC_ENGINE_PREF, true);
+    await check(
+      owned[0],
+      0,
+      "selected",
+      "engine resumed without ledger change",
+    );
     selected.clear();
     selected.add(ids[1]);
     notify();
@@ -358,6 +388,12 @@ async function testRealWindowsKeepIndependentIndicators(): Promise<void> {
       "recovery hides the explanation",
     );
   } finally {
+    if (hadEnginePreference) {
+      Services.prefs.setBoolPref(
+        WORKSPACE_SYNC_ENGINE_PREF,
+        originalEnginePreference,
+      );
+    } else Services.prefs.clearUserPref(WORKSPACE_SYNC_ENGINE_PREF);
     api.isSelected = originalSelected;
     api.errorFor = originalError;
     notify();

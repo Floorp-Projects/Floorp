@@ -32,20 +32,30 @@ export function createWorkspaceSyncIndicator(
         tooltip: name(),
       };
     }
-    const error = ctx.syncController.errorText(id) || null;
+    const paused = !ctx.syncController.isEnabled();
+    const error = paused
+      ? i18next.t("workspaces.sync.engine-disabled")
+      : ctx.syncController.errorText(id) || null;
     return {
       state: error ? "attention" : "selected",
       status: i18next.t(
-        error
+        paused
+          ? "workspaces.sync.status-paused"
+          : error
           ? "workspaces.sync.status-error"
           : "workspaces.sync.status-selected",
       ),
       error,
       tooltip: error
-        ? i18next.t("workspaces.sync.indicator-attention", {
-          name: name(),
-          error,
-        })
+        ? i18next.t(
+          paused
+            ? "workspaces.sync.indicator-paused"
+            : "workspaces.sync.indicator-attention",
+          {
+            name: name(),
+            error,
+          },
+        )
         : i18next.t("workspaces.sync.indicator-selected", { name: name() }),
     };
   });

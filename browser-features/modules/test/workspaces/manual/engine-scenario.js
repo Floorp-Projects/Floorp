@@ -150,7 +150,69 @@ async function runScenario() {
     return result;
   };
   const completed = [];
+
+  // A pre-existing account has metadata for Firefox engines, but no entry for
+  // the newly installed Floorp engine. Exercise Gecko's actual reconciliation,
+  // which interprets that missing entry as a remote disable even with our
+  // shipped default=true. An explicit workspace opt-in must override it.
+  const { EngineSynchronizer } = ChromeUtils.importESModule(
+    "resource://services-sync/stages/enginesync.sys.mjs",
+  );
+  const synchronizer = new EngineSynchronizer(Service);
+  const manager = {
+    get enabledEngineNames() {
+      return engine.enabled ? ["floorp-workspaces"] : [];
+    },
+    get: (name) => name === "floorp-workspaces" ? engine : null,
+    decline: () => {},
+    undecline: () => {},
+  };
+  const oldAccountMeta = {
+    isNew: false,
+    payload: { engines: { bookmarks: { version: 2 } }, declined: [] },
+  };
+  Services.prefs.clearUserPref(
+    "services.sync.engineStatusChanged.floorp-workspaces",
+  );
+  await synchronizer._updateEnabledFromMeta(oldAccountMeta, 2, manager);
+  assert(
+    !Services.prefs.getBoolPref("services.sync.engine.floorp-workspaces"),
+    "native reconciliation reproduces the existing-account remote disable",
+  );
   await api.select(workspace, true);
+  assert(
+    Services.prefs.getBoolPref("services.sync.engine.floorp-workspaces"),
+    "explicit workspace selection enables the native Sync engine",
+  );
+  assert(
+    Services.prefs.getBoolPref(
+      "services.sync.engineStatusChanged.floorp-workspaces",
+      false,
+    ),
+    "workspace opt-in is recorded as a local engine enablement",
+  );
+  await new Promise((resolve) => win.setTimeout(resolve, 0));
+  await synchronizer._updateEnabledFromMeta(oldAccountMeta, 2, manager);
+  assert(
+    Services.prefs.getBoolPref("services.sync.engine.floorp-workspaces"),
+    "old account metadata cannot silently disable an explicit workspace opt-in",
+  );
+  completed.push(
+    "existing-account opt-in survives native engine reconciliation",
+  );
+  Services.prefs.setBoolPref("services.sync.engine.floorp-workspaces", false);
+  await api.capture();
+  assert(
+    !Services.prefs.getBoolPref("services.sync.engine.floorp-workspaces"),
+    "background capture respects disabled workspace transport",
+  );
+  await api.select(workspace, false);
+  assert(
+    !Services.prefs.getBoolPref("services.sync.engine.floorp-workspaces"),
+    "opting out does not enable workspace transport",
+  );
+  await api.select(workspace, true);
+  completed.push("only explicit opt-in resumes disabled workspace transport");
   const ids = await engine._store.getAllIDs();
   assert(
     Object.keys(ids).length === 2 && ids[workspace] && ids[tabA],
