@@ -1213,7 +1213,7 @@ diff --git a/third_party/libwebrtc/modules/desktop_capture/mac/sck_picker_handle
 +
 +   SCContentSharingPickerConfiguration *
 +   Configuration(SCContentSharingPickerMode modes) const {
-+     auto *configuration = [Picker().defaultConfiguration copy];
++     SCContentSharingPickerConfiguration *configuration = [Picker().defaultConfiguration copy];
 +     configuration.allowedPickerModes = modes;
 +     return configuration;
 +   }

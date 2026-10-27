@@ -23,8 +23,8 @@ tools/chrome-extension-runtime/quiet-native-document-probe.js text eol=lf
 tools/chrome-extension-runtime/native-messaging-candidate-host.py text eol=lf
 
 # Shared authored resource/sidebar programs must keep the measured bytes.
-browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/programs-source.js text eol=lf
-browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/sidebar-source.js text eol=lf
+browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/programs-source.js.txt text eol=lf
+browser-features/modules/modules/chrome-web-store/test/helpers/resource-paths/sidebar-source.js.txt text eol=lf
 
 # Shared isolated-world fixture bytes match the measured Chrome reference.
 tools/chrome-extension-runtime/fixtures/content-worlds/* text eol=lf
@@ -33,4 +33,4 @@ tools/chrome-extension-runtime/fixtures/content-worlds/* text eol=lf
 tools/chrome-extension-runtime/fixtures/custom-event-detail/* text eol=lf
 
 # Shared public offscreen-context program matches its measured Chrome reference.
-browser-features/modules/modules/chrome-web-store/test/helpers/offscreen-contexts/public-program.js text eol=lf
+browser-features/modules/modules/chrome-web-store/test/helpers/offscreen-contexts/public-program.js.txt text eol=lf
