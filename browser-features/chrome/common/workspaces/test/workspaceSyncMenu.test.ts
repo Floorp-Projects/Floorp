@@ -72,6 +72,18 @@ async function testNativeSyncMenuStateTracksSignals(): Promise<void> {
       "an unselected workspace must omit the checked attribute",
     );
 
+    const normalHelp = item.getAttribute("tooltiptext");
+    assert(normalHelp, "an unselected workspace has normal sync help");
+    setEnabled(false);
+    await Promise.resolve();
+    assertEquals(
+      item.getAttribute("tooltiptext"),
+      normalHelp,
+      "an unselected workspace must not advertise an unavailable resume action",
+    );
+    setEnabled(true);
+    await Promise.resolve();
+
     setSelected(true);
     await Promise.resolve();
     assertEquals(

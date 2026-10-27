@@ -93,7 +93,9 @@ export function ContextMenu(props: {
           : props.ctx.syncController?.errorText(props.contextWorkspaceId)
           ? texts().syncPaused
           : texts().sync}
-        tooltiptext={props.ctx.syncController &&
+        tooltiptext={props.ctx.syncController?.isSelected(
+            props.contextWorkspaceId,
+          ) &&
             !props.ctx.syncController.isEnabled()
           ? texts().syncDisabled
           : props.ctx.syncController?.errorText(
