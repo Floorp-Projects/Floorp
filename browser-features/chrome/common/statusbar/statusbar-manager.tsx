@@ -155,6 +155,7 @@ export class StatusBarManager {
           statusText?.removeAttribute("hidden");
         }
       });
+      onCleanup(() => observer.disconnect());
       if (this.showStatusBar()) {
         if (statusText) {
           statusText.appendChild(statuspanelLabel);

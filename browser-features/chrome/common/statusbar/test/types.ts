@@ -10,3 +10,12 @@ export interface StatusbarTestWindow extends Window {
   CustomizableUI: StatusbarTestCustomizableUI;
   OpenBrowserWindow(): StatusbarTestWindow;
 }
+
+export type Fixture = {
+  setEnabled: (enabled: boolean) => void;
+  panel: HTMLElement;
+  text: HTMLElement;
+  label: HTMLElement;
+  writes: () => number;
+  dispose: () => void;
+};
