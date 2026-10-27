@@ -64,7 +64,33 @@ Runtime Draftには、安定版SDK 26.5の完全なuncompressed tarの
 が一致した場合だけ2日保持する、20分上限の取得用workflow候補を置く。
 専用branchの初回push・attempt 1だけを受け付ける。候補配置だけでは実行されない。
 
-新しいSDKの作成と、修正版Intel Macの追加1回実行には別の実行承認が必要。
-前回の「1回実行する」は完了したrunに使った。
-現在の承認範囲内で追加のnative実行、merge、releaseは行っていない。
+本人はSDK復旧と修正版Intel Macの追加1回を承認した。
+続く直接指示で、SDK取得・VM内・mainに影響しない専用branchとDraft更新の都度確認は不要となった。
+追加Intel Mac実行はjob 360分・work 345分の1回に限定する。
+
+## SDK復旧と配置修正の再検証準備
+
+[SDK run 40516581212 / attempt 1](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/40516581212)
+のdownload-macos-sdk job 122231898010は成功。
+生成元はRuntime a2bceca6e076c130cb133e490e0f7c5f50f34c30、
+Xcode 26.6 build 17F113付属SDK 26.5である。
+生成元commitとコンパイル元7dd619742b25567e479eeda97ae071d10542ad0bは別に固定する。
+
+新artifact 12739697223の実archive 105082683 bytesはAPI digestと一致した。
+zip SHA-256は2f8aa854ddae53d2edb6fa300e0583cb823a4ef20c419a810fbf001d414c8c23、
+gzip entry 105567985 bytesのSHA-256はcefd8301ce7c40231896cf5ef0c58ef9377d27b9d6a0506067f3b38112a4b8a0。
+完全uncompressed tarのサイズとhashは元の固定値に一致し、canonical SDK treeも
+c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f、
+49701 members・704719765 logical bytes・SDK version 26.5の一致を秘密情報なし隔離で確認した。
+APIで観測した期限は2026-10-29T13:57:37Z。実行時にも再照合する。
+
+schema 3の明示spec sdk_source-20261027.jsonへ実ID・hash・producerを固定し、
+既存schema 1/2を維持する。外部JSONによる任意SDK指定は許可しない。
+新しいb/qa-fresh45-install-20261027は明示CLI選択と専用origin profileを要求し、
+初回push・attempt 1・実API由来の同branch・元のclockを照合する。
+旧branchやrerunを新profileとして受け付けない。
+
+新しいbindingを含む関連91テストは隔離環境で成功した。
+追加8件を含むMac事前検証catalogは707 ID。実Macで全件成功・skip 0が必要である。
+この時点では追加Intel Mac実行は未開始。
 Windows現head・最終配布物・全OSのqualificationも引き続き未確認。

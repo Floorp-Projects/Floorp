@@ -1,5 +1,4 @@
 {
-  "schema": 1,
   "modules": [
     "test_checkpoint",
     "test_process_census",
@@ -30,6 +29,7 @@
     "test_fresh45",
     "test_sdk_content_qualification"
   ],
+  "schema": 1,
   "tests": [
     "test_build_completion.CompletionTests.test_boolean_nonfinite_negative_and_reversed_times_fail_closed",
     "test_build_completion.CompletionTests.test_changed_file_after_parse_discards_all_counts",
@@ -288,6 +288,7 @@
     "test_fresh_job_origin.FreshJobOriginTests.test_api_deadline_before_first_request_or_after_response_is_not_reset",
     "test_fresh_job_origin.FreshJobOriginTests.test_api_http_status_is_typed",
     "test_fresh_job_origin.FreshJobOriginTests.test_cli_failure_uses_fixed_code_without_url_or_token",
+    "test_fresh_job_origin.FreshJobOriginTests.test_cli_install_repair_selects_only_its_explicit_profile",
     "test_fresh_job_origin.FreshJobOriginTests.test_cli_unknown_failure_does_not_expose_path_or_exception_text",
     "test_fresh_job_origin.FreshJobOriginTests.test_continuation_route_requires_explicit_selection_and_bound_api_branch",
     "test_fresh_job_origin.FreshJobOriginTests.test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch",
@@ -296,6 +297,9 @@
     "test_fresh_job_origin.FreshJobOriginTests.test_exactly_one_job_required_not_bool_or_pagination_omission",
     "test_fresh_job_origin.FreshJobOriginTests.test_existing_task_and_clock_are_not_reused_or_overwritten",
     "test_fresh_job_origin.FreshJobOriginTests.test_http_errors_stop_without_task_or_secret_text",
+    "test_fresh_job_origin.FreshJobOriginTests.test_install_repair_has_explicit_bound_branch_and_original_clock_limits",
+    "test_fresh_job_origin.FreshJobOriginTests.test_install_repair_rejects_other_routes_reruns_and_noninitial_push_before_api",
+    "test_fresh_job_origin.FreshJobOriginTests.test_install_repair_requires_same_branch_in_authenticated_run_metadata",
     "test_fresh_job_origin.FreshJobOriginTests.test_job_age_unknown_or_outside_original_600_seconds_is_rejected",
     "test_fresh_job_origin.FreshJobOriginTests.test_job_crossrun_attempt_and_head_are_rejected_with_actual_response_fields",
     "test_fresh_job_origin.FreshJobOriginTests.test_job_name_state_labels_id_and_timestamp_are_bound",
@@ -662,6 +666,8 @@
     "test_sdk_source.SDKSourceTests.test_receipt_foreign_missing_extra_url_and_bool_as_int_values_are_rejected",
     "test_sdk_source.SDKSourceTests.test_receipt_nested_anchors_and_qualification_are_not_caller_authority",
     "test_sdk_source.SDKSourceTests.test_receipt_validation_returns_fresh_trusted_data_and_never_mutates_input_or_spec",
+    "test_sdk_source.SDKSourceTests.test_recovered_sdk_binds_actual_successful_producer_and_unchanged_tar_tree",
+    "test_sdk_source.SDKSourceTests.test_recovered_sdk_rejects_cross_schema_origin_and_any_modified_pin",
     "test_sdk_source.SDKSourceTests.test_source_read_json_utf8_duplicate_nonfinite_and_size_failures_are_private",
     "test_sdk_source.SDKSourceTests.test_source_schema_key_allowlist_and_bool_schema_are_strict",
     "test_sdk_source.SDKSourceTests.test_stream_file_change_is_rejected",
@@ -696,6 +702,8 @@
     "test_sdk_source_integration.SDKSourceIntegration.test_payload_eof_after_deadline_is_not_success",
     "test_sdk_source_integration.SDKSourceIntegration.test_producer_http_error_never_falls_back",
     "test_sdk_source_integration.SDKSourceIntegration.test_producer_name_binding_does_not_relax_runtime_head_or_run_attempt",
+    "test_sdk_source_integration.SDKSourceIntegration.test_recovered_sdk_download_and_materialization_bind_real_producer_identity",
+    "test_sdk_source_integration.SDKSourceIntegration.test_recovered_sdk_rejects_foreign_producer_run_head_and_expiry_before_download",
     "test_sdk_source_integration.SDKSourceIntegration.test_redirect_does_not_permit_acquisition_to_start_after_expiry",
     "test_sdk_source_integration.SDKSourceIntegration.test_shared_deadline_arguments_are_typed_and_timeouts_are_bounded",
     "test_sdk_source_integration.SDKSourceIntegration.test_uncompressed_anchor_failure_never_writes_success_receipt",

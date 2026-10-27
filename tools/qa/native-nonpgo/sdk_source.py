@@ -39,6 +39,13 @@ CURRENT_PIN = {**PIN, 'artifact': 12624490543, 'run': 40259426572,
     'zipSHA256': '4090088d6c29b7ca8e6fdcae46c491827c575764d2aea0734d422ef55f9a7bb6',
     'tarSHA256': 'f30c8e392d8c01d595313ec1e53d4d8d8fe62f2e5f8c65638ac4146b52899add',
     'expiresObserved': '2026-10-27T02:31:18Z'}
+RECOVERED_PRODUCER_REF = 'a2bceca6e076c130cb133e490e0f7c5f50f34c30'
+RECOVERED_PRODUCER_JOB = 122231898010
+RECOVERED_PRODUCER_NAME = 'download-macos-sdk'
+RECOVERED_PIN = {**PIN, 'artifact': 12739697223, 'run': 40516581212,
+    'zipSHA256': '2f8aa854ddae53d2edb6fa300e0583cb823a4ef20c419a810fbf001d414c8c23',
+    'tarSHA256': 'cefd8301ce7c40231896cf5ef0c58ef9377d27b9d6a0506067f3b38112a4b8a0',
+    'expiresObserved': '2026-10-29T13:57:37Z'}
 MAX_UNCOMPRESSED_BYTES = 1024**3
 MAX_COMPRESSED_BYTES = 512 * 1024**2
 
@@ -89,9 +96,11 @@ def load_sdk_source(plan_path, source_path=None):
     if source_path is None:
         return result
     value, source_sha = _source_json(source_path)
-    current = type(value) is dict and type(value.get('schema')) is int and value['schema'] == 2
-    require(type(value) is dict and set(value) == (SOURCE_KEYS | {'producerRef'} if current else SOURCE_KEYS) and
-            type(value.get('schema')) is int and value['schema'] == (2 if current else 1), 'sdk-source-shape')
+    require(type(value) is dict and type(value.get('schema')) is int and value['schema'] in (1, 2, 3),
+            'sdk-source-shape')
+    current = value['schema'] in (2, 3)
+    recovered = value['schema'] == 3
+    require(set(value) == (SOURCE_KEYS | {'producerRef'} if current else SOURCE_KEYS), 'sdk-source-shape')
     require(_same(value['qualification'], QUALIFICATION), 'sdk-source-qualification')
     require(_same(value['baselinePlanSHA256'], BASELINE_PLAN_SHA256) and
             result['baselinePlanSHA256'] == value['baselinePlanSHA256'], 'sdk-source-plan-binding')
@@ -101,9 +110,13 @@ def load_sdk_source(plan_path, source_path=None):
     producer_job = CURRENT_PRODUCER_JOB if current else PRODUCER_JOB
     producer_name = CURRENT_PRODUCER_NAME if current else PRODUCER_NAME
     expected_pin = CURRENT_PIN if current else PIN
+    producer_ref = CURRENT_PRODUCER_REF
+    if recovered:
+        producer_job, producer_name = RECOVERED_PRODUCER_JOB, RECOVERED_PRODUCER_NAME
+        expected_pin, producer_ref = RECOVERED_PIN, RECOVERED_PRODUCER_REF
     require(_same(value['producerJob'], producer_job), 'sdk-source-producer')
     if current:
-        require(_same(value['producerRef'], CURRENT_PRODUCER_REF), 'sdk-source-producer-ref')
+        require(_same(value['producerRef'], producer_ref), 'sdk-source-producer-ref')
     require(_same(value['pin'], expected_pin), 'sdk-source-pin')
     require(all(_same(value['pin'][key], pin.get(key)) for key in CONTENT_KEYS), 'sdk-source-content-binding')
     require(_same(value['uncompressedTar'], UNCOMPRESSED_TAR), 'sdk-source-uncompressed-anchor')
@@ -111,7 +124,7 @@ def load_sdk_source(plan_path, source_path=None):
     result.update(producerJob=producer_job, producerName=producer_name, uncompressedTar=dict(UNCOMPRESSED_TAR),
                   sourceSHA256=source_sha, qualification=QUALIFICATION)
     if current:
-        result['producerRef'] = CURRENT_PRODUCER_REF
+        result['producerRef'] = producer_ref
     return result
 
 

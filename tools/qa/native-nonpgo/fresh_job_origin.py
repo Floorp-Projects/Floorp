@@ -20,6 +20,8 @@ JOB_NAME = 'fresh-firefox45'
 PROFILE = 'fresh-firefox45-job-origin-v1'
 CONTINUATION_BRANCH = 'b/qa-fresh45-20261026'
 CONTINUATION_PROFILE = 'fresh-firefox45-job-origin-20261026-v1'
+INSTALL_REPAIR_BRANCH = 'b/qa-fresh45-install-20261027'
+INSTALL_REPAIR_PROFILE = 'fresh-firefox45-install-job-origin-20261027-v1'
 API_CAP = 2 * 1024**2
 
 
@@ -43,14 +45,17 @@ def _decode(raw):
 
 
 def initialize(task, *, environment=None, opener=None, wall_clock=None, monotonic_clock=None,
-               continuation=False):
+               continuation=False, install_repair=False):
     """No clock reset, checkpoint role, payload operation, or permission mutation."""
     env = os.environ if environment is None else environment
     wall = time.time if wall_clock is None else wall_clock
     mono = time.monotonic if monotonic_clock is None else monotonic_clock
-    require(type(continuation) is bool, 'fresh-origin-run-scope')
+    require(type(continuation) is bool and type(install_repair) is bool and
+            not (continuation and install_repair), 'fresh-origin-run-scope')
     branch = CONTINUATION_BRANCH if continuation else BRANCH
     profile = CONTINUATION_PROFILE if continuation else PROFILE
+    if install_repair:
+        branch, profile = INSTALL_REPAIR_BRANCH, INSTALL_REPAIR_PROFILE
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and env.get('GITHUB_EVENT_NAME') == 'push' and
             env.get('GITHUB_RUN_ATTEMPT') == '1' and env.get('GITHUB_REF') == 'refs/heads/' + branch and
             env.get('FRESH_PUSH_CREATED') == 'true' and env.get('FRESH_PUSH_BEFORE') == '0' * 40,
@@ -145,10 +150,13 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=Path, required=True)
-    parser.add_argument('--continuation-20261026', action='store_true')
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--continuation-20261026', action='store_true')
+    selection.add_argument('--install-repair-20261027', action='store_true')
     args = parser.parse_args()
     try:
-        initialize(args.task, continuation=args.continuation_20261026)
+        initialize(args.task, continuation=args.continuation_20261026,
+                   install_repair=args.install_repair_20261027)
     except Failure as error:
         print(json.dumps({'freshJobOrigin': 'failed', 'code': str(error)}), flush=True)
         return 1
