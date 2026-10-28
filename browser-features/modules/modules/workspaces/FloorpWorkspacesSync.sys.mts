@@ -1866,6 +1866,20 @@ export class FloorpWorkspacesEngine extends SyncEngine {
       for (const id of this._modified.ids()) {
         if (!pendingIds.has(id)) this._modified.delete(id);
       }
+    } else {
+      // Startup collected these definitions before incoming parent tombstones
+      // could remove their last selected reference. Skip the obsolete upload;
+      // retain the definition locally and on the server for other profiles.
+      const referenced = new Set(
+        referencedDefinitions().map((definition) => definition.containerId),
+      );
+      for (const id of this._modified.ids()) {
+        if (
+          WorkspaceContainerBindings.getDefinition(id) && !referenced.has(id)
+        ) {
+          this._modified.delete(id);
+        }
+      }
     }
     for (const record of pendingMigration) {
       this._modified.set(record.id, Date.now() / 1000);

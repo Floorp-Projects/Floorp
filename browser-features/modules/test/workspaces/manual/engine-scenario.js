@@ -1154,6 +1154,96 @@ async function runScenario() {
     "native v2 container definition, tab reference and explicit none",
   );
 
+  const removedContainerParent = uuid(),
+    orphanedContainer = uuid(),
+    sharedContainerTab = uuid(),
+    outgoingDeletedParent = uuid();
+  await engine._store.create(
+    record(orphanedContainer, definition(orphanedContainer)),
+  );
+  await engine._store.create(record(removedContainerParent, {
+    ...metaEntity(removedContainerParent),
+    defaultContainer: {
+      kind: "container",
+      containerId: orphanedContainer,
+    },
+  }));
+  const sharedContainerEntity = tabEntity(
+    sharedContainerTab,
+    removedContainerParent,
+  );
+  sharedContainerEntity.tab.container = containerReference;
+  await engine._store.create(record(sharedContainerTab, sharedContainerEntity));
+  snapshots.set(outgoingDeletedParent, makeSnapshot(outgoingDeletedParent, []));
+  await api.select(outgoingDeletedParent, true);
+  await api.deleteWorkspace(outgoingDeletedParent);
+  const beforeParentRemoval = await engine.getChangedIDs();
+  assert(
+    Object.hasOwn(beforeParentRemoval, orphanedContainer) &&
+      Object.hasOwn(beforeParentRemoval, logicalContainer),
+    "startup queues both the unique and shared container definitions",
+  );
+  const orphanedBinding = bindings.lookup({
+    kind: "container",
+    containerId: orphanedContainer,
+  });
+  assert(
+    orphanedBinding.status === "resolved" && orphanedBinding.userContextId > 0,
+    "the soon-unreferenced definition has a native binding to preserve",
+  );
+  const previousModified = Object.fromEntries(engine._modified.entries());
+  const originalParentRemovalProcess = SyncEngine.prototype._processIncoming;
+  try {
+    engine._modified.replace({
+      [orphanedContainer]: beforeParentRemoval[orphanedContainer],
+      [logicalContainer]: beforeParentRemoval[logicalContainer],
+      [outgoingDeletedParent]: Date.now() / 1000,
+    });
+    // The native download reconciles the parent after startup has already
+    // snapshotted outgoing IDs. Exercise the engine's post-download boundary.
+    SyncEngine.prototype._processIncoming = async function () {
+      await this._store.remove(tomb(removedContainerParent));
+    };
+    await engine._processIncoming();
+    assert(
+      !engine._modified.has(orphanedContainer) &&
+        engine._modified.has(logicalContainer) &&
+        engine._modified.has(outgoingDeletedParent),
+      "parent deletion drops only the unreferenced definition from outgoing changes",
+    );
+    const survivingUploads = await Promise.all(
+      engine._modified.ids().map((id) =>
+        engine._store.createRecord(id, "floorp-workspaces-v2")
+      ),
+    );
+    assert(
+      survivingUploads.some((item) =>
+        item.id === logicalContainer && item.entity?.kind === "container" &&
+        !item.deleted
+      ) &&
+        survivingUploads.some((item) =>
+          item.id === outgoingDeletedParent && item.deleted
+        ),
+      "remaining shared definition and genuine tombstone still serialize for native upload",
+    );
+    assert(
+      bindings.getDefinition(orphanedContainer) &&
+        bindings.lookup({ kind: "container", containerId: orphanedContainer })
+            .userContextId === orphanedBinding.userContextId &&
+        !Object.hasOwn(cache.data.deleted, orphanedContainer) &&
+        snapshots.get(removedContainerParent).tabs.some((tab) =>
+          tab.id === sharedContainerTab
+        ),
+      "pruning keeps local bindings and tabs without creating a container tombstone",
+    );
+  } finally {
+    SyncEngine.prototype._processIncoming = originalParentRemovalProcess;
+    engine._modified.replace(previousModified);
+  }
+  completed.push(
+    "incoming parent deletion prunes orphan definition uploads while retaining shared definitions and tombstones",
+  );
+
   const reboundParent = uuid(), reboundTab = uuid();
   const originalNative = ContextualIdentityService.create(
     `QA original ${reboundParent}`,
