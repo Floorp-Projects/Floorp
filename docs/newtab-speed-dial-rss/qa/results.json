@@ -1,0 +1,713 @@
+{
+  "sourceCommit": "7a1a638b",
+  "baseCommit": "0c5b265d73c23f3811b4c2199eb61186e8949003",
+  "browser": "Floorp / Firefox 159.0",
+  "buildId": "20261026023026",
+  "runtimeSourceCommit": "0ac255739cdd64e100cd6913329247421b0ec2ea",
+  "runtimeArtifactSha256": "8b130d9f8c0e1c032064f9e1163db1d6000f955c29ac16036ac19138f0c445f5",
+  "platform": "Linux x86_64 / Xvfb",
+  "focusedBrowserTests": {
+    "modules": 14,
+    "cases": 71,
+    "failed": 0
+  },
+  "ciSmoke": {
+    "steps": 6,
+    "failed": 0,
+    "runnerUnitCases": 41,
+    "lintFiles": 1280
+  },
+  "integrationChecks": {
+    "http-results": [
+      {
+        "name": "RSS subscribe through UI",
+        "pass": true
+      },
+      {
+        "name": "article cache and supplied full content",
+        "pass": true,
+        "detail": {
+          "id": "6f71f682eaa68eed6c5dcbb1268958f8aa72ccc6ffcf8aa9a9824bf1d9c6f418",
+          "feedId": "2e900ddf-9886-4b12-ad98-22779951caaa",
+          "title": "QA RSS full article",
+          "link": "http://127.0.0.1:8767/article",
+          "author": "",
+          "publishedAt": 1793232000000,
+          "receivedAt": 1793216559310,
+          "excerpt": "Feed supplied full content . Tracking fixtureunsafe relative link",
+          "isRead": false,
+          "starred": false,
+          "hasFullContent": true,
+          "feedTitle": "QA feed",
+          "feedEnabled": true,
+          "siteUrl": "http://127.0.0.1:8767/"
+        }
+      },
+      {
+        "name": "malicious source converted to closed AST",
+        "pass": true,
+        "detail": [
+          {
+            "tag": "p",
+            "children": [
+              {
+                "tag": "text",
+                "text": "Feed supplied "
+              },
+              {
+                "tag": "strong",
+                "children": [
+                  {
+                    "tag": "text",
+                    "text": "full content"
+                  }
+                ]
+              },
+              {
+                "tag": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "tag": "img",
+            "alt": "Tracking fixture",
+            "imageId": "image-0"
+          },
+          {
+            "tag": "p",
+            "children": [
+              {
+                "tag": "text",
+                "text": "unsafe"
+              }
+            ]
+          },
+          {
+            "tag": "a",
+            "href": "http://127.0.0.1:8767/article",
+            "children": [
+              {
+                "tag": "text",
+                "text": "relative link"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "reader no active content or automatic remote image",
+        "pass": true
+      },
+      {
+        "name": "reader has source original link",
+        "pass": true
+      },
+      {
+        "name": "source page and images not fetched for rendering",
+        "pass": true,
+        "detail": [
+          {
+            "path": "/article",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/favicon.ico",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/feed.xml",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          }
+        ]
+      },
+      {
+        "name": "explicit image uses raster data URL",
+        "pass": true
+      },
+      {
+        "name": "conditional refresh uses validators and receives 304",
+        "pass": true,
+        "detail": [
+          {
+            "path": "/etag.xml",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/etag.xml",
+            "ifNoneMatch": "\"qa-etag-1\"",
+            "ifModifiedSince": "Thu, 29 Oct 2026 00:00:00 GMT",
+            "cookie": null,
+            "authorization": null
+          }
+        ]
+      },
+      {
+        "name": "anonymous requests omit cookies and auth",
+        "pass": true,
+        "detail": [
+          {
+            "path": "/article",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/favicon.ico",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/feed.xml",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/track.png",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/etag.xml",
+            "ifNoneMatch": null,
+            "ifModifiedSince": null,
+            "cookie": null,
+            "authorization": null
+          },
+          {
+            "path": "/etag.xml",
+            "ifNoneMatch": "\"qa-etag-1\"",
+            "ifModifiedSince": "Thu, 29 Oct 2026 00:00:00 GMT",
+            "cookie": null,
+            "authorization": null
+          }
+        ]
+      },
+      {
+        "name": "HTML discovery requires explicit selection",
+        "pass": true,
+        "detail": {
+          "type": "discovery",
+          "candidates": [
+            {
+              "title": "RSS choice",
+              "url": "http://127.0.0.1:8767/feed.xml"
+            },
+            {
+              "title": "Atom choice",
+              "url": "http://127.0.0.1:8767/atom.xml"
+            }
+          ]
+        }
+      },
+      {
+        "name": "Atom excerpt stays excerpt",
+        "pass": true,
+        "detail": {
+          "items": [
+            {
+              "id": "4153f76f2ef78e5e045aef8c9631363075b08f3cd54ac4706169e5a311820000",
+              "feedId": "d457de29-f42d-4b62-ad36-2715fb4d661f",
+              "title": "QA Atom excerpt",
+              "link": "http://127.0.0.1:8767/atom-article",
+              "author": "",
+              "publishedAt": 1793232000000,
+              "receivedAt": 1793216560511,
+              "excerpt": "Atom excerpt from feed",
+              "isRead": false,
+              "starred": false,
+              "hasFullContent": false,
+              "feedTitle": "QA Atom feed",
+              "feedEnabled": true,
+              "siteUrl": "http://127.0.0.1:8767/"
+            }
+          ],
+          "total": 1,
+          "nextOffset": null
+        }
+      },
+      {
+        "name": "HTTP redirect reaches valid feed",
+        "pass": true,
+        "detail": {
+          "ok": true,
+          "value": {
+            "type": "subscribed",
+            "feed": {
+              "id": "ac6a2661-e6e1-42be-9c70-76356f61e8d3",
+              "url": "http://127.0.0.1:8767/redirect",
+              "title": "QA feed",
+              "siteUrl": "http://127.0.0.1:8767/",
+              "enabled": true,
+              "unreadCount": 1,
+              "lastSuccessAt": 1793216560537,
+              "error": null
+            }
+          }
+        }
+      },
+      {
+        "name": "/redirect-loop rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The feed has too many redirects."
+        }
+      },
+      {
+        "name": "/redirect-unsafe rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The feed could not be downloaded."
+        }
+      },
+      {
+        "name": "/oversize rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The response exceeds the size limit."
+        }
+      },
+      {
+        "name": "/gzip-oversize rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The response exceeds the size limit."
+        }
+      },
+      {
+        "name": "/doctype.xml rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "External XML declarations are not supported."
+        }
+      },
+      {
+        "name": "/broken.xml rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The feed contains invalid XML."
+        }
+      },
+      {
+        "name": "external entity URL never fetched",
+        "pass": true
+      },
+      {
+        "name": "unsubscribe retains starred cache and source attribution",
+        "pass": true,
+        "detail": {
+          "items": [
+            {
+              "id": "6f71f682eaa68eed6c5dcbb1268958f8aa72ccc6ffcf8aa9a9824bf1d9c6f418",
+              "feedId": "2e900ddf-9886-4b12-ad98-22779951caaa",
+              "title": "QA RSS full article",
+              "link": "http://127.0.0.1:8767/article",
+              "author": "",
+              "publishedAt": 1793232000000,
+              "receivedAt": 1793216559310,
+              "excerpt": "Feed supplied full content . Tracking fixtureunsafe relative link",
+              "isRead": true,
+              "starred": true,
+              "hasFullContent": true,
+              "feedTitle": "QA feed",
+              "feedEnabled": false,
+              "siteUrl": "http://127.0.0.1:8767/"
+            }
+          ],
+          "total": 1,
+          "nextOffset": null
+        }
+      }
+    ],
+    "http-extra-results": [
+      {
+        "name": "cross origin HTTP redirect fetched completely",
+        "pass": true,
+        "detail": {
+          "type": "subscribed",
+          "feed": {
+            "id": "045e0280-d4f9-4623-8873-b7e6f35a9824",
+            "url": "http://127.0.0.1:8767/redirect-cross",
+            "title": "QA feed",
+            "siteUrl": "http://127.0.0.1:8767/",
+            "enabled": true,
+            "unreadCount": 1,
+            "lastSuccessAt": 1793216670157,
+            "error": null
+          }
+        }
+      },
+      {
+        "name": "20 second channel timeout cancels slow request",
+        "pass": true,
+        "detail": {
+          "elapsed": 20008,
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The feed request timed out."
+        }
+      },
+      {
+        "name": "429 rejected with RetryAfter",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "The feed server returned HTTP 429."
+        }
+      },
+      {
+        "name": "SVG image MIME rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "UNAVAILABLE",
+          "message": "This image format is not supported."
+        }
+      },
+      {
+        "name": "20 concurrent snapshot and refresh calls coalesce same URL",
+        "pass": true,
+        "detail": {
+          "timing": {
+            "count": 20,
+            "elapsed": 31
+          },
+          "requests": [
+            {
+              "path": "/etag.xml",
+              "ifNoneMatch": "\"qa-etag-1\"",
+              "ifModifiedSince": "Thu, 29 Oct 2026 00:00:00 GMT",
+              "cookie": null,
+              "authorization": null
+            }
+          ]
+        }
+      }
+    ],
+    "workspace-results": [
+      {
+        "name": "second native window chooses own workspace",
+        "pass": true,
+        "detail": {
+          "first": {
+            "id": "a7e92d77-4fb1-4557-ad62-13d23d4428da",
+            "title": "New Workspace (0)"
+          },
+          "second": {
+            "id": "40d59780-5ceb-45db-beb6-991cc7e53866",
+            "title": "New Workspace (3)"
+          }
+        }
+      },
+      {
+        "name": "workspace assignment auto-selects associated group",
+        "pass": true,
+        "detail": {
+          "uri": "http://localhost:5186/",
+          "value": "OVuUc19FDv-1",
+          "expected": "OVuUc19FDv-1"
+        }
+      },
+      {
+        "name": "first window retains its workspace after second switches",
+        "pass": true,
+        "detail": {
+          "expected": {
+            "id": "a7e92d77-4fb1-4557-ad62-13d23d4428da",
+            "title": "New Workspace (0)"
+          },
+          "actual": {
+            "id": "a7e92d77-4fb1-4557-ad62-13d23d4428da",
+            "title": "New Workspace (0)"
+          }
+        }
+      },
+      {
+        "name": "other window receives live bookmark change",
+        "pass": true
+      },
+      {
+        "name": "Hub toggle updates other newtab live",
+        "pass": true,
+        "detail": "Skip to content\nHome\nSpeed Dial\nFeeds\nNew Workspace (3)\nNew tab\nSearch or enter URL\nSpeed Dial\nBookmark group\nView all\nAdd site\nCubesoft (Sponsor)\nFloorp Support\nQA Folder A\n1 item\nQA Renamed Site\nQA Shared Notification\n"
+      },
+      {
+        "name": "320 CSS px at 200% without page overflow",
+        "pass": true,
+        "detail": {
+          "width": 320,
+          "scroll": 320
+        }
+      }
+    ],
+    "window-results": [
+      {
+        "name": "search native focus",
+        "pass": true,
+        "detail": "urlbar-input"
+      },
+      {
+        "name": "private no bookmark/feed/workspace/history state",
+        "pass": true,
+        "detail": {
+          "ok": true,
+          "value": {
+            "settings": {
+              "schemaVersion": 1,
+              "revision": 0,
+              "components": {
+                "topSites": true,
+                "clock": true,
+                "searchBar": true,
+                "firefoxLayout": true
+              },
+              "background": {
+                "type": "none",
+                "customImage": null,
+                "fileName": null,
+                "folderPath": null,
+                "selectedFloorp": null,
+                "slideshowEnabled": false,
+                "slideshowInterval": 30
+              },
+              "searchBar": {
+                "searchEngine": "default"
+              },
+              "topSites": {
+                "pinned": [],
+                "blocked": []
+              },
+              "speedDial": {
+                "rootGuid": null,
+                "commonGuid": null,
+                "workspaceGroups": {},
+                "show": true,
+                "columns": 6,
+                "tileSize": "standard"
+              },
+              "home": {
+                "showHistory": false,
+                "showFeed": false,
+                "layout": "balanced",
+                "translucentPanels": true
+              },
+              "rss": {
+                "refreshMinutes": 15,
+                "retentionDays": 90,
+                "maxItems": 500
+              },
+              "sponsors": {
+                "enabled": false,
+                "dismissedIds": []
+              }
+            },
+            "groups": [],
+            "workspace": null,
+            "workspaces": [],
+            "sponsors": [],
+            "feeds": [],
+            "readOnly": true,
+            "private": true
+          }
+        }
+      },
+      {
+        "name": "private mutation rejected",
+        "pass": true,
+        "detail": {
+          "ok": false,
+          "code": "READ_ONLY",
+          "message": "New tab personal data is unavailable in a private window."
+        }
+      },
+      {
+        "name": "second native window connected",
+        "pass": true,
+        "detail": {
+          "id": "a7e92d77-4fb1-4557-ad62-13d23d4428da",
+          "title": "New Workspace (0)"
+        }
+      },
+      {
+        "name": "second window search focuses its own urlbar",
+        "pass": true
+      }
+    ],
+    "background-results": [
+      {
+        "name": "Hub local image imported and stored",
+        "pass": true,
+        "detail": {
+          "type": "custom",
+          "name": "background-fixture.png",
+          "length": 114
+        }
+      },
+      {
+        "name": "320 CSS px 200% no horizontal overflow",
+        "pass": true,
+        "detail": {
+          "width": 320,
+          "scroll": 320
+        }
+      }
+    ],
+    "production-results": [
+      {
+        "name": "production startup mode",
+        "pass": true
+      },
+      {
+        "name": "production static chrome assets and CSP active",
+        "pass": true,
+        "detail": {
+          "uri": "about:newtab",
+          "scripts": [
+            "chrome://noraneko-newtab/content/assets/index-EDd1mQA-.js"
+          ],
+          "csp": "default-src chrome:; script-src chrome:; img-src chrome: moz-icon: blob: data:; font-src chrome: data:; style-src chrome: data: 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+        }
+      },
+      {
+        "name": "bookmark hierarchy persisted across restart",
+        "pass": true
+      },
+      {
+        "name": "article read star content source persist after restart",
+        "pass": true,
+        "detail": {
+          "id": "6f71f682eaa68eed6c5dcbb1268958f8aa72ccc6ffcf8aa9a9824bf1d9c6f418",
+          "feedId": "2e900ddf-9886-4b12-ad98-22779951caaa",
+          "title": "QA RSS full article",
+          "link": "http://127.0.0.1:8767/article",
+          "author": "",
+          "publishedAt": 1793232000000,
+          "receivedAt": 1793216559310,
+          "excerpt": "Feed supplied full content . Tracking fixtureunsafe relative link",
+          "isRead": true,
+          "starred": true,
+          "hasFullContent": true,
+          "feedTitle": "QA feed",
+          "feedEnabled": false,
+          "siteUrl": "http://127.0.0.1:8767/",
+          "content": [
+            {
+              "tag": "p",
+              "children": [
+                {
+                  "tag": "text",
+                  "text": "Feed supplied "
+                },
+                {
+                  "tag": "strong",
+                  "children": [
+                    {
+                      "tag": "text",
+                      "text": "full content"
+                    }
+                  ]
+                },
+                {
+                  "tag": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "tag": "img",
+              "alt": "Tracking fixture",
+              "imageId": "image-0"
+            },
+            {
+              "tag": "p",
+              "children": [
+                {
+                  "tag": "text",
+                  "text": "unsafe"
+                }
+              ]
+            },
+            {
+              "tag": "a",
+              "href": "http://127.0.0.1:8767/article",
+              "children": [
+                {
+                  "tag": "text",
+                  "text": "relative link"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "production reader renders supplied content safely",
+        "pass": true
+      },
+      {
+        "name": "production CSP permits explicit anonymous raster image",
+        "pass": true
+      },
+      {
+        "name": "production CSP blocks direct remote image loads",
+        "pass": true,
+        "detail": []
+      },
+      {
+        "name": "externally deleted open folder returns to nearest surviving parent",
+        "pass": true,
+        "detail": {
+          "hash": "#dial/Cq7hJcon5otH",
+          "path": "CommonQA Recovery Parent"
+        }
+      },
+      {
+        "name": "production Hub newtab settings actor connected",
+        "pass": true
+      }
+    ]
+  },
+  "existingHubIntegration": {
+    "modules": 1,
+    "cases": 51,
+    "failed": 0
+  },
+  "totalBrowserTests": {
+    "modules": 15,
+    "cases": 122,
+    "failed": 0
+  },
+  "fixtureNote": "Existing Hub numeric-input tests require a foreground fixture window; rerun with one task-profile window passed without source changes."
+}
