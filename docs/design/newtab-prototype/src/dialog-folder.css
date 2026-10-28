@@ -1,0 +1,10 @@
+.folder-delete-title {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.folder-delete-summary {
+  margin-top: 12px;
+  color: var(--floorp-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
