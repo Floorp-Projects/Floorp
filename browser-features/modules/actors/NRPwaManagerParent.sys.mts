@@ -58,14 +58,12 @@ export class NRPwaManagerParent extends JSWindowActorParent {
           const containers = identities.map(
             (c: {
               userContextId: number;
-              l10nId?: string;
-              name: string;
               color: string;
             }) => ({
               userContextId: c.userContextId,
-              name: c.l10nId
-                ? ContextualIdentityService.getUserContextLabel(c.userContextId)
-                : c.name,
+              name: ContextualIdentityService.getUserContextLabel(
+                c.userContextId,
+              ),
               color: CONTAINER_COLORS[c.color] ?? c.color,
             }),
           );
