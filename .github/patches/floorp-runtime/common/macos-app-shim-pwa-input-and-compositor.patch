@@ -253,7 +253,7 @@ index 4916c301f8b..d5d465bdf91 100644
    if (RefPtr<NativeLayerRootRemoteMacParent> actor = std::move(mRemoteRoot)) {
      CompositorThread()->Dispatch(NewRunnableMethod("MacWebAppWidget::CloseRemoteRoot",
 diff --git a/widget/cocoa/appshim/shim/ShimView.mm b/widget/cocoa/appshim/shim/ShimView.mm
-index 256869b..7443931 100644
+index 256869b..b3acfe2 100644
 --- a/widget/cocoa/appshim/shim/ShimView.mm
 +++ b/widget/cocoa/appshim/shim/ShimView.mm
 @@ -6,6 +6,7 @@
@@ -327,7 +327,7 @@ index 256869b..7443931 100644
        @"timestamp": @(event.timestamp)}];
  }
  - (void)keyEvent:(NSEvent*)event kind:(NSString*)kind {
-@@ -666,23 +675,35 @@ - (void)insertText:(id)value replacementRange:(NSRange)replacement {
+@@ -666,23 +675,41 @@ - (void)insertText:(id)value replacementRange:(NSRange)replacement {
    [self emit:MessageType::Input payload:@{@"kind": @"insertText", @"text": text,
        @"replacement": RangePayload(replacement), @"editorRevision": @(_editorRevision)}];
    _markedRange = NSMakeRange(NSNotFound, 0);
@@ -337,6 +337,12 @@ index 256869b..7443931 100644
    NSString* text = PlainText(value);
    if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
        selected.length > text.length - selected.location) return;
++  // AppKit ends a composition by setting empty marked text (Escape or Delete).
++  // Commit the empty string so Gecko also dispatches compositionend.
++  if (!text.length) {
++    if ([self hasMarkedText]) [self insertText:text replacementRange:replacement];
++    return;
++  }
 +  NSUInteger markedStart = replacement.location != NSNotFound ? replacement.location
 +      : [self hasMarkedText] ? _markedRange.location : _selectedRange.location;
 +  if (markedStart > UINT32_MAX - text.length) return;
@@ -365,7 +371,7 @@ index 256869b..7443931 100644
  - (NSArray<NSAttributedStringKey>*)validAttributesForMarkedText { return @[]; }
  - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actualRange:(NSRangePointer)actual {
    if (range.location == NSNotFound || range.location < _textOffset ||
-@@ -696,7 +717,7 @@ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actual
+@@ -696,7 +723,7 @@ - (NSAttributedString*)attributedSubstringForProposedRange:(NSRange)range actual
    return [[NSAttributedString alloc] initWithString:[_editorText substringWithRange:local]];
  }
  - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actual {

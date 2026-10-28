@@ -84,6 +84,8 @@ selection override ends on commit, unmark, cancellation, empty marked text,
 leaving an editable element, or disconnection. Candidate geometry uses that same
 selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
 textarea and contenteditable fixtures, using an isolated browser profile.
+Empty marked text from Escape or Backspace cancels through an empty commit;
+the test requires `compositionend` and a fresh visible composition on retyping.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts
