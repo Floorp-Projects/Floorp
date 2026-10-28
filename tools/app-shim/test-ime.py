@@ -191,6 +191,65 @@ return NavigableManager.getIdForBrowser(w.gBrowser.selectedBrowser);"""), 20)
         ordinary_space = snapshot("committed:ordinary-space")
         if ordinary_space["value"] not in (final["value"] + " ", final["value"] + "\u3000"):
             raise RuntimeError("Ordinary Space did not insert exactly one space after commit")
+
+        def event_count(event_type):
+            client.context("content")
+            return client.script("return probe.events.filter(e=>e.type===arguments[0]).length;", event_type)
+
+        for label, cancel_key, limit in (
+            ("escape", 53, 3), ("backspace", 51, 8), ("empty-backspace", 51, 8)
+        ):
+            if label == "empty-backspace":
+                client.context("content")
+                client.script("""if(editor instanceof HTMLTextAreaElement)editor.select();
+else getSelection().selectAllChildren(editor);""")
+                native_key(pid, 51)
+                cleared = snapshot("committed:all-deleted")
+                if cleared["value"] != "":
+                    raise RuntimeError("Deleting all committed text left characters in the editor")
+            prefix = report["steps"][-1]["value"]
+            started = event_count("compositionstart")
+            ended = event_count("compositionend")
+            for key in (40, 0, 45, 38, 34):
+                native_key(pid, key)
+            native_key(pid, 49)
+            composing = snapshot(f"{label}:composing")
+            if event_count("compositionstart") != started + 1 or composing["value"] == prefix:
+                raise RuntimeError(f"{label}: input did not start a visible composition")
+            for _ in range(limit):
+                native_key(pid, cancel_key)
+                if event_count("compositionend") == ended + 1:
+                    break
+            cancelled = snapshot(f"{label}:cancelled")
+            if event_count("compositionend") != ended + 1:
+                raise RuntimeError(f"{label}: empty marked text did not end the composition")
+            if cancelled["value"] != prefix:
+                raise RuntimeError(f"{label}: cancellation changed previously committed text")
+            for key in (40, 0, 45, 38, 34):
+                native_key(pid, key)
+            resumed = snapshot(f"{label}:resumed")
+            if event_count("compositionstart") != started + 2 or resumed["value"] == prefix:
+                raise RuntimeError(f"{label}: typing did not restart a visible composition")
+            candidates = []
+            for conversion in range(3):
+                native_key(pid, 49)
+                candidate = snapshot(f"{label}:converted:{conversion}")
+                if event_count("compositionend") != ended + 1:
+                    raise RuntimeError(f"{label}: Space prematurely committed the restarted composition")
+                if (not candidate["value"].startswith(prefix) or
+                    any(char in candidate["value"][len(prefix):] for char in " \u3000\n")):
+                    raise RuntimeError(f"{label}: conversion changed prior text or inserted whitespace")
+                candidates.append(candidate["value"])
+            if len(set(candidates)) < 2:
+                raise RuntimeError(f"{label}: restarted conversion did not advance the candidate")
+            native_key(pid, 36)
+            if event_count("compositionend") == ended + 1:
+                native_key(pid, 36)
+            committed = snapshot(f"{label}:committed")
+            if event_count("compositionend") != ended + 2 or not committed["value"].startswith(prefix):
+                raise RuntimeError(f"{label}: restarted composition did not commit correctly")
+            if any(not e["isTrusted"] for e in committed["events"]):
+                raise RuntimeError("Cancellation and resumed input must produce trusted DOM events")
         report["status"] = "passed"
         code = 0
     except Exception as error:
