@@ -253,22 +253,34 @@ temporarily pauses automatic scheduling to arrange concurrent unsynced edits,
 then restores scheduling. It checks selected and excluded workspaces,
 bidirectional metadata/navigation/title/pin changes, concurrent additions,
 delete wins over stale ordering, empty workspaces, opt-out/re-selection, and
-parent deletion retaining local tabs. It removes only the generated test records
-from Sync and compares a SHA-256 fingerprint of other engine metadata and
-declined settings before the first explicit Sync and after cleanup. This does
-not claim to observe account setup that occurred during the earlier interactive
-sign-in. A loopback web server supplies synthetic pages; it shuts down when
-verification ends. Snapshot assertions only read UI state and allow bounded time
-for native page loads to settle. If a case fails, its generated cloud records
-and dedicated profiles remain available for inspection; successful completion
-deletes only the generated synced records.
+parent deletion retaining local tabs. Container cases exercise exact-name
+confirmation with different local IDs, local rename/metadata preservation,
+explicit native UI reopening with a stable tab UUID, no-match creation,
+workspace-default inheritance, explicit none, native deletion protection and
+explicit recovery. A loopback HTTP fixture verifies reuse of a synthetic
+receiver session and absence of source-cookie transfer; actual site cookies are
+not collected. It deletes the generated workspace/tab records from Sync and
+compares a SHA-256 fingerprint of other engine metadata and declined settings
+before the first explicit Sync and after cleanup. This does not claim to observe
+account setup that occurred during the earlier interactive sign-in. A loopback
+web server supplies synthetic pages; it shuts down when verification ends.
+Snapshot assertions only read UI state and allow bounded time for native page
+loads to settle. If a case fails, its generated cloud records and dedicated
+profiles remain available for inspection; successful completion deletes only the
+generated workspace/tab records. Container definitions and local containers
+remain, following the product contract that unsubscribing or deleting a
+workspace preserves containers and site data.
 
 A sanitized result report records case names, cloud host names and build hashes.
 It contains no email, UID, password, token, key or account response payload. The
 profiles remain in the preparation directory for follow-up. They can contain the
 dedicated account's normal browser session and are not report artifacts. This
-proves two isolated Desktop clients on one Mac; physical-device evidence is
-recorded separately below, and iOS receiver acceptance remains a separate check.
+proves only the platforms and source revisions recorded for each run;
+physical-device evidence is recorded separately below, and iOS receiver
+acceptance remains a separate check. The container feature
+[QA report](../../docs/development/workspace-container-sync/qa-report.md)
+records the current Linux two-client scope separately from the historical v1
+results.
 
 On 2026-10-18, all eight live cases passed with two independently authenticated
 QA profiles using Mozilla's production HTTPS Sync service. The packaged loader

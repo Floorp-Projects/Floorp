@@ -56,3 +56,10 @@ export interface LiveIdentity {
   syncReady: boolean;
   uid: string | null;
 }
+
+export interface LiveReopenResult {
+  complete: boolean;
+  passed: boolean;
+  reopened?: boolean;
+  stableUUID?: boolean;
+}

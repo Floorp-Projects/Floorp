@@ -6,6 +6,7 @@ import type {
   LiveClient,
   LiveContainer,
   LiveIdentity,
+  LiveReopenResult,
   LiveSetup,
   LiveSnapshot,
 } from "./live-types.ts";
@@ -62,15 +63,29 @@ async function operation<T>(
     "WebDriver:ExecuteAsyncScript",
     {
       script:
-        `const done=arguments[arguments.length-1];${fixture}\nliveOperation(arguments[0],arguments[1]).then(done,()=>done({qaOperationFailed:true}));`,
+        `const done=arguments[arguments.length-1];${fixture}\nliveOperation(arguments[0],arguments[1]).then(done,()=>{const diagnostics=arguments[0]==="container-reopen"?Services.wm.getMostRecentWindow("navigator:browser").__floorpQaLastContainerReopen:undefined;done({qaOperationFailed:true,...(diagnostics?{containerReopen:diagnostics}:{})});});`,
       args: [action, { ...args, profile: target.profile, client: target.name }],
     },
     125_000,
   );
-  const value = response.value as T & { qaOperationFailed?: boolean };
+  const value = response.value as T & {
+    qaOperationFailed?: boolean;
+    containerReopen?: {
+      phase: string;
+      selected?: boolean;
+      confirmed?: boolean;
+      alerted?: boolean;
+      sourceConnected?: boolean;
+      uuidOwners?: number;
+    };
+  };
   if (value?.qaOperationFailed) {
     throw new Error(
-      `Client ${target.name} failed QA operation ${action}; credentials and raw browser errors are intentionally not collected`,
+      `Client ${target.name} failed QA operation ${action}; credentials and raw browser errors are intentionally not collected${
+        value.containerReopen
+          ? `; container UI stages: ${JSON.stringify(value.containerReopen)}`
+          : ""
+      }`,
     );
   }
   return value;
@@ -515,15 +530,25 @@ try {
           ),
         "Rebinding must leave an already-open tab in its existing native context until explicit reopen",
       );
-      const reopened = await operation<
-        { reopened: boolean; stableUUID: boolean }
-      >(b, "container-reopen", {
+      const reopenOperationId = crypto.randomUUID();
+      await operation(b, "container-reopen", {
+        operationId: reopenOperationId,
         workspaceId: mappedId,
         tabId: sourceMappedTab.id,
         userContextId: rebound.userContextId,
       });
+      let reopened: LiveReopenResult | null = null;
+      const receiver = clients.get(b.name)!;
+      for (let attempt = 0; attempt < 300; attempt++) {
+        reopened = await receiver.executeScript(
+          `if(Services.dirsvc.get("ProfD",Ci.nsIFile).path!==arguments[0]||Services.prefs.getStringPref("floorp.workspaces.sync.acceptance-profile","")!==arguments[1])throw new Error("Dedicated QA profile mismatch");const state=Services.wm.getMostRecentWindow("navigator:browser").__floorpQaLastContainerReopen;return state?.operationId===arguments[2]?state:null;`,
+          [b.profile, b.name, reopenOperationId],
+        ) as LiveReopenResult | null;
+        if (reopened?.complete) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
       assert(
-        reopened.reopened && reopened.stableUUID,
+        reopened?.passed && reopened.reopened && reopened.stableUUID,
         "Explicit native UI reopen must keep exactly one owner of the stable tab UUID",
       );
       await sync(b);

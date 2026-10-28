@@ -2,8 +2,8 @@
 
 作成日: 2026-10-28（日本時間）
 
-状態: 製品コードと Runtime patch の統合中。先行 native
-検証は実施済み、最終統合・実アカウント QA は未完了。
+状態: 製品コード・Runtime patch・production 成果物を統合済み。
+最新の検証結果と未実施範囲は [QA 記録](qa-report.md) を参照。
 
 関連文書: [仕様書](specification.md) / [設計書](design.md)
 
@@ -167,17 +167,18 @@ workspace adapter を一部に使うため、 production UI
 | TypeScript       | engine・migration module・migration tests・新 native migration driver の対象 check 合格                                                                                                                                                | 各所属 Deno config による対象 check                                      |
 
 移行用 loopback Sync server は試験データだけを扱い、ブラウザー側は実 native
-transport / crypto を使う。 これは実 FxA
-アカウント接続の確認ではない。実アカウント二クライアント、production UI
-の最終統合、 異 OS、旧版混在、最終パッケージの全 AC
-は未完了であり、上の部分合格を代用しない。
-最終統合版の結果・コミット・成果物ハッシュは担当者が追記する。
+transport / crypto を使う。上表は移行・削除フックの先行検証である。 最終
+production 成果物の native 統合・Chrome UI・実アカウント二クライアントの結果は
+[QA 記録](qa-report.md) に記載する。 物理的な異 OS
+間の往復、旧版アプリとの全操作行列、配布用インストーラーの受入は未実施であり、
+上の部分合格を代用しない。
 
 ### 6.2 認証済み二クライアント
 
 QA app preparation は Linux と macOS
-を扱えるよう拡張している。専用アカウントと新規プロフィールを使う。 次の driver
-は既存ワークスペース同期のためのものなので、T01〜T11 の必要ケースを追加する。
+を扱えるよう拡張した。専用アカウントと新規プロフィールを使う。次の driver に
+同名関連付け・新規作成・明示再オープン・Cookie
+分離・削除保護・明示復旧のケースを追加した。
 
 ```sh
 python3 tools/workspace-sync/prepare-acceptance-app.py \
@@ -227,5 +228,6 @@ macOS 上の二プロセス合格だけで異 OS の確認済みとはしない�
 - 変更コミット、Runtime、ビルド、パッケージの識別情報と試験結果を結び付けて保存している。
 - ドキュメントは最終実装の形式・UI・互換性に合わせて更新されている。
 
-残作業は統合試験・実認証 QA・成果物の検証である。未実施ケースと復旧 UI
-の制限を明示し、 段階ごとの完了条件を満たした証拠を最終結果へ結び付ける。
+実装・Linux での検証記録と、一般提供前に残る異
+OS・旧版混在・配布物の確認を区別する。 復旧 UI の制限も [QA 記録](qa-report.md)
+に明示する。 この PR の統合を、上記すべての配布条件の完了とは扱わない。
