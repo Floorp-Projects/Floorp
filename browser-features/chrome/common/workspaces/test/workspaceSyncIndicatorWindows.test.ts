@@ -15,7 +15,7 @@ import type {
 } from "../utils/type.ts";
 import {
   WORKSPACE_SYNC_CHANGED,
-  WORKSPACE_SYNC_ENGINE_PREF,
+  WORKSPACE_SYNC_V2_ENGINE_PREF as WORKSPACE_SYNC_ENGINE_PREF,
 } from "#modules/common/workspace-sync.ts";
 import {
   WORKSPACE_DATA_PREF_NAME,

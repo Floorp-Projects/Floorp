@@ -3,6 +3,7 @@
 import { createSignal, onCleanup } from "solid-js";
 import i18next from "i18next";
 import type {
+  WorkspaceSyncApplyResult,
   WorkspaceSyncDocument,
   WorkspaceSyncProvider,
   WorkspaceSyncSnapshot,
@@ -12,7 +13,7 @@ import {
   isWorkspaceSyncId,
   liveWorkspaceSyncTabs,
   WORKSPACE_SYNC_CHANGED,
-  WORKSPACE_SYNC_ENGINE_PREF,
+  WORKSPACE_SYNC_V2_ENGINE_PREF as WORKSPACE_SYNC_ENGINE_PREF,
 } from "#modules/common/workspace-sync.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import { setWorkspacesDataStore, workspacesDataStore } from "./data/data.ts";
@@ -26,10 +27,21 @@ import {
   WORKSPACE_TAB_ATTRIBUTION_ID,
 } from "./utils/workspaces-static-names.ts";
 import { extractUrlFromState } from "./utils/workspace-snapshot.ts";
+import type { WorkspaceContainerRef } from "#modules/common/workspace-container-types.ts";
+import { WORKSPACE_CONTAINER_BINDINGS_CHANGED } from "#modules/common/workspace-container-bindings.ts";
+import { parseWorkspaceContainerRef } from "#modules/common/workspace-container.ts";
+import {
+  getWorkspaceContainerBindings,
+  nativeWorkspaceContainerPrompt,
+  setupWorkspaceContainers,
+  workspaceContainerNeedsReopen,
+  workspaceContainerPendingText,
+} from "./workspace-container-ui.ts";
 
 import type {
   IncomingWorkspaceNavigation,
   SyncSessionStore,
+  WorkspaceContainerReopenState,
   WorkspaceSyncAPI,
   WorkspaceSyncBrowser,
   WorkspaceSyncProgressFlags,
@@ -40,6 +52,10 @@ import type {
 const TAB_ID_KEY = "floorp-workspace-sync-id";
 const TAB_OWNER_KEY = "floorp-workspace-sync-owner";
 const TAB_PENDING_URL_KEY = "floorp-workspace-sync-url";
+const TAB_CONTAINER_REF_KEY = "floorp-workspace-sync-container";
+const TAB_CONTAINER_INSTANCE_KEY = "floorp-workspace-sync-container-instance";
+const TAB_REOPEN_TARGET_KEY = "floorp-workspace-sync-reopen-target";
+const TAB_REOPEN_SOURCE_KEY = "floorp-workspace-sync-reopen-source";
 const PROGRESS_FLAGS = Ci
   .nsIWebProgressListener as unknown as WorkspaceSyncProgressFlags;
 const HISTORY_LOAD_COMMAND = Ci.nsIDocShell.LOAD_CMD_HISTORY as number;
@@ -59,6 +75,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   private explicitlyOpened = new WeakSet<XULElement>();
   private openedAfterStartup = new WeakSet<XULElement>();
   private physicalOrder = new Map<string, string[]>();
+  private containerPendingTabs = new Set<string>();
+  private containerPendingDefaults = new Set<string>();
+  private replacementTabs = new WeakSet<XULElement>();
+  private programmaticClosures = new WeakSet<XULElement>();
   private incomingNavigations = new Map<
     XULElement,
     IncomingWorkspaceNavigation
@@ -79,7 +99,24 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
 
     const onChange = (event?: Event) => {
       if (event?.type === "TabClose" && event.target) {
-        this.incomingNavigations.get(event.target as XULElement)?.finish();
+        const tab = event.target as XULElement;
+        const programmatic = this.programmaticClosures.has(tab);
+        this.programmaticClosures.delete(tab);
+        this.incomingNavigations.get(tab)?.finish();
+        if (this.active && !programmatic && !this.replacementTabs.has(tab)) {
+          const tabId = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
+          const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+          if (workspaceId && isWorkspaceSyncId(tabId)) {
+            this.api.noteTabClosed?.(workspaceId, tabId).catch((
+              error: unknown,
+            ) =>
+              console.error(
+                "[WorkspacesSync] Could not record explicit tab closure",
+                error,
+              )
+            );
+          }
+        }
       }
       if (
         event?.type === "TabOpen" && this.active && !this.applying &&
@@ -96,6 +133,8 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         // explicitly opened in this session may replace a retired UUID.
         const tab = event.target as XULElement;
         this.explicitlyOpened.add(tab);
+        this.sessionStore.setCustomTabValue(tab, TAB_REOPEN_SOURCE_KEY, "");
+        this.sessionStore.setCustomTabValue(tab, TAB_REOPEN_TARGET_KEY, "");
         const previous = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
         if (
           this.api.isRetired(previous) && !this.api.isPendingClose(previous)
@@ -105,6 +144,11 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     };
     const onPrefsChange = () => this.scheduleCapture();
     const onSyncChange = () => this.revision[1]((value) => value + 1);
+    const onContainerChange = () => {
+      onSyncChange();
+      this.scheduleCapture();
+      this.window.dispatchEvent(new Event("floorp-workspace-container-ready"));
+    };
     const events = [
       "TabOpen",
       "TabClose",
@@ -199,6 +243,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     });
     Services.prefs.addObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
     Services.obs.addObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
+    Services.obs.addObserver(
+      onContainerChange,
+      WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+    );
     Services.prefs.addObserver(WORKSPACE_SYNC_ENGINE_PREF, onSyncChange);
 
     const registration = new AbortController();
@@ -209,11 +257,17 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       try {
         await this.sessionStore.promiseAllWindowsRestored;
         if (this.stopped) return;
+        await this.api.ready();
+        await this.recoverContainerReopens();
+        if (this.stopped) return;
         unregister = await this.api.register(this, registration.signal);
         if (this.stopped) unregister();
         else {
           this.active = true;
           onSyncChange();
+          this.window.dispatchEvent(
+            new Event("floorp-workspace-container-ready"),
+          );
         }
       } catch (error) {
         if (this.stopped) return;
@@ -243,6 +297,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       workspaceMoves.disconnect();
       Services.prefs.removeObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
       Services.obs.removeObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
+      Services.obs.removeObserver(
+        onContainerChange,
+        WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+      );
       Services.prefs.removeObserver(WORKSPACE_SYNC_ENGINE_PREF, onSyncChange);
     });
   }
@@ -260,6 +318,271 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   isEnabled(): boolean {
     this.revision[0]();
     return Services.prefs.getBoolPref(WORKSPACE_SYNC_ENGINE_PREF, true);
+  }
+
+  isContainerAvailable(): boolean {
+    this.revision[0]();
+    return this.active && (this.api.isContainerSyncEnabled?.() ?? false) &&
+      getWorkspaceContainerBindings().isReady();
+  }
+
+  defaultContainerPending(id: TWorkspaceID): boolean {
+    this.revision[0]();
+    if (this.privateWindow) return false;
+    if (!this.active) return true;
+    if (
+      !(this.api.isContainerSyncEnabled?.() ?? false) ||
+      !this.api.isSelected(id)
+    ) return false;
+    const desired = this.api.getSyncedWorkspace(id)?.defaultContainer;
+    if (!desired) return false;
+    if (!getWorkspaceContainerBindings().isReady()) return true;
+    const resolution = getWorkspaceContainerBindings().lookup(desired);
+    return resolution.status !== "resolved" ||
+      this.containerPendingDefaults.has(id) ||
+      Boolean(
+        this.api.isContainerDefaultPending(id) &&
+          this.ctx.getRawWorkspace(id)?.userContextId !==
+            resolution.userContextId,
+      );
+  }
+
+  containerStatusText(id: TWorkspaceID): string | null {
+    this.revision[0]();
+    if (!this.isContainerAvailable() || !this.api.isSelected(id)) return null;
+    const desired = this.api.getSyncedWorkspace(id);
+    if (!desired) return null;
+    const bindings = getWorkspaceContainerBindings();
+    for (
+      const ref of [
+        desired.defaultContainer,
+        ...desired.tabs.filter((tab) => !tab.deleted).map((tab) =>
+          tab.container
+        ),
+      ]
+    ) {
+      if (!ref) continue;
+      const reason = workspaceContainerPendingText(bindings.lookup(ref));
+      if (reason) return reason;
+    }
+    return this.tabs(id).some((tab) =>
+        this.containerPendingTabs.has(this.tabId(tab))
+      )
+      ? i18next.t("workspaces.containers.reopen-needed")
+      : null;
+  }
+
+  async setupContainers(id: TWorkspaceID): Promise<void> {
+    if (!this.isContainerAvailable() || !this.api.isSelected(id)) return;
+    const desired = this.api.getSyncedWorkspace(id);
+    if (!desired) return;
+    const refs = [
+      desired.defaultContainer,
+      ...desired.tabs.filter((tab) => !tab.deleted).map((tab) => tab.container),
+    ].filter((ref): ref is WorkspaceContainerRef => ref !== undefined);
+    try {
+      await setupWorkspaceContainers(refs, getWorkspaceContainerBindings(), {
+        isCurrent: () =>
+          !this.stopped && this.isContainerAvailable() &&
+          this.api.isSelected(id),
+        unsubscribe: () => this.api.select(id, false),
+        retry: () => this.api.capture(),
+        resolveLegacy: (target, scope) =>
+          this.api.resolveLegacyContainers(id, target, scope),
+      });
+    } catch (error) {
+      console.error("[WorkspacesSync] Container setup failed", error);
+      nativeWorkspaceContainerPrompt().alert(
+        i18next.t("workspaces.containers.title"),
+        i18next.t("workspaces.containers.operation-failed"),
+      );
+    }
+  }
+
+  hasContainerReopen(id: TWorkspaceID): boolean {
+    this.revision[0]();
+    return this.isContainerAvailable() &&
+      this.tabs(id).some((tab) =>
+        this.containerPendingTabs.has(this.tabId(tab))
+      );
+  }
+
+  async reopenContainerTab(id: TWorkspaceID): Promise<void> {
+    if (!this.isContainerAvailable() || !this.api.isSelected(id)) return;
+    const bindings = getWorkspaceContainerBindings();
+    if (!bindings.acquirePrompt()) return;
+    const epoch = bindings.getEpoch();
+    const prompt = nativeWorkspaceContainerPrompt();
+    const title = i18next.t("workspaces.containers.title");
+    let source: XULElement | undefined;
+    try {
+      const pending = this.tabs(id).filter((tab) =>
+        this.containerPendingTabs.has(this.tabId(tab))
+      );
+      const index = prompt.select(
+        title,
+        i18next.t("workspaces.containers.reopen-select"),
+        pending.map((tab) => tab.getAttribute("label") ?? ""),
+      );
+      if (index === null || !pending[index]) return;
+      source = pending[index];
+      if (
+        !prompt.confirm(
+          title,
+          i18next.t("workspaces.containers.reopen-confirm"),
+        )
+      ) return;
+    } finally {
+      bindings.releasePrompt(epoch);
+    }
+    if (
+      !source || this.stopped || !this.api.isSelected(id) ||
+      !bindings.isCurrentEpoch(epoch)
+    ) return;
+    const tabId = this.tabId(source);
+    const desired = this.api.getSyncedTab(id, tabId);
+    if (!desired?.container) return;
+    const resolution = await bindings.resolve(desired.container);
+    if (!bindings.isCurrentEpoch(epoch)) return;
+    if (resolution.status !== "resolved") {
+      prompt.alert(title, workspaceContainerPendingText(resolution) ?? "");
+      return;
+    }
+    const token = await this.api.beginContainerReopen(id, tabId);
+    const transaction = JSON.stringify({ token, workspaceId: id, tabId });
+    const abort = new AbortController();
+    const cancel = () => abort.abort();
+    Services.obs.addObserver(cancel, "weave:service:start-over");
+    let replacement: XULElement | undefined;
+    let succeeded = false;
+    let sourceClosed = false;
+    let transferring = false;
+    const originalURL = gBrowser.getBrowserForTab(source).currentURI?.spec;
+    this.applying = true;
+    try {
+      if (
+        this.stopped || !this.api.isSelected(id) ||
+        !bindings.isCurrentEpoch(epoch)
+      ) {
+        throw new Error("Workspace changed");
+      }
+      replacement = this.ctx.withExplicitTabUserContext(
+        resolution.userContextId,
+        () =>
+          gBrowser.addTab("about:blank", {
+            inBackground: true,
+            skipAnimation: true,
+            userContextId: resolution.userContextId,
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
+          }),
+      );
+      this.replacementTabs.add(replacement);
+      this.sessionStore.setCustomTabValue(
+        replacement,
+        TAB_REOPEN_TARGET_KEY,
+        transaction,
+      );
+      this.rememberContainer(
+        replacement,
+        desired.container,
+        resolution.instanceId,
+      );
+      this.sessionStore.setCustomTabValue(
+        replacement,
+        TAB_PENDING_URL_KEY,
+        desired.url,
+      );
+      await this.waitForIncoming([
+        this.navigateIncoming(
+          replacement,
+          desired.url,
+          desired.title,
+          abort.signal,
+        ),
+      ]);
+      // Native permitUnload may spin a nested event loop. Complete it before
+      // transferring stable identity, then revalidate all participants below.
+      if (await this.tabBrowser.runBeforeUnloadForTabs([source])) {
+        throw new Error("The original tab's unload was canceled");
+      }
+      const latest = this.api.getSyncedTab(id, tabId);
+      const current = bindings.lookup(desired.container);
+      if (
+        abort.signal.aborted || this.stopped || !this.api.isSelected(id) ||
+        !bindings.isCurrentEpoch(epoch) ||
+        this.api.isRetired(tabId) || latest?.url !== desired.url ||
+        JSON.stringify(latest?.container) !==
+          JSON.stringify(desired.container) ||
+        current.status !== "resolved" ||
+        current.userContextId !== resolution.userContextId ||
+        current.instanceId !== resolution.instanceId ||
+        ![...gBrowser.tabs].includes(source) ||
+        gBrowser.getBrowserForTab(source).currentURI?.spec !== originalURL
+      ) throw new Error("Workspace container changed during tab replacement");
+      if (desired.pinned) gBrowser.pinTab(replacement);
+      gBrowser.moveTabTo(replacement, {
+        tabIndex: [...gBrowser.tabs].indexOf(source),
+      });
+      // Keep exactly one owner while changing the physical browsing context.
+      transferring = true;
+      this.sessionStore.setCustomTabValue(
+        source,
+        TAB_REOPEN_SOURCE_KEY,
+        transaction,
+      );
+      this.sessionStore.setCustomTabValue(source, TAB_ID_KEY, "");
+      this.sessionStore.setCustomTabValue(source, TAB_OWNER_KEY, "");
+      this.ctx.tabManagerCtx.setWorkspaceIdToAttribute(replacement, id);
+      this.sessionStore.setCustomTabValue(replacement, TAB_ID_KEY, tabId);
+      this.sessionStore.setCustomTabValue(replacement, TAB_OWNER_KEY, id);
+      this.rememberContainer(
+        replacement,
+        desired.container,
+        resolution.instanceId,
+      );
+      if (gBrowser.selectedTab === source) gBrowser.selectedTab = replacement;
+      this.removeProgrammaticTab(source, true, true);
+      if ([...gBrowser.tabs].includes(source)) {
+        this.sessionStore.setCustomTabValue(replacement, TAB_ID_KEY, "");
+        this.sessionStore.setCustomTabValue(replacement, TAB_OWNER_KEY, "");
+        this.sessionStore.setCustomTabValue(source, TAB_ID_KEY, tabId);
+        this.sessionStore.setCustomTabValue(source, TAB_OWNER_KEY, id);
+        throw new Error("The original tab was not closed");
+      }
+      sourceClosed = true;
+      this.replacementTabs.delete(replacement);
+      this.sessionStore.setCustomTabValue(
+        replacement,
+        TAB_REOPEN_TARGET_KEY,
+        "",
+      );
+      this.containerPendingTabs.delete(tabId);
+      succeeded = true;
+    } catch (error) {
+      abort.abort();
+      if (transferring && [...gBrowser.tabs].includes(source)) {
+        if (replacement) {
+          this.sessionStore.setCustomTabValue(replacement, TAB_ID_KEY, "");
+          this.sessionStore.setCustomTabValue(replacement, TAB_OWNER_KEY, "");
+        }
+        this.sessionStore.setCustomTabValue(source, TAB_ID_KEY, tabId);
+        this.sessionStore.setCustomTabValue(source, TAB_OWNER_KEY, id);
+        this.sessionStore.setCustomTabValue(source, TAB_REOPEN_SOURCE_KEY, "");
+      }
+      if (replacement && !succeeded && !sourceClosed) {
+        this.removeProgrammaticTab(replacement, false, true);
+      }
+      console.error("[WorkspacesSync] Could not reopen container tab", error);
+      prompt.alert(title, i18next.t("workspaces.containers.operation-failed"));
+    } finally {
+      Services.obs.removeObserver(cancel, "weave:service:start-over");
+      this.applying = false;
+      await this.api.finishContainerReopen(token, succeeded);
+      this.ctx.tabManagerCtx.updateTabsVisibility();
+      this.revision[1]((value) => value + 1);
+      this.scheduleCapture();
+    }
   }
 
   async select(id: TWorkspaceID, selected: boolean): Promise<void> {
@@ -282,7 +605,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   errorText(id: TWorkspaceID): string | null {
     this.revision[0]();
     const code = this.api.errorFor(id);
-    return code ? i18next.t(`workspaces.sync.${code}`) : null;
+    return code && code !== "container-pending"
+      ? i18next.t(`workspaces.sync.${code}`)
+      : null;
   }
 
   async deleteWorkspace(id: TWorkspaceID): Promise<void> {
@@ -301,7 +626,184 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
 
   private tabs(id: string): XULElement[] {
     return [...gBrowser.tabs].filter((tab) =>
+      !this.replacementTabs.has(tab) &&
+      !this.sessionStore.getCustomTabValue(tab, TAB_REOPEN_TARGET_KEY) &&
       tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID) === id
+    );
+  }
+
+  private removeProgrammaticTab(
+    tab: XULElement,
+    skipPermitUnload = false,
+    skipSessionStore = false,
+  ): void {
+    this.programmaticClosures.add(tab);
+    try {
+      this.tabBrowser.removeTab(tab, {
+        animate: false,
+        skipPermitUnload,
+        skipSessionStore,
+      });
+    } finally {
+      // A canceled close must not suppress the user's next ordinary close.
+      if ([...gBrowser.tabs].includes(tab) && !tab.hasAttribute("closing")) {
+        this.programmaticClosures.delete(tab);
+      }
+    }
+  }
+
+  private reopenState(
+    tab: XULElement,
+    key: string,
+  ): WorkspaceContainerReopenState | null {
+    try {
+      const value = JSON.parse(
+        this.sessionStore.getCustomTabValue(tab, key),
+      ) as Partial<WorkspaceContainerReopenState>;
+      return typeof value.token === "string" && value.token &&
+          isWorkspaceSyncId(value.workspaceId) && isWorkspaceSyncId(value.tabId)
+        ? value as WorkspaceContainerReopenState
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async recoverContainerReopens(): Promise<void> {
+    const handled = new Set<string>();
+    for (const target of [...gBrowser.tabs]) {
+      const transaction = this.reopenState(target, TAB_REOPEN_TARGET_KEY);
+      if (!transaction) continue;
+      const source = this.allBrowserTabs().find((tab) =>
+        tab !== target && (
+          this.reopenState(tab, TAB_REOPEN_SOURCE_KEY)?.token ===
+                transaction.token &&
+            (!isWorkspaceSyncId(
+              this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY),
+            ) ||
+              this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY) ===
+                transaction.tabId) ||
+          this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY) ===
+                transaction.tabId &&
+            this.sessionStore.getCustomTabValue(tab, TAB_OWNER_KEY) ===
+              transaction.workspaceId
+        )
+      );
+      const committed = !source &&
+        this.sessionStore.getCustomTabValue(target, TAB_ID_KEY) ===
+          transaction.tabId;
+      if (source) {
+        this.sessionStore.setCustomTabValue(
+          source,
+          TAB_ID_KEY,
+          transaction.tabId,
+        );
+        this.sessionStore.setCustomTabValue(
+          source,
+          TAB_OWNER_KEY,
+          transaction.workspaceId,
+        );
+        this.sessionStore.setCustomTabValue(source, TAB_REOPEN_SOURCE_KEY, "");
+      }
+      if (committed) {
+        this.sessionStore.setCustomTabValue(target, TAB_REOPEN_TARGET_KEY, "");
+      } else this.removeProgrammaticTab(target, false, true);
+      handled.add(transaction.token);
+      try {
+        await this.api.finishContainerReopen(transaction.token, committed);
+      } catch (error) {
+        console.error(
+          "[WorkspacesSync] Could not finish restored container operation",
+          error,
+        );
+      }
+    }
+    for (const source of [...gBrowser.tabs]) {
+      const transaction = this.reopenState(source, TAB_REOPEN_SOURCE_KEY);
+      if (!transaction || handled.has(transaction.token)) continue;
+      const currentId = this.sessionStore.getCustomTabValue(source, TAB_ID_KEY);
+      const ownedElsewhere = this.allBrowserTabs().some((tab) =>
+        tab !== source &&
+        this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY) ===
+          transaction.tabId
+      );
+      if (
+        !ownedElsewhere && !this.api.isRetired(transaction.tabId) &&
+        (!isWorkspaceSyncId(currentId) || currentId === transaction.tabId)
+      ) {
+        this.sessionStore.setCustomTabValue(
+          source,
+          TAB_ID_KEY,
+          transaction.tabId,
+        );
+        this.sessionStore.setCustomTabValue(
+          source,
+          TAB_OWNER_KEY,
+          transaction.workspaceId,
+        );
+      }
+      this.sessionStore.setCustomTabValue(source, TAB_REOPEN_SOURCE_KEY, "");
+      try {
+        await this.api.finishContainerReopen(transaction.token, false);
+      } catch (error) {
+        console.error(
+          "[WorkspacesSync] Could not restore container source tab",
+          error,
+        );
+      }
+    }
+  }
+
+  private allBrowserTabs(): XULElement[] {
+    const tabs: XULElement[] = [];
+    for (const candidate of Services.wm.getEnumerator("navigator:browser")) {
+      const browserWindow = candidate as unknown as {
+        gBrowser?: { tabs: XULElement[] };
+      };
+      tabs.push(...(browserWindow.gBrowser?.tabs ?? []));
+    }
+    return tabs;
+  }
+
+  private localContainerId(tab: XULElement): number {
+    const nativeId = this.tabBrowser.getBrowserForTab(tab).browsingContext
+      ?.originAttributes.userContextId;
+    if (
+      typeof nativeId === "number" && Number.isSafeInteger(nativeId) &&
+      nativeId >= 0
+    ) return nativeId;
+    return Number.parseInt(tab.getAttribute("usercontextid") || "0", 10);
+  }
+
+  private savedContainerRef(
+    tab: XULElement,
+  ): WorkspaceContainerRef | undefined {
+    const value = this.sessionStore.getCustomTabValue(
+      tab,
+      TAB_CONTAINER_REF_KEY,
+    );
+    if (!value) return undefined;
+    try {
+      return parseWorkspaceContainerRef(JSON.parse(value));
+    } catch {
+      return undefined;
+    }
+  }
+
+  private rememberContainer(
+    tab: XULElement,
+    ref: WorkspaceContainerRef,
+    instanceId?: string,
+  ): void {
+    this.sessionStore.setCustomTabValue(
+      tab,
+      TAB_CONTAINER_REF_KEY,
+      JSON.stringify(ref),
+    );
+    this.sessionStore.setCustomTabValue(
+      tab,
+      TAB_CONTAINER_INSTANCE_KEY,
+      instanceId ?? "",
     );
   }
 
@@ -476,6 +978,22 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     return this.tabs(id).map((tab) => this.tabId(tab));
   }
 
+  containerTabIds(userContextIds: readonly number[]): Record<string, string[]> {
+    const requested = new Set(userContextIds);
+    const grouped: Record<string, string[]> = {};
+    for (const tab of gBrowser.tabs) {
+      if (
+        !requested.has(this.localContainerId(tab)) ||
+        this.replacementTabs.has(tab)
+      ) continue;
+      const id = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
+      const owner = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+      if (!isWorkspaceSyncId(id) || !isWorkspaceSyncId(owner)) continue;
+      (grouped[owner] ??= []).push(id);
+    }
+    return grouped;
+  }
+
   private syncableURL(tab: XULElement): string | undefined {
     const incoming = this.incomingNavigations.get(tab);
     if (incoming) return incoming.url;
@@ -507,6 +1025,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
   capture(id: string, seenIds: Set<string>): WorkspaceSyncSnapshot | null {
     const workspace = this.ctx.getRawWorkspace(id as TWorkspaceID);
     if (!workspace) return null;
+    const containersEnabled = this.api.isContainerSyncEnabled?.() ?? false;
+    const bindings = containersEnabled ? getWorkspaceContainerBindings() : null;
+    const desired = containersEnabled ? this.api.getSyncedWorkspace(id) : null;
+    const protectedTabIds: string[] = [];
     const tabs: WorkspaceSyncSnapshot["tabs"] = [];
     for (const tab of this.tabs(id)) {
       const previousId = this.sessionStore.getCustomTabValue(tab, TAB_ID_KEY);
@@ -523,6 +1045,28 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       const browser = gBrowser.getBrowserForTab(tab);
       const url = this.syncableURL(tab);
       const known = this.api.getSyncedTab(id, previousId);
+      if (bindings && known?.container) {
+        const resolved = bindings.lookup(known.container);
+        if (
+          workspaceContainerNeedsReopen(
+            this.localContainerId(tab),
+            this.sessionStore.getCustomTabValue(
+              tab,
+              TAB_CONTAINER_INSTANCE_KEY,
+            ),
+            resolved,
+          )
+        ) {
+          // Keep the desired remote record while the real tab belongs to an
+          // unresolved or different container. Never restamp its old account.
+          if (this.tabId(tab, seenIds) === known.id) {
+            tabs.push(known);
+            protectedTabIds.push(known.id);
+            this.containerPendingTabs.add(known.id);
+          }
+          continue;
+        }
+      }
       if (!isSyncableWorkspaceURL(url)) {
         // The physical tab remains open. Preserve its previous public record,
         // including its safe title, rather than tombstoning it or exporting an
@@ -533,6 +1077,18 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       if (browser.currentURI?.spec === url) {
         this.sessionStore.setCustomTabValue(tab, TAB_PENDING_URL_KEY, "");
       }
+      const container = bindings?.captureReference(
+        this.localContainerId(tab),
+        this.savedContainerRef(tab) ?? known?.container,
+      ).ref;
+      if (container && bindings) {
+        const resolved = bindings.lookup(container);
+        this.rememberContainer(
+          tab,
+          container,
+          resolved.status === "resolved" ? resolved.instanceId : undefined,
+        );
+      }
       tabs.push({
         id: this.tabId(tab, seenIds),
         url,
@@ -541,6 +1097,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
             ? (tab.getAttribute("label") ?? "").slice(0, 1024).toWellFormed()
             : known?.title ?? ""),
         pinned: tab.hasAttribute("pinned"),
+        ...(container ? { container } : {}),
       });
       this.explicitlyOpened.delete(tab);
     }
@@ -552,7 +1109,23 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       (baseline.length !== order.length ||
         baseline.some((tabId, index) => tabId !== order[index]));
     this.physicalOrder.set(id, order);
+    let defaultContainer: WorkspaceContainerRef | undefined;
+    if (bindings) {
+      const desiredDefault = desired?.defaultContainer;
+      defaultContainer = desiredDefault &&
+          (this.containerPendingDefaults.has(id) ||
+            this.api.isContainerDefaultPending(id) ||
+            bindings.lookup(desiredDefault).status !== "resolved")
+        ? desiredDefault
+        : bindings.captureReference(
+          workspace.userContextId ?? 0,
+          desiredDefault,
+        ).ref;
+    }
     return {
+      ...(containersEnabled
+        ? { version: 2, defaultContainer, protectedTabIds }
+        : {}),
       orderChanged,
       workspaceId: id,
       name: workspace.name,
@@ -565,18 +1138,37 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
     document: WorkspaceSyncDocument,
     missingTabIds: ReadonlySet<string>,
     signal?: AbortSignal,
-  ): Promise<void> {
+  ): Promise<void | WorkspaceSyncApplyResult> {
     if (signal?.aborted) {
       throw new Error("Workspace Sync account changed");
     }
     if (this.stopped) throw new Error("Workspace window is shutting down");
     const navigations: IncomingWorkspaceNavigation[] = [];
+    const pendingContainerTabIds: string[] = [];
+    let pendingDefaultContainer = false;
     let completed = false;
     this.applying = true;
     this.window.clearTimeout(this.timer);
     try {
       const id = document.workspaceId as TWorkspaceID;
-      const localContainerId = this.ctx.getRawWorkspace(id)?.userContextId ?? 0;
+      let localContainerId = this.ctx.getRawWorkspace(id)?.userContextId ?? 0;
+      const bindings = document.version === 2
+        ? getWorkspaceContainerBindings()
+        : null;
+      if (bindings) {
+        if (!document.defaultContainer) {
+          throw new Error("Missing workspace container reference");
+        }
+        const resolution = await bindings.resolve(document.defaultContainer);
+        if (signal?.aborted || this.stopped) {
+          throw new Error("Workspace Sync account changed");
+        }
+        pendingDefaultContainer = resolution.status !== "resolved";
+        if (resolution.status === "resolved") {
+          localContainerId = resolution.userContextId;
+          this.containerPendingDefaults.delete(id);
+        } else this.containerPendingDefaults.add(id);
+      }
       setWorkspacesDataStore("data", (previous) => {
         const map = new Map(
           previous as unknown as Map<TWorkspaceID, TWorkspace>,
@@ -586,7 +1178,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           ...existing,
           name: document.name,
           icon: document.icon,
-          userContextId: existing?.userContextId ?? 0,
+          userContextId: localContainerId,
           isSelected: existing?.isSelected ?? null,
           isDefault: existing?.isDefault ?? null,
         });
@@ -600,21 +1192,54 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       const remote = new Map(document.tabs.map((tab) => [tab.id, tab]));
       for (const [tabId, tab] of local) {
         if (remote.get(tabId)?.deleted) {
-          gBrowser.removeTab(tab, { animate: false });
+          this.removeProgrammaticTab(tab);
         }
       }
       let previousTab: XULElement | undefined;
       for (const remoteTab of liveWorkspaceSyncTabs(document)) {
         let tab = local.get(remoteTab.id);
         let created = false;
+        let tabContainerId = localContainerId;
+        let instanceId: string | undefined;
+        if (bindings) {
+          if (!remoteTab.container) {
+            throw new Error("Missing tab container reference");
+          }
+          const resolution = await bindings.resolve(remoteTab.container);
+          if (signal?.aborted || this.stopped) {
+            throw new Error("Workspace Sync account changed");
+          }
+          if (
+            resolution.status !== "resolved" ||
+            (tab && workspaceContainerNeedsReopen(
+              this.localContainerId(tab),
+              this.sessionStore.getCustomTabValue(
+                tab,
+                TAB_CONTAINER_INSTANCE_KEY,
+              ),
+              resolution,
+            ))
+          ) {
+            pendingContainerTabIds.push(remoteTab.id);
+            this.containerPendingTabs.add(remoteTab.id);
+            this.incomingNavigations.get(tab as XULElement)?.cancel(
+              new Error("Workspace container requires setup"),
+            );
+            if (tab) previousTab = tab;
+            continue;
+          }
+          tabContainerId = resolution.userContextId;
+          instanceId = resolution.instanceId;
+          this.containerPendingTabs.delete(remoteTab.id);
+        }
         if (!tab && missingTabIds.has(remoteTab.id)) {
           tab = this.ctx.withExplicitTabUserContext(
-            localContainerId,
+            tabContainerId,
             () =>
               gBrowser.addTab(remoteTab.url, {
                 inBackground: true,
                 skipAnimation: true,
-                userContextId: localContainerId,
+                userContextId: tabContainerId,
                 triggeringPrincipal: Services.scriptSecurityManager
                   .getSystemPrincipal(),
               }),
@@ -630,6 +1255,9 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           created = true;
         }
         if (!tab) continue;
+        if (remoteTab.container) {
+          this.rememberContainer(tab, remoteTab.container, instanceId);
+        }
         if (!this.syncableURL(tab)) {
           // Keep an existing local internal/file page and its local pin/order
           // state. Explicit remote tab tombstones were handled above.
@@ -682,9 +1310,19 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       this.applying = false;
       await this.waitForIncoming(navigations);
       completed = true;
+      if (bindings) {
+        this.revision[1]((value) => value + 1);
+        this.window.dispatchEvent(
+          new Event("floorp-workspace-container-ready"),
+        );
+        return { pendingContainerTabIds, pendingDefaultContainer };
+      }
     } finally {
       this.applying = false;
-      if (completed) this.scheduleCapture();
+      if (
+        completed && !pendingDefaultContainer &&
+        pendingContainerTabIds.length === 0
+      ) this.scheduleCapture();
     }
   }
 }

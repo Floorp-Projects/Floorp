@@ -25,9 +25,10 @@ No account credentials or authenticated cloud service are required. A temporary
 loopback HTTP server supplies the test pages. Results and the isolated profile
 remain in the generated directory for inspection.
 
-The harness exercises 75 cases: 23 model/wire, 27 native engine and 25 adapter
-cases. Native engine scenarios cover CryptoWrapper encryption round trips,
-per-tab uploads, independent additions, delete wins,
+The harness runs model/wire, container, binding, and migration suites, followed
+by native engine and adapter scenarios. Its report lists the suites and cases
+that completed. Native engine scenarios cover CryptoWrapper encryption round
+trips, per-tab uploads, independent additions, delete wins,
 unacknowledged/partial/successful tombstone GC, local unsubscribe,
 unknown-parent and later-batch parent deletion, repeated incoming failure after
 the base retry list is pruned, repair/recovery, disabled workspaces, invalid
@@ -40,6 +41,13 @@ pre-apply values as new local edits. Further cases cover no normal-window
 provider, one UI apply per changed workspace in an incoming batch, batch
 failures and intervening local edits, unsubscribed deferred closures, and
 invalid persisted baseline recovery.
+
+Container coverage includes v2 definitions and references, explicit no-container
+tabs, unresolved-container capture protection, prepared native deletion without
+remote tab tombstones, durable replacement identity, explicit legacy choices,
+and account changes during initial loading or in-flight capture. The binary must
+include the current native lifecycle patch for those cases; prepare a matching
+application using the workflow below.
 
 Disabling workspaces during incoming processing rejects and retains those record
 IDs for retry, aborts pending provider work, and suppresses UI retries until
@@ -95,6 +103,93 @@ iOS receiver remains a separate check; this JavaScript feature needs no Gecko
 native recompile.
 
 ## Authenticated two-client acceptance
+
+### Linux preparation and isolated automation
+
+The preparation and launcher also support a complete extracted Linux Floorp app
+(the directory containing `floorp`, `omni.ja`, and `browser/omni.ja`). Build the
+matching production assets before preparing the app. Preparation creates a new
+base copy, independent A/B application copies, and fresh profiles with distinct
+Marionette ports. It refuses an existing output directory.
+
+```sh
+NODE_ENV=production deno task feles-build build --phase before-mach
+python3 tools/workspace-sync/prepare-acceptance-app.py \
+  --platform linux \
+  --source-app /absolute/path/to/extracted/floorp \
+  --source-ref RELEASE_SOURCE_COMMIT \
+  --build-root /absolute/path/to/matching/build-checkout \
+  --output-root /absolute/path/to/new/qa-directory
+python3 tools/workspace-sync/launch-acceptance-apps.py \
+  --setup /absolute/path/to/new/qa-directory/setup.json --wait
+```
+
+Use `--headless` with the launcher for noninteractive browser checks, or an
+available display for interactive account sign-in. The launcher always passes
+`MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1`, including Gecko 159, and checks the prepared
+app identity and profile marker. On subsequent launches it restores the QA
+session without adding another account-settings tab; `--open-settings` opens it
+explicitly. `--client A` or `--client B` launches just the selected owned app.
+`--purgecaches` ensures refreshed resources are loaded even when the native app
+build ID remains the same. Use `--wait` in managed execution sessions, which may
+terminate detached browser processes when the launching command exits. Keep that
+command's session alive through sign-in and verification.
+
+Preparation maps inherited `HTTPS_PROXY`/`HTTP_PROXY` to Firefox startup
+preferences, bypassing the proxy for loopback fixtures. `--proxy-url` can select
+an HTTP proxy without embedded credentials. Public CA trust is installed into
+each fresh profile's NSS database with `certutil` before its first launch;
+`NODE_EXTRA_CA_CERTS` supplies the default single PEM certificate, or repeat
+`--ca-certificate /absolute/path/to/public-ca.pem` for explicit certificates.
+TLS verification remains enabled. The tool never reads credentials or signs in.
+
+The archive overlay verifies every generated Chrome/ESM and page entry
+(including the separate workspace dialog page) and applies the native Sync
+registration, container lifecycle, and external-open patches to their actual
+`omni.ja` / `browser/omni.ja` resources. The normal preference override script
+updates the packaged `defaults/preferences/firefox.js` entry too. `--source-ref`
+identifies the exact Floorp source commit used to package the input app (for
+release 12.21.0: `fb32e0b0f336c2ccbe0ac4b96865a2ef1b7d5243`). When the input
+includes an older native patch, that exact patch is verified and reversed before
+applying the current one. Patch checks run in an isolated temporary Git
+repository so output below a checkout cannot silently skip patch paths.
+`setup.json` records resource hashes and whether the build worktree was dirty;
+the commit ID alone does not attest an uncommitted build.
+
+After rebuilding, stop both prepared apps before refreshing their application
+copies. This preserves the dedicated profiles, account sessions, ports, and CA
+trust, while replacing the apps and resource hashes. Previous app copies and
+their setup metadata are retained in a rollback directory. The launcher refuses
+to start while a refresh is in progress.
+
+```sh
+python3 tools/workspace-sync/refresh-acceptance-apps.py \
+  --setup /absolute/path/to/qa-directory/setup.json \
+  --build-root /absolute/path/to/matching/build-checkout
+```
+
+An optional script helper validates the exact dedicated profile before executing
+a browser script. The script may use `await`; its return value and raw browser
+exception text are discarded. Output contains only the client and success flag.
+Use the existing `verify-live-two-client.ts --phase status` for sanitized
+account readiness, rather than printing account objects.
+
+```sh
+deno run -A tools/workspace-sync/qa-command.ts \
+  --setup /absolute/path/to/new/qa-directory/setup.json \
+  --client A --script /absolute/path/to/qa-check.js --context chrome
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s tools/workspace-sync -p 'test_*.py'
+```
+
+`qa-command.ts --stdin` accepts script text on standard input instead of a file.
+Do not store or print account secrets in QA scripts or result reports. Use
+`verify-browser.ts --model-only --binary /absolute/path/to/floorp` to run the
+pure workspace/container/binding/migration suites in Gecko without the
+engine/adapter scenarios. The report lists the suites that actually completed
+rather than a hardcoded test count.
+
+### macOS preparation and authenticated verification
 
 This separate workflow uses two browser processes on one Mac, each with its own
 fresh profile and app identity. It exercises actual Mozilla Account

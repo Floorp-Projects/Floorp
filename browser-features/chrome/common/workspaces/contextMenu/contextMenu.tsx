@@ -20,6 +20,8 @@ const translationKeys = {
   syncResume: "workspaces.context-menu.sync-resume",
   syncDisabled: "workspaces.sync.engine-disabled",
   syncHelp: "workspaces.sync.help",
+  containersSetup: "workspaces.containers.setup",
+  containersReopen: "workspaces.containers.reopen",
 };
 
 const translate = (
@@ -38,6 +40,8 @@ const getTranslations = () => ({
   syncResume: translate(translationKeys.syncResume),
   syncDisabled: translate(translationKeys.syncDisabled),
   syncHelp: translate(translationKeys.syncHelp),
+  containersSetup: translate(translationKeys.containersSetup),
+  containersReopen: translate(translationKeys.containersReopen),
 });
 
 export function ContextMenu(props: {
@@ -119,6 +123,29 @@ export function ContextMenu(props: {
               )
             );
         }}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.containers-setup"
+        hidden={!props.ctx.syncController?.isContainerAvailable?.() ||
+          undefined}
+        disabled={!props.ctx.syncController?.isSelected(
+          props.contextWorkspaceId,
+        ) || undefined}
+        label={texts().containersSetup}
+        onCommand={() =>
+          props.ctx.syncController?.setupContainers(props.contextWorkspaceId)}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.containers-reopen"
+        hidden={!props.ctx.syncController?.hasContainerReopen?.(
+          props.contextWorkspaceId,
+        ) || undefined}
+        label={texts().containersReopen}
+        onCommand={() =>
+          props.ctx.syncController?.reopenContainerTab(props.contextWorkspaceId)
+            .catch((error: unknown) =>
+              console.error("[WorkspacesSync] Container reopen failed", error)
+            )}
       />
       <xul:menuseparator
         data-floorp-context-menu-key="floorp.workspaces.separator-archive"

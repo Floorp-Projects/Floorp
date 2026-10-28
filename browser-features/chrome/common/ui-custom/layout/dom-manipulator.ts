@@ -689,20 +689,31 @@ function preserveEventState(original: Event, clone: Event): void {
 /**
  * Select a live public workspace identity before constructing a bookmark tab.
  */
-function getBookmarkWorkspaceUserContextId(win: Window): number {
+function getBookmarkWorkspaceUserContextId(win: Window): number | null {
   try {
     const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
     );
     if (
       PrivateBrowsingUtils.permanentPrivateBrowsing ||
-      PrivateBrowsingUtils.isWindowPrivate(win) ||
-      !Services.prefs.getBoolPref("privacy.userContext.enabled", false)
+      PrivateBrowsingUtils.isWindowPrivate(win)
     ) {
       return 0;
     }
-    const userContextId = Workspaces.getCtx(win)
-      ?.getCurrentWorkspaceUserContextId() ?? 0;
+    const workspace = Workspaces.getCtx(win);
+    if (workspace?.canOpenWorkspaceTab() === false) return null;
+    if (
+      !workspace &&
+      Services.prefs.getBoolPref("floorp.workspaces.enabled", true) &&
+      Services.prefs.getBoolPref(
+        "floorp.workspaces.containerSync.enabled",
+        false,
+      )
+    ) return null;
+    if (!Services.prefs.getBoolPref("privacy.userContext.enabled", false)) {
+      return 0;
+    }
+    const userContextId = workspace?.getCurrentWorkspaceUserContextId() ?? 0;
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
     );
@@ -712,7 +723,12 @@ function getBookmarkWorkspaceUserContextId(win: Window): number {
       ? userContextId
       : 0;
   } catch {
-    return 0;
+    return Services.prefs.getBoolPref(
+        "floorp.workspaces.containerSync.enabled",
+        false,
+      )
+      ? null
+      : 0;
   }
 }
 
@@ -758,19 +774,28 @@ export function loadBookmarkURI(
   try {
     // Determine how to open the bookmark based on modifier keys
     // Ctrl/Cmd/Shift opens in new tab
-    const openInNewTab =
-      mouseEvent.ctrlKey || mouseEvent.metaKey || mouseEvent.shiftKey;
+    const openInNewTab = mouseEvent.ctrlKey || mouseEvent.metaKey ||
+      mouseEvent.shiftKey;
 
-    const principal =
-      services.Services.scriptSecurityManager?.getSystemPrincipal();
+    const principal = services.Services.scriptSecurityManager
+      ?.getSystemPrincipal();
     const uriObject = services.Services.io?.newURI(uri);
 
     if (openInNewTab && win.gBrowser.addTab) {
+      const userContextId = getBookmarkWorkspaceUserContextId(win);
+      if (userContextId === null) {
+        // A pending default is handled here: allowing the original bookmark
+        // command to continue could open the site through another handler.
+        mouseEvent.preventDefault?.();
+        mouseEvent.stopPropagation?.();
+        mouseEvent.stopImmediatePropagation?.();
+        return false;
+      }
       // Open in new tab
       win.gBrowser.addTab(uri, {
         triggeringPrincipal: principal,
         inBackground: false,
-        userContextId: getBookmarkWorkspaceUserContextId(win),
+        userContextId,
       });
     } else if (win.gBrowser.loadURI && uriObject) {
       // Open in current tab - need to convert string URI to URI object
