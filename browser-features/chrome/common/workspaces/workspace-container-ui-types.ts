@@ -30,6 +30,7 @@ export interface WorkspaceContainerSetupActions {
   isCurrent(): boolean;
   unsubscribe(): Promise<void>;
   retry(): Promise<void>;
+  capture(): Promise<void>;
   resolveLegacy(
     target: number | "new",
     scope: "default" | "tabs" | "all",

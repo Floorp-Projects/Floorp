@@ -18,7 +18,10 @@ import {
   workspaceTabRecord,
 } from "../../common/workspace-sync-record.ts";
 import { sameWorkspaceContainerRef } from "../../common/workspace-container.ts";
-import { WORKSPACE_CONTAINER_BINDINGS_CHANGED } from "../../common/workspace-container-bindings.ts";
+import {
+  WORKSPACE_CONTAINER_ASSOCIATION_CHANGED,
+  WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+} from "../../common/workspace-container-bindings.ts";
 import type { WorkspaceMigrationService } from "./WorkspaceContainerMigration.sys.mts";
 import type { WorkspaceMigrationRecord } from "../../common/workspace-container-migration.ts";
 import { canonicalWorkspaceMigrationRecord } from "../../common/workspace-container-migration.ts";
@@ -639,8 +642,9 @@ Services.obs.addObserver((subject) => {
     if (initialized) await FloorpWorkspacesSync.capture();
   })());
 }, "floorp-container-removal-finished");
+const pendingContainerAssociations = new Set<string>();
 let bindingRetryScheduled = false;
-Services.obs.addObserver(() => {
+function scheduleBindingRetry(): void {
   if (!initialized || bindingRetryScheduled) return;
   bindingRetryScheduled = true;
   setTimeout(() => {
@@ -650,7 +654,43 @@ Services.obs.addObserver(() => {
       console.error("[WorkspacesSync] Could not retry container apply", error)
     );
   }, 0);
-}, WORKSPACE_CONTAINER_BINDINGS_CHANGED);
+}
+Services.obs.addObserver(
+  scheduleBindingRetry,
+  WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+);
+Services.obs.addObserver((_subject, _topic, id) => {
+  if (!isWorkspaceSyncId(id)) return;
+  pendingContainerAssociations.add(id);
+  scheduleBindingRetry();
+}, WORKSPACE_CONTAINER_ASSOCIATION_CHANGED);
+
+function markPendingContainerAssociations(): boolean {
+  if (!pendingContainerAssociations.size) return false;
+  const changedIds = new Set(pendingContainerAssociations);
+  pendingContainerAssociations.clear();
+  let marked = false;
+  for (const id of state().selected) {
+    const document = state().records[id];
+    if (!document || retired.has(id)) continue;
+    const matches = (ref?: WorkspaceContainerRef) =>
+      ref?.kind === "container" && changedIds.has(ref.containerId);
+    const defaultChanged = matches(document.defaultContainer);
+    const tabs = document.tabs.filter((tab) =>
+      !tab.deleted && matches(tab.container)
+    ).map((tab) => tab.id);
+    if (!defaultChanged && !tabs.length) continue;
+    const pending = state().containerPending[id] ??= {
+      tabs: [],
+      defaultContainer: false,
+    };
+    pending.defaultContainer ||= defaultChanged;
+    pending.tabs = [...new Set([...pending.tabs, ...tabs])];
+    marked = true;
+    changed(id);
+  }
+  return marked;
+}
 
 async function apply(
   document: WorkspaceSyncDocument,
@@ -868,6 +908,10 @@ function pendingSnapshot(
 }
 function captureNow(): void {
   if (!workspacesEnabled() || state().bootstrapPending) return;
+  // A rebind changes the native destination of an existing logical reference.
+  // Mark it before observing old physical defaults, without discarding unrelated
+  // unsent URL/title/order edits. Source-side definition capture has no such event.
+  markPendingContainerAssociations();
   const seenIds = new Set<string>(Object.keys(state().records));
   for (const id of state().selected) {
     try {
@@ -1121,13 +1165,18 @@ export const FloorpWorkspacesSync = {
       await applySelected(document, expected);
     });
   },
-  async noteTabClosed(workspaceId: string, tabId: string): Promise<void> {
+  async noteTabClosed(
+    workspaceId: string,
+    tabId: string,
+    reason: "close" | "move" = "close",
+  ): Promise<void> {
     const expected = accountEpoch;
     // Capture provenance synchronously with TabClose. The removal completion
     // can release its native token before this queued mutation gets the lock.
-    const removalClosure = [...activeContainerRemovals.values()].some((ids) =>
-      ids.has(`${workspaceId}/${tabId}`)
-    );
+    const removalClosure = reason === "close" &&
+      [...activeContainerRemovals.values()].some((ids) =>
+        ids.has(`${workspaceId}/${tabId}`)
+      );
     await ready();
     await mutate(async () => {
       assertAccountEpoch(expected);
@@ -1325,6 +1374,7 @@ export const FloorpWorkspacesSync = {
     await waitForProviders(accountAbort.signal);
     await mutate(async () => {
       assertAccountEpoch(expected);
+      if (markPendingContainerAssociations()) await persistState();
       captureNow();
       await retryPendingApplies(expected);
       await WorkspaceContainerBindings.flush();

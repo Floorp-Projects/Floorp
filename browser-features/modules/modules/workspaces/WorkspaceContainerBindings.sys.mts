@@ -2,6 +2,7 @@
 
 import {
   type LocalWorkspaceContainer,
+  WORKSPACE_CONTAINER_ASSOCIATION_CHANGED,
   WORKSPACE_CONTAINER_BINDINGS_CHANGED,
   WorkspaceContainerBindingCoordinator,
 } from "../../common/workspace-container-bindings.ts";
@@ -12,7 +13,10 @@ export type {
   WorkspaceContainerPendingReason,
   WorkspaceContainerResolution,
 } from "../../common/workspace-container-bindings.ts";
-export { WORKSPACE_CONTAINER_BINDINGS_CHANGED };
+export {
+  WORKSPACE_CONTAINER_ASSOCIATION_CHANGED,
+  WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+};
 
 interface NativeContainerIdentity {
   userContextId: number;
@@ -104,6 +108,12 @@ export const WorkspaceContainerBindings =
       Services.obs.notifyObservers(
         null as unknown as nsISupports,
         WORKSPACE_CONTAINER_BINDINGS_CHANGED,
+      ),
+    associationChanged: (containerId) =>
+      Services.obs.notifyObservers(
+        null as unknown as nsISupports,
+        WORKSPACE_CONTAINER_ASSOCIATION_CHANGED,
+        containerId,
       ),
   });
 

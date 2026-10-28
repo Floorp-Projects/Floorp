@@ -25,6 +25,7 @@ import type {
 import {
   WORKSPACE_DATA_PREF_NAME,
   WORKSPACE_TAB_ATTRIBUTION_ID,
+  WORKSPACE_TAB_MOVED_EVENT,
 } from "./utils/workspaces-static-names.ts";
 import { extractUrlFromState } from "./utils/workspace-snapshot.ts";
 import type { WorkspaceContainerRef } from "#modules/common/workspace-container-types.ts";
@@ -47,6 +48,7 @@ import type {
   WorkspaceSyncProgressFlags,
   WorkspaceSyncProgressListener,
   WorkspaceSyncTabBrowser,
+  WorkspaceTabMoveDetail,
 } from "./workspacesSyncTypes.ts";
 
 const TAB_ID_KEY = "floorp-workspace-sync-id";
@@ -143,6 +145,12 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       this.scheduleCapture();
     };
     const onPrefsChange = () => this.scheduleCapture();
+    const onWorkspaceTabMoved = (event: Event) =>
+      this.onWorkspaceTabMoved(event);
+    this.window.addEventListener(
+      WORKSPACE_TAB_MOVED_EVENT,
+      onWorkspaceTabMoved,
+    );
     const onSyncChange = () => this.revision[1]((value) => value + 1);
     const onContainerChange = () => {
       onSyncChange();
@@ -296,6 +304,10 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
       this.tabBrowser.removeTabsProgressListener(progressListener);
       workspaceMoves.disconnect();
       Services.prefs.removeObserver(WORKSPACE_DATA_PREF_NAME, onPrefsChange);
+      this.window.removeEventListener(
+        WORKSPACE_TAB_MOVED_EVENT,
+        onWorkspaceTabMoved,
+      );
       Services.obs.removeObserver(onSyncChange, WORKSPACE_SYNC_CHANGED);
       Services.obs.removeObserver(
         onContainerChange,
@@ -387,6 +399,7 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
           this.api.isSelected(id),
         unsubscribe: () => this.api.select(id, false),
         retry: () => this.api.capture(),
+        capture: () => this.api.capture(),
         resolveLegacy: (target, scope) =>
           this.api.resolveLegacyContainers(id, target, scope),
       });
@@ -622,6 +635,22 @@ export class WorkspacesSyncController implements WorkspaceSyncProvider {
         console.error("[WorkspacesSync] Capture failed", error)
       );
     }, 750);
+  }
+
+  private onWorkspaceTabMoved(event: Event): void {
+    if (this.privateWindow || this.stopped) return;
+    const detail = (event as CustomEvent<WorkspaceTabMoveDetail>).detail;
+    if (!detail?.tab || !isWorkspaceSyncId(detail.fromWorkspaceId)) return;
+    const tabId = this.sessionStore.getCustomTabValue(detail.tab, TAB_ID_KEY);
+    if (!isWorkspaceSyncId(tabId)) return;
+    this.api.noteTabClosed(detail.fromWorkspaceId, tabId, "move").then(
+      () => this.scheduleCapture(),
+      (error: unknown) =>
+        console.error(
+          "[WorkspacesSync] Could not record explicit tab move",
+          error,
+        ),
+    );
   }
 
   private tabs(id: string): XULElement[] {

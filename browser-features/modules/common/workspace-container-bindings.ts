@@ -12,6 +12,8 @@ import {
 
 export const WORKSPACE_CONTAINER_BINDINGS_CHANGED =
   "floorp.workspaces.containers.changed";
+export const WORKSPACE_CONTAINER_ASSOCIATION_CHANGED =
+  "floorp.workspaces.containers.association-changed";
 
 export interface LocalWorkspaceContainer {
   userContextId: number;
@@ -85,6 +87,7 @@ export interface WorkspaceContainerBindingDependencies {
   uuid(): string;
   now(): number;
   changed(): void;
+  associationChanged?(containerId: string): void;
 }
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -697,6 +700,9 @@ export class WorkspaceContainerBindingCoordinator {
         userContextId,
         instanceId: instance.instanceId,
       };
+      // Signal before general capture notifications, including on a failed
+      // durable save: the old physical context must not remint this reference.
+      this.dependencies.associationChanged?.(containerId);
       delete this.data().creations[containerId];
       this.dirty();
       await this.persist(expected);
@@ -788,6 +794,7 @@ export class WorkspaceContainerBindingCoordinator {
         userContextId: identity.userContextId,
         instanceId: instance.instanceId,
       };
+      this.dependencies.associationChanged?.(id);
       delete this.data().creations[id];
       this.dirty();
       await this.persist(expected);

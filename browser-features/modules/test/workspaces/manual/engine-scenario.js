@@ -36,6 +36,8 @@ async function runScenario() {
   const applyCalls = new Map();
   let nextApplyGate = null;
   let failNextApply = false;
+  let beforeCaptureCheck = null;
+  let beforeApplyCheck = null;
   const makeSnapshot = (id, tabs) => ({
     version: 2,
     workspaceId: id,
@@ -54,6 +56,7 @@ async function runScenario() {
   const provider = {
     window: win,
     capture: (id) => {
+      beforeCaptureCheck?.(id);
       const snapshot = snapshots.get(id);
       return snapshot
         ? {
@@ -76,6 +79,7 @@ async function runScenario() {
       ]));
     },
     apply: async (document, _missingTabIds, signal) => {
+      await beforeApplyCheck?.(document);
       applyCalls.set(
         document.workspaceId,
         (applyCalls.get(document.workspaceId) ?? 0) + 1,
@@ -1150,6 +1154,78 @@ async function runScenario() {
     "native v2 container definition, tab reference and explicit none",
   );
 
+  const reboundParent = uuid(), reboundTab = uuid();
+  const originalNative = ContextualIdentityService.create(
+    `QA original ${reboundParent}`,
+    "briefcase",
+    "blue",
+  );
+  const replacementNative = ContextualIdentityService.create(
+    `QA replacement ${reboundParent}`,
+    "fingerprint",
+    "red",
+  );
+  await ContextualIdentityService.save();
+  const canonicalRebound =
+    bindings.captureReference(originalNative.userContextId).ref;
+  const reboundSnapshot = makeSnapshot(reboundParent, [reboundTab]);
+  reboundSnapshot.defaultContainer = canonicalRebound;
+  reboundSnapshot.tabs[0].container = canonicalRebound;
+  snapshots.set(reboundParent, reboundSnapshot);
+  await api.select(reboundParent, true);
+  await api.capture();
+  let markedBeforeCapture = false, durableBeforeApply = false;
+  const localRebindURL = "https://example.com/local-navigation-during-rebind";
+  snapshots.set(reboundParent, {
+    ...snapshots.get(reboundParent),
+    tabs: snapshots.get(reboundParent).tabs.map((tab) => ({
+      ...tab,
+      url: localRebindURL,
+    })),
+  });
+  beforeCaptureCheck = (id) => {
+    if (id !== reboundParent || markedBeforeCapture) return;
+    assert(
+      api.isContainerDefaultPending(id) && api.isContainerApplyPending(id),
+      "association changes mark canonical defaults before provider recapture can reinterpret old native state",
+    );
+    markedBeforeCapture = true;
+  };
+  beforeApplyCheck = async (document) => {
+    if (document.workspaceId !== reboundParent || durableBeforeApply) return;
+    const persisted = await IOUtils.readJSON(cache.path);
+    assert(
+      persisted.containerPending[reboundParent]?.defaultContainer &&
+        persisted.containerPending[reboundParent]?.tabs.includes(reboundTab),
+      "association pending state is durable before provider application",
+    );
+    durableBeforeApply = true;
+  };
+  try {
+    assert(
+      canonicalRebound.kind === "container",
+      "rebind fixture has a logical identity",
+    );
+    await bindings.bind(
+      canonicalRebound.containerId,
+      replacementNative.userContextId,
+    );
+    await api.capture();
+    assert(
+      markedBeforeCapture && durableBeforeApply &&
+        api.getSyncedWorkspace(reboundParent).defaultContainer.containerId ===
+          canonicalRebound.containerId &&
+        api.getSyncedTab(reboundParent, reboundTab).url === localRebindURL,
+      "explicit reassociation preserves the canonical default and a concurrent local navigation",
+    );
+  } finally {
+    beforeCaptureCheck = null;
+    beforeApplyCheck = null;
+  }
+  completed.push(
+    "association rebind durably protects canonical defaults before capture and preserves concurrent local navigation",
+  );
+
   const missingParent = uuid(), missingTab = uuid(), missingContainer = uuid();
   await engine._store.create(record(missingParent, metaEntity(missingParent)));
   const missingEntity = tabEntity(missingTab, missingParent);
@@ -1212,6 +1288,9 @@ async function runScenario() {
     "explicit default none does not silently reinterpret unresolved tab containers",
   );
   await api.resolveLegacyContainers(legacyParent, "new", "tabs");
+  // The setup UI retries after making its explicit choices; this also consumes
+  // the native creation's association notification before inspecting status.
+  await api.capture();
   const resolvedLegacyTab = await engine._store.createRecord(
     legacyTab,
     "floorp-workspaces-v2",

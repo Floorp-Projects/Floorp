@@ -6,6 +6,11 @@ import type {
   WorkspaceSyncSnapshot,
 } from "#modules/common/workspace-sync-types.ts";
 
+export interface WorkspaceTabMoveDetail {
+  tab?: XULElement;
+  fromWorkspaceId?: string;
+}
+
 export interface IncomingWorkspaceNavigation {
   url: string;
   title: string;
@@ -88,7 +93,11 @@ export interface WorkspaceSyncAPI {
   isRetired(id: string): boolean;
   errorFor(id: string): string | null;
   isPendingClose(id: string): boolean;
-  noteTabClosed(workspaceId: string, tabId: string): Promise<void>;
+  noteTabClosed(
+    workspaceId: string,
+    tabId: string,
+    reason?: "move",
+  ): Promise<void>;
   isContainerSyncEnabled(): boolean;
   isContainerApplyPending(id: string): boolean;
   isContainerDefaultPending(id: string): boolean;

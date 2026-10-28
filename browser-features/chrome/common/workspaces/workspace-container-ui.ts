@@ -105,6 +105,8 @@ export async function setupWorkspaceContainers(
           ? 0
           : candidates[selection]?.userContextId;
         if (target === undefined) return;
+        await actions.capture();
+        if (!current()) return;
         await actions.resolveLegacy(target, scopes[scopeIndex]);
         continue;
       }
@@ -124,6 +126,8 @@ export async function setupWorkspaceContainers(
             i18next.t("workspaces.containers.confirm", { name }),
           )
         ) return;
+        if (!current()) return;
+        await actions.capture();
         if (!current()) return;
         await bindings.bind(ref.containerId, candidate.userContextId, epoch);
       } else if (
@@ -152,8 +156,12 @@ export async function setupWorkspaceContainers(
           return;
         }
         if (selected === createIndex) {
+          await actions.capture();
+          if (!current()) return;
           await bindings.create(ref.containerId, epoch);
         } else if (candidates[selected]) {
+          await actions.capture();
+          if (!current()) return;
           await bindings.bind(
             ref.containerId,
             candidates[selected].userContextId,

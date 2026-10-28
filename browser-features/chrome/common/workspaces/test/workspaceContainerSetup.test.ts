@@ -105,6 +105,10 @@ function fixture(reason: "confirmation" | "deleted") {
       acquired = value;
     },
     actions: {
+      capture: () => {
+        events.push("capture");
+        return Promise.resolve();
+      },
       resolveLegacy: (
         target: number | "new",
         scope: "default" | "tabs" | "all",
@@ -149,7 +153,7 @@ export async function runAllTests(): Promise<void> {
         );
         assertEquals(
           f.events.join(","),
-          "resolve,select,select,legacy:new:all,retry,release",
+          "resolve,select,select,capture,legacy:new:all,retry,release",
         );
       },
     },
@@ -180,7 +184,7 @@ export async function runAllTests(): Promise<void> {
         );
         assertEquals(
           f.events.join(","),
-          `resolve,confirm,bind:${containerId}:9,retry,release`,
+          `resolve,confirm,capture,bind:${containerId}:9,retry,release`,
         );
       },
     },
@@ -202,7 +206,7 @@ export async function runAllTests(): Promise<void> {
         await setupWorkspaceContainers([ref], f.bindings, f.actions, f.prompt);
         assertEquals(
           f.events.join(","),
-          `resolve,select,create:${containerId},retry,release`,
+          `resolve,select,capture,create:${containerId},retry,release`,
         );
       },
     },
@@ -235,6 +239,20 @@ export async function runAllTests(): Promise<void> {
         };
         await setupWorkspaceContainers([ref], f.bindings, f.actions, f.prompt);
         assertEquals(f.events.join(","), "resolve,release");
+      },
+    },
+    {
+      name:
+        "account changes during the pre-binding capture cancel the pending choice",
+      fn: async () => {
+        const f = fixture("confirmation");
+        f.actions.capture = () => {
+          f.events.push("capture");
+          f.setCurrent(false);
+          return Promise.resolve();
+        };
+        await setupWorkspaceContainers([ref], f.bindings, f.actions, f.prompt);
+        assertEquals(f.events.join(","), "resolve,confirm,capture,release");
       },
     },
     {

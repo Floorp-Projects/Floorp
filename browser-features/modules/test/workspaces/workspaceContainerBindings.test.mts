@@ -63,6 +63,8 @@ function fixture(initial: LocalWorkspaceContainer[] = [], persisted?: unknown) {
     persisted: persisted ?? null as unknown,
     saved: 0,
     created: 0,
+    notifications: [] as string[],
+    associationWasReady: [] as boolean[],
     failSave: false,
     enabled: true,
     beforeLoad: (): Promise<void> => Promise.resolve(),
@@ -110,7 +112,15 @@ function fixture(initial: LocalWorkspaceContainer[] = [], persisted?: unknown) {
           (++counter).toString(16).padStart(8, "0")
         }-0000-4000-8000-000000000000`,
       now: () => 50,
-      changed() {},
+      changed() {
+        state.notifications.push("changed");
+      },
+      associationChanged(id) {
+        state.notifications.push(`association:${id}`);
+        state.associationWasReady.push(
+          coordinator.getState(id).status === "resolved",
+        );
+      },
     });
     return coordinator;
   };
@@ -119,6 +129,67 @@ function fixture(initial: LocalWorkspaceContainer[] = [], persisted?: unknown) {
 
 export async function runAllTests(): Promise<void> {
   await runTests("workspaceContainerBindings.test.mts", [
+    {
+      name:
+        "association notifications precede general changes and exclude source capture or rename",
+      fn: async () => {
+        const f = fixture([identity(7), identity(9)]);
+        await f.service.ready("account", device);
+        const captured = f.service.captureReference(7);
+        assert(
+          captured.ref.kind === "container",
+          "source capture creates a logical definition",
+        );
+        f.state.identities[0].name = "Local rename";
+        f.service.captureReference(7, captured.ref);
+        await f.service.receiveDefinitions([
+          definition(anotherId, "New native target"),
+        ]);
+        assert(
+          !f.state.notifications.some((item) =>
+            item.startsWith("association:")
+          ),
+          "source capture, rename and metadata receive do not announce reassociation",
+        );
+        f.state.notifications.length = 0;
+        await f.service.bind(captured.ref.containerId, 9);
+        assertEquals(
+          f.state.notifications[0],
+          `association:${captured.ref.containerId}`,
+          "specific association is announced first",
+        );
+        assertEquals(
+          f.state.notifications[1],
+          "changed",
+          "general capture signal follows association",
+        );
+        f.state.notifications.length = 0;
+        await f.service.resolve({ kind: "container", containerId: anotherId });
+        const associated = f.state.notifications.indexOf(
+          `association:${anotherId}`,
+        );
+        assert(
+          associated >= 0 &&
+            f.state.notifications[associated + 1] === "changed",
+          "successful native creation announces association before its general change",
+        );
+        assert(
+          f.state.associationWasReady.every(Boolean),
+          "listeners see the newly assigned mapping synchronously",
+        );
+        f.state.notifications.length = 0;
+        f.state.failSave = true;
+        await rejects(
+          f.service.bind(captured.ref.containerId, 7),
+          "binding save failure propagates",
+        );
+        assertEquals(
+          f.state.notifications[0],
+          `association:${captured.ref.containerId}`,
+          "association protection was already announced before the failed save",
+        );
+      },
+    },
     {
       name:
         "a same-name existing identity waits for explicit binding and keeps its presentation",

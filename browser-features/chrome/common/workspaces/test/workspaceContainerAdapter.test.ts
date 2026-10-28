@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { WorkspacesSyncController } from "../workspacesSync.ts";
+import { WorkspacesTabManager } from "../workspacesTabManager.tsx";
 import { getWorkspaceContainerBindings } from "../workspace-container-ui.ts";
 import { setWorkspacesDataStore, workspacesDataStore } from "../data/data.ts";
 import type {
@@ -15,7 +16,10 @@ import type {
   WorkspaceSyncAPI,
 } from "../workspacesSyncTypes.ts";
 import type { WorkspacesService } from "../workspacesService.ts";
-import { WORKSPACE_TAB_ATTRIBUTION_ID } from "../utils/workspaces-static-names.ts";
+import {
+  WORKSPACE_TAB_ATTRIBUTION_ID,
+  WORKSPACE_TAB_MOVED_EVENT,
+} from "../utils/workspaces-static-names.ts";
 import {
   assert,
   assertEquals,
@@ -63,11 +67,14 @@ async function testPendingContainersNeverOpenOrOverwrite(): Promise<void> {
   ) as { SessionStore: SyncSessionStore };
   let localTab: XULElement | undefined;
   let ready = false;
+  let defaultPending = true;
+  let resolvedLocalId = 9876;
+  let capturedReferences = 0;
   const resolution = () =>
     ready
       ? {
         status: "resolved" as const,
-        userContextId: 9876,
+        userContextId: resolvedLocalId,
         instanceId: "new-instance",
       }
       : {
@@ -80,10 +87,13 @@ async function testPendingContainersNeverOpenOrOverwrite(): Promise<void> {
     bindings.resolve = () => Promise.resolve(resolution());
     bindings.lookup = resolution;
     bindings.isReady = () => true;
-    bindings.captureReference = () => ({ ref: reference });
+    bindings.captureReference = () => {
+      capturedReferences++;
+      return { ref: reference };
+    };
     const api = {
       isContainerSyncEnabled: () => true,
-      isContainerDefaultPending: () => !ready,
+      isContainerDefaultPending: () => defaultPending,
       isContainerApplyPending: () => true,
       isSelected: () => true,
       isRetired: () => false,
@@ -148,6 +158,7 @@ async function testPendingContainersNeverOpenOrOverwrite(): Promise<void> {
     sessionStore.setCustomTabValue(localTab, "floorp-workspace-sync-id", tabId);
     sessionStore.setCustomTabValue(localTab, "floorp-workspace-sync-owner", id);
     ready = true;
+    defaultPending = false;
     const mismatch = await controller.apply(desired, new Set());
     assertEquals(
       mismatch?.pendingContainerTabIds.join(),
@@ -175,6 +186,39 @@ async function testPendingContainersNeverOpenOrOverwrite(): Promise<void> {
       snapshot.protectedTabIds?.join(),
       tabId,
       "pending physical tab is protected from inferred deletion",
+    );
+
+    // The engine marks only references affected by an association change before
+    // capture, so the stale local default cannot mint another logical UUID.
+    resolvedLocalId = 9877;
+    defaultPending = true;
+    const captureCount = capturedReferences;
+    const reboundSnapshot = controller.capture(id, new Set());
+    assertEquals(
+      JSON.stringify(reboundSnapshot?.defaultContainer),
+      JSON.stringify(reference),
+      "a rebound default preserves the desired logical container before apply",
+    );
+    assertEquals(
+      capturedReferences,
+      captureCount,
+      "the previous local default is not captured as a new logical container",
+    );
+    const reboundApply = await controller.apply(desired, new Set());
+    assertEquals(
+      ctx.getRawWorkspace(id)?.userContextId,
+      resolvedLocalId,
+      "apply updates future workspace tabs to the rebound local container",
+    );
+    assertEquals(
+      reboundApply?.pendingContainerTabIds.join(),
+      tabId,
+      "the existing physical tab still waits for explicit reopen after rebinding",
+    );
+    assertEquals(
+      Number(localTab.getAttribute("usercontextid") || 0),
+      0,
+      "rebinding does not replace or move the existing native browsing context",
     );
   } finally {
     bindings.resolve = originalResolve;
@@ -273,8 +317,84 @@ async function testRestoredReplacementSourceKeepsItsNewIdentity(): Promise<
   }
 }
 
+async function testExplicitPendingTabMoveClosesOriginalIdentity(): Promise<
+  void
+> {
+  const uuid = () => Services.uuid.generateUUID().toString().slice(1, -1);
+  const fromId = uuid() as TWorkspaceID;
+  const toId = uuid() as TWorkspaceID;
+  const previousId = uuid();
+  const { SessionStore: sessionStore } = ChromeUtils.importESModule(
+    "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
+  ) as { SessionStore: SyncSessionStore };
+  const tab = gBrowser.addTab("about:blank", {
+    inBackground: true,
+    userContextId: 0,
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+  const closures: string[] = [];
+  const controller = Object.assign(
+    Object.create(WorkspacesSyncController.prototype),
+    {
+      active: false,
+      privateWindow: false,
+      stopped: false,
+      sessionStore,
+      containerPendingTabs: new Set([previousId]),
+      scheduleCapture: () => {},
+      api: {
+        isRetired: () => false,
+        noteTabClosed: (workspaceId: string, tabId: string, reason: string) => {
+          closures.push(`${workspaceId}/${tabId}/${reason}`);
+          return Promise.resolve();
+        },
+      },
+    },
+  ) as {
+    onWorkspaceTabMoved(event: Event): void;
+    tabId(tab: XULElement, seen: Set<string>): string;
+  };
+  const manager = Object.assign(
+    Object.create(WorkspacesTabManager.prototype),
+    { dataManagerCtx: { isWorkspaceID: () => true } },
+  ) as WorkspacesTabManager;
+  const onMove = (event: Event) => controller.onWorkspaceTabMoved(event);
+  globalThis.addEventListener(WORKSPACE_TAB_MOVED_EVENT, onMove);
+  try {
+    tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, fromId);
+    sessionStore.setCustomTabValue(tab, "floorp-workspace-sync-id", previousId);
+    sessionStore.setCustomTabValue(tab, "floorp-workspace-sync-owner", fromId);
+    manager.moveTabToWorkspace(toId, tab);
+    await Promise.resolve();
+    assertEquals(
+      closures.join(),
+      `${fromId}/${previousId}/move`,
+      "an explicit move before provider readiness still closes the original workspace record",
+    );
+    assert(
+      controller.tabId(tab, new Set()) !== previousId,
+      "the destination owns a fresh UUID instead of the original pending record",
+    );
+    manager.moveTabToWorkspace(toId, tab);
+    manager.setWorkspaceIdToAttribute(tab, fromId);
+    assertEquals(
+      closures.length,
+      1,
+      "same-workspace and programmatic incoming attribution do not emit a move",
+    );
+  } finally {
+    globalThis.removeEventListener(WORKSPACE_TAB_MOVED_EVENT, onMove);
+    gBrowser.removeTab(tab, { animate: false });
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("workspaceContainerAdapter.test.ts", [
+    {
+      name:
+        "moving a pending tab before provider readiness removes its old workspace identity once",
+      fn: testExplicitPendingTabMoveClosesOriginalIdentity,
+    },
     {
       name:
         "private windows do not wait for an intentionally inactive sync provider",

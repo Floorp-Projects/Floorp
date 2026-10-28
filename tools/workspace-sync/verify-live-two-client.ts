@@ -43,6 +43,7 @@ const result = {
   clientsSyncReady: false,
   cloudHosts: [] as string[],
   cases: [] as string[],
+  runId: null as string | null,
   sourceBuild: setup.buildCommit,
   sourceTree: setup.buildTree,
   engineSha256: setup.engineSha256,
@@ -128,22 +129,51 @@ try {
       for (const target of setup.clients) {
         await operation(target, "pause-scheduler");
       }
+      // Synthetic first-party session markers exist only on this QA localhost
+      // server. Report booleans; never inspect Mozilla Account/site cookies.
+      const cookieResponses = new Map<
+        string,
+        { name: string; value: string }
+      >();
+      const cookieChecks = new Map<string, { name: string; value: string }>();
+      const cookieObservations = new Map<string, boolean[]>();
       server = Deno.serve(
         { hostname: "127.0.0.1", port: 0, onListen: () => {} },
         (request) => {
-          const title = new URL(request.url).pathname.replace(
+          const pathname = new URL(request.url).pathname;
+          const checkedCookie = cookieChecks.get(pathname);
+          if (checkedCookie) {
+            const present = (request.headers.get("cookie") ?? "").split(";")
+              .some((part) =>
+                part.trim() === `${checkedCookie.name}=${checkedCookie.value}`
+              );
+            const observations = cookieObservations.get(pathname) ?? [];
+            observations.push(present);
+            cookieObservations.set(pathname, observations);
+          }
+          const headers = new Headers({ "content-type": "text/html" });
+          const seedCookie = cookieResponses.get(pathname);
+          if (seedCookie) {
+            headers.set(
+              "set-cookie",
+              `${seedCookie.name}=${seedCookie.value}; Path=/; HttpOnly; SameSite=Lax`,
+            );
+          }
+          const title = pathname.replace(
             /[^a-zA-Z0-9-]/g,
             " ",
           ).trim();
           return new Response(
             `<!doctype html><title>QA ${title}</title><p>Workspace Sync acceptance page</p>`,
-            { headers: { "content-type": "text/html" } },
+            { headers },
           );
         },
       );
       const origin = `http://127.0.0.1:${(server.addr as Deno.NetAddr).port}`;
       const run = crypto.randomUUID();
+      result.runId = run;
       const url = (name: string) => `${origin}/${run}/${name}`;
+      const path = (name: string) => new URL(url(name)).pathname;
       const sync = async (target: LiveClient, allowEmpty = false) => {
         const received = await operation<
           { finished: boolean; host: string; lastSyncPositive: boolean }
@@ -361,6 +391,19 @@ try {
         sourceContainer.userContextId !== receiverContainer.userContextId,
         "Container reuse fixture must use different native IDs on each client",
       );
+      const reuseMarker = {
+        name: `floorp-qa-reuse-${run}`,
+        value: crypto.randomUUID(),
+      };
+      cookieResponses.set(path("cookie-seed-b"), reuseMarker);
+      cookieChecks.set(path("mapped-container"), reuseMarker);
+      cookieChecks.set(path("mapped-none"), reuseMarker);
+      await operation(b, "create", {
+        name: `QA Local Cookie Seed B ${run}`,
+        urls: [url("cookie-seed-b")],
+        defaultUserContextId: receiverContainer.userContextId,
+        selected: false,
+      });
       const mappedWorkspace = await operation<{ workspaceId: string }>(
         a,
         "create",
@@ -423,6 +466,16 @@ try {
         reusedMetadata[0]?.color === "red" &&
           reusedMetadata[0]?.icon === "fingerprint",
         "Binding an existing container must preserve its local presentation",
+      );
+      assert(
+        cookieObservations.get(path("mapped-container"))?.some(Boolean) &&
+          cookieObservations.get(path("mapped-none"))?.every((present) =>
+            !present
+          ),
+        "The reused local container sends its existing synthetic session cookie while explicit-none tabs stay isolated",
+      );
+      result.cases.push(
+        "same-name association reuses an existing local first-party session without crossing into explicit none",
       );
       await operation(b, "container-rename", {
         userContextId: receiverContainer.userContextId,
@@ -492,6 +545,19 @@ try {
         "container-create",
         { name: automaticName },
       );
+      const sourceMarker = {
+        name: `floorp-qa-source-${run}`,
+        value: crypto.randomUUID(),
+      };
+      cookieResponses.set(path("cookie-seed-a"), sourceMarker);
+      cookieChecks.set(path("automatic-default"), sourceMarker);
+      cookieChecks.set(path("automatic-none"), sourceMarker);
+      await operation(a, "create", {
+        name: `QA Local Cookie Seed A ${run}`,
+        urls: [url("cookie-seed-a")],
+        defaultUserContextId: automaticSource.userContextId,
+        selected: false,
+      });
       const automaticWorkspace = await operation<{ workspaceId: string }>(
         a,
         "create",
@@ -517,6 +583,13 @@ try {
           ),
         "Native opening must inherit the workspace default while preserving explicit zero",
       );
+      const sourceCookieRequests =
+        cookieObservations.get(path("automatic-default")) ?? [];
+      assert(
+        sourceCookieRequests.some(Boolean),
+        "Source native container must actually send its synthetic session marker",
+      );
+      const requestsBeforeReceiver = sourceCookieRequests.length;
       await sync(a);
       await sync(b);
       const automaticRemote = await settled(
@@ -541,6 +614,21 @@ try {
               name: automaticName,
             })).length === 1,
         "Automatic receive must create one local identity shared by the workspace default and tab",
+      );
+      const receiverCookieRequests =
+        (cookieObservations.get(path("automatic-default")) ?? []).slice(
+          requestsBeforeReceiver,
+        );
+      assert(
+        receiverCookieRequests.length > 0 &&
+          receiverCookieRequests.every((present) => !present) &&
+          cookieObservations.get(path("automatic-none"))?.every((present) =>
+            !present
+          ),
+        "The newly created receiver container receives no source session cookie and explicit-none tabs remain isolated",
+      );
+      result.cases.push(
+        "source first-party session cookies are not transferred into a new receiver container or explicit none",
       );
       result.cases.push(
         "no-match auto-creation and native workspace-default inheritance preserve explicit none",
@@ -624,6 +712,25 @@ try {
       console.log(JSON.stringify({ ...result, report }, null, 2));
     }
   }
+} catch (error) {
+  if (options.phase === "acceptance") {
+    const report = join(
+      dirname(setupFile),
+      `acceptance-incomplete-${crypto.randomUUID()}.json`,
+    );
+    await Deno.writeTextFile(
+      report,
+      JSON.stringify({ ...result, completed: false }, null, 2),
+    );
+    console.log(
+      JSON.stringify(
+        { passed: false, completedCases: result.cases, report },
+        null,
+        2,
+      ),
+    );
+  }
+  throw error;
 } finally {
   if (options.phase === "acceptance") {
     for (const target of setup.clients) {
