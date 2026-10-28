@@ -86,6 +86,61 @@ class UpstreamTests(unittest.TestCase):
                          {'selected':45,'executed':42,'passed':42,'skipped':3})
         self.assertTrue(all(row['actual']=='SKIP' for row in receipt['tests'][-3:]))
 
+    def test_incomplete_log_keeps_observations_without_claiming_test_results(self):
+        receipt=self.receipt(self.raw_rows()[:-1])
+        self.assertFalse(receipt['completeLog']);self.assertIsNone(receipt['counts'])
+        self.assertEqual(receipt['tests'],[])
+        self.assertEqual(receipt['reason'],'mozilla-harness-incomplete-suite')
+        diagnostic=receipt['diagnostic']
+        self.assertEqual(diagnostic['actions']['test_end'],45)
+        self.assertEqual(diagnostic['actions']['suite_end'],0)
+        self.assertFalse(diagnostic['productQualification'])
+        self.assertFalse(receipt['expectationsSatisfied'])
+
+    def test_unknown_event_is_diagnostic_only_and_does_not_publish_its_text(self):
+        rows=self.raw_rows()
+        rows.insert(1,{'action':'PRIVATE_ACTION','time':1,'message':'PRIVATE_MESSAGE',
+                       'test':'PRIVATE_TEST','path':'/PRIVATE_PATH','status':'PRIVATE_STATUS'})
+        receipt=self.receipt(rows)
+        self.assertEqual(receipt['reason'],'mozilla-harness-unknown-action')
+        self.assertFalse(receipt['completeLog']);self.assertIsNone(receipt['counts'])
+        self.assertEqual(receipt['diagnostic']['actions']['other'],1)
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
+    def test_exception_diagnostic_keeps_only_fixed_types_and_no_exception_text(self):
+        rows=self.raw_rows()
+        rows.insert(1,{'action':'log','time':1,'level':'ERROR',
+            'message':'ModuleNotFoundError: PRIVATE_TOKEN\nPermissionError: /PRIVATE_PATH'})
+        receipt=self.receipt(rows)
+        self.assertEqual(receipt['diagnostic']['exceptionTypes'],['ModuleNotFoundError','PermissionError'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+        self.assertFalse(receipt['expectationsSatisfied'])
+
+    def test_invalid_record_preserves_only_prior_diagnostic_counts(self):
+        raw=(json.dumps(self.raw_rows()[0])+'\n'+
+             '{"action":"log","action":"PRIVATE_DUPLICATE","time":1}\n').encode()
+        self.path.write_bytes(raw)
+        receipt=upstream.scope_receipt(self.path,self.expected)
+        self.assertEqual(receipt['reason'],'mozilla-harness-json')
+        self.assertEqual(receipt['diagnostic']['status'],'rejected')
+        self.assertEqual(receipt['diagnostic']['recordsObserved'],1)
+        self.assertEqual(receipt['diagnostic']['actions']['suite_start'],1)
+        self.assertEqual(receipt['sha256'],hashlib.sha256(raw).hexdigest())
+        self.assertIsNone(receipt['counts']);self.assertFalse(receipt['completeLog'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
+    def test_partial_line_retains_identity_but_never_qualifies_the_prefix(self):
+        raw=(json.dumps(self.raw_rows()[0])+'\n'+
+             '{"action":"PRIVATE_PARTIAL"').encode()
+        self.path.write_bytes(raw)
+        receipt=upstream.scope_receipt(self.path,self.expected)
+        self.assertEqual(receipt['reason'],'mozilla-harness-partial-log')
+        self.assertEqual(receipt['diagnostic']['status'],'rejected')
+        self.assertEqual(receipt['diagnostic']['recordsObserved'],0)
+        self.assertEqual(receipt['sha256'],hashlib.sha256(raw).hexdigest())
+        self.assertFalse(receipt['expectationsSatisfied']);self.assertIsNone(receipt['counts'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
     def test_pre_harness_ledger_preserves_all_cases_without_inventing_skips(self):
         value=self.proof();value.update(status='failed',case=None)
         original=copy.deepcopy(value)
@@ -452,6 +507,14 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(result['case']['runnerFailure'],primary)
         self.assertEqual(result['case']['caughtCode'],'nonzero-exit')
         self.assertIsNotNone(result['case']['evidenceWriteFailure'])
+
+    def test_console_diagnostic_failure_cannot_replace_child_primary_or_promote_pass(self):
+        with mock.patch.object(upstream,'full_log_receipt',side_effect=OSError('PRIVATE')):
+            result,primary=self.run_case_control(fail=True)
+        self.assertEqual(result['case']['runnerFailure'],primary)
+        self.assertEqual(result['case']['consoleLog']['errorType'],'unavailable')
+        self.assertEqual(result['status'],'failed')
+        self.assertNotIn('PRIVATE',json.dumps(result))
 
     def test_collection_failure_cannot_replace_child_primary_or_keep_pass(self):
         result,primary=self.run_case_control(fail=True,collection=True)

@@ -12,6 +12,7 @@ import re
 import sys
 import time
 
+from checkpoint import full_log_receipt
 from firefox_target_observer import _FixedRead, identity
 from mozilla_harness_receipt import (END_STATUSES, SUB_STATUSES, _inputs, _parse, _read,
                                      _records, _Invalid)
@@ -32,6 +33,22 @@ CHILD_LIBS_STAGE = 'mozilla-upstream-child-libs'
 RESOURCE_STAGE = 'mozilla-upstream-resources-build'
 PREPARE_STAGES = (PREPARE_STAGE, HELPER_INSTALL_STAGE, INVENTORY_STAGE)
 EXTRA_STAGES = (*PREPARE_STAGES, CHILD_STAGE, CHILD_LIBS_STAGE, RESOURCE_STAGE)
+RECEIPT_REASONS = tuple('mozilla-harness-' + name for name in (
+    'assertion-shape', 'duplicate-test', 'event-shape', 'file-changed', 'file-kind',
+    'file-platform', 'file-size', 'group-order', 'incomplete-suite', 'input',
+    'intermittent-status', 'json', 'line-size', 'log-shape', 'partial-log',
+    'process-shape', 'record-cap', 'selected-tests', 'status-shape', 'suite-order',
+    'suite-tests', 'test-order', 'unknown-action', 'utf8')) + (
+    'mozilla-upstream-receipt-unavailable',)
+LOG_ACTIONS = ('suite_start', 'suite_end', 'test_start', 'test_end', 'test_status',
+    'log', 'process_start', 'process_output', 'process_exit', 'assertion_count',
+    'group_start', 'group_end', 'crash', 'shutdown_failure', 'valgrind_error',
+    'lsan_leak', 'tsan_error', 'add_subsuite', 'buffering_on', 'buffering_off',
+    'shutdown', 'other')
+LOG_EXCEPTION_TYPES = ('ModuleNotFoundError', 'ImportError', 'SyntaxError', 'OSError',
+    'FileNotFoundError', 'PermissionError', 'ValueError', 'TypeError', 'KeyError',
+    'AttributeError', 'RuntimeError', 'AssertionError', 'SystemExit',
+    'KeyboardInterrupt', 'JSONDecodeError')
 
 
 def plan_definition():
@@ -515,16 +532,41 @@ def verify_scope_assets(task, runner, macho, *, diagnostic=None):
     return result
 
 
+def scope_log_diagnostic(raw):
+    """Describe observed records without accepting an incomplete test lifecycle."""
+    result = {'contract': 'upstream-xpcom-log-diagnostic-v1', 'status': 'unavailable',
+        'reason': None, 'recordsObserved': 0, 'actions': dict.fromkeys(LOG_ACTIONS, 0),
+        'exceptionTypes': [], 'rawContentPublished': False, 'freeTextPublished': False,
+        'productQualification': False}
+    kinds = set()
+    try:
+        for row in _records(raw):
+            result['recordsObserved'] += 1
+            action = row['action']
+            result['actions'][action if action in LOG_ACTIONS else 'other'] += 1
+            message = row.get('message') if action == 'log' else row.get('data') if action == 'process_output' else None
+            if type(message) is str:
+                for kind in LOG_EXCEPTION_TYPES:
+                    if re.search(r'(?:^|\s)' + kind + r'(?::|\s|$)', message):
+                        kinds.add(kind)
+        result['status'] = 'observed'
+    except _Invalid as error:
+        result.update(status='rejected', reason=error.reason if error.reason in RECEIPT_REASONS else 'unavailable')
+    result['exceptionTypes'] = sorted(kinds)
+    return result
+
+
 def scope_receipt(path, expectations):
     result = {'status':'unavailable','completeLog':False,'reason':None,
               'bytes':None,'sha256':None,'counts':None,'tests':[],
-              'expectationsSatisfied':False}
+              'expectationsSatisfied':False,'diagnostic':None}
     try:
         selected = _inputs(list(expectations),'positive',None,None)
         require(all(value in ('PASS','FAIL','SKIP') for value in expectations.values()),
                 'mozilla-upstream-expectations')
         raw = _read(path)
         result.update(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())
+        result['diagnostic'] = scope_log_diagnostic(raw)
         counts,_,_ = _parse(raw,selected,None,None)
         ends = {row['test']:row for row in _records(raw) if row['action']=='test_end'}
         tests=[]
@@ -600,6 +642,12 @@ def run_scope(source, task, parent_runner, env, deadline, result):
         retain(phase,error);value.update(caseError=error_code(error),caseFailurePhase=phase)
     finally:
         private_evidence=None
+        if created:
+            try:
+                value['consoleLog'] = full_log_receipt(case_task/'mozilla-xpcshell.private.log')
+            except BaseException:
+                value['consoleLog'] = {'complete': False, 'rawContentPublished': False,
+                                       'freeTextPublished': False, 'errorType': 'unavailable'}
         try:
             if case_runner is not None:
                 private_evidence={'stages':case_runner.records,'runnerFailure':case_runner.failure,
