@@ -246,7 +246,8 @@ else getSelection().selectAllChildren(editor);""")
             if event_count("compositionend") == ended + 1:
                 native_key(pid, 36)
             committed = snapshot(f"{label}:committed")
-            if event_count("compositionend") != ended + 2 or not committed["value"].startswith(prefix):
+            if (event_count("compositionend") != ended + 2 or
+                not committed["value"].startswith(prefix) or committed["value"] == prefix):
                 raise RuntimeError(f"{label}: restarted composition did not commit correctly")
             if any(not e["isTrusted"] for e in committed["events"]):
                 raise RuntimeError("Cancellation and resumed input must produce trusted DOM events")
