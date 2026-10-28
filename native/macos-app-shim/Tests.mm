@@ -609,6 +609,14 @@ void TestAsyncSender() {
   }
   Expect(sender.Enqueue(MessageType::WindowChanged, fullReplacementMessages, @{}) == EnqueueStatus::Backpressure,
       "async sender reports a replayed sequence as backpressure");
+  // Production receive ports use the largest kernel queue. Lower this peer's
+  // capacity before filling it so the attachment stays pending until Stop.
+  mach_port_limits_t stalledLimits = {};
+  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
+  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
+               reinterpret_cast<mach_port_info_t>(&stalledLimits),
+               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
+      "stall the receiving peer for cancellation and bounded sending");
   IOSurfaceRef cancelledSurface = MakeSurface(0xff00abcd);
   Port cancelledPort(IOSurfaceCreateMachPort(cancelledSurface));
   CFRelease(cancelledSurface);
@@ -624,15 +632,6 @@ void TestAsyncSender() {
   sender.Stop();
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesAfter) == KERN_SUCCESS &&
       referencesAfter == referencesBefore, "Stop releases pending attachment while another send waits");
-  // Production receive ports ask for the largest kernel queue. Put this peer
-  // back to the default limit so it stops accepting messages again, which is
-  // the stalled receiver the bounded sender has to survive.
-  mach_port_limits_t stalledLimits = {};
-  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
-  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
-               reinterpret_cast<mach_port_info_t>(&stalledLimits),
-               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
-      "stall the receiving peer for the bounded sender");
   MessageSender bounded(receiving.get(), [&] { failed = true; });
   uint32_t admitted = 0;
   EnqueueStatus refusal = EnqueueStatus::Accepted;
