@@ -1,5 +1,5 @@
 diff --git a/moz-src/browser/components/BrowserContentHandler.sys.mjs b/moz-src/browser/components/BrowserContentHandler.sys.mjs
-index f4a0e1e..e81c6d9 100644
+index f4a0e1e566c363d5eb1d77e0c021df250d96b3f3..31750d21e858cbcba41a8f485a11a6bcd3c2e037 100644
 --- a/moz-src/browser/components/BrowserContentHandler.sys.mjs
 +++ b/moz-src/browser/components/BrowserContentHandler.sys.mjs
 @@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
@@ -11,19 +11,20 @@ index f4a0e1e..e81c6d9 100644
    FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
    HeadlessShell: "moz-src:///browser/components/shell/HeadlessShell.sys.mjs",
    HomePage: "resource:///modules/HomePage.sys.mjs",
-@@ -80,6 +82,75 @@ const ONCE_PREF = "browser.startup.homepage_override.once";
+@@ -80,6 +82,232 @@ const ONCE_PREF = "browser.startup.homepage_override.once";
  // Must line up with the one in nsNativeAppSupportWin.h.
  const PRIVATE_BROWSING_ICON_INDEX = 5;
-
+ 
 +/**
 + * Floorp's fallback for an external open with no Firefox container guess.
 + * Resolve it before creating the browser: changing a tab's attribute at
 + * TabOpen is too late to change its browsing context or cookie/storage jar.
-+ * A new or not-yet-initialized window uses the persisted default workspace.
++ * Container-capable clients wait for the final window and verified mappings.
++ * Older clients retain their persisted default-workspace fallback.
 + *
 + * @param {ChromeWindow|null} [win=null] The final target window, if available.
 + * @param {boolean} [forcePrivate=false]
-+ * @returns {number}
++ * @returns {number|null} null means that the workspace default is not ready.
 + */
 +export function getWorkspaceUserContextIdForExternalOpen(
 +  win = null,
@@ -35,12 +36,29 @@ index f4a0e1e..e81c6d9 100644
 +      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
 +      (win && lazy.PrivateBrowsingUtils.isWindowPrivate(win)) ||
 +      !Services.prefs.getBoolPref("floorp.workspaces.enabled", true) ||
-+      !Services.prefs.getBoolPref("privacy.userContext.enabled", false) ||
 +      Services.prefs.getBoolPref(
 +        "browser.link.force_default_user_context_id_for_external_opens",
 +        false
 +      )
 +    ) {
++      return 0;
++    }
++
++    const containerSync = Services.prefs.getBoolPref(
++      "floorp.workspaces.containerSync.enabled",
++      false
++    );
++    const canOpen = win?.workspacesFuncs?.canOpenWorkspaceTab;
++    if (typeof canOpen === "function") {
++      if (!canOpen()) {
++        return null;
++      }
++    } else if (containerSync) {
++      // An initializing/new window cannot safely use a stale persisted numeric
++      // ID before the account-bound container mappings have been checked.
++      return null;
++    }
++    if (!Services.prefs.getBoolPref("privacy.userContext.enabled", false)) {
 +      return 0;
 +    }
 +
@@ -79,25 +97,208 @@ index f4a0e1e..e81c6d9 100644
 +    }
 +    return userContextId;
 +  } catch {
-+    // Preference migration and window startup must not prevent external opens.
-+    return 0;
++    // A container-capable client must wait rather than choose a different jar
++    // when its window/controller is still initializing or unavailable.
++    return Services.prefs.getBoolPref("floorp.workspaces.containerSync.enabled", false)
++      ? null
++      : 0;
 +  }
++}
++
++/**
++ * Keep an external request on an owned blank tab until the chosen workspace is
++ * ready. No site is loaded in the placeholder's browsing context. Requests are
++ * retried by a readiness event, without polling or holding a native Sync pass.
++ */
++export function deferWorkspaceExternalOpen(
++  win, url, open, reuseInitial = false, inBackground = false
++) {
++  const request = { url, tab: null, opening: false };
++  let pending;
++  let startupObserver;
++  let closedObserver;
++
++  const cleanup = () => {
++    pending?.delete(request);
++    win.removeEventListener("floorp-workspace-container-ready", retry);
++    win.removeEventListener("unload", cleanup);
++    win.gBrowser?.tabContainer.removeEventListener("TabClose", onClose);
++    if (startupObserver) {
++      Services.obs.removeObserver(startupObserver, "browser-delayed-startup-finished");
++      startupObserver = null;
++    }
++    if (closedObserver) {
++      Services.obs.removeObserver(closedObserver, "domwindowclosed");
++      closedObserver = null;
++    }
++    request.tab?.removeAttribute("floorp-pending-external-open");
++  };
++  const onClose = event => {
++    if (event.target === request.tab) {
++      cleanup();
++    }
++  };
++  const stillOwned = () =>
++    request.tab?.isConnected &&
++    !request.tab.closing &&
++    request.tab.linkedBrowser.currentURI.spec === "about:blank" &&
++    !request.tab.linkedBrowser.userTypedValue;
++  const retry = () => {
++    if (win.closed) {
++      cleanup();
++      return;
++    }
++    if (!win.gBrowserInit?.delayedStartupFinished || request.opening) {
++      return;
++    }
++    if (!pending) {
++      // openDialog initially exposes an about:blank inner window. Attaching
++      // unload listeners or storing our queue there would lose the request
++      // while browser.xhtml replaces that document during normal startup.
++      pending = (win.floorpPendingWorkspaceExternalOpens ??= new Set());
++      pending.add(request);
++      win.addEventListener("floorp-workspace-container-ready", retry);
++      win.addEventListener("unload", cleanup, { once: true });
++    }
++    if (!request.tab) {
++      const initial = win.gBrowser.selectedTab;
++      request.tab = reuseInitial && win.gBrowser.tabs.length === 1 &&
++        initial.linkedBrowser.currentURI.spec === "about:blank" &&
++        !initial.linkedBrowser.userTypedValue
++        ? initial
++        : win.gBrowser.addTab("about:blank", {
++            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
++            userContextId: 0,
++            inBackground,
++          });
++      if (!inBackground) {
++        win.gBrowser.selectedTab = request.tab;
++      }
++      request.tab.setAttribute("floorp-pending-external-open", "true");
++      request.tab.setAttribute("label", url);
++      win.gBrowser.tabContainer.addEventListener("TabClose", onClose);
++    }
++    if (!stillOwned()) {
++      // The user navigated or closed the placeholder. Never replace that work
++      // or replay a request whose placeholder the user has repurposed.
++      cleanup();
++      return;
++    }
++    const workspaceId = request.tab.getAttribute("floorpWorkspaceId");
++    const currentId = win.workspacesFuncs?.getSelectedWorkspaceID?.();
++    if (workspaceId && currentId && workspaceId !== currentId) {
++      return;
++    }
++    const userContextId = getWorkspaceUserContextIdForExternalOpen(win);
++    if (userContextId === null) {
++      return;
++    }
++    request.opening = true;
++    try {
++      const opened = open(userContextId);
++      if (!opened) {
++        request.opening = false;
++        return;
++      }
++      const placeholder = request.tab;
++      const removePlaceholder = stillOwned();
++      cleanup();
++      if (removePlaceholder) {
++        win.gBrowser.removeTab(placeholder, {
++          skipPermitUnload: true,
++          skipSessionStore: true,
++        });
++      }
++    } catch {
++      // The browser API may have partially consumed a POST stream or started
++      // loading before throwing. Preserve the request but never retry it
++      // automatically, which could submit the same operation twice.
++      request.failed = true;
++      // Do not log a site's URL, principal, or POST body.
++      console.error("[WorkspacesSync] Deferred external open is still pending");
++    }
++  };
++
++  if (!win.gBrowserInit?.delayedStartupFinished) {
++    startupObserver = subject => {
++      if (subject === win) {
++        Services.obs.removeObserver(startupObserver, "browser-delayed-startup-finished");
++        startupObserver = null;
++        Services.obs.removeObserver(closedObserver, "domwindowclosed");
++        closedObserver = null;
++        retry();
++      }
++    };
++    closedObserver = subject => {
++      if (subject === win) {
++        cleanup();
++      }
++    };
++    Services.obs.addObserver(startupObserver, "browser-delayed-startup-finished");
++    Services.obs.addObserver(closedObserver, "domwindowclosed");
++  }
++  retry();
++  return request.tab?.linkedBrowser ?? null;
 +}
 +
  function shouldLoadURI(aURI) {
    if (aURI && !aURI.schemeIs("chrome")) {
      return true;
-@@ -302,6 +373,9 @@ function openBrowserWindow(
+@@ -302,6 +530,53 @@ function openBrowserWindow(
    const isStartup =
      cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
    const openAsSmart = canOpenAsSmartWindow(forcePrivate);
-+  const userContextId = urlOrUrlList
++  let userContextId = urlOrUrlList
 +    ? getWorkspaceUserContextIdForExternalOpen(null, forcePrivate)
 +    : 0;
-
++  let deferred;
++  if (userContextId === null) {
++    userContextId = 0;
++    const urls = [].concat(urlOrUrlList);
++    // Internal setup/settings pages must remain available to resolve a pending
++    // workspace. They do not load a website in the default container.
++    if (!urls.every(url => /^(about|chrome|resource|moz-extension):/i.test(url))) {
++      if (
++        Array.isArray(urlOrUrlList) &&
++        (!triggeringPrincipal || !triggeringPrincipal.equals(lazy.gSystemPrincipal))
++      ) {
++        throw new Error("Can't open multiple URLs with something other than system principal.");
++      }
++      deferred = {
++        urls,
++        postData: Array.isArray(urlOrUrlList) ? null : postData,
++        triggeringPrincipal,
++      };
++      urlOrUrlList = "about:blank";
++      postData = null;
++    }
++  }
++  const deferUntilReady = win => {
++    if (deferred) {
++      deferred.urls.forEach((url, index) => {
++        deferWorkspaceExternalOpen(win, url, contextId => {
++          const tab = win.gBrowser.addTab(url, {
++            userContextId: contextId,
++            triggeringPrincipal: deferred.triggeringPrincipal,
++            postData: deferred.postData,
++            fromExternal: true,
++            forceAllowDataURI,
++            inBackground: index !== 0,
++          });
++          if (index === 0) {
++            win.gBrowser.selectedTab = tab;
++          }
++          return tab;
++        }, index === 0, index !== 0
++        );
++      });
++    }
++    return win;
++  };
+ 
    let args;
    if (!urlOrUrlList) {
-@@ -333,7 +407,9 @@ function openBrowserWindow(
+@@ -333,7 +608,9 @@ function openBrowserWindow(
        sstring.data = uri;
        uriArray.appendElement(sstring);
      });
@@ -108,7 +309,7 @@ index f4a0e1e..e81c6d9 100644
    } else {
      let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
        Ci.nsIWritablePropertyBag2
-@@ -353,7 +429,7 @@ function openBrowserWindow(
+@@ -353,7 +630,7 @@ function openBrowserWindow(
        postData,
        undefined, // allowThirdPartyFixup; this would be `false` but that
        // needs a conversion. Hopefully bug 1485961 will fix.
@@ -117,7 +318,16 @@ index f4a0e1e..e81c6d9 100644
        null, // origin principal
        null, // origin storage principal
        triggeringPrincipal,
-@@ -387,13 +463,20 @@ function openBrowserWindow(
+@@ -363,7 +640,7 @@ function openBrowserWindow(
+   if (isStartup) {
+     let win = gBrowserContentHandler.replaceStartupWindow(args, forcePrivate);
+     if (win) {
+-      return win;
++      return deferUntilReady(win);
+     }
+   }
+ 
+@@ -387,13 +664,20 @@ function openBrowserWindow(
      }
    } else {
      // Otherwise, pass an nsIArray.
@@ -139,21 +349,37 @@ index f4a0e1e..e81c6d9 100644
      let array = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
      args.forEach(a => {
        array.appendElement(a);
+@@ -401,12 +685,12 @@ function openBrowserWindow(
+     args = array;
+   }
+ 
+-  return lazy.BrowserWindowTracker.openWindow({
++  return deferUntilReady(lazy.BrowserWindowTracker.openWindow({
+     args,
+     features: gBrowserContentHandler.getFeatures(cmdLine),
+     private: forcePrivate,
+     aiWindow: openAsSmart,
+-  });
++  }));
+ }
+ 
+ function openPreferences(cmdLine) {
 diff --git a/browser/modules/BrowserDOMWindow.sys.mjs b/browser/modules/BrowserDOMWindow.sys.mjs
-index 21bd771..b742f84 100644
+index 2cbf419680e8b2943786aeeda290c70af16e6c4a..5a22682ef8bae12ea17034404c14bf6c9c00d304 100644
 --- a/browser/modules/BrowserDOMWindow.sys.mjs
 +++ b/browser/modules/BrowserDOMWindow.sys.mjs
-@@ -10,7 +10,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+@@ -10,6 +10,10 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  let lazy = {};
-
+ 
  ChromeUtils.defineESModuleGetters(lazy, {
++  deferWorkspaceExternalOpen:
++    "moz-src:///browser/components/BrowserContentHandler.sys.mjs",
 +  getWorkspaceUserContextIdForExternalOpen:
 +    "moz-src:///browser/components/BrowserContentHandler.sys.mjs",
    NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
    TaskbarTabsUtils:
      "moz-src:///browser/components/taskbartabs/TaskbarTabsUtils.sys.mjs",
-   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
-@@ -73,7 +75,7 @@ export class BrowserDOMWindow {
+@@ -74,7 +78,7 @@ export class BrowserDOMWindow {
     * @param {boolean} aIsPrivate
     * @param {boolean} aIsExternal
     * @param {boolean} [aForceNotRemote=false]
@@ -162,21 +388,35 @@ index 21bd771..b742f84 100644
     * @param {nsIOpenWindowInfo} [aOpenWindowInfo=null]
     * @param {Element} [aOpenerBrowser=null]
     * @param {nsIPrincipal} [aTriggeringPrincipal=null]
-@@ -125,6 +127,13 @@ export class BrowserDOMWindow {
+@@ -127,6 +131,27 @@ export class BrowserDOMWindow {
        return win.gBrowser.selectedBrowser;
      }
-
+ 
 +    if (aIsExternal && aUserContextId === null) {
 +      aUserContextId = lazy.getWorkspaceUserContextIdForExternalOpen(
 +        win,
 +        aIsPrivate
 +      );
++      if (aUserContextId === null) {
++        const inBackground = aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_BACKGROUND
++          ? true
++          : aWhere === Ci.nsIBrowserDOMWindow.OPEN_NEWTAB_FOREGROUND
++            ? false
++            : lazy.loadDivertedInBackground;
++        return lazy.deferWorkspaceExternalOpen(win, aURI.spec, contextId =>
++          this.#openURIInNewTab(
++            aURI, aReferrerInfo, aIsPrivate, aIsExternal, aForceNotRemote,
++            contextId, aOpenWindowInfo, aOpenerBrowser, aTriggeringPrincipal,
++            aName, aPolicyContainer, aSkipLoad, aWhere, aForceAllowDataURI
++          ), false, inBackground
++        );
++      }
 +    }
 +
      // OPEN_NEWTAB_BACKGROUND and OPEN_NEWTAB_FOREGROUND are used by
      // `window.open` with modifiers.
      // The last case is OPEN_NEWTAB, which is used by:
-@@ -253,10 +262,11 @@ export class BrowserDOMWindow {
+@@ -255,10 +280,11 @@ export class BrowserDOMWindow {
          "browser.link.force_default_user_context_id_for_external_opens",
          false
        );
@@ -189,18 +429,53 @@ index 21bd771..b742f84 100644
 +    var openingUserContextId = guessUserContextIdEnabled
 +      ? lazy.URILoadingHelper.guessUserContextId(aURI)
 +      : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
-
+ 
      if (aOpenWindowInfo && isExternal) {
        console.error(
-@@ -347,7 +357,10 @@ export class BrowserDOMWindow {
+@@ -339,17 +365,22 @@ export class BrowserDOMWindow {
+             extraOptions.setPropertyAsBool("forceAllowDataURI", true);
+           }
+ 
+-          this.win.openDialog(
++          const userContextId = isExternal && !isPrivate
++            ? openingUserContextId ?? lazy.getWorkspaceUserContextIdForExternalOpen(null)
++            : null;
++          const deferred = isExternal && !isPrivate && userContextId === null;
++
++          const target = this.win.openDialog(
+             AppConstants.BROWSER_CHROME_URL,
+             "_blank",
+             features,
+             // window.arguments
+-            url,
++            deferred ? "about:blank" : url,
+             extraOptions,
              null,
              null,
              null,
 -            null,
-+            isExternal && !isPrivate
-+              ? openingUserContextId ??
-+                lazy.getWorkspaceUserContextIdForExternalOpen(null)
-+              : null,
++            deferred ? 0 : userContextId,
              null,
              null,
              aTriggeringPrincipal,
+@@ -357,6 +388,20 @@ export class BrowserDOMWindow {
+             aPolicyContainer,
+             aOpenWindowInfo
+           );
++          if (deferred) {
++            lazy.deferWorkspaceExternalOpen(target, url, contextId => {
++              const tab = target.gBrowser.addTab(url, {
++                userContextId: contextId,
++                triggeringPrincipal: aTriggeringPrincipal,
++                policyContainer: aPolicyContainer,
++                fromExternal: true,
++                forceAllowDataURI,
++              });
++              target.gBrowser.selectedTab = tab;
++              return tab;
++            }, true
++            );
++          }
+           // At this point, the new browser window is just starting to load, and
+           // hasn't created the content <browser> that we should return.
+           // If the caller of this function is originating in C++, they can pass a

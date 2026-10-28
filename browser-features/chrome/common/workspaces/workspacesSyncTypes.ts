@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type {
+  WorkspaceSyncDocument,
   WorkspaceSyncProvider,
   WorkspaceSyncSnapshot,
 } from "#modules/common/workspace-sync-types.ts";
+
+export interface WorkspaceTabMoveDetail {
+  tab?: XULElement;
+  fromWorkspaceId?: string;
+}
 
 export interface IncomingWorkspaceNavigation {
   url: string;
@@ -17,6 +23,7 @@ export interface IncomingWorkspaceNavigation {
 
 export interface WorkspaceSyncBrowser {
   currentURI?: { spec: string };
+  browsingContext?: { originAttributes: { userContextId?: number } };
   stop(flags: number): void;
 }
 
@@ -47,6 +54,21 @@ export interface WorkspaceSyncTabBrowser {
   getBrowserForTab(tab: XULElement): WorkspaceSyncBrowser;
   addTabsProgressListener(listener: WorkspaceSyncProgressListener): void;
   removeTabsProgressListener(listener: WorkspaceSyncProgressListener): void;
+  runBeforeUnloadForTabs(tabs: XULElement[]): Promise<boolean>;
+  removeTab(
+    tab: XULElement,
+    options: {
+      animate: boolean;
+      skipPermitUnload?: boolean;
+      skipSessionStore?: boolean;
+    },
+  ): void;
+}
+
+export interface WorkspaceContainerReopenState {
+  token: string;
+  workspaceId: string;
+  tabId: string;
 }
 
 export interface WorkspaceSyncProgressFlags {
@@ -71,6 +93,22 @@ export interface WorkspaceSyncAPI {
   isRetired(id: string): boolean;
   errorFor(id: string): string | null;
   isPendingClose(id: string): boolean;
+  noteTabClosed(
+    workspaceId: string,
+    tabId: string,
+    reason?: "move",
+  ): Promise<void>;
+  isContainerSyncEnabled(): boolean;
+  isContainerApplyPending(id: string): boolean;
+  isContainerDefaultPending(id: string): boolean;
+  getSyncedWorkspace(id: string): WorkspaceSyncDocument | null;
+  beginContainerReopen(workspaceId: string, tabId: string): Promise<string>;
+  finishContainerReopen(token: string, success: boolean): Promise<void>;
+  resolveLegacyContainers(
+    workspaceId: string,
+    target: number | "new",
+    scope: "default" | "tabs" | "all",
+  ): Promise<void>;
   getSyncedTab(
     workspaceId: string,
     tabId: string,

@@ -10,12 +10,15 @@ const DEFAULT_ID = "01234567-89ab-cdef-0123-456789abcdef";
 
 type TargetWindow = {
   isPrivate?: boolean;
-  workspacesFuncs?: { getCurrentWorkspaceUserContextId(): unknown };
+  workspacesFuncs?: {
+    getCurrentWorkspaceUserContextId(): unknown;
+    canOpenWorkspaceTab?(): boolean;
+  };
 };
 type ResolveContext = (
   win?: TargetWindow | null,
   forcePrivate?: boolean,
-) => number;
+) => number | null;
 
 async function fixture() {
   const patch = await Deno.readTextFile(SOURCE_PATCH);
@@ -254,4 +257,293 @@ Deno.test("external workspace fallback tolerates unavailable or malformed persis
     0,
     "a failing getter cannot prevent an external URL from opening",
   );
+});
+
+Deno.test("container-capable cold opens and pending live defaults defer without choosing jar 0", async () => {
+  const { resolve, prefs } = await fixture();
+  prefs.set("floorp.workspaces.containerSync.enabled", true);
+  assertEquals(
+    resolve(),
+    null,
+    "cold startup cannot trust a persisted local ID",
+  );
+  const target = {
+    workspacesFuncs: {
+      getCurrentWorkspaceUserContextId: () => 7,
+      canOpenWorkspaceTab: () => false,
+    },
+  };
+  assertEquals(resolve(target), null);
+  target.workspacesFuncs.canOpenWorkspaceTab = () => true;
+  assertEquals(resolve(target), 7);
+  target.workspacesFuncs.getCurrentWorkspaceUserContextId = () => 0;
+  assertEquals(resolve(target), 0, "resolved none is distinct from pending");
+  prefs.set(
+    "browser.link.force_default_user_context_id_for_external_opens",
+    true,
+  );
+  target.workspacesFuncs.canOpenWorkspaceTab = () => false;
+  assertEquals(
+    resolve(target),
+    0,
+    "explicit forced default bypasses workspace selection",
+  );
+});
+
+type QueueTab = {
+  isConnected: boolean;
+  closing: boolean;
+  linkedBrowser: {
+    currentURI: { spec: string };
+    userTypedValue: string | null;
+  };
+  getAttribute(name: string): string;
+  setAttribute(name: string, value: string): void;
+  removeAttribute(name: string): void;
+};
+type QueueListener = (event: { target?: QueueTab }) => void;
+
+class QueueEvents {
+  listeners = new Map<string, Set<QueueListener>>();
+  addEventListener(name: string, callback: QueueListener) {
+    const callbacks = this.listeners.get(name) ?? new Set();
+    callbacks.add(callback);
+    this.listeners.set(name, callbacks);
+  }
+  removeEventListener(name: string, callback: QueueListener) {
+    this.listeners.get(name)?.delete(callback);
+  }
+  fire(name: string, event: { target?: QueueTab } = {}) {
+    for (const callback of [...this.listeners.get(name) ?? []]) callback(event);
+  }
+}
+
+async function queueFixture() {
+  const patch = await Deno.readTextFile(SOURCE_PATCH);
+  const functions = [
+    "getWorkspaceUserContextIdForExternalOpen",
+    "deferWorkspaceExternalOpen",
+  ].map((name) => {
+    const match = patch.match(
+      new RegExp(`^\\+export function ${name}\\([\\s\\S]*?^\\+\\}`, "m"),
+    );
+    assert(match, name);
+    return match[0].replace(/^\+/gm, "").replace("export ", "");
+  }).join("\n");
+  let ready = false;
+  let workspaceId = "workspace-one";
+  const tabs: QueueTab[] = [];
+  const tabEvents = new QueueEvents();
+  const addTab = (url: string): QueueTab => {
+    const attrs = new Map([["floorpWorkspaceId", workspaceId]]);
+    const tab = {
+      isConnected: true,
+      closing: false,
+      linkedBrowser: { currentURI: { spec: url }, userTypedValue: null },
+      getAttribute: (name: string) => attrs.get(name) ?? "",
+      setAttribute: (name: string, value: string) => attrs.set(name, value),
+      removeAttribute: (name: string) => attrs.delete(name),
+    };
+    tabs.push(tab);
+    return tab;
+  };
+  const initial = addTab("about:blank");
+  const win = Object.assign(new QueueEvents(), {
+    closed: false,
+    floorpPendingWorkspaceExternalOpens: undefined as
+      | Set<{ url: string; tab: QueueTab | null }>
+      | undefined,
+    gBrowserInit: { delayedStartupFinished: true },
+    workspacesFuncs: {
+      canOpenWorkspaceTab: () => ready,
+      getCurrentWorkspaceUserContextId: () => 7,
+      getSelectedWorkspaceID: () => workspaceId,
+    },
+    gBrowser: {
+      tabs,
+      selectedTab: initial,
+      tabContainer: tabEvents,
+      addTab,
+      removeTab(tab: QueueTab) {
+        tab.isConnected = false;
+        const index = tabs.indexOf(tab);
+        if (index >= 0) tabs.splice(index, 1);
+        tabEvents.fire("TabClose", { target: tab });
+      },
+    },
+  });
+  const startupObservers = new Set<(subject: unknown) => void>();
+  const closedObservers = new Set<(subject: unknown) => void>();
+  const defer = new Function(
+    "Services",
+    "lazy",
+    `${functions}\nreturn deferWorkspaceExternalOpen;`,
+  )({
+    prefs: {
+      getBoolPref: (name: string, fallback: boolean) =>
+        ({
+          "floorp.workspaces.enabled": true,
+          "floorp.workspaces.containerSync.enabled": true,
+          "privacy.userContext.enabled": true,
+        })[name] ?? fallback,
+    },
+    obs: {
+      addObserver: (cb: (subject: unknown) => void, topic: string) =>
+        (topic === "domwindowclosed" ? closedObservers : startupObservers).add(
+          cb,
+        ),
+      removeObserver: (cb: (subject: unknown) => void, topic: string) =>
+        (topic === "domwindowclosed" ? closedObservers : startupObservers)
+          .delete(cb),
+    },
+    scriptSecurityManager: { getSystemPrincipal: () => ({}) },
+  }, {
+    PrivateBrowsingUtils: {
+      permanentPrivateBrowsing: false,
+      isWindowPrivate: () => false,
+    },
+    ContextualIdentityService: { getPublicIdentityFromId: () => ({}) },
+  }) as (
+    targetWindow: typeof win,
+    url: string,
+    open: (id: number) => unknown,
+    reuse?: boolean,
+    inBackground?: boolean,
+  ) => unknown;
+  return {
+    win,
+    defer,
+    setReady: (value: boolean) => ready = value,
+    setWorkspace: (value: string) => workspaceId = value,
+    startupObservers,
+    closedObservers,
+  };
+}
+
+Deno.test("external URL is retained on a blank placeholder until the actual workspace is ready", async () => {
+  const { win, defer, setReady } = await queueFixture();
+  const calls: number[] = [];
+  defer(win, "https://example.invalid/pending", (id) => {
+    calls.push(id);
+    return win.gBrowser.addTab("https://example.invalid/pending");
+  }, true);
+  assertEquals(calls, []);
+  assertEquals(win.gBrowser.tabs.length, 1, "reuse the owned startup blank");
+  const placeholder = win.gBrowser.tabs[0];
+  assertEquals(placeholder.linkedBrowser.currentURI.spec, "about:blank");
+  assertEquals(
+    placeholder.getAttribute("label"),
+    "https://example.invalid/pending",
+  );
+  assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 1);
+  setReady(true);
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(calls, [7]);
+  assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 0);
+  assert(!placeholder.isConnected);
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(calls, [7], "repeated readiness never repeats the request");
+});
+
+Deno.test("repurposed external placeholder is kept and its pending request is cancelled", async () => {
+  for (const kind of ["navigate", "typed", "closed"]) {
+    const { win, defer, setReady } = await queueFixture();
+    let opened = false;
+    defer(win, "https://example.invalid/pending", () => opened = true, true);
+    const placeholder = win.gBrowser.tabs[0];
+    if (kind === "navigate") {
+      placeholder.linkedBrowser.currentURI.spec =
+        "https://example.invalid/user";
+    } else if (kind === "typed") {
+      placeholder.linkedBrowser.userTypedValue = "user input";
+    } else win.gBrowser.removeTab(placeholder);
+    setReady(true);
+    win.fire("floorp-workspace-container-ready");
+    assertEquals(opened, false);
+    assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 0);
+    assertEquals(placeholder.isConnected, kind !== "closed");
+  }
+});
+
+Deno.test("deferred external request follows its placeholder workspace and respects background", async () => {
+  const { win, defer, setReady, setWorkspace } = await queueFixture();
+  const selected = win.gBrowser.selectedTab;
+  const calls: number[] = [];
+  defer(
+    win,
+    "https://example.invalid/background",
+    (id) => calls.push(id),
+    false,
+    true,
+  );
+  assertEquals(win.gBrowser.selectedTab, selected);
+  setReady(true);
+  setWorkspace("workspace-two");
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(calls, []);
+  setWorkspace("workspace-one");
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(calls, [7]);
+});
+
+Deno.test("cold external queue waits for delayed startup and disposes observers on window close", async () => {
+  const { win, defer, startupObservers, closedObservers } =
+    await queueFixture();
+  win.gBrowserInit.delayedStartupFinished = false;
+  defer(win, "https://example.invalid/cold", () => true);
+  assertEquals(
+    win.gBrowser.tabs.length,
+    1,
+    "no gBrowser access before startup",
+  );
+  assertEquals(startupObservers.size, 1);
+  assertEquals(closedObservers.size, 1);
+  win.closed = true;
+  for (const observer of [...closedObservers]) observer(win);
+  assertEquals(startupObservers.size, 0);
+  assertEquals(closedObservers.size, 0);
+  assertEquals(win.floorpPendingWorkspaceExternalOpens, undefined);
+});
+
+Deno.test("cold external request survives initial document replacement before browser startup", async () => {
+  const { win, defer, startupObservers, closedObservers, setReady } =
+    await queueFixture();
+  win.gBrowserInit.delayedStartupFinished = false;
+  const calls: number[] = [];
+  defer(win, "https://example.invalid/cold", (id) => calls.push(id), true);
+  win.fire("unload");
+  Reflect.deleteProperty(win, "floorpPendingWorkspaceExternalOpens");
+  assertEquals(
+    startupObservers.size,
+    1,
+    "initial-document unload is not window close",
+  );
+  win.gBrowserInit.delayedStartupFinished = true;
+  for (const observer of [...startupObservers]) observer(win);
+  assertEquals(startupObservers.size, 0);
+  assertEquals(closedObservers.size, 0);
+  assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 1);
+  setReady(true);
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(calls, [7]);
+  assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 0);
+});
+
+Deno.test("a partially failed external replay is not automatically submitted twice", async () => {
+  const { win, defer, setReady } = await queueFixture();
+  let attempts = 0;
+  defer(win, "https://example.invalid/submission", () => {
+    attempts++;
+    throw new Error("browser creation failed after consuming input");
+  }, true);
+  setReady(true);
+  win.fire("floorp-workspace-container-ready");
+  win.fire("floorp-workspace-container-ready");
+  assertEquals(attempts, 1);
+  assertEquals(win.floorpPendingWorkspaceExternalOpens?.size, 1);
+  assertEquals(
+    win.gBrowser.tabs[0].linkedBrowser.currentURI.spec,
+    "about:blank",
+  );
+  win.fire("unload");
 });

@@ -20,6 +20,25 @@ maps BrowserContentHandler to the unpacked artifact's
 `moz-src:///browser/components/BrowserContentHandler.sys.mjs` module URI.
 Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
 in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
+Container-capable builds set `floorp.workspaces.containerSync.enabled`; while the
+workspace default is unresolved, external requests remain on owned `about:blank`
+placeholders until `floorp-workspace-container-ready`. The target URL and request
+parameters remain local to the window. Explicit Firefox container guesses,
+including 0, and current-tab navigation bypass this implicit-default guard.
+Navigation/typing in a placeholder cancels replay without closing the user's tab.
+An exception after a replay starts never automatically resubmits a POST body.
+
+`workspace-container-lifecycle.patch` lets the workspace engine persist removal
+protection before settings deletion, extension deletion, or container disabling
+can destroy tabs. `prepareRemoval` and `finishRemoval` await observer-provided
+blockers; the synchronous `remove` path exposes a guard for mapped identities.
+The preference observer owns disabling so direct preference changes are covered.
+Ordinary close-all operations do not enter this lifecycle. The patch changes four
+existing JavaScript resources and needs no native rebuild. The corresponding
+`tools/patches` patch targets their extracted Firefox 159 resource paths.
+`tools/src/workspace_container_lifecycle_patch.test.ts` executes the lifecycle and
+caller bodies from the shipping patch and verifies development/packaging parity;
+actual browser/Sync isolation remains a separate acceptance requirement.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
 session state and N-way split layouts on Firefox 159. The tabbrowser and

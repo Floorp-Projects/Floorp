@@ -22,9 +22,7 @@ import { createRootHMR } from "@nora/solid-xul";
 import { addI18nObserver } from "#i18n/config-browser-chrome.ts";
 import { IconTranslationsHandler } from "./utils/icon-translations-handler.ts";
 
-export {
-  WORKSPACE_ICON_NO_CHANGE_SENTINEL,
-} from "./utils/workspace-icons.ts";
+export { WORKSPACE_ICON_NO_CHANGE_SENTINEL } from "./utils/workspace-icons.ts";
 
 export const createWorkspaceIconPickerFormItem = (
   workspace: TWorkspace,
@@ -149,7 +147,10 @@ export class WorkspaceManageModal {
     return container.name;
   }
 
-  private createFormConfig(workspace: TWorkspace): TForm {
+  private createFormConfig(
+    workspace: TWorkspace,
+    containerPending = false,
+  ): TForm {
     const texts = this.texts();
 
     return {
@@ -165,7 +166,10 @@ export class WorkspaceManageModal {
         {
           id: "userContextId",
           type: "dropdown",
-          label: texts.container,
+          label: containerPending
+            ? i18next.t("workspaces.containers.default-unavailable")
+            : texts.container,
+          disabled: containerPending,
           value: workspace.userContextId?.toString() || "0",
           required: true,
           options: [
@@ -197,16 +201,29 @@ export class WorkspaceManageModal {
   public async showWorkspacesModal(
     workspaceID: TWorkspaceID | null,
   ): Promise<TFormResult | null> {
-    const workspace = this.ctx.getRawWorkspace(
-      workspaceID ?? this.ctx.getSelectedWorkspaceID(),
-    );
+    const targetId = workspaceID ?? this.ctx.getSelectedWorkspaceID();
+    const workspace = this.ctx.getRawWorkspace(targetId);
     if (!workspace) return null;
-    const formConfig = this.createFormConfig(workspace);
+    const containerPending =
+      this.ctx.syncController?.defaultContainerPending(targetId) ?? false;
+    const formConfig = this.createFormConfig(workspace, containerPending);
     return await new Promise((resolve) => {
       this.modalParent.showNoraModal(formConfig, {
         width: 540,
         height: 700,
-      }, (result: TFormResult | null) => resolve(result));
+      }, (result: TFormResult | null) => {
+        if (
+          result &&
+          (containerPending ||
+            this.ctx.syncController?.defaultContainerPending(targetId))
+        ) {
+          resolve({
+            ...result,
+            userContextId: this.ctx.getRawWorkspace(targetId)?.userContextId ??
+              workspace.userContextId,
+          });
+        } else resolve(result);
+      });
     });
   }
 }

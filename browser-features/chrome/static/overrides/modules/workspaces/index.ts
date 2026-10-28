@@ -5,7 +5,24 @@
 
 import { readNewTabClipboard } from "./clipboard.ts";
 import Workspaces from "#features-chrome/common/workspaces";
-import { resolveWorkspaceOpenLinkUserContext } from "./open-link-user-context.ts";
+import { WORKSPACE_ENABLED_PREF_NAME } from "#features-chrome/common/workspaces/utils/workspaces-static-names.ts";
+import {
+  resolveWorkspaceOpenLinkUserContext,
+  shouldBlockWorkspaceOpenLink,
+  workspaceDefaultIsPending,
+} from "./open-link-user-context.ts";
+
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+);
+
+function defaultContainerPending(canOpen: boolean | undefined): boolean {
+  return workspaceDefaultIsPending(
+    Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true),
+    PrivateBrowsingUtils.isWindowPrivate(window),
+    canOpen,
+  );
+}
 
 console.log("Workspaces override loaded");
 
@@ -77,6 +94,13 @@ export const overrides = [
       }
 
       const gWorkspacesServices = Workspaces.getCtx();
+      if (
+        shouldBlockWorkspaceOpenLink(
+          options,
+          where,
+          defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
+        )
+      ) return;
       const workspaceUserContextId =
         gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
@@ -114,6 +138,13 @@ export const overrides = [
         },
       ) {
         const gWorkspacesServices = Workspaces.getCtx();
+        if (
+          shouldBlockWorkspaceOpenLink(
+            params,
+            where,
+            defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
+          )
+        ) return;
         const workspaceUserContextId =
           gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
@@ -194,6 +225,10 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = Workspaces.getCtx();
+
+      if (defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab())) {
+        return;
+      }
 
       console.log(
         "gWorkspacesServices?.getCurrentWorkspaceUserContextId()",

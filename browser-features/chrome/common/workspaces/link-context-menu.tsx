@@ -234,6 +234,8 @@ export class WorkspacesLinkContextMenu {
       return;
     }
 
+    if (!this.ctx.canOpenWorkspaceTab(workspaceId)) return;
+
     const workspace = this.ctx.getRawWorkspace(workspaceId);
     const userContextId = workspace?.userContextId ?? 0;
     const triggeringPrincipal = Services.scriptSecurityManager

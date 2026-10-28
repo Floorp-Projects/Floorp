@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
+import type { WorkspaceContainerRef } from "../../browser-features/modules/common/workspace-container-types.ts";
+
+export interface LiveContainer {
+  userContextId: number;
+  name: string;
+  color: string;
+  icon: string;
+}
 export interface LiveClient {
   name: string;
   profile: string;
@@ -11,6 +19,8 @@ export interface LiveSetup {
   buildCommit: string;
   buildTree: string;
   engineSha256: string;
+  buildWorkingTreeDirty?: boolean;
+  resourceSha256?: Record<string, string>;
 }
 export interface LiveTab {
   id: string;
@@ -24,6 +34,19 @@ export interface LiveSnapshot {
   name: string;
   selected: boolean;
   error: string | null;
+  defaultUserContextId: number;
+  desiredDefaultContainer: WorkspaceContainerRef | null;
+  desiredTabs: {
+    id: string;
+    container?: WorkspaceContainerRef;
+    deleted: boolean;
+  }[];
+  containerStates: {
+    containerId: string;
+    status: "resolved" | "pending";
+    reason?: string;
+    userContextId?: number;
+  }[];
   tabs: LiveTab[];
 }
 
@@ -32,4 +55,11 @@ export interface LiveIdentity {
   verified: boolean;
   syncReady: boolean;
   uid: string | null;
+}
+
+export interface LiveReopenResult {
+  complete: boolean;
+  passed: boolean;
+  reopened?: boolean;
+  stableUUID?: boolean;
 }

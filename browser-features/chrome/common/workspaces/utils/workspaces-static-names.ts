@@ -11,6 +11,8 @@ export const WORKSPACE_DATA_PREF_NAME = "floorp.workspaces.v4.store";
  * the attribute name of tabs that stores the workspace id.
  */
 export const WORKSPACE_TAB_ATTRIBUTION_ID = "floorpWorkspaceId";
+/** Emitted only when the user explicitly moves a tab between workspaces. */
+export const WORKSPACE_TAB_MOVED_EVENT = "floorp-workspace-tab-moved";
 /**
  * the attribute name of the workspace that stores the last shown workspace id.
  */

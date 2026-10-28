@@ -33,14 +33,19 @@ export function createWorkspaceSyncIndicator(
       };
     }
     const paused = !ctx.syncController.isEnabled();
+    const containerPending = ctx.syncController.containerStatusText?.(id) ||
+      null;
+    const syncError = ctx.syncController.errorText(id) || null;
     const error = paused
       ? i18next.t("workspaces.sync.engine-disabled")
-      : ctx.syncController.errorText(id) || null;
+      : syncError || containerPending;
     return {
       state: error ? "attention" : "selected",
       status: i18next.t(
         paused
           ? "workspaces.sync.status-paused"
+          : containerPending && !syncError
+          ? "workspaces.containers.status-pending"
           : error
           ? "workspaces.sync.status-error"
           : "workspaces.sync.status-selected",
@@ -50,6 +55,8 @@ export function createWorkspaceSyncIndicator(
         ? i18next.t(
           paused
             ? "workspaces.sync.indicator-paused"
+            : containerPending && !syncError
+            ? "workspaces.containers.indicator-pending"
             : "workspaces.sync.indicator-attention",
           {
             name: name(),
