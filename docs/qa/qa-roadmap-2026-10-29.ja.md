@@ -92,3 +92,13 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - [固定QA308レビュー](https://github.com/Floorp-Projects/Floorp/blob/c6df42ba68074ea47b70be55980b426020a2641f/docs/qa/kit-v0.3.0-review-fixes/COMPREHENSIVE_REVIEW_QA308.md)。内容は本人添付の整理に基づき、最新実装状態は別途棚卸しする。
 - 今回の終端監査：`Shared/FloorpAgents/jobs/qa-2513-20261026-b/native-result-20261027/Floorp-QA2513-Intel40562022078-20261028-JA.md`。
 - 保存済みnative ledger、SDK来歴、source pins、初回失敗、portable回帰は上記終端監査の参照先を保持する。
+
+## 2026-10-29 JST 06時台の継続
+
+- 詳細ログを限定8パスからsnapshotし、OpenSSL 3 CMS（AES-256-GCM/RSA-OAEP-SHA256）で暗号化する回収候補を実装した。公開鍵だけをsourceへ固定し、復号鍵は担当Bの私有領域で保持する。SDK、任意ファイル、環境変数を収集せず、raw tarはメモリ内だけに置く。
+- 失敗時の公開診断と暗号化artifactの2経路を無効workflow候補へ組み込み、SDK取得・build前のtransport probeも追加した。新branch専用のorigin selectorは旧route・rerun・非初回pushを拒否し、元の345分／360分とclockを維持する。
+- 全754 IDsを19の隔離batchで検証し、749成功・従来と同じ実Darwin専用5skip・0fail/0error。旧737 IDsを全保持し、148 source hashesは全batchで一致した。追加17件は暗号化回収13件と新origin4件。関連47件は全体検証に含まれ、別途合算しない。
+- 新sourceを使う公開verifierの7 synthetic controlsでも、失敗時の45行・初回失敗・未確認状態、stdoutと保存artifactの一致を確認した。最初の暗号化test setupエラーは別記して保存した。
+- 新native実行は開始していない。Mac上のOpenSSL 3の実在・version・来歴と、最新SDK metadata/取得bytes、最終fixture/head・branch不存在・run0の直前照合が残る。既存42件はUNVERIFIED・上流無効3件のままである。
+
+回収仕様と限界は `docs/qa/qa-diagnostic-transport-2026-10-29.ja.md` を参照。

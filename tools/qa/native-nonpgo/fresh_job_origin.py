@@ -24,6 +24,8 @@ INSTALL_REPAIR_BRANCH = 'b/qa-fresh45-install-20261027'
 INSTALL_REPAIR_PROFILE = 'fresh-firefox45-install-job-origin-20261027-v1'
 MONITOR_REPAIR_BRANCH = 'b/qa-fresh45-monitor-20261028'
 MONITOR_REPAIR_PROFILE = 'fresh-firefox45-monitor-job-origin-20261028-v1'
+DIAGNOSTICS_BRANCH = 'b/qa-fresh45-diagnostics-20261029'
+DIAGNOSTICS_PROFILE = 'fresh-firefox45-diagnostics-job-origin-20261029-v1'
 API_CAP = 2 * 1024**2
 
 
@@ -47,12 +49,12 @@ def _decode(raw):
 
 
 def initialize(task, *, environment=None, opener=None, wall_clock=None, monotonic_clock=None,
-               continuation=False, install_repair=False, monitor_repair=False):
+               continuation=False, install_repair=False, monitor_repair=False, diagnostics=False):
     """No clock reset, checkpoint role, payload operation, or permission mutation."""
     env = os.environ if environment is None else environment
     wall = time.time if wall_clock is None else wall_clock
     mono = time.monotonic if monotonic_clock is None else monotonic_clock
-    selectors = (continuation, install_repair, monitor_repair)
+    selectors = (continuation, install_repair, monitor_repair, diagnostics)
     require(all(type(value) is bool for value in selectors) and
             sum(selectors) <= 1, 'fresh-origin-run-scope')
     branch = CONTINUATION_BRANCH if continuation else BRANCH
@@ -61,6 +63,8 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
         branch, profile = INSTALL_REPAIR_BRANCH, INSTALL_REPAIR_PROFILE
     if monitor_repair:
         branch, profile = MONITOR_REPAIR_BRANCH, MONITOR_REPAIR_PROFILE
+    if diagnostics:
+        branch, profile = DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and env.get('GITHUB_EVENT_NAME') == 'push' and
             env.get('GITHUB_RUN_ATTEMPT') == '1' and env.get('GITHUB_REF') == 'refs/heads/' + branch and
             env.get('FRESH_PUSH_CREATED') == 'true' and env.get('FRESH_PUSH_BEFORE') == '0' * 40,
@@ -159,11 +163,13 @@ def main():
     selection.add_argument('--continuation-20261026', action='store_true')
     selection.add_argument('--install-repair-20261027', action='store_true')
     selection.add_argument('--monitor-repair-20261028', action='store_true')
+    selection.add_argument('--diagnostics-20261029', action='store_true')
     args = parser.parse_args()
     try:
         initialize(args.task, continuation=args.continuation_20261026,
                    install_repair=args.install_repair_20261027,
-                   monitor_repair=args.monitor_repair_20261028)
+                   monitor_repair=args.monitor_repair_20261028,
+                   diagnostics=args.diagnostics_20261029)
     except Failure as error:
         print(json.dumps({'freshJobOrigin': 'failed', 'code': str(error)}), flush=True)
         return 1
