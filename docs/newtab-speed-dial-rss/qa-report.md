@@ -44,6 +44,8 @@
 
 `deno task test:smoke` は全6工程成功。runner unit tests 41件、chrome / ESM / pages のテスト発見、CI 対象ソースの型検査、全1,280ファイルの lint を含む。新しいページ・サービス・テストの個別型検査も成功した。
 
+GitHub の文書チェックで検出された生成カタログ9件も、新しい Hub ルートと actor に合わせて更新した。docs inventory の収集・検証と docs pipeline の53テストは成功。
+
 本番用 bundle を locked Runtime に組み込み、開発用 HTTP loader を使わずに再起動した検証も **9項目 / 失敗0**。`about:newtab` が `chrome://noraneko-newtab/content/assets/` の script を読み込み、強化 CSP が有効であること、内蔵 AVIF 背景と半透明表示、明示画像の data URL 許可・直接 HTTP 画像の遮断、ブックマーク階層・記事の既読/スター/出典の保持を確認した。外部 Places 操作で現在フォルダーを削除した際の直近の親への復帰と、`about:hub` の接続も成功。
 
 本体の画面: [ホーム](qa/home.png) · [RSS リーダー](qa/reader.png) · [Hub 設定](qa/hub.png)。画面内の QA 名・ローカル URL は専用プロファイルの fixture であり、新規プロファイルに配布する初期データではない。
