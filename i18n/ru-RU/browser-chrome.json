@@ -73,7 +73,10 @@
       "indicator-selected": "{{name}} — Включено в синхронизацию рабочего пространства",
       "indicator-attention": "{{name}} — Ошибка синхронизации рабочего пространства: {{error}}",
       "status-selected": "Включено в синхронизацию",
-      "status-error": "Ошибка синхронизации"
+      "status-error": "Ошибка синхронизации",
+      "status-paused": "Sync paused",
+      "indicator-paused": "{{name}} — Workspace sync paused: {{error}}",
+      "engine-disabled": "Workspace sync is turned off. Choose Resume Workspace Sync in the workspace menu to sync your selected workspaces."
     },
     "context-menu": {
       "move-up": "Переместить это рабочее пространство вверх",
@@ -82,7 +85,8 @@
       "manage": "Управление рабочим пространством",
       "archive": "Архивировать рабочее пространство",
       "sync": "Синхронизировать эту рабочую область и её вкладки",
-      "sync-paused": "Синхронизация рабочего пространства требует внимания"
+      "sync-paused": "Синхронизация рабочего пространства требует внимания",
+      "sync-resume": "Resume Workspace Sync"
     },
     "popup": {
       "create-new": "Создать новое рабочее пространство...",
@@ -114,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "Неправильный идентификатор рабочих пространств (возможно не обновлён порядок)"
+    },
+    "containers": {
+      "title": "Workspace Containers",
+      "setup": "Set Up Workspace Containers…",
+      "reopen": "Reopen a Tab in Its Synced Container…",
+      "status-pending": "Container setup needed",
+      "indicator-pending": "{{name}} — Container setup needed: {{error}}",
+      "definition-missing": "The container information has not arrived yet. Tabs will open after it is available.",
+      "legacy-unresolved": "Some older synced tabs have no container assignment. Use Set Up Workspace Containers to choose where they should open.",
+      "confirmation": "Choose the container to use for “{{name}}”. Its existing sign-ins will be used on this device.",
+      "deleted": "The container linked to “{{name}}” was deleted. Link another container, create one, or stop syncing this workspace.",
+      "creating": "The workspace container is being created. Its tabs are waiting.",
+      "disabled": "Containers are disabled on this device. Enable containers to open these tabs.",
+      "deleting": "The linked container is being removed. Its tabs are waiting.",
+      "creation-failed": "The container “{{name}}” could not be created or saved. Choose an existing container or try creating it again.",
+      "confirm": "Use the existing container “{{name}}” for this synced container? Tabs will use its sign-ins on this device.",
+      "create": "Create a new “{{name}}” container (sign-in required)",
+      "unsubscribe": "Stop syncing this workspace",
+      "operation-failed": "The container operation could not be completed. Check its status in the workspace menu and try again.",
+      "reopen-needed": "Some existing tabs need to be reopened in their synced container. Choose the reopen action in the workspace menu.",
+      "reopen-select": "Choose a tab to reopen in its synced container.",
+      "reopen-confirm": "Reopen this tab in its synced container? The current tab will be replaced after the new page loads. Unsaved form input and page state may be lost.",
+      "default-unavailable": "Container — use Set Up Workspace Containers in the workspace menu first.",
+      "legacy-scope": "Which missing container assignments should be set? Tabs means every tab in this workspace whose container is still unknown.",
+      "legacy-scope-default": "Workspace default only",
+      "legacy-scope-tabs": "All tabs with unknown containers",
+      "legacy-scope-all": "Workspace default and all tabs with unknown containers",
+      "legacy-target": "Choose the container for the selected assignments. Existing sign-ins on this device will be used.",
+      "legacy-none": "No container (normal browsing)",
+      "legacy-create": "Create a container using the workspace name (sign-in required)"
     }
   },
   "profile-manager-button": {

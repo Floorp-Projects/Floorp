@@ -73,7 +73,10 @@
       "indicator-selected": "{{name}} — Ingår i synkroniseringen av arbetsytan",
       "indicator-attention": "{{name}} — Synkroniseringsfel för arbetsytan: {{error}}",
       "status-selected": "Ingår i synkronisering",
-      "status-error": "Synkroniseringsfel"
+      "status-error": "Synkroniseringsfel",
+      "status-paused": "Synkronisering pausad",
+      "indicator-paused": "{{name}} — Synkronisering av arbetsytan pausad: {{error}}",
+      "engine-disabled": "Synkronisering av arbetsyta är avstängd. Välj Återuppta arbetsyta Synkronisering i arbetsytemenyn för att synkronisera dina valda arbetsytor."
     },
     "context-menu": {
       "move-up": "Flytta denna arbetsyta uppåt",
@@ -82,7 +85,8 @@
       "manage": "Hantera arbetsyta",
       "archive": "Arkivera arbetsytan",
       "sync": "Synkronisera denna arbetsyta och dess flikar",
-      "sync-paused": "Synkroniseringen av arbetsytan kräver uppmärksamhet"
+      "sync-paused": "Synkroniseringen av arbetsytan kräver uppmärksamhet",
+      "sync-resume": "Återuppta arbetsytans synkronisering"
     },
     "popup": {
       "create-new": "Skapa ny arbetsyta...",
@@ -114,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "Ej giltigt ID för arbetsytor (kanske är placeringen inte uppdaterad)"
+    },
+    "containers": {
+      "title": "Behållare för arbetsytor",
+      "setup": "Ställ in behållare för arbetsytor…",
+      "reopen": "Öppna en flik igen i dess synkroniserade behållare…",
+      "status-pending": "Konfiguration av behållare behövs",
+      "indicator-pending": "{{name}} — Behållarkonfigurationen behövs: {{error}}",
+      "definition-missing": "Behållarinformationen har inte anlänt ännu. Flikarna öppnas efter att den är tillgänglig.",
+      "legacy-unresolved": "Vissa äldre synkroniserade flikar har ingen behållare tilldelad. Använd ”Konfigurera arbetsytans behållare” för att välja var de ska öppnas.",
+      "confirmation": "Välj behållaren att använda för ”{{name}}”. Dess befintliga inloggningar kommer att användas på den här enheten.",
+      "deleted": "Behållaren länkad till ”{{name}}” togs bort. Länka en annan behållare, skapa en eller sluta synkronisera denna arbetsyta.",
+      "creating": "Behållaren för arbetsytan skapas. Dess flikar väntar.",
+      "disabled": "Behållare är inaktiverade på den här enheten. Aktivera behållare för att öppna dessa flikar.",
+      "deleting": "Den länkade behållaren tas bort. Dess flikar väntar.",
+      "creation-failed": "Behållaren ”{{name}}” kunde inte skapas eller sparas. Välj en befintlig behållare eller försök att skapa den igen.",
+      "confirm": "Använd den befintliga behållaren ”{{name}}” för denna synkroniserade behållare? Flikar kommer att använda sina inloggningar på denna enhet.",
+      "create": "Skapa en ny behållare ”{{name}}” (inloggning krävs)",
+      "unsubscribe": "Sluta synkronisera denna arbetsyta",
+      "operation-failed": "Behållaråtgärden kunde inte slutföras. Kontrollera dess status i arbetsytans meny och försök igen.",
+      "reopen-needed": "Vissa befintliga flikar måste öppnas på nytt i sin synkroniserade behållare. Välj åtgärd igen i arbetsytans meny.",
+      "reopen-select": "Välj en flik att öppna igen i sin synkroniserade behållare.",
+      "reopen-confirm": "Öppna denna flik igen i sin synkroniserade behållare? Den aktuella fliken kommer att bytas ut efter att den nya sidan laddats. Osparad formulärinmatning och sidtillstånd kan gå förlorade.",
+      "default-unavailable": "Behållare — använd Ställ in arbetsytans behållare i arbetsytans meny först.",
+      "legacy-scope": "Vilka saknade behållaruppgifter ska anges? Flikar betyder varje flik i denna arbetsyta vars behållare fortfarande är okänd.",
+      "legacy-scope-default": "Endast arbetsyta standard",
+      "legacy-scope-tabs": "Alla flikar med okända behållare",
+      "legacy-scope-all": "Standard arbetsyta och alla flikar med okända behållare",
+      "legacy-target": "Välj behållare för de valda uppgifterna. Befintliga inloggningar på den här enheten kommer att användas.",
+      "legacy-none": "Ingen behållare (normal surfning)",
+      "legacy-create": "Skapa en behållare med namnet på arbetsytan (inloggning krävs)"
     }
   },
   "profile-manager-button": {
