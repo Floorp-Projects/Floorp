@@ -1,0 +1,22 @@
+{
+  "commit": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "reads": [
+    {
+      "path": "testing/mozbase/mozlog/mozlog/formatters/raw.py",
+      "exit": 128,
+      "stderr": "fatal: path 'testing/mozbase/mozlog/mozlog/formatters/raw.py' does not exist in '460106115bc76b026c8bf8dad24df7fcb07f97c2'\n",
+      "sha256": null
+    },
+    {
+      "path": "testing/mozbase/mozlog/mozlog/formatters/__init__.py",
+      "exit": 0,
+      "stderr": "",
+      "sha256": "d32369bbbe63d594eb0ecb4466b4465787beaa064bf2941fb0b05585d3c7b8f8",
+      "function": "JSONFormatter",
+      "startLine": 20,
+      "endLine": 21,
+      "source": "def JSONFormatter():\n    return lambda x: json.dumps(x) + \"\\n\""
+    }
+  ],
+  "upstreamSourceExecuted": false
+}

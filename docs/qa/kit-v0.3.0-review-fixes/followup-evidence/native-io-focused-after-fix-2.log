@@ -1,0 +1,18 @@
+test_caller_subreaper_zero_is_not_enabled (test_qa3_native_io.ProcessFailureTests.test_caller_subreaper_zero_is_not_enabled) ... ok
+test_cleanup_only_sink_failure_cannot_abort_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_only_sink_failure_cannot_abort_kill_and_reap) ... ok
+test_cleanup_signal_error_cannot_abort_later_kill_and_reap (test_qa3_native_io.ProcessFailureTests.test_cleanup_signal_error_cannot_abort_later_kill_and_reap) ... ok
+test_initial_snapshot_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_initial_snapshot_failure_preserves_error_and_reaps) ... ok
+test_pipe_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_read_failure_preserves_error_and_reaps) ... ok
+test_pipe_setup_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_pipe_setup_failure_preserves_error_and_reaps) ... ok
+test_selector_close_error_does_not_replace_first_sink_failure (test_qa3_native_io.ProcessFailureTests.test_selector_close_error_does_not_replace_first_sink_failure) ... ok
+test_selector_read_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_read_failure_preserves_error_and_reaps) ... ok
+test_selector_registration_failure_preserves_error_and_reaps (test_qa3_native_io.ProcessFailureTests.test_selector_registration_failure_preserves_error_and_reaps) ... ok
+test_sink_errors_preserve_initial_failure_and_reap (test_qa3_native_io.ProcessFailureTests.test_sink_errors_preserve_initial_failure_and_reap) ... ok
+test_sink_failure_reaps_detached_and_late_fork_children (test_qa3_native_io.ProcessFailureTests.test_sink_failure_reaps_detached_and_late_fork_children) ... ok
+test_unrelated_late_adoption_and_caller_subreaper_are_preserved (test_qa3_native_io.ProcessFailureTests.test_unrelated_late_adoption_and_caller_subreaper_are_preserved) ... ok
+test_worker_sigterm_after_leader_exit_is_not_pass (test_qa3_native_io.ProcessFailureTests.test_worker_sigterm_after_leader_exit_is_not_pass) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 29.063s
+
+OK

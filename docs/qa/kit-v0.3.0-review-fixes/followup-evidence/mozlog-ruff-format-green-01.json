@@ -1,0 +1,53 @@
+{
+  "phase": "ruff-format-green-01",
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=2147483648",
+    "--cpu=30",
+    "--fsize=8388608",
+    "--",
+    "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+    "format",
+    "--check",
+    "--no-cache",
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp-Runtime",
+  "exit": 0,
+  "timeout": false,
+  "seconds": 0.021,
+  "limits": {
+    "AS": 2147483648,
+    "CPU": 30,
+    "FSIZE": 8388608,
+    "wall": 60
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "LANG",
+    "MOZBUILD_STATE_PATH",
+    "PATH",
+    "PIP_NO_INDEX",
+    "PYTHONDONTWRITEBYTECODE",
+    "RUFF_CACHE_DIR",
+    "TMPDIR",
+    "UV_OFFLINE"
+  ],
+  "files": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "bytes": 7839
+    },
+    ".github/workflows/scripts/test_qa3_mozlog.py": {
+      "sha256": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063",
+      "bytes": 14148,
+      "testMethods": 21
+    }
+  },
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/mozlog-ruff-format-green-01.log",
+  "logSha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938",
+  "native": false,
+  "network": false
+}

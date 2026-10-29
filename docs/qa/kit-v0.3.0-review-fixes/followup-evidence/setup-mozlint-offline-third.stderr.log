@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 191, in <module>
+    main(sys.argv[1:])
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 147, in main
+    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 39, in check_and_get_mach
+    return load_mach(dir_path, mach_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/./mach", line 25, in load_mach
+    return mach_initialize.initialize(dir_path, args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/build/mach_initialize.py", line 448, in initialize
+    command_site_manager = CommandSiteManager.from_environment(
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/python/mach/mach/site.py", line 631, in from_environment
+    raise Exception(
+Exception: Cannot use MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE="system" for any sites other than ('mach', 'build', 'common'). The current attempted site is "lint".

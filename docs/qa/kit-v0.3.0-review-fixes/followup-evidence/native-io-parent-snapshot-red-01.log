@@ -1,0 +1,16 @@
+test_parent_snapshot_error_closes_control_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_snapshot_error_closes_control_and_reaps) ... FAIL
+
+======================================================================
+FAIL: test_parent_snapshot_error_closes_control_and_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_snapshot_error_closes_control_and_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 949, in test_parent_snapshot_error_closes_control_and_reaps
+    self.parent_failure("snapshot")
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 927, in parent_failure
+    self.assertNotEqual(
+AssertionError: (12, 366911) == (12, 366911) : parent left its own control descriptor open
+
+----------------------------------------------------------------------
+Ran 1 test in 12.124s
+
+FAILED (failures=1)

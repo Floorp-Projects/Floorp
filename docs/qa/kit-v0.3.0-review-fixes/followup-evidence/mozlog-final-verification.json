@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "baseHead": "460106115bc76b026c8bf8dad24df7fcb07f97c2",
+  "ownedFiles": {
+    ".github/workflows/scripts/qa3_mozlog.py": {
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "bytes": 7839
+    },
+    ".github/workflows/scripts/test_qa3_mozlog.py": {
+      "sha256": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063",
+      "bytes": 14148
+    }
+  },
+  "originalMethods": 14,
+  "newMethods": [
+    "test_crlf_and_multiple_complete_events_are_preserved",
+    "test_event_byte_limit_includes_terminator_at_boundary",
+    "test_formal_nullable_and_string_subtests_are_preserved",
+    "test_multibyte_byte_bound_and_truncation_fail_closed",
+    "test_readline_is_bounded_before_oversized_event_is_loaded",
+    "test_subtest_field_and_raw_type_are_required",
+    "test_unterminated_complete_and_partial_events_are_rejected"
+  ],
+  "totalMethods": 21,
+  "originalMethodsAstUnchanged": {
+    "test_exact_complete_required_execution": true,
+    "test_canonical_package_id_and_browser_chrome_uri": true,
+    "test_empty_incomplete_assertion_free_and_missing_case": true,
+    "test_required_skip_and_recovered_first_failure": true,
+    "test_first_failed_process_cannot_be_hidden_by_pass_log": true,
+    "test_duplicate_execution_and_internal_retry": true,
+    "test_extra_suite_foreign_source_and_duplicate_id": true,
+    "test_crash_leak_and_unknown_event": true,
+    "test_child_process_exit_requires_typed_zero": true,
+    "test_exact_expected_assertion_canary": true,
+    "test_unexecuted_setup_failure_is_not_expected_canary": true,
+    "test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures": true,
+    "test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions": true,
+    "test_error_after_suite_and_truncated_raw_are_rejected": true
+  },
+  "allOriginalMethodsPreserved": true,
+  "diffCheckExit": 0,
+  "patchSha256": "826aa5ad8413c29f4d12382be185b777f369eb9a00e9fac4021e1b2e4d0e0c41",
+  "stages": {
+    "red-01": {
+      "exit": 1,
+      "timeout": false,
+      "logSha256": "b4731284e1f37523043ab40f05d86a8d0ff284ec42777d8de5b28c390ff55bbb"
+    },
+    "green-01": {
+      "exit": 0,
+      "timeout": false,
+      "logSha256": "6b75f8692c749825e1b4ffbbb3cb3ff61490523fb2ac73cf9d67abc7a0a482fe"
+    },
+    "green-02": {
+      "exit": 0,
+      "timeout": false,
+      "logSha256": "a5986744f132af6eed244dd2660103499661755d3a7dfc9207271ca610e63bfa"
+    },
+    "ruff-check-red-01": {
+      "exit": 1,
+      "timeout": false,
+      "logSha256": "92b7f70883eb5e8c30c3d307a77b36b9c80422e41cab15f59b263e85ea4ebfcc"
+    },
+    "ruff-format-red-01": {
+      "exit": 1,
+      "timeout": false,
+      "logSha256": "9e10421a0a3bb9847c80b523cf68c3e16073bdb0e5009f7cabc28575ac0a3dc1"
+    },
+    "ruff-check-green-01": {
+      "exit": 0,
+      "timeout": false,
+      "logSha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "ruff-format-green-01": {
+      "exit": 0,
+      "timeout": false,
+      "logSha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "mach-lint-01": {
+      "exit": 0,
+      "timeout": false,
+      "logSha256": "7aa466628f1bc3598effbc56c45c51728ee61db623429f343982a8ec0ff5c011"
+    }
+  },
+  "sourceScope": "Only qa3_mozlog.py and test_qa3_mozlog.py edited by this agent; concurrent other-agent changes are outside this scoped diff",
+  "committed": false,
+  "pushed": false,
+  "nativeExecuted": false,
+  "networkRequested": false
+}

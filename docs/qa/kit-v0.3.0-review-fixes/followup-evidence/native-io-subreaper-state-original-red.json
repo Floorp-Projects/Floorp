@@ -1,0 +1,23 @@
+{
+  "selection": "test_qa3_native_io.ProcessFailureTests.test_caller_subreaper_zero_is_not_enabled",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 0.283,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "84a419ef44f71e2a0b005e9f9c9f1a9de1dd392a7fc6ea8517304fffaa88a0e3",
+  "testedVariant": "pinned-original",
+  "testedSourceSha256": "d1d5e86dc8ae63977248847e1bd3192b5267966ec8011aa2390fd486f2e7bd86",
+  "testSha256": "d1ba23d0c6cc3fc888ef35ebcebe8933d355a6545a6e19e5d5ab6e419fd57c68",
+  "logSha256": "4b1eadc7d150e9c0a3f6588a8874db2928563d18d562408cce1bb90515b5af3c",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}

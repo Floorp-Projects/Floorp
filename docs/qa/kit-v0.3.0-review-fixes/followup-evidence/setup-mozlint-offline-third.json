@@ -1,0 +1,15 @@
+{
+  "command": [
+    "./mach",
+    "lint",
+    "--linter",
+    "ruff",
+    "--linter",
+    "shellcheck",
+    ".github/workflows/scripts/qa3_build_profile.py",
+    ".github/workflows/scripts/test_qa3_build_profile.py",
+    ".github/workflows/scripts/setup-floorp.sh"
+  ],
+  "exit": 1,
+  "credentialsInherited": false
+}

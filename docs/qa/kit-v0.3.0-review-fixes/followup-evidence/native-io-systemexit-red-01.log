@@ -1,0 +1,19 @@
+test_private_envelope_never_reconstructs_system_exit_zero (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_never_reconstructs_system_exit_zero) ... ERROR
+
+======================================================================
+ERROR: test_private_envelope_never_reconstructs_system_exit_zero (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_never_reconstructs_system_exit_zero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1026, in test_private_envelope_never_reconstructs_system_exit_zero
+    self.reply(value)
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1001, in reply
+    return qa3_native_io._supervise(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/qa3_native_io.py", line 682, in _supervise
+    raise kind(*error["args"])
+SystemExit: 0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.041s
+
+FAILED (errors=1)
