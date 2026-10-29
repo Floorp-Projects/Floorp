@@ -125,3 +125,43 @@
 比較: [変更前の全画面](qa/windows-layout-before-fullscreen.png) / [変更後の全画面](qa/windows-layout-after-fullscreen.png)。追加画面: [暗いテーマと時計](qa/windows-layout-clock-dark.png)、[200%の履歴候補とフォーカス](qa/windows-layout-history-200.png)、[RSSのみ](qa/windows-layout-feed-only.png)、[サイト優先](qa/windows-layout-sites-first.png)。[測定結果](qa/windows-layout-checks.json)。
 
 検証には保存済みの専用QAプロファイルを使用し、レビュー時の設定（時計off・中央配置・ライトテーマなど）へ復帰した。新しいタブを全画面で起動したままレビューへ引き渡す。元の`_dist/profile/test`は引き続き使用していない。
+
+
+## 再レビュー: RSS の情報階層とフォーカス（2026-10-29）
+
+開始時 HEAD / PR head は `1fe937777ddabfe9f9e0679023657e8cef6620b0`、PR は open・未マージ、作業ツリーに未コミット変更なし。既存の Windows 改善を土台とした追加修正で、画面構成と機能仕様は変更していない。
+
+### 実画面からの追加修正
+
+- 購読先の長い名前がサイドバーを縦に占有していたため、名前だけを2行で省略する。更新失敗・更新中・購読解除済みの状態は省略対象から外し、13pxで表示する。完全な名前はDOMの文字列・読み上げ名・titleに保持する。
+- 記事一覧の配信元は1行の補助情報として扱い、長い記事名へ先に視線が向くようにする。完全な配信元名はtitleとDOMに残す。
+- スターを日付の横へ揃え、記事名と操作アイコンの競合を減らす。スター済みは塗りと共通の紫色で示し、44pxの操作領域を維持する。
+- 選択中の記事は14%の紫を混ぜた面と左境界、未選択記事のホバーは既存の9%の面、キーボードフォーカスは輪郭で区別する。スクロールするグループ選択のフォーカスを内側へ収め、枠の欠けを防ぐ。
+
+比較: [今回の開始時の一覧](qa/windows-reader-followup-before.png) / [修正後の選択・本文表示](qa/windows-reader-followup-after.png)。前者は記事未選択、後者は選択済みの状態。選択済み同士の比較元は[先行Windows QAのReader](qa/windows-light-reader.png)。いずれも本体の画面で、プロトタイプではない。
+
+### 今回再実行した検証
+
+Browser plugin は利用できないため、指定された Windows の実 Floorp とリポジトリの Marionette client を使用。途中からユーザーの指定に従い Computer Use を終了し、`deno task dev-tool` と Marionette に統一した。
+
+| 確認 | 結果 |
+| --- | --- |
+| 本番stage | `deno install`、`deno task feles-build stage --marionette`でlocked Runtime 159.0 / build 20261026023026を起動。新しいタブの本番Vite build成功 |
+| 両テーマ・背景 | 白 / 黒のQA画像 / 背景なし × 半透明on/off × 明暗、計12条件を642 CSS px幅で再確認。横overflowなし。背景とタイル・文字・blurの測定を保存 |
+| 広幅 | 1382×938 CSS pxでHome / Speed Dial / Reader / Hub、両テーマとも横overflowなし |
+| 200% | 700×800のネイティブ窓で321×359 CSS px。Home / Speed Dial / Reader / Hub、両テーマで横overflowなし。メニューのEndで末尾の操作へ到達し、ダイアログ取消後のフォーカス復帰も成功 |
+| Places | UIから入れ子フォルダー作成、移動・改名、削除を実行し、保存先と配下をサービス経由の実Placesで照合。削除確認も再表示 |
+| RSS | 記事選択・既読化、スター、未読への変更と保存状態を確認。専用リーダーの本文表示・一覧選択・フォーカス表示を再確認 |
+| Hub | 開いているHomeへ背景方式・透明化・時計の設定が反映。専用設定テストと既存integrationも再実行 |
+| コンソール | `dev-tool console --level error`には復元された外部ページとブラウザーchromeの既存メッセージあり。新しいタブ / ReaderのTypeError・ReferenceError等を対象にした抽出は0件 |
+| 既存ブラウザーテスト | 新しいタブ10モジュール、Hub新タブ設定1モジュール、既存Hub integration 1モジュール、いずれも失敗0 |
+| ソース検査 | Readerの`deno check`成功。`test:smoke`全6工程成功（runner41ケース、型検査、1282ファイルlint）。`git diff --check`成功 |
+
+[今回の画面・操作測定](qa/windows-reader-followup-checks.json)。観測結果の項目数はテストケース総数として加算しない。既存QAスクリプトの初回実行は、開始ルート・時計の表示設定の前提とフォーカス後のスクロール待ちが不足して停止した。開始状態と待機を明示した再実行を採用した。scope付きブラウザーテストも起動済みstageでは拒否されるため、QAブラウザーを正常終了してから実行した。
+
+作業ログは `_dist/visual-qa/followup-*`。本番コードへ固定デモや初期購読を追加していない。普段使いのプロファイルは使用していない。署名済み配布物、macOS、複数端末Sync、長時間・大量データ性能、先行QAに記録したネイティブクラッシュの根因未特定という制約は継続する。機能仕様を変更する提案は追加していない。
+
+
+最終stageも成功し、`dev-tool eval -c content`で `chrome://noraneko-newtab/content/assets/` のscriptと本番CSP（`connect-src 'none'`等）を再確認した。RSSの未読・スターの保存、明示操作前の画像0件、操作後だけのPNG data URL表示、空フィードも再確認した。`dev-tool navigate` / `screenshot` は `-c content` を指定して実行する。
+
+終了時、QA版Floorpを正常終了し、このcloneのFloorpプロセスが残っていないことを確認。元の`_dist/profile/test`は開始時に`pre-followup-20261029`へ退避し、既存QAデータの複製を使用していた。今回のQA側を`_dist/profile/followup-qa-20261029`へ保存し、元の`test`を復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256が退避元と一致。既存の`visual-qa-20261029`と普段使いのプロファイルは変更していない。

@@ -439,11 +439,12 @@ export function Reader() {
             <button
               type="button"
               aria-current={feedId === feed.id ? "page" : undefined}
+              title={feed.title}
               onClick={() => choose(feed.id, "all")}
             >
               <Rss size={17} />
               <span>
-                {feed.title}
+                <span className="nt-subscription-title">{feed.title}</span>
                 {!feed.enabled && (
                   <small>{t("newtab.unsubscribed", "Unsubscribed")}</small>
                 )}
@@ -636,7 +637,11 @@ export function Reader() {
                 onClick={() => open(item.id)}
               >
                 <span className="nt-reader-item-source">
-                  <span className="nt-reader-item-source-title">
+                  <span
+                    className="nt-reader-item-source-title"
+                    title={snapshot.feeds.find((feed) => feed.id === item.feedId)
+                      ?.title ?? item.feedTitle}
+                  >
                     {snapshot.feeds.find((feed) => feed.id === item.feedId)
                       ?.title ?? item.feedTitle}
                   </span>

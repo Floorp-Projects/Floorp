@@ -700,6 +700,9 @@
 .nt-group-tabs button svg {
   flex-shrink: 0;
 }
+.nt-group-tabs button:focus-visible {
+  outline-offset: -4px;
+}
 .nt-group-tabs [aria-selected="true"] {
   color: var(--floorp-action);
   border-block-end-color: var(--floorp-action);
@@ -1063,9 +1066,19 @@
   flex: 1;
   overflow-wrap: anywhere;
 }
+.nt-reader-subscriptions .nt-subscription-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.6;
+}
+.nt-reader-subscriptions li > button:first-child > svg {
+  flex-shrink: 0;
+}
 .nt-reader-subscriptions small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--floorp-muted);
 }
 .nt-reader-subscriptions li > .nt-icon-button {
@@ -1166,7 +1179,8 @@
   background: var(--floorp-surface);
 }
 .nt-reader-list-item[data-selected="true"] {
-  background: var(--nt-selection);
+  background: color-mix(in srgb, var(--floorp-action) 14%,
+    var(--floorp-surface));
   border-inline-start-color: var(--floorp-action);
 }
 .nt-reader-list-item > button:first-child {
@@ -1181,7 +1195,10 @@
 .nt-reader-list-item > .nt-icon-button {
   position: absolute;
   inset-inline-end: 3px;
-  inset-block-start: 35px;
+  inset-block-end: 8px;
+}
+.nt-reader-list-item > .nt-icon-button[aria-pressed="true"] {
+  color: var(--floorp-action);
 }
 .nt-reader-item-source {
   display: flex;
@@ -1493,7 +1510,9 @@
 }
 .nt-reader-item-source-title {
   min-inline-size: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nt-reader-status {
   padding: 16px 20px;
@@ -1501,7 +1520,7 @@
   font-size: 13px;
   line-height: 1.7;
 }
-.nt-reader-list-item:hover {
+.nt-reader-list-item:not([data-selected="true"]):hover {
   background: var(--nt-selection);
 }
 .nt-reader-list-item:focus-within {
