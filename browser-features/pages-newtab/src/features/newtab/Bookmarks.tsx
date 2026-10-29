@@ -470,129 +470,131 @@ export function Dial() {
   return (
     <main
       id="main-content"
-      className="nt-dial nt-container nt-surface"
+      className="nt-dial nt-container"
       tabIndex={-1}
     >
-      <header className="nt-page-heading">
-        <h1>{t("newtab.dial", "Speed Dial")}</h1>
-        <p>{t("newtab.dialHint", "Your bookmarks, in familiar places.")}</p>
-      </header>
-      <div className="nt-dial-toolbar">
-        <div
-          className="nt-group-tabs"
-          role="tablist"
-          aria-label={t("newtab.groups", "Bookmark groups")}
-          onKeyDown={(event) => {
-            const index = snapshot.groups.findIndex(
-              (group) => group.guid === groupGuid,
-            );
-            const next =
-              event.key === "ArrowRight"
-                ? (index + 1) % snapshot.groups.length
-                : event.key === "ArrowLeft"
-                  ? (index - 1 + snapshot.groups.length) %
-                    snapshot.groups.length
-                  : event.key === "Home"
-                    ? 0
-                    : event.key === "End"
-                      ? snapshot.groups.length - 1
-                      : -1;
-            if (next >= 0) {
-              event.preventDefault();
-              const group = snapshot.groups[next];
-              selectGroup(group.guid);
-              document.getElementById(`group-${group.guid}`)?.focus();
-            }
-          }}
-        >
-          {snapshot.groups.map((group) => (
+      <div className="nt-dial-controls nt-surface">
+        <header className="nt-page-heading">
+          <h1>{t("newtab.dial", "Speed Dial")}</h1>
+          <p>{t("newtab.dialHint", "Your bookmarks, in familiar places.")}</p>
+        </header>
+        <div className="nt-dial-toolbar">
+          <div
+            className="nt-group-tabs"
+            role="tablist"
+            aria-label={t("newtab.groups", "Bookmark groups")}
+            onKeyDown={(event) => {
+              const index = snapshot.groups.findIndex(
+                (group) => group.guid === groupGuid,
+              );
+              const next =
+                event.key === "ArrowRight"
+                  ? (index + 1) % snapshot.groups.length
+                  : event.key === "ArrowLeft"
+                    ? (index - 1 + snapshot.groups.length) %
+                      snapshot.groups.length
+                    : event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? snapshot.groups.length - 1
+                        : -1;
+              if (next >= 0) {
+                event.preventDefault();
+                const group = snapshot.groups[next];
+                selectGroup(group.guid);
+                document.getElementById(`group-${group.guid}`)?.focus();
+              }
+            }}
+          >
+            {snapshot.groups.map((group) => (
+              <button
+                type="button"
+                id={`group-${group.guid}`}
+                role="tab"
+                key={group.guid}
+                aria-controls="nt-folder-panel"
+                aria-selected={group.guid === groupGuid}
+                title={group.title}
+                tabIndex={group.guid === groupGuid ? 0 : -1}
+                onClick={() => selectGroup(group.guid)}
+              >
+                <Folder size={18} />
+                <span>{group.title}</span>
+              </button>
+            ))}
+          </div>
+          <div className="nt-dial-actions">
+            <Button
+              disabled={snapshot.readOnly || !folderGuid}
+              onClick={() =>
+                setDialog({
+                  type: "bookmark",
+                  kind: "bookmark",
+                  parentGuid: folderGuid || groupGuid,
+                })
+              }
+            >
+              <Plus size={18} />
+              {t("newtab.addSite", "Add site")}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={snapshot.readOnly || !folderGuid}
+              onClick={() =>
+                setDialog({
+                  type: "bookmark",
+                  kind: "folder",
+                  parentGuid: folderGuid || groupGuid,
+                })
+              }
+            >
+              <FolderPlus size={18} />
+              {t("newtab.createFolder", "Create folder")}
+            </Button>
+          </div>
+        </div>
+        <div className="nt-folder-navigation">
+          <IconButton
+            label={t("newtab.goUp", "Go up one folder")}
+            disabled={!folder || folder.guid === groupGuid}
+            onClick={() => openFolder(parent)}
+          >
+            <ArrowUp size={19} />
+          </IconButton>
+          <nav
+            id="dial-location"
+            tabIndex={-1}
+            aria-label={t("newtab.folderPath", "Bookmark folder path")}
+          >
+            <ol>
+              {path.map((node) => (
+                <li key={node.guid}>
+                  <button type="button" onClick={() => openFolder(node.guid)}>
+                    {node.title}
+                  </button>
+                  <ChevronRight size={15} aria-hidden="true" />
+                </li>
+              ))}
+              <li>
+                <span aria-current="page">
+                  {folder?.title ?? currentGroup?.title}
+                </span>
+              </li>
+            </ol>
+          </nav>
+          <div className="nt-group-note">
+            {t(
+              "newtab.assignmentNote",
+              "Group selection here does not change the workspace assignment.",
+            )}
             <button
               type="button"
-              id={`group-${group.guid}`}
-              role="tab"
-              key={group.guid}
-              aria-controls="nt-folder-panel"
-              aria-selected={group.guid === groupGuid}
-              title={group.title}
-              tabIndex={group.guid === groupGuid ? 0 : -1}
-              onClick={() => selectGroup(group.guid)}
+              onClick={() => void newTabClient.call("openHub", {})}
             >
-              <Folder size={18} />
-              <span>{group.title}</span>
+              {t("newtab.changeInHub", "Change in Hub")}
             </button>
-          ))}
+          </div>
         </div>
-        <div className="nt-dial-actions">
-          <Button
-            disabled={snapshot.readOnly || !folderGuid}
-            onClick={() =>
-              setDialog({
-                type: "bookmark",
-                kind: "bookmark",
-                parentGuid: folderGuid || groupGuid,
-              })
-            }
-          >
-            <Plus size={18} />
-            {t("newtab.addSite", "Add site")}
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={snapshot.readOnly || !folderGuid}
-            onClick={() =>
-              setDialog({
-                type: "bookmark",
-                kind: "folder",
-                parentGuid: folderGuid || groupGuid,
-              })
-            }
-          >
-            <FolderPlus size={18} />
-            {t("newtab.createFolder", "Create folder")}
-          </Button>
-        </div>
-      </div>
-      <div className="nt-group-note">
-        {t(
-          "newtab.assignmentNote",
-          "Group selection here does not change the workspace assignment.",
-        )}
-        <button
-          type="button"
-          onClick={() => void newTabClient.call("openHub", {})}
-        >
-          {t("newtab.changeInHub", "Change in Hub")}
-        </button>
-      </div>
-      <div className="nt-folder-navigation">
-        <IconButton
-          label={t("newtab.goUp", "Go up one folder")}
-          disabled={!folder || folder.guid === groupGuid}
-          onClick={() => openFolder(parent)}
-        >
-          <ArrowUp size={19} />
-        </IconButton>
-        <nav
-          id="dial-location"
-          tabIndex={-1}
-          aria-label={t("newtab.folderPath", "Bookmark folder path")}
-        >
-          <ol>
-            {path.map((node) => (
-              <li key={node.guid}>
-                <button type="button" onClick={() => openFolder(node.guid)}>
-                  {node.title}
-                </button>
-                <ChevronRight size={15} aria-hidden="true" />
-              </li>
-            ))}
-            <li>
-              <span aria-current="page">
-                {folder?.title ?? currentGroup?.title}
-              </span>
-            </li>
-          </ol>
-        </nav>
       </div>
       <section
         id="nt-folder-panel"

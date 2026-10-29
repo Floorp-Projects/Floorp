@@ -222,10 +222,10 @@ export function Home() {
         >
           {settings.speedDial.show && (
             <section
-              className="nt-home-dials nt-surface"
+              className="nt-home-dials"
               aria-labelledby="nt-home-dial-heading"
             >
-              <div className="nt-section-heading">
+              <div className="nt-section-heading nt-surface">
                 <h2 id="nt-home-dial-heading">
                   {t("newtab.dial", "Speed Dial")}
                 </h2>

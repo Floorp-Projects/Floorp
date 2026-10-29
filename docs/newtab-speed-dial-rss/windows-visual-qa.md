@@ -165,3 +165,37 @@ Browser plugin は利用できないため、指定された Windows の実 Floo
 最終stageも成功し、`dev-tool eval -c content`で `chrome://noraneko-newtab/content/assets/` のscriptと本番CSP（`connect-src 'none'`等）を再確認した。RSSの未読・スターの保存、明示操作前の画像0件、操作後だけのPNG data URL表示、空フィードも再確認した。`dev-tool navigate` / `screenshot` は `-c content` を指定して実行する。
 
 終了時、QA版Floorpを正常終了し、このcloneのFloorpプロセスが残っていないことを確認。元の`_dist/profile/test`は開始時に`pre-followup-20261029`へ退避し、既存QAデータの複製を使用していた。今回のQA側を`_dist/profile/followup-qa-20261029`へ保存し、元の`test`を復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256が退避元と一致。既存の`visual-qa-20261029`と普段使いのプロファイルは変更していない。
+
+
+## Vivaldi を参考にしたホーム・Speed Dial の調整（2026-10-29）
+
+ユーザーの追加指定により、RSSの外観を保持し、ホームとSpeed Dialを調整した。比較元は `62c2f3e8925c423721767ffae599a8977f850872`。開始時の作業ツリーはクリーン。Windows実Floorpの操作は`dev-tool` / Marionetteのみを使用し、Computer Useは使用していない。
+
+参考は[Vivaldi公式のスタートページ解説](https://vivaldi.com/blog/powering-up-the-start-page/)と[スタートページのヘルプ](https://help.vivaldi.com/desktop/navigation/start-page/)。Vivaldiのブックマークを視覚的に並べる考え方を参考に、既存のFloorp Hubの書体・紫色・共通部品へ合わせた。
+
+- 大きなパネルでタイル全体を囲う構造から、背景上にタイルを並べる構造へ変更。操作欄とパンくずには読める半透明の面を保持し、白・黒の背景でも文字が直接重ならない。
+- タイルを横長の視覚領域とその下の名前に分ける。名前は2行、ドメイン・項目数は補助情報として示す。列数4/5/6の保存値を維持し、各タイルの幅は208pxを上限として中央へ揃える。小さめ設定では視覚領域の比率・アイコンサイズを抑える。
+- フォルダーは紫の面と重なりの線でサイトと区別。メニューは従来どおり各項目から操作できる。
+- ホームのグループ選択・すべて見る・追加を一つの操作欄にまとめ、Speed Dial側は説明・Hubへのリンクをパンくずの行へまとめる。狭幅では折り返す。
+- 検索の中央配置、右上の時計、既存のサイト優先配置、3種類のホーム配置、RSSの本文と一覧、履歴候補、スポンサーの区別を保持する。新しいネットワーク取得や初期データは追加しない。
+
+比較画像: [ホーム変更前](qa/windows-vivaldi-before-home.png) / [ホーム変更後](qa/windows-vivaldi-after-home.png)、[Speed Dial変更前](qa/windows-vivaldi-before-dial.png) / [Speed Dial変更後](qa/windows-vivaldi-after-dial.png)。同じQAプロファイル・表示設定・ウィンドウ寸法で撮影。データ内のQA名は本番初期データではない。
+
+| 再確認 | 結果 |
+| --- | --- |
+| 実機の画面 | 両テーマでHome / Speed Dial / Reader / Hubを1382×938 CSS pxで表示。空白・開発エラーoverlay・横overflowなし |
+| 背景と半透明 | 白 / 黒 / 背景なし × 半透明on/off × 両テーマの12条件が成功 |
+| 200% | 321×359 CSS pxで両テーマ、Home / Speed Dial / Reader / Hubに横overflowなし。メニューEndで末尾到達、Escape、編集ダイアログと取消後のフォーカス復帰が成功 |
+| 操作 | UIから実Placesの入れ子作成・移動・改名・削除と保存状態を照合。RSS記事選択・スター操作も成功 |
+| ソース・テスト | Home/Bookmarksの型検査、`git diff --check`、本番newtab Vite buildが成功。新タブ既存10モジュールが失敗0。`test:smoke`全6工程（runner41ケース・1282ファイルlint等）が成功 |
+
+[測定と操作結果](qa/windows-vivaldi-checks.json)。作業ログは `_dist/visual-qa/vivaldi-*`。先行するQAと同様、署名済み配布物・macOS・複数端末Sync・大量データ性能は今回の合格範囲に含めない。
+
+機能仕様を要する別案: Vivaldiのような実ページのサムネイル取得・カスタムサムネイル・フォルダー内サイトのプレビューは未実装。取得のタイミング、通信、保存と削除、既存画像との扱いを別途設計する必要がある。今回は既存のアイコンとCSSによる視覚改善に限定した。
+
+
+最終stageで列数4/5/6 × 標準/小さめ、ホームbalanced/links/reading × 中央配置/サイト優先を切り替え、すべて横overflowなし。4/5列時のタイル幅208px、6列時194.33pxを確認。[内蔵写真背景でのホーム](qa/windows-vivaldi-photo-home.png)も再確認し、本番chrome assets・CSPを照合。`dev-tool console --level error -f newtab`は該当メッセージなし。
+
+最終の全体stage初回は、変更していないAboutダイアログのビルドで処理が長時間継続したため、その作業プロセスを終了した。対象の単独ビルドと全体stageの再実行は成功し、コード・依存関係の修正は行っていない。初回の処理停滞の原因は未特定。
+
+検証は既存QAプロファイルの複製で実施。元の`test`を`pre-vivaldi-20261029`へ退避して保護し、終了後に復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256は退避元と一致。今回のQAデータは`_dist/profile/vivaldi-qa-20261029`に保持。普段使いのプロファイルは変更していない。
