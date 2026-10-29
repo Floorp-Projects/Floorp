@@ -10,13 +10,16 @@ import { createPortal } from "react-dom";
 import { Folder, Globe, X } from "lucide-react";
 import {
   SiDeno,
+  SiFirefoxbrowser,
   SiGithub,
   SiMdnwebdocs,
   SiNotion,
   SiNpm,
   SiReact,
+  SiReddit,
   SiTypescript,
   SiWikipedia,
+  SiYoutube,
 } from "@icons-pack/react-simple-icons";
 import { Button } from "../../../../../libs/ui/button.tsx";
 import floorpIcon from "../../../../../static/gecko/custom-app-icons/floorp-simple.png";
@@ -189,6 +192,15 @@ export function SiteIcon({ url, folder = false }: SiteIconProps) {
   }
   if (hostname === "wikipedia.org" || hostname.endsWith(".wikipedia.org")) {
     return <SiWikipedia {...props} />;
+  }
+  if (hostname === "youtube.com" || hostname.endsWith(".youtube.com")) {
+    return <SiYoutube {...props} />;
+  }
+  if (hostname === "reddit.com" || hostname.endsWith(".reddit.com")) {
+    return <SiReddit {...props} />;
+  }
+  if (hostname === "addons.mozilla.org") {
+    return <SiFirefoxbrowser {...props} />;
   }
   if (hostname === "notion.so") return <SiNotion {...props} />;
   if (hostname === "npmjs.com") return <SiNpm {...props} color="#cb3837" />;

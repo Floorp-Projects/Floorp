@@ -10,7 +10,7 @@ import type {
 import { DEFAULT_SUGGESTED_SITES } from "../../utils/dataManager.ts";
 import { BookmarkGrid, GroupSelect } from "./Bookmarks.tsx";
 import { messageOf, useNewTab } from "./state.tsx";
-import { Button, IconButton, SiteIcon, safeWebUrl } from "./ui.tsx";
+import { Button, domain, IconButton, SiteIcon, safeWebUrl } from "./ui.tsx";
 
 function Clock() {
   const [time, setTime] = useState(() => new Date());
@@ -99,11 +99,19 @@ function HistorySites() {
       <div className="nt-history-grid">
         {sites.map((site) => (
           <article className="nt-history-site" key={site.url}>
-            <a href={safeWebUrl(site.url) ?? undefined}>
-              <SiteIcon url={site.url} />
-              <strong>{site.title}</strong>
+            <a
+              href={safeWebUrl(site.url) ?? undefined}
+              title={`${site.title}\n${site.url}`}
+            >
+              <span className="nt-history-icon" aria-hidden="true">
+                <SiteIcon url={site.url} />
+              </span>
+              <span className="nt-history-caption">
+                <strong>{site.title}</strong>
+                <small>{domain(site.url)}</small>
+              </span>
             </a>
-            <div>
+            <div className="nt-history-actions">
               <IconButton
                 disabled={snapshot.readOnly || !groupGuid}
                 label={t("newtab.saveSite", {
@@ -184,178 +192,183 @@ export function Home() {
           <Clock />
         </div>
       )}
-      {settings.components.searchBar && (
-        <section
-          className="nt-search-region nt-container"
-          aria-label={t("newtab.webSearch", "Web search")}
-        >
-          <button
-            type="button"
-            className="nt-web-search"
-            onClick={() => void focusSearch()}
-          >
-            <Search size={21} />
-            <span>
-              {t("searchBar.searchOrEnterUrl", "Search or enter a URL")}
-            </span>
-            <ArrowRight size={21} />
-          </button>
-        </section>
-      )}
-      <div
-        className="nt-home-content nt-container"
-        data-layout={settings.home.layout}
-        data-only={
-          !settings.speedDial.show || !settings.home.showFeed
-            ? "true"
-            : undefined
-        }
-      >
-        {settings.speedDial.show && (
+      <div className="nt-home-body">
+        {settings.components.searchBar && (
           <section
-            className="nt-home-dials nt-surface"
-            aria-labelledby="nt-home-dial-heading"
+            className="nt-search-region nt-container"
+            aria-label={t("newtab.webSearch", "Web search")}
           >
-            <div className="nt-section-heading">
-              <h2 id="nt-home-dial-heading">
-                {t("newtab.dial", "Speed Dial")}
-              </h2>
-              {snapshot.groups.length > 0 && <GroupSelect />}
-              <div className="nt-section-actions">
-                <button
-                  type="button"
-                  className="nt-text-action"
-                  onClick={() => navigate("dial")}
-                >
-                  {t("newtab.viewAll", "View all")}
-                  <ArrowRight size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="nt-text-action"
-                  disabled={snapshot.readOnly || !groupGuid}
-                  onClick={() =>
-                    setDialog({
-                      type: "bookmark",
-                      kind: "bookmark",
-                      parentGuid: groupGuid,
-                    })
-                  }
-                >
-                  <Plus size={18} />
-                  {t("newtab.addSite", "Add site")}
-                </button>
-              </div>
-            </div>
-            <BookmarkGrid compact />
-          </section>
-        )}
-        {settings.home.showFeed && (
-          <section
-            className="nt-home-feeds nt-surface"
-            aria-labelledby="nt-home-feed-heading"
-          >
-            <div className="nt-section-heading">
-              <h2 id="nt-home-feed-heading">{t("newtab.feeds", "Feeds")}</h2>
-              <span className="nt-count">
-                {t("newtab.unreadCount", {
-                  count: snapshot.feeds.reduce(
-                    (sum, feed) => sum + feed.unreadCount,
-                    0,
-                  ),
-                  defaultValue: "{{count}} unread",
-                })}
-              </span>
-            </div>
-            {articles.length ? (
-              <div className="nt-home-article-list">
-                {articles.map((article) => (
-                  <article className="nt-home-article" key={article.id}>
-                    <span
-                      className="nt-unread-dot"
-                      aria-label={t("newtab.unread", "Unread")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        location.hash = `feed/${encodeURIComponent(article.id)}`;
-                      }}
-                    >
-                      <small>
-                        {snapshot.feeds.find(
-                          (feed) => feed.id === article.feedId,
-                        )?.title ?? article.feedTitle}
-                      </small>
-                      <strong>{article.title}</strong>
-                      <time>
-                        {new Date(
-                          article.publishedAt ?? article.receivedAt,
-                        ).toLocaleDateString()}
-                      </time>
-                    </button>
-                    <IconButton
-                      disabled={snapshot.readOnly}
-                      aria-pressed={article.starred}
-                      label={t("newtab.toggleStar", {
-                        title: article.title,
-                        defaultValue: "Toggle star for {{title}}",
-                      })}
-                      onClick={() => void star(article)}
-                    >
-                      <Star
-                        size={18}
-                        fill={article.starred ? "currentColor" : "none"}
-                      />
-                    </IconButton>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="nt-empty">
-                <h3>
-                  {snapshot.feeds.some((feed) => feed.enabled)
-                    ? t("newtab.caughtUp", "You are all caught up")
-                    : t("newtab.addFeedHeading", "Bring your reading together")}
-                </h3>
-                <p>
-                  {t(
-                    "newtab.addFeedHint",
-                    "Add a feed to see its latest articles here.",
-                  )}
-                </p>
-                <Button
-                  variant="secondary"
-                  disabled={snapshot.readOnly}
-                  onClick={() => setDialog({ type: "subscribe" })}
-                >
-                  <Plus size={17} />
-                  {t("newtab.addFeed", "Add feed")}
-                </Button>
-              </div>
-            )}
             <button
               type="button"
-              className="nt-text-action nt-reader-entry"
-              onClick={() => navigate("feed")}
+              className="nt-web-search"
+              onClick={() => void focusSearch()}
             >
-              {t("newtab.openReader", "Open reader")}
-              <ArrowRight size={17} />
+              <Search size={21} />
+              <span>
+                {t("searchBar.searchOrEnterUrl", "Search or enter a URL")}
+              </span>
+              <ArrowRight size={21} />
             </button>
           </section>
         )}
-        {!settings.speedDial.show && !settings.home.showFeed && (
-          <div className="nt-empty nt-surface">
-            <h2>{t("newtab.makeHome", "Make this page your own")}</h2>
-            <Button
-              variant="secondary"
-              onClick={() => void newTabClient.call("openHub", {})}
+        <div
+          className="nt-home-content nt-container"
+          data-layout={settings.home.layout}
+          data-only={
+            !settings.speedDial.show || !settings.home.showFeed
+              ? "true"
+              : undefined
+          }
+        >
+          {settings.speedDial.show && (
+            <section
+              className="nt-home-dials nt-surface"
+              aria-labelledby="nt-home-dial-heading"
             >
-              {t("newtab.openSettings", "Choose what to show")}
-            </Button>
-          </div>
-        )}
+              <div className="nt-section-heading">
+                <h2 id="nt-home-dial-heading">
+                  {t("newtab.dial", "Speed Dial")}
+                </h2>
+                {snapshot.groups.length > 0 && <GroupSelect />}
+                <div className="nt-section-actions">
+                  <button
+                    type="button"
+                    className="nt-text-action"
+                    onClick={() => navigate("dial")}
+                  >
+                    {t("newtab.viewAll", "View all")}
+                    <ArrowRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="nt-text-action"
+                    disabled={snapshot.readOnly || !groupGuid}
+                    onClick={() =>
+                      setDialog({
+                        type: "bookmark",
+                        kind: "bookmark",
+                        parentGuid: groupGuid,
+                      })
+                    }
+                  >
+                    <Plus size={18} />
+                    {t("newtab.addSite", "Add site")}
+                  </button>
+                </div>
+              </div>
+              <BookmarkGrid compact />
+            </section>
+          )}
+          {settings.home.showFeed && (
+            <section
+              className="nt-home-feeds nt-surface"
+              aria-labelledby="nt-home-feed-heading"
+            >
+              <div className="nt-section-heading">
+                <h2 id="nt-home-feed-heading">{t("newtab.feeds", "Feeds")}</h2>
+                <span className="nt-count">
+                  {t("newtab.unreadCount", {
+                    count: snapshot.feeds.reduce(
+                      (sum, feed) => sum + feed.unreadCount,
+                      0,
+                    ),
+                    defaultValue: "{{count}} unread",
+                  })}
+                </span>
+              </div>
+              {articles.length ? (
+                <div className="nt-home-article-list">
+                  {articles.map((article) => (
+                    <article className="nt-home-article" key={article.id}>
+                      <span
+                        className="nt-unread-dot"
+                        aria-label={t("newtab.unread", "Unread")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          location.hash = `feed/${encodeURIComponent(article.id)}`;
+                        }}
+                      >
+                        <small>
+                          {snapshot.feeds.find(
+                            (feed) => feed.id === article.feedId,
+                          )?.title ?? article.feedTitle}
+                        </small>
+                        <strong>{article.title}</strong>
+                        <time>
+                          {new Date(
+                            article.publishedAt ?? article.receivedAt,
+                          ).toLocaleDateString()}
+                        </time>
+                      </button>
+                      <IconButton
+                        disabled={snapshot.readOnly}
+                        aria-pressed={article.starred}
+                        label={t("newtab.toggleStar", {
+                          title: article.title,
+                          defaultValue: "Toggle star for {{title}}",
+                        })}
+                        onClick={() => void star(article)}
+                      >
+                        <Star
+                          size={18}
+                          fill={article.starred ? "currentColor" : "none"}
+                        />
+                      </IconButton>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="nt-empty">
+                  <h3>
+                    {snapshot.feeds.some((feed) => feed.enabled)
+                      ? t("newtab.caughtUp", "You are all caught up")
+                      : t(
+                          "newtab.addFeedHeading",
+                          "Bring your reading together",
+                        )}
+                  </h3>
+                  <p>
+                    {t(
+                      "newtab.addFeedHint",
+                      "Add a feed to see its latest articles here.",
+                    )}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    disabled={snapshot.readOnly}
+                    onClick={() => setDialog({ type: "subscribe" })}
+                  >
+                    <Plus size={17} />
+                    {t("newtab.addFeed", "Add feed")}
+                  </Button>
+                </div>
+              )}
+              <button
+                type="button"
+                className="nt-text-action nt-reader-entry"
+                onClick={() => navigate("feed")}
+              >
+                {t("newtab.openReader", "Open reader")}
+                <ArrowRight size={17} />
+              </button>
+            </section>
+          )}
+          {!settings.speedDial.show && !settings.home.showFeed && (
+            <div className="nt-empty nt-surface">
+              <h2>{t("newtab.makeHome", "Make this page your own")}</h2>
+              <Button
+                variant="secondary"
+                onClick={() => void newTabClient.call("openHub", {})}
+              >
+                {t("newtab.openSettings", "Choose what to show")}
+              </Button>
+            </div>
+          )}
+        </div>
+        {settings.home.showHistory && <HistorySites />}
       </div>
-      {settings.home.showHistory && <HistorySites />}
     </main>
   );
 }
