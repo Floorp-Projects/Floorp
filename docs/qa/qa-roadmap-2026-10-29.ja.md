@@ -102,3 +102,13 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 新native実行は開始していない。Mac上のOpenSSL 3の実在・version・来歴と、最新SDK metadata/取得bytes、最終fixture/head・branch不存在・run0の直前照合が残る。既存42件はUNVERIFIED・上流無効3件のままである。
 
 回収仕様と限界は `docs/qa/qa-diagnostic-transport-2026-10-29.ja.md` を参照。
+
+## 2026-10-29 JST 18時台の継続
+
+- 前回候補の通常CIはsmokeと4環境jobの終端successを確認した。
+- SDK12739697223を正規経路から再取得し、前後のAPI metadataとproducer、ZIP digest/size、全49701メンバーのcanonical tree、760518144 bytesのuncompressed tarの同一性を再確認した。
+- Macの公式image資料だけではOpenSSL 3の実在・versionを確定できないため、長時間nativeの前に最大10分の実機依存確認と、最大20分の同一内容SDK再取得を直列で行う候補を用意した。SDKは今回22:57 JSTに期限を迎えるため、次回に備える。
+- 新workflowは自分の既存handoff branchへの今回のpush、固定parent、attempt1だけを許す。実行済みworkflowとfresh45の無効候補は変更せず、新しいfresh45 branchもまだ作成しない。
+- 既存の754-ID catalogと148 source hashesは不変。QA helperを変えていないため、既済の全回帰を繰り返し・加算しない。新workflowの構文・起動の負例・時間とSDK同一性条件を検証する。
+
+仕様、参照、実機結果の採用条件は `docs/qa/qa-native-input-probe-2026-10-29.ja.md` に記載した。
