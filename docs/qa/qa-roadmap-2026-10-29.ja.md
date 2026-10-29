@@ -112,3 +112,12 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 既存の754-ID catalogと148 source hashesは不変。QA helperを変えていないため、既済の全回帰を繰り返し・加算しない。新workflowの構文・起動の負例・時間とSDK同一性条件を検証する。
 
 仕様、参照、実機結果の採用条件は `docs/qa/qa-native-input-probe-2026-10-29.ja.md` に記載した。
+
+## 2026-10-30 JST 00時台の継続
+
+- 前回のMac依存13件は成功、SDK再取得はraw tar hash不一致で拒否した終端記録を保持する。旧SDKは保存期限を経過し、APIでも404。新build入力に使わない。
+- SDK内容・格納順序・header metadataを分けてhashする限定診断を用意した。新しい初回pushに固定したMac26の1 job・最大20分。元identity gateは維持し、SDK候補は別名の調査資料として保存、常にNOT_ADMITTEDとする。
+- 秘密情報なし隔離環境の診断器12回帰は成功。元の保存SDK全49701メンバーとraw/canonical hashesを新診断器でも一致確認し、比較baselineを固定した。変更のない754-ID/148 hashesの全回帰を繰り返し・加算しない。
+- 前回doc head b2b70afの通常CI40848313173はsmokeと4環境jobの終端successを確認した。新fresh45はまだ未開始、42件はUNVERIFIEDのまま。
+
+今回の条件と採用境界は `docs/qa/qa-sdk-archive-diagnostic-2026-10-30.ja.md` を参照。
