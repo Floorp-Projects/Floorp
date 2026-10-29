@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 import { useEffect, useState } from "react";
-import { ArrowRight, Plus, Search, Star, X } from "lucide-react";
+import { ArrowRight, Plus, Search, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { newTabClient } from "../../../../../libs/newtab/client.ts";
-import type {
-  ArticleSummary,
-  PinnedSite,
-} from "../../../../../libs/newtab/types.ts";
-import { DEFAULT_SUGGESTED_SITES } from "../../utils/dataManager.ts";
+import type { ArticleSummary } from "../../../../../libs/newtab/types.ts";
 import { BookmarkGrid, GroupSelect } from "./Bookmarks.tsx";
 import { messageOf, useNewTab } from "./state.tsx";
-import { Button, domain, IconButton, SiteIcon, safeWebUrl } from "./ui.tsx";
+import { Button, IconButton } from "./ui.tsx";
 
 function Clock() {
   const [time, setTime] = useState(() => new Date());
@@ -39,106 +35,6 @@ function Clock() {
         })}
       </span>
     </time>
-  );
-}
-function HistorySites() {
-  const { t } = useTranslation();
-  const { snapshot, groupGuid, epoch, setDialog, refresh, notify } =
-    useNewTab();
-  const [sites, setSites] = useState<PinnedSite[]>([]);
-  useEffect(() => {
-    let active = true;
-    void newTabClient
-      .call("history", {})
-      .then((history) => {
-        const allowed = history.filter(
-          (site) => !snapshot.settings.topSites.blocked.includes(site.url),
-        );
-        const items =
-          allowed.length <= 3
-            ? DEFAULT_SUGGESTED_SITES.filter(
-                (site) =>
-                  !snapshot.settings.topSites.blocked.includes(site.url),
-              )
-            : allowed;
-        if (active) setSites(items.slice(0, 8));
-      })
-      .catch(() => {
-        if (active) setSites([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, [epoch, snapshot.settings.topSites.blocked]);
-  const save = async (site: PinnedSite) => {
-    try {
-      await newTabClient.call("bookmark", {
-        action: "create",
-        type: "bookmark",
-        parentGuid: groupGuid,
-        title: site.title,
-        url: site.url,
-      });
-      await refresh();
-      notify(t("newtab.savedSite", "Saved to Speed Dial"));
-    } catch (cause) {
-      notify(messageOf(cause));
-    }
-  };
-  if (!sites.length) return null;
-  return (
-    <section
-      className="nt-history nt-surface nt-container"
-      aria-labelledby="nt-history-heading"
-    >
-      <div className="nt-section-heading">
-        <h2 id="nt-history-heading">
-          {t("newtab.frequentSites", "Frequently visited")}
-        </h2>
-      </div>
-      <div className="nt-history-grid">
-        {sites.map((site) => (
-          <article className="nt-history-site" key={site.url}>
-            <a
-              href={safeWebUrl(site.url) ?? undefined}
-              title={`${site.title}\n${site.url}`}
-            >
-              <span className="nt-history-icon" aria-hidden="true">
-                <SiteIcon url={site.url} />
-              </span>
-              <span className="nt-history-caption">
-                <strong>{site.title}</strong>
-                <small>{domain(site.url)}</small>
-              </span>
-            </a>
-            <div className="nt-history-actions">
-              <IconButton
-                disabled={snapshot.readOnly || !groupGuid}
-                label={t("newtab.saveSite", {
-                  title: site.title,
-                  defaultValue: "Save {{title}} to Speed Dial",
-                })}
-                onClick={() => void save(site)}
-              >
-                <Plus size={17} />
-              </IconButton>
-              <IconButton
-                disabled={snapshot.readOnly}
-                label={t("newtab.hideSite", {
-                  title: site.title,
-                  defaultValue: "Hide {{title}}",
-                })}
-                onClick={() =>
-                  setDialog({ type: "block", url: site.url, title: site.title })
-                }
-              >
-                <X size={17} />
-              </IconButton>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 export function Home() {
@@ -183,7 +79,9 @@ export function Home() {
   return (
     <main
       id="main-content"
-      className={`nt-home${settings.components.firefoxLayout ? "" : " is-sites-first"}`}
+      className={`nt-home${
+        settings.components.firefoxLayout ? "" : " is-sites-first"
+      }`}
       tabIndex={-1}
     >
       <h1 className="nt-sr-only">{t("newtab.title", "New tab")}</h1>
@@ -214,11 +112,9 @@ export function Home() {
         <div
           className="nt-home-content nt-container"
           data-layout={settings.home.layout}
-          data-only={
-            !settings.speedDial.show || !settings.home.showFeed
-              ? "true"
-              : undefined
-          }
+          data-only={!settings.speedDial.show || !settings.home.showFeed
+            ? "true"
+            : undefined}
         >
           {settings.speedDial.show && (
             <section
@@ -248,8 +144,7 @@ export function Home() {
                         type: "bookmark",
                         kind: "bookmark",
                         parentGuid: groupGuid,
-                      })
-                    }
+                      })}
                   >
                     <Plus size={18} />
                     {t("newtab.addSite", "Add site")}
@@ -276,75 +171,81 @@ export function Home() {
                   })}
                 </span>
               </div>
-              {articles.length ? (
-                <div className="nt-home-article-list">
-                  {articles.map((article) => (
-                    <article className="nt-home-article" key={article.id}>
-                      <span
-                        className="nt-unread-dot"
-                        aria-label={t("newtab.unread", "Unread")}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          location.hash = `feed/${encodeURIComponent(article.id)}`;
-                        }}
-                      >
-                        <small>
-                          {snapshot.feeds.find(
-                            (feed) => feed.id === article.feedId,
-                          )?.title ?? article.feedTitle}
-                        </small>
-                        <strong>{article.title}</strong>
-                        <time>
-                          {new Date(
-                            article.publishedAt ?? article.receivedAt,
-                          ).toLocaleDateString()}
-                        </time>
-                      </button>
-                      <IconButton
-                        disabled={snapshot.readOnly}
-                        aria-pressed={article.starred}
-                        label={t("newtab.toggleStar", {
-                          title: article.title,
-                          defaultValue: "Toggle star for {{title}}",
-                        })}
-                        onClick={() => void star(article)}
-                      >
-                        <Star
-                          size={18}
-                          fill={article.starred ? "currentColor" : "none"}
+              {articles.length
+                ? (
+                  <div className="nt-home-article-list">
+                    {articles.map((article) => (
+                      <article className="nt-home-article" key={article.id}>
+                        <span
+                          className="nt-unread-dot"
+                          aria-label={t("newtab.unread", "Unread")}
                         />
-                      </IconButton>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="nt-empty">
-                  <h3>
-                    {snapshot.feeds.some((feed) => feed.enabled)
-                      ? t("newtab.caughtUp", "You are all caught up")
-                      : t(
+                        <button
+                          type="button"
+                          onClick={() => {
+                            location.hash = `feed/${
+                              encodeURIComponent(article.id)
+                            }`;
+                          }}
+                        >
+                          <small>
+                            {snapshot.feeds.find(
+                              (feed) =>
+                                feed.id === article.feedId,
+                            )?.title ?? article.feedTitle}
+                          </small>
+                          <strong>{article.title}</strong>
+                          <time>
+                            {new Date(
+                              article.publishedAt ?? article.receivedAt,
+                            ).toLocaleDateString()}
+                          </time>
+                        </button>
+                        <IconButton
+                          disabled={snapshot.readOnly}
+                          aria-pressed={article.starred}
+                          label={t("newtab.toggleStar", {
+                            title: article.title,
+                            defaultValue: "Toggle star for {{title}}",
+                          })}
+                          onClick={() =>
+                            void star(article)}
+                        >
+                          <Star
+                            size={18}
+                            fill={article.starred ? "currentColor" : "none"}
+                          />
+                        </IconButton>
+                      </article>
+                    ))}
+                  </div>
+                )
+                : (
+                  <div className="nt-empty">
+                    <h3>
+                      {snapshot.feeds.some((feed) => feed.enabled)
+                        ? t("newtab.caughtUp", "You are all caught up")
+                        : t(
                           "newtab.addFeedHeading",
                           "Bring your reading together",
                         )}
-                  </h3>
-                  <p>
-                    {t(
-                      "newtab.addFeedHint",
-                      "Add a feed to see its latest articles here.",
-                    )}
-                  </p>
-                  <Button
-                    variant="secondary"
-                    disabled={snapshot.readOnly}
-                    onClick={() => setDialog({ type: "subscribe" })}
-                  >
-                    <Plus size={17} />
-                    {t("newtab.addFeed", "Add feed")}
-                  </Button>
-                </div>
-              )}
+                    </h3>
+                    <p>
+                      {t(
+                        "newtab.addFeedHint",
+                        "Add a feed to see its latest articles here.",
+                      )}
+                    </p>
+                    <Button
+                      variant="secondary"
+                      disabled={snapshot.readOnly}
+                      onClick={() => setDialog({ type: "subscribe" })}
+                    >
+                      <Plus size={17} />
+                      {t("newtab.addFeed", "Add feed")}
+                    </Button>
+                  </div>
+                )}
               <button
                 type="button"
                 className="nt-text-action nt-reader-entry"
@@ -367,7 +268,6 @@ export function Home() {
             </div>
           )}
         </div>
-        {settings.home.showHistory && <HistorySites />}
       </div>
     </main>
   );

@@ -147,3 +147,10 @@ Places と prefs/journal 全体が単一 transaction になるとは保証しな
 実 Firefox の colocated harness、実 Places/DB、親 actor とページ UI を合わせて検証する。本文 fixture・mock transport・Chromium だけの成功を Gecko の権限や配布物の証拠にしない。実際に実行した環境・結果は [QA レポート](qa-report.md)、再実行手順は[実装計画書](implementation-plan.md)に記録する。
 
 Windows/macOS のネイティブ選択、配布全工程、20タブ・1万ブックマーク・大量購読での長時間メモリ、起動・スクロール・blur の性能予算は、未実測を成功扱いにしない。採用した件数・容量制限は性能実測の代用ではない。
+
+
+## 履歴候補の統合（2026-10-29の追加指定）
+
+独立したHomeのHistorySites領域を廃止。BookmarkGridがグループ入口で既存の`history`要求を使い、登録済み項目の後へ候補を表示する。親側は既存のAboutNewTab / Activity Stream APIと既存候補のfallbackを引き継ぐ。別の履歴DBやブックマーク自動生成は追加しない。候補はGUIDを持つ保存済み項目として扱わず、通常の並べ替え・編集・削除メニューを与えない。保存操作だけが`bookmark/create`で実Placesへ書き込む。
+
+表示の既存キー`home.showHistory`と非表示URL`topSites.blocked`を維持し、HubではSpeed Dialカテゴリへ移す。private snapshotでは候補APIを呼ばず、入れ子フォルダーにも表示しない。現在グループ直下の登録URL、表示中スポンサー、非表示URLと候補間の重複を除く。登録済みサイトの名前・順序・ワークスペース割当は変更しない。

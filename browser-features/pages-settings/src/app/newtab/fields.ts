@@ -4,7 +4,7 @@ export const NEWTAB_SETTINGS_ROUTE = "/features/newtab";
 export const NEWTAB_FIELDS: readonly NewTabSettingField[] = [
   { id: "newtab-search", tab: "general", titleKey: "newtab.search" },
   { id: "newtab-clock", tab: "general", titleKey: "newtab.clock" },
-  { id: "newtab-history", tab: "general", titleKey: "newtab.history" },
+  { id: "newtab-history", tab: "dial", titleKey: "newtab.history" },
   { id: "newtab-dials", tab: "general", titleKey: "newtab.dials" },
   { id: "newtab-feed", tab: "general", titleKey: "newtab.feedHome" },
   { id: "newtab-placement", tab: "general", titleKey: "newtab.placement" },

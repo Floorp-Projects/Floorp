@@ -59,6 +59,7 @@ export type TileProps = {
   index: number;
   total: number;
   sponsor?: Sponsor;
+  suggestion?: boolean;
   compact: boolean;
 };
 export type BookmarkGridProps = { compact?: boolean };

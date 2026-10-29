@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { BookmarkGridProps, TileProps } from "./types.ts";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { newTabClient } from "../../../../../libs/newtab/client.ts";
-import type { BookmarkNode } from "../../../../../libs/newtab/types.ts";
+import type {
+  BookmarkNode,
+  PinnedSite,
+} from "../../../../../libs/newtab/types.ts";
+import { selectHistorySuggestions } from "./suggestions.ts";
 import { messageOf, useNewTab } from "./state.tsx";
 import {
   Button,
@@ -28,7 +32,7 @@ import {
   SiteIcon,
 } from "./ui.tsx";
 
-function Tile({ node, index, total, sponsor, compact }: TileProps) {
+function Tile({ node, index, total, sponsor, suggestion, compact }: TileProps) {
   const { t } = useTranslation();
   const {
     snapshot,
@@ -82,67 +86,75 @@ function Tile({ node, index, total, sponsor, compact }: TileProps) {
       });
       setDialog({ type: "delete", summary, title: node.title });
     });
-  const name =
-    node.title || domain(node.url) || t("newtab.untitled", "Untitled");
+  const name = node.title || domain(node.url) ||
+    t("newtab.untitled", "Untitled");
   return (
     <article
       className={`nt-tile${node.type === "folder" ? " nt-folder-tile" : ""}`}
-      data-bookmark-guid={sponsor ? undefined : node.guid}
+      data-bookmark-guid={sponsor || suggestion ? undefined : node.guid}
+      data-history-suggestion={suggestion || undefined}
       data-menu-open={menu || undefined}
     >
-      {node.type === "folder" ? (
-        <button
-          type="button"
-          className="nt-tile-link"
-          title={name}
-          onClick={() => openFolder(node.guid)}
-          aria-label={t("newtab.openFolder", {
-            title: name,
-            defaultValue: "Open {{title}} folder",
-          })}
-        >
-          <span className="nt-site-icon">
-            <SiteIcon folder />
-          </span>
-          <span className="nt-site-caption">
-            <strong>{name}</strong>
-            <small>
-              {t("newtab.itemCount", {
-                count: node.childCount ?? 0,
-                defaultValue: "{{count}} items",
-              })}
-            </small>
-          </span>
-        </button>
-      ) : (
-        <a
-          className="nt-tile-link"
-          href={safeWebUrl(node.url) ?? undefined}
-          aria-disabled={!safeWebUrl(node.url) || undefined}
-          title={`${name}\n${node.url ?? ""}`}
-        >
-          <span className="nt-site-icon">
-            <SiteIcon url={node.url} />
-          </span>
-          <span className="nt-site-caption">
-            {sponsor && (
-              <small className="nt-sponsored">
-                {t("newtab.sponsored", "Sponsored")}
-              </small>
-            )}
-            <strong>{name}</strong>
-            {!safeWebUrl(node.url) && (
+      {node.type === "folder"
+        ? (
+          <button
+            type="button"
+            className="nt-tile-link"
+            title={name}
+            onClick={() => openFolder(node.guid)}
+            aria-label={t("newtab.openFolder", {
+              title: name,
+              defaultValue: "Open {{title}} folder",
+            })}
+          >
+            <span className="nt-site-icon">
+              <SiteIcon folder />
+            </span>
+            <span className="nt-site-caption">
+              <strong>{name}</strong>
               <small>
-                {t(
-                  "newtab.unsupportedUrl",
-                  "Use the bookmark manager to open this address.",
-                )}
+                {t("newtab.itemCount", {
+                  count: node.childCount ?? 0,
+                  defaultValue: "{{count}} items",
+                })}
               </small>
-            )}
-            {!compact && <small>{domain(node.url)}</small>}
-          </span>
-        </a>
-      )}
+            </span>
+          </button>
+        )
+        : (
+          <a
+            className="nt-tile-link"
+            href={safeWebUrl(node.url) ?? undefined}
+            aria-disabled={!safeWebUrl(node.url) || undefined}
+            title={`${name}\n${node.url ?? ""}`}
+          >
+            <span className="nt-site-icon">
+              <SiteIcon url={node.url} />
+            </span>
+            <span className="nt-site-caption">
+              {sponsor && (
+                <small className="nt-sponsored">
+                  {t("newtab.sponsored", "Sponsored")}
+                </small>
+              )}
+              <strong>{name}</strong>
+              {suggestion && (
+                <small className="nt-suggestion-label">
+                  {t("newtab.historySuggestion", "Suggested site")}
+                </small>
+              )}
+              {!safeWebUrl(node.url) && (
+                <small>
+                  {t(
+                    "newtab.unsupportedUrl",
+                    "Use the bookmark manager to open this address.",
+                  )}
+                </small>
+              )}
+              {!compact && <small>{domain(node.url)}</small>}
+            </span>
+          </a>
+        )}
       <div className="nt-tile-menu-anchor">
         <IconButton
           ref={trigger}
@@ -161,77 +173,98 @@ function Tile({ node, index, total, sponsor, compact }: TileProps) {
             close={() => setMenu(false)}
             label={name}
           >
-            {sponsor ? (
-              <>
-                <button
-                  type="button"
-                  disabled={snapshot.readOnly}
-                  onClick={() =>
-                    void act(() =>
-                      newTabClient.call("saveSponsor", {
-                        id: sponsor.id,
-                        expectedTitle: sponsor.title,
-                        expectedUrl: sponsor.url,
-                        parentGuid: compact
-                          ? groupGuid
-                          : (folder?.guid ?? groupGuid),
-                      }),
-                    )
-                  }
-                >
-                  <BookmarkPlus size={17} />
-                  {t("newtab.saveToDial", "Save to Speed Dial")}
-                </button>
-                <button
-                  type="button"
-                  disabled={snapshot.readOnly}
-                  onClick={() =>
-                    void act(() =>
-                      newTabClient.call("dismissSponsor", { id: sponsor.id }),
-                    )
-                  }
-                >
-                  <X size={17} />
-                  {t("newtab.hide", "Hide")}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  disabled={snapshot.readOnly}
-                  onClick={edit}
-                >
-                  <Pencil size={17} />
-                  {t("newtab.editMove", "Edit or move")}
-                </button>
-                <button
-                  type="button"
-                  disabled={snapshot.readOnly || index === 0}
-                  onClick={() => void move(-1)}
-                >
-                  <ArrowLeft size={17} />
-                  {t("newtab.movePrevious", "Move earlier")}
-                </button>
-                <button
-                  type="button"
-                  disabled={snapshot.readOnly || index >= total - 1}
-                  onClick={() => void move(1)}
-                >
-                  <ArrowRight size={17} />
-                  {t("newtab.moveNext", "Move later")}
-                </button>
-                <button
-                  type="button"
-                  className="nt-danger"
-                  disabled={snapshot.readOnly}
-                  onClick={() => void remove()}
-                >
-                  <Trash2 size={17} />
-                  {t("newtab.delete", "Delete")}
-                </button>
-              </>
-            )}
+            {sponsor || suggestion
+              ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={snapshot.readOnly}
+                    onClick={() =>
+                      void act(() =>
+                        sponsor
+                          ? newTabClient.call("saveSponsor", {
+                            id: sponsor.id,
+                            expectedTitle: sponsor.title,
+                            expectedUrl: sponsor.url,
+                            parentGuid: compact
+                              ? groupGuid
+                              : (folder?.guid ?? groupGuid),
+                          })
+                          : newTabClient.call("bookmark", {
+                            action: "create",
+                            type: "bookmark",
+                            parentGuid: groupGuid,
+                            title: name,
+                            url: node.url,
+                          })
+                      )}
+                  >
+                    <BookmarkPlus size={17} />
+                    {t("newtab.saveToDial", "Save to Speed Dial")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={snapshot.readOnly}
+                    onClick={() => {
+                      if (sponsor) {
+                        void act(() =>
+                          newTabClient.call("dismissSponsor", {
+                            id: sponsor.id,
+                          })
+                        );
+                      } else if (node.url) {
+                        setMenu(false);
+                        trigger.current?.focus();
+                        setDialog({
+                          type: "block",
+                          url: node.url,
+                          title: name,
+                        });
+                      }
+                    }}
+                  >
+                    <X size={17} />
+                    {t("newtab.hide", "Hide")}
+                  </button>
+                </>
+              )
+              : (
+                <>
+                  <button
+                    type="button"
+                    disabled={snapshot.readOnly}
+                    onClick={edit}
+                  >
+                    <Pencil size={17} />
+                    {t("newtab.editMove", "Edit or move")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={snapshot.readOnly || index === 0}
+                    onClick={() => void move(-1)}
+                  >
+                    <ArrowLeft size={17} />
+                    {t("newtab.movePrevious", "Move earlier")}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={snapshot.readOnly || index >= total - 1}
+                    onClick={() => void move(1)}
+                  >
+                    <ArrowRight size={17} />
+                    {t("newtab.moveNext", "Move later")}
+                  </button>
+                  <button
+                    type="button"
+                    className="nt-danger"
+                    disabled={snapshot.readOnly}
+                    onClick={() => void remove()}
+                  >
+                    <Trash2 size={17} />
+                    {t("newtab.delete", "Delete")}
+                  </button>
+                </>
+              )}
           </FloatingMenu>
         )}
       </div>
@@ -267,11 +300,38 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
     folderLoading,
     folderError,
     groupGuid,
+    epoch,
     setDialog,
     refresh,
     notify,
   } = useNewTab();
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [history, setHistory] = useState<PinnedSite[]>([]);
+  const showSuggestions = snapshot.settings.home.showHistory &&
+    !snapshot.private && folder?.guid === groupGuid;
+  useEffect(() => {
+    let active = true;
+    setHistory([]);
+    if (showSuggestions) {
+      void newTabClient.call("history", {}).then((items) => {
+        if (active) setHistory(items);
+      }).catch(
+        () => {/* Bookmarks remain usable if history is unavailable. */},
+      );
+    }
+    return () => {
+      active = false;
+    };
+  }, [showSuggestions, groupGuid, epoch]);
+  const suggestions = showSuggestions
+    ? selectHistorySuggestions(
+      history,
+      folder?.children ?? [],
+      snapshot.sponsors,
+      snapshot.settings.topSites.blocked,
+    ).slice(0, compact ? Math.max(0, 6 - (folder?.children.length ?? 0)) : 8)
+    : [];
+
   const nodes = compact
     ? (folder?.children.slice(0, 6) ?? [])
     : (folder?.children ?? []);
@@ -326,8 +386,7 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
             void newTabClient
               .call("repairBookmarks", {})
               .then(refresh)
-              .catch((cause) => notify(messageOf(cause)))
-          }
+              .catch((cause) => notify(messageOf(cause)))}
         >
           {t("newtab.recreateFolders", "Create empty Speed Dial folders")}
         </Button>
@@ -336,46 +395,45 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
   }
   return (
     <div aria-busy={folderLoading}>
-      {folderLoading && !folder ? (
-        <p role="status">{t("newtab.loading", "Loading…")}</p>
-      ) : (
-        nodes.length === 0 && (
-          <div className="nt-empty">
-            <Folder size={30} />
-            <h3>{t("newtab.emptyFolder", "Add your first site or folder")}</h3>
-            <p>
-              {t(
-                "newtab.emptyFolderHint",
-                "Keep the places you use together here.",
+      {folderLoading && !folder
+        ? <p role="status">{t("newtab.loading", "Loading…")}</p>
+        : (
+          nodes.length === 0 && suggestions.length === 0 && (
+            <div className="nt-empty">
+              <Folder size={30} />
+              <h3>
+                {t("newtab.emptyFolder", "Add your first site or folder")}
+              </h3>
+              <p>
+                {t(
+                  "newtab.emptyFolderHint",
+                  "Keep the places you use together here.",
+                )}
+              </p>
+              {groupGuid && (
+                <Button
+                  disabled={snapshot.readOnly}
+                  onClick={() =>
+                    setDialog({
+                      type: "bookmark",
+                      kind: "bookmark",
+                      parentGuid: compact
+                        ? groupGuid
+                        : (folder?.guid ?? groupGuid),
+                    })}
+                >
+                  <Plus size={17} />
+                  {t("newtab.addSite", "Add site")}
+                </Button>
               )}
-            </p>
-            {groupGuid && (
-              <Button
-                disabled={snapshot.readOnly}
-                onClick={() =>
-                  setDialog({
-                    type: "bookmark",
-                    kind: "bookmark",
-                    parentGuid: compact
-                      ? groupGuid
-                      : (folder?.guid ?? groupGuid),
-                  })
-                }
-              >
-                <Plus size={17} />
-                {t("newtab.addSite", "Add site")}
-              </Button>
-            )}
-          </div>
-        )
-      )}
+            </div>
+          )
+        )}
       <div
         className={`nt-site-grid${compact ? " is-compact" : ""}`}
-        style={
-          {
-            "--nt-columns": snapshot.settings.speedDial.columns,
-          } as React.CSSProperties
-        }
+        style={{
+          "--nt-columns": snapshot.settings.speedDial.columns,
+        } as React.CSSProperties}
         data-tile-size={snapshot.settings.speedDial.tileSize}
       >
         {nodes.map((node, index) => (
@@ -411,6 +469,24 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
               index={index}
               total={folder?.children.length ?? 0}
               compact={compact}
+            />
+          </div>
+        ))}
+        {suggestions.map((site, index) => (
+          <div className="nt-draggable" key={`history-${site.url}`}>
+            <Tile
+              node={{
+                guid: `history-${site.url}`,
+                parentGuid: groupGuid,
+                index,
+                type: "bookmark",
+                title: site.title,
+                url: site.url,
+              }}
+              index={index}
+              total={suggestions.length}
+              compact={compact}
+              suggestion
             />
           </div>
         ))}
@@ -450,23 +526,20 @@ export function Dial() {
   const currentGroup = snapshot.groups.find(
     (group) => group.guid === groupGuid,
   );
-  const ancestors =
-    folder?.ancestors.filter(
-      (node) =>
-        node.guid !== snapshot.settings.speedDial.rootGuid &&
-        node.guid !== folder.guid,
-    ) ?? [];
-  const path =
-    ancestors.some((node) => node.guid === groupGuid) ||
-    folder?.guid === groupGuid
-      ? ancestors
-      : currentGroup
-        ? [currentGroup, ...ancestors]
-        : ancestors;
-  const parent =
-    folder?.guid === groupGuid
-      ? groupGuid
-      : (ancestors.at(-1)?.guid ?? groupGuid);
+  const ancestors = folder?.ancestors.filter(
+    (node) =>
+      node.guid !== snapshot.settings.speedDial.rootGuid &&
+      node.guid !== folder.guid,
+  ) ?? [];
+  const path = ancestors.some((node) => node.guid === groupGuid) ||
+      folder?.guid === groupGuid
+    ? ancestors
+    : currentGroup
+    ? [currentGroup, ...ancestors]
+    : ancestors;
+  const parent = folder?.guid === groupGuid
+    ? groupGuid
+    : (ancestors.at(-1)?.guid ?? groupGuid);
   return (
     <main
       id="main-content"
@@ -487,17 +560,16 @@ export function Dial() {
               const index = snapshot.groups.findIndex(
                 (group) => group.guid === groupGuid,
               );
-              const next =
-                event.key === "ArrowRight"
-                  ? (index + 1) % snapshot.groups.length
-                  : event.key === "ArrowLeft"
-                    ? (index - 1 + snapshot.groups.length) %
-                      snapshot.groups.length
-                    : event.key === "Home"
-                      ? 0
-                      : event.key === "End"
-                        ? snapshot.groups.length - 1
-                        : -1;
+              const next = event.key === "ArrowRight"
+                ? (index + 1) % snapshot.groups.length
+                : event.key === "ArrowLeft"
+                ? (index - 1 + snapshot.groups.length) %
+                  snapshot.groups.length
+                : event.key === "Home"
+                ? 0
+                : event.key === "End"
+                ? snapshot.groups.length - 1
+                : -1;
               if (next >= 0) {
                 event.preventDefault();
                 const group = snapshot.groups[next];
@@ -531,8 +603,7 @@ export function Dial() {
                   type: "bookmark",
                   kind: "bookmark",
                   parentGuid: folderGuid || groupGuid,
-                })
-              }
+                })}
             >
               <Plus size={18} />
               {t("newtab.addSite", "Add site")}
@@ -545,8 +616,7 @@ export function Dial() {
                   type: "bookmark",
                   kind: "folder",
                   parentGuid: folderGuid || groupGuid,
-                })
-              }
+                })}
             >
               <FolderPlus size={18} />
               {t("newtab.createFolder", "Create folder")}

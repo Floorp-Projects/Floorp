@@ -199,3 +199,28 @@ Browser plugin は利用できないため、指定された Windows の実 Floo
 最終の全体stage初回は、変更していないAboutダイアログのビルドで処理が長時間継続したため、その作業プロセスを終了した。対象の単独ビルドと全体stageの再実行は成功し、コード・依存関係の修正は行っていない。初回の処理停滞の原因は未特定。
 
 検証は既存QAプロファイルの複製で実施。元の`test`を`pre-vivaldi-20261029`へ退避して保護し、終了後に復帰した。`prefs.js`・`places.sqlite`・`favicons.sqlite`のSHA-256は退避元と一致。今回のQAデータは`_dist/profile/vivaldi-qa-20261029`に保持。普段使いのプロファイルは変更していない。
+
+
+## 既存の履歴APIをSpeed Dialへ統合（2026-10-29）
+
+追加指定により「よく使うサイト」の独立領域を廃止し、既存`history` API（AboutNewTab/Activity Streamと既存fallback）をSpeed Dialへ引き継いだ。通常ブックマークとは区別した「サイトの候補」で、保存操作までPlacesへ追加しない。候補は入口のみ、専用画面最大8件、ホームは登録済み項目を先に最大6項目。スポンサーはこれと別の最大2枠を維持する。
+
+現在グループ直下の登録URL・表示スポンサー・非表示URL・候補同士を重複除外。既存の`home.showHistory`と`topSites.blocked`を保持し、Hubの表示・復元をSpeed Dialカテゴリへ移設した。旧ピン留めの既存移行処理は変更していない。保存済み項目を履歴から消えたことを理由に削除せず、候補を保存した後は同じURLの候補を表示しない。別グループや入れ子内に保存した同URLをグローバルに隠す仕組みは追加していない。
+
+実Windows locked Runtimeのstage、本番assets/CSP、`dev-tool` / Marionetteで次を確認した。
+
+- 既存の履歴APIから候補6件を取得。候補の保存で実Placesに1件が作成され、同じURLの候補が消えることを照合。
+- メニューの非表示でURL設定へ保存。Hub検索の旧ID `newtab-history` から新カテゴリを開き、表示offでも保存済みブックマークは残る。onと復元で候補が戻る。
+- ホームの独立History領域なし、同じグリッドに登録済み項目と候補を表示。入れ子フォルダーには候補0件。
+- 321×359 CSS px / 200% / 暗いテーマで横overflowなし。候補メニューのEndで「非表示」へ到達し、Escapeで閉じる。
+- 新しいタブに関するコンソールエラーの抽出は0件。本番CSPを照合。
+
+[統合後のホーム](qa/windows-history-home.png) / [統合後のSpeed Dial](qa/windows-history-dial.png) / [200%の候補メニュー](qa/windows-history-menu-200.png)。画面内のQA名とlocalhost履歴は専用QAプロファイルのデータで、本番初期値には追加していない。今回の変更は先行する視覚改善とは異なり、上記の追加指定を反映した製品仕様の更新として扱う。作業ログは`_dist/visual-qa/history-*`。
+
+
+新しいタブは既存10モジュール＋候補の重複/順序/URL安全性3ケースを持つ新モジュールの計11モジュールが失敗0。Hub新タブ設定1モジュールも失敗0。smoke全6工程、1284ファイルlint、変更したHome/Bookmarks/Hubの型検査が成功。追加テストの初回は独自ハーネスの`assertEquals`が配列を参照比較するため失敗した。値としての比較に修正して全11モジュールを再実行し成功した。本文やサービスの動作修正は不要だった。
+
+
+最終stageも成功し、最終ラベル「サイトの候補」を1382px幅と321px幅 / 200%で確認。狭幅でも候補のラベルが消えないことと横overflowなしを照合した。[今回の操作・測定結果](qa/windows-history-checks.json)。従来APIの既存候補fallbackも含むため、必ずしも閲覧済みサイトだけでないことが伝わるラベルにした。
+
+既存のtestプロファイルは`pre-history-20261029`へ退避して保護し、既存QAプロファイルの複製で検証した。終了後に元のtestを復帰し、prefs/Places/faviconのSHA-256が退避元と一致。今回のQAデータは`_dist/profile/history-qa-20261029`に保持。普段使いのプロファイルは変更していない。

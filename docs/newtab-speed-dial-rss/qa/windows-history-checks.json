@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-29",
+  "environment": "Windows Floorp 159.0 production stage; dev-tool/Marionette",
+  "runs": {
+    "flow": {
+      "ok": true,
+      "observations": [
+        {
+          "candidates": 5
+        },
+        {
+          "saved": {
+            "guid": "lqE5JVH9n-mN",
+            "parentGuid": "Ckn6rUMpYLA3",
+            "title": "Settings UI regression tests",
+            "index": 0,
+            "type": "bookmark",
+            "url": "http://localhost:5196/test/integration/index.html#/overview/home"
+          }
+        },
+        {
+          "duplicate": false
+        },
+        {
+          "blocked": [
+            "https://developer.mozilla.org/",
+            "https://www.wikipedia.org/"
+          ]
+        },
+        {
+          "hubSection": "新しいタブ"
+        },
+        {
+          "off": true,
+          "bookmarkKept": true
+        },
+        {
+          "homeTiles": 5,
+          "history": 3
+        }
+      ]
+    },
+    "scope": {
+      "ok": true,
+      "observations": [
+        {
+          "nestedHasNoSuggestions": true
+        },
+        {
+          "width": 321,
+          "scrollWidth": 321
+        },
+        {
+          "menuEnd": "非表示にする",
+          "visible": true
+        },
+        {
+          "closed": true,
+          "csp": "default-src chrome:; script-src chrome:; img-src chrome: moz-icon: blob: data:; font-src chrome: data:; style-src chrome: data: 'unsafe-inline'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+        }
+      ]
+    },
+    "final": {
+      "ok": true,
+      "observations": [
+        {
+          "label": "サイトの候補",
+          "width": 1382,
+          "scrollWidth": 1382
+        },
+        {
+          "labelVisible": true,
+          "width": 321
+        }
+      ]
+    }
+  },
+  "tests": {
+    "newtabModules": 11,
+    "newSuggestionCases": 3,
+    "hubNewtabModules": 1,
+    "failures": 0,
+    "smokeSteps": 6
+  },
+  "profileRestoredSha256Match": true
+}

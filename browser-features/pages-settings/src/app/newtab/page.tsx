@@ -397,16 +397,6 @@ export default function NewTabSettingsPage() {
                         change("speedDial", { show: e.currentTarget.checked })}
                     />
                   </Row>
-                  <Row id="newtab-history" title={t("newtab.history")}>
-                    <Switch
-                      id="newtab-history"
-                      checked={settings.home.showHistory}
-                      onChange={(e) =>
-                        change("home", {
-                          showHistory: e.currentTarget.checked,
-                        })}
-                    />
-                  </Row>
                   <Row id="newtab-feed" title={t("newtab.feedHome")}>
                     <Switch
                       id="newtab-feed"
@@ -628,33 +618,6 @@ export default function NewTabSettingsPage() {
                   </Row>
                 </Section>
                 <Section
-                  title={t("newtab.history")}
-                  description={t("newtab.blockedDescription")}
-                >
-                  {settings.topSites.blocked.length
-                    ? (
-                      <ul className={styles.blocked}>
-                        {settings.topSites.blocked.map((url) => (
-                          <li key={url}>
-                            <span>{url}</span>
-                            <Button
-                              variant="secondary"
-                              onClick={() =>
-                                change("topSites", {
-                                  blocked: settings.topSites.blocked.filter(
-                                    (value) => value !== url,
-                                  ),
-                                })}
-                            >
-                              {t("newtab.restore")}
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )
-                    : <p className={styles.note}>{t("newtab.noBlocked")}</p>}
-                </Section>
-                <Section
                   title={t("newtab.floorpStart")}
                   description={t("newtab.floorpStartDescription")}
                 >
@@ -680,6 +643,43 @@ export default function NewTabSettingsPage() {
             )}
             {tab === "dial" && (
               <>
+                <Section
+                  title={t("newtab.history")}
+                  description={t("newtab.blockedDescription")}
+                >
+                  <Row id="newtab-history" title={t("newtab.history")}>
+                    <Switch
+                      id="newtab-history"
+                      checked={settings.home.showHistory}
+                      onChange={(e) =>
+                        change("home", {
+                          showHistory: e.currentTarget.checked,
+                        })}
+                    />
+                  </Row>
+                  {settings.topSites.blocked.length
+                    ? (
+                      <ul className={styles.blocked}>
+                        {settings.topSites.blocked.map((url) => (
+                          <li key={url}>
+                            <span>{url}</span>
+                            <Button
+                              variant="secondary"
+                              onClick={() =>
+                                change("topSites", {
+                                  blocked: settings.topSites.blocked.filter(
+                                    (value) => value !== url,
+                                  ),
+                                })}
+                            >
+                              {t("newtab.restore")}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )
+                    : <p className={styles.note}>{t("newtab.noBlocked")}</p>}
+                </Section>
                 <Section
                   title={t("newtab.tileDisplay")}
                   description={t("newtab.tileDescription")}

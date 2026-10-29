@@ -52,6 +52,7 @@
     "close": "Close"
   },
   "newtab": {
+    "historySuggestion": "Suggested site",
     "home": "Home",
     "all": "All",
     "unread": "Unread",

@@ -296,9 +296,6 @@
 .nt-home.is-sites-first .nt-home-content {
   order: 1;
 }
-.nt-home.is-sites-first .nt-history {
-  order: 2;
-}
 .nt-home.is-sites-first .nt-search-region {
   order: 3;
   margin-block: 40px 0;
@@ -574,88 +571,11 @@
   max-inline-size: 38ch;
   line-height: 1.75;
 }
-.nt-history {
-  margin-block-start: 32px;
-}
-.nt-history-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr));
-  gap: 16px;
-}
-.nt-history-site {
-  display: flex;
-  flex-direction: column;
-  min-inline-size: 0;
-  gap: 4px;
-  border: 1px solid transparent;
-  padding: 16px 8px 8px;
-  border-radius: 12px;
-}
-.nt-history-site:is(:hover, :focus-within) {
-  background: var(--floorp-subtle);
-  border-color: var(--floorp-line);
-}
-.nt-history-site > a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  gap: 12px;
-  min-inline-size: 0;
-  border-radius: 8px;
-  text-decoration: none;
-  text-align: center;
-}
-.nt-history-icon {
-  display: grid;
-  place-items: center;
-  inline-size: 56px;
-  block-size: 56px;
-  border-radius: 18px;
-  background: var(--nt-selection);
-  color: var(--floorp-action);
-}
-.nt-history-icon :is(svg, img) {
-  inline-size: 28px;
-  block-size: 28px;
-}
-.nt-history-caption {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
-.nt-history-site strong {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  min-block-size: 2.9em;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.45;
-}
-.nt-history-site small {
-  display: block;
-  color: var(--floorp-muted);
+.nt-suggestion-label {
+  color: var(--floorp-action) !important;
   font-size: 12px;
-  line-height: 1.7;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.nt-history-actions {
-  display: flex;
-  justify-content: center;
-}
-.nt-history-site .nt-icon-button {
-  min-inline-size: 44px;
-  min-block-size: 44px;
-  padding: 12px;
-}
-.nt-history-site .nt-icon-button svg {
-  inline-size: 16px;
-  block-size: 16px;
-}
+
 .nt-dial {
   margin-block: 32px;
 }
@@ -1737,9 +1657,6 @@
   .nt-web-search {
     font-size: 14px !important;
   }
-  .nt-history-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .nt-dial {
     margin-block: 24px;
   }
@@ -1826,7 +1743,7 @@
   .nt-site-caption strong {
     font-size: 13px;
   }
-  .nt-tile:not(.nt-folder-tile) .nt-site-caption small:not(.nt-sponsored) {
+  .nt-tile:not(.nt-folder-tile) .nt-site-caption small:not(.nt-sponsored):not(.nt-suggestion-label) {
     display: none;
   }
   .nt-site-caption .nt-sponsored {
