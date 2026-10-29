@@ -56,3 +56,7 @@ Floorp QA helperの148 source hashesと754-ID catalogは不変で、前回749成
 公開reportとjobログの一致を照合する。内容tree・順序・各header digestを元SDKと比較し、
 原因が内容か表現かを判断する。元identityと異なる候補の自動採用はしない。
 旧Intel2runは消費済み失敗、有効42件はUNVERIFIED、無効3件はMANIFEST_DISABLEDを維持する。
+
+## 2026-10-30 JST 06時台の終端照合
+
+全SDK内容と格納順序は一致し、不一致は全49701メンバーのmtime（うち22417件はPAX mtimeも変更）と確認した。元raw gateでのfailureとNOT_ADMITTEDを維持する。前後API・全bytes・独立raw構造監査・cleanup・CIを照合済み。詳細と次の厳密な受入条件は `qa-sdk-archive-terminal-2026-10-30.ja.md` を参照。

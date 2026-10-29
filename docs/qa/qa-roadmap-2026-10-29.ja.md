@@ -121,3 +121,9 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 前回doc head b2b70afの通常CI40848313173はsmokeと4環境jobの終端successを確認した。新fresh45はまだ未開始、42件はUNVERIFIEDのまま。
 
 今回の条件と採用境界は `docs/qa/qa-sdk-archive-diagnostic-2026-10-30.ja.md` を参照。
+
+## 2026-10-30 JST 06時台の継続
+
+- SDK診断40898949074/attempt1を終端照合。元raw同一性ゲートでfailure、report/候補保存とowned cleanupはsuccess。通常Floorp CI40898945379の5jobsとRuntime shadow40898963223はすべてsuccess。
+- API前後metadataと正規ZIP bytesを照合し、全49701メンバーのcontent tree・SDK26.5・格納順序が旧baselineと一致。全mtimeと22417件のPAX mtimeの差を検出し、独立した全raw監査で他のheader・file/link内容・paddingの差分0を確認した。runner image更新が原因という因果は未実証。
+- 候補SDKのrawは前回probeと同じ32dd16b5で、元57aeb200とは不一致。旧profile/失敗は保持し、候補はNOT_ADMITTED、fresh45は未開始。次は現在の全archive identityをversion付き別sourceへ明示固定するproducer候補を準備し、success・期限・全bytesを照合してから採用を判断する。具体条件は `qa-sdk-archive-terminal-2026-10-30.ja.md` に記載した。
