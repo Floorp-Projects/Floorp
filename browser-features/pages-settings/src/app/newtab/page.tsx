@@ -43,7 +43,7 @@ function Section({ title, description, children }: SettingsSectionProps) {
           {description}
         </CardDescription>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className={styles.content}>{children}</CardContent>
     </Card>
   );
 }
@@ -313,49 +313,51 @@ export default function NewTabSettingsPage() {
       )}
       {snapshot && settings && !unreadable && (
         <>
-          <nav
-            className={styles.tabs}
-            aria-label={t("newtab.categories")}
-            onKeyDown={(event) => {
-              const index = tabs.indexOf(tab);
-              const next = event.key === "ArrowRight"
-                ? (index + 1) % tabs.length
-                : event.key === "ArrowLeft"
-                ? (index + tabs.length - 1) % tabs.length
-                : event.key === "Home"
-                ? 0
-                : event.key === "End"
-                ? tabs.length - 1
-                : -1;
-              if (next >= 0) {
-                event.preventDefault();
-                selectTab(tabs[next]);
-                requestAnimationFrame(() =>
-                  document.getElementById(`newtab-tab-${tabs[next]}`)?.focus()
-                );
-              }
-            }}
-          >
-            {tabs.map((id) => (
-              <button
-                key={id}
-                id={`newtab-tab-${id}`}
-                type="button"
-                aria-current={tab === id ? "page" : undefined}
-                onClick={() => selectTab(id)}
-              >
-                {t(`newtab.tabs.${id}`)}
-              </button>
-            ))}
-          </nav>
-          <p
-            className={styles.status}
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {busy ? t("newtab.saving") : message}
-          </p>
+          <div className={styles.categoryHeader}>
+            <nav
+              className={styles.tabs}
+              aria-label={t("newtab.categories")}
+              onKeyDown={(event) => {
+                const index = tabs.indexOf(tab);
+                const next = event.key === "ArrowRight"
+                  ? (index + 1) % tabs.length
+                  : event.key === "ArrowLeft"
+                  ? (index + tabs.length - 1) % tabs.length
+                  : event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                  ? tabs.length - 1
+                  : -1;
+                if (next >= 0) {
+                  event.preventDefault();
+                  selectTab(tabs[next]);
+                  requestAnimationFrame(() =>
+                    document.getElementById(`newtab-tab-${tabs[next]}`)?.focus()
+                  );
+                }
+              }}
+            >
+              {tabs.map((id) => (
+                <button
+                  key={id}
+                  id={`newtab-tab-${id}`}
+                  type="button"
+                  aria-current={tab === id ? "page" : undefined}
+                  onClick={() => selectTab(id)}
+                >
+                  {t(`newtab.tabs.${id}`)}
+                </button>
+              ))}
+            </nav>
+            <p
+              className={styles.status}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {busy ? t("newtab.saving") : message}
+            </p>
+          </div>
           <fieldset
             disabled={busy || loading}
             aria-busy={busy || loading}
@@ -405,7 +407,7 @@ export default function NewTabSettingsPage() {
                         })}
                     />
                   </Row>
-                  <Row id="newtab-feed" title={t("newtab.feed")}>
+                  <Row id="newtab-feed" title={t("newtab.feedHome")}>
                     <Switch
                       id="newtab-feed"
                       checked={settings.home.showFeed}
@@ -491,21 +493,6 @@ export default function NewTabSettingsPage() {
                       </label>
                     ))}
                   </fieldset>
-                  <Row
-                    id="newtab-transparency"
-                    title={t("newtab.transparency")}
-                    hint={t("newtab.transparencyDescription")}
-                  >
-                    <Switch
-                      id="newtab-transparency"
-                      checked={settings.home.translucentPanels}
-                      disabled={settings.background.type === "none"}
-                      onChange={(e) =>
-                        change("home", {
-                          translucentPanels: e.currentTarget.checked,
-                        })}
-                    />
-                  </Row>
                   {settings.background.type === "custom" && (
                     <div className={styles.backgroundDetail}>
                       <p>
@@ -514,7 +501,8 @@ export default function NewTabSettingsPage() {
                       </p>
                       <Button
                         variant="secondary"
-                        onClick={() => fileInput.current?.click()}
+                        onClick={() =>
+                          fileInput.current?.click()}
                       >
                         {t("newtab.background.chooseImage")}
                       </Button>
@@ -618,6 +606,25 @@ export default function NewTabSettingsPage() {
                       />
                       <span>{t("newtab.background.seconds")}</span>
                     </div>
+                  </Row>
+                  <Row
+                    id="newtab-transparency"
+                    title={t("newtab.transparency")}
+                    hint={t(
+                      settings.background.type === "none"
+                        ? "newtab.transparencyUnavailable"
+                        : "newtab.transparencyDescription",
+                    )}
+                  >
+                    <Switch
+                      id="newtab-transparency"
+                      checked={settings.home.translucentPanels}
+                      disabled={settings.background.type === "none"}
+                      onChange={(e) =>
+                        change("home", {
+                          translucentPanels: e.currentTarget.checked,
+                        })}
+                    />
                   </Row>
                 </Section>
                 <Section
@@ -794,17 +801,17 @@ export default function NewTabSettingsPage() {
                   title={t("newtab.reading")}
                   description={t("newtab.readingDescription")}
                 >
-                  <div className={styles.copy}>
-                    <p>{t("newtab.feedBodyPolicy")}</p>
-                    <p>{t("newtab.feedShared")}</p>
-                    <p>
+                  <ul className={styles.copy}>
+                    <li>{t("newtab.feedBodyPolicy")}</li>
+                    <li>{t("newtab.feedImages")}</li>
+                    <li>
                       {t("newtab.feedRetention", {
                         days: settings.rss.retentionDays,
                         count: settings.rss.maxItems,
                       })}
-                    </p>
-                    <p>{t("newtab.feedImages")}</p>
-                  </div>
+                    </li>
+                    <li>{t("newtab.feedShared")}</li>
+                  </ul>
                 </Section>
               </>
             )}

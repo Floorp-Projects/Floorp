@@ -368,7 +368,9 @@ function SubscribeDialog({ close }: SubscribeDialogProps) {
           </Button>
           <Button disabled={pending} type="submit">
             {pending && <LoaderCircle size={17} className="nt-spin" />}
-            {t("newtab.add", "Add")}
+            {pending
+              ? t("newtab.loading", "Loading…")
+              : t("newtab.add", "Add")}
           </Button>
         </div>
       </form>

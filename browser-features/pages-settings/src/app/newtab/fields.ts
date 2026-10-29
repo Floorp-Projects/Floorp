@@ -6,7 +6,7 @@ export const NEWTAB_FIELDS: readonly NewTabSettingField[] = [
   { id: "newtab-clock", tab: "general", titleKey: "newtab.clock" },
   { id: "newtab-history", tab: "general", titleKey: "newtab.history" },
   { id: "newtab-dials", tab: "general", titleKey: "newtab.dials" },
-  { id: "newtab-feed", tab: "general", titleKey: "newtab.feed" },
+  { id: "newtab-feed", tab: "general", titleKey: "newtab.feedHome" },
   { id: "newtab-placement", tab: "general", titleKey: "newtab.placement" },
   { id: "newtab-layout", tab: "general", titleKey: "newtab.layout" },
   {

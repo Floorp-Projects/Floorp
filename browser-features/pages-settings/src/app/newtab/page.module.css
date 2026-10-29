@@ -1,5 +1,6 @@
 .page {
   composes: page from "../../components/common/settings-sections.module.css";
+  gap: 24px;
 }
 .sections {
   composes: sections from
@@ -11,49 +12,68 @@
 .section {
   composes: section from "../../components/common/settings-sections.module.css";
 }
+.section .content {
+  gap: 0;
+}
 .description {
   composes: description from
     "../../components/common/settings-sections.module.css";
+  max-width: 65ch;
+}
+.categoryHeader {
+  min-width: 0;
 }
 .tabs {
   display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  border-bottom: 1px solid var(--floorp-line);
 }
 .tabs button {
-  flex-shrink: 0;
+  min-width: 0;
   min-height: 48px;
-  padding: 12px 2px;
+  padding: 12px 4px;
   background: none;
   border: 0;
   border-bottom: 3px solid transparent;
   color: var(--floorp-muted);
   font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
+.tabs button:hover {
+  color: var(--floorp-action);
+  background: var(--floorp-subtle);
+}
 .tabs button[aria-current="page"] {
-  color: var(--chakra-colors-purple-fg, #7e22ce);
+  color: var(--floorp-action);
   border-bottom-color: currentColor;
   font-weight: 600;
 }
 .tabs button:focus-visible,
-.backgroundChoice:focus-within,
-.galleryChoice:focus-within {
+.backgroundChoice:has(:focus-visible),
+.galleryChoice:has(:focus-visible) {
   outline: 3px solid var(--floorp-focus);
   outline-offset: 3px;
 }
 .status {
-  min-height: 24px;
+  min-height: 22px;
   color: var(--floorp-muted);
   font-size: 13px;
-  margin: 8px 0;
+  line-height: 1.7;
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
 }
 .notice {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
+  padding: 16px;
+  border-inline-start: 3px solid var(--floorp-danger);
+  background: var(--floorp-subtle);
+  line-height: 1.65;
 }
 .row {
   display: flex;
@@ -72,6 +92,8 @@
   padding-block: 12px;
   cursor: pointer;
   font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 .row label > span {
   display: block;
@@ -81,12 +103,13 @@
   display: block;
   color: var(--floorp-muted);
   margin-top: 5px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .control {
   flex-shrink: 0;
   max-width: 65%;
+  min-width: 0;
 }
 .control [data-scope="switch"][data-part="root"] {
   min-height: 44px;
@@ -98,11 +121,15 @@
   min-height: 44px;
   font: inherit;
   font-size: 14px;
-  border: 1px solid var(--chakra-colors-border-emphasized, #d4d4d8);
+  border: 1px solid var(--floorp-control-border);
   color: var(--floorp-ink);
   background: var(--floorp-surface);
   border-radius: 6px;
   padding: 10px 12px;
+}
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .backgroundChoices {
   display: grid;
@@ -125,6 +152,10 @@
   height: 18px;
   accent-color: var(--floorp-brand);
   flex-shrink: 0;
+}
+.backgroundChoice:has(:checked) span {
+  color: var(--floorp-action);
+  font-weight: 600;
 }
 .backgroundDetail {
   display: flex;
@@ -170,12 +201,28 @@
   object-fit: cover;
 }
 .galleryChoice span {
-  font-size: 12px;
+  font-size: 13px;
   padding: 7px 0;
   text-align: center;
 }
 .galleryChoice[data-selected="true"] {
-  border-color: var(--floorp-brand);
+  border-color: var(--floorp-action);
+  background: var(--floorp-subtle);
+}
+.galleryChoice[data-selected="true"]::after {
+  content: "✓";
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-end: 10px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--floorp-brand);
+  color: var(--chakra-colors-purple-contrast, #fff);
+  font-size: 16px;
+  font-weight: 700;
 }
 .interval {
   display: flex;
@@ -194,10 +241,20 @@
   line-height: 1.7;
   margin: 12px 0 20px;
 }
-.copy p {
+.copy {
+  margin: 0;
+  padding-inline-start: 20px;
+  max-width: 68ch;
+  list-style: disc;
+}
+.copy li {
   font-size: 14px;
   line-height: 1.8;
-  margin: 0 0 14px;
+  padding-inline-start: 4px;
+  margin-block-end: 16px;
+}
+.copy li:last-child {
+  margin-block-end: 0;
 }
 .blocked {
   list-style: none;
@@ -231,15 +288,29 @@
   white-space: nowrap;
   border: 0;
 }
-@media (max-width: 600px) {
+@container (max-width: 560px) {
   .row {
     gap: 16px;
   }
+  .row:has(.select, .interval) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding-block: 16px;
+  }
+  .row:has(.select, .interval) > label {
+    padding-block: 0;
+  }
+  .row:has(.select, .interval) .control {
+    max-width: 100%;
+  }
   .select {
-    width: 150px;
+    width: 100%;
   }
   .tabs {
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 12px;
   }
   .backgroundChoices {
     grid-template-columns: 1fr;
@@ -249,11 +320,23 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
+  .blocked li {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .blocked li > span {
+    flex: 1 1 180px;
+  }
 }
 @media (forced-colors: active) {
   .tabs button[aria-current="page"],
   .galleryChoice[data-selected="true"] {
     border-color: Highlight;
     color: LinkText;
+  }
+  .galleryChoice[data-selected="true"]::after {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
   }
 }

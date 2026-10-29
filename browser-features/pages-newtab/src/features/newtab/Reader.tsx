@@ -81,14 +81,16 @@ function FeedImage({ articleId, imageId, alt }: FeedImageProps) {
   return source ? (
     <img className="nt-feed-image" src={source} alt={alt} />
   ) : (
-    <span className="nt-feed-image-placeholder">
+    <span className="nt-feed-image-placeholder" aria-busy={loading}>
       <span>{alt || t("newtab.externalImage", "External image")}</span>
       <Button
         variant="secondary"
         disabled={loading}
         onClick={() => void load()}
       >
-        {t("newtab.loadImage", "Load this image")}
+        {loading
+          ? t("newtab.loading", "Loading…")
+          : t("newtab.loadImage", "Load this image")}
       </Button>
       {error && <span role="alert">{error}</span>}
     </span>
@@ -165,16 +167,22 @@ export function Reader() {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(articleFromHash);
+  const [listSelection, setListSelection] = useState<string | null>(
+    articleFromHash,
+  );
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingArticle, setLoadingArticle] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [articleError, setArticleError] = useState("");
+  const [listRetry, setListRetry] = useState(0);
+  const [articleRetry, setArticleRetry] = useState(0);
   const [drawer, setDrawer] = useState(false);
   const [menu, setMenu] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
+  const listHeading = useRef<HTMLHeadingElement>(null);
   const articleRequest = useRef(0);
   const actionTrigger = useRef<HTMLButtonElement>(null);
   const currentFeed = snapshot.feeds.find(
@@ -242,9 +250,13 @@ export function Reader() {
     return () => {
       active = false;
     };
-  }, [feedId, filter, search, offset, epoch]);
+  }, [feedId, filter, search, offset, epoch, listRetry]);
   useEffect(() => {
-    const sync = () => setSelectedId(articleFromHash());
+    const sync = () => {
+      const id = articleFromHash();
+      setSelectedId(id);
+      if (id) setListSelection(id);
+    };
     addEventListener("hashchange", sync);
     return () => removeEventListener("hashchange", sync);
   }, []);
@@ -253,8 +265,11 @@ export function Reader() {
     setMenu(false);
     if (!selectedId) {
       setArticle(null);
+      setLoadingArticle(false);
+      setArticleError("");
       return;
     }
+    setArticle(null);
     setLoadingArticle(true);
     setArticleError("");
     void newTabClient
@@ -293,7 +308,7 @@ export function Reader() {
     return () => {
       articleRequest.current++;
     };
-  }, [selectedId, refresh, notify, snapshot.readOnly]);
+  }, [selectedId, refresh, notify, snapshot.readOnly, articleRetry]);
   useEffect(() => {
     if (!selectedId || article?.id !== selectedId) return;
     let active = true;
@@ -317,8 +332,25 @@ export function Reader() {
     };
   }, [epoch, selectedId]);
   const open = (id: string) => {
+    setListSelection(id);
     setSelectedId(id);
     location.hash = `feed/${encodeURIComponent(id)}`;
+    // The list is hidden at narrow widths. Move keyboard navigation into the
+    // article pane without resetting the list's scroll position.
+    requestAnimationFrame(() => body.current?.focus({ preventScroll: true }));
+  };
+  const backToList = () => {
+    const id = selectedId;
+    setSelectedId(null);
+    location.hash = "feed";
+    requestAnimationFrame(() => {
+      const previous = id
+        ? list.current?.querySelector<HTMLButtonElement>(
+            `[data-article-id="${CSS.escape(id)}"]`,
+          )
+        : null;
+      (previous ?? listHeading.current)?.focus({ preventScroll: true });
+    });
   };
   const choose = (id: string | undefined, nextFilter: typeof filter) => {
     setFeedId(id);
@@ -485,7 +517,15 @@ export function Reader() {
             >
               <Menu size={20} />
             </IconButton>
-            {!selectedId ? <h1>{title}</h1> : <h2>{title}</h2>}
+            {!selectedId ? (
+              <h1 ref={listHeading} tabIndex={-1}>
+                {title}
+              </h1>
+            ) : (
+              <h2 ref={listHeading} tabIndex={-1}>
+                {title}
+              </h2>
+            )}
             <IconButton
               disabled={updating || snapshot.readOnly}
               label={t("newtab.refreshFeeds", "Refresh feeds")}
@@ -508,6 +548,7 @@ export function Reader() {
           </label>
           <div
             className="nt-reader-filters"
+            role="group"
             aria-label={t("newtab.articleFilter", "Article filter")}
           >
             {(["all", "unread", "starred"] as const).map((value) => (
@@ -545,11 +586,20 @@ export function Reader() {
         </header>
         <div className="nt-reader-list-scroll" ref={list} aria-busy={loading}>
           {error && (
-            <p role="alert" className="nt-form-error">
-              {error}
-            </p>
+            <div className="nt-reader-status">
+              <p role="alert" className="nt-form-error">
+                {error}
+              </p>
+              <Button
+                variant="secondary"
+                disabled={loading}
+                onClick={() => setListRetry((current) => current + 1)}
+              >
+                {t("newtab.retry", "Retry")}
+              </Button>
+            </div>
           )}
-          {!loading && items.length === 0 && (
+          {!loading && !error && items.length === 0 && (
             <div className="nt-empty">
               <Rss size={30} />
               <p>
@@ -560,19 +610,36 @@ export function Reader() {
                       "Add a feed to see its latest articles here.",
                     )}
               </p>
+              {!snapshot.feeds.length && (
+                <Button
+                  variant="secondary"
+                  disabled={snapshot.readOnly}
+                  onClick={() => setDialog({ type: "subscribe" })}
+                >
+                  <Plus size={17} />
+                  {t("newtab.addFeed", "Add feed")}
+                </Button>
+              )}
             </div>
           )}
           {items.map((item) => (
             <article
               className="nt-reader-list-item"
               key={item.id}
-              data-selected={item.id === selectedId}
+              data-selected={item.id === listSelection}
               data-unread={!item.isRead}
             >
-              <button type="button" onClick={() => open(item.id)}>
+              <button
+                type="button"
+                data-article-id={item.id}
+                aria-current={item.id === listSelection ? "true" : undefined}
+                onClick={() => open(item.id)}
+              >
                 <span className="nt-reader-item-source">
-                  {snapshot.feeds.find((feed) => feed.id === item.feedId)
-                    ?.title ?? item.feedTitle}
+                  <span className="nt-reader-item-source-title">
+                    {snapshot.feeds.find((feed) => feed.id === item.feedId)
+                      ?.title ?? item.feedTitle}
+                  </span>
                   {!item.isRead && (
                     <span
                       className="nt-unread-dot"
@@ -581,8 +648,12 @@ export function Reader() {
                   )}
                 </span>
                 <strong>{item.title}</strong>
-                <p>{item.excerpt}</p>
-                <time>
+                {item.excerpt && <p>{item.excerpt}</p>}
+                <time
+                  dateTime={new Date(
+                    item.publishedAt ?? item.receivedAt,
+                  ).toISOString()}
+                >
                   {new Date(
                     item.publishedAt ?? item.receivedAt,
                   ).toLocaleDateString()}
@@ -626,10 +697,7 @@ export function Reader() {
           <IconButton
             className="nt-back-to-list"
             label={t("newtab.backToList", "Back to article list")}
-            onClick={() => {
-              setSelectedId(null);
-              location.hash = "feed";
-            }}
+            onClick={backToList}
           >
             <ChevronLeft size={20} />
           </IconButton>
@@ -677,6 +745,7 @@ export function Reader() {
                       disabled={snapshot.readOnly}
                       onClick={() => {
                         setMenu(false);
+                        actionTrigger.current?.focus({ preventScroll: true });
                         void mutate(article.id, { isRead: !article.isRead });
                       }}
                     >
@@ -708,6 +777,7 @@ export function Reader() {
         <div
           className="nt-reader-article-scroll"
           ref={body}
+          tabIndex={-1}
           aria-busy={loadingArticle}
         >
           {loadingArticle ? (
@@ -718,7 +788,11 @@ export function Reader() {
             <article className="nt-article-content">
               <h1 tabIndex={-1}>{article.title}</h1>
               <p className="nt-article-byline">
-                <time>
+                <time
+                  dateTime={new Date(
+                    article.publishedAt ?? article.receivedAt,
+                  ).toISOString()}
+                >
                   {new Date(
                     article.publishedAt ?? article.receivedAt,
                   ).toLocaleDateString()}
@@ -780,9 +854,17 @@ export function Reader() {
           ) : (
             <div className="nt-empty">
               {articleError ? (
-                <p className="nt-form-error" role="alert">
-                  {articleError}
-                </p>
+                <>
+                  <p className="nt-form-error" role="alert">
+                    {articleError}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setArticleRetry((current) => current + 1)}
+                  >
+                    {t("newtab.retry", "Retry")}
+                  </Button>
+                </>
               ) : (
                 <>
                   <Rss size={36} />

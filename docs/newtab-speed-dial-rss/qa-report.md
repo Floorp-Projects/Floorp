@@ -6,6 +6,8 @@
 
 比較元: `0c5b265d73c23f3811b4c2199eb61186e8949003`
 
+2026-10-29 の Windows 本体 UI 改善は [表示・操作改善と Windows QA](windows-visual-qa.md)に分けて記録する。以下の先行 Linux 検証結果はそのまま保持する。
+
 ## 環境と範囲
 
 - Linux x86_64、Xvfb、実 Floorp / Firefox **159.0**、build **20261026023026**。

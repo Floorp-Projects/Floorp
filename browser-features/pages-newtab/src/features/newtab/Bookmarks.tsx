@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import type { TileProps, BookmarkGridProps } from "./types.ts";
+import type { BookmarkGridProps, TileProps } from "./types.ts";
 import { useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -18,14 +18,14 @@ import {
 import { useTranslation } from "react-i18next";
 import { newTabClient } from "../../../../../libs/newtab/client.ts";
 import type { BookmarkNode } from "../../../../../libs/newtab/types.ts";
-import { useNewTab, messageOf } from "./state.tsx";
+import { messageOf, useNewTab } from "./state.tsx";
 import {
   Button,
   domain,
   FloatingMenu,
   IconButton,
-  SiteIcon,
   safeWebUrl,
+  SiteIcon,
 } from "./ui.tsx";
 
 function Tile({ node, index, total, sponsor, compact }: TileProps) {
@@ -94,6 +94,7 @@ function Tile({ node, index, total, sponsor, compact }: TileProps) {
         <button
           type="button"
           className="nt-tile-link"
+          title={name}
           onClick={() => openFolder(node.guid)}
           aria-label={t("newtab.openFolder", {
             title: name,
@@ -118,7 +119,7 @@ function Tile({ node, index, total, sponsor, compact }: TileProps) {
           className="nt-tile-link"
           href={safeWebUrl(node.url) ?? undefined}
           aria-disabled={!safeWebUrl(node.url) || undefined}
-          title={node.url}
+          title={`${name}\n${node.url ?? ""}`}
         >
           <span className="nt-site-icon">
             <SiteIcon url={node.url} />
@@ -281,13 +282,13 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
     const guid = event.dataTransfer.getData("text/x-floorp-bookmark");
     if (!guid || guid === target.guid) return;
     try {
-      if (target.type === "folder")
+      if (target.type === "folder") {
         await newTabClient.call("bookmark", {
           action: "move",
           guid,
           parentGuid: target.guid,
         });
-      else {
+      } else {
         const guids = folder.children.map((node) => node.guid);
         const from = guids.indexOf(guid);
         const to = guids.indexOf(target.guid);
@@ -305,7 +306,7 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
       notify(messageOf(cause));
     }
   };
-  if (folderError || !groupGuid)
+  if (folderError || !groupGuid) {
     return (
       <div className="nt-empty">
         <p role="alert">
@@ -332,6 +333,7 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
         </Button>
       </div>
     );
+  }
   return (
     <div aria-busy={folderLoading}>
       {folderLoading && !folder ? (
@@ -398,8 +400,9 @@ export function BookmarkGrid({ compact = false }: BookmarkGridProps) {
                 !event.currentTarget.contains(
                   event.relatedTarget as Node | null,
                 )
-              )
+              ) {
                 setDropTarget(null);
+              }
             }}
             onDrop={(event) => void drop(event, node)}
           >
@@ -463,7 +466,7 @@ export function Dial() {
   const parent =
     folder?.guid === groupGuid
       ? groupGuid
-      : (folder?.ancestors.at(-1)?.guid ?? groupGuid);
+      : (ancestors.at(-1)?.guid ?? groupGuid);
   return (
     <main
       id="main-content"
@@ -510,11 +513,12 @@ export function Dial() {
               key={group.guid}
               aria-controls="nt-folder-panel"
               aria-selected={group.guid === groupGuid}
+              title={group.title}
               tabIndex={group.guid === groupGuid ? 0 : -1}
               onClick={() => selectGroup(group.guid)}
             >
               <Folder size={18} />
-              {group.title}
+              <span>{group.title}</span>
             </button>
           ))}
         </div>

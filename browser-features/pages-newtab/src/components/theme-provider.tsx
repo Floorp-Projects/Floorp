@@ -37,6 +37,7 @@ export function ThemeProvider({
         theme === "system" ? (media.matches ? "dark" : "light") : theme;
       root.classList.remove("light", "dark");
       root.classList.add(resolved);
+      root.dataset.theme = resolved;
       root.style.colorScheme = resolved;
       setResolvedTheme(resolved);
     };

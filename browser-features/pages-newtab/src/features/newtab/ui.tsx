@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MPL-2.0
 import type {
   FloatingMenuProps,
-  SiteIconProps,
-  ModalProps,
   IconButtonProps,
+  ModalProps,
+  SiteIconProps,
 } from "./types.ts";
-import { forwardRef, useEffect, useRef } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Folder, Globe, X } from "lucide-react";
 import {
+  SiDeno,
   SiGithub,
   SiMdnwebdocs,
-  SiDeno,
+  SiNotion,
+  SiNpm,
   SiReact,
   SiTypescript,
   SiWikipedia,
-  SiNotion,
-  SiNpm,
 } from "@icons-pack/react-simple-icons";
 import { Button } from "../../../../../libs/ui/button.tsx";
 import floorpIcon from "../../../../../static/gecko/custom-app-icons/floorp-simple.png";
@@ -47,18 +47,33 @@ export function FloatingMenu({
   const ref = useRef<HTMLDivElement>(null);
   const rect = anchor.current?.getBoundingClientRect();
   const width = Math.min(244, innerWidth - 32);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const menu = ref.current;
+    const trigger = anchor.current;
+    if (menu && trigger) {
+      const bounds = trigger.getBoundingClientRect();
+      const height = menu.getBoundingClientRect().height;
+      const below = bounds.bottom + 4;
+      menu.style.top = `${Math.max(
+        16,
+        Math.min(
+          below + height <= innerHeight - 16 ? below : bounds.top - height - 4,
+          innerHeight - height - 16,
+        ),
+      )}px`;
+    }
     ref.current
       ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
       ?.focus({ preventScroll: true });
-  }, []);
+  }, [anchor]);
   useEffect(() => {
     const pointer = (event: PointerEvent) => {
       if (
         !ref.current?.contains(event.target as Node) &&
         !anchor.current?.contains(event.target as Node)
-      )
+      ) {
         close();
+      }
     };
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -88,17 +103,24 @@ export function FloatingMenu({
                   buttons.length) %
                 buttons.length;
         event.preventDefault();
-        buttons[next].focus({ preventScroll: true });
+        buttons[next].focus();
       }
     };
     const focus = (event: FocusEvent) => {
       if (
         !ref.current?.contains(event.target as Node) &&
         !anchor.current?.contains(event.target as Node)
-      )
+      ) {
         close();
+      }
     };
-    const reposition = () => close();
+    const reposition = (event: Event) => {
+      // Scrolling a tall menu must not dismiss it before its last action is reached.
+      if (event.target instanceof Node && ref.current?.contains(event.target)) {
+        return;
+      }
+      close();
+    };
     addEventListener("pointerdown", pointer);
     addEventListener("keydown", key);
     addEventListener("focusin", focus);
@@ -136,7 +158,7 @@ export function FloatingMenu({
   );
 }
 export function SiteIcon({ url, folder = false }: SiteIconProps) {
-  if (folder)
+  if (folder) {
     return (
       <Folder
         className="nt-folder-icon"
@@ -145,6 +167,7 @@ export function SiteIcon({ url, folder = false }: SiteIconProps) {
         aria-hidden="true"
       />
     );
+  }
   let hostname = "";
   try {
     hostname = new URL(url ?? "").hostname.replace(/^www\./, "");
@@ -153,16 +176,20 @@ export function SiteIcon({ url, folder = false }: SiteIconProps) {
   }
   const props = { size: 44, "aria-hidden": true as const };
   if (hostname === "github.com") return <SiGithub {...props} />;
-  if (hostname === "floorp.app" || hostname.endsWith(".floorp.app"))
+  if (hostname === "floorp.app" || hostname.endsWith(".floorp.app")) {
     return <img src={floorpIcon} width={44} height={44} alt="" />;
+  }
   if (hostname === "developer.mozilla.org") return <SiMdnwebdocs {...props} />;
-  if (hostname === "deno.com" || hostname === "deno.land")
+  if (hostname === "deno.com" || hostname === "deno.land") {
     return <SiDeno {...props} />;
+  }
   if (hostname === "react.dev") return <SiReact {...props} color="#00a7d6" />;
-  if (hostname === "typescriptlang.org")
+  if (hostname === "typescriptlang.org") {
     return <SiTypescript {...props} color="#3178c6" />;
-  if (hostname === "wikipedia.org" || hostname.endsWith(".wikipedia.org"))
+  }
+  if (hostname === "wikipedia.org" || hostname.endsWith(".wikipedia.org")) {
     return <SiWikipedia {...props} />;
+  }
   if (hostname === "notion.so") return <SiNotion {...props} />;
   if (hostname === "npmjs.com") return <SiNpm {...props} color="#cb3837" />;
   return <Globe {...props} strokeWidth={1.5} />;
@@ -198,9 +225,9 @@ export function Modal({ title, closeLabel, close, children }: ModalProps) {
     target?.focus();
     return () => {
       dialog?.close();
-      if (previous instanceof HTMLElement && previous.isConnected)
+      if (previous instanceof HTMLElement && previous.isConnected) {
         previous.focus();
-      else
+      } else {
         requestAnimationFrame(() => {
           const main =
             document.getElementById("dial-location") ??
@@ -210,6 +237,7 @@ export function Modal({ title, closeLabel, close, children }: ModalProps) {
             main.focus();
           }
         });
+      }
     };
   }, []);
   return (
@@ -217,12 +245,19 @@ export function Modal({ title, closeLabel, close, children }: ModalProps) {
       ref={ref}
       className="nt-dialog"
       aria-labelledby="nt-dialog-title"
-      onCancel={(event) => {
-        event.preventDefault();
-        close();
-      }}
+      // Let Gecko finish native cancellation and restore focus before React
+      // removes the dialog. Unmounting during cancel can re-enter modal focus.
+      onClose={close}
       onClick={(event) => {
-        if (event.target === event.currentTarget) close();
+        if (event.target !== event.currentTarget) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (
+          event.clientX < rect.left ||
+          event.clientX > rect.right ||
+          event.clientY < rect.top ||
+          event.clientY > rect.bottom
+        )
+          close();
       }}
     >
       <header className="nt-dialog-header">
