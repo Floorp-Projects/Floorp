@@ -127,3 +127,9 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - SDK診断40898949074/attempt1を終端照合。元raw同一性ゲートでfailure、report/候補保存とowned cleanupはsuccess。通常Floorp CI40898945379の5jobsとRuntime shadow40898963223はすべてsuccess。
 - API前後metadataと正規ZIP bytesを照合し、全49701メンバーのcontent tree・SDK26.5・格納順序が旧baselineと一致。全mtimeと22417件のPAX mtimeの差を検出し、独立した全raw監査で他のheader・file/link内容・paddingの差分0を確認した。runner image更新が原因という因果は未実証。
 - 候補SDKのrawは前回probeと同じ32dd16b5で、元57aeb200とは不一致。旧profile/失敗は保持し、候補はNOT_ADMITTED、fresh45は未開始。次は現在の全archive identityをversion付き別sourceへ明示固定するproducer候補を準備し、success・期限・全bytesを照合してから採用を判断する。具体条件は `qa-sdk-archive-terminal-2026-10-30.ja.md` に記載した。
+
+## 2026-10-30 JST 12時台の継続
+
+- 現在のraw32dd16b5・全49701内容・順序・全header11 digest・Xcodeを別profileへ固定する、最大20分/初回push1回のSDK producerを準備した。外側gzip時刻4 bytesだけを0に固定し、完全な圧縮bytesも事前固定する。raw内の時刻や内容は変えない。
+- 新検証器18件と起動/CLI/cleanup13 controlsは秘密情報なし隔離環境で成功。保存済み全SDKの再検査で別profileと完全一致。旧148 hashes/754 IDsと既済全回帰は不変で、再実行・加算していない。
+- 前回Floorp CI40955108259の5jobsとRuntime shadow40955135690は終端success。新producerの終端とAPI/全wire ZIP照合は次に必要。loader/schema1〜3と元失敗は保持し、schema4は無効な設計候補だけ。Mac42件・製品資格は未確認。詳細は `qa-sdk-exact-profile-2026-10-30.ja.md` を参照。
