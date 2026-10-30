@@ -133,3 +133,10 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 現在のraw32dd16b5・全49701内容・順序・全header11 digest・Xcodeを別profileへ固定する、最大20分/初回push1回のSDK producerを準備した。外側gzip時刻4 bytesだけを0に固定し、完全な圧縮bytesも事前固定する。raw内の時刻や内容は変えない。
 - 新検証器18件と起動/CLI/cleanup13 controlsは秘密情報なし隔離環境で成功。保存済み全SDKの再検査で別profileと完全一致。旧148 hashes/754 IDsと既済全回帰は不変で、再実行・加算していない。
 - 前回Floorp CI40955108259の5jobsとRuntime shadow40955135690は終端success。新producerの終端とAPI/全wire ZIP照合は次に必要。loader/schema1〜3と元失敗は保持し、schema4は無効な設計候補だけ。Mac42件・製品資格は未確認。詳細は `qa-sdk-exact-profile-2026-10-30.ja.md` を参照。
+
+## 2026-10-30 JST 18時台の継続
+
+- 前回producer40996012481は固定32dd profileに対しraw57aとなりfailure。report保存/owned cleanup成功、SDK artifact0。report12951441466の前後API/期限/ZIP/producer/最終stdout一致を確認し、保存旧SDKの全49701メンバーから全archive identityの一致も確認した。
+- 2つのrunner imageを観測したため、image/OS/Python/Xcode/SDKから先に1つの完全profileを選ぶ限定producerを追加した。未知imageや値の混在/差替えを拒否し、任意の時刻差を許容しない。旧workflow・verifier・profile・source schema1〜3は不変。
+- 新selector9テストと起動/cleanup/report結合12 controlsは秘密情報なし隔離環境で成功。2つの完全offline baselineを結合し、148 helper hashes/754 IDsの不変を確認。既済回帰は再実行・加算していない。
+- 前回通常CI40996000828の5jobsとRuntime shadow40996017301は終端success。新producerは最大20分/初回push1回で別artifactを作り、同run/head/attempt/jobのAPI/全bytes/全内容照合後に採用を判断する。Mac42件は未実行。具体条件は `qa-sdk-image-bound-2026-10-30.ja.md` を参照。
