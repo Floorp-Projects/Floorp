@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { toggleLastChromeSidePanel } from "../panel-sidebar/chrome-side-panels.ts";
 import { gestureActions } from "../mouse-gesture/utils/gestures.ts";
 import { openInlineTabUrlEditorForSelectedTab } from "../tab-inline-edit/controller.ts";
 import type {
@@ -10,10 +11,17 @@ import type {
   KeyboardOnlyActionRegistration,
 } from "./type.ts";
 
+export const CHROME_SIDE_PANEL_ACTION_ID =
+  "floorp-toggle-last-extension-side-panel" as const;
+
 export const INLINE_TAB_URL_ACTION_ID = "floorp-edit-tab-url" as const;
 
 export const KEYBOARD_ONLY_ACTIONS: readonly KeyboardOnlyActionRegistration[] =
   Object.freeze([
+    Object.freeze({
+      name: CHROME_SIDE_PANEL_ACTION_ID,
+      fn: toggleLastChromeSidePanel,
+    }),
     Object.freeze({
       name: INLINE_TAB_URL_ACTION_ID,
       fn: (win: Window): void => {

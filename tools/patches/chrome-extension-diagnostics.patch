@@ -1,0 +1,764 @@
+diff --git a/chrome/toolkit/content/mozapps/extensions/aboutaddons.css b/chrome/toolkit/content/mozapps/extensions/aboutaddons.css
+index 219971a..9c155fe 100644
+--- a/chrome/toolkit/content/mozapps/extensions/aboutaddons.css
++++ b/chrome/toolkit/content/mozapps/extensions/aboutaddons.css
+@@ -863,3 +863,34 @@ section:not(:empty) ~ :is(#empty-addons-message, #empty-addons-promo) {
+     --addons-promo-text-padding-inline: 0;
+   }
+ }
++
++
++floorp-chrome-extension-diagnostics {
++  display: block;
++}
++
++floorp-chrome-extension-diagnostics[hidden] {
++  display: none;
++}
++
++.floorp-chrome-diagnostics {
++  border-block-start: 1px solid var(--in-content-border-color);
++  margin-block-start: 16px;
++  padding-block-start: 16px;
++}
++
++.floorp-chrome-diagnostics code,
++.floorp-chrome-diagnostics li {
++  overflow-wrap: anywhere;
++}
++
++.floorp-chrome-diagnostics-actions {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 8px;
++  margin-block-start: 16px;
++}
++
++.floorp-chrome-diagnostics-status {
++  margin-block-end: 0;
++}
+diff --git a/chrome/toolkit/content/mozapps/extensions/components/addon-details.mjs b/chrome/toolkit/content/mozapps/extensions/components/addon-details.mjs
+index 416c534..5d65d56 100644
+--- a/chrome/toolkit/content/mozapps/extensions/components/addon-details.mjs
++++ b/chrome/toolkit/content/mozapps/extensions/components/addon-details.mjs
+@@ -13,6 +13,7 @@ import {
+   nl2br,
+ } from "../aboutaddons-utils.mjs";
+ import { gViewController } from "../view-controller.mjs";
++import "./floorp-chrome-extension-diagnostics.mjs";
+ import { shouldShowNativeThemeCheckbox } from "./native-theme-colors-checkbox.mjs";
+ 
+ const { AddonManager } = ChromeUtils.importESModule(
+@@ -74,6 +75,7 @@ export class AddonDetails extends AboutAddonsHTMLElement {
+                 hidden
+               ></button>
+             </div>
++            <floorp-chrome-extension-diagnostics hidden></floorp-chrome-extension-diagnostics>
+             <div class="addon-detail-default-theme-options">
+               <native-theme-colors-checkbox
+                 class="native-theme-checkbox-detail"
+@@ -472,6 +474,8 @@ export class AddonDetails extends AboutAddonsHTMLElement {
+     this.textContent = "";
+     this.appendChild(AddonDetails.fragment);
+ 
++    this.querySelector("floorp-chrome-extension-diagnostics").setAddon(addon);
++
+     this.deck = this.querySelector("named-deck");
+     this.tabGroup = this.querySelector(".tab-group");
+ 
+diff --git a/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs
+new file mode 100644
+index 0000000..49000b7
+--- /dev/null
++++ b/chrome/toolkit/content/mozapps/extensions/components/floorp-chrome-extension-diagnostics.mjs
+@@ -0,0 +1,690 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import {
++  AboutAddonsHTMLElement,
++  getBrowserElement,
++} from "../aboutaddons-utils.mjs";
++import { gViewController } from "../view-controller.mjs";
++
++const { AddonManager } = ChromeUtils.importESModule(
++  "resource://gre/modules/AddonManager.sys.mjs",
++);
++const { NetUtil } = ChromeUtils.importESModule(
++  "resource://gre/modules/NetUtil.sys.mjs",
++);
++
++const FALLBACK_STRINGS = {
++  heading: "Chrome extension compatibility",
++  chromeId: "Original Chrome ID",
++  legacyChromeId: "Recorded Chrome ID",
++  legacyNotice:
++    "This extension uses an older conversion format. Its Chrome source has not been verified.",
++  originalVersion: "Original version",
++  runtimeVersion: "Compatibility runtime schema",
++  warnings: "Conversion warnings",
++  noWarnings: "No conversion warnings recorded.",
++  removedPermissions: "Removed permissions",
++  contexts: "Running contexts",
++  noContexts: "No extension contexts are running.",
++  refresh: "Refresh",
++  reload: "Reload extension",
++  export: "Save diagnostics…",
++  sidebarSettings: "Manage sidebar pins",
++  extensionShortcuts: "Extension shortcuts",
++  floorpShortcuts: "Floorp shortcuts",
++  unavailable: "Unavailable",
++  reportUnavailable: "The conversion report is unavailable.",
++  contextUnavailable: "Running contexts could not be read.",
++  refreshed: "Diagnostics refreshed.",
++  reloaded: "Extension reloaded.",
++  exported: "Diagnostics saved.",
++  actionFailed: "The operation could not be completed.",
++  saveTitle: "Save Chrome extension diagnostics",
++  jsonFilter: "JSON files",
++  updateHeading: "Updates and compatibility",
++  checkUpdate: "Check for updates",
++  reapply: "Reapply compatibility…",
++  applyUpdate: "Apply update",
++  applyCompatibility: "Apply compatibility changes",
++  checking: "Checking for updates…",
++  updateAvailable: "Version {{version}} is ready to install.",
++  compatibilityAvailable:
++    "Compatibility changes for version {{version}} are ready to apply.",
++  upToDate: "This extension is up to date.",
++  updateInstalled: "Version {{version}} installed.",
++  updatePostponed: "The update was postponed.",
++  updateFailed: "Update failed: {{message}}",
++  updateInvalidated: "The extension changed. Check for updates again.",
++  automaticUpdates: "Automatically check for and apply updates",
++  automaticMigrationRequired:
++    "Use Reapply compatibility and Apply to verify the installed package before enabling automatic updates.",
++  automaticUnavailable:
++    "Automatic updates are unavailable for this installation.",
++  automaticDisabled: "Automatic updates are disabled.",
++  automaticPaused:
++    "Automatic updates are paused by the browser update settings.",
++  automaticIdle: "Automatic update checks are enabled.",
++  automaticChecking: "Checking for an automatic update\u2026",
++  automaticCurrent: "The latest checked version is installed.",
++  automaticAvailable: "An update is available.",
++  automaticWaiting: "The update is waiting for an open browser window.",
++  automaticInstalling: "Applying the verified update\u2026",
++  automaticInstalled: "The automatic update was installed.",
++  automaticPostponed: "The extension postponed the update.",
++  automaticFailed: "Automatic update failed: {{message}}",
++};
++
++function translate(key, args = {}) {
++  try {
++    const { I18nUtils } = ChromeUtils.importESModule(
++      "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
++    );
++    const fullKey = `addons.chromeDiagnostics.${key}`;
++    const value = I18nUtils.getTranslationProvider()?.t(fullKey, args);
++    if (typeof value === "string" && value !== fullKey) {
++      return value;
++    }
++  } catch {}
++  return (FALLBACK_STRINGS[key] ?? key).replace(
++    /{{(\w+)}}/g,
++    (match, name) => Object.hasOwn(args, name) ? String(args[name]) : match,
++  );
++}
++
++function readAddonJSON(addon, path) {
++  return new Promise((resolve, reject) => {
++    NetUtil.asyncFetch(
++      { uri: addon.getResourceURI(path), loadUsingSystemPrincipal: true },
++      (input, status) => {
++        try {
++          if (!Components.isSuccessCode(status)) {
++            throw new Error(`Cannot read extension resource: ${path}`);
++          }
++          const size = input.available();
++          if (size > 1024 * 1024) {
++            throw new Error("Extension diagnostics resource is too large");
++          }
++          resolve(JSON.parse(NetUtil.readInputStreamToString(input, size, {
++            charset: "UTF-8",
++          })));
++        } catch (error) {
++          reject(error);
++        }
++      },
++    );
++  });
++}
++
++export async function collectChromeExtensionDiagnostics(addon) {
++  if (
++    !addon || addon.type !== "extension" ||
++    typeof addon.getResourceURI !== "function"
++  ) {
++    return null;
++  }
++  const manifest = await readAddonJSON(addon, "manifest.json");
++  const gecko = manifest.browser_specific_settings?.gecko;
++  const marker = gecko?.floorp_chrome_extension;
++  const legacyId = /^([a-p]{32})@chromium-extension$/.exec(addon.id)?.[1];
++  const legacy = marker == null && !!legacyId && gecko?.id === addon.id;
++  const current = marker?.schema_version === 1 &&
++    typeof marker.original_id === "string" &&
++    /^[a-p]{32}$/.test(marker.original_id) &&
++    addon.id === `${marker.original_id}@chromium-extension`;
++  if (!current && !legacy) {
++    return null;
++  }
++  const chromeId = current ? marker.original_id : legacyId;
++  const diagnostics = {
++    schemaVersion: 1,
++    generatedAt: new Date().toISOString(),
++    browser: {
++      version: Services.appinfo.version,
++      buildId: Services.appinfo.appBuildID,
++    },
++    extension: {
++      addonId: addon.id,
++      chromeId,
++      provenance: legacy ? "legacy-unverified" : "converted",
++      installedVersion: addon.version,
++      runtimeSchemaVersion: current ? marker.schema_version : null,
++      active: addon.isActive,
++      hasSidePanel: current && (!!manifest.side_panel ||
++        Array.isArray(manifest.permissions) &&
++          manifest.permissions.includes("sidePanel")),
++    },
++    conversion: null,
++    conversionError: null,
++    contexts: [],
++    contextsError: null,
++  };
++  try {
++    const report = await readAddonJSON(
++      addon,
++      "__floorp_chrome__/conversion-report.json",
++    );
++    if (
++      report.schemaVersion !== 1 || report.chromeId !== chromeId ||
++      report.addonId !== addon.id ||
++      typeof report.originalVersion !== "string" ||
++      !Array.isArray(report.warnings) || !report.warnings.every((item) =>
++        typeof item === "string"
++      ) ||
++      !Array.isArray(report.removedPermissions) ||
++      !report.removedPermissions.every((item) => typeof item === "string")
++    ) {
++      throw new Error("Invalid Chrome extension conversion report");
++    }
++    diagnostics.conversion = {
++      schemaVersion: report.schemaVersion,
++      originalVersion: report.originalVersion,
++      warnings: report.warnings,
++      removedPermissions: report.removedPermissions,
++    };
++    const background = report.background;
++    if (
++      background && typeof background.nativeWorkerCompiled === "boolean" &&
++      ["service_worker", "document", "none"].includes(background.selected) &&
++      typeof background.serviceWorkerFallback === "boolean"
++    ) {
++      diagnostics.conversion.background = {
++        nativeWorkerCompiled: background.nativeWorkerCompiled,
++        selected: background.selected,
++        serviceWorkerFallback: background.serviceWorkerFallback,
++      };
++    }
++    const signature = report.signature;
++    if (
++      signature && [2, 3].includes(signature.format) &&
++      ["rsa-sha1", "rsa-sha256", "ecdsa-sha256"].includes(
++        signature.algorithm,
++      ) &&
++      typeof signature.publicKeySha256 === "string" &&
++      /^[0-9a-f]{64}$/.test(signature.publicKeySha256)
++    ) {
++      diagnostics.conversion.signature = {
++        format: signature.format,
++        algorithm: signature.algorithm,
++        publicKeySha256: signature.publicKeySha256,
++      };
++    }
++  } catch (error) {
++    diagnostics.conversionError = String(error);
++  }
++  try {
++    const extension = WebExtensionPolicy.getByID(addon.id)?.extension;
++    if (extension) {
++      const runtime = await extension.apiManager.asyncGetAPI(
++        "runtime",
++        extension,
++      );
++      diagnostics.contexts = runtime.getContexts({});
++    }
++  } catch (error) {
++    diagnostics.contextsError = String(error);
++  }
++  return diagnostics;
++}
++
++export class FloorpChromeExtensionDiagnostics extends AboutAddonsHTMLElement {
++  static get markup() {
++    return `
++      <template>
++        <section class="floorp-chrome-diagnostics" aria-labelledby="floorp-chrome-diagnostics-heading">
++          <h3 id="floorp-chrome-diagnostics-heading" data-chrome-string="heading"></h3>
++          <p class="floorp-chrome-diagnostics-legacy" data-chrome-string="legacyNotice" hidden></p>
++          <div class="addon-detail-row"><label data-chrome-string="chromeId"></label><code data-chrome-value="chromeId"></code></div>
++          <div class="addon-detail-row"><label data-chrome-string="originalVersion"></label><span data-chrome-value="originalVersion"></span></div>
++          <div class="addon-detail-row"><label data-chrome-string="runtimeVersion"></label><span data-chrome-value="runtimeVersion"></span></div>
++          <h4 data-chrome-string="warnings"></h4>
++          <ul class="floorp-chrome-diagnostics-warnings"></ul>
++          <p class="floorp-chrome-diagnostics-report-status"></p>
++          <details class="floorp-chrome-diagnostics-contexts"><summary data-chrome-string="contexts"></summary><ul></ul><p></p></details>
++          <div class="floorp-chrome-diagnostics-actions">
++            <button data-chrome-action="refresh" data-chrome-string="refresh"></button>
++            <button data-chrome-action="reload" data-chrome-string="reload"></button>
++            <button data-chrome-action="export" data-chrome-string="export"></button>
++            <button data-chrome-action="sidebar-settings" data-chrome-string="sidebarSettings" hidden></button>
++            <button data-chrome-action="extension-shortcuts" data-chrome-string="extensionShortcuts"></button>
++            <button data-chrome-action="floorp-shortcuts" data-chrome-string="floorpShortcuts"></button>
++          </div>
++          <p class="floorp-chrome-diagnostics-status" role="status"></p>
++          <h4 data-chrome-string="updateHeading"></h4>
++          <label class="floorp-chrome-diagnostics-automatic"><input type="checkbox" data-chrome-action="automatic-updates"><span data-chrome-string="automaticUpdates"></span></label>
++          <p class="floorp-chrome-diagnostics-automatic-migration" data-chrome-string="automaticMigrationRequired" hidden></p>
++          <p class="floorp-chrome-diagnostics-automatic-status" role="status"></p>
++          <div class="floorp-chrome-diagnostics-actions">
++            <button data-chrome-action="check-update" data-chrome-string="checkUpdate"></button>
++            <button data-chrome-action="reapply" data-chrome-string="reapply"></button>
++            <button data-chrome-action="apply-update" data-chrome-string="applyUpdate" hidden></button>
++          </div>
++          <p class="floorp-chrome-diagnostics-update-status" role="status"></p>
++          <ul class="floorp-chrome-diagnostics-update-warnings"></ul>
++        </section>
++      </template>
++    `;
++  }
++
++  connectedCallback() {
++    this.addEventListener("click", this);
++    AddonManager.addAddonListener(this);
++    this.updateObserver ??= { observe: this.observe.bind(this) };
++    Services.obs.addObserver(
++      this.updateObserver,
++      "floorp-chrome-extension-update-status-changed",
++    );
++  }
++
++  disconnectedCallback() {
++    this.removeEventListener("click", this);
++    AddonManager.removeAddonListener(this);
++    Services.obs.removeObserver(
++      this.updateObserver,
++      "floorp-chrome-extension-update-status-changed",
++    );
++  }
++
++  observe(subject, topic, data) {
++    if (
++      topic === "floorp-chrome-extension-update-status-changed" &&
++      data === this.addon?.id
++    ) {
++      this.refreshAutomaticUpdates();
++    }
++  }
++
++  onEnabled(addon) {
++    this.onAddonChanged(addon);
++  }
++
++  onDisabled(addon) {
++    this.onAddonChanged(addon);
++  }
++
++  onInstalled(addon) {
++    this.onAddonChanged(addon);
++  }
++
++  onUninstalled(addon) {
++    if (addon.id === this.addon?.id) {
++      this.hidden = true;
++    }
++  }
++
++  onAddonChanged(addon) {
++    if (addon.id === this.addon?.id) {
++      this.addon = addon;
++      this.refreshSafely();
++    }
++  }
++
++  refreshSafely() {
++    this.ready = this.refresh().catch((error) => {
++      this.setBusy(false);
++      console.error("[ChromeExtensionDiagnostics]", error);
++    });
++  }
++
++  setAddon(addon) {
++    this.addon = addon;
++    this.hidden = true;
++    this.textContent = "";
++    this.appendChild(FloorpChromeExtensionDiagnostics.fragment);
++    this.refreshSafely();
++  }
++
++  setBusy(busy) {
++    this.setAttribute("aria-busy", String(busy));
++    this.busy = busy;
++    const automatic = this.querySelector(
++      '[data-chrome-action="automatic-updates"]',
++    );
++    if (automatic) {
++      automatic.disabled = busy ||
++        this.automaticStatus?.eligibility !== "verified";
++    }
++    for (const button of this.querySelectorAll("button")) {
++      button.disabled = busy || (button.dataset.chromeAction === "reload" &&
++        (!this.addon?.isActive ||
++          !(this.addon.permissions & AddonManager.PERM_CAN_DISABLE))) ||
++        (button.dataset.chromeAction === "apply-update" &&
++          !this.preparedUpdate);
++    }
++  }
++
++  clearPreparedUpdate() {
++    this.preparedUpdate = null;
++    this.querySelector(".floorp-chrome-diagnostics-update-status").textContent =
++      "";
++    this.querySelector('[data-chrome-action="apply-update"]').hidden = true;
++    this.querySelector(".floorp-chrome-diagnostics-update-warnings")
++      .textContent = "";
++  }
++
++  async refresh() {
++    this.clearPreparedUpdate();
++    this.setBusy(true);
++    const request = this.request = (this.request ?? 0) + 1;
++    const diagnostics = await collectChromeExtensionDiagnostics(this.addon);
++    if (request !== this.request) {
++      return;
++    }
++    this.diagnostics = diagnostics;
++    this.hidden = !diagnostics;
++    if (!diagnostics) {
++      this.setBusy(false);
++      return;
++    }
++    for (const element of this.querySelectorAll("[data-chrome-string]")) {
++      element.textContent = translate(element.dataset.chromeString);
++    }
++    this.querySelector('[data-chrome-action="sidebar-settings"]').hidden =
++      !diagnostics.extension.hasSidePanel;
++    const legacy = diagnostics.extension.provenance === "legacy-unverified";
++    this.querySelector(".floorp-chrome-diagnostics-legacy").hidden = !legacy;
++    this.querySelector('[data-chrome-value="chromeId"]').previousElementSibling
++      .textContent = translate(legacy ? "legacyChromeId" : "chromeId");
++    this.querySelector('[data-chrome-value="chromeId"]').textContent =
++      diagnostics.extension.chromeId;
++    this.querySelector('[data-chrome-value="originalVersion"]').textContent =
++      diagnostics.conversion?.originalVersion ?? translate("unavailable");
++    this.querySelector('[data-chrome-value="runtimeVersion"]').textContent =
++      diagnostics.extension.runtimeSchemaVersion ?? translate("unavailable");
++    const warnings = this.querySelector(".floorp-chrome-diagnostics-warnings");
++    warnings.textContent = "";
++    for (const warning of diagnostics.conversion?.warnings ?? []) {
++      const item = document.createElement("li");
++      item.textContent = warning;
++      warnings.appendChild(item);
++    }
++    if (diagnostics.conversion?.removedPermissions.length) {
++      const item = document.createElement("li");
++      item.textContent = `${translate("removedPermissions")}: ${
++        diagnostics.conversion.removedPermissions.join(", ")
++      }`;
++      warnings.appendChild(item);
++    }
++    this.querySelector(".floorp-chrome-diagnostics-report-status").textContent =
++      diagnostics.conversionError
++        ? translate("reportUnavailable")
++        : warnings.children.length
++        ? ""
++        : translate("noWarnings");
++    const contexts = this.querySelector(
++      ".floorp-chrome-diagnostics-contexts ul",
++    );
++    contexts.textContent = "";
++    for (const context of diagnostics.contexts) {
++      const item = document.createElement("li");
++      item.textContent = `${context.contextType}: ${
++        context.documentUrl ?? context.contextId
++      }`;
++      contexts.appendChild(item);
++    }
++    this.querySelector(".floorp-chrome-diagnostics-contexts p").textContent =
++      diagnostics.contextsError
++        ? translate("contextUnavailable")
++        : contexts.children.length
++        ? ""
++        : translate("noContexts");
++    await this.refreshAutomaticUpdates();
++    this.setBusy(false);
++  }
++
++  getUpdateScheduler() {
++    return ChromeUtils.importESModule(
++      "resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdateScheduler.sys.mjs",
++    ).ChromeExtensionUpdateScheduler;
++  }
++
++  async refreshAutomaticUpdates() {
++    const id = this.addon?.id;
++    const request = this.automaticRequest = (this.automaticRequest ?? 0) + 1;
++    const checkbox = this.querySelector(
++      '[data-chrome-action="automatic-updates"]',
++    );
++    const status = this.querySelector(
++      ".floorp-chrome-diagnostics-automatic-status",
++    );
++    if (!id || !checkbox) return;
++    try {
++      const value = await this.getUpdateScheduler().getStatus(id);
++      if (request !== this.automaticRequest || this.addon?.id !== id) return;
++      this.automaticStatus = value;
++      checkbox.checked = !!value.enabled;
++      checkbox.disabled = !!this.busy || value.eligibility !== "verified";
++      this.querySelector(".floorp-chrome-diagnostics-automatic-migration")
++        .hidden = value.eligibility !== "migration-required";
++      const states = {
++        idle: "automaticIdle",
++        checking: "automaticChecking",
++        "up-to-date": "automaticCurrent",
++        available: "automaticAvailable",
++        "waiting-for-window": "automaticWaiting",
++        installing: "automaticInstalling",
++        installed: "automaticInstalled",
++        postponed: "automaticPostponed",
++        error: "automaticFailed",
++      };
++      const key = value.eligibility !== "verified"
++        ? "automaticUnavailable"
++        : value.enabled && value.policyAllowed === false
++        ? "automaticPaused"
++        : value.state === "error"
++        ? "automaticFailed"
++        : !value.enabled
++        ? "automaticDisabled"
++        : states[value.state] ?? "automaticIdle";
++      status.textContent = translate(key, { message: value.error ?? "" });
++    } catch (error) {
++      if (request !== this.automaticRequest || this.addon?.id !== id) return;
++      this.automaticStatus = null;
++      checkbox.checked = false;
++      checkbox.disabled = true;
++      status.textContent = translate("automaticFailed", {
++        message: error.message ?? String(error),
++      });
++    }
++  }
++
++  async chooseExportFile() {
++    const picker = Cc["@mozilla.org/filepicker;1"].createInstance(
++      Ci.nsIFilePicker,
++    );
++    picker.init(
++      window.browsingContext,
++      translate("saveTitle"),
++      Ci.nsIFilePicker.modeSave,
++    );
++    picker.defaultString =
++      `floorp-chrome-${this.diagnostics.extension.chromeId}-diagnostics.json`;
++    picker.defaultExtension = "json";
++    picker.appendFilter(translate("jsonFilter"), "*.json");
++    const result = await new Promise((resolve) => picker.open(resolve));
++    return result === Ci.nsIFilePicker.returnOK ||
++        result === Ci.nsIFilePicker.returnReplace
++      ? picker.file
++      : null;
++  }
++
++  getUpdateService() {
++    return ChromeUtils.importESModule(
++      "resource://noraneko/modules/chrome-web-store/ChromeExtensionUpdater.sys.mjs",
++    ).ChromeExtensionUpdater;
++  }
++
++  async prepareUpdate(reconvert) {
++    this.clearPreparedUpdate();
++    const status = this.querySelector(
++      ".floorp-chrome-diagnostics-update-status",
++    );
++    status.textContent = translate("checking");
++    const generation = this.request;
++    const id = this.addon.id;
++    const version = this.addon.version;
++    const result = await this.getUpdateService().checkForUpdate(id, {
++      reconvert,
++    });
++    if (
++      generation !== this.request || id !== this.addon?.id ||
++      version !== this.addon?.version
++    ) {
++      throw new Error(translate("updateInvalidated"));
++    }
++    if (result.status === "up-to-date") {
++      status.textContent = translate("upToDate");
++      return;
++    }
++    this.preparedUpdate = result;
++    const reapply = result.kind === "reconvert";
++    status.textContent = translate(
++      reapply ? "compatibilityAvailable" : "updateAvailable",
++      {
++        version: result.availableVersion ?? result.currentVersion,
++      },
++    );
++    const apply = this.querySelector('[data-chrome-action="apply-update"]');
++    apply.textContent = translate(
++      reapply ? "applyCompatibility" : "applyUpdate",
++    );
++    apply.hidden = false;
++    const warnings = this.querySelector(
++      ".floorp-chrome-diagnostics-update-warnings",
++    );
++    for (const warning of result.warnings) {
++      const item = document.createElement("li");
++      item.textContent = warning;
++      warnings.appendChild(item);
++    }
++  }
++
++  async applyPreparedUpdate() {
++    if (!this.preparedUpdate) {
++      return;
++    }
++    const result = await this.getUpdateService().installUpdate(
++      this.addon.id,
++      getBrowserElement(),
++    );
++    this.clearPreparedUpdate();
++    await this.refreshAutomaticUpdates();
++    this.querySelector(".floorp-chrome-diagnostics-update-status").textContent =
++      result.status === "installed"
++        ? translate("updateInstalled", { version: result.version })
++        : translate("updatePostponed");
++  }
++
++  openFloorpSettings(action) {
++    // Use the browser that owns this Add-ons Manager, including private windows.
++    // These are existing Hub routes backed by Floorp's normal settings actors.
++    const routes = {
++      "sidebar-settings": "about:hub#/features/sidebar",
++      "floorp-shortcuts": "about:hub#/features/shortcuts",
++    };
++    const url = Object.hasOwn(routes, action) ? routes[action] : null;
++    const win = getBrowserElement()?.ownerDocument?.defaultView;
++    if (
++      !url || !win || win.closed || typeof win.openTrustedLinkIn !== "function"
++    ) {
++      throw new Error("The owning browser cannot open Floorp settings");
++    }
++    win.openTrustedLinkIn(url, "tab", {
++      relatedToCurrent: true,
++      allowInheritPrincipal: false,
++    });
++  }
++
++  async handleEvent(event) {
++    const action = event.target.closest("[data-chrome-action]")?.dataset
++      .chromeAction;
++    if (!action || !this.diagnostics) {
++      return;
++    }
++    this.setBusy(true);
++    const status = this.querySelector(".floorp-chrome-diagnostics-status");
++    status.textContent = "";
++    try {
++      if (action === "sidebar-settings" || action === "floorp-shortcuts") {
++        if (
++          action === "sidebar-settings" &&
++          !this.diagnostics.extension.hasSidePanel
++        ) {
++          return;
++        }
++        this.openFloorpSettings(action);
++      } else if (action === "extension-shortcuts") {
++        await gViewController.loadView(
++          `shortcuts/${encodeURIComponent(this.addon.id)}`,
++        );
++      } else if (action === "automatic-updates") {
++        const enabled = event.target.checked;
++        try {
++          await this.getUpdateScheduler().setAutomaticUpdates(
++            this.addon.id,
++            enabled,
++          );
++        } finally {
++          await this.refreshAutomaticUpdates();
++        }
++      } else if (action === "check-update" || action === "reapply") {
++        await this.prepareUpdate(action === "reapply");
++      } else if (action === "apply-update") {
++        await this.applyPreparedUpdate();
++      } else if (action === "reload") {
++        if (
++          !this.addon?.isActive ||
++          !(this.addon.permissions & AddonManager.PERM_CAN_DISABLE)
++        ) {
++          return;
++        }
++        await this.addon.reload();
++        this.addon = await AddonManager.getAddonByID(this.addon.id);
++        await this.refresh();
++        status.textContent = translate("reloaded");
++      } else if (action === "refresh") {
++        await this.refresh();
++        status.textContent = translate("refreshed");
++      } else if (action === "export") {
++        const file = await this.chooseExportFile();
++        if (file) {
++          const diagnostics = await collectChromeExtensionDiagnostics(
++            this.addon,
++          );
++          if (!diagnostics) {
++            throw new Error("The Chrome extension is no longer installed");
++          }
++          await IOUtils.writeUTF8(
++            file.path,
++            JSON.stringify(diagnostics, null, 2) + "\n",
++          );
++          status.textContent = translate("exported");
++        }
++      }
++    } catch (error) {
++      console.error("[ChromeExtensionDiagnostics]", error);
++      if (["check-update", "reapply", "apply-update"].includes(action)) {
++        this.clearPreparedUpdate();
++        this.querySelector(".floorp-chrome-diagnostics-update-status")
++          .textContent = translate("updateFailed", {
++            message: error.message ?? String(error),
++          });
++      } else if (action === "automatic-updates") {
++        this.querySelector(".floorp-chrome-diagnostics-automatic-status")
++          .textContent = translate("automaticFailed", {
++            message: error.message ?? String(error),
++          });
++      } else {
++        status.textContent = translate("actionFailed");
++      }
++    } finally {
++      this.setBusy(false);
++    }
++  }
++}
++
++customElements.define(
++  "floorp-chrome-extension-diagnostics",
++  FloorpChromeExtensionDiagnostics,
++);

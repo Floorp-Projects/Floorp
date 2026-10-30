@@ -2,14 +2,16 @@
 // @colocated-env browser
 
 import {
-  sanitizeDNRRules,
-  validateDNRRule,
   countInvalidDomains,
+  sanitizeDNRRules,
+  sanitizeDNRRulesFull,
+  validateDNRRule,
 } from "../DNRTransformer.sys.mts";
 
 import {
   assert,
   assertEquals,
+  assertThrows,
   runTests,
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
@@ -106,37 +108,230 @@ function testSanitizeEmptyArray(): void {
 }
 
 function testSanitizeNonArray(): void {
-  const result = sanitizeDNRRules("not-array" as unknown as unknown[]);
-  assertEquals(result.length, 0, "non-array should return empty");
+  assertThrows(
+    () => sanitizeDNRRulesFull("not-array"),
+    "invalid rulesets must not be silently converted to empty arrays",
+  );
 }
 
-function testSanitizeRemovesInvalidDomains(): void {
-  const rules = [
-    makeRule(1, {
-      domains: ["example.com", "185.164.59.38.12", "valid.org"],
-    }),
-  ];
-  const result = sanitizeDNRRules(rules);
-  const condition = (result[0] as Record<string, unknown>).condition as Record<
-    string,
-    unknown
-  >;
-  const domains = condition.domains as string[];
-  assert(!domains.includes("185.164.59.38.12"), "invalid IP should be removed");
-  assert(domains.includes("example.com"), "valid domain should remain");
-  assert(domains.includes("valid.org"), "valid domain should remain");
+function testSanitizeRejectsInvalidDomains(): void {
+  for (
+    const field of [
+      "domains",
+      "excludedDomains",
+      "initiatorDomains",
+      "excludedInitiatorDomains",
+      "requestDomains",
+      "excludedRequestDomains",
+    ]
+  ) {
+    const rules = [makeRule(1, {
+      [field]: ["example.com", "185.164.59.38.12", "valid.org"],
+    })];
+    const original = JSON.stringify(rules);
+    const result = sanitizeDNRRulesFull(rules);
+    assertEquals(result.rules.length, 0, `${field}: reject the complete rule`);
+    assertEquals(result.rejectedRules, 1, `${field}: report rejected count`);
+    assertEquals(result.rejectedRuleIds[0], 1, `${field}: report rejected ID`);
+    assert(
+      result.warnings.some((warning) =>
+        warning.includes(field) && warning.includes("185.164.59.38.12")
+      ),
+      `${field}: identify the rejected constraint`,
+    );
+    assertEquals(JSON.stringify(rules), original, "input must remain intact");
+    assertThrows(
+      () => sanitizeDNRRules(rules),
+      "the legacy API cannot return a partial ruleset without diagnostics",
+    );
+  }
 }
 
 function testSanitizePreservesValidRules(): void {
-  const rules = [makeRule(1, { domains: ["example.com"] })];
-  const result = sanitizeDNRRules(rules);
-  assertEquals(result.length, 1, "valid rule should be preserved");
+  const rules = [makeRule(1, {
+    initiatorDomains: ["example.com", "[::1]"],
+    excludedInitiatorDomains: ["private.example.com"],
+    requestDomains: ["cdn.example.com"],
+    excludedRequestDomains: ["private.cdn.example.com"],
+  })];
+  const result = sanitizeDNRRulesFull(rules);
+  assertEquals(
+    JSON.stringify(result.rules),
+    JSON.stringify(rules),
+    "modern domain constraints must be preserved verbatim",
+  );
+  assertEquals(result.warnings.length, 0, "unchanged rules need no warnings");
 }
 
 function testSanitizeHandlesNonDNRObjects(): void {
   const rules = [{ some: "random", object: true }, makeRule(1)];
-  const result = sanitizeDNRRules(rules);
-  assertEquals(result.length, 2, "all items should be in result");
+  const result = sanitizeDNRRulesFull(rules);
+  assertEquals(result.rejectedRules, 1, "malformed rule must be reported");
+  assertEquals(result.rejectedRuleIds.length, 0, "no fabricated numeric ID");
+  assert(
+    result.warnings.some((warning) => warning.includes("index 0")),
+    "malformed objects must be identified by their ruleset index",
+  );
+}
+
+function testSanitizeMigratesLegacyDomains(): void {
+  const rules = [makeRule(1, {
+    domains: ["example.com"],
+    excludedDomains: ["private.example.com"],
+  })];
+  const original = JSON.stringify(rules);
+  const result = sanitizeDNRRulesFull(rules);
+  assertEquals(
+    JSON.stringify(result.rules),
+    JSON.stringify([makeRule(1, {
+      initiatorDomains: ["example.com"],
+      excludedInitiatorDomains: ["private.example.com"],
+    })]),
+    "deprecated aliases must retain inclusion and exclusion semantics",
+  );
+  assertEquals(result.warnings.length, 2, "each alias migration is recorded");
+  assertEquals(result.rejectedRules, 0, "valid aliases should be supported");
+  assertEquals(
+    JSON.stringify(rules),
+    original,
+    "migration must not mutate input",
+  );
+}
+
+function testSanitizeRejectsConflictingAliases(): void {
+  for (
+    const [legacy, modern] of [
+      ["domains", "initiatorDomains"],
+      ["excludedDomains", "excludedInitiatorDomains"],
+    ]
+  ) {
+    const result = sanitizeDNRRulesFull([makeRule(1, {
+      [legacy]: ["example.com"],
+      [modern]: ["other.com"],
+    })]);
+    assertEquals(
+      result.rejectedRules,
+      1,
+      "conflicting aliases must be rejected",
+    );
+    assert(
+      result.warnings.some((warning) =>
+        warning.includes("Cannot specify both")
+      ),
+      "conflict must be explained",
+    );
+  }
+}
+
+function testSanitizeRejectsUnsupportedConditions(): void {
+  const result = sanitizeDNRRulesFull([makeRule(1, {
+    unknownHeaderCondition: [{ header: "content-type", values: ["image/*"] }],
+  })]);
+  assertEquals(
+    result.rejectedRules,
+    1,
+    "unsupported constraints must reject rule",
+  );
+  assert(
+    result.warnings.some((warning) =>
+      warning.includes("Unsupported condition: unknownHeaderCondition")
+    ),
+    "unsupported condition name must be reported",
+  );
+}
+
+function testPreservesResponseHeaderConditions(): void {
+  const rules = [
+    makeRule(1, {
+      responseHeaders: [
+        {
+          header: "content-type",
+          values: ["text/*"],
+          excludedValues: ["text/html*"],
+        },
+      ],
+      excludedResponseHeaders: [{ header: "x-excluded" }],
+    }),
+  ];
+  const result = sanitizeDNRRulesFull(rules);
+  assertEquals(
+    result.rejectedRules,
+    0,
+    "native response header constraints remain supported",
+  );
+  assertEquals(
+    JSON.stringify(result.rules),
+    JSON.stringify(rules),
+    "response header constraints must remain byte-for-byte equivalent",
+  );
+  for (
+    const condition of [
+      { responseHeaders: [] },
+      { excludedResponseHeaders: [] },
+      { responseHeaders: [{ header: "invalid name" }] },
+    { responseHeaders: [{ header: "x-test" }], excludedResponseHeaders: [{ header: "x-test" }] },
+      { responseHeaders: [{ header: "x-test", values: ["bad\r\nvalue"] }] },
+      { responseHeaders: [{ header: "x-test", unknownConstraint: true }] },
+    ]
+  ) {
+    assertEquals(
+      sanitizeDNRRulesFull([makeRule(1, condition)]).rejectedRules,
+      1,
+      "invalid header matching constraints must reject rather than broaden rules",
+    );
+  }
+}
+
+
+function testSanitizeRejectsDuplicateIds(): void {
+  const result = sanitizeDNRRulesFull([makeRule(1), makeRule(1)]);
+  assertEquals(result.rejectedRules, 1, "duplicate IDs must be reported");
+  assert(
+    result.warnings.some((warning) => warning.includes("Duplicate rule id: 1")),
+    "the duplicate ID must be identified",
+  );
+}
+
+function testSanitizeRejectsInvalidDomainLists(): void {
+  for (
+    const condition of [
+      { requestDomains: "example.com" },
+      { requestDomains: [] },
+      { initiatorDomains: [] },
+      { excludedRequestDomains: null },
+      { requestDomains: [1] },
+    ]
+  ) {
+    assertEquals(
+      sanitizeDNRRulesFull([makeRule(1, condition)]).rejectedRules,
+      1,
+      "malformed domain lists must not lose their constraints",
+    );
+  }
+  assertEquals(
+    sanitizeDNRRulesFull([makeRule(1, { excludedRequestDomains: [] })])
+      .rejectedRules,
+    0,
+    "empty exclusion lists are supported by the native schema",
+  );
+}
+
+function testSanitizeRejectsInvalidStructure(): void {
+  for (
+    const rule of [
+      { id: 0, action: { type: "block" }, condition: {} },
+      { id: 1.5, action: { type: "block" }, condition: {} },
+      { id: 1, priority: 0, action: { type: "block" }, condition: {} },
+      { id: 1, action: [], condition: {} },
+      { id: 1, action: { type: "block" }, condition: [] },
+    ]
+  ) {
+    assertEquals(
+      sanitizeDNRRulesFull([rule]).rejectedRules,
+      1,
+      "native rule structure constraints must be respected",
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +347,7 @@ function testCountInvalidDomainsMultiple(): void {
   const rules = [
     makeRule(1, {
       domains: ["example.com", "185.164.59.38.12"],
-      excludedDomains: ["bad..domain", "ok.com"],
+      excludedDomains: ["bad domain", "ok.com"],
     }),
   ];
   assertEquals(countInvalidDomains(rules), 2, "should count 2 invalid domains");
@@ -194,22 +389,39 @@ function testDomainValidationHostnameWithHyphen(): void {
   assertEquals(domainErrors.length, 0, "hostname with hyphen should pass");
 }
 
-function testDomainValidationStartsWithDot(): void {
-  const rule = makeRule(1, { domains: [".example.com"] });
-  const errors = validateDNRRule(rule);
-  assert(
-    errors.some((e) => e.includes("Invalid domain")),
-    "domain starting with dot should fail",
-  );
+function testDomainValidationCanonicalNativeDomains(): void {
+  // These follow the pinned Runtime's canonicalDomain schema. Do not replace
+  // native URL parsing with DNS hostname heuristics or drop IPv6 constraints.
+  for (const domain of ["[::1]", "[::1a]", "lowercase", ".", ".example.com"]) {
+    const errors = validateDNRRule(makeRule(1, { requestDomains: [domain] }));
+    assertEquals(
+      errors.length,
+      0,
+      `native canonical domain ${domain} is valid`,
+    );
+  }
 }
 
-function testDomainValidationConsecutiveDots(): void {
-  const rule = makeRule(1, { domains: ["example..com"] });
-  const errors = validateDNRRule(rule);
-  assert(
-    errors.some((e) => e.includes("Invalid domain")),
-    "consecutive dots should fail",
-  );
+function testDomainValidationNoncanonicalDomains(): void {
+  for (
+    const domain of [
+      "example.com ",
+      "UPPERCASE",
+      "straß.de",
+      "[::1A]",
+      "[::ffff:127.0.0.1]",
+      "example.com:80",
+      "example.com/path",
+      "::1",
+      "2",
+      "%61",
+    ]
+  ) {
+    const result = sanitizeDNRRulesFull([makeRule(1, {
+      requestDomains: [domain],
+    })]);
+    assertEquals(result.rejectedRules, 1, `${domain} must not be rewritten`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -229,8 +441,8 @@ export async function runAllTests(): Promise<void> {
     { name: "sanitize empty array", fn: testSanitizeEmptyArray },
     { name: "sanitize non-array", fn: testSanitizeNonArray },
     {
-      name: "sanitize removes invalid domains",
-      fn: testSanitizeRemovesInvalidDomains,
+      name: "sanitize rejects invalid domain constraints",
+      fn: testSanitizeRejectsInvalidDomains,
     },
     {
       name: "sanitize preserves valid rules",
@@ -239,6 +451,34 @@ export async function runAllTests(): Promise<void> {
     {
       name: "sanitize handles non-DNR objects",
       fn: testSanitizeHandlesNonDNRObjects,
+    },
+    {
+      name: "sanitize migrates deprecated domain aliases",
+      fn: testSanitizeMigratesLegacyDomains,
+    },
+    {
+      name: "sanitize rejects conflicting aliases",
+      fn: testSanitizeRejectsConflictingAliases,
+    },
+    {
+      name: "sanitize preserves supported response header constraints",
+      fn: testPreservesResponseHeaderConditions,
+    },
+    {
+      name: "sanitize rejects unsupported constraints",
+      fn: testSanitizeRejectsUnsupportedConditions,
+    },
+    {
+      name: "sanitize rejects duplicate rule IDs",
+      fn: testSanitizeRejectsDuplicateIds,
+    },
+    {
+      name: "sanitize rejects malformed domain lists",
+      fn: testSanitizeRejectsInvalidDomainLists,
+    },
+    {
+      name: "sanitize rejects invalid rule structures",
+      fn: testSanitizeRejectsInvalidStructure,
     },
     { name: "count invalid domains zero", fn: testCountInvalidDomainsZero },
     {
@@ -255,10 +495,13 @@ export async function runAllTests(): Promise<void> {
       name: "hostname with hyphen",
       fn: testDomainValidationHostnameWithHyphen,
     },
-    { name: "domain starts with dot", fn: testDomainValidationStartsWithDot },
     {
-      name: "domain consecutive dots",
-      fn: testDomainValidationConsecutiveDots,
+      name: "native canonical domains including IPv6",
+      fn: testDomainValidationCanonicalNativeDomains,
+    },
+    {
+      name: "noncanonical domains rejected without rewriting",
+      fn: testDomainValidationNoncanonicalDomains,
     },
   ];
 

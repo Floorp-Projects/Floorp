@@ -1,0 +1,34 @@
+diff --git a/toolkit/components/extensions/parent/ext-management.js b/toolkit/components/extensions/parent/ext-management.js
+--- a/toolkit/components/extensions/parent/ext-management.js
++++ b/toolkit/components/extensions/parent/ext-management.js
+@@ -204,6 +204,7 @@
+ 
+   getAPI(context) {
+     let { extension } = context;
++    const isChromeExtension = !!ExtensionUtils.getChromeExtensionId(extension);
+ 
+     return {
+       management: {
+@@ -308,6 +309,7 @@
+           }
+ 
+           if (
++            !isChromeExtension &&
+             addon.type !== "theme" &&
+             !Services.policies?.isAddonRequiredByPolicy(extension.id)
+           ) {
+@@ -317,6 +319,14 @@
+           }
+           if (!checkAllowedAddon(addon)) {
+             throw new ExtensionError("setEnabled not allowed for this addon");
++          }
++          if (isChromeExtension && enabled !== addon.isActive) {
++            const permission = enabled
++              ? AddonManager.PERM_CAN_ENABLE
++              : AddonManager.PERM_CAN_DISABLE;
++            if (!(addon.permissions & permission)) {
++              throw new ExtensionError(`Cannot change enabled state for add-on ${id}`);
++            }
+           }
+           if (
+             !enabled &&

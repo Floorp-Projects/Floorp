@@ -1,0 +1,412 @@
+diff --git a/toolkit/components/extensions/parent/ext-webRequest.js b/toolkit/components/extensions/parent/ext-webRequest.js
+index 8bd844e..e36049a 100644
+--- a/toolkit/components/extensions/parent/ext-webRequest.js
++++ b/toolkit/components/extensions/parent/ext-webRequest.js
+@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
+   WebRequest: "resource://gre/modules/WebRequest.sys.mjs",
+ });
+ 
+-var { parseMatchPatterns, DefaultMap } = ExtensionUtils;
++var { parseMatchPatterns, DefaultMap, ExtensionError } = ExtensionUtils;
+ 
+ const MAX_HANDLER_BEHAVIOR_CHANGED_CALLS_PER_10_MINUTES = 20;
+ const TIME_10_MINUTES_IN_MS = 10 * 60 * 1000;
+@@ -83,6 +83,16 @@ function registerEvent(extension, eventName, fire, filter, info) {
+   let info2 = [];
+   if (info) {
+     for (let desc of info) {
++      // Gecko exposes the raw headers at these native interception points.
++      // Chrome uses this option to opt into the same visibility/timing.
++      if (desc === "extraHeaders") {
++        if (!ExtensionUtils.getChromeExtensionId(extension)) {
++          throw new ExtensionError(
++            "extraHeaders requires a converted Chrome extension"
++          );
++        }
++        continue;
++      }
+       if ((desc == "blocking" || desc == "asyncBlocking") && !blockingAllowed) {
+         // This is usually checked in the child process (based on the API schemas, where these options
+         // should be checked with the "webRequestBlockingPermissionRequired" postprocess property),
+diff --git a/toolkit/components/extensions/schemas/web_request.json b/toolkit/components/extensions/schemas/web_request.json
+index 58d2c99..fc5ba59 100644
+--- a/toolkit/components/extensions/schemas/web_request.json
++++ b/toolkit/components/extensions/schemas/web_request.json
+@@ -59,46 +59,51 @@
+       {
+         "id": "OnBeforeRequestOptions",
+         "type": "string",
+-        "enum": ["blocking", "requestBody"],
++        "enum": ["blocking", "requestBody", "extraHeaders"],
+         "postprocess": "webRequestBlockingPermissionRequired"
+       },
+       {
+         "id": "OnBeforeSendHeadersOptions",
+         "type": "string",
+-        "enum": ["requestHeaders", "blocking"],
++        "enum": ["requestHeaders", "blocking", "extraHeaders"],
+         "postprocess": "webRequestBlockingPermissionRequired"
+       },
+       {
+         "id": "OnSendHeadersOptions",
+         "type": "string",
+-        "enum": ["requestHeaders"]
++        "enum": ["requestHeaders", "extraHeaders"]
+       },
+       {
+         "id": "OnHeadersReceivedOptions",
+         "type": "string",
+-        "enum": ["blocking", "responseHeaders"],
++        "enum": ["blocking", "responseHeaders", "extraHeaders"],
+         "postprocess": "webRequestBlockingPermissionRequired"
+       },
+       {
+         "id": "OnAuthRequiredOptions",
+         "type": "string",
+-        "enum": ["responseHeaders", "blocking", "asyncBlocking"],
++        "enum": [
++          "responseHeaders",
++          "blocking",
++          "asyncBlocking",
++          "extraHeaders"
++        ],
+         "postprocess": "webRequestBlockingOrAuthProviderPermissionRequired"
+       },
+       {
+         "id": "OnResponseStartedOptions",
+         "type": "string",
+-        "enum": ["responseHeaders"]
++        "enum": ["responseHeaders", "extraHeaders"]
+       },
+       {
+         "id": "OnBeforeRedirectOptions",
+         "type": "string",
+-        "enum": ["responseHeaders"]
++        "enum": ["responseHeaders", "extraHeaders"]
+       },
+       {
+         "id": "OnCompletedOptions",
+         "type": "string",
+-        "enum": ["responseHeaders"]
++        "enum": ["responseHeaders", "extraHeaders"]
+       },
+       {
+         "id": "RequestFilter",
+@@ -108,18 +113,29 @@
+           "urls": {
+             "type": "array",
+             "description": "A list of URLs or URL patterns. Requests that cannot match any of the URLs will be filtered out.",
+-            "items": { "type": "string" },
++            "items": {
++              "type": "string"
++            },
+             "minItems": 1
+           },
+           "types": {
+             "type": "array",
+             "optional": true,
+             "description": "A list of request types. Requests that cannot match any of the types will be filtered out.",
+-            "items": { "$ref": "ResourceType", "onError": "warn" },
++            "items": {
++              "$ref": "ResourceType",
++              "onError": "warn"
++            },
+             "minItems": 1
+           },
+-          "tabId": { "type": "integer", "optional": true },
+-          "windowId": { "type": "integer", "optional": true },
++          "tabId": {
++            "type": "integer",
++            "optional": true
++          },
++          "windowId": {
++            "type": "integer",
++            "optional": true
++          },
+           "incognito": {
+             "type": "boolean",
+             "optional": true,
+@@ -147,7 +163,9 @@
+               "type": "array",
+               "optional": true,
+               "description": "Value of the HTTP header if it cannot be represented by UTF-8, stored as individual byte values (0..255).",
+-              "items": { "type": "integer" }
++              "items": {
++                "type": "integer"
++              }
+             }
+           }
+         }
+@@ -187,8 +205,12 @@
+             "description": "Only used as a response to the onAuthRequired event. If set, the request is made using the supplied credentials.",
+             "optional": true,
+             "properties": {
+-              "username": { "type": "string" },
+-              "password": { "type": "string" }
++              "username": {
++                "type": "string"
++              },
++              "password": {
++                "type": "string"
++              }
+             }
+           }
+         }
+@@ -208,15 +230,23 @@
+             "type": "object",
+             "description": "Contains start and end timestamps.",
+             "properties": {
+-              "start": { "type": "integer" },
+-              "end": { "type": "integer" }
++              "start": {
++                "type": "integer"
++              },
++              "end": {
++                "type": "integer"
++              }
+             }
+           },
+           "fingerprint": {
+             "type": "object",
+             "properties": {
+-              "sha1": { "type": "string" },
+-              "sha256": { "type": "string" }
++              "sha1": {
++                "type": "string"
++              },
++              "sha256": {
++                "type": "string"
++              }
+             }
+           },
+           "serialNumber": {
+@@ -228,7 +258,9 @@
+           "subjectPublicKeyInfoDigest": {
+             "type": "object",
+             "properties": {
+-              "sha256": { "type": "string" }
++              "sha256": {
++                "type": "string"
++              }
+             }
+           },
+           "rawDER": {
+@@ -298,7 +330,9 @@
+           "certificates": {
+             "description": "Certificate data if state is \"secure\".  Will only contain one entry unless <code>certificateChain</code> is passed as an option.",
+             "type": "array",
+-            "items": { "$ref": "CertificateInfo" }
++            "items": {
++              "$ref": "CertificateInfo"
++            }
+           },
+           "overridableErrorCategory": {
+             "description": "The type of certificate error that was overridden for this connection, if any.",
+@@ -348,7 +382,9 @@
+           },
+           "weaknessReasons": {
+             "type": "array",
+-            "items": { "$ref": "TransportWeaknessReasons" },
++            "items": {
++              "$ref": "TransportWeaknessReasons"
++            },
+             "description": "list of reasons that cause the request to be considered weak, if state is \"weak\"",
+             "optional": true
+           },
+@@ -417,7 +453,9 @@
+       {
+         "id": "UrlClassificationParty",
+         "type": "array",
+-        "items": { "$ref": "UrlClassificationFlags" },
++        "items": {
++          "$ref": "UrlClassificationFlags"
++        },
+         "description": "If the request has been classified this is an array of $(ref:UrlClassificationFlags)."
+       },
+       {
+@@ -433,6 +471,11 @@
+             "description": "Classification flags if the request has been classified and it or its window hierarchy is third party."
+           }
+         }
++      },
++      {
++        "id": "OnErrorOccurredOptions",
++        "type": "string",
++        "enum": ["extraHeaders"]
+       }
+     ],
+     "functions": [
+@@ -463,7 +506,9 @@
+         ],
+         "returns": {
+           "type": "object",
+-          "additionalProperties": { "type": "any" },
++          "additionalProperties": {
++            "type": "any"
++          },
+           "isInstanceOf": "StreamFilter"
+         }
+       },
+@@ -511,7 +556,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -571,13 +618,17 @@
+                     "properties": {},
+                     "additionalProperties": {
+                       "type": "array",
+-                      "items": { "type": "string" }
++                      "items": {
++                        "type": "string"
++                      }
+                     }
+                   },
+                   "raw": {
+                     "type": "array",
+                     "optional": true,
+-                    "items": { "$ref": "UploadData" },
++                    "items": {
++                      "$ref": "UploadData"
++                    },
+                     "description": "If the request method is PUT or POST, and the body is not already parsed in formData, then the unparsed request body elements are contained in this array."
+                   }
+                 }
+@@ -641,7 +692,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -748,7 +801,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -850,7 +905,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -965,7 +1022,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -1033,8 +1092,12 @@
+                 "type": "object",
+                 "description": "The server requesting authentication.",
+                 "properties": {
+-                  "host": { "type": "string" },
+-                  "port": { "type": "integer" }
++                  "host": {
++                    "type": "string"
++                  },
++                  "port": {
++                    "type": "integer"
++                  }
+                 }
+               },
+               "isProxy": {
+@@ -1069,7 +1132,12 @@
+             "type": "function",
+             "optional": true,
+             "name": "asyncCallback",
+-            "parameters": [{ "name": "response", "$ref": "BlockingResponse" }]
++            "parameters": [
++              {
++                "name": "response",
++                "$ref": "BlockingResponse"
++              }
++            ]
+           }
+         ],
+         "extraParameters": [
+@@ -1108,7 +1176,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -1227,7 +1297,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -1350,7 +1422,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -1476,7 +1550,9 @@
+                 "type": "string",
+                 "description": "The ID of the request. Request IDs are unique within a browser session. As a result, they could be used to relate different events of the same request."
+               },
+-              "url": { "type": "string" },
++              "url": {
++                "type": "string"
++              },
+               "method": {
+                 "type": "string",
+                 "description": "Standard HTTP method."
+@@ -1561,6 +1637,14 @@
+             "$ref": "RequestFilter",
+             "name": "filter",
+             "description": "A set of filters that restricts the events that will be sent to this listener."
++          },
++          {
++            "type": "array",
++            "optional": true,
++            "name": "extraInfoSpec",
++            "items": {
++              "$ref": "OnErrorOccurredOptions"
++            }
+           }
+         ]
+       }

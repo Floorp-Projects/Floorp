@@ -14,6 +14,7 @@ import {
   type TestCase,
 } from "../../../../chrome/test/utils/test_harness.ts";
 import {
+  CHROME_SIDE_PANEL_ACTION_ID,
   createDefaultKeyboardShortcutConfig,
   getKeyboardShortcutActionOptions,
   INLINE_TAB_URL_ACTION_ID,
@@ -24,6 +25,8 @@ function testKeyboardCatalogPreservesExistingOrderAndAddsInlineAction(): void {
   const labels: Record<string, string> = {
     [`keyboardShortcut.actionLabels.${INLINE_TAB_URL_ACTION_ID}`]:
       "localized inline action",
+    [`keyboardShortcut.actionLabels.${CHROME_SIDE_PANEL_ACTION_ID}`]:
+      "localized side panel",
   };
   const existingOptions = [
     { id: "gecko-back", name: "localized back" },
@@ -37,6 +40,7 @@ function testKeyboardCatalogPreservesExistingOrderAndAddsInlineAction(): void {
     JSON.stringify(actions),
     JSON.stringify([
       ...existingOptions,
+      { id: CHROME_SIDE_PANEL_ACTION_ID, name: "localized side panel" },
       { id: INLINE_TAB_URL_ACTION_ID, name: "localized inline action" },
     ]),
     "existing actions should keep their order before keyboard-only actions",
@@ -58,8 +62,11 @@ function testKeyboardCatalogDeduplicatesExistingAction(): void {
   );
   assertEquals(
     JSON.stringify(actions),
-    JSON.stringify(existingOptions),
-    "an existing action should not be appended a second time",
+    JSON.stringify([...existingOptions, {
+      id: CHROME_SIDE_PANEL_ACTION_ID,
+      name: CHROME_SIDE_PANEL_ACTION_ID,
+    }]),
+    "existing actions should be deduplicated while new actions remain available",
   );
 }
 
@@ -76,7 +83,8 @@ function testPagesDefaultConfigIsUnchanged(): void {
     2,
     "enabled default config should have command-palette and Zen shortcuts",
   );
-  const paletteShortcut = firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
+  const paletteShortcut =
+    firstEnabledDefault.shortcuts["floorp-toggle-command-palette"];
   assertEquals(
     paletteShortcut.action,
     "floorp-toggle-command-palette",
@@ -103,8 +111,14 @@ function testPagesDefaultConfigIsUnchanged(): void {
           key: "KeyZ",
           modifiers: {
             alt: true,
-            ctrl: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? false : true,
-            meta: typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC") ? true : false,
+            ctrl: typeof navigator !== "undefined" &&
+                navigator.platform.toUpperCase().includes("MAC")
+              ? false
+              : true,
+            meta: typeof navigator !== "undefined" &&
+                navigator.platform.toUpperCase().includes("MAC")
+              ? true
+              : false,
             shift: false,
           },
           action: "floorp-toggle-zen-mode",

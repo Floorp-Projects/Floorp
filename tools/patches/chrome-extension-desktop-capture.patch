@@ -1,0 +1,933 @@
+diff --git a/browser/actors/WebRTCChild.sys.mjs b/browser/actors/WebRTCChild.sys.mjs
+index fe5301a..e6dba77 100644
+--- a/browser/actors/WebRTCChild.sys.mjs
++++ b/browser/actors/WebRTCChild.sys.mjs
+@@ -402,6 +402,7 @@ function prompt(
+   let request = {
+     callID: aCallID,
+     windowID: aWindowID,
++    floorpCapturePickerToken: aConstraints.mozFloorpCapturePickerToken,
+     secondOrigin,
+     documentURI: aContentWindow.document.documentURI,
+     secure: aSecure,
+diff --git a/browser/actors/WebRTCParent.sys.mjs b/browser/actors/WebRTCParent.sys.mjs
+index d97d92a..56a4f23 100644
+--- a/browser/actors/WebRTCParent.sys.mjs
++++ b/browser/actors/WebRTCParent.sys.mjs
+@@ -32,7 +32,7 @@ export class WebRTCParent extends JSWindowActorParent {
+   }
+ 
+   getBrowser() {
+-    return this.browsingContext.top.embedderElement;
++    return this.chromeCaptureBrowser || this.browsingContext.top.embedderElement;
+   }
+ 
+   receiveMessage(aMessage) {
+@@ -88,6 +88,32 @@ export class WebRTCParent extends JSWindowActorParent {
+       }
+       case "webrtc:Request": {
+         let data = aMessage.data;
++        if (data.floorpCapturePickerToken) {
++          try {
++            const {ChromeExtensionCapturePicker} = ChromeUtils.importESModule(
++              "resource://gre/modules/ChromeExtensionCapturePicker.sys.mjs"
++            );
++            const request = ChromeExtensionCapturePicker.claim(
++              data.floorpCapturePickerToken, this
++            );
++            this.chromeCaptureBrowser = request.browser;
++            data.videoInputDevices = data.videoInputDevices.filter(
++              device => device.mediaSource === request.kind
++            );
++            data.audioInputDevices = [];
++            data.audioOutputDevices = [];
++            data.requestTypes = ["Screen"];
++            data.sharingScreen = true;
++            data.sharingAudio = false;
++            if (!data.videoInputDevices.length) {
++              this.denyRequest(data);
++              break;
++            }
++          } catch (error) {
++            this.denyRequest(data);
++            break;
++          }
++        }
+ 
+         // Record third party origins for telemetry.
+         let isThirdPartyOrigin =
+diff --git a/modules/ChromeExtensionCapturePicker.sys.mjs b/modules/ChromeExtensionCapturePicker.sys.mjs
+new file mode 100644
+index 0000000..f1a7235
+--- /dev/null
++++ b/modules/ChromeExtensionCapturePicker.sys.mjs
+@@ -0,0 +1,32 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++const requests = new Map();
++
++// This nonce is created by the privileged API after its own source choice.
++// It is delivered only to the owned capture actor, never to an extension page.
++export const ChromeExtensionCapturePicker = {
++  reserve(extension, sourceGlobal, browser, kind) {
++    if (!sourceGlobal?.isCurrentGlobal ||
++        !sourceGlobal.documentPrincipal.equals(extension.principal) ||
++        !extension.hasPermission("desktopCapture") ||
++        !browser?.isConnected || !["screen", "window"].includes(kind))
++      throw new Error("Invalid desktop picker owner.");
++    const token = String(Services.uuid.generateUUID());
++    requests.set(token, {extension, sourceGlobal, browser, kind});
++    return token;
++  },
++  claim(token, actor) {
++    const request = requests.get(token);
++    requests.delete(token);
++    if (!request || actor.manager !== request.sourceGlobal ||
++        !actor.manager.isCurrentGlobal ||
++        !actor.manager.documentPrincipal.equals(request.extension.principal) ||
++        !request.extension.hasPermission("desktopCapture") ||
++        !request.browser.isConnected ||
++        request.browser.documentGlobal.closed)
++      throw new Error("Invalid or expired desktop picker token.");
++    return request;
++  },
++  drop(token) { requests.delete(token); },
++};
+diff --git a/chrome/toolkit/content/extensions/child/ext-desktopCapture.js b/chrome/toolkit/content/extensions/child/ext-desktopCapture.js
+new file mode 100644
+index 0000000..dd59e5f
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/child/ext-desktopCapture.js
+@@ -0,0 +1,43 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++
++this.desktopCapture = class extends ExtensionAPI {
++  getAPI(context) {
++    const marker = context.extension.manifest.browser_specific_settings?.gecko
++      ?.floorp_chrome_extension;
++    if (marker?.schema_version !== 1 ||
++        context.extension.id !== `${marker.original_id}@chromium-extension` ||
++        !/^[a-p]{32}$/.test(marker.original_id)) return {};
++    let nextRequestId = 0;
++    const pending = new Map();
++    context.callOnClose({close() { pending.clear(); }});
++    return {desktopCapture: {
++      chooseDesktopMedia(sources, targetTab, callback) {
++        const id = ++nextRequestId;
++        pending.set(id, callback);
++        context.childManager.callParentAsyncFunction(
++          "desktopCapture._choose", [id, sources, targetTab]
++        ).then(result => {
++          if (!pending.delete(id) || context.unloaded) return;
++          context.runSafe(callback, result.streamId, {
++            canRequestAudioTrack: result.canRequestAudioTrack,
++          });
++        }, error => {
++          if (!pending.delete(id) || context.unloaded) return;
++          context.withLastError(error, () =>
++            context.runSafe(callback)
++          );
++        });
++        return id;
++      },
++      cancelChooseDesktopMedia(id) {
++        if (!pending.delete(id)) return;
++        context.childManager.callParentAsyncFunction(
++          "desktopCapture._cancel", [id]
++        ).catch(Cu.reportError);
++      },
++    }};
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/child/ext-toolkit.js b/chrome/toolkit/content/extensions/child/ext-toolkit.js
+index adaad76..eb85a18 100644
+--- a/chrome/toolkit/content/extensions/child/ext-toolkit.js
++++ b/chrome/toolkit/content/extensions/child/ext-toolkit.js
+@@ -56,6 +56,11 @@ extensions.registerModules({
+     scopes: ["addon_child", "content_child", "devtools_child"],
+     paths: [["storage"]],
+   },
++  desktopCapture: {
++    url: "chrome://extensions/content/child/ext-desktopCapture.js",
++    scopes: ["addon_child"],
++    paths: [["desktopCapture"]],
++  },
+   tabCapture: {
+     url: "chrome://extensions/content/child/ext-tabCapture.js",
+     scopes: ["addon_child"],
+diff --git a/chrome/toolkit/content/extensions/ext-toolkit.json b/chrome/toolkit/content/extensions/ext-toolkit.json
+index ec7b631..113320c 100644
+--- a/chrome/toolkit/content/extensions/ext-toolkit.json
++++ b/chrome/toolkit/content/extensions/ext-toolkit.json
+@@ -156,6 +156,12 @@
+     "scopes": ["addon_parent", "content_parent", "devtools_parent"],
+     "paths": [["storage"]]
+   },
++  "desktopCapture": {
++    "url": "chrome://extensions/content/parent/ext-desktopCapture.js",
++    "schema": "chrome://extensions/content/schemas/desktop_capture.json",
++    "scopes": ["addon_parent"],
++    "paths": [["desktopCapture"]]
++  },
+   "tabCapture": {
+     "url": "chrome://extensions/content/parent/ext-tabCapture.js",
+     "schema": "chrome://extensions/content/schemas/tab_capture.json",
+diff --git a/chrome/toolkit/content/extensions/parent/ext-desktopCapture.js b/chrome/toolkit/content/extensions/parent/ext-desktopCapture.js
+new file mode 100644
+index 0000000..303ba5e
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/parent/ext-desktopCapture.js
+@@ -0,0 +1,504 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++"use strict";
++var { setTimeout: desktopSetTimeout, clearTimeout: desktopClearTimeout } =
++  ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
++var { DesktopSourcePage } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionDesktopSource.sys.mjs"
++);
++var { ChromeExtensionCaptureRegistry } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionCaptureRegistry.sys.mjs"
++);
++var { ChromeExtensionCapturePicker } = ChromeUtils.importESModule(
++  "resource://gre/modules/ChromeExtensionCapturePicker.sys.mjs"
++);
++var { PromptUtils } = ChromeUtils.importESModule(
++  "resource://gre/modules/PromptUtils.sys.mjs"
++);
++
++this.desktopCapture = class extends ExtensionAPI {
++  apiNamespace = "desktopCapture";
++  tokens = new Map();
++  streams = new Map();
++  pending = new Map();
++  constructor(extension) {
++    super(extension);
++    try {
++      ChromeUtils.registerWindowActor("ChromeExtensionCaptureConsumer", {
++        parent: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureConsumer.sys.mjs",
++        },
++        child: {
++          esModuleURI:
++            "resource://gre/modules/ChromeExtensionCaptureConsumer.sys.mjs",
++        },
++        allFrames: true,
++        safeForUntrustedWebProcess: true,
++      });
++    } catch (error) {
++      if (!String(error).includes("already")) throw error;
++    }
++    this.permissionsRemoved = (_event, removed) => {
++      if (removed.permissions.includes("desktopCapture")) this.stopAll();
++    };
++    extension.on("remove-permissions", this.permissionsRemoved);
++  }
++  dropToken(token, preserveSource = false) {
++    const record = this.tokens.get(token);
++    this.tokens.delete(token);
++    ChromeExtensionCaptureRegistry.drop(token);
++    desktopClearTimeout(record?.timer);
++    if (record && !preserveSource) {
++      record.source.onClose = null;
++      record.source.close();
++    }
++  }
++  cancel(job) {
++    if (!job || job.cancelled) return;
++    job.cancelled = true;
++    job.dialog?.close();
++    if (job.pickerToken) ChromeExtensionCapturePicker.drop(job.pickerToken);
++    job.source?.close();
++  }
++  stopAll() {
++    for (const jobs of this.pending.values())
++      for (const job of jobs.values()) this.cancel(job);
++    for (const token of [...this.tokens.keys()]) this.dropToken(token);
++    for (const session of [...this.streams.values()]) session.stop();
++  }
++  onShutdown() {
++    this.stopAll();
++    ChromeExtensionCaptureRegistry.shutdown(this);
++    this.extension.off("remove-permissions", this.permissionsRemoved);
++  }
++  async select(job, title, labels) {
++    if (job.cancelled || !job.browser?.isConnected) return -1;
++    const args = PromptUtils.objectToPropBag({
++      promptType: "select",
++      title: this.extension.name,
++      text: title,
++      list: labels,
++      selected: -1,
++      ok: false,
++    });
++    // An owned native select dialog lets cancelChooseDesktopMedia close only
++    // this request, including when other browser prompts are also open.
++    const dialog = Services.ww.openWindow(
++      job.browser.documentGlobal,
++      "chrome://global/content/selectDialog.xhtml",
++      "_blank",
++      "chrome,dialog,dependent,centerscreen,titlebar",
++      args
++    );
++    job.dialog = dialog;
++    await new Promise(resolve => {
++      // Opening the chrome window first unloads its initial about:blank.
++      // Only closing this request's actual select document completes the choice.
++      const unloaded = event => {
++        if (
++          event.target.documentURI ===
++            "chrome://global/content/selectDialog.xhtml" ||
++          job.cancelled ||
++          dialog.closed
++        ) {
++          dialog.removeEventListener("unload", unloaded);
++          resolve();
++        }
++      };
++      dialog.addEventListener("unload", unloaded);
++    });
++    job.dialog = null;
++    return !job.cancelled && args.getProperty("ok")
++      ? args.getProperty("selected")
++      : -1;
++  }
++  getAPI(context) {
++    const { extension } = this;
++    const marker =
++      extension.manifest.browser_specific_settings?.gecko
++        ?.floorp_chrome_extension;
++    if (
++      marker?.schema_version !== 1 ||
++      !/^[a-p]{32}$/.test(marker.original_id) ||
++      extension.id !== `${marker.original_id}@chromium-extension` ||
++      !extension.hasPermission("desktopCapture")
++    )
++      return {};
++    const error = message => new ExtensionUtils.ExtensionError(message);
++    const ownDocument = () => {
++      const global = context.actor?.manager;
++      const current = context.browsingContext?.currentWindowContext;
++      const binding = context.captureConsumer;
++      if (
++        context.unloaded ||
++        context.envType !== "addon_parent" ||
++        !global?.isCurrentGlobal ||
++        global.innerWindowId !== current?.innerWindowId ||
++        !extension.hasPermission("desktopCapture") ||
++        !(
++          global.documentPrincipal.equals(extension.principal) ||
++          (binding?.browsingContextId === context.browsingContext.id &&
++            binding.innerWindowId === global.innerWindowId &&
++            binding.principal.equals(global.documentPrincipal))
++        )
++      )
++        throw error(
++          "Desktop capture requires its current authorized consumer document."
++        );
++      return global;
++    };
++    const ownIssuer = () => {
++      if (context.viewType !== "background_worker") return ownDocument();
++      const manager = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
++        Ci.nsIServiceWorkerManager
++      );
++      const registration = manager.getRegistrationForAddonPrincipal(
++        extension.principal
++      );
++      const worker = registration?.getWorkerByID(context.workerDescriptorId);
++      if (
++        context.unloaded ||
++        extension.backgroundContext !== context ||
++        !extension.workerBackground ||
++        !context.principal?.equals(extension.principal) ||
++        !extension.hasPermission("desktopCapture") ||
++        !worker ||
++        worker.id !== registration.activeWorker?.id ||
++        worker.state !== Ci.nsIServiceWorkerInfo.STATE_ACTIVATED
++      )
++        throw error(
++          "Desktop capture requires the current activated extension worker."
++        );
++    };
++    const liveConsumer = binding =>
++      ChromeExtensionCaptureRegistry.isLiveConsumer(binding);
++    const validTab = tab => {
++      const global = tab?.linkedBrowser.browsingContext?.currentWindowGlobal;
++      return (
++        extension.tabManager.canAccessTab(tab) &&
++        global?.isCurrentGlobal &&
++        !global.documentPrincipal.isSystemPrincipal &&
++        !global.documentPrincipal.isExpandedPrincipal &&
++        !global.documentPrincipal.addonPolicy
++      );
++    };
++    const finish = sessionId => {
++      const session = this.streams.get(sessionId);
++      if (!session || session.context !== context) return;
++      this.streams.delete(sessionId);
++      context.forgetOnClose(session.contextClose);
++      for (const topic of [
++        "window-global-destroyed",
++        "browsing-context-discarded",
++      ])
++        Services.obs.removeObserver(session.observer, topic);
++      session.source.onClose = null;
++      session.source.close();
++      if (!context.unloaded) this.emit("capture-stop", { context, sessionId });
++    };
++    const getSession = sessionId => {
++      ownDocument();
++      const session = this.streams.get(sessionId);
++      if (
++        !session ||
++        session.context !== context ||
++        !liveConsumer(session.consumer)
++      ) {
++        finish(sessionId);
++        throw error("Invalid or navigated desktop capture session.");
++      }
++      return session;
++    };
++    return {
++      desktopCapture: {
++        _choose: async (requestId, sources, targetTab) => {
++          ownIssuer();
++          if (context.viewType === "background_worker" && targetTab == null)
++            throw error(
++              "A target tab is required when called from a service worker context."
++            );
++          const kinds = [...new Set(sources)].filter(kind => kind !== "audio");
++          if (!kinds.length)
++            throw error(
++              "At least one screen, window, or tab source is required."
++            );
++          let consumer, consumerGlobal;
++          if (targetTab != null) {
++            const tab = extension.tabManager.get(targetTab.id)?.nativeTab;
++            const global =
++              tab?.linkedBrowser.browsingContext?.currentWindowGlobal;
++            if (
++              !tab ||
++              !validTab(tab) ||
++              !global.documentPrincipal.isOriginPotentiallyTrustworthy
++            )
++              throw error(
++                "targetTab requires an accessible secure current document."
++              );
++            consumerGlobal = global;
++            consumer = {
++              browsingContextId: global.browsingContext.id,
++              innerWindowId: global.innerWindowId,
++              principal: global.documentPrincipal,
++            };
++          } else {
++            ownDocument();
++          }
++          const browser =
++            context.pendingEventBrowser || tabTracker.activeTab?.linkedBrowser;
++          if (!browser?.isConnected)
++            throw error("Desktop capture requires a visible browser window.");
++          let jobs = this.pending.get(context);
++          if (!jobs) this.pending.set(context, (jobs = new Map()));
++          if (jobs.has(requestId))
++            throw error("Duplicate desktop capture request.");
++          const job = { browser, cancelled: false };
++          jobs.set(requestId, job);
++          const contextClose = { close: () => this.cancel(job) };
++          context.callOnClose(contextClose);
++          const ja = Services.locale.appLocaleAsBCP47.startsWith("ja");
++          const labels = ja
++            ? { screen: "画面", window: "ウィンドウ", tab: "ブラウザーのタブ" }
++            : { screen: "Screen", window: "Window", tab: "Browser tab" };
++          try {
++            const index = await this.select(
++              job,
++              ja ? "共有する種類を選択してください" : "Choose what to share",
++              kinds.map(kind => labels[kind])
++            );
++            if (index < 0) return { streamId: "", canRequestAudioTrack: false };
++            ownIssuer();
++            if (!liveConsumer(consumer))
++              throw error("Capture consumer navigated during selection.");
++            const kind = kinds[index];
++            let sourceTab, audioTab;
++            if (kind === "tab") {
++              const tabs = [];
++              for (const window of windowTracker.browserWindows())
++                for (const tab of window.gBrowser.tabs)
++                  if (validTab(tab)) tabs.push(tab);
++              if (!tabs.length)
++                throw error("No accessible browser tab can be shared.");
++              const selected = await this.select(
++                job,
++                ja ? "共有するタブを選択してください" : "Choose a tab to share",
++                tabs.map(
++                  tab =>
++                    `${tab.label} — ${tab.linkedBrowser.currentURI.prePath}`
++                )
++              );
++              if (selected < 0)
++                return { streamId: "", canRequestAudioTrack: false };
++              sourceTab = tabs[selected];
++              if (!sourceTab || !validTab(sourceTab))
++                throw error("Selected tab is no longer available.");
++              if (sources.includes("audio")) {
++                const audio = await this.select(
++                  job,
++                  ja ? "タブの音声を共有しますか？" : "Share tab audio?",
++                  ja
++                    ? ["映像と音声を共有", "映像のみ共有"]
++                    : ["Share video and audio", "Share video only"]
++                );
++                if (audio < 0)
++                  return { streamId: "", canRequestAudioTrack: false };
++                if (audio === 0) audioTab = sourceTab;
++              }
++            }
++            if (job.cancelled)
++              return { streamId: "", canRequestAudioTrack: false };
++            ownIssuer();
++            const source = (job.source = new DesktopSourcePage(extension));
++            await source.open();
++            if (job.cancelled) throw error("Desktop capture was cancelled.");
++            if (kind !== "tab")
++              job.pickerToken = ChromeExtensionCapturePicker.reserve(
++                extension,
++                source.windowGlobal,
++                browser,
++                kind
++              );
++            let permissionExpires;
++            const sourcePrincipal = source.windowGlobal.documentPrincipal;
++            try {
++              if (kind === "tab") {
++                if (!validTab(sourceTab))
++                  throw error("Selected tab navigated or closed.");
++                if (
++                  Services.perms.testExactPermissionFromPrincipal(
++                    sourcePrincipal,
++                    "MediaManagerVideo"
++                  ) !== Services.perms.UNKNOWN_ACTION
++                )
++                  throw error(
++                    "Another capture request is pending for this extension."
++                  );
++                permissionExpires = Date.now() + 10000;
++                Services.perms.addFromPrincipal(
++                  sourcePrincipal,
++                  "MediaManagerVideo",
++                  Services.perms.ALLOW_ACTION,
++                  Services.perms.EXPIRE_TIME,
++                  permissionExpires
++                );
++              }
++              const tracks = await source.select({
++                kind,
++                pickerToken: job.pickerToken,
++                browserId: sourceTab?.linkedBrowser.browsingContext.browserId,
++                audioTab,
++              });
++              if (!tracks.video)
++                throw error("Selected source did not provide a video track.");
++              ownIssuer();
++              if (job.cancelled || !liveConsumer(consumer))
++                throw error("Capture selection is no longer current.");
++              if (consumerGlobal) {
++                await consumerGlobal
++                  .getActor("ChromeExtensionCaptureConsumer")
++                  .sendQuery("Install", {
++                    innerWindowId: consumer.innerWindowId,
++                    extensionId: extension.id,
++                    marker,
++                  });
++                if (!liveConsumer(consumer))
++                  throw error(
++                    "Capture consumer navigated during installation."
++                  );
++              }
++              const token = `floorp-desktop-capture-${Services.uuid.generateUUID()}`;
++              const record = {
++                source,
++                consumer,
++                expires: Date.now() + 10000,
++                canRequestAudioTrack: !!tracks.audio,
++                timer: desktopSetTimeout(() => this.dropToken(token), 10000),
++              };
++              this.tokens.set(token, record);
++              ChromeExtensionCaptureRegistry.register(token, this);
++              source.onClose = () => this.dropToken(token);
++              job.source = null;
++              return {
++                streamId: token,
++                canRequestAudioTrack: record.canRequestAudioTrack,
++              };
++            } finally {
++              if (
++                permissionExpires &&
++                Services.perms.getPermissionObject(
++                  sourcePrincipal,
++                  "MediaManagerVideo",
++                  true
++                )?.expireTime === permissionExpires
++              )
++                Services.perms.removeFromPrincipal(
++                  sourcePrincipal,
++                  "MediaManagerVideo"
++                );
++              if (job.pickerToken)
++                ChromeExtensionCapturePicker.drop(job.pickerToken);
++            }
++          } catch (failure) {
++            if (
++              job.cancelled ||
++              /NotAllowedError|denied|cancelled/i.test(String(failure))
++            )
++              return { streamId: "", canRequestAudioTrack: false };
++            throw failure;
++          } finally {
++            job.source?.close();
++            context.forgetOnClose(contextClose);
++            jobs.delete(requestId);
++            if (!jobs.size) this.pending.delete(context);
++          }
++        },
++        _cancel: async requestId => {
++          this.cancel(this.pending.get(context)?.get(requestId));
++        },
++        _consumeStreamId: async (token, options) => {
++          const global = ownDocument();
++          const record = this.tokens.get(token);
++          this.dropToken(token, true);
++          if (!record)
++            throw error("Invalid or already consumed desktop capture ID.");
++          try {
++            if (
++              record.expires < Date.now() ||
++              !liveConsumer(record.consumer) ||
++              (record.consumer &&
++                (record.consumer.browsingContextId !==
++                  context.browsingContext.id ||
++                  record.consumer.innerWindowId !== global.innerWindowId ||
++                  !record.consumer.principal.equals(
++                    global.documentPrincipal
++                  ))) ||
++              !(options.audio || options.video) ||
++              (options.audio && !record.canRequestAudioTrack)
++            )
++              throw error(
++                "Expired desktop capture ID, wrong consumer, or unapproved tracks."
++              );
++            const sessionId = String(Services.uuid.generateUUID());
++            const consumer = record.consumer || {
++              browsingContextId: context.browsingContext.id,
++              innerWindowId: global.innerWindowId,
++              principal: global.documentPrincipal,
++            };
++            const session = {
++              context,
++              source: record.source,
++              consumer,
++              stop: () => finish(sessionId),
++              contextClose: { close: () => finish(sessionId) },
++              observer: (subject, topic) => {
++                if (
++                  (topic === "window-global-destroyed" &&
++                    subject.innerWindowId === consumer.innerWindowId) ||
++                  (topic === "browsing-context-discarded" &&
++                    subject.id === consumer.browsingContextId)
++                )
++                  finish(sessionId);
++              },
++            };
++            this.streams.set(sessionId, session);
++            record.source.onClose = () => finish(sessionId);
++            context.callOnClose(session.contextClose);
++            for (const topic of [
++              "window-global-destroyed",
++              "browsing-context-discarded",
++            ])
++              Services.obs.addObserver(session.observer, topic);
++            return { sessionId };
++          } catch (failure) {
++            record.source.onClose = null;
++            record.source.close();
++            throw failure;
++          }
++        },
++        _desktopOffer: sessionId =>
++          getSession(sessionId).source.offer(sessionId),
++        _desktopAnswer: (sessionId, answer) =>
++          getSession(sessionId).source.answer(sessionId, answer),
++        _streamStarted: async sessionId => {
++          getSession(sessionId);
++        },
++        _streamStopped: async sessionId => {
++          finish(sessionId);
++        },
++        _onStreamStop: new EventManager({
++          context,
++          name: "desktopCapture._onStreamStop",
++          register: fire => {
++            const listener = (_event, message) => {
++              if (message.context === context) fire.async(message.sessionId);
++            };
++            this.on("capture-stop", listener);
++            return () => this.off("capture-stop", listener);
++          },
++        }).api(),
++      },
++    };
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/parent/ext-runtime.js b/chrome/toolkit/content/extensions/parent/ext-runtime.js
+index abc30a2..0aa4fc1 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-runtime.js
++++ b/chrome/toolkit/content/extensions/parent/ext-runtime.js
+@@ -146,7 +146,10 @@ this.runtime = class extends ExtensionAPIPersistent {
+     const { proxyContexts } = ExtensionParent.ParentAPIManager;
+     const results = [];
+     for (const proxyContext of proxyContexts.values()) {
+-      if (proxyContext.extension !== extension) {
++      if (
++        proxyContext.extension !== extension ||
++        proxyContext.viewType === "chrome_capture_source"
++      ) {
+         continue;
+       }
+       let ctx;
+diff --git a/chrome/toolkit/content/extensions/schemas/desktop_capture.json b/chrome/toolkit/content/extensions/schemas/desktop_capture.json
+new file mode 100644
+index 0000000..dc013b2
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/schemas/desktop_capture.json
+@@ -0,0 +1,223 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "PermissionNoPrompt",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "desktopCapture"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "desktopCapture",
++    "permissions": [
++      "desktopCapture"
++    ],
++    "types": [
++      {
++        "id": "DesktopCaptureSourceType",
++        "type": "string",
++        "enum": [
++          "screen",
++          "window",
++          "tab",
++          "audio"
++        ]
++      }
++    ],
++    "functions": [
++      {
++        "name": "chooseDesktopMedia",
++        "type": "function",
++        "returns": {
++          "type": "integer"
++        },
++        "parameters": [
++          {
++            "name": "sources",
++            "type": "array",
++            "minItems": 1,
++            "items": {
++              "$ref": "DesktopCaptureSourceType"
++            }
++          },
++          {
++            "name": "targetTab",
++            "type": "object",
++            "optional": true,
++            "additionalProperties": true
++          },
++          {
++            "name": "callback",
++            "type": "function",
++            "parameters": [
++              {
++                "name": "streamId",
++                "type": "string"
++              },
++              {
++                "name": "options",
++                "type": "object",
++                "properties": {
++                  "canRequestAudioTrack": {
++                    "type": "boolean"
++                  }
++                }
++              }
++            ]
++          }
++        ]
++      },
++      {
++        "name": "cancelChooseDesktopMedia",
++        "type": "function",
++        "parameters": [
++          {
++            "name": "desktopMediaRequestId",
++            "type": "integer"
++          }
++        ]
++      },
++      {
++        "name": "_choose",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "requestId",
++            "type": "integer"
++          },
++          {
++            "name": "sources",
++            "type": "array",
++            "items": {
++              "$ref": "DesktopCaptureSourceType"
++            }
++          },
++          {
++            "name": "targetTab",
++            "type": "object",
++            "optional": true,
++            "additionalProperties": true
++          }
++        ]
++      },
++      {
++        "name": "_cancel",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "requestId",
++            "type": "integer"
++          }
++        ]
++      },
++      {
++        "name": "_consumeStreamId",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "token",
++            "type": "string"
++          },
++          {
++            "name": "options",
++            "type": "object",
++            "properties": {
++              "audio": {
++                "type": "boolean"
++              },
++              "video": {
++                "type": "boolean"
++              }
++            }
++          }
++        ]
++      },
++      {
++        "name": "_desktopOffer",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ]
++      },
++      {
++        "name": "_desktopAnswer",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          },
++          {
++            "name": "answer",
++            "type": "object",
++            "additionalProperties": true
++          }
++        ]
++      },
++      {
++        "name": "_streamStarted",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ]
++      },
++      {
++        "name": "_streamStopped",
++        "type": "function",
++        "async": true,
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          },
++          {
++            "name": "failed",
++            "type": "boolean",
++            "optional": true,
++            "default": false
++          }
++        ]
++      }
++    ],
++    "events": [
++      {
++        "name": "_onStreamStop",
++        "type": "function",
++        "unsupported": true,
++        "parameters": [
++          {
++            "name": "sessionId",
++            "type": "string"
++          }
++        ]
++      }
++    ]
++  }
++]

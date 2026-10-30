@@ -1,449 +1,83 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Offscreen API Polyfill for Firefox
- *
- * This module provides a polyfill for Chrome's Offscreen API using hidden iframes
- * in Firefox's MV3 background scripts (which have DOM access).
- *
- * Background:
- * - Chrome Offscreen API allows extensions to run DOM-based operations in hidden contexts
- * - Firefox doesn't have a native equivalent
- * - Firefox MV3 background scripts have DOM access (unlike Chrome's service workers)
- * - This polyfill leverages that DOM access to emulate the Offscreen API
- *
- * See: docs/investigations/offscreen-api-support.md for full investigation details
- *
- * Status: DRAFT - Not yet integrated into build pipeline
- * TODO: Integrate with CRXConverter to inject during extension conversion
- */
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-declare global {
-  // Extend global Window interface
-  interface Window {
-    __FLOORP_OFFSCREEN_MODULE__?: boolean;
-  }
-
-  // Declare chrome namespace
-  var chrome: {
-    offscreen?: OffscreenAPI;
-    runtime?: {
-      getURL(path: string): string;
-    };
-    // deno-lint-ignore no-explicit-any
-    [key: string]: any;
-  };
-
-  // Declare browser namespace
-  var browser: {
-    offscreen?: OffscreenAPI;
-    runtime?: {
-      getURL(path: string): string;
-    };
-    // deno-lint-ignore no-explicit-any
-    [key: string]: any;
-  };
-}
-
-/**
- * Timeout for offscreen document loading (in milliseconds)
- */
-const OFFSCREEN_LOAD_TIMEOUT_MS = 10000;
-
-/**
- * Firefox preference key for debug mode
- */
-const DEBUG_PREF_KEY = "extensions.floorp.debug";
-
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Options for creating an offscreen document
+ * Legacy module entry point. Offscreen documents are now owned by the Runtime,
+ * independently of the background page. Never restore the old iframe fallback:
+ * it lost documents when an event background stopped and exposed extra APIs.
  */
 export interface OffscreenDocumentOptions {
-  /** URL of the offscreen document (must be within extension) */
   url: string;
-  /** Reasons for creating the offscreen document */
   reasons: OffscreenReason[];
-  /** Justification for creating the offscreen document (for auditing) */
   justification: string;
 }
 
-/**
- * Reasons for creating an offscreen document
- * These match Chrome's Offscreen API enum values
- */
 export type OffscreenReason =
-  | "AUDIO_PLAYBACK"
-  | "BLOBS"
-  | "CLIPBOARD"
-  | "DOM_PARSER"
-  | "DOM_SCRAPING"
-  | "IFRAME_SCRIPTING"
-  | "LOCAL_STORAGE"
-  | "MEDIA_STREAM"
-  | "OFFSCREEN_CANVAS"
   | "TESTING"
+  | "AUDIO_PLAYBACK"
+  | "IFRAME_SCRIPTING"
+  | "DOM_SCRAPING"
+  | "BLOBS"
+  | "DOM_PARSER"
   | "USER_MEDIA"
-  | "WEB_RTC";
+  | "DISPLAY_MEDIA"
+  | "WEB_RTC"
+  | "CLIPBOARD"
+  | "LOCAL_STORAGE"
+  | "WORKERS"
+  | "BATTERY_STATUS"
+  | "MATCH_MEDIA"
+  | "GEOLOCATION";
 
-/**
- * Chrome Offscreen API interface
- */
 export interface OffscreenAPI {
   createDocument(options: OffscreenDocumentOptions): Promise<void>;
   closeDocument(): Promise<void>;
   hasDocument(): Promise<boolean>;
 }
 
-type OffscreenPolyfillOptions = {
-  debug?: boolean;
-  createHiddenIframeForTest?: (url: string) => HTMLIFrameElement;
-  waitForIframeLoadForTest?: (_iframe: HTMLIFrameElement) => Promise<void>;
-};
+function nativeAPI(): OffscreenAPI | undefined {
+  const globals = globalThis as unknown as {
+    chrome?: { offscreen?: OffscreenAPI };
+    browser?: { offscreen?: OffscreenAPI };
+  };
+  return globals.browser?.offscreen ?? globals.chrome?.offscreen;
+}
 
-// =============================================================================
-// Polyfill Implementation
-// =============================================================================
+/** @deprecated Use the native chrome.offscreen API provided by Floorp Runtime. */
+export class OffscreenPolyfill implements OffscreenAPI {
+  private readonly api: OffscreenAPI | undefined;
 
-/**
- * Polyfill implementation for Chrome Offscreen API
- *
- * Limitations:
- * - Only works in contexts with DOM access (background scripts)
- * - Won't work in pure service worker contexts
- * - Lifecycle may differ slightly from Chrome's implementation
- * - Performance characteristics may differ from native implementation
- */
-class OffscreenPolyfillImpl implements OffscreenAPI {
-  private offscreenFrame: HTMLIFrameElement | null = null;
-  private readonly debugMode: boolean = false;
-  private readonly createHiddenIframeForTest?: (
-    url: string,
-  ) => HTMLIFrameElement;
-  private readonly waitForIframeLoadForTest?: (
-    _iframe: HTMLIFrameElement,
-  ) => Promise<void>;
-
-  constructor(options?: OffscreenPolyfillOptions) {
-    this.debugMode = options?.debug ?? false;
-    this.createHiddenIframeForTest = options?.createHiddenIframeForTest;
-    this.waitForIframeLoadForTest = options?.waitForIframeLoadForTest;
+  constructor(options?: { nativeAPI?: OffscreenAPI; debug?: boolean }) {
+    this.api = options?.nativeAPI ?? nativeAPI();
   }
 
-  /**
-   * Create an offscreen document
-   * @param options - Configuration for the offscreen document
-   * @throws Error if document already exists or options are invalid
-   */
+  private requireAPI(): OffscreenAPI {
+    if (!this.api) {
+      throw new Error(
+        "Offscreen documents require the Floorp compatibility Runtime.",
+      );
+    }
+    return this.api;
+  }
+
   async createDocument(options: OffscreenDocumentOptions): Promise<void> {
-    this.log("createDocument called with:", options);
-
-    // Validate: Only one offscreen document allowed
-    if (this.offscreenFrame) {
-      throw new Error(
-        "Only one offscreen document may exist at a time. " +
-          "Call closeDocument() first.",
-      );
-    }
-
-    // Validate: Must have at least one reason
-    if (!options.reasons || options.reasons.length === 0) {
-      throw new Error("Must specify at least one reason");
-    }
-
-    // Validate: URL must be provided
-    if (!options.url) {
-      throw new Error("URL must be specified");
-    }
-
-    // Validate: Justification must be provided
-    if (!options.justification) {
-      throw new Error("Justification must be specified");
-    }
-
-    // Ensure we're in a context with DOM access
-    if (typeof document === "undefined") {
-      throw new Error(
-        "Offscreen API polyfill requires DOM access. " +
-          "This context does not support offscreen documents.",
-      );
-    }
-
-    try {
-      // Create the hidden iframe
-      const iframe = this.createHiddenIframeForTest
-        ? this.createHiddenIframeForTest(options.url)
-        : this.createHiddenIframe(options.url);
-
-      // Wait for iframe to load
-      if (this.waitForIframeLoadForTest) {
-        await this.waitForIframeLoadForTest(iframe);
-      } else {
-        await this.waitForIframeLoad(iframe);
-      }
-
-      // Store reference
-      this.offscreenFrame = iframe;
-
-      this.log("Offscreen document created successfully");
-    } catch (error) {
-      // Clean up on error
-      this.cleanupFrame();
-      throw new Error(
-        `Failed to create offscreen document: ${(error as Error).message}`,
-      );
-    }
+    await this.requireAPI().createDocument(options);
   }
 
-  /**
-   * Close the offscreen document
-   */
-  closeDocument(): Promise<void> {
-    this.log("closeDocument called");
-
-    if (!this.offscreenFrame) {
-      // Chrome doesn't throw an error if no document exists, so we don't either
-      this.log("No offscreen document to close");
-      return Promise.resolve();
-    }
-
-    this.cleanupFrame();
-    this.log("Offscreen document closed");
-    return Promise.resolve();
+  async closeDocument(): Promise<void> {
+    await this.requireAPI().closeDocument();
   }
 
-  /**
-   * Check if an offscreen document exists
-   * @returns true if document exists, false otherwise
-   */
-  hasDocument(): Promise<boolean> {
-    const exists = this.offscreenFrame !== null;
-    this.log("hasDocument:", exists);
-    return Promise.resolve(exists);
-  }
-
-  // =============================================================================
-  // Private Helper Methods
-  // =============================================================================
-
-  /**
-   * Create a hidden iframe element
-   */
-  private createHiddenIframe(url: string): HTMLIFrameElement {
-    const iframe = document?.createElement("iframe") as HTMLIFrameElement;
-
-    // Make iframe completely hidden and inaccessible
-    iframe.style.cssText = `
-      display: none !important;
-      position: absolute !important;
-      left: -9999px !important;
-      top: -9999px !important;
-      width: 0 !important;
-      height: 0 !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-    `;
-
-    // Set URL using browser.runtime.getURL for proper extension URL resolution
-    // Note: In Firefox extensions, browser.runtime.getURL is available
-    const resolvedUrl =
-      typeof browser !== "undefined" && browser.runtime?.getURL
-        ? browser.runtime.getURL(url)
-        : url;
-
-    iframe.src = resolvedUrl;
-
-    // Add metadata for debugging
-    iframe.setAttribute("data-floorp-offscreen", "true");
-    iframe.setAttribute("data-floorp-offscreen-url", url);
-
-    // Append to document body
-    if (document?.body) {
-      document.body.appendChild(iframe);
-    } else {
-      document?.documentElement?.appendChild(iframe);
-    }
-
-    return iframe;
-  }
-
-  /**
-   * Wait for iframe to finish loading
-   */
-  private waitForIframeLoad(iframe: HTMLIFrameElement): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const isAlreadyLoaded = (): boolean => {
-        const readyState = iframe.contentDocument?.readyState;
-        return readyState === "interactive" || readyState === "complete";
-      };
-
-      // about:blank can load synchronously, so handle already-loaded frames.
-      if (isAlreadyLoaded()) {
-        resolve();
-        return;
-      }
-
-      let settled = false;
-
-      const cleanup = () => {
-        iframe.removeEventListener("load", onLoad);
-        iframe.removeEventListener("error", onError);
-        if (timeout !== undefined) {
-          clearTimeout(timeout);
-        }
-      };
-
-      const resolveOnce = () => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        cleanup();
-        resolve();
-      };
-
-      const rejectOnce = (message: string) => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        cleanup();
-        reject(new Error(message));
-      };
-
-      const onLoad = () => {
-        resolveOnce();
-      };
-
-      const onError = () => {
-        rejectOnce("Failed to load offscreen document");
-      };
-
-      iframe.addEventListener("load", onLoad, { once: true });
-      iframe.addEventListener("error", onError, { once: true });
-
-      const timeout: number | undefined = setTimeout(() => {
-        rejectOnce("Offscreen document load timeout");
-      }, OFFSCREEN_LOAD_TIMEOUT_MS);
-
-      // Re-check to close the race between first check and listener registration.
-      if (isAlreadyLoaded()) {
-        resolveOnce();
-      }
-    });
-  }
-
-  /**
-   * Clean up the iframe and references
-   */
-  private cleanupFrame(): void {
-    if (this.offscreenFrame) {
-      try {
-        this.offscreenFrame.remove();
-      } catch (error) {
-        // Ignore errors during cleanup
-        this.log("Error during cleanup:", error);
-      }
-      this.offscreenFrame = null;
-    }
-  }
-
-  /**
-   * Log debug messages
-   */
-  private log(...args: unknown[]): void {
-    if (this.debugMode) {
-      console.log("[Floorp Offscreen Polyfill]", ...args);
-    }
+  async hasDocument(): Promise<boolean> {
+    return await this.requireAPI().hasDocument();
   }
 }
 
-// =============================================================================
-// Installation
-// =============================================================================
-
-/**
- * Install the Offscreen API polyfill into the chrome object
- *
- * This function should be called early in the background script lifecycle,
- * before any extension code that might use the Offscreen API.
- *
- * @param options - Configuration options
- * @returns true if polyfill was installed, false if already exists
- */
-export function installOffscreenPolyfill(options?: {
+/** @deprecated Kept for old imports; the Runtime installs the native API. */
+export function installOffscreenPolyfill(_options?: {
   debug?: boolean;
   force?: boolean;
 }): boolean {
-  // Check if we're in a browser extension context
-  if (typeof chrome === "undefined") {
-    console.warn("[Floorp Offscreen Polyfill] Not in Chrome extension context");
-    return false;
-  }
-
-  // Check if Offscreen API already exists (e.g., if Chrome adds native support)
-  if (chrome.offscreen && !options?.force) {
-    if (options?.debug) {
-      console.log(
-        "[Floorp Offscreen Polyfill] Native Offscreen API detected, skipping polyfill",
-      );
-    }
-    return false;
-  }
-
-  // Create polyfill instance
-  const polyfill = new OffscreenPolyfillImpl({ debug: options?.debug });
-
-  // Install into chrome object
-  chrome.offscreen = {
-    createDocument: polyfill.createDocument.bind(polyfill),
-    closeDocument: polyfill.closeDocument.bind(polyfill),
-    hasDocument: polyfill.hasDocument.bind(polyfill),
-  };
-
-  // Also install into browser object for compatibility
-  if (typeof browser !== "undefined") {
-    browser.offscreen = chrome.offscreen;
-  }
-
-  if (options?.debug) {
-    console.log("[Floorp Offscreen Polyfill] Successfully installed");
-  }
-
-  return true;
-}
-
-// =============================================================================
-// Exports
-// =============================================================================
-
-export { OffscreenPolyfillImpl as OffscreenPolyfill };
-
-// Auto-install if this is loaded as a script (not as a module import)
-// This allows the polyfill to be injected as a standalone script
-if (
-  typeof window !== "undefined" &&
-  !("__FLOORP_OFFSCREEN_MODULE__" in window)
-) {
-  // Mark as loaded
-  // deno-lint-ignore no-window
-  window.__FLOORP_OFFSCREEN_MODULE__ = true;
-
-  // Auto-install with debug mode based on environment
-  const debugMode =
-    typeof Services !== "undefined" &&
-    Services.prefs?.getBoolPref(DEBUG_PREF_KEY, false);
-
-  installOffscreenPolyfill({ debug: debugMode });
+  return false;
 }

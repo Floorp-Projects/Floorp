@@ -829,7 +829,8 @@
         "shortcut": "ショートカット",
         "actions": "アクション",
         "actionLabels": {
-            "floorp-edit-tab-url": "タブの URL を編集"
+            "floorp-edit-tab-url": "タブの URL を編集",
+            "floorp-toggle-last-extension-side-panel": "前回の Chrome 拡張機能のサイドパネルを切り替える"
         },
         "notSet": "設定なし",
         "add": "追加",

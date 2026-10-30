@@ -1,0 +1,130 @@
+{
+  "registry": "https://registry.npmjs.org",
+  "purpose": "Genuine authored application fixtures; no project dependency changes",
+  "packages": {
+    "react": {
+      "version": "19.2.6",
+      "metadataSource": "https://registry.npmjs.org/react/19.2.6",
+      "tarball": "https://registry.npmjs.org/react/-/react-19.2.6.tgz",
+      "integrity": "sha512-sfWGGfavi0xr8Pg0sVsyHMAOziVYKgPLNrS7ig+ivMNb3wbCBw3KxtflsGBAwD3gYQlE/AEZsTLgToRrSCjb0Q==",
+      "sha256": "3869e1f44439eadc02e9570135b594715702374a0d8a30c7771b853698422283",
+      "registrySignatures": [
+        {
+          "sig": "MEUCIQDvotUIZ3Jr9C7AGrEfK9AdQVflI5kuVvAGAw9va/cUFQIgA343f54aJ6pZnCFI8kvE8NdRjR/MrZtq1tf4NJB+xdw=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "registryKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+      "registryKeyFetchError": null,
+      "verifiedRegistrySignatures": [
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g==",
+          "signature": "MEUCIQDvotUIZ3Jr9C7AGrEfK9AdQVflI5kuVvAGAw9va/cUFQIgA343f54aJ6pZnCFI8kvE8NdRjR/MrZtq1tf4NJB+xdw="
+        }
+      ],
+      "matchesProjectLock": true
+    },
+    "react-dom": {
+      "version": "19.2.6",
+      "metadataSource": "https://registry.npmjs.org/react-dom/19.2.6",
+      "tarball": "https://registry.npmjs.org/react-dom/-/react-dom-19.2.6.tgz",
+      "integrity": "sha512-0prMI+hvBbPjsWnxDLxlCGyM8PN6UuWjEUCYmZhO67xIV9Xasa/r/vDnq+Xyq4Lo27g8QSbO5YzARu0D1Sps3g==",
+      "sha256": "a840fde16696a9a35d06c906796b9c066dcbd214e49d0467d638d5fd4a4c5b11",
+      "registrySignatures": [
+        {
+          "sig": "MEUCIDsUmh7uYMuiI1fMEryzI2Lc1kS5wbsask8vgzr9L42HAiEA1fjU5n/z6ApCSUINaTbTPKU2nvLD2zjOaVrRha5b6qc=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "registryKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+      "registryKeyFetchError": null,
+      "verifiedRegistrySignatures": [
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g==",
+          "signature": "MEUCIDsUmh7uYMuiI1fMEryzI2Lc1kS5wbsask8vgzr9L42HAiEA1fjU5n/z6ApCSUINaTbTPKU2nvLD2zjOaVrRha5b6qc="
+        }
+      ],
+      "matchesProjectLock": true
+    },
+    "scheduler": {
+      "version": "0.27.0",
+      "metadataSource": "https://registry.npmjs.org/scheduler/0.27.0",
+      "tarball": "https://registry.npmjs.org/scheduler/-/scheduler-0.27.0.tgz",
+      "integrity": "sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==",
+      "sha256": "ab26ce35ce4032f04b78cfc5bbb4cfe13358e9fe7a5433a8aa6315c3debc5095",
+      "registrySignatures": [
+        {
+          "sig": "MEUCIQCack5vHWKaO0QKERoq6u2nwR4oANQ9dLApCdNzJ7eJNgIgW7gYxV4eIWVrzAII08xKwzgRFPaa4iJFwfZAQWlUSsE=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "registryKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+      "registryKeyFetchError": null,
+      "verifiedRegistrySignatures": [
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g==",
+          "signature": "MEUCIQCack5vHWKaO0QKERoq6u2nwR4oANQ9dLApCdNzJ7eJNgIgW7gYxV4eIWVrzAII08xKwzgRFPaa4iJFwfZAQWlUSsE="
+        }
+      ],
+      "matchesProjectLock": true
+    },
+    "redux": {
+      "version": "5.0.1",
+      "metadataSource": "https://registry.npmjs.org/redux/5.0.1",
+      "tarball": "https://registry.npmjs.org/redux/-/redux-5.0.1.tgz",
+      "integrity": "sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==",
+      "sha256": "adacd4f8a377e638a3feb568e45e8b8ff22c926516941db25b1acfc34d94398b",
+      "registrySignatures": [
+        {
+          "sig": "MEYCIQDN6CQPvxOJZK1LYwjTIYc5iOmuRxpfMhN7ToTDvSYTLAIhAN88EJoSQzmIm8vI99Lw8BcjQ6IB1H5B4HEZ4OvNWoCb",
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA"
+        }
+      ],
+      "registryKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+      "registryKeyFetchError": null,
+      "verifiedRegistrySignatures": [
+        {
+          "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg==",
+          "signature": "MEYCIQDN6CQPvxOJZK1LYwjTIYc5iOmuRxpfMhN7ToTDvSYTLAIhAN88EJoSQzmIm8vI99Lw8BcjQ6IB1H5B4HEZ4OvNWoCb"
+        }
+      ],
+      "matchesProjectLock": true
+    },
+    "vue": {
+      "version": "3.5.44",
+      "metadataSource": "https://registry.npmjs.org/vue/3.5.44",
+      "tarball": "https://registry.npmjs.org/vue/-/vue-3.5.44.tgz",
+      "integrity": "sha512-dvvmaOCG7lAMkJTPqPwWeGMsPS6DIsFsfZDUgBp9V6mHf9b3+/wyVwYR4Es+WV6uJC0FKRxp81Obcq0ZwUcGFQ==",
+      "sha256": "33cd651dcae080f76c110bdb035faf9e0bab35f44cd4bd9cf8cf40ae7ed97256",
+      "registrySignatures": [
+        {
+          "sig": "MEYCIQCSIWX80OVq1tXjuN3XILFcY715uX2h56IlzW45xHJxfAIhAPg6tyYvDwqpk+EU4JNvgJujosFp/9NNCwZbFtP7cf7/",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        },
+        {
+          "sig": "MEUCIGr61ePd+PckjL222TPrrQXasW1D/KaBJvkeSP8FoLDXAiEA1quzUM/NMuiaJbXQ0oaEHoEETXNqrnCi1wI/yDYzcHM=",
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+        }
+      ],
+      "registryKeySource": "https://registry.npmjs.org/-/npm/v1/keys",
+      "registryKeyFetchError": null,
+      "verifiedRegistrySignatures": [
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g==",
+          "signature": "MEYCIQCSIWX80OVq1tXjuN3XILFcY715uX2h56IlzW45xHJxfAIhAPg6tyYvDwqpk+EU4JNvgJujosFp/9NNCwZbFtP7cf7/"
+        },
+        {
+          "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+          "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g==",
+          "signature": "MEUCIGr61ePd+PckjL222TPrrQXasW1D/KaBJvkeSP8FoLDXAiEA1quzUM/NMuiaJbXQ0oaEHoEETXNqrnCi1wI/yDYzcHM="
+        }
+      ],
+      "matchesProjectLock": false
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "referenceChromeVersion": "155.0.8059.84",
+  "runtimeSourceCommit": "1553b7b550dfe555684628d175e0c1701a785d0b",
+  "corpusFrozenAtUTC": "2026-10-19T00:54:21.244Z",
+  "scope": "Historical signed-package source inventory captured against runtimeSourceCommit for auxiliary API work. References include feature detection and are not execution evidence for the current native candidate or primary-operation passes.",
+  "extensions": [
+    {
+      "id": "hnmpcagpplmpfojmgmnngilcnanddlhb",
+      "name": "Windscribe",
+      "version": "4.3.1",
+      "packageSha256": "03bb87147da87069eee9875294865b415546f31cad4d9ad0e02786aa8bceb19b",
+      "references": [
+        {
+          "member": "storage.session.setAccessLevel",
+          "path": "js/ext.js",
+          "sourceSha256": "aca2e21367fdbdf56f1670e8148ba6509e5f518e9eb163d2c9044351ff15b49e",
+          "firstCharacterOffset": 1938,
+          "context": " async function sessionAccessLevel(e){try{browser.storage.session.setAccessLevel(e)}catch{}}export async function adminRead(e){if(browser?.storage?.managed instanceof Obj"
+        },
+        {
+          "member": "action.openPopup",
+          "path": "background.bundle.js",
+          "sourceSha256": "65729229aefd8ee68f6dea1230ccf7a516fa81a3a896e771d1ded1ef913b74b5",
+          "firstCharacterOffset": 1182832,
+          "context": "me.windows.update(p.id,{focused:!0}),await chrome.action.openPopup({windowId:p.id}),await Os({message:`Opened popup in window ${p.id}`}))}catch(e){await Os("
+        }
+      ]
+    },
+    {
+      "id": "gcbalfbdmfieckjlnblleoemohcganoc",
+      "name": "UI.Vision",
+      "version": "10.0.301",
+      "packageSha256": "ef6699aaef8c24aeaa26440649a50d628264a9f21371362961aa69693abbe407",
+      "references": []
+    },
+    {
+      "id": "infppggnoaenmfagbfknfkancpbljcca",
+      "name": "Automa",
+      "version": "1.30.02",
+      "packageSha256": "54095ca7764675f1df6f62329412a75be33bb30968fc2184497d9d29188b2797",
+      "references": []
+    },
+    {
+      "id": "nngceckbapebfimnlniiiahkandclblb",
+      "name": "Bitwarden",
+      "version": "2026.10.0",
+      "packageSha256": "f2feb7fc46d2550bef9b69af1cc358aea26b90a947645f9de16ec14d9296ef69",
+      "references": [
+        {
+          "member": "notifications.onButtonClicked",
+          "path": "background.js",
+          "sourceSha256": "93c564245ac68c9af56d35023acb0f05a0bcebb921b48d2e4e81d9a5c4c1a473",
+          "firstCharacterOffset": 3352564,
+          "context": "sService=e,this.notificationClicked$=et(TF(chrome.notifications.onButtonClicked).pipe(ie(([e,t])=>({id:e,buttonIdentifier:t}))),TF(chrome.notifications.onClicked).pipe(i"
+        },
+        {
+          "member": "notifications.onButtonClicked",
+          "path": "popup/main.js",
+          "sourceSha256": "08da5d9a5acb1cb1831ed5f4c739c2aec0dc61d883f752c8f3cd3674150a87bc",
+          "firstCharacterOffset": 3991471,
+          "context": "ce=e,this.notificationClicked$=(0,Ga.h)(u9(chrome.notifications.onButtonClicked).pipe((0,l.T)(([e,t])=>({id:e,buttonIdentifier:t}))),u9(chrome.notifications.onClicked).p"
+        }
+      ]
+    },
+    {
+      "id": "aeblfdkhhhdcdjpifhhbdiojplfjncoa",
+      "name": "1Password",
+      "version": "8.12.41.1",
+      "packageSha256": "ba9e031604781012f6032ffc8e16fba400090ed0c085d02b8e939556f95f8fa8",
+      "references": [
+        {
+          "member": "notifications.update",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 2538806,
+          "context": "|(n.requireInteraction=!0),i&&!Ca()&&!Ne()?chrome.notifications.update(a,n):(chrome.notifications.create(a,n),Vf(\"click\",a,()=>{gk({url:e})}))})}function Mpt(A)"
+        },
+        {
+          "member": "notifications.getAll",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 2538558,
+          "context": "ons||Ne())return;let a=`authrequired-${A}`;chrome.notifications.getAll(r=>{let i=a in r,n={type:\"basic\",iconUrl:A6,title:Y(\"Authentication Required\"),message:Y("
+        },
+        {
+          "member": "notifications.onButtonClicked",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 1673716,
+          "context": "s.onClicked.addListener(A=>EVA(\"click\",A)),chrome.notifications.onButtonClicked.addListener((A,e)=>EVA(\"buttonClick\",A,e)),chrome.notifications.onClosed.addListener(A=>{"
+        },
+        {
+          "member": "notifications.onClosed",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 1673796,
+          "context": "addListener((A,e)=>EVA(\"buttonClick\",A,e)),chrome.notifications.onClosed.addListener(A=>{Object.prototype.hasOwnProperty.call(Ew,\"click\"+A)?delete Ew[\"click\"+A]:O"
+        },
+        {
+          "member": "action.openPopup",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 2343953,
+          "context": "opup\"}).length>0}async function tq(){if(!(browser.action?.openPopup!==void 0||browser.browserAction?.openPopup!==void 0))return!1;if(Ca()){let{version:e}=awa"
+        },
+        {
+          "member": "action.getUserSettings",
+          "path": "background/background.js",
+          "sourceSha256": "6d704aab12ff6db0ccd7ba55ba9bb1895fea9ee220207d8dfa9769fa9bb4e034",
+          "firstCharacterOffset": 123516,
+          "context": "s\"'})}return!gt()}async function uT(){if(!(chrome.action?.getUserSettings!==void 0||browser.browserAction?.getUserSettings!==void 0))return!1;let e;return chrome.a"
+        },
+        {
+          "member": "action.getUserSettings",
+          "path": "chunks/chunk-C2VNOTTB.js",
+          "sourceSha256": "386cd1216f01f5d1ab3d3e68ef39c8383e37c597872230477a111a9940bd101f",
+          "firstCharacterOffset": 91854,
+          "context": "NV=()=>dL()||mL();async function GV(){if(!(chrome.action?.getUserSettings!==void 0||browser.browserAction?.getUserSettings!==void 0))return!1;let r;return chrome.a"
+        }
+      ]
+    },
+    {
+      "id": "oeopbcgkkoapgobdbedcemjljbihmemj",
+      "name": "Checker Plus for Gmail",
+      "version": "36.6",
+      "packageSha256": "2b483dc168f25882cffbffb471244395c4f4a50bad013c32274550580e8fad0b",
+      "references": [
+        {
+          "member": "notifications.onButtonClicked",
+          "path": "js/background.js",
+          "sourceSha256": "d8cca6e22cd60d2aa8a9ec7b50f943769f03a943b60b0b3cffaa2cd57addcbaa",
+          "firstCharacterOffset": 29358,
+          "context": "icationId, -1);\n\t});\n\n\t// buttons clicked\n\tchrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {\n\t\tonButtonClicked(notificationId, bu"
+        },
+        {
+          "member": "notifications.onClosed",
+          "path": "js/background.js",
+          "sourceSha256": "d8cca6e22cd60d2aa8a9ec7b50f943769f03a943b60b0b3cffaa2cd57addcbaa",
+          "firstCharacterOffset": 29521,
+          "context": "Id, buttonIndex);\n\t});\n\t\n\t// closed notif\n\tchrome.notifications.onClosed.addListener(async (notificationId, byUser) => {\n\t\tconsole.log(\"notif onclose\", notificati"
+        },
+        {
+          "member": "action.openPopup",
+          "path": "js/background.js",
+          "sourceSha256": "d8cca6e22cd60d2aa8a9ec7b50f943769f03a943b60b0b3cffaa2cd57addcbaa",
+          "firstCharacterOffset": 97229,
+          "context": "mand == \"activateExtension\") {\n            chrome.action.openPopup();\n            return;\n        }\n\n        await initMisc();\n        var errorFlag;\n      "
+        },
+        {
+          "member": "action.openPopup",
+          "path": "js/grant-access.js",
+          "sourceSha256": "4b03fb5ea2dd063dd90ff0278edddb9a9773b1bc87a2e15942d092dcf4b1d65e",
+          "firstCharacterOffset": 847,
+          "context": "\r\n            try {\r\n                await chrome.action.openPopup();\r\n            } catch (error) {\r\n                console.error(\"error opening popup\", e"
+        },
+        {
+          "member": "action.openPopup",
+          "path": "js/options.js",
+          "sourceSha256": "81c90e938f1a977cd22a6e56a7aedd0ce1379b4229a59e8a39d9f0c17733a925",
+          "firstCharacterOffset": 73341,
+          "context": "Message(\"accessGranted\"));\n                chrome.action.openPopup().catch(error => {\n                    console.error(error);\n                    // for f"
+        },
+        {
+          "member": "action.getUserSettings",
+          "path": "js/options.js",
+          "sourceSha256": "81c90e938f1a977cd22a6e56a7aedd0ce1379b4229a59e8a39d9f0c17733a925",
+          "firstCharacterOffset": 5587,
+          "context": "move(\"hide-pin\");\n        }\n    });\n}\n\nif (chrome.action.getUserSettings) {\n    chrome.action.getUserSettings(userSettings => {\n        if (userSettings.isOnToolb"
+        },
+        {
+          "member": "action.onUserSettingsChanged",
+          "path": "js/options.js",
+          "sourceSha256": "81c90e938f1a977cd22a6e56a7aedd0ce1379b4229a59e8a39d9f0c17733a925",
+          "firstCharacterOffset": 5287,
+          "context": "});\n        sendResponse();\n    }\n});\n\nif (chrome.action.onUserSettingsChanged) {\n    chrome.action.onUserSettingsChanged.addListener(userSettings => {\n        if (user"
+        }
+      ]
+    },
+    {
+      "id": "dhdgffkkebhmkfjojejmpbldmpobfkfo",
+      "name": "Tampermonkey",
+      "version": "5.5.1",
+      "packageSha256": "b5167937817e636adeba462ed9bf9b32ff01c2888f78a9afc6aa4f8e655fe872",
+      "references": [
+        {
+          "member": "declarativeContent.PageStateMatcher",
+          "path": "extension.js",
+          "sourceSha256": "4de33a82e08870c32719de1a578320f50d52760fb219de9b6093fd4d3b4bc9aa",
+          "firstCharacterOffset": 131210,
+          "context": "Content&&ke.declarativeContent.onPageChanged&&(ke.declarativeContent.PageStateMatcher,ke.declarativeContent.RequestContentScript),Re&&Re.contentScripts&&Re.contentScripts.regi"
+        },
+        {
+          "member": "declarativeContent.RequestContentScript",
+          "path": "extension.js",
+          "sourceSha256": "4de33a82e08870c32719de1a578320f50d52760fb219de9b6093fd4d3b4bc9aa",
+          "firstCharacterOffset": 131249,
+          "context": "anged&&(ke.declarativeContent.PageStateMatcher,ke.declarativeContent.RequestContentScript),Re&&Re.contentScripts&&Re.contentScripts.register,Re&&Re.userScripts&&Re.userScripts.reg"
+        },
+        {
+          "member": "declarativeContent.onPageChanged",
+          "path": "extension.js",
+          "sourceSha256": "4de33a82e08870c32719de1a578320f50d52760fb219de9b6093fd4d3b4bc9aa",
+          "firstCharacterOffset": 131172,
+          "context": "k!\"),ke&&ke.action,\nke&&ke.declarativeContent&&ke.declarativeContent.onPageChanged&&(ke.declarativeContent.PageStateMatcher,ke.declarativeContent.RequestContentScript),Re&&"
+        },
+        {
+          "member": "notifications.onClosed",
+          "path": "background.js",
+          "sourceSha256": "7377109daee3340f6f1f89d06f8099e92583229231b25d0f950653a63fb7dd32",
+          "firstCharacterOffset": 134911,
+          "context": ":{addListener:function(t){if(!pt)throw new Error(\"notifications.onClosed listener can only be registered during startup in non-persistent background pages!\")\n;ret"
+        },
+        {
+          "member": "notifications.onPermissionLevelChanged",
+          "path": "background.js",
+          "sourceSha256": "7377109daee3340f6f1f89d06f8099e92583229231b25d0f950653a63fb7dd32",
+          "firstCharacterOffset": 134328,
+          "context": ":{addListener:function(t){if(!pt)throw new Error(\"notifications.onPermissionLevelChanged listener can only be registered during startup in non-persistent background pages!\");retu"
+        },
+        {
+          "member": "declarativeContent.PageStateMatcher",
+          "path": "background.js",
+          "sourceSha256": "7377109daee3340f6f1f89d06f8099e92583229231b25d0f950653a63fb7dd32",
+          "firstCharacterOffset": 129791,
+          "context": "veContent&&C.declarativeContent.onPageChanged&&(C.declarativeContent.PageStateMatcher,C.declarativeContent.RequestContentScript),M&&M.contentScripts&&M.contentScripts.register"
+        },
+        {
+          "member": "declarativeContent.RequestContentScript",
+          "path": "background.js",
+          "sourceSha256": "7377109daee3340f6f1f89d06f8099e92583229231b25d0f950653a63fb7dd32",
+          "firstCharacterOffset": 129829,
+          "context": "Changed&&(C.declarativeContent.PageStateMatcher,C.declarativeContent.RequestContentScript),M&&M.contentScripts&&M.contentScripts.register,M&&M.userScripts&&M.userScripts.register,"
+        },
+        {
+          "member": "declarativeContent.onPageChanged",
+          "path": "background.js",
+          "sourceSha256": "7377109daee3340f6f1f89d06f8099e92583229231b25d0f950653a63fb7dd32",
+          "firstCharacterOffset": 129754,
+          "context": "l}:{supported:!1\n},yt=(C&&C.declarativeContent&&C.declarativeContent.onPageChanged&&(C.declarativeContent.PageStateMatcher,C.declarativeContent.RequestContentScript),M&&M.c"
+        }
+      ]
+    },
+    {
+      "id": "laookkfknpbbblfpciffpaejjkokdgca",
+      "name": "Momentum",
+      "version": "2.27.8",
+      "packageSha256": "c7d574585d6c26065ef5efffcdcbdc89ec92c28857138b4522da0eb4bc425328",
+      "references": [
+        {
+          "member": "notifications.onButtonClicked",
+          "path": "serviceWorker.js",
+          "sourceSha256": "d3b0d1f000592d9ea5698ab8ed391dd44b908ec7f52e26b7ca23f04ed8d3c64c",
+          "firstCharacterOffset": 112493,
+          "context": "{me.notifications.onClicked.removeListener(qe),me.notifications.onButtonClicked.removeListener(Ee),me.notifications.onClicked.addListener(qe),me.notifications.onButtonCl"
+        }
+      ]
+    }
+  ]
+}

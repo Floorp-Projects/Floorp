@@ -1,0 +1,166 @@
+diff --git a/browser/modules/ExtensionsUI.sys.mjs b/browser/modules/ExtensionsUI.sys.mjs
+index 73ef024..29a484f 100644
+--- a/browser/modules/ExtensionsUI.sys.mjs
++++ b/browser/modules/ExtensionsUI.sys.mjs
+@@ -336,11 +336,11 @@ export var ExtensionsUI = {
+         }
+       });
+     } else if (topic == "webextension-optional-permission-prompt") {
+-      let { browser, name, icon, permissions, resolve } =
++      let { browser, name, id, icon, permissions, resolve } =
+         subject.wrappedJSObject;
+       let strings = this._buildStrings({
+         type: "optional",
+-        addon: { name },
++        addon: { name, id },
+         permissions,
+       });
+ 
+diff --git a/toolkit/components/extensions/Extension.sys.mjs b/toolkit/components/extensions/Extension.sys.mjs
+index 6e81396..0e59ba0 100644
+--- a/toolkit/components/extensions/Extension.sys.mjs
++++ b/toolkit/components/extensions/Extension.sys.mjs
+@@ -66,6 +66,10 @@ const lazy = XPCOMUtils.declareLazy({
+   PERMISSION_L10N: "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
+   permissionToL10nId:
+     "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
++  floorpChromePermissionInfo:
++    "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
++  floorpChromePermissionMessages:
++    "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
+   QuarantinedDomains: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+ 
+   resourceProtocol: () =>
+@@ -1227,6 +1231,7 @@ export class ExtensionData {
+     }
+ 
+     return {
++      ...lazy.floorpChromePermissionInfo(this.manifest, this.id),
+       permissions: Array.from(permissions),
+       origins: this.originControls ? [] : this.getManifestOrigins(),
+       data_collection: lazy.dataCollectionPermissionsEnabled
+@@ -1370,6 +1375,7 @@ export class ExtensionData {
+       : [];
+ 
+     return {
++      ...lazy.floorpChromePermissionInfo(this.manifest, this.id),
+       permissions: Array.from(permissions),
+       origins: Array.from(origins),
+       data_collection,
+@@ -3091,6 +3097,9 @@ export class ExtensionData {
+       dataCollectionIsNone: !!hasNone,
+     });
+     result.msgs = l10n.formatValuesSync(msgIds);
++    const chromeMessages = lazy.floorpChromePermissionMessages(addon, permissions, optionalPermissions);
++    result.msgs.push(...chromeMessages.messages);
++    Object.assign(result.optionalPermissions, chromeMessages.optionalPermissions);
+     setAcceptCancel(acceptId, cancelId);
+     return result;
+   }
+diff --git a/toolkit/components/extensions/ExtensionPermissionMessages.sys.mjs b/toolkit/components/extensions/ExtensionPermissionMessages.sys.mjs
+index b85f41a..4bf086a 100644
+--- a/toolkit/components/extensions/ExtensionPermissionMessages.sys.mjs
++++ b/toolkit/components/extensions/ExtensionPermissionMessages.sys.mjs
+@@ -15,7 +15,7 @@ export const PERMISSION_L10N = new Localization(
+     "toolkit/global/extensionPermissions.ftl",
+     "branding/brand.ftl",
+   ],
+-  true
++  true,
+ );
+ 
+ /**
+@@ -121,3 +121,53 @@ export function permissionToL10nId(permission, short = false) {
+ 
+   return `webext-perms-description-${sanitized}`;
+ }
++
++// These UI hints come from the normalized manifest; they do not establish XPI
++// provenance or grant an API. Keep the same exact opt-in identity as the runtime.
++export function floorpChromePermissionInfo(manifest, addonId) {
++  const gecko = manifest?.browser_specific_settings?.gecko ||
++    manifest?.applications?.gecko;
++  const marker = gecko?.floorp_chrome_extension;
++  const id = marker?.original_id;
++  return marker?.schema_version === 1 && typeof id === "string" &&
++      /^[a-p]{32}$/.test(id) && addonId === `${id}@chromium-extension`
++    ? { floorpChromeOriginalId: id }
++    : {};
++}
++
++export function floorpChromePermissionMessages(
++  addon,
++  permissions,
++  optionalPermissions,
++) {
++  const id = permissions?.floorpChromeOriginalId ||
++    optionalPermissions?.floorpChromeOriginalId ||
++    addon?.userPermissions?.floorpChromeOriginalId;
++  const result = { messages: [], optionalPermissions: {} };
++  if (
++    typeof id !== "string" || !/^[a-p]{32}$/.test(id) ||
++    addon?.id !== `${id}@chromium-extension`
++  ) {
++    return result;
++  }
++  const capture = permissions?.permissions?.includes("tabCapture");
++  const optionalCapture = optionalPermissions?.permissions?.includes(
++    "tabCapture",
++  );
++  if (!capture && !optionalCapture) {
++    return result;
++  }
++  // Floorp ships both descriptions in the base resource so ja / ja-JP-mac can
++  // use the capture warning even when the upstream language pack lacks this key.
++  const messageId = /^ja(?:-|$)/i.test(Services.locale.appLocaleAsBCP47)
++    ? "floorp-webext-perms-description-tab-capture-ja"
++    : "floorp-webext-perms-description-tab-capture";
++  const message = PERMISSION_L10N.formatValueSync(messageId);
++  if (capture) {
++    result.messages.push(message);
++  }
++  if (optionalCapture) {
++    result.optionalPermissions.tabCapture = message;
++  }
++  return result;
++}
+diff --git a/toolkit/components/extensions/parent/ext-permissions.js b/toolkit/components/extensions/parent/ext-permissions.js
+index 9232d78..71e382d 100644
+--- a/toolkit/components/extensions/parent/ext-permissions.js
++++ b/toolkit/components/extensions/parent/ext-permissions.js
+@@ -6,6 +6,7 @@
+ 
+ ChromeUtils.defineESModuleGetters(this, {
+   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
++  floorpChromePermissionInfo: "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
+   Schemas: "resource://gre/modules/Schemas.sys.mjs",
+ });
+ 
+@@ -194,7 +195,10 @@ this.permissions = class extends ExtensionAPIPersistent {
+                   name: context.extension.name,
+                   id: context.extension.id,
+                   icon: context.extension.getPreferredIcon(32),
+-                  permissions: { permissions, origins, data_collection },
++                  permissions: {
++                    ...floorpChromePermissionInfo(context.extension.manifest, context.extension.id),
++                    permissions, origins, data_collection,
++                  },
+                   resolve,
+                 },
+               };
+diff --git a/toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl b/toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl
+index 47f842a..9bf02d4 100644
+--- a/toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl
++++ b/toolkit/locales/en-US/toolkit/global/extensionPermissions.ftl
+@@ -72,3 +72,11 @@ webext-perms-description-data-long-searchTerms = Share search terms with extensi
+ webext-perms-description-data-long-technicalAndInteraction = Share technical and interaction data with extension developer
+ webext-perms-description-data-long-websiteActivity = Share website activity with extension developer
+ webext-perms-description-data-long-websiteContent = Share website content with extension developer
++
++
++## Floorp Chrome-extension compatibility. This warning is used only for the
++## exact opt-in Chrome extension identity. Keep both base-resource translations
++## available when upstream locale packs do not yet contain this permission.
++
++floorp-webext-perms-description-tab-capture = Capture video and audio from browser tabs
++floorp-webext-perms-description-tab-capture-ja = ブラウザーのタブの映像と音声をキャプチャする

@@ -1,0 +1,26 @@
+{
+  "messageJSONProbeSource": {
+    "file": "native-message-json-probe.js.txt",
+    "sha256": "10f386ade6d97fccaa1377687aef0f7be53a6bf04cf3928e023dc436a62f96e4"
+  },
+  "messageOverloadProbeSource": {
+    "file": "native-message-overload-probe.js.txt",
+    "sha256": "5388c62dc9d3cbffe772382371313bd66257424484c8f491321a812d871a889b"
+  },
+  "messageEdgeProbeSource": {
+    "file": "native-message-edge-probe.js.txt",
+    "sha256": "f53e7922839cb170a57718e68ca4f0af88810a13a9ddc2a49555ea31135d4825"
+  },
+  "messageJSONReferenceSource": {
+    "file": "native-message-json-chrome-reference.json",
+    "sha256": "bfeca40b2e2e0623817ee70f9e703721cf1da3f82b5b6d108110c2452cbe89f4"
+  },
+  "messageOverloadReferenceSource": {
+    "file": "native-message-overload-chrome-reference.json",
+    "sha256": "0c37cc6b34f03c1ea1a406e8717b9bd3f9881e88bd659933fbb60e9b6c7345cc"
+  },
+  "messageEdgeReferenceSource": {
+    "file": "native-message-edge-chrome-reference.json",
+    "sha256": "d0575d6ade626588583a2f7d319455614b1e558dd96c4801f3a6028725b05629"
+  }
+}

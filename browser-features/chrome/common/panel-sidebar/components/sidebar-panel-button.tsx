@@ -7,6 +7,7 @@ import { createResource, Suspense } from "solid-js";
 import { getFaviconURLForPanel } from "../utils/favicon-getter";
 import type { CPanelSidebar } from "./panel-sidebar";
 import {
+  activeChromeSidePanelId,
   isPanelSidebarVisible,
   panelSidebarData,
   selectedPanelId,
@@ -103,14 +104,18 @@ export function PanelSidebarButton(props: {
       <div
         id={props.panel.id}
         class={`${props.panel.type} panel-sidebar-panel`}
-        data-checked={selectedPanelId() === props.panel.id}
+        data-checked={selectedPanelId() === props.panel.id ||
+          (props.panel.type === "extension" &&
+            activeChromeSidePanelId() === props.panel.extensionId)}
         data-panel-id={props.panel.id}
         role="button"
         tabindex={0}
         aria-label={props.panel.url || props.panel.extensionId ||
           props.panel.id}
-        aria-expanded={selectedPanelId() === props.panel.id &&
-          isPanelSidebarVisible()}
+        aria-expanded={(selectedPanelId() === props.panel.id &&
+          isPanelSidebarVisible()) ||
+          (props.panel.type === "extension" &&
+            activeChromeSidePanelId() === props.panel.extensionId)}
         onKeyDown={(event: KeyboardEvent) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();

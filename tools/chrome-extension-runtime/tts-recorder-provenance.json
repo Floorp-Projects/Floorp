@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "scope": "helper-compile-and-OS-probe-only",
+  "nativeTtsQualified": false,
+  "preflight": {
+    "primaryRun": 39201247823,
+    "primaryCommit": "7bc8bff02c5dce32f788b939e7e96b898d38912d",
+    "windowsRun": 39201384214,
+    "windowsCommit": "774e0631e8f8892aef6f68f09f557055d7d64747",
+    "temporaryBranchesDeleted": true,
+    "sources": {
+      "test-browser-tts-waveform.py": "b6dfce3c0cd9380bbbefff03644b40e7ef68f6b0babfbad025aa894ddcd531e7",
+      "tts-waveform-analyzer.py": "149c571005549383c32fdbb167be9eac059ec5d50b737a60b95365547b714bad",
+      "tts-helper-linux-preflight.py": "bed42f76b003653be2eedcf1ae6e753e0d6773295326a3f1bb8ef8231a32c453",
+      "tts-windows-recorder.ps1": "bcd95bc73d22869b91489a116c1f757b1c0060512bf30cad1f474cf51546fc34",
+      "tts-macos-recorder.m": "886a08f8b4fd11df4d0e73a8734c27973b280bc41d5d16701c58a49130e5bdd7"
+    },
+    "platforms": {
+      "linux": {
+        "passed": true,
+        "nativeTtsQualified": false,
+        "artifactSha256": "72003451591321f7d38ac16999cdee9cbe382e90aee85b7d3c0b2e7ff5139e8d",
+        "reportSha256": "8ffac4847602f4e14c028a398f6082cb79cedd749523eb3deb818d21f17e3dc8",
+        "commands": [
+          {
+            "label": "python-syntax",
+            "exitCode": 0,
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "label": "wrapper-help",
+            "exitCode": 0,
+            "logSha256": "ff5e0818dd67e624c29cf8fb5c97852011b2d2712bf398cd16315ec4aa63988d"
+          },
+          {
+            "label": "analyzer-help",
+            "exitCode": 0,
+            "logSha256": "1b26e0a022fc646aa86e995ae2cc5a2447d030e127d1110494750e1700ff9d8f"
+          },
+          {
+            "label": "parec-version",
+            "exitCode": 0,
+            "logSha256": "8b25d9fede8ac42624766bcc44b3853533e994678ed93ff6e499f5cc0df470fc"
+          },
+          {
+            "label": "pulse-info",
+            "exitCode": 0,
+            "logSha256": "40f5b6648b1a5c0ab0b0b0081f1af8ab651f836cb890000b28b6423f6f689df8"
+          },
+          {
+            "label": "actual-pulse-baseline",
+            "exitCode": 0,
+            "logSha256": "ab311703c203359651c0c9d4a1ffd07926b90c56104a6661d162dc569dbbb64b"
+          }
+        ]
+      },
+      "mac": {
+        "passed": true,
+        "nativeTtsQualified": false,
+        "artifactSha256": "cf5e3fa821feb4388cc65ea78ca233c0dfa0ad69016f3ba027314755679ef7a8",
+        "reportSha256": "51869811d0deb08bb3bb72016195d2bb92ede73fe0567b34b0c942fa43dc1715",
+        "commands": [
+          {
+            "label": "python-syntax",
+            "exitCode": 0,
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "label": "wrapper-help",
+            "exitCode": 0,
+            "logSha256": "ff5e0818dd67e624c29cf8fb5c97852011b2d2712bf398cd16315ec4aa63988d"
+          },
+          {
+            "label": "analyzer-help",
+            "exitCode": 0,
+            "logSha256": "1b26e0a022fc646aa86e995ae2cc5a2447d030e127d1110494750e1700ff9d8f"
+          },
+          {
+            "label": "clang-version",
+            "exitCode": 0,
+            "logSha256": "6c263f4a0b378193483e8853193204a89db0eacf407199d789fb7e3125b8148b"
+          },
+          {
+            "label": "mac-clang",
+            "exitCode": 0,
+            "logSha256": "be1f9227d23c388fbe7be85f17c7e559bf2f369594d49b2db8f7bc80082eb738"
+          },
+          {
+            "label": "mac-endpoint-probe",
+            "exitCode": 0,
+            "logSha256": "379fca9e902377409455960252c454f8ce756c93c18ee8e50db303c9854491c2"
+          }
+        ]
+      },
+      "windows": {
+        "passed": true,
+        "nativeTtsQualified": false,
+        "artifactSha256": "ed0bea02798da13206c72965d58c21715854ffc9dc0c8564b6047de84a897d62",
+        "reportSha256": "e40c84ffb2169440390ec26ef7a8a044a665fed51aeb6e5c25622f65ed533f7e",
+        "commands": [
+          {
+            "label": "python-syntax",
+            "exitCode": 0,
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "label": "wrapper-help",
+            "exitCode": 0,
+            "logSha256": "09b9ab8831c7cd434b0836e4aa52150a4ef28b9a9192876666717f89e806fbbb"
+          },
+          {
+            "label": "analyzer-help",
+            "exitCode": 0,
+            "logSha256": "657c1c92fe8d2a3ba8053bdc366b69195d065486ce9e7adf8cbbaa0689ac1c07"
+          },
+          {
+            "label": "windows-add-type",
+            "exitCode": 0,
+            "logSha256": "7e65ff296b6d954d94b54786d7681c167a1cb9159e898eb8cfec376539dfa789"
+          },
+          {
+            "label": "windows-endpoint-probe",
+            "exitCode": 0,
+            "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ]
+      }
+    }
+  },
+  "maintainedSources": {
+    "test-browser-tts-waveform.py": {
+      "sha256": "f6bb53558ab32add73d88618c149ffcc52750cc033ceaaad3770dfa58ac56c6d",
+      "changesSincePreflight": [
+        "Portable checkout-relative repository default",
+        "Updated tool description"
+      ]
+    },
+    "tts-waveform-analyzer.py": {
+      "sha256": "3bab34403f5947e9aa85d91d524bc26d7cc657ccb8030888bf39caab3a04bc16",
+      "changesSincePreflight": [
+        "Bound metadata file/line and raw payload sizes before parsing",
+        "Reject boolean/nonfinite/overflowing numbers and invalid measurement intervals",
+        "Updated tool description"
+      ]
+    },
+    "tts-helper-linux-preflight.py": {
+      "sha256": "bed42f76b003653be2eedcf1ae6e753e0d6773295326a3f1bb8ef8231a32c453",
+      "changesSincePreflight": []
+    },
+    "tts-windows-recorder.ps1": {
+      "sha256": "af302d5d0349025b6ae4b67d2bd7c88027ddbe5a7af1779eeb1d4c9666d4698a",
+      "changesSincePreflight": [
+        "Leading provenance comment only"
+      ]
+    },
+    "tts-macos-recorder.m": {
+      "sha256": "f1f249341df13592cc8b0a5ba423ac7965a8c6f71fc4c4c5504e2f6e7ee7af2c",
+      "changesSincePreflight": [
+        "Leading SPDX/provenance comments only"
+      ]
+    }
+  },
+  "nativeExecutableSourceBodies": {
+    "tts-windows-recorder.ps1": {
+      "matchesPreflight": true,
+      "sha256": "fe0a55952f8ed869c9224e2157aed62cdda7e4cbfa59bc6ad8dd82924f3f38d8",
+      "startsAt": "[CmdletBinding()]"
+    },
+    "tts-macos-recorder.m": {
+      "matchesPreflight": true,
+      "sha256": "b48af08244b9fb6b56b2aa703670c654d7ccae8b620135c947ff9ac885499b1b",
+      "startsAt": "#import"
+    }
+  },
+  "limits": {
+    "maximumPcmBytes": 33554432,
+    "maximumRecordingSeconds": 300
+  },
+  "evidenceLimits": [
+    "Linux preflight recorded a quiet actual Pulse monitor, not browser TTS",
+    "macOS and Windows compiled and probed devices without capture or speech",
+    "Actual authenticated browser TTS waveform verification remains pending",
+    "Windows initial LF/CRLF byte-guard failure preceded compilation; follow-up used exact Git blob bytes"
+  ]
+}

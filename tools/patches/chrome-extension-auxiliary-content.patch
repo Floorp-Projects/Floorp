@@ -1,0 +1,2319 @@
+diff --git a/browser/chrome/browser/content/browser/parent/ext-browserAction.js b/browser/chrome/browser/content/browser/parent/ext-browserAction.js
+index 45ce82b3efb50bdf6252aae99a51b46723157ad6..53af74efb4facb1d4c0d2add8b2466959d63ae58 100644
+--- a/browser/chrome/browser/content/browser/parent/ext-browserAction.js
++++ b/browser/chrome/browser/content/browser/parent/ext-browserAction.js
+@@ -845,6 +845,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
+     attention = false,
+     quarantined = false
+   ) {
++    const tab = node.documentGlobal.gBrowser.selectedTab;
+     // This is the primary/action button in the custom widget.
+     let button = node.querySelector(".unified-extensions-item-action-button");
+     let extensionTitle = tabData.title || this.extension.name;
+@@ -896,7 +897,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
+         button.removeAttribute("badge");
+       }
+ 
+-      if (tabData.enabled) {
++      if (this.action.getProperty(tab, "enabled")) {
+         button.removeAttribute("disabled");
+       } else {
+         button.setAttribute("disabled", "true");
+@@ -912,7 +913,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
+         ].join("; ")
+       );
+ 
+-      let style = this.iconData.get(tabData.icon);
++      let style = this.iconData.get(this.action.getProperty(tab, "icon"));
+       button.setAttribute("style", style);
+ 
+       // Refresh the unified extensions panel item messagebar
+@@ -1097,7 +1098,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
+             !Services.prefs.getBoolPref(
+               "extensions.openPopupWithoutUserGesture.enabled"
+             ) &&
+-            !isHandlingUserInput
++            !isHandlingUserInput &&
++            !ExtensionUtils.getChromeExtensionId(extension)
+           ) {
+             throw new ExtensionError("openPopup requires a user gesture");
+           }
+diff --git a/browser/chrome/browser/content/browser/parent/ext-pageAction.js b/browser/chrome/browser/content/browser/parent/ext-pageAction.js
+index 72c1b3fd63d94648f6015b584a27a83e033a0658..14ef25e0d98c79b0279180c1fef84a1f8206fdd2 100644
+--- a/browser/chrome/browser/content/browser/parent/ext-pageAction.js
++++ b/browser/chrome/browser/content/browser/parent/ext-pageAction.js
+@@ -214,14 +214,14 @@ this.pageAction = class extends ExtensionAPIPersistent {
+         last.title = title;
+       }
+ 
+-      let enabled =
+-        tabData.enabled != null ? tabData.enabled : tabData.patternMatching;
++      let enabled = this.action.getProperty(tab, "enabled");
++      enabled = enabled != null ? enabled : tabData.patternMatching;
+       if (last.enabled !== enabled) {
+         this.browserPageAction.setDisabled(!enabled, window);
+         last.enabled = enabled;
+       }
+ 
+-      let icon = tabData.icon;
++      let icon = this.action.getProperty(tab, "icon");
+       if (last.icon !== icon) {
+         this.browserPageAction.setIconURL(icon, window);
+         last.icon = icon;
+diff --git a/chrome/toolkit/content/global/alerts/alert.js b/chrome/toolkit/content/global/alerts/alert.js
+index 9f2697f962a75f6507ce771ef94e1c84a212dedf..3381ef8760bd2f8f3541b0e9c99b9aa082d8b4a9 100644
+--- a/chrome/toolkit/content/global/alerts/alert.js
++++ b/chrome/toolkit/content/global/alerts/alert.js
+@@ -41,6 +41,20 @@ function prefillAlertInfo() {
+ 
+   switch (window.arguments.length) {
+     default:
++    case 13: {
++      const actions=window.arguments[12].QueryInterface(Ci.nsIArray);
++      const container=document.getElementById("alertActions");
++      for(let index=0;index<actions.length;index++) {
++        const action=actions.queryElementAt(index,Ci.nsIAlertAction);
++        const button=document.createXULElement("button");
++        button.setAttribute("label",action.title);
++        button.addEventListener("click",event=>event.stopPropagation());
++        button.addEventListener("command",()=>{gAlertCallbacks?.onAlertClick(action);window.close()});
++        container.appendChild(button);
++      }
++      container.hidden=!actions.length;
++    }
++    // fall through
+     case 12: {
+       if (window.arguments[11]) {
+         let alertBox = document.getElementById("alertBox");
+diff --git a/chrome/toolkit/content/global/alerts/alert.xhtml b/chrome/toolkit/content/global/alerts/alert.xhtml
+index 952b6f95e97c059a5bc3b733e9d17db5dd663cf6..3fceb94e3e61b2bcbc47f680ff063c7d8abdfd4a 100644
+--- a/chrome/toolkit/content/global/alerts/alert.xhtml
++++ b/chrome/toolkit/content/global/alerts/alert.xhtml
+@@ -37,6 +37,7 @@
+           id="alert-close"
+           data-l10n-id="alert-close"
+         />
++        <hbox id="alertActions" hidden="true"/>
+       </vbox>
+     </box>
+     <box>
+diff --git a/modules/ChromeDeclarativeContent.sys.mjs b/modules/ChromeDeclarativeContent.sys.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2485d00373ebd906088bbdf5a7499e29bcf05207
+--- /dev/null
++++ b/modules/ChromeDeclarativeContent.sys.mjs
+@@ -0,0 +1,581 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import { ExtensionDNR } from "resource://gre/modules/ExtensionDNR.sys.mjs";
++import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
++import { MatchURLFilters } from "resource://gre/modules/MatchURLFilters.sys.mjs";
++import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
++
++const { ExtensionError, getChromeExtensionId } = ExtensionUtils;
++const managers = new Set();
++const pendingWrites = new Map();
++let actorsRegistered = false;
++const ACTOR = "ChromeDeclarativeContent";
++Cu.importGlobalProperties(["DOMParser"]);
++const selectorDocument = new DOMParser().parseFromString(
++  "<!doctype html>",
++  "text/html",
++);
++const MAX_RULES = 1000;
++const URL_KEYS = new Set([
++  "schemes",
++  "ports",
++  "urlMatches",
++  "originAndPathMatches",
++]);
++for (const part of ["host", "path", "query", "url"]) {
++  for (const test of ["Contains", "Equals", "Prefix", "Suffix"]) {
++    URL_KEYS.add(part + test);
++  }
++}
++
++export function documentChanged(browsingContext) {
++  for (const manager of managers) {
++    manager.changed(browsingContext);
++  }
++}
++
++function allTabs() {
++  const tabs = [];
++  for (const win of Services.wm.getEnumerator("navigator:browser")) {
++    tabs.push(...(win.gBrowser?.tabs || []));
++  }
++  return tabs;
++}
++
++function ownKeys(value, allowed) {
++  if (!value || typeof value !== "object" || Array.isArray(value)) {
++    throw new ExtensionError("Expected a declarative condition/action object.");
++  }
++  for (const key of Object.keys(value)) {
++    if (!allowed.includes(key)) {
++      throw new ExtensionError(`Unexpected declarative property '${key}'.`);
++    }
++  }
++}
++
++function compileURL(filter, extension) {
++  if (!filter || typeof filter !== "object" || Array.isArray(filter)) {
++    throw new ExtensionError("pageUrl must be a URL filter object.");
++  }
++  const plain = {};
++  const regexes = [];
++  for (const [key, value] of Object.entries(filter)) {
++    if (!URL_KEYS.has(key)) {
++      throw new ExtensionError(`Unexpected URL filter property '${key}'.`);
++    }
++    if (key === "schemes") {
++      if (!Array.isArray(value) || value.some((v) => typeof v !== "string")) {
++        throw new ExtensionError("schemes must be an array of strings.");
++      }
++    } else if (key === "ports") {
++      const port = (n) => Number.isInteger(n) && n >= 0 && n <= 65535;
++      if (
++        !Array.isArray(value) || value.some((v) =>
++          !port(v) &&
++          !(Array.isArray(v) && v.length === 2 && v.every(port) && v[0] <= v[1])
++        )
++      ) {
++        throw new ExtensionError("Invalid URL filter port/range.");
++      }
++    } else if (typeof value !== "string") {
++      throw new ExtensionError(`${key} must be a string.`);
++    }
++    if (key === "urlMatches" || key === "originAndPathMatches") {
++      if (!("@floorp.app/extensions/chrome-dnr-regex;1" in Cc)) {
++        throw new ExtensionError(
++          "URL regular expressions require the native Chrome regex engine.",
++        );
++      }
++      const regex = ExtensionDNR.compileRegexFilter(value, true, extension);
++      regexes.push({ key, regex });
++    } else {
++      plain[key] = value;
++    }
++  }
++  const native = new MatchURLFilters([plain]);
++  return (url) =>
++    native.matches(url) && regexes.every(({ key, regex }) => {
++      const target = key === "urlMatches" ? url : (() => {
++        const uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
++        return uri.prePath + uri.filePath;
++      })();
++      return regex.test(target);
++    });
++}
++
++export class ChromeDeclarativeContent {
++  constructor(extension) {
++    this.extension = extension;
++    this.id = getChromeExtensionId(extension);
++    if (!this.id || !extension.hasPermission("declarativeContent")) {
++      throw new ExtensionError(
++        "declarativeContent requires a converted Chrome extension and permission.",
++      );
++    }
++    if (!actorsRegistered) {
++      ChromeUtils.registerWindowActor(ACTOR, {
++        allFrames: false,
++        safeForUntrustedWebProcess: true,
++        parent: {
++          esModuleURI:
++            "resource://gre/modules/ChromeDeclarativeContentParent.sys.mjs",
++        },
++        child: {
++          esModuleURI:
++            "resource://gre/modules/ChromeDeclarativeContentChild.sys.mjs",
++          events: { DOMContentLoaded: {}, pageshow: {} },
++        },
++        matches: ["http://*/*", "https://*/*", "file://*/*"],
++      });
++      actorsRegistered = true;
++    }
++    this.rules = new Map();
++    this.tabs = new Map();
++    this.epoch = 0;
++    this.closed = false;
++    this.path = PathUtils.join(
++      PathUtils.profileDir,
++      "extension-store",
++      "chrome-declarative-content",
++      this.id + ".json",
++    );
++    this.permissionChanged = () => {
++      this.epoch++;
++      if (!extension.hasPermission("declarativeContent")) {
++        this.clearEffects();
++      } else {
++        this.updateAll();
++      }
++    };
++    extension.on("add-permissions", this.permissionChanged);
++    extension.on("remove-permissions", this.permissionChanged);
++    this.bookmarksChanged = () => this.updateAll();
++    PlacesUtils.observers.addListener([
++      "bookmark-added",
++      "bookmark-removed",
++      "bookmark-url-changed",
++    ], this.bookmarksChanged);
++    managers.add(this);
++    this.ready = this.load();
++    this.serial = this.ready;
++  }
++  check() {
++    if (
++      this.closed || !this.extension.hasPermission("declarativeContent") ||
++      getChromeExtensionId(this.extension) !== this.id
++    ) {
++      throw new ExtensionError("declarativeContent is unavailable.");
++    }
++  }
++  async load() {
++    try {
++      const data = await IOUtils.readJSON(this.path);
++      if (
++        data.schemaVersion !== 1 || !Array.isArray(data.rules) ||
++        data.rules.length > MAX_RULES
++      ) {
++        throw new Error("Invalid declarativeContent persistence format");
++      }
++      for (const rule of data.rules) {
++        const compiled = this.validate(rule, new Set(this.rules.keys()));
++        this.rules.set(compiled.rule.id, compiled);
++      }
++    } catch (error) {
++      if (error.name !== "NotFoundError") {
++        console.error(
++          "[ChromeDeclarativeContent] Cannot load persisted rules",
++          error,
++        );
++        this.rules.clear();
++      }
++    }
++    if (!this.closed) {
++      this.updateAll();
++    }
++  }
++  action() {
++    if (this.closed || this.nativeAction) return this.nativeAction;
++    const manifest = this.extension.manifest;
++    if (!(manifest.page_action || manifest.action || manifest.browser_action)) {
++      return undefined;
++    }
++    const name = this.extension.manifest.page_action
++      ? "pageAction"
++      : "browserAction";
++    return this.nativeAction = this.extension.apiManager.getAPI(
++      name,
++      this.extension,
++    )?.action;
++  }
++  validate(rule, existing) {
++    ownKeys(rule, ["id", "priority", "conditions", "actions"]);
++    const id = rule.id ?? Services.uuid.generateUUID().toString().slice(1, -1);
++    if (typeof id !== "string" || !id.length || existing.has(id)) {
++      throw new ExtensionError("Duplicate or invalid declarative rule id.");
++    }
++    const priority = rule.priority ?? 100;
++    if (
++      !Number.isInteger(priority) || priority < 1 ||
++      !Array.isArray(rule.conditions) || !rule.conditions.length ||
++      !Array.isArray(rule.actions) || !rule.actions.length
++    ) {
++      throw new ExtensionError("Invalid declarative rule.");
++    }
++    const conditions = rule.conditions.map((condition) => {
++      ownKeys(condition, ["instanceType", "pageUrl", "css", "isBookmarked"]);
++      if (condition.instanceType !== "declarativeContent.PageStateMatcher") {
++        throw new ExtensionError("Expected PageStateMatcher.");
++      }
++      const css = condition.css ?? [];
++      if (!Array.isArray(css) || css.some((s) => typeof s !== "string")) {
++        throw new ExtensionError("css must be an array of selectors.");
++      }
++      for (const selector of css) {
++        try {
++          selectorDocument.querySelector(selector);
++        } catch {
++          throw new ExtensionError(`Invalid CSS selector '${selector}'.`);
++        }
++      }
++      if (
++        condition.isBookmarked !== undefined &&
++        typeof condition.isBookmarked !== "boolean"
++      ) {
++        throw new ExtensionError("isBookmarked must be a boolean.");
++      }
++      return {
++        css,
++        isBookmarked: condition.isBookmarked,
++        url: condition.pageUrl === undefined
++          ? () => true
++          : compileURL(condition.pageUrl, this.extension),
++      };
++    });
++    const actions = rule.actions.map((action) => {
++      if (
++        action.instanceType === "declarativeContent.ShowAction" ||
++        action.instanceType === "declarativeContent.ShowPageAction"
++      ) {
++        ownKeys(action, ["instanceType"]);
++        return { type: "show" };
++      }
++      if (action.instanceType === "declarativeContent.SetIcon") {
++        ownKeys(action, ["instanceType", "imageData"]);
++        const icons = action.imageData;
++        if (
++          !icons || !Object.keys(icons).length ||
++          Object.entries(icons).some(([size, data]) =>
++            !/^[1-9][0-9]*$/.test(size) || typeof data !== "string" ||
++            !data.startsWith("data:image/png;base64,")
++          )
++        ) {
++          throw new ExtensionError(
++            "SetIcon requires canonical native ImageData.",
++          );
++        }
++        return { type: "icon", icon: icons };
++      }
++      if (action.instanceType === "declarativeContent.RequestContentScript") {
++        ownKeys(action, [
++          "instanceType",
++          "js",
++          "css",
++          "allFrames",
++          "matchAboutBlank",
++        ]);
++        for (const key of ["js", "css"]) {
++          if (
++            action[key] &&
++            (!Array.isArray(action[key]) ||
++              action[key].some((path) =>
++                typeof path !== "string" ||
++                !this.extension.isExtensionURL(
++                  this.extension.baseURI.resolve(path),
++                )
++              ))
++          ) {
++            throw new ExtensionError(
++              "Content script files must belong to this extension.",
++            );
++          }
++        }
++        for (const key of ["allFrames", "matchAboutBlank"]) {
++          if (action[key] !== undefined && typeof action[key] !== "boolean") {
++            throw new ExtensionError(`${key} must be a boolean.`);
++          }
++        }
++        if (!(action.js?.length || action.css?.length)) {
++          throw new ExtensionError(
++            "RequestContentScript requires js or css files.",
++          );
++        }
++        return { type: "script", options: action };
++      }
++      throw new ExtensionError("Unsupported declarative action.");
++    });
++    return {
++      rule: { ...structuredClone(rule), id, priority },
++      conditions,
++      actions,
++    };
++  }
++  mutate(callback) {
++    const task = this.serial.catch(() => {}).then(async () => {
++      this.check();
++      const next = callback(new Map(this.rules));
++      await IOUtils.makeDirectory(PathUtils.parent(this.path), {
++        createAncestors: true,
++        permissions: 0o700,
++      });
++      await IOUtils.writeJSON(this.path, {
++        schemaVersion: 1,
++        rules: [...next.values()].map((v) => v.rule),
++      }, { tmpPath: this.path + ".tmp" });
++      this.check();
++      this.rules = next;
++      this.epoch++;
++      this.updateAll();
++      return next;
++    });
++    this.serial = task;
++    pendingWrites.set(this.extension.id, task);
++    task.catch(() => {}).finally(() => {
++      if (pendingWrites.get(this.extension.id) === task) {
++        pendingWrites.delete(this.extension.id);
++      }
++    });
++    return task;
++  }
++  async addRules(rules) {
++    let added;
++    await this.mutate((next) => {
++      if (next.size + rules.length > MAX_RULES) {
++        throw new ExtensionError("Too many declarative rules.");
++      }
++      const ids = new Set(next.keys());
++      added = rules.map((rule) => {
++        const value = this.validate(rule, ids);
++        ids.add(value.rule.id);
++        return value;
++      });
++      for (const value of added) {
++        next.set(value.rule.id, value);
++      }
++      return next;
++    });
++    return added.map((v) => structuredClone(v.rule));
++  }
++  async getRules(ids) {
++    await this.serial;
++    this.check();
++    return [...this.rules.values()].filter((v) =>
++      !ids || ids.includes(v.rule.id)
++    ).map((v) => structuredClone(v.rule));
++  }
++  async removeRules(ids) {
++    await this.mutate((next) => {
++      for (const id of ids ?? next.keys()) {
++        next.delete(id);
++      }
++      return next;
++    });
++  }
++  updateAll() {
++    for (const tab of allTabs()) {
++      this.changed(tab.linkedBrowser.browsingContext);
++    }
++  }
++  changed(bc) {
++    if (this.closed || !bc) {
++      return;
++    }
++    const tab = allTabs().find((t) => t.linkedBrowser.browsingContext === bc);
++    if (!tab) {
++      return;
++    }
++    let state = this.tabs.get(tab);
++    if (!state) {
++      state = { revision: 0, executed: new Set() };
++      this.tabs.set(tab, state);
++      tab.addEventListener("TabClose", () => this.tabs.delete(tab), {
++        once: true,
++      });
++    }
++    state.revision++;
++    if (state.running) {
++      return;
++    }
++    state.running = true;
++    (async () => {
++      try {
++        let revision;
++        do {
++          revision = state.revision;
++          await this.evaluate(tab, state, revision);
++        } while (!this.closed && revision !== state.revision);
++      } catch (error) {
++        if (!this.closed) {
++          console.error("[ChromeDeclarativeContent] Evaluation failed", error);
++        }
++      } finally {
++        state.running = false;
++      }
++    })();
++  }
++  clearTab(tab) {
++    const action = this.action();
++    action?.setProperty(tab, "floorpDeclarativeContentEnabled", null);
++    action?.setProperty(tab, "floorpDeclarativeContentIcon", null);
++  }
++  async evaluate(tab, state, revision) {
++    await this.ready;
++    if (this.closed) return;
++    const { extension } = this;
++    const win = tab.documentGlobal;
++    const browser = tab.linkedBrowser;
++    const wg = browser.browsingContext.currentWindowGlobal;
++    const uri = wg?.documentURI || browser.currentURI;
++    if (
++      !wg || !extension.hasPermission("declarativeContent") ||
++      !extension.canAccessWindow(win) ||
++      !["http", "https", "file"].includes(uri.scheme) ||
++      (uri.scheme === "file" && !extension.policy.fileSchemeAllowed) ||
++      WebExtensionPolicy.isRestrictedURI(uri) ||
++      WebExtensionPolicy.isQuarantinedURI(uri) ||
++      extension.policy.checkGuarded(uri)
++    ) {
++      this.clearTab(tab);
++      return;
++    }
++    const epoch = this.epoch;
++    const candidates = [...this.rules.values()].sort((a, b) =>
++      b.rule.priority - a.rule.priority
++    );
++    const conditions = candidates.flatMap((v) => v.conditions);
++    const actor = wg.getActor(ACTOR);
++    const result = await actor.sendQuery("Match", {
++      selectors: conditions.map((c) => c.css),
++    });
++    let bookmarked;
++    if (conditions.some((c) => c.isBookmarked !== undefined)) {
++      bookmarked = Boolean(
++        await PlacesUtils.bookmarks.fetch({ url: uri.spec }),
++      );
++    }
++    if (
++      this.closed || state.revision !== revision || this.epoch !== epoch ||
++      !extension.hasPermission("declarativeContent") ||
++      !extension.canAccessWindow(win) ||
++      WebExtensionPolicy.isRestrictedURI(uri) ||
++      WebExtensionPolicy.isQuarantinedURI(uri) ||
++      extension.policy.checkGuarded(uri) ||
++      browser.browsingContext.currentWindowGlobal !== wg ||
++      result.url !== uri.spec
++    ) {
++      return;
++    }
++    if (state.document !== wg.innerWindowId) {
++      state.document = wg.innerWindowId;
++      state.executed.clear();
++    }
++    let index = 0;
++    const matched = candidates.filter((rule) => {
++      let any = false;
++      for (const condition of rule.conditions) {
++        const css = result.results[index++];
++        any ||= css && condition.url(uri.spec) &&
++          (condition.isBookmarked === undefined ||
++            condition.isBookmarked === bookmarked);
++      }
++      return any;
++    });
++    const actions = matched.flatMap((r) => r.actions);
++    const nativeAction = this.action();
++    nativeAction?.setProperty(
++      tab,
++      "floorpDeclarativeContentEnabled",
++      actions.some((a) => a.type === "show") ? true : null,
++    );
++    nativeAction?.setProperty(
++      tab,
++      "floorpDeclarativeContentIcon",
++      actions.find((a) => a.type === "icon")?.icon ?? null,
++    );
++    for (const rule of matched) {
++      for (const [i, action] of rule.actions.entries()) {
++        if (
++          this.closed || this.epoch !== epoch || state.revision !== revision ||
++          !extension.hasPermission("declarativeContent") ||
++          browser.browsingContext.currentWindowGlobal !== wg
++        ) return;
++        const key = rule.rule.id + ":" + i;
++        if (action.type !== "script" || state.executed.has(key)) {
++          continue;
++        }
++        state.executed.add(key);
++        const wrapper = extension.tabManager.getWrapper(tab);
++        const options = action.options;
++        try {
++          await wrapper.queryContent("Execute", {
++            extensionId: extension.id,
++            jsExecuteScriptSources: (options.js ?? []).map((path) => ({
++              file: extension.baseURI.resolve(path),
++            })),
++            cssPaths: (options.css ?? []).map((path) =>
++              extension.baseURI.resolve(path)
++            ),
++            hasActiveTabPermission: wrapper.hasActiveTabPermission,
++            matches: extension.allowedOrigins.patterns.map((p) => p.pattern),
++            allFrames: options.allFrames ?? false,
++            matchAboutBlank: options.matchAboutBlank ?? false,
++            runAt: "document_idle",
++            world: "ISOLATED",
++            wantReturnValue: false,
++          });
++        } catch (error) {
++          console.error(
++            "[ChromeDeclarativeContent] Content script injection denied or failed",
++            error,
++          );
++        }
++      }
++    }
++  }
++  clearEffects() {
++    for (const tab of this.tabs.keys()) {
++      if (tab.isConnected) {
++        this.clearTab(tab);
++      }
++    }
++  }
++  close() {
++    this.closed = true;
++    managers.delete(this);
++    this.clearEffects();
++    this.tabs.clear();
++    this.extension.off("add-permissions", this.permissionChanged);
++    this.extension.off("remove-permissions", this.permissionChanged);
++    PlacesUtils.observers.removeListener([
++      "bookmark-added",
++      "bookmark-removed",
++      "bookmark-url-changed",
++    ], this.bookmarksChanged);
++  }
++}
++
++export async function uninstall(id) {
++  if (/^[a-p]{32}@chromium-extension$/.test(id)) {
++    await pendingWrites.get(id)?.catch(() => {});
++    await IOUtils.remove(
++      PathUtils.join(
++        PathUtils.profileDir,
++        "extension-store",
++        "chrome-declarative-content",
++        id.slice(0, 32) + ".json",
++      ),
++      { ignoreAbsent: true },
++    );
++  }
++}
+diff --git a/modules/ChromeDeclarativeContentChild.sys.mjs b/modules/ChromeDeclarativeContentChild.sys.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..e5b7e4237ec467670705842a58902e05d10319c1
+--- /dev/null
++++ b/modules/ChromeDeclarativeContentChild.sys.mjs
+@@ -0,0 +1,88 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++export class ChromeDeclarativeContentChild extends JSWindowActorChild {
++  handleEvent() {
++    if (this.destroyed) {
++      return;
++    }
++    if (!this.observer && this.document.documentElement) {
++      this.observer = new this.contentWindow.MutationObserver(() =>
++        this.changed()
++      );
++      this.progress = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
++        .getInterface(Ci.nsIWebProgress);
++      this.progressListener = {
++        QueryInterface: ChromeUtils.generateQI([
++          "nsIWebProgressListener",
++          "nsISupportsWeakReference",
++        ]),
++        onLocationChange: () => this.changed(),
++      };
++      this.progress.addProgressListener(
++        this.progressListener,
++        Ci.nsIWebProgress.NOTIFY_LOCATION,
++      );
++      this.observer.observe(this.document.documentElement, {
++        childList: true,
++        subtree: true,
++        attributes: true,
++        characterData: true,
++      });
++      this.listenerDocument = this.document;
++      for (const name of ["input", "change", "click", "focusin", "focusout"]) {
++        this.listenerDocument.addEventListener(name, this, { capture: true });
++      }
++    }
++    this.changed();
++  }
++  changed() {
++    if (this.destroyed || this.queued) {
++      return;
++    }
++    this.queued = true;
++    this.contentWindow.setTimeout(() => {
++      this.queued = false;
++      if (!this.destroyed) {
++        this.sendAsyncMessage("Changed");
++      }
++    }, 0);
++  }
++  receiveMessage({ name, data }) {
++    if (name === "Match") {
++      if (!this.observer) {
++        this.handleEvent();
++      }
++      return {
++        url: this.document.documentURI,
++        results: data.selectors.map((selectors) =>
++          selectors.every((selector) =>
++            Boolean(this.document.querySelector(selector))
++          )
++        ),
++      };
++    }
++    return undefined;
++  }
++  didDestroy() {
++    this.destroyed = true;
++    try {
++      this.progress?.removeProgressListener(this.progressListener);
++    } catch (error) {
++      // The docshell can remove the listener before actor teardown.
++      if (error?.result !== Cr.NS_ERROR_FAILURE) {
++        throw error;
++      }
++    } finally {
++      this.progressListener = null;
++      this.progress = null;
++      this.observer?.disconnect();
++      this.observer = null;
++      for (const name of ["input", "change", "click", "focusin", "focusout"]) {
++        this.listenerDocument?.removeEventListener(name, this, { capture: true });
++      }
++      this.listenerDocument = null;
++    }
++  }
++}
+diff --git a/modules/ChromeDeclarativeContentParent.sys.mjs b/modules/ChromeDeclarativeContentParent.sys.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..8091422660d467f6b7d8effa1ed810e5f2dc87ea
+--- /dev/null
++++ b/modules/ChromeDeclarativeContentParent.sys.mjs
+@@ -0,0 +1,13 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++import { documentChanged } from "resource://gre/modules/ChromeDeclarativeContent.sys.mjs";
++
++export class ChromeDeclarativeContentParent extends JSWindowActorParent {
++  receiveMessage({ name }) {
++    if (name === "Changed") {
++      documentChanged(this.browsingContext.top);
++    }
++  }
++}
+diff --git a/modules/ExtensionActions.sys.mjs b/modules/ExtensionActions.sys.mjs
+index 958b92ead57d5078687797994028db7d4230fb65..09c38a348011a369a67c37e07d3b8b350ecf5788 100644
+--- a/modules/ExtensionActions.sys.mjs
++++ b/modules/ExtensionActions.sys.mjs
+@@ -128,7 +128,16 @@ class PanelActionBase {
+    *          Value of prop.
+    */
+   getProperty(target, prop) {
+-    return this.getContextData(target)[prop];
++    const values = this.getContextData(target);
++    // Keep declarative state separate from imperative state, so removing a rule
++    // restores even imperative changes made while the rule was matching.
++    if (prop === "enabled" && values.floorpDeclarativeContentEnabled) {
++      return true;
++    }
++    if (prop === "icon" && values.floorpDeclarativeContentIcon) {
++      return values.floorpDeclarativeContentIcon;
++    }
++    return values[prop];
+   }
+ 
+   getPropertyFromDetails(details, prop) {
+@@ -485,8 +494,9 @@ export class PageActionBase extends PanelActionBase {
+     let tabData = this.getContextData(tab);
+ 
+     // If there is a "show" value, return it. Can be due to show(), hide() or empty show_matches.
+-    if (tabData.enabled !== undefined) {
+-      return tabData.enabled;
++    const enabled = this.getProperty(tab, "enabled");
++    if (enabled !== undefined) {
++      return enabled;
+     }
+ 
+     // Otherwise pattern matching must have been configured. Do it, caching the result.
+@@ -695,7 +705,7 @@ export class BrowserActionBase extends PanelActionBase {
+         if (typeof details == "number") {
+           details = { tabId: details };
+         }
+-        return this.getPropertyFromDetails(details ?? {}, "enabled");
++        return this.getContextData(this.getTargetFromDetails(details ?? {})).enabled;
+       },
+       setBadgeText: details => {
+         this.setPropertyFromDetails(details, "badgeText", details.text);
+diff --git a/modules/ExtensionChild.sys.mjs b/modules/ExtensionChild.sys.mjs
+index f0c8b871036e946f840c234b7aa9589efe28ba55..c0052037bec1aafeb388e421a895f088cda4ea32 100644
+--- a/modules/ExtensionChild.sys.mjs
++++ b/modules/ExtensionChild.sys.mjs
+@@ -1009,6 +1009,19 @@ export class ChildAPIManager {
+       return false;
+     }
+ 
++    if ((namespace === "declarativeContent" ||
++         (!namespace && name === "declarativeContent")) &&
++        !ExtensionUtils.getChromeExtensionId(this.context.extension)) {
++      return false;
++    }
++    const chromeCompatible=ExtensionUtils.getChromeExtensionId(this.context.extension);
++    const apiPath=namespace ? `${namespace}.${name}` : name;
++    if (!chromeCompatible && (
++      (apiPath === "storage.session" && this.context.envType === "content_child") ||
++      apiPath.endsWith(".setAccessLevel") && namespace.startsWith("storage.") ||
++      namespace === "notifications" && ["update","getPermissionLevel","onPermissionLevelChanged"].includes(name)
++    )) return false;
++
+     // Do not generate devtools APIs, unless explicitly allowed.
+     if (
+       this.context.envType === "devtools_child" &&
+diff --git a/modules/Schemas.sys.mjs b/modules/Schemas.sys.mjs
+index 093b045bd3b407f7fc88d6b1d68cc07c9090592b..9dabeb636371ea840209556c9bc355240563fc10 100644
+--- a/modules/Schemas.sys.mjs
++++ b/modules/Schemas.sys.mjs
+@@ -3008,6 +3008,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
+         "permissions",
+         "allowAmbiguousOptionalArguments",
+         "allowCrossOriginArguments",
++        "constructible",
+       ]),
+       schema.unsupported || false,
+       schema.allowAmbiguousOptionalArguments || false,
+@@ -3029,6 +3030,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
+     permissions
+   ) {
+     super(schema, path, name, type.parameters, allowAmbiguousOptionalArguments);
++    this.constructible = schema.constructible === true;
+     this.unsupported = unsupported;
+     this.returns = returns;
+     this.permissions = permissions;
+@@ -3124,12 +3126,33 @@ FunctionEntry = class FunctionEntry extends CallEntry {
+       };
+     }
+ 
++    // Declarative condition/action records are genuine JavaScript constructors.
++    // Cu.exportFunction preserves constructibility only for a normal function.
++    let prototype;
++    if (this.constructible) {
++      const call = stub;
++      const plainRecord = this.name === "SetIcon";
++      prototype = Cu.createObjectIn(context.cloneScope);
++      stub = function (...args) {
++        if (!new.target) {
++          throw new context.cloneScope.TypeError("Invalid invocation: use new.");
++        }
++        const result = call(...args);
++        if (!plainRecord) {
++          Object.setPrototypeOf(Cu.waiveXrays(result), Cu.waiveXrays(prototype));
++        }
++        return result;
++      };
++    }
++    const exported = Cu.exportFunction(stub, context.cloneScope, {
++      allowCrossOriginArguments: this.allowCrossOriginArguments,
++    });
++    if (this.constructible) {
++      Object.defineProperty(Cu.waiveXrays(exported), "prototype", { value: Cu.waiveXrays(prototype) });
++      Object.defineProperty(Cu.waiveXrays(prototype), "constructor", { value: Cu.waiveXrays(exported) });
++    }
+     return {
+-      descriptor: {
+-        value: Cu.exportFunction(stub, context.cloneScope, {
+-          allowCrossOriginArguments: this.allowCrossOriginArguments,
+-        }),
+-      },
++      descriptor: { value: exported },
+       revoke() {
+         apiImpl.revoke();
+         apiImpl = null;
+diff --git a/chrome/toolkit/content/extensions/child/ext-declarative-content.js b/chrome/toolkit/content/extensions/child/ext-declarative-content.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..ed374ab11f31384977ba04f4a81201ea09226515
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/child/ext-declarative-content.js
+@@ -0,0 +1,126 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++this.declarativeContent = class extends ExtensionAPI {
++  getAPI(context) {
++    if (!ExtensionUtils.getChromeExtensionId(context.extension)) {
++      return {};
++    }
++    const record = (kind, options = {}) =>
++      Cu.cloneInto({
++        ...options,
++        instanceType: `declarativeContent.${kind}`,
++      }, context.cloneScope);
++    const requireKeys = (options, allowed) => {
++      for (const key of Object.keys(options)) {
++        if (!allowed.includes(key)) {
++          throw new context.cloneScope.TypeError(
++            `Unexpected property '${key}'.`,
++          );
++        }
++      }
++    };
++    return {
++      declarativeContent: {
++        PageStateMatcher: function (options = {}) {
++          requireKeys(options, ["pageUrl", "css", "isBookmarked"]);
++          if (
++            options.css &&
++            (!Array.isArray(options.css) ||
++              options.css.some((s) => typeof s !== "string"))
++          ) {
++            throw new context.cloneScope.TypeError(
++              "css must be an array of selectors.",
++            );
++          }
++          if (
++            options.isBookmarked !== undefined &&
++            typeof options.isBookmarked !== "boolean"
++          ) {
++            throw new context.cloneScope.TypeError(
++              "isBookmarked must be a boolean.",
++            );
++          }
++          return record("PageStateMatcher", options);
++        },
++        ShowAction: function (options = {}) {
++          requireKeys(options, []);
++          return record("ShowAction");
++        },
++        ShowPageAction: function (options = {}) {
++          requireKeys(options, []);
++          return record("ShowAction");
++        },
++        RequestContentScript: function (options = {}) {
++          requireKeys(options, ["js", "css", "allFrames", "matchAboutBlank"]);
++          for (const key of ["js", "css"]) {
++            if (
++              options[key] &&
++              (!Array.isArray(options[key]) ||
++                options[key].some((s) => typeof s !== "string"))
++            ) {
++              throw new context.cloneScope.TypeError(
++                `${key} must be an array of paths.`,
++              );
++            }
++          }
++          if (!(options.js?.length || options.css?.length)) {
++            throw new context.cloneScope.TypeError(
++              "At least one js or css file is required.",
++            );
++          }
++          for (const key of ["allFrames", "matchAboutBlank"]) {
++            if (
++              options[key] !== undefined && typeof options[key] !== "boolean"
++            ) {
++              throw new context.cloneScope.TypeError(
++                `${key} must be a boolean.`,
++              );
++            }
++          }
++          return record("RequestContentScript", options);
++        },
++        SetIcon: function (options = {}) {
++          requireKeys(options, ["imageData"]);
++          if (!options.imageData) {
++            throw new context.cloneScope.TypeError("imageData is required.");
++          }
++          const image = options.imageData;
++          const images = ChromeUtils.getClassName(image) === "ImageData"
++            ? { [image.width]: image }
++            : image;
++          const urls = {};
++          for (const [size, data] of Object.entries(images)) {
++            if (
++              !/^[1-9][0-9]*$/.test(size) ||
++              ChromeUtils.getClassName(data) !== "ImageData"
++            ) {
++              throw new context.cloneScope.TypeError(
++                "Expected ImageData or a size-to-ImageData dictionary.",
++              );
++            }
++            // The native canvas encoder validates actual pixels. No extension
++            // path or arbitrary URL is substituted for an ImageData record.
++            const canvas = context.cloneScope.document.createElementNS(
++              "http://www.w3.org/1999/xhtml",
++              "canvas",
++            );
++            canvas.width = data.width;
++            canvas.height = data.height;
++            canvas.getContext("2d").putImageData(data, 0, 0);
++            urls[size] = canvas.toDataURL("image/png");
++          }
++          if (!Object.keys(urls).length) {
++            throw new context.cloneScope.TypeError(
++              "imageData must not be empty.",
++            );
++          }
++          return record("SetIcon", { imageData: urls });
++        },
++      },
++    };
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/child/ext-storage.js b/chrome/toolkit/content/extensions/child/ext-storage.js
+index 5a9fb629576df27f40befee1038068060ecbcaa1..141d8b77d436da781b030b716a539f54c4a0fcc2 100644
+--- a/chrome/toolkit/content/extensions/child/ext-storage.js
++++ b/chrome/toolkit/content/extensions/child/ext-storage.js
+@@ -37,31 +37,31 @@ this.storage = class extends ExtensionAPI {
+       getKeys() {
+         return context.childManager.callParentAsyncFunction(
+           "storage.local.JSONFileBackend.getKeys",
+-          []
++          [],
+         );
+       },
+       getBytesInUse(keys) {
+         return context.childManager.callParentAsyncFunction(
+           "storage.local.JSONFileBackend.getBytesInUse",
+-          [serialize(keys)]
++          [serialize(keys)],
+         );
+       },
+       set(items) {
+         return context.childManager.callParentAsyncFunction(
+           "storage.local.JSONFileBackend.set",
+-          [serialize(items)]
++          [serialize(items)],
+         );
+       },
+       remove(keys) {
+         return context.childManager.callParentAsyncFunction(
+           "storage.local.JSONFileBackend.remove",
+-          [serialize(keys)]
++          [serialize(keys)],
+         );
+       },
+       clear() {
+         return context.childManager.callParentAsyncFunction(
+           "storage.local.JSONFileBackend.clear",
+-          []
++          [],
+         );
+       },
+     };
+@@ -76,12 +76,12 @@ this.storage = class extends ExtensionAPI {
+ 
+       const persisted = context.extension.hasPermission("unlimitedStorage");
+       dbPromise = ExtensionStorageIDB.open(storagePrincipal, persisted).catch(
+-        err => {
++        (err) => {
+           // Reset the cached promise if it has been rejected, so that the next
+           // API call is going to retry to open the DB.
+           dbPromise = null;
+           throw err;
+-        }
++        },
+       );
+ 
+       return dbPromise;
+@@ -95,7 +95,7 @@ this.storage = class extends ExtensionAPI {
+           async () => {
+             const db = await getDB();
+             return db.get(keys);
+-          }
++          },
+         );
+       },
+       async getKeys() {
+@@ -111,7 +111,7 @@ this.storage = class extends ExtensionAPI {
+           return ExtensionStorage.serialize(
+             `set/${context.extension.id}/${name}`,
+             `set/${context.extension.id}/${anonymizedName}`,
+-            value
++            value,
+           );
+         }
+ 
+@@ -127,7 +127,7 @@ this.storage = class extends ExtensionAPI {
+             if (changes) {
+               fireOnChanged(changes);
+             }
+-          }
++          },
+         );
+       },
+       async remove(keys) {
+@@ -154,7 +154,7 @@ this.storage = class extends ExtensionAPI {
+     const serialize = ExtensionStorage.serializeForContext.bind(null, context);
+     const deserialize = ExtensionStorage.deserializeForContext.bind(
+       null,
+-      context
++      context,
+     );
+ 
+     // onChangedName is "storage.onChanged", "storage.sync.onChanged", etc.
+@@ -164,7 +164,7 @@ this.storage = class extends ExtensionAPI {
+         name: onChangedName,
+         // Parent event already resets idle if needed, no need to do it here.
+         resetIdleOnEvent: false,
+-        register: fire => {
++        register: (fire) => {
+           let onChanged = (data, area) => {
+             let changes = new context.cloneScope.Object();
+             for (let [key, value] of Object.entries(data)) {
+@@ -215,7 +215,7 @@ this.storage = class extends ExtensionAPI {
+       // abstractions (e.g. callParentAsyncFunction or callParentFunctionNoReturn).
+       Services.cpmm.sendAsyncMessage(
+         `Extension:StorageLocalOnChanged:${extension.uuid}`,
+-        changes
++        changes,
+       );
+     }
+ 
+@@ -223,8 +223,8 @@ this.storage = class extends ExtensionAPI {
+     // by asking to the main process (as soon as the storage.local API has been accessed for
+     // the first time).
+     const getStorageLocalBackend = async () => {
+-      const { backendEnabled, storagePrincipal } =
+-        await ExtensionStorageIDB.selectBackend(context);
++      const { backendEnabled, storagePrincipal } = await ExtensionStorageIDB
++        .selectBackend(context);
+ 
+       if (!backendEnabled) {
+         return this.getLocalFileBackend(context, { deserialize, serialize });
+@@ -260,25 +260,27 @@ this.storage = class extends ExtensionAPI {
+     const local = {
+       onChanged: makeOnChangedEventTarget("storage.local.onChanged"),
+     };
+-    for (let method of [
+-      "get",
+-      "getKeys",
+-      "getBytesInUse",
+-      "set",
+-      "remove",
+-      "clear",
+-    ]) {
++    for (
++      let method of [
++        "get",
++        "getKeys",
++        "getBytesInUse",
++        "set",
++        "remove",
++        "clear",
++      ]
++    ) {
+       local[method] = async function (...args) {
+         try {
+           // Discover the selected backend if it is not known yet.
+           if (!selectedBackend) {
+             if (!promiseStorageLocalBackend) {
+               promiseStorageLocalBackend = getStorageLocalBackend().catch(
+-                err => {
++                (err) => {
+                   // Clear the cached promise if it has been rejected.
+                   promiseStorageLocalBackend = null;
+                   throw err;
+-                }
++                },
+               );
+             }
+ 
+@@ -292,10 +294,10 @@ this.storage = class extends ExtensionAPI {
+             ) {
+               // Let the outer try to catch rejections returned by the backend methods.
+               try {
+-                const result =
+-                  await context.childManager.callParentAsyncFunction(
++                const result = await context.childManager
++                  .callParentAsyncFunction(
+                     "storage.local.callMethodInParentProcess",
+-                    [method, args]
++                    [method, args],
+                   );
+                 return result;
+               } catch (err) {
+@@ -323,7 +325,7 @@ this.storage = class extends ExtensionAPI {
+       };
+     }
+ 
+-    return {
++    const api = {
+       storage: {
+         local,
+ 
+@@ -332,14 +334,14 @@ this.storage = class extends ExtensionAPI {
+             return deserialize(
+               await context.childManager.callParentAsyncFunction(
+                 "storage.session.get",
+-                [serialize(keys)]
+-              )
++                [serialize(keys)],
++              ),
+             );
+           },
+           set(items) {
+             return context.childManager.callParentAsyncFunction(
+               "storage.session.set",
+-              [serialize(items)]
++              [serialize(items)],
+             );
+           },
+           onChanged: makeOnChangedEventTarget("storage.session.onChanged"),
+@@ -350,14 +352,14 @@ this.storage = class extends ExtensionAPI {
+             keys = sanitize(keys);
+             return context.childManager.callParentAsyncFunction(
+               "storage.sync.get",
+-              [keys]
++              [keys],
+             );
+           },
+           set(items) {
+             items = sanitize(items);
+             return context.childManager.callParentAsyncFunction(
+               "storage.sync.set",
+-              [items]
++              [items],
+             );
+           },
+           onChanged: makeOnChangedEventTarget("storage.sync.onChanged"),
+@@ -385,5 +387,38 @@ this.storage = class extends ExtensionAPI {
+         onChanged: makeOnChangedEventTarget("storage.onChanged"),
+       },
+     };
++    if (ExtensionUtils.getChromeExtensionId(context.extension)) {
++      for (const name of ["local", "session", "sync", "managed"]) {
++        const area = api.storage[name];
++        area.setAccessLevel = (details) =>
++          context.childManager.callParentAsyncFunction(
++            `storage.${name}.setAccessLevel`,
++            [details],
++          );
++        if (name === "session") continue; // Every session operation already reaches the parent.
++        for (
++          const key of [
++            "get",
++            "getKeys",
++            "getBytesInUse",
++            "set",
++            "remove",
++            "clear",
++          ]
++        ) {
++          const original = area[key];
++          if (typeof original === "function") {
++            area[key] = async (...args) => {
++              await context.childManager.callParentAsyncFunction(
++                `storage.${name}.checkAccess`,
++                [],
++              );
++              return original.apply(area, args);
++            };
++          }
++        }
++      }
++    }
++    return api;
+   }
+ };
+diff --git a/chrome/toolkit/content/extensions/child/ext-toolkit.js b/chrome/toolkit/content/extensions/child/ext-toolkit.js
+index 2d8f4344d0df8a06b40117fa26a2f48c7a66c3e3..2af2784e75edc913e8db9794e3a18dc4ac9b3598 100644
+--- a/chrome/toolkit/content/extensions/child/ext-toolkit.js
++++ b/chrome/toolkit/content/extensions/child/ext-toolkit.js
+@@ -21,6 +21,11 @@ extensions.registerModules({
+     scopes: ["addon_child"],
+     paths: [["contentScripts"]],
+   },
++  declarativeContent: {
++    url: "chrome://extensions/content/child/ext-declarative-content.js",
++    scopes: ["addon_child"],
++    paths: [["declarativeContent"]],
++  },
+   declarativeNetRequest: {
+     url: "chrome://extensions/content/child/ext-declarativeNetRequest.js",
+     scopes: ["addon_child"],
+diff --git a/chrome/toolkit/content/extensions/ext-toolkit.json b/chrome/toolkit/content/extensions/ext-toolkit.json
+index 38a435e567f6599e9be923b98334677535b06a2f..85698ff5eff6e1c494c3ad586456b0bc066a88a3 100644
+--- a/chrome/toolkit/content/extensions/ext-toolkit.json
++++ b/chrome/toolkit/content/extensions/ext-toolkit.json
+@@ -39,6 +39,13 @@
+     "scopes": ["addon_parent"],
+     "paths": [["cookies"]]
+   },
++  "declarativeContent": {
++    "url": "chrome://extensions/content/parent/ext-declarative-content.js",
++    "schema": "chrome://extensions/content/schemas/declarative_content.json",
++    "scopes": ["addon_parent"],
++    "events": ["startup", "uninstall"],
++    "paths": [["declarativeContent"]]
++  },
+   "declarativeNetRequest": {
+     "url": "chrome://extensions/content/parent/ext-declarativeNetRequest.js",
+     "schema": "chrome://extensions/content/schemas/declarative_net_request.json",
+diff --git a/chrome/toolkit/content/extensions/parent/ext-declarative-content.js b/chrome/toolkit/content/extensions/parent/ext-declarative-content.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1b5de574e4a89dc169966722d3f4e5219ba2f06
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/parent/ext-declarative-content.js
+@@ -0,0 +1,45 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++"use strict";
++
++ChromeUtils.defineESModuleGetters(this, {
++  ChromeDeclarativeContent:
++    "resource://gre/modules/ChromeDeclarativeContent.sys.mjs",
++});
++
++this.declarativeContent = class extends ExtensionAPI {
++  onStartup() {
++    if (
++      ExtensionUtils.getChromeExtensionId(this.extension) &&
++      this.extension.hasPermission("declarativeContent")
++    ) {
++      this.manager ??= new ChromeDeclarativeContent(this.extension);
++    }
++  }
++  onShutdown() {
++    this.manager?.close();
++  }
++  static async onUninstall(id) {
++    const { uninstall } = ChromeUtils.importESModule(
++      "resource://gre/modules/ChromeDeclarativeContent.sys.mjs",
++    );
++    await uninstall(id);
++  }
++  getAPI() {
++    if (!ExtensionUtils.getChromeExtensionId(this.extension)) {
++      return {};
++    }
++    this.onStartup();
++    return {
++      declarativeContent: {
++        onPageChanged: {
++          addRules: (rules) => this.manager.addRules(rules),
++          getRules: (ids) => this.manager.getRules(ids),
++          removeRules: (ids) => this.manager.removeRules(ids),
++        },
++      },
++    };
++  }
++};
+diff --git a/chrome/toolkit/content/extensions/parent/ext-notifications.js b/chrome/toolkit/content/extensions/parent/ext-notifications.js
+index 78e5e28..cd71265 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-notifications.js
++++ b/chrome/toolkit/content/extensions/parent/ext-notifications.js
+@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(ToolkitModules, {
+ const AlertNotification = Components.Constructor(
+   "@mozilla.org/alert-notification;1",
+   "nsIAlertNotification",
+-  "initWithObject"
++  "initWithObject",
+ );
+ 
+ var { ignoreEvent } = ExtensionCommon;
+@@ -24,6 +24,13 @@ function Notification(context, notificationsMap, id, options) {
+   this.notificationsMap = notificationsMap;
+   this.id = id;
+   this.options = options;
++  this.chromeCompatible = !!ExtensionUtils.getChromeExtensionId(
++    context.extension,
++  );
++  this.nativeName = this.chromeCompatible
++    ? `floorp-chrome:${context.extension.id}:${id}`
++    : id;
++  this.programmaticClose = false;
+ 
+   // Set before calling into nsIAlertsService, because the notification may be
+   // closed during the call.
+@@ -33,12 +40,14 @@ function Notification(context, notificationsMap, id, options) {
+ }
+ 
+ Notification.prototype = {
++  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsIAlertCallbacks"]),
+   clear() {
++    this.programmaticClose = true;
+     try {
+       let svc = Cc["@mozilla.org/alerts-service;1"].getService(
+-        Ci.nsIAlertsService
++        Ci.nsIAlertsService,
+       );
+-      svc.closeAlert(this.id);
++      svc.closeAlert(this.nativeName);
+     } catch (e) {
+       // This will fail if the OS doesn't support this function.
+     }
+@@ -70,14 +79,17 @@ Notification.prototype = {
+     }
+ 
+     // Return if the notification was explicitly closed while waiting for the image.
+-    if (!this.notificationsMap.has(this.id)) {
++    if (
++      !this.notificationsMap.has(this.id) ||
++      this.chromeCompatible && this.notificationsMap.get(this.id) !== this
++    ) {
+       this.observe(null, "alertfinished");
+       return;
+     }
+ 
+     try {
+       let svc = Cc["@mozilla.org/alerts-service;1"].getService(
+-        Ci.nsIAlertsService
++        Ci.nsIAlertsService,
+       );
+       // Principal is not set because doing so reveals buttons to control
+       // notification preferences, which are currently not implemented for
+@@ -89,25 +101,70 @@ Notification.prototype = {
+         image,
+         title: this.options.title,
+         text: this.options.message,
+-        textClickable: true,
+-        name: this.id,
++        textClickable: this.chromeCompatible
++          ? this.options.isClickable !== false
++          : true,
++        name: this.nativeName,
++        requireInteraction: this.chromeCompatible &&
++          !!this.options.requireInteraction,
++        silent: this.chromeCompatible && !!this.options.silent,
+         inPrivateBrowsing: context.incognito,
+       });
+-      svc.showAlert(alert, this);
++      if (this.chromeCompatible) {
++        alert.actions = (this.options.buttons || []).map((button, index) => ({
++          QueryInterface: ChromeUtils.generateQI(["nsIAlertAction"]),
++          action: `floorp-chrome-button:${index}`,
++          title: button.title,
++          iconURL: button.iconUrl
++            ? context.extension.baseURI.resolve(button.iconUrl)
++            : "",
++          navigate: null,
++          windowsSystemActivationType: false,
++          opaqueRelaunchData: "",
++        }));
++        svc.showAlertWithCallbacks(alert, this);
++      } else svc.showAlert(alert, this);
+     } catch (e) {
+       // This will fail if alerts aren't available on the system.
+       this.observe(null, "alertfinished");
+     }
+   },
+ 
++  onAlertShow() {
++    this.observe(null, "alertshow");
++  },
++  onAlertClick(action) {
++    if (action?.action?.startsWith("floorp-chrome-button:")) {
++      this.notificationsMap.emit(
++        "buttonClicked",
++        this.id,
++        Number(action.action.split(":").pop()),
++      );
++    } else this.observe(null, "alertclickcallback");
++  },
++  onAlertDismissedFromForeground() {},
++  onAlertClosed() {},
++  onAlertFinished() {
++    this.observe(null, "alertfinished");
++  },
++  onAlertSettings() {},
++  onAlertDisable() {},
+   observe(subject, topic) {
+     switch (topic) {
+       case "alertclickcallback":
+         this.notificationsMap.emit("clicked", this.id);
+         break;
+       case "alertfinished":
+-        this.notificationsMap.emit("closed", this.id);
+-        this.notificationsMap.delete(this.id);
++        if (
++          !this.chromeCompatible || this.notificationsMap.get(this.id) === this
++        ) {
++          this.notificationsMap.emit(
++            "closed",
++            this.id,
++            this.chromeCompatible ? !this.programmaticClose : true,
++          );
++          this.notificationsMap.delete(this.id);
++        }
+         break;
+       case "alertshow":
+         this.notificationsMap.emit("shown", this.id);
+@@ -132,10 +189,41 @@ this.notifications = class extends ExtensionAPIPersistent {
+   }
+ 
+   PERSISTENT_EVENTS = {
++    onButtonClicked({ fire }) {
++      const listener = (_event, id, index) => fire.async(id, index);
++      this.notificationsMap.on("buttonClicked", listener);
++      return {
++        unregister: () => this.notificationsMap.off("buttonClicked", listener),
++        convert: (value) => {
++          fire = value;
++        },
++      };
++    },
++    onPermissionLevelChanged({ fire }) {
++      const listener = (_event, permissions) => {
++        if (permissions.permissions.includes("notifications")) {
++          fire.async(
++            this.extension.hasPermission("notifications")
++              ? "granted"
++              : "denied",
++          );
++        }
++      };
++      this.extension.on("add-permissions", listener);
++      this.extension.on("remove-permissions", listener);
++      return {
++        unregister: () => {
++          this.extension.off("add-permissions", listener);
++          this.extension.off("remove-permissions", listener);
++        },
++        convert: (value) => {
++          fire = value;
++        },
++      };
++    },
+     onClosed({ fire }) {
+-      let listener = (event, notificationId) => {
+-        // TODO Bug 1413188, Support the byUser argument.
+-        fire.async(notificationId, true);
++      let listener = (event, notificationId, byUser = true) => {
++        fire.async(notificationId, byUser);
+       };
+ 
+       this.notificationsMap.on("closed", listener);
+@@ -182,10 +270,34 @@ this.notifications = class extends ExtensionAPIPersistent {
+ 
+   getAPI(context) {
+     let notificationsMap = this.notificationsMap;
++    const chromeCompatible = !!ExtensionUtils.getChromeExtensionId(
++      this.extension,
++    );
+ 
+-    return {
++    const api = {
+       notifications: {
++        update: async (id, changes) => {
++          const old = notificationsMap.get(id);
++          if (!old) return false;
++          // Omitted schema properties normalize to null; preserve existing values.
++          const updates = Object.fromEntries(
++            Object.entries(changes).filter(([, value]) => value != null),
++          );
++          const options = { ...old.options, ...updates };
++          new Notification(context, notificationsMap, id, options);
++          return true;
++        },
++        getPermissionLevel: async () =>
++          this.extension.hasPermission("notifications") ? "granted" : "denied",
++        onPermissionLevelChanged: new EventManager({
++          context,
++          module: "notifications",
++          event: "onPermissionLevelChanged",
++          extensionApi: this,
++        }).api(),
+         create: (notificationId, options) => {
++          if (!chromeCompatible && options.buttons != null)
++            throw new ExtensionUtils.ExtensionError("Property buttons is unsupported by Firefox");
+           if (!notificationId) {
+             notificationId = String(this.nextId++);
+           }
+@@ -210,7 +322,7 @@ this.notifications = class extends ExtensionAPIPersistent {
+         getAll: function () {
+           let result = {};
+           notificationsMap.forEach((value, key) => {
+-            result[key] = value.options;
++            result[key] = chromeCompatible ? true : value.options;
+           });
+           return Promise.resolve(result);
+         },
+@@ -237,8 +349,21 @@ this.notifications = class extends ExtensionAPIPersistent {
+         }).api(),
+ 
+         // TODO Bug 1190681, implement button support.
+-        onButtonClicked: ignoreEvent(context, "notifications.onButtonClicked"),
++        onButtonClicked: chromeCompatible
++          ? new EventManager({
++            context,
++            module: "notifications",
++            event: "onButtonClicked",
++            extensionApi: this,
++          }).api()
++          : ignoreEvent(context, "notifications.onButtonClicked"),
+       },
+     };
++    if (!chromeCompatible) {
++      delete api.notifications.update;
++      delete api.notifications.getPermissionLevel;
++      delete api.notifications.onPermissionLevelChanged;
++    }
++    return api;
+   }
+ };
+diff --git a/chrome/toolkit/content/extensions/parent/ext-storage.js b/chrome/toolkit/content/extensions/parent/ext-storage.js
+index 0d6109c25019c950394d3c8ca774c9109a8a1f3e..d8cab67a09728cb60b3a15de2b6dd8dc30a1338c 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-storage.js
++++ b/chrome/toolkit/content/extensions/parent/ext-storage.js
+@@ -19,13 +19,13 @@
+   // TODO bug 1637465: Remove Kinto-based implementation.
+   if (Services.prefs.getBoolPref("webextensions.storage.sync.kinto")) {
+     const { extensionStorageSyncKinto } = ChromeUtils.importESModule(
+-      "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs"
++      "resource://gre/modules/ExtensionStorageSyncKinto.sys.mjs",
+     );
+     return extensionStorageSyncKinto;
+   }
+ 
+   const { extensionStorageSync } = ChromeUtils.importESModule(
+-    "resource://gre/modules/ExtensionStorageSync.sys.mjs"
++    "resource://gre/modules/ExtensionStorageSync.sys.mjs",
+   );
+   return extensionStorageSync;
+ });
+@@ -34,10 +34,10 @@
+   this,
+   "prefStorageSyncEnabled",
+   "webextensions.storage.sync.enabled",
+-  true
++  true,
+ );
+ 
+-const enforceNoTemporaryAddon = extensionId => {
++const enforceNoTemporaryAddon = (extensionId) => {
+   const EXCEPTION_MESSAGE =
+     "The storage API will not work with a temporary addon ID. " +
+     "Please add an explicit addon ID to your manifest. " +
+@@ -89,7 +89,7 @@
+   let info = await NativeManifests.lookupManifest(
+     "storage",
+     extensionId,
+-    context
++    context,
+   );
+   if (info) {
+     return ExtensionStorage._serializableMap(info.manifest.data);
+@@ -106,6 +106,11 @@
+   }
+ 
+   if (!lookup) {
++    if (ExtensionUtils.getChromeExtensionId(extension)) {
++      // Chrome exposes an empty, read-only managed store without a policy.
++      // Leave the absent lookup uncached so a later policy can still appear.
++      return ExtensionStorage._serializableMap({});
++    }
+     throw new ExtensionError("Managed storage manifest not found");
+   }
+ 
+@@ -115,6 +120,7 @@
+ this.storage = class extends ExtensionAPIPersistent {
+   constructor(extension) {
+     super(extension);
++    this.chromeAccessLevels = new Map();
+ 
+     const messageName = `Extension:StorageLocalOnChanged:${extension.uuid}`;
+     Services.ppmm.addMessageListener(messageName, this);
+@@ -123,12 +129,38 @@
+     };
+   }
+ 
++  canAccessStorage(context, area) {
++    if (
++      !ExtensionUtils.getChromeExtensionId(this.extension) ||
++      context?.envType !== "content_parent"
++    ) return true;
++    const level = this.chromeAccessLevels.get(area) ||
++      (area === "session"
++        ? "TRUSTED_CONTEXTS"
++        : "TRUSTED_AND_UNTRUSTED_CONTEXTS");
++    return level === "TRUSTED_AND_UNTRUSTED_CONTEXTS";
++  }
++  checkStorageAccess(context, area) {
++    if (!this.canAccessStorage(context, area)) {
++      throw new ExtensionError(
++        "Access to storage is not allowed from this context.",
++      );
++    }
++  }
++  setAccessLevel(context, area, { accessLevel }) {
++    if (context.envType === "content_parent") {
++      throw new ExtensionError(
++        "setAccessLevel is only available to trusted extension contexts",
++      );
++    }
++    this.chromeAccessLevels.set(area, accessLevel);
++  }
+   PERSISTENT_EVENTS = {
+     onChanged({ context, fire }) {
+-      let unregisterLocal = this.registerLocalChangedListener(changes => {
++      let unregisterLocal = this.registerLocalChangedListener((changes) => {
+         // |changes| is already serialized. Send the raw value, so that it can
+         // be deserialized by the onChanged handler in child/ext-storage.js.
+-        fire.raw(changes, "local");
++        if (this.canAccessStorage(context, "local")) fire.raw(changes, "local");
+       });
+ 
+       // Session storage is not exposed to content scripts, and `context` does
+@@ -137,16 +169,21 @@
+       if (
+         !context ||
+         context.envType === "addon_parent" ||
+-        context.envType === "devtools_parent"
++        context.envType === "devtools_parent" ||
++        ExtensionUtils.getChromeExtensionId(this.extension)
+       ) {
+         unregisterSession = extensionStorageSession.registerListener(
+           this.extension,
+-          changes => fire.async(changes, "session")
++          (changes) => {
++            if (this.canAccessStorage(context, "session")) {
++              fire.async(changes, "session");
++            }
++          },
+         );
+       }
+ 
+-      let unregisterSync = this.registerSyncChangedListener(changes => {
+-        fire.async(changes, "sync");
++      let unregisterSync = this.registerSyncChangedListener((changes) => {
++        if (this.canAccessStorage(context, "sync")) fire.async(changes, "sync");
+       });
+ 
+       return {
+@@ -155,45 +192,51 @@
+           unregisterSession?.();
+           unregisterSync();
+         },
+-        convert(_fire) {
++        convert(_fire, extContext) {
+           fire = _fire;
++          context = extContext;
+         },
+       };
+     },
+-    "local.onChanged"({ fire }) {
+-      let unregister = this.registerLocalChangedListener(changes => {
++    "local.onChanged"({ context, fire }) {
++      let unregister = this.registerLocalChangedListener((changes) => {
+         // |changes| is already serialized. Send the raw value, so that it can
+         // be deserialized by the onChanged handler in child/ext-storage.js.
+-        fire.raw(changes);
++        if (this.canAccessStorage(context, "local")) fire.raw(changes);
+       });
+       return {
+         unregister,
+-        convert(_fire) {
++        convert(_fire, extContext) {
+           fire = _fire;
++          context = extContext;
+         },
+       };
+     },
+-    "session.onChanged"({ fire }) {
++    "session.onChanged"({ context, fire }) {
+       let unregister = extensionStorageSession.registerListener(
+         this.extension,
+-        changes => fire.async(changes)
++        (changes) => {
++          if (this.canAccessStorage(context, "session")) fire.async(changes);
++        },
+       );
+ 
+       return {
+         unregister,
+-        convert(_fire) {
++        convert(_fire, extContext) {
+           fire = _fire;
++          context = extContext;
+         },
+       };
+     },
+-    "sync.onChanged"({ fire }) {
+-      let unregister = this.registerSyncChangedListener(changes => {
+-        fire.async(changes);
++    "sync.onChanged"({ context, fire }) {
++      let unregister = this.registerSyncChangedListener((changes) => {
++        if (this.canAccessStorage(context, "sync")) fire.async(changes);
+       });
+       return {
+         unregister,
+-        convert(_fire) {
++        convert(_fire, extContext) {
+           fire = _fire;
++          context = extContext;
+         },
+       };
+     },
+@@ -204,16 +247,16 @@
+     ExtensionStorage.addOnChangedListener(extensionId, onStorageLocalChanged);
+     ExtensionStorageIDB.addOnChangedListener(
+       extensionId,
+-      onStorageLocalChanged
++      onStorageLocalChanged,
+     );
+     return () => {
+       ExtensionStorage.removeOnChangedListener(
+         extensionId,
+-        onStorageLocalChanged
++        onStorageLocalChanged,
+       );
+       ExtensionStorageIDB.removeOnChangedListener(
+         extensionId,
+-        onStorageLocalChanged
++        onStorageLocalChanged,
+       );
+     };
+   }
+@@ -236,12 +279,12 @@
+     extensionStorageSync.addOnChangedListener(
+       extension,
+       onStorageSyncChanged,
+-      dummyContextForKinto
++      dummyContextForKinto,
+     );
+     return () => {
+       extensionStorageSync.removeOnChangedListener(
+         extension,
+-        onStorageSyncChanged
++        onStorageSyncChanged,
+       );
+       // May be void if ExtensionStorageSyncKinto.sys.mjs was not used.
+       // ExtensionStorageSync.sys.mjs does not use the context.
+@@ -269,7 +312,7 @@
+   getAPI(context) {
+     let { extension } = context;
+ 
+-    return {
++    const api = {
+       storage: {
+         local: {
+           async callMethodInParentProcess(method, args) {
+@@ -281,7 +324,7 @@
+             const persisted = extension.hasPermission("unlimitedStorage");
+             const db = await ExtensionStorageIDB.open(
+               res.storagePrincipal.deserialize(this, true),
+-              persisted
++              persisted,
+             );
+             try {
+               const changes = await db[method](...args);
+@@ -295,7 +338,7 @@
+                   error: err,
+                   extensionId: extension.id,
+                   storageMethod: method,
+-                }
++                },
+               ).message;
+               return Promise.reject({
+                 message: String(normalizedError),
+@@ -437,5 +480,44 @@
+         }).api(),
+       },
+     };
++    if (ExtensionUtils.getChromeExtensionId(extension)) {
++      for (const name of ["local", "session", "sync", "managed"]) {
++        const area = api.storage[name];
++        area.checkAccess = () => this.checkStorageAccess(context, name);
++        area.setAccessLevel = (details) =>
++          this.setAccessLevel(context, name, details);
++        for (
++          const key of [
++            "get",
++            "getKeys",
++            "getBytesInUse",
++            "set",
++            "remove",
++            "clear",
++            "callMethodInParentProcess",
++          ]
++        ) {
++          const original = area[key];
++          if (typeof original === "function") {
++            area[key] = (...args) => {
++              this.checkStorageAccess(context, name);
++              return original.apply(area, args);
++            };
++          }
++        }
++        for (const backend of [area.JSONFileBackend, area.IDBBackend]) {
++          if (!backend) continue;
++          for (const [key, original] of Object.entries(backend)) {
++            if (typeof original === "function") {
++              backend[key] = (...args) => {
++                this.checkStorageAccess(context, name);
++                return original.apply(backend, args);
++              };
++            }
++          }
++        }
++      }
++    }
++    return api;
+   }
+ };
+diff --git a/chrome/toolkit/content/extensions/schemas/declarative_content.json b/chrome/toolkit/content/extensions/schemas/declarative_content.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..938704fd5ebb74aa203feede81629c39ee25fb70
+--- /dev/null
++++ b/chrome/toolkit/content/extensions/schemas/declarative_content.json
+@@ -0,0 +1,262 @@
++[
++  {
++    "namespace": "manifest",
++    "types": [
++      {
++        "$extend": "OptionalPermission",
++        "choices": [
++          {
++            "type": "string",
++            "enum": [
++              "declarativeContent"
++            ]
++          }
++        ]
++      }
++    ]
++  },
++  {
++    "namespace": "declarativeContent",
++    "permissions": [
++      "declarativeContent"
++    ],
++    "types": [
++      {
++        "id": "Rule",
++        "type": "object",
++        "properties": {
++          "id": {
++            "type": "string",
++            "optional": true
++          },
++          "priority": {
++            "type": "integer",
++            "minimum": 1,
++            "optional": true
++          },
++          "conditions": {
++            "type": "array",
++            "minItems": 1,
++            "items": {
++              "type": "object",
++              "additionalProperties": {
++                "type": "any"
++              }
++            }
++          },
++          "actions": {
++            "type": "array",
++            "minItems": 1,
++            "items": {
++              "type": "object",
++              "additionalProperties": {
++                "type": "any"
++              }
++            }
++          }
++        }
++      },
++      {
++        "id": "RuleEvent",
++        "type": "object",
++        "functions": [
++          {
++            "name": "addRules",
++            "type": "function",
++            "async": "callback",
++            "parameters": [
++              {
++                "name": "rules",
++                "type": "array",
++                "items": {
++                  "$ref": "declarativeContent.Rule"
++                }
++              },
++              {
++                "name": "callback",
++                "type": "function",
++                "optional": true,
++                "parameters": [
++                  {
++                    "name": "rules",
++                    "type": "array",
++                    "items": {
++                      "$ref": "declarativeContent.Rule"
++                    }
++                  }
++                ]
++              }
++            ]
++          },
++          {
++            "name": "getRules",
++            "type": "function",
++            "async": "callback",
++            "parameters": [
++              {
++                "name": "ruleIdentifiers",
++                "type": "array",
++                "items": {
++                  "type": "string"
++                },
++                "optional": true
++              },
++              {
++                "name": "callback",
++                "type": "function",
++                "optional": true,
++                "parameters": [
++                  {
++                    "name": "rules",
++                    "type": "array",
++                    "items": {
++                      "$ref": "declarativeContent.Rule"
++                    }
++                  }
++                ]
++              }
++            ]
++          },
++          {
++            "name": "removeRules",
++            "type": "function",
++            "async": "callback",
++            "parameters": [
++              {
++                "name": "ruleIdentifiers",
++                "type": "array",
++                "items": {
++                  "type": "string"
++                },
++                "optional": true
++              },
++              {
++                "name": "callback",
++                "type": "function",
++                "optional": true,
++                "parameters": []
++              }
++            ]
++          }
++        ]
++      }
++    ],
++    "functions": [
++      {
++        "name": "PageStateMatcher",
++        "type": "function",
++        "constructible": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            },
++            "optional": true,
++            "default": {}
++          }
++        ],
++        "returns": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "any"
++          }
++        }
++      },
++      {
++        "name": "ShowAction",
++        "type": "function",
++        "constructible": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            },
++            "optional": true,
++            "default": {}
++          }
++        ],
++        "returns": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "any"
++          }
++        }
++      },
++      {
++        "name": "ShowPageAction",
++        "type": "function",
++        "constructible": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            },
++            "optional": true,
++            "default": {}
++          }
++        ],
++        "returns": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "any"
++          }
++        }
++      },
++      {
++        "name": "SetIcon",
++        "type": "function",
++        "constructible": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            },
++            "optional": true,
++            "default": {}
++          }
++        ],
++        "returns": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "any"
++          }
++        }
++      },
++      {
++        "name": "RequestContentScript",
++        "type": "function",
++        "constructible": true,
++        "parameters": [
++          {
++            "name": "options",
++            "type": "object",
++            "additionalProperties": {
++              "type": "any"
++            },
++            "optional": true,
++            "default": {}
++          }
++        ],
++        "returns": {
++          "type": "object",
++          "additionalProperties": {
++            "type": "any"
++          }
++        }
++      }
++    ],
++    "properties": {
++      "onPageChanged": {
++        "$ref": "RuleEvent"
++      }
++    }
++  }
++]
+diff --git a/chrome/toolkit/content/extensions/schemas/notifications.json b/chrome/toolkit/content/extensions/schemas/notifications.json
+index 79a549799739f77ee8259b58c6242e5f84f234ec..62e0110e57b1124a335cb0b997810c9d02129c06 100644
+--- a/chrome/toolkit/content/extensions/schemas/notifications.json
++++ b/chrome/toolkit/content/extensions/schemas/notifications.json
+@@ -71,7 +71,6 @@
+             "type": "number"
+           },
+           "buttons": {
+-            "unsupported": true,
+             "optional": true,
+             "description": "Text and icons for up to two notification action buttons.",
+             "type": "array",
+@@ -106,6 +105,8 @@
+             "minimum": 0,
+             "maximum": 100
+           },
++          "requireInteraction": {"optional": true, "type": "boolean"},
++          "silent": {"optional": true, "type": "boolean"},
+           "isClickable": {
+             "optional": true,
+             "description": "Whether to show UI indicating that the app will visibly respond to clicks on the body of a notification.",
+@@ -160,7 +161,6 @@
+             "type": "number"
+           },
+           "buttons": {
+-            "unsupported": true,
+             "optional": true,
+             "description": "Text and icons for up to two notification action buttons.",
+             "type": "array",
+@@ -195,6 +195,8 @@
+             "minimum": 0,
+             "maximum": 100
+           },
++          "requireInteraction": {"optional": true, "type": "boolean"},
++          "silent": {"optional": true, "type": "boolean"},
+           "isClickable": {
+             "optional": true,
+             "description": "Whether to show UI indicating that the app will visibly respond to clicks on the body of a notification.",
+@@ -237,7 +239,6 @@
+       },
+       {
+         "name": "update",
+-        "unsupported": true,
+         "type": "function",
+         "description": "Updates an existing notification.",
+         "async": "callback",
+@@ -313,7 +314,6 @@
+       },
+       {
+         "name": "getPermissionLevel",
+-        "unsupported": true,
+         "type": "function",
+         "description": "Retrieves whether the user has enabled notifications from this app or extension.",
+         "async": "callback",
+@@ -381,7 +381,6 @@
+       },
+       {
+         "name": "onPermissionLevelChanged",
+-        "unsupported": true,
+         "type": "function",
+         "description": "Fired when the user changes the permission level.",
+         "parameters": [
+diff --git a/chrome/toolkit/content/extensions/schemas/storage.json b/chrome/toolkit/content/extensions/schemas/storage.json
+index c2ac9f0d76aeff3d694bbc681e304be2d31c1297..0bf59cdcf46257f3d6ea2e63ff142f161f0f24f1 100644
+--- a/chrome/toolkit/content/extensions/schemas/storage.json
++++ b/chrome/toolkit/content/extensions/schemas/storage.json
+@@ -26,6 +26,24 @@
+         "id": "StorageArea",
+         "type": "object",
+         "functions": [
++          {
++            "name": "setAccessLevel",
++            "type": "function",
++            "async": "callback",
++            "parameters": [
++              {
++                "name": "details",
++                "type": "object",
++                "properties": {
++                  "accessLevel": {
++                    "type": "string",
++                    "enum": ["TRUSTED_CONTEXTS", "TRUSTED_AND_UNTRUSTED_CONTEXTS"]
++                  }
++                }
++              },
++              {"name": "callback", "type": "function", "optional": true, "parameters": []}
++            ]
++          },
+           {
+             "name": "get",
+             "type": "function",
+@@ -261,7 +279,7 @@
+         }
+       },
+       "session": {
+-        "allowedContexts": ["devtools"],
++        "allowedContexts": ["content", "devtools"],
+         "$ref": "StorageArea",
+         "description": "Items in the <code>session</code> storage area are kept in memory, and only until the either browser or extension is closed or reloaded.",
+         "properties": {

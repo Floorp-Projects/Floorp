@@ -1,0 +1,1263 @@
+diff --git a/chrome/toolkit/content/extensions/parent/ext-proxy.js b/chrome/toolkit/content/extensions/parent/ext-proxy.js
+index e69606d..6193fb9 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-proxy.js
++++ b/chrome/toolkit/content/extensions/parent/ext-proxy.js
+@@ -6,6 +6,7 @@
+ 
+ ChromeUtils.defineESModuleGetters(this, {
+   ProxyChannelFilter: "resource://gre/modules/ProxyChannelFilter.sys.mjs",
++  Management: "resource://gre/modules/Extension.sys.mjs",
+ });
+ 
+ // Delayed wakeup is tied to ExtensionParent.browserPaintedPromise, which is
+@@ -43,29 +44,32 @@ const DEFAULT_PORTS = new Map([
+   ["socks", 1080],
+ ]);
+ 
++const CHROME_PROXY_CONTROLLED_PREFS = [
++  "network.proxy.type",
++  "floorp.chrome.proxy.allow_loopback",
++  "network.proxy.http",
++  "network.proxy.http_port",
++  "network.proxy.share_proxy_settings",
++  "network.proxy.ssl",
++  "network.proxy.ssl_port",
++  "network.proxy.socks",
++  "network.proxy.socks_port",
++  "network.proxy.socks_version",
++  "network.proxy.socks_remote_dns",
++  "network.proxy.socks5_remote_dns",
++  "network.proxy.no_proxies_on",
++  "network.proxy.autoconfig_url",
++  "signon.autologin.proxy",
++  "network.http.proxy.respect-be-conservative",
++];
++
+ ExtensionPreferencesManager.addSetting("proxy.settings", {
+   permission: "proxy",
+-  prefNames: [
+-    "network.proxy.type",
+-    "network.proxy.http",
+-    "network.proxy.http_port",
+-    "network.proxy.share_proxy_settings",
+-    "network.proxy.ssl",
+-    "network.proxy.ssl_port",
+-    "network.proxy.socks",
+-    "network.proxy.socks_port",
+-    "network.proxy.socks_version",
+-    "network.proxy.socks_remote_dns",
+-    "network.proxy.socks5_remote_dns",
+-    "network.proxy.no_proxies_on",
+-    "network.proxy.autoconfig_url",
+-    "signon.autologin.proxy",
+-    "network.http.proxy.respect-be-conservative",
+-  ],
+-
++  prefNames: CHROME_PROXY_CONTROLLED_PREFS,
+   setCallback(value) {
+     let prefs = {
+       "network.proxy.type": PROXY_TYPES_MAP.get(value.proxyType),
++      "floorp.chrome.proxy.allow_loopback": !!value.floorpChromeLoopback,
+       "signon.autologin.proxy": value.autoLogin,
+       "network.proxy.socks_remote_dns": value.proxyDNS,
+       "network.proxy.socks5_remote_dns": value.proxyDNS,
+@@ -91,6 +95,1084 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
+   },
+ });
+ 
++// Fixed-server rules are compiled into Gecko's real PAC backend. The exact
++// generated source identifies the stored Chrome value; arbitrary PAC scripts
++// are never evaluated in the privileged extension API process.
++const FLOORP_FIXED_PAC = "// Floorp Chrome proxy configuration v1 ";
++const FLOORP_INLINE_PAC = "// Floorp Chrome inline PAC v1\n";
++const FLOORP_PAC_URL = "data:application/x-ns-proxy-autoconfig,";
++
++function chromeProxyRecord(value, label, allowed) {
++  if (!value || typeof value !== "object" || Array.isArray(value)) {
++    throw new ExtensionError(`${label} must be an object.`);
++  }
++  for (const key of Object.keys(value)) {
++    if (!allowed.includes(key)) {
++      throw new ExtensionError(`Unsupported ${label} property: ${key}`);
++    }
++  }
++}
++
++function chromeProxyServer(server) {
++  chromeProxyRecord(server, "proxy server", ["scheme", "host", "port"]);
++  const scheme = server.scheme ?? "http";
++  if (!["http", "https", "socks4", "socks5"].includes(scheme)) {
++    throw new ExtensionError(`Unsupported proxy server scheme: ${scheme}`);
++  }
++  if (
++    scheme === "https" &&
++    !Services.prefs.getBoolPref("network.proxy.proxy_over_tls", true)
++  ) {
++    throw new ExtensionError(
++      "HTTPS proxy endpoints are disabled in this browser."
++    );
++  }
++  let host = server.host;
++  if (typeof host !== "string" || !host || /[\s/@?#]/.test(host)) {
++    throw new ExtensionError(
++      "Proxy server host must be a hostname or IP address."
++    );
++  }
++  // Chrome accepts IPv6 literals without URL brackets.
++  if (host.includes(":") && !host.startsWith("[")) host = `[${host}]`;
++  try {
++    const parsed = new URL(`http://${host}`);
++    if (
++      parsed.port ||
++      parsed.username ||
++      parsed.password ||
++      parsed.pathname !== "/" ||
++      !parsed.hostname
++    )
++      throw new Error();
++    host = parsed.hostname;
++  } catch {
++    throw new ExtensionError("Invalid proxy server host.");
++  }
++  const port =
++    server.port ?? (scheme === "http" ? 80 : scheme === "https" ? 443 : 1080);
++  if (!Number.isInteger(port) || port < 1 || port > 65535) {
++    throw new ExtensionError(
++      "Proxy server port must be an integer from 1 to 65535."
++    );
++  }
++  return { scheme, host, port };
++}
++
++function chromeProxyIP(value) {
++  value = value.replace(/^\[|\]$/g, "").toLowerCase();
++  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(value)) {
++    var bytes = value.split(".").map(Number);
++    return bytes.every(function (byte) {
++      return byte <= 255;
++    })
++      ? bytes
++      : null;
++  }
++  if (!/^[a-f0-9:.]+$/.test(value) || value.indexOf(":") < 0) return null;
++  if (value.indexOf(".") >= 0) {
++    var split = value.lastIndexOf(":");
++    var suffix = chromeProxyIP(value.slice(split + 1));
++    if (!suffix || suffix.length !== 4) return null;
++    value =
++      value.slice(0, split + 1) +
++      ((suffix[0] << 8) | suffix[1]).toString(16) +
++      ":" +
++      ((suffix[2] << 8) | suffix[3]).toString(16);
++  }
++  var halves = value.split("::");
++  if (halves.length > 2) return null;
++  var left = halves[0] ? halves[0].split(":") : [];
++  var right = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
++  if (
++    left.concat(right).some(function (part) {
++      return !/^[a-f0-9]{1,4}$/.test(part);
++    })
++  )
++    return null;
++  var missing = 8 - left.length - right.length;
++  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
++  var words = left.concat(Array(missing).fill("0"), right);
++  var result = [];
++  for (var i = 0; i < words.length; ++i) {
++    var word = parseInt(words[i], 16);
++    result.push(word >> 8, word & 255);
++  }
++  return result;
++}
++
++function chromeProxyParseBypass(value) {
++  if (
++    typeof value !== "string" ||
++    !value ||
++    value !== value.trim() ||
++    /\s/.test(value)
++  ) {
++    throw new ExtensionError("Proxy bypass entries must be nonempty strings.");
++  }
++  value = value.toLowerCase();
++  if (value === "<local>" || value === "<-loopback>") return { special: value };
++  var scheme = null;
++  var match = value.match(/^([a-z][a-z0-9+.-]*):\/\//);
++  if (match) {
++    scheme = match[1];
++    value = value.slice(match[0].length);
++  }
++  var slash = value.lastIndexOf("/");
++  if (slash >= 0) {
++    var network = chromeProxyIP(value.slice(0, slash));
++    var prefix = value.slice(slash + 1);
++    if (
++      !network ||
++      !/^\d+$/.test(prefix) ||
++      Number(prefix) > network.length * 8
++    )
++      throw new ExtensionError("Invalid proxy CIDR bypass pattern");
++    return { scheme: scheme, network: network, prefix: Number(prefix) };
++  }
++  var port = null;
++  if (value[0] === "[") {
++    var bracket = value.indexOf("]");
++    if (bracket < 0 || !chromeProxyIP(value.slice(0, bracket + 1)))
++      throw new ExtensionError("Invalid proxy IPv6 bypass pattern");
++    if (value.length > bracket + 1) {
++      if (!/^:\d+$/.test(value.slice(bracket + 1)))
++        throw new ExtensionError("Invalid proxy bypass port");
++      port = Number(value.slice(bracket + 2));
++    }
++    value = value.slice(0, bracket + 1);
++  } else if (value.includes(":")) {
++    var colon = value.lastIndexOf(":");
++    if (
++      !/^\d+$/.test(value.slice(colon + 1)) ||
++      value.slice(0, colon).includes(":")
++    )
++      throw new ExtensionError("IPv6 bypass literals require brackets");
++    port = Number(value.slice(colon + 1));
++    value = value.slice(0, colon);
++  }
++  if (port !== null && (port < 0 || port > 65535))
++    throw new ExtensionError("Invalid proxy bypass port");
++  var ip = chromeProxyIP(value);
++  if (!ip && (!/^[a-z0-9.*_-]+$/.test(value) || !value || value === "."))
++    throw new ExtensionError("Invalid proxy host bypass pattern");
++  if (value[0] === ".") value = "*" + value;
++  return {
++    scheme: scheme,
++    port: port,
++    host: value.replace(/^\[|\]$/g, ""),
++    ip: ip,
++  };
++}
++
++function chromeProxyBypass(value) {
++  chromeProxyParseBypass(value);
++  return value.toLowerCase();
++}
++
++// Serialized into the real PAC engine. No DNS lookup for IP/CIDR rules: Chrome
++// only applies them to literal destinations, even if a DNS name resolves locally.
++function chromeProxyBypassMatches(rule, url, host) {
++  var scheme = url.slice(0, url.indexOf(":")).toLowerCase();
++  var ip = chromeProxyIP(host);
++  if (rule.special === "<local>")
++    return !ip && host.indexOf(".") < 0 && host.indexOf(":") < 0;
++  if (rule.special) return false;
++  if (rule.scheme && rule.scheme !== scheme) return false;
++  if (rule.port !== null && rule.port !== undefined) {
++    var authority = url.match(
++      /^[^:]+:\/\/(?:[^@/]*@)?(?:\[[^\]]+\]|[^:/?#]+)(?::(\d+))?/
++    );
++    var port =
++      authority && authority[1] !== undefined
++        ? Number(authority[1])
++        : { http: 80, https: 443, ftp: 21, ws: 80, wss: 443 }[scheme];
++    if (rule.port !== port) return false;
++  }
++  var network = rule.network || rule.ip;
++  if (network) {
++    if (!ip || ip.length !== network.length) return false;
++    var remaining = rule.network ? rule.prefix : network.length * 8;
++    for (var i = 0; remaining > 0; ++i) {
++      var bits = Math.min(remaining, 8);
++      var mask = (255 << (8 - bits)) & 255;
++      if ((ip[i] & mask) !== (network[i] & mask)) return false;
++      remaining -= bits;
++    }
++    return true;
++  }
++  return shExpMatch(host.replace(/^\[|\]$/g, ""), rule.host);
++}
++
++function chromeProxyFixedPAC(config) {
++  const rules = config.rules;
++  const directive = server =>
++    server
++      ? `${
++          {
++            http: "PROXY",
++            https: "HTTPS",
++            socks4: "SOCKS4",
++            socks5: "SOCKS5",
++          }[server.scheme]
++        } ${server.host}:${server.port}`
++      : "DIRECT";
++  const values = Object.fromEntries(
++    [
++      "singleProxy",
++      "proxyForHttp",
++      "proxyForHttps",
++      "proxyForFtp",
++      "fallbackProxy",
++    ].map(key => [key, rules[key] ? directive(rules[key]) : null])
++  );
++  return (
++    FLOORP_FIXED_PAC +
++    JSON.stringify(config) +
++    "\n" +
++    chromeProxyIP.toString() +
++    "\n" +
++    chromeProxyBypassMatches.toString() +
++    "\n" +
++    "function FindProxyForURL(url, host) {\n" +
++    "  host = host.toLowerCase();\n" +
++    "  var bypass = " +
++    JSON.stringify((rules.bypassList ?? []).map(chromeProxyParseBypass)) +
++    ";\n" +
++    "  var subtractLoopback = bypass.some(function(rule) { return rule.special === '<-loopback>'; });\n" +
++    "  var ip = chromeProxyIP(host);\n" +
++    "  if (!subtractLoopback && (/(^|\\.)localhost$/.test(host) || ip && (ip.length === 4 && (ip[0] === 127 || ip[0] === 169 && ip[1] === 254) || ip.length === 16 && (ip.slice(0, 15).every(function(byte) { return byte === 0; }) && ip[15] === 1 || ip[0] === 254 && (ip[1] & 192) === 128)))) return 'DIRECT';\n" +
++    "  for (var i = 0; i < bypass.length; i++) {\n" +
++    "    if (chromeProxyBypassMatches(bypass[i], url, host)) return 'DIRECT';\n" +
++    "  }\n" +
++    "  var p = " +
++    JSON.stringify(values) +
++    ";\n" +
++    "  if (p.singleProxy) return p.singleProxy;\n" +
++    "  var scheme = url.slice(0, url.indexOf(':')).toLowerCase();\n" +
++    "  if (scheme === 'ws' || scheme === 'wss') return p.fallbackProxy || p.proxyForHttps || p.proxyForHttp || 'DIRECT';\n" +
++    "  return (scheme === 'http' ? p.proxyForHttp : scheme === 'https' ? p.proxyForHttps : scheme === 'ftp' ? p.proxyForFtp : null) || p.fallbackProxy || 'DIRECT';\n" +
++    "}\n"
++  );
++}
++
++function chromeProxyToGecko(value, extension, allowMandatory = false) {
++  chromeProxyRecord(value, "proxy configuration", [
++    "mode",
++    "rules",
++    "pacScript",
++  ]);
++  const modes = {
++    direct: "none",
++    auto_detect: "autoDetect",
++    system: "system",
++    pac_script: "autoConfig",
++    fixed_servers: "autoConfig",
++  };
++  if (!Object.hasOwn(modes, value.mode)) {
++    throw new ExtensionError(`Unsupported Chrome proxy mode: ${value.mode}`);
++  }
++  const native = {
++    proxyType: modes[value.mode],
++    passthrough: "",
++    autoConfigUrl: "",
++  };
++  if (
++    (value.mode !== "fixed_servers" && value.rules !== undefined) ||
++    (value.mode !== "pac_script" && value.pacScript !== undefined)
++  ) {
++    throw new ExtensionError(
++      "Proxy rules and PAC scripts must match the selected mode."
++    );
++  }
++  if (value.mode === "fixed_servers") {
++    const rules = value.rules;
++    const keys = [
++      "singleProxy",
++      "proxyForHttp",
++      "proxyForHttps",
++      "proxyForFtp",
++      "fallbackProxy",
++    ];
++    chromeProxyRecord(rules, "proxy rules", [...keys, "bypassList"]);
++    if (
++      rules.singleProxy &&
++      keys.slice(1).some(key => rules[key] !== undefined)
++    ) {
++      throw new ExtensionError(
++        "singleProxy cannot be combined with per-protocol proxy rules."
++      );
++    }
++    const normalized = {};
++    for (const key of keys) {
++      if (rules[key] !== undefined) {
++        normalized[key] = chromeProxyServer(rules[key]);
++      }
++    }
++    if (!Object.keys(normalized).length) {
++      throw new ExtensionError("At least one proxy server is required.");
++    }
++    if (rules.bypassList !== undefined) {
++      if (!Array.isArray(rules.bypassList)) {
++        throw new ExtensionError("bypassList must be an array.");
++      }
++      normalized.bypassList = rules.bypassList.map(chromeProxyBypass);
++    }
++    native.floorpChromeLoopback =
++      normalized.bypassList?.includes("<-loopback>") ?? false;
++    native.autoConfigUrl =
++      FLOORP_PAC_URL +
++      encodeURIComponent(
++        chromeProxyFixedPAC({ mode: "fixed_servers", rules: normalized })
++      );
++  } else if (value.mode === "pac_script") {
++    const pac = value.pacScript;
++    chromeProxyRecord(pac, "PAC script", ["url", "data", "mandatory"]);
++    if (pac.mandatory !== undefined && typeof pac.mandatory !== "boolean") {
++      throw new ExtensionError("PAC mandatory must be a boolean.");
++    }
++    if (pac.mandatory && !allowMandatory) {
++      throw new ExtensionError(
++        "Mandatory PAC scripts are not supported by this runtime."
++      );
++    }
++    if (
++      (typeof pac.url === "string") === (typeof pac.data === "string") ||
++      (pac.url !== undefined && typeof pac.url !== "string") ||
++      (pac.data !== undefined && typeof pac.data !== "string")
++    ) {
++      throw new ExtensionError("Specify exactly one PAC url or data string.");
++    }
++    if (pac.data !== undefined) {
++      if (!pac.data.trim()) {
++        throw new ExtensionError("PAC script data must not be empty.");
++      }
++      native.autoConfigUrl =
++        FLOORP_PAC_URL + encodeURIComponent(FLOORP_INLINE_PAC + pac.data);
++    } else {
++      let parsed;
++      try {
++        parsed = new URL(pac.url);
++      } catch {
++        throw new ExtensionError("Invalid PAC script URL.");
++      }
++      if (
++        !["http:", "https:", "data:"].includes(parsed.protocol) &&
++        !(
++          parsed.protocol === "moz-extension:" &&
++          pac.url.startsWith(extension.baseURL)
++        )
++      ) {
++        throw new ExtensionError(
++          "Unsupported PAC script URL scheme or foreign extension."
++        );
++      }
++      native.autoConfigUrl = pac.url;
++    }
++  }
++  return native;
++}
++
++function geckoProxyToChrome(value) {
++  const modes = {
++    none: "direct",
++    autoDetect: "auto_detect",
++    system: "system",
++    manual: "fixed_servers",
++    autoConfig: "pac_script",
++  };
++  const mode = modes[value.proxyType];
++  if (!mode) {
++    throw new ExtensionError("The active proxy mode is not supported.");
++  }
++  if (mode === "pac_script") {
++    if (value.autoConfigUrl.startsWith(FLOORP_PAC_URL)) {
++      let source = "";
++      try {
++        source = decodeURIComponent(
++          value.autoConfigUrl.slice(FLOORP_PAC_URL.length)
++        );
++      } catch {}
++      if (source.startsWith(FLOORP_FIXED_PAC)) {
++        try {
++          const config = JSON.parse(
++            source.slice(FLOORP_FIXED_PAC.length).split("\n", 1)[0]
++          );
++          if (source === chromeProxyFixedPAC(config)) return config;
++        } catch {
++          /* Report arbitrary PAC scripts using their actual URL. */
++        }
++      }
++      if (source.startsWith(FLOORP_INLINE_PAC)) {
++        return {
++          mode,
++          pacScript: {
++            data: source.slice(FLOORP_INLINE_PAC.length),
++            mandatory: false,
++          },
++        };
++      }
++    }
++    return { mode, pacScript: { url: value.autoConfigUrl, mandatory: false } };
++  }
++  if (mode === "fixed_servers") {
++    const rules = {};
++    for (const [native, chrome, scheme] of [
++      ["http", "proxyForHttp", "http"],
++      ["ssl", "proxyForHttps", "http"],
++      [
++        "socks",
++        "fallbackProxy",
++        value.socksVersion === 4 ? "socks4" : "socks5",
++      ],
++    ]) {
++      const host = Services.prefs.getCharPref(`network.proxy.${native}`);
++      const port = Services.prefs.getIntPref(`network.proxy.${native}_port`);
++      if (
++        native === "socks" &&
++        (host.startsWith("file:") || host.startsWith("\\\\.\\pipe\\"))
++      ) {
++        throw new ExtensionError(
++          "Native SOCKS socket and named-pipe proxies cannot be represented as Chrome proxy servers."
++        );
++      }
++      // Gecko requires a nonempty host and a positive port for network proxy
++      // endpoints. Its Firefox API renders port=0 as a bare host; interpreting
++      // that as Chrome's default port would invent a proxy that isn't active.
++      if (!host || port <= 0) continue;
++      const bracketedHost =
++        host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
++      const server = new URL(`http://${bracketedHost}`);
++      rules[chrome] = { scheme, host: server.hostname, port };
++    }
++    if (value.passthrough) {
++      rules.bypassList = value.passthrough.split(/[,;]\s*/);
++    }
++    return { mode, rules };
++  }
++  return { mode };
++}
++
++function readGeckoProxySettings(extension) {
++  let prefValue = Services.prefs.getIntPref("network.proxy.type");
++  let socksVersion = Services.prefs.getIntPref("network.proxy.socks_version");
++  let proxyDNS;
++  if (socksVersion == 4) {
++    proxyDNS = Services.prefs.getBoolPref("network.proxy.socks_remote_dns");
++  } else {
++    proxyDNS = Services.prefs.getBoolPref("network.proxy.socks5_remote_dns");
++  }
++
++  let proxyConfig = {
++    proxyType: Array.from(PROXY_TYPES_MAP.entries()).find(
++      entry => entry[1] === prefValue
++    )[0],
++    autoConfigUrl: Services.prefs.getCharPref("network.proxy.autoconfig_url"),
++    autoLogin: Services.prefs.getBoolPref("signon.autologin.proxy"),
++    proxyDNS,
++    httpProxyAll: Services.prefs.getBoolPref(
++      "network.proxy.share_proxy_settings"
++    ),
++    socksVersion,
++    passthrough: Services.prefs.getCharPref("network.proxy.no_proxies_on"),
++  };
++
++  if (extension.isPrivileged) {
++    proxyConfig.respectBeConservative = Services.prefs.getBoolPref(
++      "network.http.proxy.respect-be-conservative"
++    );
++  }
++
++  for (let prop of ["http", "ssl", "socks"]) {
++    let host = Services.prefs.getCharPref(`network.proxy.${prop}`);
++    let port = Services.prefs.getIntPref(`network.proxy.${prop}_port`);
++    proxyConfig[prop] = port ? `${host}:${port}` : host;
++  }
++
++  return proxyConfig;
++}
++
++// Scope ownership uses the existing preferences store, including extension
++// install precedence, disable/uninstall cleanup and permission revocation.
++const chromeProxyScopeModules = {};
++ChromeUtils.defineESModuleGetters(chromeProxyScopeModules, {
++  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
++  ExtensionData: "resource://gre/modules/Extension.sys.mjs",
++  ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
++  ExtensionSettingsStore:
++    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
++  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
++});
++const CHROME_PROXY_REGULAR_ONLY = "floorp.chrome.proxy.regularOnly";
++const CHROME_PROXY_PRIVATE = "floorp.chrome.proxy.incognitoPersistent";
++for (const name of [CHROME_PROXY_REGULAR_ONLY, CHROME_PROXY_PRIVATE]) {
++  ExtensionPreferencesManager.addSetting(name, {
++    permission: "proxy",
++    prefNames: [],
++    setCallback() {
++      return {};
++    },
++    getCallback() {
++      return null;
++    },
++  });
++}
++const ChromeProxyScopes = {
++  sessions: new Map(),
++  startupManifests: new Map(),
++  listeners: new Set(),
++  keys: new Map(),
++  state: { regular: null, private: null, global: null },
++  epoch: 0,
++  revision: 0,
++  pending: null,
++  barrier: null,
++  transaction: Promise.resolve(),
++  native: Cc["@mozilla.org/network/protocol-proxy-service;1"].getService(
++    Ci.nsIProtocolProxyService2
++  ),
++  get available() {
++    return (
++      typeof this.native.registerChromeScopeProvider === "function" &&
++      typeof this.native.retainChromeScopeCaches === "function"
++    );
++  },
++  get policyControlled() {
++    return (
++      !Services.policies.isAllowed("changeProxySettings") ||
++      CHROME_PROXY_CONTROLLED_PREFS.some(pref =>
++        Services.prefs.prefIsLocked(pref)
++      )
++    );
++  },
++  selected(privateContext) {
++    if (this.policyControlled) return privateContext ? this.state.global : null;
++    return privateContext ? this.state.private : this.state.regular;
++  },
++  handles(record, privateContext) {
++    return (
++      !!record?.chrome &&
++      (privateContext ? record.value.proxyType !== "manual" : !!record.force)
++    );
++  },
++  provider: {
++    QueryInterface: ChromeUtils.generateQI(
++      "nsIChromeProxyScopeProvider" in Ci ? ["nsIChromeProxyScopeProvider"] : []
++    ),
++    getConfiguration(channel, callback) {
++      let privateContext =
++        channel.loadInfo.originAttributes.privateBrowsingId > 0;
++      // Speculative channels may inherit a spanning extension's regular
++      // principal while their native load context belongs to a private window.
++      // Honor that channel state before any regular PAC can observe the URL.
++      try {
++        privateContext ||= channel.QueryInterface(
++          Ci.nsIPrivateBrowsingChannel
++        ).isChannelPrivate;
++      } catch {
++        // Non-HTTP channels may not implement nsIPrivateBrowsingChannel.
++      }
++      const current = ChromeProxyScopes.selected(privateContext);
++      // Ordinary Firefox's setting path and regular inherited configuration
++      // keep their native backend. Every selected private Chrome configuration
++      // gets its own PAC instance, including an inherited regular setting.
++      const shouldHandle = ChromeProxyScopes.handles(current, privateContext);
++      if (
++        !ChromeProxyScopes.pending &&
++        !ChromeProxyScopes.barrier &&
++        !ChromeProxyScopes.error &&
++        !shouldHandle
++      )
++        return false;
++      ChromeProxyScopes.ready()
++        .then(() => {
++          const selected = ChromeProxyScopes.selected(privateContext);
++          const handle = ChromeProxyScopes.handles(selected, privateContext);
++          callback.onConfiguration(
++            handle
++              ? ChromeProxyScopes.configuration(selected, privateContext)
++              : null
++          );
++        })
++        .catch(error => {
++          Cu.reportError(error);
++          callback.onConfiguration({
++            QueryInterface: ChromeUtils.generateQI([
++              "nsIChromeProxyConfiguration",
++            ]),
++            key: "failed",
++            type: 999,
++            PACURI: "",
++            mandatory: true,
++            allowLoopback: false,
++          });
++        });
++      return true;
++    },
++  },
++  async ready() {
++    if (this.barrier) await this.barrier;
++    if (this.pending) await this.pending;
++    if (this.error) throw this.error;
++  },
++  async activeRecord(item, kind) {
++    if (!item?.id || item.enabled === false) return null;
++    let extension = ExtensionParent.GlobalManager.getExtension(item.id);
++    const addon = await chromeProxyScopeModules.AddonManager.getAddonByID(
++      item.id
++    );
++    if (!addon || (!addon.isActive && kind !== "global")) return null;
++    // Settings modules can load before an add-on has registered its live
++    // Extension instance. Authenticate the installed manifest in that window,
++    // so a restored private request cannot run the regular PAC during startup.
++    if (!extension) {
++      if (!this.startupManifests.has(item.id)) {
++        this.startupManifests.set(
++          item.id,
++          (async () => {
++            const data = new chromeProxyScopeModules.ExtensionData(
++              addon.getResourceURI("")
++            );
++            const manifest = await data.readJSON("manifest.json");
++            const permissions =
++              await chromeProxyScopeModules.ExtensionPermissions.get(item.id);
++            return {
++              id: item.id,
++              manifest,
++              privateBrowsingAllowed: permissions.permissions.includes(
++                "internal:privateBrowsingAllowed"
++              ),
++            };
++          })()
++        );
++      }
++      extension = await this.startupManifests.get(item.id);
++    }
++    const chrome = !!ExtensionUtils.getChromeExtensionId(extension);
++    if (kind !== "global" && (!chrome || !extension.privateBrowsingAllowed))
++      return null;
++    return {
++      id: item.id,
++      date: addon.installDate.valueOf(),
++      kind,
++      value: item.value,
++      chrome,
++      force:
++        chrome &&
++        (kind === "regularOnly" ||
++          !!item.value?.floorpChromeMandatory ||
++          (this.available &&
++            ["autoConfig", "autoDetect", "system"].includes(
++              item.value?.proxyType
++            ))),
++    };
++  },
++  refresh() {
++    ++this.revision;
++    if (this.pending) return this.pending;
++    let seen;
++    this.pending = (async () => {
++      await chromeProxyScopeModules.ExtensionSettingsStore.initialize();
++      do {
++        seen = this.revision;
++        const global = await this.activeRecord(
++          chromeProxyScopeModules.ExtensionSettingsStore.getSetting(
++            "prefs",
++            "proxy.settings"
++          ),
++          "global"
++        );
++        if (global?.chrome) {
++          const actual = readGeckoProxySettings({ isPrivileged: false });
++          const samePAC =
++            actual.proxyType === global.value.proxyType &&
++            actual.autoConfigUrl === global.value.autoConfigUrl;
++          global.value = {
++            ...actual,
++            floorpChromeConfig: geckoProxyToChrome(actual),
++            floorpChromeMandatory:
++              samePAC && global.value.floorpChromeMandatory,
++            floorpChromeLoopback: samePAC && global.value.floorpChromeLoopback,
++          };
++          if (global.value.floorpChromeConfig.pacScript)
++            global.value.floorpChromeConfig.pacScript.mandatory =
++              !!global.value.floorpChromeMandatory;
++          global.force =
++            !!global.value.floorpChromeMandatory ||
++            (this.available &&
++              ["autoConfig", "autoDetect", "system"].includes(
++                actual.proxyType
++              ));
++        }
++        const regularOnly = await this.activeRecord(
++          chromeProxyScopeModules.ExtensionSettingsStore.getSetting(
++            "prefs",
++            CHROME_PROXY_REGULAR_ONLY
++          ),
++          "regularOnly"
++        );
++        const persistent = await this.activeRecord(
++          chromeProxyScopeModules.ExtensionSettingsStore.getSetting(
++            "prefs",
++            CHROME_PROXY_PRIVATE
++          ),
++          "private"
++        );
++        const session = (
++          await Promise.all(
++            [...this.sessions].map(([id, value]) =>
++              this.activeRecord({ id, value }, "session")
++            )
++          )
++        ).filter(Boolean);
++        const weight = { global: 0, regularOnly: 1, private: 2, session: 3 };
++        const choose = records =>
++          records
++            .filter(Boolean)
++            .sort(
++              (a, b) => b.date - a.date || weight[b.kind] - weight[a.kind]
++            )[0] ?? null;
++        const state = {
++          regular: choose([global, regularOnly]),
++          private: choose([global, persistent, ...session]),
++          global,
++        };
++        this.error = null;
++        const signature = JSON.stringify({ state, epoch: this.epoch });
++        if (signature !== this.signature) {
++          this.signature = signature;
++          this.state = state;
++          if (this.available) {
++            const retained = new Set();
++            for (const [record, privateContext] of [
++              [state.regular, false],
++              [state.private, true],
++              [state.global, true],
++            ]) {
++              if (this.handles(record, privateContext))
++                retained.add(this.configuration(record, privateContext).key);
++            }
++            this.native.retainChromeScopeCaches([...retained]);
++            for (const [signatureKey, key] of this.keys) {
++              if (!retained.has(key)) this.keys.delete(signatureKey);
++            }
++          }
++          for (const listener of this.listeners) listener();
++        }
++      } while (seen !== this.revision);
++    })()
++      .catch(error => {
++        this.error = error;
++        throw error;
++      })
++      .finally(() => {
++        this.pending = null;
++        if (seen !== undefined && seen !== this.revision) return this.refresh();
++      });
++    return this.pending;
++  },
++  configuration(record, privateContext) {
++    const native = record.value;
++    const kind = native.proxyType;
++    const type = { none: 0, autoConfig: 2, autoDetect: 4, system: 5 }[kind];
++    if (type === undefined)
++      throw new ExtensionError(`Unsupported scoped proxy type: ${kind}`);
++    const signature = JSON.stringify({
++      id: record.id,
++      kind: record.kind,
++      value: native,
++      privateContext,
++      epoch: this.epoch,
++    });
++    if (!this.keys.has(signature))
++      this.keys.set(signature, Services.uuid.generateUUID().toString());
++    return {
++      QueryInterface: ChromeUtils.generateQI(["nsIChromeProxyConfiguration"]),
++      key: this.keys.get(signature),
++      type,
++      PACURI: native.autoConfigUrl ?? "",
++      mandatory: !!native.floorpChromeMandatory,
++      allowLoopback: !!native.floorpChromeLoopback,
++    };
++  },
++  validate(extension, scope, setting = true) {
++    if (AppConstants.platform === "android")
++      throw new ExtensionError("proxy.settings is not supported on android.");
++    if (setting && !extension.privateBrowsingAllowed)
++      throw new ExtensionError(
++        "proxy.settings requires private browsing permission."
++      );
++    if (setting && !Services.policies.isAllowed("changeProxySettings"))
++      throw new ExtensionError(
++        "Proxy settings are being managed by the Policies manager."
++      );
++    if (
++      ![
++        "regular",
++        "regular_only",
++        "incognito_persistent",
++        "incognito_session_only",
++      ].includes(scope)
++    )
++      throw new ExtensionError(`Unsupported Chrome proxy scope: ${scope}`);
++    if (scope !== "regular" && !this.available)
++      throw new ExtensionError(
++        "This proxy scope requires the compiled Floorp scoped proxy runtime."
++      );
++  },
++  mutate(operation) {
++    const task = this.transaction.then(async () => {
++      let release;
++      this.barrier = new Promise(resolve => {
++        release = resolve;
++      });
++      try {
++        await operation();
++        await this.refresh();
++      } finally {
++        this.barrier = null;
++        release();
++      }
++    });
++    this.transaction = task.catch(() => {});
++    return task;
++  },
++  set(extension, details, nativeSet, nativeClear) {
++    const scope = details.scope ?? "regular";
++    this.validate(extension, scope);
++    if (
++      scope === "incognito_session_only" &&
++      !Array.from(Services.wm.getEnumerator("navigator:browser")).some(win =>
++        chromeProxyScopeModules.PrivateBrowsingUtils.isWindowPrivate(win)
++      )
++    )
++      throw new ExtensionError(
++        "An incognito window must be open for incognito_session_only proxy settings."
++      );
++    const value = chromeProxyToGecko(details.value, extension, this.available);
++    value.floorpChromeConfig = geckoProxyToChrome(value);
++    value.floorpChromeMandatory = !!details.value.pacScript?.mandatory;
++    if (value.floorpChromeConfig.pacScript)
++      value.floorpChromeConfig.pacScript.mandatory =
++        value.floorpChromeMandatory;
++    return this.mutate(async () => {
++      const control = await ExtensionPreferencesManager.getLevelOfControl(
++        extension.id,
++        "proxy.settings"
++      );
++      if (control === "not_controllable")
++        throw new ExtensionError("Proxy settings are not controllable.");
++      if (scope === "regular") {
++        await nativeSet({ value });
++        await ExtensionPreferencesManager.removeSetting(
++          extension.id,
++          CHROME_PROXY_REGULAR_ONLY
++        );
++      } else if (scope === "regular_only") {
++        await ExtensionPreferencesManager.setSetting(
++          extension.id,
++          CHROME_PROXY_REGULAR_ONLY,
++          value
++        );
++        await nativeClear({});
++      } else if (scope === "incognito_persistent") {
++        await ExtensionPreferencesManager.setSetting(
++          extension.id,
++          CHROME_PROXY_PRIVATE,
++          value
++        );
++      } else this.sessions.set(extension.id, value);
++    });
++  },
++  clear(extension, details, nativeClear) {
++    const scope = details.scope ?? "regular";
++    // Removing this extension's stored setting remains available after
++    // private permission revocation or a new policy lock, like native clear.
++    this.validate(extension, scope, false);
++    return this.mutate(async () => {
++      if (scope === "regular" || scope === "regular_only") {
++        await nativeClear({});
++        await ExtensionPreferencesManager.removeSetting(
++          extension.id,
++          CHROME_PROXY_REGULAR_ONLY
++        );
++      } else if (scope === "incognito_persistent")
++        await ExtensionPreferencesManager.removeSetting(
++          extension.id,
++          CHROME_PROXY_PRIVATE
++        );
++      else this.sessions.delete(extension.id);
++    });
++  },
++  async get(extension, details, nativeGet) {
++    if (details.incognito && !extension.privateBrowsingAllowed)
++      throw new ExtensionError(
++        "Incognito proxy queries require private browsing permission."
++      );
++    if (details.incognito && !this.available)
++      throw new ExtensionError(
++        "Incognito proxy queries require the compiled Floorp scoped proxy runtime."
++      );
++    await this.ready();
++    const selected = this.selected(!!details.incognito);
++    if (
++      !selected ||
++      !selected.chrome ||
++      (!details.incognito && !selected.force)
++    ) {
++      const value = await nativeGet({});
++      return { ...value, incognitoSpecific: false };
++    }
++    const addon = await chromeProxyScopeModules.AddonManager.getAddonByID(
++      extension.id
++    );
++    let levelOfControl =
++      selected.id === extension.id
++        ? "controlled_by_this_extension"
++        : selected.date > addon.installDate.valueOf()
++          ? "controlled_by_other_extensions"
++          : "controllable_by_this_extension";
++    if (
++      !Services.policies.isAllowed("changeProxySettings") ||
++      (await ExtensionPreferencesManager.getLevelOfControl(
++        extension.id,
++        "proxy.settings"
++      )) === "not_controllable"
++    )
++      levelOfControl = "not_controllable";
++    return {
++      value: selected.value.floorpChromeConfig,
++      levelOfControl,
++      incognitoSpecific: !!details.incognito && selected.kind !== "global",
++    };
++  },
++};
++if (ChromeProxyScopes.available)
++  ChromeProxyScopes.native.registerChromeScopeProvider(
++    ChromeProxyScopes.provider
++  );
++const refreshChromeProxyScopes = () => {
++  ChromeProxyScopes.refresh().catch(Cu.reportError);
++};
++for (const name of [
++  "proxy.settings",
++  CHROME_PROXY_REGULAR_ONLY,
++  CHROME_PROXY_PRIVATE,
++])
++  Management.on(`extension-setting-changed:${name}`, refreshChromeProxyScopes);
++const scopedProxyPrefObserver = { observe: refreshChromeProxyScopes };
++Services.prefs.addObserver("network.proxy.", scopedProxyPrefObserver);
++const scopedProxySessionObserver = {
++  observe() {
++    ChromeProxyScopes.sessions.clear();
++    ++ChromeProxyScopes.epoch;
++    refreshChromeProxyScopes();
++  },
++};
++Services.obs.addObserver(scopedProxySessionObserver, "last-pb-context-exited");
++Management.on("startup", (_event, extension) => {
++  ChromeProxyScopes.startupManifests.delete(extension.id);
++  refreshChromeProxyScopes();
++});
++Management.on("ready", refreshChromeProxyScopes);
++Management.on("disable", (_event, id) => {
++  ChromeProxyScopes.startupManifests.delete(id);
++  ChromeProxyScopes.sessions.delete(id);
++  refreshChromeProxyScopes();
++});
++Management.on("uninstall", (_event, { id }) => {
++  ChromeProxyScopes.startupManifests.delete(id);
++  ChromeProxyScopes.sessions.delete(id);
++  refreshChromeProxyScopes();
++});
++Management.on("change-permissions", (_event, change) => {
++  if (
++    change.removed?.permissions.includes("proxy") ||
++    change.removed?.permissions.includes("internal:privateBrowsingAllowed")
++  ) {
++    ChromeProxyScopes.startupManifests.delete(change.extensionId);
++    ChromeProxyScopes.sessions.delete(change.extensionId);
++    refreshChromeProxyScopes();
++  }
++});
++refreshChromeProxyScopes();
++
++function registerChromeProxySettingsEvent(extension, fire) {
++  const nativeGet = async () => ({
++    value: geckoProxyToChrome(readGeckoProxySettings(extension)),
++    levelOfControl: await ExtensionPreferencesManager.getLevelOfControl(
++      extension.id,
++      "proxy.settings"
++    ),
++  });
++  const snapshot = incognito =>
++    ChromeProxyScopes.get(extension, { incognito }, nativeGet);
++  const previous = new Map();
++  const ready = Promise.all(
++    [
++      false,
++      ...(ChromeProxyScopes.available && extension.privateBrowsingAllowed
++        ? [true]
++        : []),
++    ].map(async incognito => {
++      previous.set(incognito, JSON.stringify(await snapshot(incognito)));
++    })
++  );
++  let pending = false,
++    dirty = false,
++    active = true;
++  const notify = () => {
++    if (!active) return;
++    if (pending) {
++      dirty = true;
++      return;
++    }
++    pending = true;
++    Promise.resolve()
++      .then(async () => {
++        await ready;
++        await ChromeProxyScopes.ready();
++        if (!active) return;
++        let regularChanged = false;
++        for (const incognito of previous.keys()) {
++          const value = await snapshot(incognito);
++          const key = JSON.stringify(value);
++          if (previous.get(incognito) === key) continue;
++          previous.set(incognito, key);
++          if (!incognito) regularChanged = true;
++          // An inherited regular change has one regular event; an independent
++          // private override sends its own incognitoSpecific event.
++          if (incognito && regularChanged && !value.incognitoSpecific) continue;
++          if (fire.wakeup) await fire.wakeup();
++          if (active) fire.async(value);
++        }
++      })
++      .catch(Cu.reportError)
++      .finally(() => {
++        pending = false;
++        if (dirty) {
++          dirty = false;
++          notify();
++        }
++      });
++  };
++  ChromeProxyScopes.listeners.add(notify);
++  const observer = { observe: notify };
++  Services.prefs.addObserver("network.proxy.", observer);
++  Management.on("extension-setting-changed:proxy.settings", notify);
++  return {
++    unregister() {
++      active = false;
++      ChromeProxyScopes.listeners.delete(notify);
++      Services.prefs.removeObserver("network.proxy.", observer);
++      Management.off("extension-setting-changed:proxy.settings", notify);
++    },
++    convert(newFire) {
++      fire = newFire;
++    },
++  };
++}
++
+ function registerProxyFilterEvent(
+   context,
+   extension,
+@@ -144,6 +1226,9 @@ function registerProxyFilterEvent(
+ 
+ this.proxy = class extends ExtensionAPIPersistent {
+   PERSISTENT_EVENTS = {
++    chromeSettings({ fire }) {
++      return registerChromeProxySettingsEvent(this.extension, fire);
++    },
+     onRequest({ fire, context }, params) {
+       return registerProxyFilterEvent(context, this.extension, fire, ...params);
+     },
+@@ -152,8 +1237,9 @@ this.proxy = class extends ExtensionAPIPersistent {
+   getAPI(context) {
+     let { extension } = context;
+     let self = this;
++    const chromeMode = !!ExtensionUtils.getChromeExtensionId(extension);
+ 
+-    return {
++    const api = {
+       proxy: {
+         onRequest: new EventManager({
+           context,
+@@ -183,54 +1269,8 @@ this.proxy = class extends ExtensionAPIPersistent {
+             context,
+             name: "proxy.settings",
+             callback() {
+-              let prefValue = Services.prefs.getIntPref("network.proxy.type");
+-              let socksVersion = Services.prefs.getIntPref(
+-                "network.proxy.socks_version"
+-              );
+-              let proxyDNS;
+-              if (socksVersion == 4) {
+-                proxyDNS = Services.prefs.getBoolPref(
+-                  "network.proxy.socks_remote_dns"
+-                );
+-              } else {
+-                proxyDNS = Services.prefs.getBoolPref(
+-                  "network.proxy.socks5_remote_dns"
+-                );
+-              }
+-
+-              let proxyConfig = {
+-                proxyType: Array.from(PROXY_TYPES_MAP.entries()).find(
+-                  entry => entry[1] === prefValue
+-                )[0],
+-                autoConfigUrl: Services.prefs.getCharPref(
+-                  "network.proxy.autoconfig_url"
+-                ),
+-                autoLogin: Services.prefs.getBoolPref("signon.autologin.proxy"),
+-                proxyDNS,
+-                httpProxyAll: Services.prefs.getBoolPref(
+-                  "network.proxy.share_proxy_settings"
+-                ),
+-                socksVersion,
+-                passthrough: Services.prefs.getCharPref(
+-                  "network.proxy.no_proxies_on"
+-                ),
+-              };
+-
+-              if (extension.isPrivileged) {
+-                proxyConfig.respectBeConservative = Services.prefs.getBoolPref(
+-                  "network.http.proxy.respect-be-conservative"
+-                );
+-              }
+-
+-              for (let prop of ["http", "ssl", "socks"]) {
+-                let host = Services.prefs.getCharPref(`network.proxy.${prop}`);
+-                let port = Services.prefs.getIntPref(
+-                  `network.proxy.${prop}_port`
+-                );
+-                proxyConfig[prop] = port ? `${host}:${port}` : host;
+-              }
+-
+-              return proxyConfig;
++              const value = readGeckoProxySettings(extension);
++              return chromeMode ? geckoProxyToChrome(value) : value;
+             },
+             // proxy.settings is unsupported on android.
+             validate() {
+@@ -262,6 +1302,11 @@ this.proxy = class extends ExtensionAPIPersistent {
+               }
+ 
+               let value = details.value;
++              if (!chromeMode) {
++                delete value.floorpChromeLoopback;
++                delete value.floorpChromeMandatory;
++                delete value.floorpChromeConfig;
++              }
+ 
+               // proxyType is optional and it should default to "system" when missing.
+               if (value.proxyType == null) {
+@@ -348,5 +1393,24 @@ this.proxy = class extends ExtensionAPIPersistent {
+         ),
+       },
+     };
++    if (chromeMode) {
++      const settings = api.proxy.settings;
++      settings.onChange = new EventManager({
++        context,
++        module: "proxy",
++        event: "chromeSettings",
++        extensionApi: self,
++      }).api();
++      const nativeGet = settings.get;
++      const nativeSet = settings.set;
++      const nativeClear = settings.clear;
++      settings.get = details =>
++        ChromeProxyScopes.get(extension, details, nativeGet);
++      settings.set = details =>
++        ChromeProxyScopes.set(extension, details, nativeSet, nativeClear);
++      settings.clear = details =>
++        ChromeProxyScopes.clear(extension, details, nativeClear);
++    }
++    return api;
+   }
+ };
