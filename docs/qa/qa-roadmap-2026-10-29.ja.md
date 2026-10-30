@@ -147,3 +147,10 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - その観測imageへ事前固定した別の限定snapshot診断を用意した。既存selector/profile/verifier/workflowを保ち、全archive identityを保存する。取得成功でもNOT_ADMITTED。元tree/SDKが違えば候補uploadを拒否し、環境が違えばproducerに拒否理由を保存してtar前に止める。
 - 前回通常Floorp CI41031453407の5jobs、docs41031453439のverify、Runtime shadow41031476952はsuccess。Floorpの148 helper hashes/754 IDsは不変で既済全回帰を再実行/加算しない。新診断の構文/起動/差替え/失敗保存/owned cleanupと完全offline baselineを含む29 controlsが秘密情報なし隔離環境で成功した。
 - 新診断は最大20分/初回push1回。Mac42件は未実行、旧45ledger/失敗と旧practicalは不変。具体条件は `qa-sdk-image-snapshot-2026-10-31.ja.md` を参照。
+
+## 2026-10-31 JST 06時台の継続
+
+- Snapshot41078301968/attempt1/head2fe74b81/job124140325890は全step/保存/cleanupがsuccess。report12988147877とSDK診断12987718264の前後認証API/期限/全ZIP bytes/digest/lineage、producer pins/最終stdoutを照合した。
+- 全49701メンバーと全gzip/raw/tree/order/metadata/11 header digestsを別読取処理でも照合。canonical treeとSDK26.5/順序は旧baselineと同じ、新rawf0d4937dを別の完全profileへ固定した。診断snapshotはNOT_ADMITTED、旧57a/32dd profileと失敗は保持する。
+- 単一image20261026.0455.2と新完全profileに事前固定する別producerを追加。最大20分/初回push1回、異なる環境や全identity差は拒否、失敗reportとowned cleanupを保持。次に同run終端/全API/全bytes照合後の実artifact/source/schema4/loaderと負例・新source回帰へ接続する。
+- 通常CI41078286356全5jobs/docs41078286207のverify/shadow41078313206はsuccess。148 helper hashes/754 IDs/loader/旧workflow/45ledgerは不変、既済回帰は再実行/加算なし。Mac42件は未実行。具体条件は `qa-sdk-single-image-2026-10-31.ja.md` を参照。
