@@ -74,9 +74,9 @@
       "indicator-attention": "{{name}} — 워크스페이스 동기화 오류: {{error}}",
       "status-selected": "동기화에 포함됨",
       "status-error": "동기화 오류",
-      "status-paused": "Sync paused",
-      "indicator-paused": "{{name}} — Workspace sync paused: {{error}}",
-      "engine-disabled": "Workspace sync is turned off. Choose Resume Workspace Sync in the workspace menu to sync your selected workspaces."
+      "status-paused": "동기화 중지됨",
+      "indicator-paused": "{{name}} — 워크스페이스 동기화 중지됨: {{error}}",
+      "engine-disabled": "워크스페이스 동기화가 꺼져 있습니다. 선택한 워크스페이스를 동기화하려면 워크스페이스 메뉴에서 '워크스페이스 동기화 재개'를 누르세요."
     },
     "context-menu": {
       "move-up": "이 워크스페이스를 위로 옮기기",
@@ -86,7 +86,7 @@
       "archive": "보관된 워크스페이스",
       "sync": "이 워크스페이스 및 탭 동기화",
       "sync-paused": "워크스페이스 동기화 확인 필요",
-      "sync-resume": "Resume Workspace Sync"
+      "sync-resume": "워크스페이스 동기화 재개"
     },
     "popup": {
       "create-new": "새로운 워크스페이스 만들기...",
@@ -120,8 +120,8 @@
       "invalidWorkspaceID": "워크스페이스 ID가 유효하지 않습니다(주문이 업데이트되지 않았을 수 있음)"
     },
     "containers": {
-      "title": "Workspace Containers",
-      "setup": "Set Up Workspace Containers…",
+      "title": "워크스페이스 컨테이너",
+      "setup": "워크스페이스 컨테이너 설정…",
       "reopen": "Reopen a Tab in Its Synced Container…",
       "status-pending": "Container setup needed",
       "indicator-pending": "{{name}} — Container setup needed: {{error}}",
