@@ -762,6 +762,50 @@ function testShareMenuAndClassKeysAreCustomizable(): void {
   );
 }
 
+function testContainerIdentityOutranksAppearanceClasses(): void {
+  const adapter = createTestAdapter();
+  const registry = new ContextMenuRegistry([adapter]);
+  const work = appendTestNode("menuitem");
+  const personal = appendTestNode("menuitem");
+  for (const row of [work, personal]) {
+    row.classList.add(
+      "menuitem-iconic",
+      "identity-color-blue",
+      "identity-icon-fingerprint",
+    );
+  }
+  work.setAttribute("data-usercontextid", "1");
+  personal.setAttribute("data-usercontextid", "2");
+
+  const workIdentity = registry.identifyItem(adapter, work);
+  const personalIdentity = registry.identifyItem(adapter, personal);
+  assert(
+    workIdentity?.key.startsWith("test.surface.container.1."),
+    "a container row is keyed by data-usercontextid",
+  );
+  assert(
+    personalIdentity?.key.startsWith("test.surface.container.2."),
+    "a second container keeps its own data-usercontextid",
+  );
+  assert(
+    workIdentity?.key !== personalIdentity?.key,
+    "identical color and icon classes do not merge two containers",
+  );
+  assertEquals(
+    workIdentity?.hideable,
+    true,
+    "a container row can be hidden",
+  );
+
+  work.classList.remove("identity-color-blue");
+  work.classList.add("identity-color-red");
+  assertEquals(
+    registry.identifyItem(adapter, work)?.key,
+    workIdentity?.key,
+    "restyling a container does not change its saved key",
+  );
+}
+
 function testIndexKeyExpiresWhenNativeLayoutChanges(): void {
   const popup = appendPopup();
   const registry = new ContextMenuRegistry([createTestAdapter()]);
@@ -3809,6 +3853,10 @@ const tests: TestCase[] = [
   {
     name: "an index key expires when Firefox changes the native layout",
     fn: testIndexKeyExpiresWhenNativeLayoutChanges,
+  },
+  {
+    name: "container identity outranks appearance classes",
+    fn: testContainerIdentityOutranksAppearanceClasses,
   },
   {
     name: "explicit aliases override broad readonly fallbacks",

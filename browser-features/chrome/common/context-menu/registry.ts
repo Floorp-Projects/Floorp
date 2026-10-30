@@ -197,15 +197,32 @@ function encodeKeyToken(value: string): string {
   return `${body}.${fnv1a32(normalized)}`;
 }
 
+function firstAttributeKey(
+  element: Element,
+  candidates: ReadonlyArray<readonly [string, string | null]>,
+): string | null {
+  for (const [prefix, value] of candidates) {
+    if (!value?.trim()) continue;
+    return `${prefix}.${encodeKeyToken(value)}`;
+  }
+  return null;
+}
+
 /**
- * Identity that survives Firefox rebuilding the row. Prefer attributes that
- * name one command or one tab group over the row's sibling index.
+ * The row's own identity. Container color and icon classes are decoration
+ * and must not outrank these attributes.
  */
-function attributeKey(element: Element): string | null {
-  const candidates: Array<[string, string | null]> = [
+function entityKey(element: Element): string | null {
+  return firstAttributeKey(element, [
     ["tab-group", element.getAttribute("tab-group-id")],
     ["profile", element.getAttribute("profileid")],
     ["container", element.getAttribute("data-usercontextid")],
+  ]);
+}
+
+/** A command description used only when the row has no entity id or feature class. */
+function descriptiveKey(element: Element): string | null {
+  return firstAttributeKey(element, [
     [
       "l10n",
       element.getAttribute("data-l10n-id") ??
@@ -216,20 +233,17 @@ function attributeKey(element: Element): string | null {
       "label",
       element.getAttribute("label") ?? element.getAttribute("aria-label"),
     ],
-  ];
-  for (const [prefix, value] of candidates) {
-    if (!value?.trim()) continue;
-    return `${prefix}.${encodeKeyToken(value)}`;
-  }
-  return null;
+  ]);
 }
 
 function siblingLayoutToken(element: Element): string {
   if (element.id) return `#${element.id}`;
+  const entity = entityKey(element);
+  if (entity) return entity;
   const classKey = semanticClassKey(element);
   if (classKey) return `.${classKey}`;
-  const attributes = attributeKey(element);
-  if (attributes) return attributes;
+  const description = descriptiveKey(element);
+  if (description) return description;
   return `anon:${element.localName}`;
 }
 
@@ -252,10 +266,12 @@ function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
     const owner = looksLikeExtensionItem(element) ? "extension" : "firefox";
     return `${owner}.${element.id}`;
   }
+  const entity = entityKey(element);
+  if (entity) return `${adapter.key}.${entity}`;
   const classKey = semanticClassKey(element);
   if (classKey) return `${adapter.key}.class.${classKey}`;
-  const attributes = attributeKey(element);
-  if (attributes) return `${adapter.key}.${attributes}`;
+  const description = descriptiveKey(element);
+  if (description) return `${adapter.key}.${description}`;
   const index = Array.from(element.parentElement?.children ?? []).indexOf(
     element,
   );
