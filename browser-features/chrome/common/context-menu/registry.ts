@@ -224,6 +224,29 @@ function attributeKey(element: Element): string | null {
   return null;
 }
 
+function siblingLayoutToken(element: Element): string {
+  if (element.id) return `#${element.id}`;
+  const classKey = semanticClassKey(element);
+  if (classKey) return `.${classKey}`;
+  const attributes = attributeKey(element);
+  if (attributes) return attributes;
+  return `anon:${element.localName}`;
+}
+
+/**
+ * Hash of the menu as Firefox built it. Identification runs after the
+ * previous overlay is rolled back, so this is the native row sequence, not
+ * the user's order. A saved index key stops matching when that sequence
+ * changes, instead of landing on a newly inserted row.
+ */
+function nativeLayoutFingerprint(element: Element): string {
+  const parent = element.parentElement;
+  const layout = parent
+    ? Array.from(parent.children).map(siblingLayoutToken).join("|")
+    : "";
+  return fnv1a32(layout);
+}
+
 function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
   if (element.id) {
     const owner = looksLikeExtensionItem(element) ? "extension" : "firefox";
@@ -236,7 +259,9 @@ function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
   const index = Array.from(element.parentElement?.children ?? []).indexOf(
     element,
   );
-  return `${adapter.key}.unmanaged.${element.localName}.${Math.max(index, 0)}`;
+  return `${adapter.key}.unmanaged.${element.localName}.${
+    Math.max(index, 0)
+  }.${nativeLayoutFingerprint(element)}`;
 }
 
 function itemCapabilities(
@@ -250,8 +275,6 @@ function itemCapabilities(
     // Preserve the schema-v1 meaning for older Hub code. A separator keeps
     // `customizable` false so a client that only reads that flag does not
     // treat it as an ordinary command. New Hub code uses `hideable`.
-    // A sibling index is not persistent: Firefox can insert another anonymous
-    // row ahead of it, and the saved key would then point at that new row.
     customizable: persistent && kind !== "separator",
     movable: persistent,
     hideable: persistent,
@@ -383,12 +406,11 @@ export class ContextMenuRegistry {
 
     const key = fallbackKey(adapter, element);
     const childKey = childContainerKey(kind, key, element);
-    const persistent = !key.includes(".unmanaged.");
     return {
       key,
       kind,
       source: extensionItem ? "extension" : "firefox",
-      ...itemCapabilities(kind, persistent),
+      ...itemCapabilities(kind, true),
       ...(childKey ? { childContainerKey: childKey } : {}),
     };
   }

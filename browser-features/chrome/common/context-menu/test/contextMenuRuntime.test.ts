@@ -648,20 +648,21 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
     adapter,
     anonymousSeparator,
   );
-  assertEquals(
-    anonymousIdentity?.key,
-    "test.surface.unmanaged.menuseparator.0",
+  assert(
+    anonymousIdentity?.key.startsWith(
+      "test.surface.unmanaged.menuseparator.0.",
+    ),
     "a separator with no id, class, or label keeps an index key",
   );
   assertEquals(
     anonymousIdentity?.movable,
-    false,
-    "an index key is not saved as a move target",
+    true,
+    "an index key bound to the native layout can be moved",
   );
   assertEquals(
     anonymousIdentity?.hideable,
-    false,
-    "an index key is not saved as a visibility override",
+    true,
+    "an index key bound to the native layout can be hidden",
   );
 
   const openLabel = appendTestNode("menuitem");
@@ -750,16 +751,55 @@ function testShareMenuAndClassKeysAreCustomizable(): void {
     tabContextMenuAdapter,
     iconicOnly,
   );
-  assertEquals(
-    iconicIdentity?.key,
-    "browser.tabs.unmanaged.menuitem.0",
+  assert(
+    iconicIdentity?.key.startsWith("browser.tabs.unmanaged.menuitem.0."),
     "a generic iconic class does not become the saved key",
   );
   assertEquals(
     iconicIdentity?.movable,
-    false,
-    "a row with only a generic class is not saved by its sibling index",
+    true,
+    "a row with only a generic class can be moved while the native layout matches",
   );
+}
+
+function testIndexKeyExpiresWhenNativeLayoutChanges(): void {
+  const popup = appendPopup();
+  const registry = new ContextMenuRegistry([createTestAdapter()]);
+  try {
+    const before = appendTestNode("menuitem", "runtime-a");
+    const separator = appendTestNode("menuseparator");
+    const after = appendTestNode("menuitem", "runtime-b");
+    popup.append(before, separator, after);
+    const surface = registry.resolvePopup(popup, window);
+    assert(surface !== null, "layout popup should resolve");
+    const original = registry.identifyItem(surface.adapter, separator);
+    assert(
+      original?.hideable === true && original.movable === true,
+      "the anonymous separator is editable for this native layout",
+    );
+
+    const inserted = appendTestNode("menuitem");
+    before.after(inserted);
+    const shifted = registry.identifyItem(surface.adapter, separator);
+    assert(
+      shifted !== null && shifted.key !== original?.key,
+      "inserting a row changes the anonymous separator key",
+    );
+    assertEquals(
+      registry.resolveItem(surface, original?.key ?? "").status,
+      "missing",
+      "the saved key does not attach to the separator after the layout change",
+    );
+
+    inserted.remove();
+    assertEquals(
+      registry.identifyItem(surface.adapter, separator)?.key,
+      original?.key,
+      "restoring the native layout restores the saved key",
+    );
+  } finally {
+    popup.remove();
+  }
 }
 
 function testExplicitAliasesOverrideBroadReadonlyFallbacks(): void {
@@ -3765,6 +3805,10 @@ const tests: TestCase[] = [
   {
     name: "Share and class-stable rows can be hidden and moved",
     fn: testShareMenuAndClassKeysAreCustomizable,
+  },
+  {
+    name: "an index key expires when Firefox changes the native layout",
+    fn: testIndexKeyExpiresWhenNativeLayoutChanges,
   },
   {
     name: "explicit aliases override broad readonly fallbacks",
