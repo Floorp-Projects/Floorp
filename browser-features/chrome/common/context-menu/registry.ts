@@ -142,8 +142,82 @@ function looksLikeExtensionItem(element: Element): boolean {
     (id.includes("-menuitem-") && id.length > "-menuitem-".length);
 }
 
+/**
+ * Widget classes Firefox paints onto many rows. They do not identify one
+ * command, so they must not become a saved key.
+ */
+const GENERIC_ITEM_CLASSES = new Set([
+  "indent",
+  "menu-iconic",
+  "menu-iconic-auto",
+  "menuitem-iconic",
+  "menuitem-iconic-auto",
+  "subviewbutton",
+  "subviewbutton-iconic",
+  "subviewbutton-nav",
+]);
+
+/**
+ * A feature class such as `share-tab-url-item` stays on the node across
+ * Firefox releases even when the node has no id. One such class is a stable
+ * customization key. Several feature classes are joined so the key still
+ * does not depend on sibling order.
+ */
+function semanticClassKey(element: Element): string | null {
+  const names = Array.from(element.classList).filter((name) =>
+    !GENERIC_ITEM_CLASSES.has(name) &&
+    !name.startsWith("chromeclass-") &&
+    /^[a-z][a-z0-9-]*[a-z0-9]$/i.test(name) &&
+    name.includes("-")
+  ).sort();
+  if (names.length === 0) return null;
+  return names.join("+");
+}
+
+function encodeKeyToken(value: string): string {
+  const token = value.trim().replace(/[^a-z0-9._-]+/gi, "_").replace(
+    /^_+|_+$/g,
+    "",
+  );
+  return (token || "item").slice(0, 80);
+}
+
+/**
+ * Identity that survives Firefox rebuilding the row. Prefer attributes that
+ * name one command or one tab group over the row's sibling index.
+ */
+function attributeKey(element: Element): string | null {
+  const candidates: Array<[string, string | null]> = [
+    ["tab-group", element.getAttribute("tab-group-id")],
+    ["profile", element.getAttribute("profileid")],
+    ["container", element.getAttribute("data-usercontextid")],
+    [
+      "l10n",
+      element.getAttribute("data-l10n-id") ??
+        element.getAttribute("data-lazy-l10n-id"),
+    ],
+    ["command", element.getAttribute("command")],
+    [
+      "label",
+      element.getAttribute("label") ?? element.getAttribute("aria-label"),
+    ],
+  ];
+  for (const [prefix, value] of candidates) {
+    if (!value?.trim()) continue;
+    return `${prefix}.${encodeKeyToken(value)}`;
+  }
+  return null;
+}
+
 function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
-  if (element.id) return `firefox.${element.id}`;
+  if (element.id) {
+    const owner = looksLikeExtensionItem(element) ? "extension" : "firefox";
+    return `${owner}.${element.id}`;
+  }
+  const classKey = semanticClassKey(element);
+  if (classKey) return `${adapter.key}.class.${classKey}`;
+  const attributes = attributeKey(element);
+  if (attributes) return `${adapter.key}.${attributes}`;
   const index = Array.from(element.parentElement?.children ?? []).indexOf(
     element,
   );
@@ -152,25 +226,18 @@ function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
 
 function itemCapabilities(
   kind: ContextMenuItemKind,
-  readonlyItem: boolean,
-  stableKey: boolean,
 ): Pick<
   ContextMenuItemIdentity,
   "customizable" | "movable" | "hideable" | "orderAnchor"
 > {
-  const movable = stableKey && !readonlyItem;
-  const hideable = movable && kind !== "separator";
   return {
-    // Preserve the schema-v1 meaning for older Hub code. In particular, a
-    // separator must not gain a visibility switch merely because it is now
-    // movable.
-    customizable: movable && hideable,
-    movable,
-    hideable,
-    // Protected Firefox/extension nodes retain their exact native slots. Only
-    // user-movable nodes become persisted anchors; anonymous index-derived
-    // keys are also excluded because their meaning may change after updates.
-    orderAnchor: movable,
+    // Preserve the schema-v1 meaning for older Hub code. A separator keeps
+    // `customizable` false so a client that only reads that flag does not
+    // treat it as an ordinary command. New Hub code uses `hideable`.
+    customizable: kind !== "separator",
+    movable: true,
+    hideable: true,
+    orderAnchor: true,
   };
 }
 
@@ -275,7 +342,7 @@ export class ContextMenuRegistry {
         key: floorpKey,
         kind,
         source: "floorp",
-        ...itemCapabilities(kind, false, true),
+        ...itemCapabilities(kind),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
@@ -289,27 +356,20 @@ export class ContextMenuRegistry {
         key: alias.key,
         kind,
         source: extensionItem ? "extension" : alias.source ?? "firefox",
-        // An explicit adapter alias is our strongest ownership contract.
-        // Firefox uses attributes such as data-usercontextid on several of
-        // its own standard commands, so broad fallback selectors must not
-        // accidentally turn a known command into a protected item. Extension
-        // detection still wins because add-on-owned nodes are never safe
-        // persistent targets.
-        ...itemCapabilities(kind, extensionItem, true),
+        // Extension and container rows stay editable. Their alias or id is
+        // the saved key, so a later rebuild still finds the same command.
+        ...itemCapabilities(kind),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
 
-    const readonlyItem = extensionItem ||
-      matchesAny(element, adapter.readonlySelectors);
     const key = fallbackKey(adapter, element);
     const childKey = childContainerKey(kind, key, element);
-    const stableKey = Boolean(element.id);
     return {
       key,
       kind,
-      source: extensionItem ? "extension" : element.id ? "firefox" : "unknown",
-      ...itemCapabilities(kind, readonlyItem, stableKey),
+      source: extensionItem ? "extension" : "firefox",
+      ...itemCapabilities(kind),
       ...(childKey ? { childContainerKey: childKey } : {}),
     };
   }

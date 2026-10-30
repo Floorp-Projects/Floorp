@@ -31,6 +31,7 @@ import {
   FLOORP_CONTEXT_SEPARATOR_HIDDEN_ATTRIBUTE,
   FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE,
 } from "../style.ts";
+import { tabContextMenuAdapter } from "../adapters/tab.ts";
 import { ContextMenuTransaction } from "../transaction.ts";
 import type {
   ContextMenuAdapter,
@@ -575,13 +576,18 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
   );
   assertEquals(
     extensionIdentity.customizable,
-    false,
-    "extension-owned items are read-only",
+    true,
+    "extension-owned items can be hidden and moved",
+  );
+  assertEquals(
+    extensionIdentity.hideable,
+    true,
+    "extension-owned items accept a visibility override",
   );
   assertEquals(
     extensionIdentity.orderAnchor,
-    false,
-    "extension IDs are not persisted as stable order anchors",
+    true,
+    "extension IDs are persisted as order anchors",
   );
 
   const extensionById = appendTestNode(
@@ -592,12 +598,12 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
   assertEquals(
     extensionByIdIdentity?.source,
     "extension",
-    "the WebExtension widget menuitem ID pattern is protected without ext-type",
+    "the WebExtension widget menuitem ID pattern is recognized without ext-type",
   );
   assertEquals(
     extensionByIdIdentity?.customizable,
-    false,
-    "ID-detected extension items remain read-only",
+    true,
+    "ID-detected extension items can be customized",
   );
 
   const floorp = appendTestNode("menuitem");
@@ -623,8 +629,8 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
   );
   assertEquals(
     separatorIdentity?.hideable,
-    false,
-    "a movable separator does not gain a manual visibility override",
+    true,
+    "a separator with a stable key can be hidden",
   );
   assertEquals(
     separatorIdentity?.customizable,
@@ -643,14 +649,96 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
     anonymousSeparator,
   );
   assertEquals(
-    anonymousIdentity?.movable,
-    false,
-    "an index-keyed anonymous separator is not movable",
+    anonymousIdentity?.key,
+    "test.surface.unmanaged.menuseparator.0",
+    "a separator with no id, class, or label keeps an index key",
   );
   assertEquals(
-    anonymousIdentity?.orderAnchor,
-    false,
-    "an index-keyed anonymous separator is not persisted as an anchor",
+    anonymousIdentity?.movable,
+    true,
+    "an index-keyed separator can still be moved",
+  );
+  assertEquals(
+    anonymousIdentity?.hideable,
+    true,
+    "an index-keyed separator can still be hidden",
+  );
+
+  const tabGroup = appendTestNode("menuitem");
+  tabGroup.setAttribute("tab-group-id", "group-1");
+  const tabGroupIdentity = registry.identifyItem(adapter, tabGroup);
+  assertEquals(
+    tabGroupIdentity?.key,
+    "test.surface.tab-group.group-1",
+    "a tab-group row is keyed by its group id",
+  );
+  assertEquals(
+    tabGroupIdentity?.hideable,
+    true,
+    "a tab-group row can be hidden",
+  );
+  assertEquals(
+    tabGroupIdentity?.movable,
+    true,
+    "a tab-group row can be moved",
+  );
+}
+
+function testShareMenuAndClassKeysAreCustomizable(): void {
+  const registry = new ContextMenuRegistry([tabContextMenuAdapter]);
+  const share = appendTestNode("menu");
+  share.classList.add("menu-iconic", "share-tab-url-item");
+  const shareIdentity = registry.identifyItem(tabContextMenuAdapter, share);
+  assertEquals(
+    shareIdentity?.key,
+    "tab.share",
+    "the id-less Share menu uses its stable class alias",
+  );
+  assertEquals(shareIdentity?.movable, true, "Share can be reordered");
+  assertEquals(shareIdentity?.hideable, true, "Share can be hidden");
+  assertEquals(
+    shareIdentity?.orderAnchor,
+    true,
+    "Share can be an insertion target",
+  );
+
+  const classOnly = appendTestNode("menuseparator");
+  classOnly.classList.add("content-context-sep");
+  const classIdentity = registry.identifyItem(
+    tabContextMenuAdapter,
+    classOnly,
+  );
+  assertEquals(
+    classIdentity?.key,
+    "browser.tabs.class.content-context-sep",
+    "a class-only separator gets a position-independent key",
+  );
+  assertEquals(
+    classIdentity?.hideable,
+    true,
+    "a class-only separator can be hidden",
+  );
+  assertEquals(
+    classIdentity?.movable,
+    true,
+    "a class-only separator can be moved",
+  );
+
+  const iconicOnly = appendTestNode("menuitem");
+  iconicOnly.classList.add("menuitem-iconic");
+  const iconicIdentity = registry.identifyItem(
+    tabContextMenuAdapter,
+    iconicOnly,
+  );
+  assertEquals(
+    iconicIdentity?.key,
+    "browser.tabs.unmanaged.menuitem.0",
+    "a generic iconic class does not become the saved key",
+  );
+  assertEquals(
+    iconicIdentity?.movable,
+    true,
+    "a row with only a generic class can still be moved by its index key",
   );
 }
 
@@ -683,16 +771,21 @@ function testExplicitAliasesOverrideBroadReadonlyFallbacks(): void {
   const unknownIdentity = registry.identifyItem(adapter, unknownDynamicItem);
   assertEquals(
     unknownIdentity?.movable,
-    false,
-    "a non-aliased dynamic container item remains protected",
+    true,
+    "a dynamic container command with its own id can be moved",
+  );
+  assertEquals(
+    unknownIdentity?.key,
+    "firefox.runtime-dynamic-container-command",
+    "the container command keeps its element id as the saved key",
   );
 
   const extensionAlias = appendTestNode("menuitem", "runtime-b");
   extensionAlias.setAttribute("ext-type", "context-menu");
   assertEquals(
     registry.identifyItem(adapter, extensionAlias)?.movable,
-    false,
-    "extension ownership still overrides an explicit selector alias",
+    true,
+    "an extension row that matches an alias can be moved",
   );
 }
 
@@ -1319,8 +1412,8 @@ function testCurrentFirefoxContextMenuContracts(): void {
   assertEquals(
     registry.identifyItem(toolbarSurface.adapter, extensionAnchor)
       ?.customizable,
-    false,
-    "the asynchronous extension-control anchor stays in its native slot",
+    true,
+    "the extension-control anchor can be hidden and moved",
   );
 
   const navigationGroup = document.getElementById("context-navigation");
@@ -1575,8 +1668,6 @@ function testTransactionMovesAcrossKnownSeparator(): void {
 
     const transaction = new ContextMenuTransaction(surface, registry, {
       order: ["test.c", "test.separator", "test.a", "test.b"],
-      // A hand-edited preference must not turn a movable separator into a
-      // manually hidden item.
       hidden: ["test.separator"],
     });
     assert(transaction.apply(), "separator-relative order should apply");
@@ -1586,8 +1677,8 @@ function testTransactionMovesAcrossKnownSeparator(): void {
       "a command crosses the separator while a new unconfigured Firefox item keeps its native slot",
     );
     assert(
-      !separator.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
-      "separator visibility cannot be overridden through a stale preference",
+      separator.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "a stable separator can be hidden by the saved preference",
     );
     assertEquals(
       (separator as Element & { hidden: boolean }).hidden,
@@ -1640,11 +1731,11 @@ function testTransactionKeepsProtectedItemInNativeSlot(): void {
     assertEquals(
       childMarkers(popup),
       "runtime-b,runtime-protected,runtime-a",
-      "the protected node keeps its exact native slot",
+      "a formerly protected node follows the saved order",
     );
     assert(
-      !protectedItem.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
-      "the protected node cannot receive a visibility overlay",
+      protectedItem.hasAttribute(FLOORP_CONTEXT_HIDDEN_ATTRIBUTE),
+      "a formerly protected node can receive a visibility overlay",
     );
 
     transaction.rollback();
@@ -3650,6 +3741,10 @@ const tests: TestCase[] = [
   {
     name: "page menus excluded and extensions catalogued read-only",
     fn: testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly,
+  },
+  {
+    name: "Share and class-stable rows can be hidden and moved",
+    fn: testShareMenuAndClassKeysAreCustomizable,
   },
   {
     name: "explicit aliases override broad readonly fallbacks",
