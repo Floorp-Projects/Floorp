@@ -655,21 +655,41 @@ function testRegistryExcludesPageItemsAndKeepsExtensionsReadOnly(): void {
   );
   assertEquals(
     anonymousIdentity?.movable,
-    true,
-    "an index-keyed separator can still be moved",
+    false,
+    "an index key is not saved as a move target",
   );
   assertEquals(
     anonymousIdentity?.hideable,
+    false,
+    "an index key is not saved as a visibility override",
+  );
+
+  const openLabel = appendTestNode("menuitem");
+  openLabel.setAttribute("label", "Открыть");
+  const closeLabel = appendTestNode("menuitem");
+  closeLabel.setAttribute("label", "Закрыть");
+  const openIdentity = registry.identifyItem(adapter, openLabel);
+  const closeIdentity = registry.identifyItem(adapter, closeLabel);
+  assert(
+    openIdentity?.key.includes("Открыть") &&
+      closeIdentity?.key.includes("Закрыть"),
+    "non-Latin labels stay readable in the saved key",
+  );
+  assert(
+    openIdentity?.key !== closeIdentity?.key,
+    "different non-Latin labels do not share one key",
+  );
+  assertEquals(
+    openIdentity?.hideable,
     true,
-    "an index-keyed separator can still be hidden",
+    "a labeled row without an id can be hidden",
   );
 
   const tabGroup = appendTestNode("menuitem");
   tabGroup.setAttribute("tab-group-id", "group-1");
   const tabGroupIdentity = registry.identifyItem(adapter, tabGroup);
-  assertEquals(
-    tabGroupIdentity?.key,
-    "test.surface.tab-group.group-1",
+  assert(
+    tabGroupIdentity?.key.startsWith("test.surface.tab-group.group-1."),
     "a tab-group row is keyed by its group id",
   );
   assertEquals(
@@ -737,8 +757,8 @@ function testShareMenuAndClassKeysAreCustomizable(): void {
   );
   assertEquals(
     iconicIdentity?.movable,
-    true,
-    "a row with only a generic class can still be moved by its index key",
+    false,
+    "a row with only a generic class is not saved by its sibling index",
   );
 }
 

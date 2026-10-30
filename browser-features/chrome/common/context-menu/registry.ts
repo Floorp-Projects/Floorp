@@ -174,12 +174,27 @@ function semanticClassKey(element: Element): string | null {
   return names.join("+");
 }
 
+/** Stable across runs. Covers the whole string so a shortened label cannot collide. */
+function fnv1a32(text: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+/**
+ * Keep letters from every script. A hash of the original text distinguishes
+ * labels that would otherwise share a shortened or punctuated form.
+ */
 function encodeKeyToken(value: string): string {
-  const token = value.trim().replace(/[^a-z0-9._-]+/gi, "_").replace(
-    /^_+|_+$/g,
-    "",
-  );
-  return (token || "item").slice(0, 80);
+  const normalized = value.trim().normalize("NFC");
+  const readable = normalized
+    .replace(/[^\p{L}\p{N}._-]+/gu, "_")
+    .replace(/^_+|_+$/g, "");
+  const body = (readable || "item").slice(0, 48);
+  return `${body}.${fnv1a32(normalized)}`;
 }
 
 /**
@@ -226,6 +241,7 @@ function fallbackKey(adapter: ContextMenuAdapter, element: Element): string {
 
 function itemCapabilities(
   kind: ContextMenuItemKind,
+  persistent: boolean,
 ): Pick<
   ContextMenuItemIdentity,
   "customizable" | "movable" | "hideable" | "orderAnchor"
@@ -234,10 +250,12 @@ function itemCapabilities(
     // Preserve the schema-v1 meaning for older Hub code. A separator keeps
     // `customizable` false so a client that only reads that flag does not
     // treat it as an ordinary command. New Hub code uses `hideable`.
-    customizable: kind !== "separator",
-    movable: true,
-    hideable: true,
-    orderAnchor: true,
+    // A sibling index is not persistent: Firefox can insert another anonymous
+    // row ahead of it, and the saved key would then point at that new row.
+    customizable: persistent && kind !== "separator",
+    movable: persistent,
+    hideable: persistent,
+    orderAnchor: persistent,
   };
 }
 
@@ -342,7 +360,7 @@ export class ContextMenuRegistry {
         key: floorpKey,
         kind,
         source: "floorp",
-        ...itemCapabilities(kind),
+        ...itemCapabilities(kind, true),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
@@ -358,18 +376,19 @@ export class ContextMenuRegistry {
         source: extensionItem ? "extension" : alias.source ?? "firefox",
         // Extension and container rows stay editable. Their alias or id is
         // the saved key, so a later rebuild still finds the same command.
-        ...itemCapabilities(kind),
+        ...itemCapabilities(kind, true),
         ...(childKey ? { childContainerKey: childKey } : {}),
       };
     }
 
     const key = fallbackKey(adapter, element);
     const childKey = childContainerKey(kind, key, element);
+    const persistent = !key.includes(".unmanaged.");
     return {
       key,
       kind,
       source: extensionItem ? "extension" : "firefox",
-      ...itemCapabilities(kind),
+      ...itemCapabilities(kind, persistent),
       ...(childKey ? { childContainerKey: childKey } : {}),
     };
   }

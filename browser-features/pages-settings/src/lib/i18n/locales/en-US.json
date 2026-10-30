@@ -766,7 +766,7 @@
         "editingIndependent": "Use the arrow buttons or Move to… to reorder items. Dragging is also available in Current context. Visibility switches apply only to items Floorp can safely hide in this context profile.",
         "editingShared": "Use the arrow buttons or Move to… to reorder items. Dragging is also available in Current context. Visibility switches apply only to items Floorp can safely hide in the shared layout.",
         "incompleteContainer": "Firefox reported only part of this menu. Unreported saved items will be kept unchanged.",
-        "capabilityHelp": "“Conditional in Firefox” means Firefox hid the item for the most recently observed right-click context. It remains available in All items so you can configure its relative order. Extension rows, tab groups, separators, and rows without an id can be hidden and moved. “Order fixed” appears only when two rows share the same identity, because Floorp cannot tell which one the setting should change.",
+        "capabilityHelp": "“Conditional in Firefox” means Firefox hid the item for the most recently observed right-click context. It remains available in All items so you can configure its relative order. Extension rows, tab groups, separators, and rows identified by a class, command, or label can be hidden and moved. “Order fixed” remains for a row known only by its position, and for two rows that share the same identity.",
         "viewMode": "Items shown",
         "viewCurrent": "Current context",
         "viewAll": "All items",
