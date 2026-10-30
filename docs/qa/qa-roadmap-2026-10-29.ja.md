@@ -140,3 +140,10 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 2つのrunner imageを観測したため、image/OS/Python/Xcode/SDKから先に1つの完全profileを選ぶ限定producerを追加した。未知imageや値の混在/差替えを拒否し、任意の時刻差を許容しない。旧workflow・verifier・profile・source schema1〜3は不変。
 - 新selector9テストと起動/cleanup/report結合12 controlsは秘密情報なし隔離環境で成功。2つの完全offline baselineを結合し、148 helper hashes/754 IDsの不変を確認。既済回帰は再実行・加算していない。
 - 前回通常CI40996000828の5jobsとRuntime shadow40996017301は終端success。新producerは最大20分/初回push1回で別artifactを作り、同run/head/attempt/jobのAPI/全bytes/全内容照合後に採用を判断する。Mac42件は未実行。具体条件は `qa-sdk-image-bound-2026-10-30.ja.md` を参照。
+
+## 2026-10-31 JST 00時台の継続
+
+- 前回image-bound41031469840/attempt1/head7b1d90302/job123981954108は、新しいimage20261026.0455.2を `image-not-pinned` でtar作成前に拒否。SDK0、producer report/cleanup成功。前後API/期限/ZIP全795bytes/digest/lineage/固定5入力hashを照合した。新imageのSDK内容とraw/headerはまだ未確認である。
+- その観測imageへ事前固定した別の限定snapshot診断を用意した。既存selector/profile/verifier/workflowを保ち、全archive identityを保存する。取得成功でもNOT_ADMITTED。元tree/SDKが違えば候補uploadを拒否し、環境が違えばproducerに拒否理由を保存してtar前に止める。
+- 前回通常Floorp CI41031453407の5jobs、docs41031453439のverify、Runtime shadow41031476952はsuccess。Floorpの148 helper hashes/754 IDsは不変で既済全回帰を再実行/加算しない。新診断の構文/起動/差替え/失敗保存/owned cleanupと完全offline baselineを含む29 controlsが秘密情報なし隔離環境で成功した。
+- 新診断は最大20分/初回push1回。Mac42件は未実行、旧45ledger/失敗と旧practicalは不変。具体条件は `qa-sdk-image-snapshot-2026-10-31.ja.md` を参照。
