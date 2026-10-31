@@ -676,6 +676,197 @@ export async function runPageTests() {
       },
     });
   }
+  tests.push({
+    name: "Design style saves only sidebar.verticalTabs",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "horizontal";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.delete("sidebar.revamp");
+        await route(
+          "features/design",
+          'input[name="style"][value="horizontal"]',
+        );
+
+        await click('input[name="style"][value="vertical"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === true,
+          "Vertical tabs pref was not enabled",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp",
+        );
+
+        await click('input[name="style"][value="multirow"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === false,
+          "Multirow did not disable native vertical tabs",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp for multirow",
+        );
+
+        await click('input[name="style"][value="horizontal"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === false,
+          "Horizontal did not disable native vertical tabs",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp for horizontal",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+        prefs.delete("sidebar.revamp");
+      }
+    },
+  });
+  tests.push({
+    name: "Design reflects native vertical tabs turned off",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route(
+          "features/design",
+          'input[name="style"][value="horizontal"]',
+        );
+        assert(
+          element<HTMLInputElement>('input[name="style"][value="horizontal"]')
+            .checked,
+          "The Hub must show horizontal when native vertical tabs are off",
+        );
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "vertical",
+          "Loading the page must not rewrite the stored config",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design keeps vertical when the native pref is unavailable",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.delete("sidebar.verticalTabs");
+        await route("features/design", 'input[name="style"][value="vertical"]');
+        assert(
+          element<HTMLInputElement>('input[name="style"][value="vertical"]')
+            .checked,
+          "A missing native pref must fall back to the stored config",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design unrelated edits leave native vertical tabs untouched",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", true);
+        await route("features/design", "#favicon-color");
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          prefs.get("sidebar.verticalTabs"),
+          true,
+          "Unrelated edits must not change the native vertical tabs pref",
+        );
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "vertical",
+          "Unrelated edits must keep the effective style",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design unrelated edits heal a stale vertical config",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route("features/design", "#favicon-color");
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "horizontal",
+          "Saving must persist the effective native style",
+        );
+        assertEquals(
+          prefs.get("sidebar.verticalTabs"),
+          false,
+          "Native vertical tabs must stay off",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
   await executeCases(tests);
 }
 
