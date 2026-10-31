@@ -18,6 +18,14 @@ REPOSITORY = 'Floorp-Projects/Floorp-Runtime'
 BRANCH = 'codex/mac-native-firefox45-fresh-recovery64-20261020'
 JOB_NAME = 'fresh-firefox45'
 PROFILE = 'fresh-firefox45-job-origin-v1'
+CONTINUATION_BRANCH = 'b/qa-fresh45-20261026'
+CONTINUATION_PROFILE = 'fresh-firefox45-job-origin-20261026-v1'
+INSTALL_REPAIR_BRANCH = 'b/qa-fresh45-install-20261027'
+INSTALL_REPAIR_PROFILE = 'fresh-firefox45-install-job-origin-20261027-v1'
+MONITOR_REPAIR_BRANCH = 'b/qa-fresh45-monitor-20261028'
+MONITOR_REPAIR_PROFILE = 'fresh-firefox45-monitor-job-origin-20261028-v1'
+DIAGNOSTICS_BRANCH = 'b/qa-fresh45-diagnostics-20261029'
+DIAGNOSTICS_PROFILE = 'fresh-firefox45-diagnostics-job-origin-20261029-v1'
 API_CAP = 2 * 1024**2
 
 
@@ -40,13 +48,25 @@ def _decode(raw):
         raise Failure('fresh-origin-api-json') from None
 
 
-def initialize(task, *, environment=None, opener=None, wall_clock=None, monotonic_clock=None):
+def initialize(task, *, environment=None, opener=None, wall_clock=None, monotonic_clock=None,
+               continuation=False, install_repair=False, monitor_repair=False, diagnostics=False):
     """No clock reset, checkpoint role, payload operation, or permission mutation."""
     env = os.environ if environment is None else environment
     wall = time.time if wall_clock is None else wall_clock
     mono = time.monotonic if monotonic_clock is None else monotonic_clock
+    selectors = (continuation, install_repair, monitor_repair, diagnostics)
+    require(all(type(value) is bool for value in selectors) and
+            sum(selectors) <= 1, 'fresh-origin-run-scope')
+    branch = CONTINUATION_BRANCH if continuation else BRANCH
+    profile = CONTINUATION_PROFILE if continuation else PROFILE
+    if install_repair:
+        branch, profile = INSTALL_REPAIR_BRANCH, INSTALL_REPAIR_PROFILE
+    if monitor_repair:
+        branch, profile = MONITOR_REPAIR_BRANCH, MONITOR_REPAIR_PROFILE
+    if diagnostics:
+        branch, profile = DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and env.get('GITHUB_EVENT_NAME') == 'push' and
-            env.get('GITHUB_RUN_ATTEMPT') == '1' and env.get('GITHUB_REF') == 'refs/heads/' + BRANCH and
+            env.get('GITHUB_RUN_ATTEMPT') == '1' and env.get('GITHUB_REF') == 'refs/heads/' + branch and
             env.get('FRESH_PUSH_CREATED') == 'true' and env.get('FRESH_PUSH_BEFORE') == '0' * 40,
             'fresh-origin-run-scope')
     run_id, head, token = env.get('GITHUB_RUN_ID'), env.get('GITHUB_SHA'), env.get('JOB_READ_TOKEN')
@@ -80,7 +100,7 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
 
     run = api('runs/' + run_id)
     require(type(run) is dict and type(run.get('id')) is int and run['id'] == int(run_id) and
-            run.get('head_sha') == head and run.get('head_branch') == BRANCH and
+            run.get('head_sha') == head and run.get('head_branch') == branch and
             type(run.get('run_attempt')) is int and run['run_attempt'] == 1 and run.get('event') == 'push' and run.get('status') == 'in_progress' and
             type(run.get('repository')) is dict and run['repository'].get('full_name') == REPOSITORY,
             'fresh-origin-run-provenance')
@@ -105,7 +125,7 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
     age = now_wall - started
     origin = now_mono - max(0, age)
     require(-2 <= age < 600 and 0 < origin <= now_mono, 'fresh-origin-job-age')
-    record = {'schema': 1, 'profile': PROFILE, 'repository': REPOSITORY, 'run': int(run_id),
+    record = {'schema': 1, 'profile': profile, 'repository': REPOSITORY, 'run': int(run_id),
               'attempt': 1, 'head': head, 'ref': env['GITHUB_REF'], 'event': 'push',
               'job': job['id'], 'jobName': JOB_NAME, 'startedAt': job['started_at'],
               'platformMinutes': 360, 'workDeadlineMinutes': 345, 'clockResetAllowed': False}
@@ -139,9 +159,17 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=Path, required=True)
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--continuation-20261026', action='store_true')
+    selection.add_argument('--install-repair-20261027', action='store_true')
+    selection.add_argument('--monitor-repair-20261028', action='store_true')
+    selection.add_argument('--diagnostics-20261029', action='store_true')
     args = parser.parse_args()
     try:
-        initialize(args.task)
+        initialize(args.task, continuation=args.continuation_20261026,
+                   install_repair=args.install_repair_20261027,
+                   monitor_repair=args.monitor_repair_20261028,
+                   diagnostics=args.diagnostics_20261029)
     except Failure as error:
         print(json.dumps({'freshJobOrigin': 'failed', 'code': str(error)}), flush=True)
         return 1

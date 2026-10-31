@@ -69,6 +69,186 @@ class FreshJobOriginTests(unittest.TestCase):
         with self.assertRaisesRegex(Failure,'^fresh-origin-task-exists-or-unavailable$'):self.invoke()
         self.assertEqual(marker.read_text(),'old')
 
+    def test_continuation_route_requires_explicit_selection_and_bound_api_branch(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.CONTINUATION_BRANCH
+        self.run['head_branch']=origin.CONTINUATION_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):self.invoke()
+        self.assertEqual(self.requests,[])
+        record=origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,continuation=True)
+        self.assertEqual(record['profile'],'fresh-firefox45-job-origin-20261026-v1')
+        self.assertEqual(record['ref'],'refs/heads/b/qa-fresh45-20261026')
+        self.assertEqual((record['platformMinutes'],record['workDeadlineMinutes']),(360,345))
+        self.assertIs(record['clockResetAllowed'],False)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()),940)
+
+    def test_install_repair_has_explicit_bound_branch_and_original_clock_limits(self):
+        self.env['GITHUB_REF'] = 'refs/heads/b/qa-fresh45-install-20261027'
+        self.run['head_branch'] = 'b/qa-fresh45-install-20261027'
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'): self.invoke()
+        self.assertEqual(self.requests, [])
+        record = origin.initialize(self.task, environment=self.env, opener=self.client,
+            wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, install_repair=True)
+        self.assertEqual(record['profile'], 'fresh-firefox45-install-job-origin-20261027-v1')
+        self.assertEqual(record['ref'], self.env['GITHUB_REF'])
+        self.assertEqual((record['platformMinutes'], record['workDeadlineMinutes']), (360, 345))
+        self.assertIs(record['clockResetAllowed'], False)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()), 940)
+        self.requests.clear()
+        with self.assertRaisesRegex(Failure, 'task-exists-or-unavailable'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, install_repair=True)
+
+    def test_install_repair_rejects_other_routes_reruns_and_noninitial_push_before_api(self):
+        for key, value in (('GITHUB_REF', 'refs/heads/'+origin.BRANCH),
+                ('GITHUB_REF', 'refs/heads/'+origin.CONTINUATION_BRANCH),
+                ('GITHUB_REF', 'refs/heads/main'), ('GITHUB_RUN_ATTEMPT', '2'),
+                ('GITHUB_EVENT_NAME', 'workflow_dispatch'), ('FRESH_PUSH_CREATED', 'false'),
+                ('FRESH_PUSH_BEFORE', 'a'*40)):
+            env = {**self.env, 'GITHUB_REF': 'refs/heads/'+origin.INSTALL_REPAIR_BRANCH, key: value}
+            with self.subTest(key=key, value=value), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, opener=self.client, install_repair=True)
+        for selector in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=self.env, install_repair=selector)
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+            origin.initialize(self.task, environment=self.env, continuation=True, install_repair=True)
+        self.assertEqual(self.requests, []); self.assertFalse(self.task.exists())
+
+    def test_install_repair_requires_same_branch_in_authenticated_run_metadata(self):
+        self.env['GITHUB_REF'] = 'refs/heads/'+origin.INSTALL_REPAIR_BRANCH
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-provenance'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, install_repair=True)
+        self.assertFalse(self.task.exists())
+
+    def test_cli_install_repair_selects_only_its_explicit_profile(self):
+        with mock.patch.object(origin, 'initialize') as initialize, \
+             mock.patch('sys.argv', ['fresh_job_origin.py', '--task', str(self.task),
+                                    '--install-repair-20261027']), \
+             mock.patch('sys.stdout', new_callable=io.StringIO):
+            self.assertEqual(origin.main(), 0)
+        initialize.assert_called_once_with(self.task, continuation=False, install_repair=True,
+                                           monitor_repair=False, diagnostics=False)
+
+    def test_monitor_repair_requires_initial_bound_branch_and_keeps_original_budget(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
+        self.run['head_branch']=origin.MONITOR_REPAIR_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):self.invoke()
+        self.assertEqual(self.requests,[])
+        record=origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertEqual(record['profile'],'fresh-firefox45-monitor-job-origin-20261028-v1')
+        self.assertEqual(record['ref'],'refs/heads/b/qa-fresh45-monitor-20261028')
+        self.assertEqual((record['platformMinutes'],record['workDeadlineMinutes']),(360,345))
+        self.assertIs(record['clockResetAllowed'],False)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()),940)
+
+    def test_monitor_repair_rejects_routes_reruns_dispatch_and_ambiguous_selectors(self):
+        for key,value in (('GITHUB_REF','refs/heads/'+origin.BRANCH),
+                ('GITHUB_REF','refs/heads/'+origin.CONTINUATION_BRANCH),
+                ('GITHUB_REF','refs/heads/'+origin.INSTALL_REPAIR_BRANCH),
+                ('GITHUB_REF','refs/heads/main'),('GITHUB_RUN_ATTEMPT','2'),
+                ('GITHUB_EVENT_NAME','workflow_dispatch'),('FRESH_PUSH_CREATED','false'),
+                ('FRESH_PUSH_BEFORE','a'*40)):
+            env={**self.env,'GITHUB_REF':'refs/heads/'+origin.MONITOR_REPAIR_BRANCH,key:value}
+            with self.subTest(key=key,value=value),self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=env,opener=self.client,monitor_repair=True)
+        for selection in (None,1,'true'):
+            with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=self.env,monitor_repair=selection)
+        for other in ('continuation','install_repair'):
+            with self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=self.env,monitor_repair=True,**{other:True})
+        self.assertEqual(self.requests,[]);self.assertFalse(self.task.exists())
+
+    def test_monitor_repair_requires_authenticated_run_branch_and_never_reuses_task(self):
+        self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-provenance'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertFalse(self.task.exists())
+        self.requests.clear();self.run['head_branch']=origin.MONITOR_REPAIR_BRANCH
+        origin.initialize(self.task,environment=self.env,opener=self.client,
+            wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        before={p.name:p.read_bytes() for p in self.task.iterdir()}
+        self.requests.clear()
+        with self.assertRaisesRegex(Failure,'task-exists-or-unavailable'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono,monitor_repair=True)
+        self.assertEqual({p.name:p.read_bytes() for p in self.task.iterdir()},before)
+
+    def test_cli_monitor_repair_selects_only_explicit_new_profile(self):
+        with mock.patch.object(origin,'initialize') as initialize, \
+             mock.patch('sys.argv',['fresh_job_origin.py','--task',str(self.task),
+                                    '--monitor-repair-20261028']), \
+             mock.patch('sys.stdout',new_callable=io.StringIO):
+            self.assertEqual(origin.main(),0)
+        initialize.assert_called_once_with(self.task,continuation=False,install_repair=False,
+                                           monitor_repair=True,diagnostics=False)
+
+    def test_diagnostics_route_preserves_original_clock_and_rejects_old_routes(self):
+        for branch in (origin.BRANCH, origin.CONTINUATION_BRANCH, origin.INSTALL_REPAIR_BRANCH,
+                       origin.MONITOR_REPAIR_BRANCH, 'main'):
+            with self.subTest(branch=branch), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**self.env, 'GITHUB_REF': 'refs/heads/'+branch},
+                                  opener=self.client, diagnostics=True)
+        self.assertEqual(self.requests, [])
+        self.env['GITHUB_REF'] = 'refs/heads/'+origin.DIAGNOSTICS_BRANCH
+        self.run['head_branch'] = origin.DIAGNOSTICS_BRANCH
+        record = origin.initialize(self.task, environment=self.env, opener=self.client,
+            wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, diagnostics=True)
+        self.assertEqual(record['profile'], origin.DIAGNOSTICS_PROFILE)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()), 940)
+        self.assertEqual((record['platformMinutes'], record['workDeadlineMinutes']), (360, 345))
+        self.assertIs(record['clockResetAllowed'], False)
+
+    def test_diagnostics_route_rejects_reruns_noninitial_push_and_selector_ambiguity(self):
+        env = {**self.env, 'GITHUB_REF': 'refs/heads/'+origin.DIAGNOSTICS_BRANCH}
+        for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                           ('FRESH_PUSH_CREATED', 'false'), ('FRESH_PUSH_BEFORE', 'a'*40)):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**env, key: value}, diagnostics=True)
+        for key in ('continuation', 'install_repair', 'monitor_repair'):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, diagnostics=True, **{key: True})
+        for value in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, diagnostics=value)
+        self.assertFalse(self.task.exists())
+
+    def test_diagnostics_requires_same_authenticated_run_branch(self):
+        self.env['GITHUB_REF'] = 'refs/heads/'+origin.DIAGNOSTICS_BRANCH
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-provenance'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, diagnostics=True)
+        self.assertFalse(self.task.exists())
+
+    def test_cli_diagnostics_selects_only_its_explicit_profile(self):
+        with mock.patch.object(origin, 'initialize') as initialize, \
+             mock.patch('sys.argv', ['fresh_job_origin.py', '--task', str(self.task), '--diagnostics-20261029']), \
+             mock.patch('sys.stdout', new_callable=io.StringIO):
+            self.assertEqual(origin.main(), 0)
+        initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
+                                           monitor_repair=False, diagnostics=True)
+
+    def test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch(self):
+        for selector in (None,1,'true'):
+            with self.assertRaises(Failure):
+                origin.initialize(self.task,environment=self.env,opener=self.client,continuation=selector)
+        for key,value in (('GITHUB_REF',self.env['GITHUB_REF']),('GITHUB_REF','refs/heads/main'),
+                          ('GITHUB_RUN_ATTEMPT','2'),('GITHUB_EVENT_NAME','workflow_dispatch'),
+                          ('FRESH_PUSH_CREATED','false'),('FRESH_PUSH_BEFORE','a'*40)):
+            env={**self.env,'GITHUB_REF':'refs/heads/'+origin.CONTINUATION_BRANCH,key:value}
+            with self.subTest(key=key,value=value),self.assertRaisesRegex(Failure,'fresh-origin-run-scope'):
+                origin.initialize(self.task,environment=env,opener=self.client,continuation=True)
+        self.assertEqual(self.requests,[]);self.assertFalse(self.task.exists())
+        self.env['GITHUB_REF']='refs/heads/'+origin.CONTINUATION_BRANCH
+        with self.assertRaisesRegex(Failure,'fresh-origin-run-provenance'):
+            origin.initialize(self.task,environment=self.env,opener=self.client,continuation=True,
+                wall_clock=lambda:self.wall,monotonic_clock=lambda:self.mono)
+        self.assertFalse(self.task.exists())
+
     def test_symlink_to_existing_task_cannot_reset_its_clock(self):
         actual=self.root/'actual';actual.mkdir();(actual/'started').write_text('old')
         self.task.symlink_to(actual)

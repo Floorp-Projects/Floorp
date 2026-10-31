@@ -86,6 +86,178 @@ class UpstreamTests(unittest.TestCase):
                          {'selected':45,'executed':42,'passed':42,'skipped':3})
         self.assertTrue(all(row['actual']=='SKIP' for row in receipt['tests'][-3:]))
 
+    def test_incomplete_log_keeps_observations_without_claiming_test_results(self):
+        receipt=self.receipt(self.raw_rows()[:-1])
+        self.assertFalse(receipt['completeLog']);self.assertIsNone(receipt['counts'])
+        self.assertEqual(receipt['tests'],[])
+        self.assertEqual(receipt['reason'],'mozilla-harness-incomplete-suite')
+        diagnostic=receipt['diagnostic']
+        self.assertEqual(diagnostic['actions']['test_end'],45)
+        self.assertEqual(diagnostic['actions']['suite_end'],0)
+        self.assertFalse(diagnostic['productQualification'])
+        self.assertFalse(receipt['expectationsSatisfied'])
+
+    def test_unknown_event_is_diagnostic_only_and_does_not_publish_its_text(self):
+        rows=self.raw_rows()
+        rows.insert(1,{'action':'PRIVATE_ACTION','time':1,'message':'PRIVATE_MESSAGE',
+                       'test':'PRIVATE_TEST','path':'/PRIVATE_PATH','status':'PRIVATE_STATUS'})
+        receipt=self.receipt(rows)
+        self.assertEqual(receipt['reason'],'mozilla-harness-unknown-action')
+        self.assertFalse(receipt['completeLog']);self.assertIsNone(receipt['counts'])
+        self.assertEqual(receipt['diagnostic']['actions']['other'],1)
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
+    def test_exception_diagnostic_keeps_only_fixed_types_and_no_exception_text(self):
+        rows=self.raw_rows()
+        rows.insert(1,{'action':'log','time':1,'level':'ERROR',
+            'message':'ModuleNotFoundError: PRIVATE_TOKEN\nPermissionError: /PRIVATE_PATH'})
+        receipt=self.receipt(rows)
+        self.assertEqual(receipt['diagnostic']['exceptionTypes'],['ModuleNotFoundError','PermissionError'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+        self.assertFalse(receipt['expectationsSatisfied'])
+
+    def test_invalid_record_preserves_only_prior_diagnostic_counts(self):
+        raw=(json.dumps(self.raw_rows()[0])+'\n'+
+             '{"action":"log","action":"PRIVATE_DUPLICATE","time":1}\n').encode()
+        self.path.write_bytes(raw)
+        receipt=upstream.scope_receipt(self.path,self.expected)
+        self.assertEqual(receipt['reason'],'mozilla-harness-json')
+        self.assertEqual(receipt['diagnostic']['status'],'rejected')
+        self.assertEqual(receipt['diagnostic']['recordsObserved'],1)
+        self.assertEqual(receipt['diagnostic']['actions']['suite_start'],1)
+        self.assertEqual(receipt['sha256'],hashlib.sha256(raw).hexdigest())
+        self.assertIsNone(receipt['counts']);self.assertFalse(receipt['completeLog'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
+    def test_partial_line_retains_identity_but_never_qualifies_the_prefix(self):
+        raw=(json.dumps(self.raw_rows()[0])+'\n'+
+             '{"action":"PRIVATE_PARTIAL"').encode()
+        self.path.write_bytes(raw)
+        receipt=upstream.scope_receipt(self.path,self.expected)
+        self.assertEqual(receipt['reason'],'mozilla-harness-partial-log')
+        self.assertEqual(receipt['diagnostic']['status'],'rejected')
+        self.assertEqual(receipt['diagnostic']['recordsObserved'],0)
+        self.assertEqual(receipt['sha256'],hashlib.sha256(raw).hexdigest())
+        self.assertFalse(receipt['expectationsSatisfied']);self.assertIsNone(receipt['counts'])
+        self.assertNotIn('PRIVATE',json.dumps(receipt))
+
+    def test_pre_harness_ledger_preserves_all_cases_without_inventing_skips(self):
+        value=self.proof();value.update(status='failed',case=None)
+        original=copy.deepcopy(value)
+        ledger=upstream.execution_ledger(value)
+        self.assertEqual(value,original)
+        self.assertEqual(ledger['status'],'not-executed')
+        self.assertTrue(ledger['inventoryVerified']);self.assertFalse(ledger['terminalLogObserved'])
+        self.assertEqual(ledger['counts'],{'planned':45,'eligible':42,'manifestDisabled':3,
+            'recorded':0,'executed':0,'passed':0,'expectedFailures':0,'unexpectedResults':0,
+            'skipped':0,'notExecuted':42,'unverified':0})
+        self.assertEqual({row['id'] for row in ledger['tests']},set(self.ids))
+        self.assertEqual(sum(row['execution']=='NOT_EXECUTED' for row in ledger['tests']),42)
+        self.assertEqual(sum(row['execution']=='MANIFEST_DISABLED' for row in ledger['tests']),3)
+        self.assertTrue(all(row['actual'] is None for row in ledger['tests']))
+        self.assertFalse(ledger['productQualification'])
+
+    def test_unknown_or_tampered_inventory_keeps_eligibility_and_results_unknown(self):
+        value=self.proof();value.update(status='failed',case=None)
+        variants=[None,{}, {**value,'inventoryReceipt':{'bytes':1,'sha256':'0'*64}}]
+        for field,replacement in (('scopeTests',value['inventory']['scopeTests'][:-1]),
+                                  ('testsExecuted',True),('planSHA256','0'*64)):
+            changed=copy.deepcopy(value);changed['inventory'][field]=replacement
+            changed['inventoryReceipt']=binding(changed['inventory']);variants.append(changed)
+        changed=copy.deepcopy(value)
+        changed['inventory']['scopeTests'][-1]=dict(changed['inventory']['scopeTests'][0])
+        changed['inventoryReceipt']=binding(changed['inventory']);variants.append(changed)
+        changed=copy.deepcopy(value);changed['inventory']['scope']['manifestEnabledRecords']=True
+        changed['inventoryReceipt']=binding(changed['inventory']);variants.append(changed)
+        for variant in variants:
+            with self.subTest(variant=variant is None):
+                ledger=upstream.execution_ledger(variant)
+                self.assertEqual(ledger['status'],'unverified')
+                self.assertEqual(ledger['counts']['planned'],45)
+                self.assertEqual(ledger['counts']['unverified'],45)
+                for key in ('eligible','manifestDisabled','executed','passed','skipped','notExecuted'):
+                    self.assertIsNone(ledger['counts'][key])
+                self.assertTrue(all(row['execution']=='UNVERIFIED' and row['actual'] is None
+                                    for row in ledger['tests']))
+
+    def test_missing_case_or_incomplete_log_cannot_be_reported_as_not_executed(self):
+        value=self.proof()
+        absent=copy.deepcopy(value);del absent['case']
+        missing=copy.deepcopy(value);missing['case']={}
+        incomplete=copy.deepcopy(value)
+        incomplete['case']['harness']=self.receipt(self.raw_rows()[:-1])
+        self.assertEqual(incomplete['case']['harness']['status'],'unavailable')
+        for variant in (absent,missing,incomplete):
+            ledger=upstream.execution_ledger(variant)
+            self.assertEqual(ledger['status'],'unverified')
+            self.assertTrue(ledger['inventoryVerified'])
+            self.assertEqual(ledger['counts']['unverified'],42)
+            self.assertIsNone(ledger['counts']['executed'])
+            self.assertIsNone(ledger['counts']['notExecuted'])
+            self.assertTrue(all(row['actual'] is None for row in ledger['tests']))
+
+    def test_terminal_results_are_separate_from_process_and_product_qualification(self):
+        value=self.proof();value['private']='PRIVATE'
+        ledger=upstream.execution_ledger(value)
+        self.assertEqual(ledger['status'],'recorded');self.assertTrue(ledger['processEvidenceComplete'])
+        self.assertEqual(ledger['counts']['recorded'],45)
+        self.assertEqual(ledger['counts']['executed'],42)
+        self.assertEqual(ledger['counts']['passed'],42);self.assertEqual(ledger['counts']['skipped'],3)
+        self.assertFalse(ledger['productQualification']);self.assertNotIn('PRIVATE',json.dumps(ledger))
+        value['case']['process']['exactReaped']=False
+        value['case']['monitorFailureObserved']=True
+        value['case']['monitorFailure']={'private':'PRIVATE'}
+        changed=upstream.execution_ledger(value)
+        self.assertEqual(changed['counts'],ledger['counts'])
+        self.assertFalse(changed['processEvidenceComplete']);self.assertFalse(changed['productQualification'])
+        self.assertNotIn('PRIVATE',json.dumps(changed))
+
+    def test_unexpected_failure_and_expected_failure_keep_different_observed_counts(self):
+        value=self.proof();rows=self.raw_rows();rows[2].update(status='FAIL',expected='PASS')
+        value['case']['harness']=self.receipt(rows)
+        ledger=upstream.execution_ledger(value)
+        self.assertEqual(ledger['status'],'recorded')
+        self.assertEqual(ledger['counts']['passed'],41)
+        self.assertEqual(ledger['counts']['unexpectedResults'],1)
+        self.assertEqual(ledger['counts']['expectedFailures'],0)
+        self.assertEqual(next(row for row in ledger['tests'] if row['id']==self.ids[0])['actual'],'FAIL')
+        value=self.proof();self.expected[self.ids[0]]='FAIL'
+        value['inventory']['scopeTests'][0]['expected']='FAIL'
+        for key in ('scope','global'):value['inventory'][key]['expectedFailureRecords']=1
+        value['inventoryReceipt']=binding(value['inventory'])
+        value['case']['harness']=self.receipt()
+        ledger=upstream.execution_ledger(value)
+        self.assertEqual(ledger['status'],'recorded')
+        self.assertEqual(ledger['counts']['passed'],41)
+        self.assertEqual(ledger['counts']['unexpectedResults'],0)
+        self.assertEqual(ledger['counts']['expectedFailures'],1)
+
+    def test_terminal_ledger_rejects_duplicate_ids_boolean_counts_and_wrong_lifecycle(self):
+        original=self.proof()
+        variants=[]
+        for path,replacement in [(('counts','executed'),True),(('counts','passed'),43),
+                                  (('counts','rawLifecycle','suiteEnds'),False),
+                                  (('counts','rawLifecycle','testEndStatuses','SKIP'),0),
+                                  (('sha256',),'invalid'),(('completeLog',),False)]:
+            value=copy.deepcopy(original);node=value['case']['harness']
+            for key in path[:-1]:node=node[key]
+            node[path[-1]]=replacement;variants.append(value)
+        value=copy.deepcopy(original)
+        value['case']['harness']['tests'][-1]=dict(value['case']['harness']['tests'][0]);variants.append(value)
+        for value in variants:
+            ledger=upstream.execution_ledger(value)
+            self.assertEqual(ledger['status'],'unverified')
+            self.assertTrue(ledger['inventoryVerified']);self.assertFalse(ledger['terminalLogObserved'])
+            self.assertIsNone(ledger['counts']['passed']);self.assertIsNone(ledger['counts']['executed'])
+            self.assertTrue(all(row['actual'] is None for row in ledger['tests']))
+
+    def test_unreadable_plan_still_returns_diagnostic_failure_without_case_claims(self):
+        with mock.patch.object(upstream,'plan_definition',side_effect=OSError('PRIVATE')):
+            ledger=upstream.execution_ledger(self.proof())
+        self.assertEqual(ledger['status'],'unverified');self.assertEqual(ledger['tests'],[])
+        self.assertTrue(all(value is None for value in ledger['counts'].values()))
+        self.assertNotIn('PRIVATE',json.dumps(ledger));self.assertFalse(ledger['productQualification'])
+
     def test_known_failure_keeps_actual_fail_and_separate_count(self):
         expected=dict(self.expected);expected[self.ids[0]]='FAIL'
         receipt=self.receipt(expected=expected)
@@ -336,6 +508,14 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(result['case']['caughtCode'],'nonzero-exit')
         self.assertIsNotNone(result['case']['evidenceWriteFailure'])
 
+    def test_console_diagnostic_failure_cannot_replace_child_primary_or_promote_pass(self):
+        with mock.patch.object(upstream,'full_log_receipt',side_effect=OSError('PRIVATE')):
+            result,primary=self.run_case_control(fail=True)
+        self.assertEqual(result['case']['runnerFailure'],primary)
+        self.assertEqual(result['case']['consoleLog']['errorType'],'unavailable')
+        self.assertEqual(result['status'],'failed')
+        self.assertNotIn('PRIVATE',json.dumps(result))
+
     def test_collection_failure_cannot_replace_child_primary_or_keep_pass(self):
         result,primary=self.run_case_control(fail=True,collection=True)
         self.assertEqual(result['status'],'failed')
@@ -528,7 +708,28 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(result['inventoryDiagnostic']['journal']['errorPhase'],'imports')
         self.assertEqual(result['status'],'failed')
         self.assertIsNone(result['inventory'])
-        self.assertEqual(calls,[upstream.PREPARE_STAGE,upstream.INVENTORY_STAGE])
+        self.assertEqual(calls,list(upstream.PREPARE_STAGES))
+
+    def test_helper_install_failure_stops_before_inventory_under_original_deadline(self):
+        calls=[]
+        primary=Failure('controlled-install-failure')
+        def run(stage,command,cwd,env,limit,**kwargs):
+            calls.append(stage)
+            self.assertEqual(limit,360)
+            self.assertEqual(kwargs['phase_deadline_minutes'],345)
+            if stage==upstream.HELPER_INSTALL_STAGE:
+                self.assertEqual(command[1:],['mach','build','-j3','-C','xpcom/tests','misc'])
+                raise primary
+        runner=SimpleNamespace(limits={'jobMinutes':360},run=run)
+        with mock.patch.object(upstream,'scope_plan',return_value=(self.plan,self.plan_hash)):
+            with self.assertRaises(Failure) as raised:
+                upstream.prepare(self.task,self.task,runner,{},345,{})
+        self.assertIs(raised.exception,primary)
+        self.assertEqual(calls,[upstream.PREPARE_STAGE,upstream.HELPER_INSTALL_STAGE])
+
+    def test_build_without_helper_install_cannot_qualify(self):
+        rows=[stage(name) for name in upstream.EXTRA_STAGES if name!=upstream.HELPER_INSTALL_STAGE]
+        self.assertFalse(upstream.proof_complete(self.proof(),rows))
 
     def test_diagnostic_exception_codes_are_fixed_and_system_exit_is_typed(self):
         self.assertIsNone(upstream.diagnostic_error(Failure('PRIVATE_SENTINEL'))['code'])

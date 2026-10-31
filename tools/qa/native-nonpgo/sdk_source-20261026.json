@@ -1,0 +1,27 @@
+{
+  "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "baselineTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+  "pin": {
+    "artifact": 12624490543,
+    "attempt": 1,
+    "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "entry": "macos_sdk.tar.gz",
+    "expiresObserved": "2026-10-27T02:31:18Z",
+    "name": "macos-sdk",
+    "run": 40259426572,
+    "tarBytes": 105567985,
+    "tarSHA256": "f30c8e392d8c01d595313ec1e53d4d8d8fe62f2e5f8c65638ac4146b52899add",
+    "version": "26.5",
+    "zipBytes": 105082683,
+    "zipSHA256": "4090088d6c29b7ca8e6fdcae46c491827c575764d2aea0734d422ef55f9a7bb6"
+  },
+  "producerJob": 121368405809,
+  "producerRef": "0ac255739cdd64e100cd6913329247421b0ec2ea",
+  "qualification": "official-artifact-identical-uncompressed-tar-v1",
+  "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 2,
+  "uncompressedTar": {
+    "bytes": 760518144,
+    "sha256": "57aeb200890ba97c382bf450f23f9dab3e0d4696fdf02323a705f82210b087e3"
+  }
+}
