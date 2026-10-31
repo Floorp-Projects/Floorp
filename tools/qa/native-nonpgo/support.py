@@ -102,6 +102,7 @@ def clean_environment(task, tools=None):
             ('rust/bin', 'clang/bin', 'cbindgen', 'nasm', 'node/bin', 'dump_syms', 'fix-stacks')]
             + [result['PATH']])
         result.update({'MOZBUILD_STATE_PATH': str(task / 'mozbuild'),
+                       'MOZ_FETCHES_DIR': str(tools),
                        'CARGO_HOME': str(task / 'cargo'), 'RUSTUP_HOME': str(task / 'rustup'),
                        'CC': str(tools / 'clang/bin/clang'), 'CXX': str(tools / 'clang/bin/clang++'),
                        'HOST_CC': str(tools / 'clang/bin/clang'),

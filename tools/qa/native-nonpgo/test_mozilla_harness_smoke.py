@@ -1,7 +1,11 @@
 # SPDX-License-Identifier: MPL-2.0
 import copy
 import errno
+import hashlib
 import json
+import os
+import subprocess
+import sys
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,7 +14,7 @@ import unittest
 from unittest import mock
 
 import mozilla_harness_smoke as smoke
-from support import Failure
+from support import Failure, clean_environment
 
 
 class MozillaHarnessSmokeTests(unittest.TestCase):
@@ -26,6 +30,36 @@ class MozillaHarnessSmokeTests(unittest.TestCase):
         self.manifest = self.task / 'xpcshell.toml'
         self.test = self.task / 'test_current_debug.js'
         self.binary = self.task / 'xpcshell'
+
+    def stack_fixer(self, env):
+        fixture = Path(__file__).with_name('fixtures') / 'upstream-fix_stacks.py'
+        self.assertEqual(hashlib.sha256(fixture.read_bytes()).hexdigest(),
+                         'cfdca169762f2b6c82b7d73566069251ad4da3a260e434b53cefcf0eb5b07071')
+        frame = '#01: ???[test-binary +0x43a0]\n'
+        script = 'import runpy,sys; m=runpy.run_path(sys.argv[1]); print(m["fixSymbols"](sys.argv[2]),end="")'
+        return subprocess.run([sys.executable, '-c', script, str(fixture), frame],
+                              env=smoke.child_environment(env), capture_output=True,
+                              text=True, timeout=10), frame
+
+    def test_pinned_stack_fixer_resolves_verified_tools_in_clean_child_environment(self):
+        tools = self.task / 'tools'
+        executable = tools / 'fix-stacks/fix-stacks'
+        executable.parent.mkdir(parents=True)
+        executable.write_text('#!/bin/sh\nexec /bin/cat\n')
+        executable.chmod(0o700)
+        with mock.patch.dict(os.environ, {'MOZ_FETCHES_DIR': '/untrusted-fetches',
+                                         'GH_TOKEN': 'PRIVATE-SENTINEL'}):
+            env = clean_environment(self.task, tools)
+        self.assertNotIn('GH_TOKEN', env)
+        result, frame = self.stack_fixer(env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, frame)
+        self.assertEqual(env['MOZ_FETCHES_DIR'], str(tools))
+
+    def test_pinned_stack_fixer_missing_tool_still_fails(self):
+        result, _ = self.stack_fixer(clean_environment(self.task, self.task / 'tools'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('cannot find `fix-stacks`', result.stderr)
 
     def run_case(self, *, negative=False, code=None, group='verified-gone', cleanup=None,
                  monitor=None, unexpected_error=None, reaped=None, debug=True):
