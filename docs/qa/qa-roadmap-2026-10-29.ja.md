@@ -166,3 +166,9 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 ## 2026-11-01 JST 00時台：初回Mac終端・NSSとstack-fixerの切分け
 
 初回41187440235/attempt1/head3fae099d/job124497118586はfailure。全artifact/API/SDK/元150pinsと公開verifier最終stdoutを照合し、限定8パスの認証復号を完了した。scope91recordsは開始1件/終了0件で正式42件のcountsはunknown、45ledgerは42 UNVERIFIED+3無効。NSSのlibrary load crash(-5977)の後、取得済みfix-stacksの参照先漏れでharnessが中断していた。MOZ_FETCHES_DIRを検証済みtoolsへ固定する限定修正は、stock wrapperで旧例外を再現後、関連186件中185成功/同じDarwin専用1skip/失敗0。新767-ID catalogを全発見し旧765IDs保持、151hashesを固定。全767回帰やMacでの修正成功は未確認。次はNSSの同OBJDIR library/build/install closureと実load診断の設計。新native/manual rerunなし。詳細は `qa-native-terminal-2026-11-01.ja.md`。
+
+## 2026-11-01 JST 06時台：NSS動的libraryの生成・配置を追跡
+
+前回Floorp CI41213621232の全5jobsとRuntime shadow41213637548/contracts312件は終端success、全artifact/API/bytes/logsを照合。固定コンパイルsource13ファイルと適用30patchを読み、NSS→softokn3→freebl3の実行時load経路と、現在のQAが両DSOの存在・配置を検証しない点を確認した。直接失敗したlibraryは未確定。
+
+固定generated graphと同OBJDIRのdist/bin・app内6libraryだけをFD同一性/上限付きで読む準備候補を追加。欠落・差替え・不正Mach-O・symlink/hardlink/FIFO拒否等の新15件＋既存target12件は隔離環境で全27成功。旧767IDs全保持、新782-ID catalog/153hashes。全782回帰とMac実loadは未実行。観測器はpipeline未接続で、今回は新native/manual rerunなし。次は失敗時保存・限定DSO targetと実NSS load probeを結合し、入力と必要回帰を凍結する。42UNVERIFIED/3無効と旧first failure/practicalは保持。詳細は `qa-nss-dynamic-closure-2026-11-01.ja.md`。
