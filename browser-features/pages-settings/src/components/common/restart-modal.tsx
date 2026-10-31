@@ -1,3 +1,4 @@
+import type {} from "../../types/browser.d.ts";
 import { useTranslation } from "react-i18next";
 import { ConfirmModal } from "../../../../../libs/ui/dialog.tsx";
 export function RestartModal(

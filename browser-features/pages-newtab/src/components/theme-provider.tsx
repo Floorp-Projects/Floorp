@@ -31,21 +31,20 @@ export function ThemeProvider({
   const root = globalThis.document.documentElement;
 
   useEffect(() => {
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
-          .matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-    setResolvedTheme(theme);
-  }, [theme]);
+    const media = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const resolved =
+        theme === "system" ? (media.matches ? "dark" : "light") : theme;
+      root.classList.remove("light", "dark");
+      root.classList.add(resolved);
+      root.dataset.theme = resolved;
+      root.style.colorScheme = resolved;
+      setResolvedTheme(resolved);
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [theme, root]);
 
   const value = {
     theme,

@@ -8,6 +8,7 @@ import {
   Briefcase,
   Command,
   Gauge,
+  Grid2X2,
   House,
   Keyboard,
   List,
@@ -48,6 +49,15 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     icon: Sparkles,
     priority: 60,
     textKey: "design.chrome-extras",
+  },
+  {
+    id: "newtab",
+    route: "/features/newtab",
+    titleKey: "pages.newtab",
+    descriptionKey: "newtab.description",
+    icon: Grid2X2,
+    priority: 95,
+    textKey: "newtab",
   },
   {
     id: "panel-sidebar",

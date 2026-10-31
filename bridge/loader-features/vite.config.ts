@@ -19,11 +19,11 @@ const dndKitAccessibilityDir = realpathSync(
   path.join(path.dirname(dndKitCoreDir), "accessibility"),
 );
 const REACT_UI_PATH =
-  /[\\/](?:browser-features[\\/]pages-settings|libs[\\/]ui)[\\/]/;
+  /[\\/](?:browser-features[\\/]pages-(?:settings|newtab)|libs[\\/]ui)[\\/]/;
 // An explicit SWC include replaces its default source-extension filter. Keep
 // CSS modules and other assets in Vite's own transform pipeline.
 const REACT_UI_SOURCE_PATH =
-  /[\\/](?:browser-features[\\/]pages-settings|libs[\\/]ui)[\\/].*\.[cm]?[jt]sx?(?:\?.*)?$/;
+  /[\\/](?:browser-features[\\/]pages-(?:settings|newtab)|libs[\\/]ui)[\\/].*\.[cm]?[jt]sx?(?:\?.*)?$/;
 const chakraReactDir = realpathSync(
   r("../../libs/ui/node_modules/@chakra-ui/react"),
 );

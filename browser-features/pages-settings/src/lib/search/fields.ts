@@ -1,7 +1,14 @@
 import type { SettingFieldDefinition } from "./types.ts";
+import { NEWTAB_FIELDS, NEWTAB_SETTINGS_ROUTE } from "../../app/newtab/fields.ts";
 
 // Search destinations use the existing input IDs. Keep these in sync with field labels.
 export const SETTING_FIELDS: SettingFieldDefinition[] = [
+  ...NEWTAB_FIELDS.map((field) => ({
+    id: field.id,
+    route: NEWTAB_SETTINGS_ROUTE,
+    titleKey: field.titleKey,
+    descriptionKey: field.descriptionKey,
+  })),
   {
     "id": "favicon-color",
     "route": "/features/design",
@@ -66,11 +73,6 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "id": "disable-qr-code-button",
     "route": "/features/design",
     "titleKey": "design.uiCustomization.display.disableQRCodeButton",
-  },
-  {
-    "id": "disable-floorp-start",
-    "route": "/features/design",
-    "titleKey": "design.uiCustomization.newtab.disableFloorpStart",
   },
   {
     "id": "optimize-for-tree-style-tab",

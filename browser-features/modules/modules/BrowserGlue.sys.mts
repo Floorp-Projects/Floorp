@@ -338,6 +338,23 @@ const JS_WINDOW_ACTORS: {
     ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
   },
 
+  NRNewTab: {
+    parent: { esModuleURI: localPathToResourceURI("../actors/NRNewTabParent.sys.mts") },
+    child: {
+      esModuleURI: localPathToResourceURI("../actors/NRNewTabChild.sys.mts"),
+      events: { DOMDocElementInserted: {}, DOMContentLoaded: {} },
+    },
+    matches: [
+      ...DEVELOPMENT_LOOPBACK_MATCHES,
+      "chrome://noraneko-newtab/content/*",
+      "chrome://noraneko-settings/content/*",
+      "about:newtab*", "about:home*", "about:hub*",
+    ],
+    includeChrome: true,
+    allFrames: false,
+    ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
+  },
+
   NRStartPage: {
     parent: {
       esModuleURI: localPathToResourceURI(

@@ -19,6 +19,7 @@ import {
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
+const NewTab = lazy(() => import("@/app/newtab/page.tsx"));
 const PanelSidebar = lazy(() => import("@/app/sidebar/page.tsx"));
 const Workspaces = lazy(() => import("@/app/workspaces/page.tsx"));
 const ProgressiveWebApp = lazy(() => import("@/app/pwa/page.tsx"));
@@ -86,6 +87,7 @@ function SettingsApp() {
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/overview/home" element={<Dashboard />} />
                   <Route path="/features/design" element={<Design />} />
+                  <Route path="/features/newtab" element={<NewTab />} />
                   <Route
                     path="/features/design/chrome-extras"
                     element={<ChromeExtrasSettings />}
