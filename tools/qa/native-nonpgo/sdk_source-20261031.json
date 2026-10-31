@@ -1,0 +1,43 @@
+{
+  "baselinePlanSHA256": "33fb00c07a7ad9f66950489f06c0b5039ee173bc78297bc13b39265b24f4d460",
+  "baselineTarSHA256": "2002b346bf7087cc14f7b0e52bfc25ed767af29461ae1106356feaaec841dcc4",
+  "exactProfile": {
+    "producerContext": {
+      "ImageOS": "macos26",
+      "ImageVersion": "20261026.0455.2",
+      "macOSVersion": "26.6.2",
+      "machine": "arm64",
+      "pythonVersion": "3.9.6",
+      "sdkVersion": "26.5",
+      "xcodeBuild": "17F113",
+      "xcodeVersion": "26.6"
+    },
+    "producerRepository": "Floorp-Projects/Floorp-Runtime",
+    "producerRepositoryID": 914860957,
+    "producerWorkflow": ".github/workflows/qa-sdk-single-image-20261031.yml",
+    "profileSHA256": "ce50e72c5aa2d163a39ba6de283c58f1e2930fb5e261a22ddb6160f54edaaf42"
+  },
+  "pin": {
+    "artifact": 13011079529,
+    "attempt": 1,
+    "draftReaderTreeSHA256": "c3c01387c82e9ce1436fd517ec19308416663cc526c39be15f66f6bab22c3a5f",
+    "entry": "macos_sdk.tar.gz",
+    "expiresObserved": "2026-11-13T21:08:48Z",
+    "name": "macos-sdk-single-image-v4",
+    "run": 41128679337,
+    "tarBytes": 105599920,
+    "tarSHA256": "15c6c4ba110a5ff7c231f85a352c5e226f5407243c961d5a04a548d73f3886de",
+    "version": "26.5",
+    "zipBytes": 105157519,
+    "zipSHA256": "8d1fc67bc1b130e61c1fd334dcfdadd525a6bf095ad2d50d76a5626950d93aca"
+  },
+  "producerJob": 124313694921,
+  "producerRef": "032085d9c0176b68d405fb7d3297629df6c1a971",
+  "qualification": "official-artifact-exact-profile-v2",
+  "runtimeRef": "7dd619742b25567e479eeda97ae071d10542ad0b",
+  "schema": 4,
+  "uncompressedTar": {
+    "bytes": 760518144,
+    "sha256": "f0d4937d3793e5bd0d17ec899df993fb3b68267dab88ddaa9bdc14ccab7c4a58"
+  }
+}

@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 from support import Failure, HTTPSRedirect, Runner, digest, require, write_json
-from sdk_source import load_sdk_source, verify_uncompressed_tar, acquisition_receipt
+from sdk_source import load_sdk_source, verify_uncompressed_tar, acquisition_receipt, validate_exact_metadata
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -91,6 +91,7 @@ def main():
                 producer.get('status') == 'completed' and producer.get('conclusion') == 'success',
                 'sdk-producer-provenance')
         require(expires > datetime.datetime.now(datetime.timezone.utc), 'sdk-expired')
+        validate_exact_metadata(source, artifact, run, producer, datetime.datetime.now(datetime.timezone.utc))
     try:
         with opener.open(urllib.request.Request(base + 'artifacts/' + str(pin['artifact']) + '/zip', headers=headers), timeout=acquisition_budget(deadline)):
             raise Failure('sdk-expected-download-redirect')
@@ -120,6 +121,12 @@ def main():
     acquisition_budget(deadline)
     verify_uncompressed_tar(args.output / pin['entry'], source, deadline=deadline)
     acquisition_budget(deadline)
+    if 'exactProfile' in source:
+        after = (api('artifacts/' + str(pin['artifact'])), api('runs/' + str(pin['run'])),
+                 api('jobs/' + str(source['producerJob'])))
+        validate_exact_metadata(source, *after, datetime.datetime.now(datetime.timezone.utc))
+        require(after == (artifact, run, producer), 'sdk-exact-metadata-changed')
+        acquisition_budget(deadline)
     write_json(args.output / 'receipt.json', acquisition_receipt(source))
     try:
         acquisition_budget(deadline)

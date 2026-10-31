@@ -5,6 +5,7 @@ Only a supplied source_path selects the alternate. Download/API/expiry, archive
 content, canonical tree and SDK version checks remain the caller's obligations.
 """
 import copy
+import datetime
 import gzip
 import hashlib
 import json
@@ -48,6 +49,27 @@ RECOVERED_PIN = {**PIN, 'artifact': 12739697223, 'run': 40516581212,
     'expiresObserved': '2026-10-29T13:57:37Z'}
 MAX_UNCOMPRESSED_BYTES = 1024**3
 MAX_COMPRESSED_BYTES = 512 * 1024**2
+EXACT_QUALIFICATION = 'official-artifact-exact-profile-v2'
+EXACT_PROFILE = {
+    'profileSHA256': 'ce50e72c5aa2d163a39ba6de283c58f1e2930fb5e261a22ddb6160f54edaaf42',
+    'producerRepositoryID': 914860957,
+    'producerRepository': 'Floorp-Projects/Floorp-Runtime',
+    'producerWorkflow': '.github/workflows/qa-sdk-single-image-20261031.yml',
+    'producerContext': {'ImageOS': 'macos26', 'ImageVersion': '20261026.0455.2',
+        'machine': 'arm64', 'macOSVersion': '26.6.2', 'pythonVersion': '3.9.6',
+        'xcodeVersion': '26.6', 'xcodeBuild': '17F113', 'sdkVersion': '26.5'},
+}
+EXACT_PRODUCER_REF = '032085d9c0176b68d405fb7d3297629df6c1a971'
+EXACT_PRODUCER_JOB = 124313694921
+EXACT_PRODUCER_NAME = 'single-image-sdk'
+EXACT_PIN = {**PIN, 'artifact': 13011079529, 'run': 41128679337,
+    'name': 'macos-sdk-single-image-v4', 'zipBytes': 105157519,
+    'zipSHA256': '8d1fc67bc1b130e61c1fd334dcfdadd525a6bf095ad2d50d76a5626950d93aca',
+    'tarBytes': 105599920,
+    'tarSHA256': '15c6c4ba110a5ff7c231f85a352c5e226f5407243c961d5a04a548d73f3886de',
+    'expiresObserved': '2026-11-13T21:08:48Z'}
+EXACT_UNCOMPRESSED_TAR = {'bytes': 760518144,
+    'sha256': 'f0d4937d3793e5bd0d17ec899df993fb3b68267dab88ddaa9bdc14ccab7c4a58'}
 
 
 def _same(value, expected):
@@ -96,8 +118,10 @@ def load_sdk_source(plan_path, source_path=None):
     if source_path is None:
         return result
     value, source_sha = _source_json(source_path)
-    require(type(value) is dict and type(value.get('schema')) is int and value['schema'] in (1, 2, 3),
+    require(type(value) is dict and type(value.get('schema')) is int and value['schema'] in (1, 2, 3, 4),
             'sdk-source-shape')
+    if value['schema'] == 4:
+        return _load_exact_source(result, value, source_sha, pin, runtime)
     current = value['schema'] in (2, 3)
     recovered = value['schema'] == 3
     require(set(value) == (SOURCE_KEYS | {'producerRef'} if current else SOURCE_KEYS), 'sdk-source-shape')
@@ -126,6 +150,56 @@ def load_sdk_source(plan_path, source_path=None):
     if current:
         result['producerRef'] = producer_ref
     return result
+
+
+def _load_exact_source(result, value, source_sha, pin, runtime):
+    expected = {'schema': 4, 'qualification': EXACT_QUALIFICATION,
+        'baselinePlanSHA256': BASELINE_PLAN_SHA256, 'baselineTarSHA256': BASELINE_TAR_SHA256,
+        'runtimeRef': RUNTIME_REF, 'producerRef': EXACT_PRODUCER_REF,
+        'producerJob': EXACT_PRODUCER_JOB, 'pin': EXACT_PIN,
+        'uncompressedTar': EXACT_UNCOMPRESSED_TAR, 'exactProfile': EXACT_PROFILE}
+    require(_same(value, expected), 'sdk-source-v4-binding')
+    require(result['baselinePlanSHA256'] == BASELINE_PLAN_SHA256 and
+            _same(pin.get('tarSHA256'), BASELINE_TAR_SHA256), 'sdk-source-plan-binding')
+    require(_same(runtime, RUNTIME_REF), 'sdk-source-runtime')
+    require(all(_same(EXACT_PIN[key], pin.get(key)) for key in
+                ('entry', 'version', 'draftReaderTreeSHA256')), 'sdk-source-content-binding')
+    result.update(pin=copy.deepcopy(EXACT_PIN), producerRef=EXACT_PRODUCER_REF,
+        producerJob=EXACT_PRODUCER_JOB, producerName=EXACT_PRODUCER_NAME,
+        uncompressedTar=copy.deepcopy(EXACT_UNCOMPRESSED_TAR), sourceSHA256=source_sha,
+        qualification=EXACT_QUALIFICATION, exactProfile=copy.deepcopy(EXACT_PROFILE))
+    return result
+
+
+def validate_exact_metadata(spec, artifact, run, producer, now):
+    if 'exactProfile' not in spec:
+        return
+    pin, profile = spec['pin'], spec['exactProfile']
+    require(_same(profile, EXACT_PROFILE), 'sdk-exact-profile')
+    lineage = {'id': pin['run'], 'repository_id': profile['producerRepositoryID'],
+        'head_repository_id': profile['producerRepositoryID'],
+        'head_branch': 'b/qa-handoff-20261026', 'head_sha': spec['producerRef']}
+    require(_same(artifact.get('id'), pin['artifact']) and
+            _same(artifact.get('name'), pin['name']) and
+            _same(artifact.get('size_in_bytes'), pin['zipBytes']) and
+            _same(artifact.get('digest'), 'sha256:' + pin['zipSHA256']) and
+            artifact.get('expired') is False and
+            _same(artifact.get('workflow_run'), lineage) and
+            _same(artifact.get('expires_at'), pin['expiresObserved']), 'sdk-exact-artifact')
+    require(all(_same(run.get(key), expected) for key, expected in {
+        'id': pin['run'], 'run_attempt': pin['attempt'], 'head_sha': spec['producerRef'],
+        'head_branch': lineage['head_branch'], 'event': 'push',
+        'path': profile['producerWorkflow'], 'status': 'completed', 'conclusion': 'success'}.items())
+        and _same(run.get('repository', {}).get('id'), profile['producerRepositoryID'])
+        and _same(run.get('repository', {}).get('full_name'), profile['producerRepository']),
+        'sdk-exact-run')
+    require(all(_same(producer.get(key), expected) for key, expected in {
+        'id': spec['producerJob'], 'run_id': pin['run'], 'run_attempt': pin['attempt'],
+        'head_sha': spec['producerRef'], 'name': spec['producerName'],
+        'status': 'completed', 'conclusion': 'success', 'labels': ['macos-26']}.items()),
+        'sdk-exact-producer')
+    expires = datetime.datetime.fromisoformat(pin['expiresObserved'].replace('Z', '+00:00'))
+    require(expires > now, 'sdk-expired')
 
 
 def _alternate(spec):
@@ -191,6 +265,8 @@ def acquisition_receipt(spec):
                       qualification=spec['qualification'], uncompressedTar=copy.deepcopy(spec['uncompressedTar']))
         if 'producerRef' in spec:
             result['producerRef'] = spec['producerRef']
+        if 'exactProfile' in spec:
+            result['exactProfile'] = copy.deepcopy(spec['exactProfile'])
     return result
 
 
@@ -198,6 +274,8 @@ def source_provenance(spec):
     fields = ('qualification', 'sourceSHA256', 'baselinePlanSHA256', 'uncompressedTar', 'producerJob')
     if 'producerRef' in spec:
         fields += ('producerRef',)
+    if 'exactProfile' in spec:
+        fields += ('exactProfile',)
     return {key: copy.deepcopy(spec[key]) for key in fields}
 
 

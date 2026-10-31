@@ -154,3 +154,11 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 - 全49701メンバーと全gzip/raw/tree/order/metadata/11 header digestsを別読取処理でも照合。canonical treeとSDK26.5/順序は旧baselineと同じ、新rawf0d4937dを別の完全profileへ固定した。診断snapshotはNOT_ADMITTED、旧57a/32dd profileと失敗は保持する。
 - 単一image20261026.0455.2と新完全profileに事前固定する別producerを追加。最大20分/初回push1回、異なる環境や全identity差は拒否、失敗reportとowned cleanupを保持。次に同run終端/全API/全bytes照合後の実artifact/source/schema4/loaderと負例・新source回帰へ接続する。
 - 通常CI41078286356全5jobs/docs41078286207のverify/shadow41078313206はsuccess。148 helper hashes/754 IDs/loader/旧workflow/45ledgerは不変、既済回帰は再実行/加算なし。Mac42件は未実行。具体条件は `qa-sdk-single-image-2026-10-31.ja.md` を参照。
+
+## 2026-10-31 JST 12時台の継続
+
+- 単一image producer41128679337/attempt1/head032085d9/job124313694921は全step/保存/cleanup success。SDK13011079529とreport13011134290の前後API/期限/全ZIP、producer/profile/最終stdoutを照合し、全49701メンバー・全archive identityを独立readerでも一致確認した。
+- 実artifact/producer/期限/新rawを別source/schema4へ明示固定。旧source1〜3・旧raw/失敗を保持し、取得前後のAPI再照合と失効/差替え拒否、profile付きreceiptを追加。正規実bytesと保存APIによる隔離fetch→receipt→全展開/tree検証が成功した。
+- 新sourceの全765 IDsを20batchで760成功・同じ実Darwin専用5skip・0fail/0error。旧754 IDs全保持、全150 source hashesが一致。公開診断7制御とSDK proof5制御も成功。単独11件は全765件に含み、重複加算しない。
+- 前回通常CI41128672556は4jobs成功/Linux x64ブラウザー試験exit1。詳細artifact13012153420の取得はHTTP503で原因未確定として保持。docs41128672561 verifyとRuntime shadow41128687783はsuccess。変更後CIと無効候補の最終fixtureを次に照合し、native入力凍結へ進む。
+- fresh45 ref不存在/push0/POST未送信、Mac42未実行。45ledger/旧practicalは不変。実行済みworkflowは変更せず、SDK/秘密情報なしの証拠を保存する。詳細は `qa-sdk-v4-admission-2026-10-31.ja.md`。

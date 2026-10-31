@@ -31,7 +31,8 @@
     "test_sdk_content_qualification",
     "test_inventory_startup",
     "test_inventory_progress",
-    "test_diagnostic_archive"
+    "test_diagnostic_archive",
+    "test_sdk_source_v4"
   ],
   "tests": [
     "test_build_completion.CompletionTests.test_batch_validation_cache_keeps_fresh_values_bounds_and_deadline",
@@ -759,6 +760,17 @@
     "test_sdk_source_integration.SDKSourceIntegration.test_uncompressed_anchor_failure_never_writes_success_receipt",
     "test_sdk_source_integration.SDKSourceIntegration.test_unexpected_redirect_http_error_stops_and_closes_body",
     "test_sdk_source_integration.SDKSourceIntegration.test_verified_local_new_source_materializes_after_service_expiry",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_artifact_revoked_after_download_leaves_no_receipt",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_download_rechecks_api_and_materializes_with_profile_receipt",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_expired_artifact_is_rejected_before_download",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_expiry_during_download_leaves_no_receipt",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_foreign_and_malformed_lineage_is_rejected_before_download",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_matching_wire_hash_cannot_bypass_raw_tar_identity",
+    "test_sdk_source_v4.ExactSDKIntegrationTests.test_metadata_change_after_download_leaves_no_receipt",
+    "test_sdk_source_v4.ExactSDKSourceTests.test_changed_plan_is_rejected_and_no_source_preserves_default",
+    "test_sdk_source_v4.ExactSDKSourceTests.test_every_source_field_is_bound_and_typed",
+    "test_sdk_source_v4.ExactSDKSourceTests.test_fixed_artifact_keeps_compilation_revision_separate",
+    "test_sdk_source_v4.ExactSDKSourceTests.test_receipt_and_provenance_retain_exact_profile",
     "test_shim_failure_patch.ShimFailurePatchTests.test_fixed_context_auth_timeout_keeps_qa_counts_and_precleanup_before_three_cleanup_errors",
     "test_shim_failure_patch.ShimFailurePatchTests.test_fixed_runtime_early_failure_keeps_pre_post_and_original_functional_failure",
     "test_shim_failure_patch.ShimFailurePatchTests.test_patch_compiles_and_preserves_startup_ownership_class_and_context_observer",
