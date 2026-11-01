@@ -8,7 +8,7 @@ import time
 
 from firefox_target_graph import (_assignment, _closure, _token, NODES,
                                   target_graph_proof, Unknown as GraphUnknown)
-from firefox_target_observer import _FixedRead, Unknown
+from firefox_target_observer import _FixedRead, decode, Unknown
 from mozilla_target_build import GRAPH_PINS
 
 
@@ -71,20 +71,47 @@ def graph_facts(root, deps):
         return {'status': 'unconfirmed', 'reason': 'graph-unconfirmed'}
 
 
-def observe(task, bundle):
-    result = {'contract': CONTRACT, 'status': 'unconfirmed', 'reason': None,
+def unconfirmed(reason):
+    return {'contract': CONTRACT, 'status': 'unconfirmed', 'reason': reason,
               'files': {}, 'graph': None, 'graphPinsMatch': False,
               'bindingsStable': False, 'allLibrariesObserved': False,
               'bundleMatchesDist': None, 'realLoadPerformed': False,
               'buildPerformed': False, 'productQualification': False,
               'native42ResultQualification': False}
-    if (type(bundle) is not str or re.fullmatch(r'[A-Za-z0-9 _.-]+\.app', bundle) is None or
-            '..' in bundle):
+
+
+def _valid_bundle(bundle):
+    return (type(bundle) is str and re.fullmatch(r'[A-Za-z0-9 _.-]+\.app', bundle) is not None and
+            '..' not in bundle)
+
+
+def observe(task, bundle):
+    return _observe(task, bundle, configured=False, deadline=time.monotonic() + 30)
+
+
+def observe_configured(task, *, deadline):
+    return _observe(task, None, configured=True, deadline=deadline)
+
+
+def _observe(task, bundle, *, configured, deadline):
+    result = unconfirmed(None)
+    if not configured and not _valid_bundle(bundle):
         result['reason'] = 'bundle-unconfirmed'
         return result
     try:
         with ExitStack() as stack:
-            reader = _FixedRead(Path(task), stack, time.monotonic() + 30)
+            reader = _FixedRead(Path(task), stack, min(deadline, time.monotonic() + 30))
+            if configured:
+                raw, receipt = reader.read('effective-config.private.log', 2 * 1024**2)
+                result['files']['effectiveConfig'] = receipt
+                if raw is None:
+                    raise Unknown('config-unconfirmed')
+                config = decode(raw)
+                if type(config) is not dict or type(config.get('substs')) is not dict:
+                    raise Unknown('config-unconfirmed')
+                bundle = config['substs'].get('MOZ_MACBUNDLE_NAME')
+                if not _valid_bundle(bundle):
+                    raise Unknown('bundle-unconfirmed')
             data = {}
             for label in ('rootMk', 'rootDepsMk'):
                 relative, cap, _ = GRAPH_PINS[label]

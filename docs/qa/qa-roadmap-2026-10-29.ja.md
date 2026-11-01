@@ -172,3 +172,11 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 前回Floorp CI41213621232の全5jobsとRuntime shadow41213637548/contracts312件は終端success、全artifact/API/bytes/logsを照合。固定コンパイルsource13ファイルと適用30patchを読み、NSS→softokn3→freebl3の実行時load経路と、現在のQAが両DSOの存在・配置を検証しない点を確認した。直接失敗したlibraryは未確定。
 
 固定generated graphと同OBJDIRのdist/bin・app内6libraryだけをFD同一性/上限付きで読む準備候補を追加。欠落・差替え・不正Mach-O・symlink/hardlink/FIFO拒否等の新15件＋既存target12件は隔離環境で全27成功。旧767IDs全保持、新782-ID catalog/153hashes。全782回帰とMac実loadは未実行。観測器はpipeline未接続で、今回は新native/manual rerunなし。次は失敗時保存・限定DSO targetと実NSS load probeを結合し、入力と必要回帰を凍結する。42UNVERIFIED/3無効と旧first failure/practicalは保持。詳細は `qa-nss-dynamic-closure-2026-11-01.ja.md`。
+
+## 2026-11-01 JST 12時台：NSS観測を失敗時のsummaryへ接続
+
+前回CI41242323807の全5jobs、shadow41242338846/contracts312件は終端success。artifact/API/完全ZIP/logsとSDK最新API・保存正規全ZIPを照合した。NSS観測を同OBJDIRのtarget build前後・child resources再配置後・終了時へ接続し、fixed config/graph/6libraryをFD同一性/総量64MiB/30秒と既存期限の残りへ結んだ。collector例外やcleanup未確認で元first failure・ledgerを上書きしない。
+
+新sourceの全795 IDsを照合し、790成功・従来と同じ実Darwin専用5skip・0fail/0error。旧782 IDs全保持、全153source hashesは各実行と一致。最終batchの120秒driver timeoutは保存し、成功済み23件を再利用して未完了12件だけ4件ずつ分割し全成功した。795件は重複加算しない。設定FD/失敗時保存など新13件はこの全件に含む。公開診断7制御と、既存8パス暗号化回収で新summary field/first failureがbyte完全一致して復号される追加1制御も成功。Mac実観測・実loadは未実行。
+
+新nativeは未開始。次は固定generated graph宣言でguardする限定DSO build候補と、同xpcshellのNSS実load/実Mac fix-stacks probeを準備し、新入力を凍結する。Mac42件・製品資格は未認定のまま。詳細は `qa-nss-evidence-integration-2026-11-01.ja.md`。

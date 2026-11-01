@@ -3,6 +3,7 @@ import argparse
 import ctypes
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -21,6 +22,7 @@ from checkpoint_public import public_restore
 from sdk_source import load_sdk_source, validate_acquisition_receipt, source_provenance
 from consumer_time import select_consumer_time, select_fresh45_time
 from build_completion import start_snapshot, collect as collect_build_completion
+import nss_dynamic_closure
 
 
 HERE = Path(__file__).resolve().parent
@@ -346,6 +348,19 @@ def mozilla_proof_complete(value):
             type(value.get('cases')) is list and len(value['cases']) == 3)
 
 
+def nss_closure_evidence(task, runner, deadline):
+    try:
+        remaining = deadline * 60 - runner.elapsed()
+        if not math.isfinite(remaining) or remaining <= 0:
+            return nss_dynamic_closure.unconfirmed('work-deadline')
+        if any(row.get('groupCleanup') != 'verified-gone' for row in runner.records):
+            return nss_dynamic_closure.unconfirmed('process-cleanup-unconfirmed')
+        return nss_dynamic_closure.observe_configured(
+            task, deadline=time.monotonic() + min(30, remaining))
+    except Exception:
+        return nss_dynamic_closure.unconfirmed('collector-exception')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, required=True)
@@ -572,11 +587,17 @@ def main():
                 report['mozillaUpstream'] = {}
                 upstream.prepare(args.source, task, runner, env,
                     target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
+                report['nssDynamicClosure'] = {'beforeTargetBuild': nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])}
             run_build(args.source, task, runner, env,
                       target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
             if upstream_xpcom:
+                report['nssDynamicClosure']['afterTargetBuild'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
                 upstream.child_and_resources(args.source, task, runner, env,
                     target_deadlines['consumerBuildDeadlineMinutes'])
+                report['nssDynamicClosure']['afterChildResources'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
                 diagnostic = {}
                 report['mozillaUpstream']['nativeAssetPrecondition'] = diagnostic
                 report['mozillaUpstream']['assets'] = upstream.verify_scope_assets(
@@ -719,6 +740,9 @@ def main():
             except OSError:
                 report['buildDiagnosticUnavailable'] = True
     finally:
+        if upstream_xpcom:
+            report.setdefault('nssDynamicClosure', {})['final'] = nss_closure_evidence(
+                task, runner, target_deadlines['finalDeadlineMinutes'])
         for key, path in (('monitorPreflight', 'monitor-preflight.json'),
                            ('sdk', 'sdk-materialized.json'), ('toolchains', 'toolchain-receipts.json'),
                            ('effectiveConfig', 'effective-config.json'), ('source', 'source.json'),

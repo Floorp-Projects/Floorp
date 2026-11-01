@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import struct
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -15,7 +16,7 @@ def dylib(uuid=b'a' * 16, cpu=0x01000007, kind=6):
     return struct.pack('<8I', 0xfeedfacf, cpu, 3, kind, 1, 24, 0, 0) + struct.pack('<2I', 0x1b, 24) + uuid
 
 
-class DynamicClosureTests(unittest.TestCase):
+class ClosureFixture:
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='nss-closure-')
         self.addCleanup(temporary.cleanup)
@@ -43,6 +44,8 @@ class DynamicClosureTests(unittest.TestCase):
         with mock.patch.object(nss, 'GRAPH_PINS', self.pins):
             return nss.observe(kwargs.get('task', self.task), kwargs.get('bundle', 'Test.app'))
 
+
+class DynamicClosureTests(ClosureFixture, unittest.TestCase):
     def test_complete_snapshot_hashes_and_uuid_never_establish_real_load_or_qualification(self):
         value = self.observe()
         self.assertEqual(value['status'], 'observed')
@@ -171,6 +174,74 @@ class DynamicClosureTests(unittest.TestCase):
         value = self.observe()
         self.assertEqual(value['files']['dist:libsoftokn3.dylib']['reason'], 'size-limit')
         self.assertFalse(value['allLibrariesObserved'])
+
+
+class ConfiguredClosureTests(ClosureFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.config = self.task / 'effective-config.private.log'
+        self.config.write_text(json.dumps({'substs': {'MOZ_MACBUNDLE_NAME': 'Test.app'},
+                                          'private': 'PRIVATE_SENTINEL'}))
+
+    def configured(self):
+        with mock.patch.object(nss, 'GRAPH_PINS', self.pins):
+            return nss.observe_configured(self.task, deadline=time.monotonic() + 30)
+
+    def test_actual_config_is_fd_bound_without_exporting_its_contents(self):
+        value = self.configured()
+        self.assertEqual(value['status'], 'observed')
+        self.assertTrue(value['bindingsStable'])
+        self.assertTrue(value['allLibrariesObserved'])
+        self.assertEqual(len(value['files']), 9)
+        self.assertEqual(value['files']['effectiveConfig']['sha256'],
+                         hashlib.sha256(self.config.read_bytes()).hexdigest())
+        self.assertNotIn('PRIVATE_SENTINEL', json.dumps(value))
+        self.assertNotIn(str(self.task), json.dumps(value))
+
+    def test_missing_config_has_no_guessed_bundle_or_library_reads(self):
+        self.config.unlink()
+        value = self.configured()
+        self.assertEqual(value['reason'], 'config-unconfirmed')
+        self.assertEqual(set(value['files']), {'effectiveConfig'})
+        self.assertFalse(value['bindingsStable'])
+
+    def test_config_links_never_expose_the_link_target(self):
+        reference = self.task / 'private-config'
+        self.config.rename(reference)
+        self.config.symlink_to(reference)
+        value = self.configured()
+        self.assertEqual(value['files']['effectiveConfig']['reason'], 'file-kind')
+        self.assertNotIn('PRIVATE_SENTINEL', json.dumps(value))
+
+    def test_invalid_duplicate_or_escaping_config_never_selects_other_paths(self):
+        for raw in ('{}', '[]', '{"substs":null}',
+                    '{"substs":{"MOZ_MACBUNDLE_NAME":"../Other.app"}}',
+                    '{"substs":{},"substs":{"MOZ_MACBUNDLE_NAME":"Test.app"}}'):
+            with self.subTest(raw=raw):
+                self.config.write_text(raw)
+                value = self.configured()
+                self.assertEqual(value['status'], 'unconfirmed')
+                self.assertEqual(set(value['files']), {'effectiveConfig'})
+                self.assertFalse(value['allLibrariesObserved'])
+
+    def test_config_replacement_invalidates_the_complete_observation(self):
+        verify = nss._FixedRead.verify
+        def replace_then_verify(reader):
+            replacement = self.config.with_suffix('.new')
+            replacement.write_bytes(self.config.read_bytes())
+            replacement.replace(self.config)
+            verify(reader)
+        with mock.patch.object(nss._FixedRead, 'verify', replace_then_verify):
+            value = self.configured()
+        self.assertEqual(value['status'], 'unconfirmed')
+        self.assertFalse(value['bindingsStable'])
+
+    def test_expired_observation_budget_never_reads_any_file(self):
+        with mock.patch.object(os, 'read', side_effect=AssertionError('unexpected-read')):
+            value = nss.observe_configured(self.task, deadline=time.monotonic() - 1)
+        self.assertEqual(value['reason'], 'processing-limit')
+        self.assertFalse(value['bindingsStable'])
+        self.assertEqual(value['files'], {})
 
 
 if __name__ == '__main__':

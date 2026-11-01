@@ -19,6 +19,7 @@ import consumer_time
 import fresh45 as fresh
 import mozilla_target_build as target
 import mozilla_upstream as upstream
+import nss_dynamic_closure as nss
 import pipeline
 import test_mozilla_target_build as target_models
 import test_mozilla_upstream as upstream_models
@@ -206,6 +207,110 @@ class Fresh45Flow(unittest.TestCase):
                      ('--mozilla-first',),('--mozilla-targeted',),('--mozilla-upstream-xpcom',)]:
             with self.subTest(args=args),self.assertRaisesRegex(Failure,'fresh-firefox45-mode'):self.invoke(args)
         self.assertIsNone(self.runner);self.assertEqual(self.launches,[])
+
+    def test_nss_snapshots_follow_completed_builds_and_survive_in_saved_summary(self):
+        observations = []
+        def observe(task, *, deadline):
+            observations.append([row[0] for row in self.launches])
+            self.assertEqual(task, self.task.resolve())
+            self.assertLessEqual(deadline - self.clock, 30)
+            return nss.unconfirmed('missing')
+        with mock.patch.object(nss, 'observe_configured', side_effect=observe):
+            code, result = self.invoke()
+        self.assertEqual(code, 0)
+        self.assertEqual(len(observations), 4)
+        self.assertNotIn(target.STAGES[0], observations[0])
+        self.assertEqual(observations[1][-1], target.STAGES[-1])
+        self.assertEqual(observations[2][-1], upstream.RESOURCE_STAGE)
+        self.assertEqual(set(result['nssDynamicClosure']),
+                         {'beforeTargetBuild', 'afterTargetBuild', 'afterChildResources', 'final'})
+        self.assertTrue(all(value['native42ResultQualification'] is False
+                            for value in result['nssDynamicClosure'].values()))
+        self.assertEqual(result['nssDynamicClosure'],
+                         json.loads(self.stdout.splitlines()[-1])['nssDynamicClosure'])
+
+    def test_nss_diagnostic_exception_cannot_replace_first_failure_or_45_ledger(self):
+        self.fail_stage = upstream.CHILD_LIBS_STAGE
+        with mock.patch.object(nss, 'observe_configured', side_effect=RuntimeError('PRIVATE_SENTINEL')):
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure'],
+                         {'stage': upstream.CHILD_LIBS_STAGE, 'code': 'controlled-functional-failure'})
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'collector-exception')
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['notExecuted'], 42)
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['manifestDisabled'], 3)
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+
+    def test_real_configured_observer_preserves_partial_files_in_failed_pipeline_summary(self):
+        import test_nss_dynamic_closure as model
+        def after(stage):
+            if stage == 'effective-config':
+                (self.task / 'effective-config.private.log').write_text(json.dumps(
+                    {'substs': {'MOZ_MACBUNDLE_NAME': 'Test.app'}, 'private': 'PRIVATE_SENTINEL'}))
+            if stage == target.STAGES[-1]:
+                for prefix in ('obj/dist/bin', 'obj/dist/Test.app/Contents/MacOS'):
+                    directory = self.task / prefix
+                    directory.mkdir(parents=True)
+                    for name in nss.LIBRARIES:
+                        (directory / name).write_bytes(model.dylib())
+                (self.task / 'obj/dist/bin/libsoftokn3.dylib').unlink()
+        self.after = after
+        self.fail_stage = upstream.CHILD_LIBS_STAGE
+        code, result = self.invoke()
+        self.assertEqual(code, 1)
+        value = result['nssDynamicClosure']['final']
+        self.assertTrue(value['bindingsStable'])
+        self.assertEqual(value['files']['dist:libsoftokn3.dylib']['reason'], 'missing')
+        self.assertEqual(value['files']['bundle:libsoftokn3.dylib']['status'], 'observed')
+        self.assertFalse(value['allLibrariesObserved'])
+        self.assertFalse(value['graphPinsMatch'])
+        self.assertFalse(value['realLoadPerformed'])
+        self.assertEqual(result['firstFailure']['stage'], upstream.CHILD_LIBS_STAGE)
+        self.assertEqual(result['nssDynamicClosure'],
+                         json.loads(self.stdout.splitlines()[-1])['nssDynamicClosure'])
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+        self.assertNotIn(str(self.task), json.dumps(value))
+
+    def test_nss_final_snapshot_runs_after_asset_failure_without_later_test_launch(self):
+        def failed(diagnostic):
+            raise Failure('mozilla-upstream-current-native-asset')
+        self.after_asset = failed
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 4)
+        self.assertIn('final', result['nssDynamicClosure'])
+        self.assertIsNone(result['mozillaUpstream']['case'])
+        self.assertEqual(result['firstFailure']['code'], 'mozilla-upstream-current-native-asset')
+
+    def test_nss_diagnostic_failure_alone_cannot_fail_a_complete_route(self):
+        with mock.patch.object(nss, 'observe_configured', side_effect=OSError('PRIVATE_SENTINEL')):
+            code, result = self.invoke()
+        self.assertEqual(code, 0)
+        self.assertIsNone(result['firstFailure'])
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'collector-exception')
+        self.assertNotIn('PRIVATE_SENTINEL', self.stdout)
+
+    def test_nss_collection_never_extends_original_work_deadline(self):
+        self.after_scope = lambda: setattr(self, 'clock', 1000 + 345 * 60)
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 3)
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'work-deadline')
+        self.assertEqual((self.task / 'started-monotonic').read_bytes(), self.origin)
+
+    def test_nss_collection_does_not_overlap_an_unconfirmed_process_group(self):
+        def after(stage):
+            if stage == target.STAGES[0]:
+                self.runner.records[-1]['groupCleanup'] = 'unconfirmed'
+        self.after = after
+        with mock.patch.object(nss, 'observe_configured', return_value=nss.unconfirmed('missing')) as observe:
+            code, result = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertEqual(observe.call_count, 1)
+        self.assertEqual(result['nssDynamicClosure']['final']['reason'], 'process-cleanup-unconfirmed')
+        self.assertEqual(result['firstFailure']['code'], 'mozilla-target-stage-proof')
 
     def test_existing_object_directory_or_broken_symlink_is_rejected(self):
         (self.task/'obj').symlink_to(self.task/'missing')
