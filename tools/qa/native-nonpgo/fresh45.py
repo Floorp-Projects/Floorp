@@ -114,7 +114,12 @@ def final_problem(task, runner, report, origin, deadline, budget):
                     ['configure', 'effective-config', EXPORT_STAGE, *PREPARE_STAGES,
                      *STAGES, *EXTRA_STAGES[len(PREPARE_STAGES):]]):
             problem = 'fresh-stage-proof-incomplete'
-        else:
+        elif 'nssRuntime' in report or 'nssRuntimeRequired' in report:
+            from nss_runtime import proof_complete as nss_complete
+            if not (report.get('nssRuntimeRequired') is True and
+                    nss_complete(report.get('nssRuntime'), records, report.get('mozillaTargets', {}).get('assets'))):
+                problem = 'fresh-nss-runtime-proof-incomplete'
+        if problem is None:
             upstream = report.get('mozillaUpstream', {})
             smoke = report.get('mozilla', {})
             expected_diagnostic = {'schema': 1, 'status': 'passed', 'checkedAssets': 6,

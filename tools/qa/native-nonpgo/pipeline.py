@@ -377,7 +377,9 @@ def main():
     parser.add_argument('--sdk-source', type=Path)
     parser.add_argument('--consumer-shared-deadline', action='store_true')
     parser.add_argument('--fresh-firefox45', action='store_true')
+    parser.add_argument('--nss-runtime-closure', action='store_true')
     args = parser.parse_args()
+    require(not args.nss_runtime_closure or args.fresh_firefox45, 'nss-runtime-fresh-only')
     require(not args.fresh_firefox45 or (args.checkpoint_role is None and not any((
         args.restore_only, args.replay_origin, args.mozilla_only, args.mozilla_first,
         args.mozilla_targeted, args.mozilla_upstream_xpcom, args.consumer_shared_deadline))),
@@ -414,6 +416,11 @@ def main():
     runner = Runner(task, started, plan['limits'])
     report = {'status': 'failed', 'newArtifacts': 0, 'retry': False, 'productQualification': False,
               'priorExecution': plan.get('recovery'), 'timePolicy': plan.get('timePolicy')}
+    if args.nss_runtime_closure:
+        import nss_runtime
+        report['nssRuntimeRequired'] = True
+        report['nssRuntime'] = {'contract': nss_runtime.CONTRACT,
+                               'productQualification': False, 'native42ResultQualification': False}
     if consumer_time['evidence'] is not None:
         report['executionTimeBudget'] = consumer_time['evidence']
     if args.mozilla_first:
@@ -465,6 +472,11 @@ def main():
         env = clean_environment(task, tools)
         env['PATH'] += ':/usr/local/bin'
         env['MOZ_BUILD_DATE'] = time.strftime('%Y%m%d%H%M%S', time.gmtime(started))
+        if args.nss_runtime_closure:
+            stage = 'nss-stack-fixer-probe'
+            report['nssRuntime']['stackProbe'] = {}
+            nss_runtime.run_stack_probe(task, runner, env, fresh_deadline,
+                                        report['nssRuntime']['stackProbe'])
         if checkpoint_role == 'consumer':
             date = os.environ.get('CHECKPOINT_BUILD_DATE', '')
             require(re.fullmatch('[0-9]{14}', date), 'checkpoint-build-date')
@@ -589,6 +601,14 @@ def main():
                     target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaUpstream'])
                 report['nssDynamicClosure'] = {'beforeTargetBuild': nss_closure_evidence(
                     task, runner, target_deadlines['consumerBuildDeadlineMinutes'])}
+            if args.nss_runtime_closure:
+                stage = 'nss-runtime-build'
+                report['nssRuntime']['build'] = {}
+                nss_runtime.run_build(args.source, task, runner, env,
+                    target_deadlines['consumerBuildDeadlineMinutes'], report['nssRuntime']['build'])
+                report['nssDynamicClosure']['afterNSSBuild'] = nss_closure_evidence(
+                    task, runner, target_deadlines['consumerBuildDeadlineMinutes'])
+                stage = 'mozilla-target-build'
             run_build(args.source, task, runner, env,
                       target_deadlines['consumerBuildDeadlineMinutes'], report['mozillaTargets'])
             if upstream_xpcom:
@@ -604,6 +624,12 @@ def main():
                     task, runner, macho, diagnostic=diagnostic)
             stage = 'mozilla-target-assets'
             report['mozillaTargets']['assets'] = verify_assets(task, runner, macho, source=args.source)
+            if args.nss_runtime_closure:
+                stage = 'nss-runtime-load'
+                report['nssRuntime']['loadProbe'] = {}
+                nss_runtime.run_load_probe(args.source, task, runner, env,
+                    target_deadlines['consumerNativeDeadlineMinutes'], macho,
+                    report['mozillaTargets']['assets'], report['nssRuntime']['loadProbe'])
             object_path = task / 'obj/widget/cocoa/MacWebAppService.o'
             report['hostObject'] = macho(object_path, 1)
             require(object_path.stat().st_mtime >= started, 'object-not-fresh')
@@ -789,6 +815,8 @@ def main():
                 target_log_stages += EXTRA_STAGES
             if args.fresh_firefox45:
                 target_log_stages += (fresh45.EXPORT_STAGE,)
+            if args.nss_runtime_closure:
+                target_log_stages += tuple(name for name, _ in nss_runtime.TARGETS) + (nss_runtime.STACK_STAGE,)
             report['checkpointStageLogs'] = {
                 row['stage']: full_log_receipt(task / (row['stage'] + '.private.log'))
                 for row in runner.records if row['stage'] in

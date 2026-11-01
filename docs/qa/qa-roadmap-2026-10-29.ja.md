@@ -180,3 +180,13 @@ main変更・merge・release・第三者送信、他担当や他routineの変更
 新sourceの全795 IDsを照合し、790成功・従来と同じ実Darwin専用5skip・0fail/0error。旧782 IDs全保持、全153source hashesは各実行と一致。最終batchの120秒driver timeoutは保存し、成功済み23件を再利用して未完了12件だけ4件ずつ分割し全成功した。795件は重複加算しない。設定FD/失敗時保存など新13件はこの全件に含む。公開診断7制御と、既存8パス暗号化回収で新summary field/first failureがbyte完全一致して復号される追加1制御も成功。Mac実観測・実loadは未実行。
 
 新nativeは未開始。次は固定generated graph宣言でguardする限定DSO build候補と、同xpcshellのNSS実load/実Mac fix-stacks probeを準備し、新入力を凍結する。Mac42件・製品資格は未認定のまま。詳細は `qa-nss-evidence-integration-2026-11-01.ja.md`。
+
+## 2026-11-01 JST 18時台：限定NSS buildと実probeを準備
+
+前回Floorp CI41268271182/attempt1/headc0e5f303は全5jobs終端success。API・全artifact/ZIP・logsとSDK最新APIを照合した。前回shadow41268280073/contracts312の監査は同じbytesの証拠を再利用する。
+
+opt-inのfresh45経路へ、同OBJDIRのsoftoken/freebl targetを実graph宣言/完全hashでguardするbuildと、同xpcshellのNSS internal-slot乱数生成/Rust SHA-256既知解probe、実stock wrapper/stack-fixerの短時間probeを接続した。固定sourceの確認でSHA-256単独はRust実装と判明したため、NSSConstructor→EnsureNSSInitialized→PK11_GetInternalSlot/GenerateRandomOnSlotへ結ぶ。既存42件の期待は不変で、probeは別件として扱う。default8パス回収を保ち、明示flagのみ固定3probe logsを追加。summary最終proofも追加receiptの欠落を拒否する。
+
+実Macでのbuild/load/stack-fixer動作はまだ未確認。次は新しい未使用origin/branch、fixture/head/pins/catalog、SDKの直前照合、workflowと公開verifier・固有証拠を凍結し、必要な初回nativeへ進む。42 UNVERIFIED+3無効/counts unknown、旧first failure/practical/ledgerと既存workflowを保持する。詳細は `qa-nss-runtime-probes-2026-11-01.ja.md`。
+
+検証結果：全816 exact IDsの811成功・従来と同じ実Darwin専用5skip・0fail/0error。旧795 IDs全保持、全157source hashesが41batchで一致。関連62件と新21件は全816件に含む。公開診断7制御と追加probe logs/summary/first failureの認証暗号化・byte完全一致復号1制御も成功。初回公開制御のfresh45 helper pin不一致は拒否として保存し、隔離verifier候補の厳密157-file listとpipeline/fresh45 pinだけを新bytesへ固定した。実行済みworkflowのverifierは不変。

@@ -20,6 +20,7 @@ import fresh45 as fresh
 import mozilla_target_build as target
 import mozilla_upstream as upstream
 import nss_dynamic_closure as nss
+import nss_runtime
 import pipeline
 import test_mozilla_target_build as target_models
 import test_mozilla_upstream as upstream_models
@@ -207,6 +208,58 @@ class Fresh45Flow(unittest.TestCase):
                      ('--mozilla-first',),('--mozilla-targeted',),('--mozilla-upstream-xpcom',)]:
             with self.subTest(args=args),self.assertRaisesRegex(Failure,'fresh-firefox45-mode'):self.invoke(args)
         self.assertIsNone(self.runner);self.assertEqual(self.launches,[])
+
+    def test_opt_in_nss_builds_and_probes_precede_unchanged_42_case_scope(self):
+        def stack(task, runner, env, deadline, value):
+            value.update(status='passed', realToolExecuted=True)
+            runner.run(nss_runtime.STACK_STAGE, [], task, env, 360, phase_deadline_minutes=deadline)
+        def build(source, task, runner, env, deadline, value):
+            value.update(status='built')
+            for name, _ in nss_runtime.TARGETS:
+                runner.run(name, [], source, env, 360, phase_deadline_minutes=deadline)
+        def load(source, task, runner, env, deadline, macho, assets, value):
+            self.assertEqual(assets, self.assets)
+            self.assertNotIn('mozilla-upstream-xpcom', [row[0] for row in self.launches])
+            value.update(status='passed', realNSSLoadObserved=True)
+        with mock.patch.object(nss_runtime, 'run_stack_probe', stack), \
+                mock.patch.object(nss_runtime, 'run_build', build), \
+                mock.patch.object(nss_runtime, 'run_load_probe', load), \
+                mock.patch.object(nss_runtime, 'proof_complete', return_value=True):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 0)
+        self.assertEqual(result['nssRuntime']['loadProbe']['status'], 'passed')
+        self.assertFalse(result['nssRuntime']['native42ResultQualification'])
+        stages = [row[0] for row in self.launches]
+        self.assertLess(stages.index(nss_runtime.STACK_STAGE), stages.index('configure'))
+        self.assertLess(stages.index(nss_runtime.TARGETS[-1][0]), stages.index(target.STAGES[0]))
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['executed'], 42)
+        self.assertEqual(result['mozillaUpstreamExecution']['counts']['skipped'], 3)
+        self.assertEqual(result['nssDynamicClosure']['afterNSSBuild']['status'], 'unconfirmed')
+        self.assertTrue(all(name in result['targetStageLogs'] for name, _ in nss_runtime.TARGETS))
+
+    def test_opt_in_stack_failure_keeps_first_failure_and_no_build_or_42_launch(self):
+        def fail(task, runner, env, deadline, value):
+            value.update(status='failed', realToolExecuted=False)
+            runner.fail(nss_runtime.STACK_STAGE, 'controlled-functional-failure')
+            raise Failure('controlled-functional-failure')
+        with mock.patch.object(nss_runtime, 'run_stack_probe', fail):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure']['stage'], nss_runtime.STACK_STAGE)
+        self.assertFalse(result['nssRuntime']['stackProbe']['realToolExecuted'])
+        self.assertNotIn('configure', [row[0] for row in self.launches])
+        self.assertEqual(result['mozillaUpstreamExecution']['status'], 'unverified')
+        self.assertFalse(result['mozillaUpstreamExecution']['inventoryVerified'])
+
+    def test_opt_in_incomplete_nss_receipt_cannot_pass_saved_final_proof(self):
+        def value(*args):
+            args[-1].update(status='passed')
+        with mock.patch.object(nss_runtime, 'run_stack_probe', value), \
+                mock.patch.object(nss_runtime, 'run_build', value), \
+                mock.patch.object(nss_runtime, 'run_load_probe', value):
+            code, result = self.invoke(('--nss-runtime-closure',))
+        self.assertEqual(code, 1)
+        self.assertEqual(result['firstFailure']['code'], 'fresh-nss-runtime-proof-incomplete')
 
     def test_nss_snapshots_follow_completed_builds_and_survive_in_saved_summary(self):
         observations = []

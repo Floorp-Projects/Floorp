@@ -29,6 +29,11 @@ FILES = (
     ('mozilla-upstream-xpcom/mozilla-xpcshell.private.log', 32*MIB),
 )
 SCOPED = tuple(name for name, _ in FILES[-2:])
+NSS_PROBE_FILES = (
+    ('nss-stack-fixer-probe.private.log', MIB),
+    ('mozilla-nss-load/native-private/harness.raw.jsonl', MIB),
+    ('mozilla-nss-load/mozilla-xpcshell.private.log', MIB),
+)
 ALLOWED_REASONS = ('missing', 'size-limit', 'total-limit', 'file-kind', 'file-binding',
                   'directory-binding', 'root-binding', 'permission', 'io-unavailable')
 
@@ -50,7 +55,7 @@ def bindings(environment):
             'runtimeSource': env['RUNTIME_SHA']}
 
 
-def snapshot(task, expected):
+def snapshot(task, expected, *, nss_probes=False):
     with ExitStack() as stack:
         reader = _FixedRead(task, stack, time.monotonic()+30)
         require(stat.S_IMODE(os.fstat(reader.root).st_mode) == 0o700, 'diagnostic-private-root')
@@ -67,7 +72,7 @@ def snapshot(task, expected):
                 type(origin.get('workDeadlineMinutes')) is int and origin['workDeadlineMinutes'] == 345 and
                 origin.get('clockResetAllowed') is False, 'diagnostic-origin-binding')
         captured, records = {}, []
-        for name, cap in FILES:
+        for name, cap in FILES + (NSS_PROBE_FILES if nss_probes else ()):
             raw, record = reader.read(name, cap)
             if raw is not None:
                 captured[name] = raw
@@ -79,6 +84,8 @@ def snapshot(task, expected):
     manifest = {'contract': CONTRACT, 'binding': expected, 'job': origin['job'], 'files': records,
                 'scopedFilesCaptured': all(name in captured for name in SCOPED),
                 'qualification': None, 'productQualification': False}
+    if nss_probes:
+        manifest['nssProbeFilesCaptured'] = all(name in captured for name, _ in NSS_PROBE_FILES)
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode='w', format=tarfile.USTAR_FORMAT) as archive:
         members = {'manifest.json': (json.dumps(manifest, sort_keys=True)+'\n').encode(), **captured}
@@ -101,7 +108,8 @@ def openssl_run(openssl, arguments, *, payload=None):
     return result.stdout
 
 
-def export(task, certificate, certificate_sha256, output, *, openssl, environment=None):
+def export(task, certificate, certificate_sha256, output, *, openssl, environment=None,
+           nss_probes=False):
     expected = bindings(os.environ if environment is None else environment)
     require(type(certificate_sha256) is str and
             re.fullmatch('[0-9a-f]{64}', certificate_sha256) is not None, 'diagnostic-recipient')
@@ -116,7 +124,7 @@ def export(task, certificate, certificate_sha256, output, *, openssl, environmen
     output = Path(output)
     require(output.is_absolute() and output.parent.resolve() == output.parent and
             not output.exists() and not output.is_symlink(), 'diagnostic-destination')
-    payload, manifest = snapshot(task, expected)
+    payload, manifest = snapshot(task, expected, nss_probes=nss_probes)
     with tempfile.TemporaryDirectory(prefix='.diagnostic-recipient-', dir=output.parent) as temporary:
         pinned_cert = Path(temporary)/'recipient.pem'
         pinned_cert.write_bytes(cert)
@@ -151,10 +159,11 @@ def main():
     parser.add_argument('--certificate-sha256', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--openssl', type=Path, required=True)
+    parser.add_argument('--nss-probes', action='store_true')
     args = parser.parse_args()
     try:
         result = export(args.task, args.certificate, args.certificate_sha256, args.output,
-                        openssl=args.openssl)
+                        openssl=args.openssl, nss_probes=args.nss_probes)
     except BaseException as error:
         code = str(error) if isinstance(error, Failure) and str(error) in (
             'diagnostic-run-binding', 'diagnostic-private-root', 'diagnostic-origin-binding',

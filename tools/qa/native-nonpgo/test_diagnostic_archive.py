@@ -104,6 +104,32 @@ class DiagnosticArchiveTests(unittest.TestCase):
         self.assertNotIn(b'ENVIRONMENT-SENTINEL', joined)
         self.assertNotIn(b'PRIVATE KEY', joined)
 
+    def test_explicit_nss_probes_roundtrip_only_three_additional_fixed_paths(self):
+        expected = {}
+        for name, _ in archive.NSS_PROBE_FILES:
+            expected[name] = ('PRIVATE-NSS-PROBE:' + name + '\n').encode()
+            self.write(name, expected[name])
+        receipt = self.export(nss_probes=True)
+        members = self.members()
+        self.assertEqual(len(receipt['files']), len(archive.FILES) + 3)
+        self.assertTrue(json.loads(members['manifest.json'])['nssProbeFilesCaptured'])
+        self.assertTrue(all(members[name] == raw for name, raw in expected.items()))
+        self.assertNotIn('PRIVATE-NSS-PROBE', json.dumps(receipt))
+        self.assertEqual(archive.SCOPED, tuple(name for name, _ in archive.FILES[-2:]))
+
+    def test_default_transport_retains_original_eight_path_scope(self):
+        for name, _ in archive.NSS_PROBE_FILES:
+            self.write(name, b'PRIVATE-NSS-PROBE')
+        receipt = self.export()
+        self.assertEqual(len(receipt['files']), 8)
+        self.assertFalse(any(name in self.members() for name, _ in archive.NSS_PROBE_FILES))
+
+    def test_missing_probe_log_is_explicit_and_does_not_change_scoped_capture(self):
+        self.export(nss_probes=True)
+        manifest = json.loads(self.members()['manifest.json'])
+        self.assertFalse(manifest['nssProbeFilesCaptured'])
+        self.assertTrue(manifest['scopedFilesCaptured'])
+
     def test_modified_gcm_tag_is_rejected_before_recovery_can_use_plaintext(self):
         self.export()
         raw = bytearray(self.output.read_bytes())
