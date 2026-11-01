@@ -190,3 +190,11 @@ opt-inのfresh45経路へ、同OBJDIRのsoftoken/freebl targetを実graph宣言/
 実Macでのbuild/load/stack-fixer動作はまだ未確認。次は新しい未使用origin/branch、fixture/head/pins/catalog、SDKの直前照合、workflowと公開verifier・固有証拠を凍結し、必要な初回nativeへ進む。42 UNVERIFIED+3無効/counts unknown、旧first failure/practical/ledgerと既存workflowを保持する。詳細は `qa-nss-runtime-probes-2026-11-01.ja.md`。
 
 検証結果：全816 exact IDsの811成功・従来と同じ実Darwin専用5skip・0fail/0error。旧795 IDs全保持、全157source hashesが41batchで一致。関連62件と新21件は全816件に含む。公開診断7制御と追加probe logs/summary/first failureの認証暗号化・byte完全一致復号1制御も成功。初回公開制御のfresh45 helper pin不一致は拒否として保存し、隔離verifier候補の厳密157-file listとpipeline/fresh45 pinだけを新bytesへ固定した。実行済みworkflowのverifierは不変。
+
+## 2026-11-02 JST 00時台：NSS新origin・workflowの入力を結合
+
+前回Floorp CI41293611976の全5jobsとartifact13078881939/API/全ZIP/logsを終端照合しました。新branch b/qa-fresh45-nss-20261102の初回だけを許すoriginと、対応する暗号化回収originを明示flagで追加。pipelineのNSS opt-inと固定11パス回収、新workflowの独立公開NSS predicateを結びました。旧origin/workflow・scope期待・345/360分は保持します。
+
+関連58テスト全成功、新824 exact IDs全発見/旧816保持、157hashes固定。変更5ファイル以外の152hashesは不変です。旧全816回帰は過去証拠として保持し、不変766件を再実行・合算しません。新nativeでは全824件/skip0を要求します。独立NSS正例1＋26負例/秘匿制御、公開射影7制御、起動正例1＋10負例と全bash/埋込Python構文・flag結合は成功しました。
+
+次は専用handoffの固定fixture通常CIとRuntime shadowを終端照合し、branch不存在/push0・SDK/API/期限/bytes・担当/両Draft・固有意図を直前確認して必要な初回nativeへ進めます。実Macのbuild/load/toolと42件は未判定、元45ledger/first failure/cleanup限定/旧practicalを保持。詳細は `qa-nss-input-freeze-2026-11-02.ja.md`。

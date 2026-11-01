@@ -162,6 +162,52 @@ class DiagnosticArchiveTests(unittest.TestCase):
                 self.export()
         self.assertFalse(self.output.exists())
 
+    def test_nss_origin_roundtrip_retains_exact_summary_first_failure_and_three_probe_logs(self):
+        self.environment['GITHUB_REF'] = 'refs/heads/' + archive.NSS_BRANCH
+        self.origin.update(ref=self.environment['GITHUB_REF'], profile=archive.NSS_PROFILE)
+        self.write('job-origin.json', json.dumps(self.origin).encode())
+        summary = b'{"firstFailure":{"stage":"nss-runtime-build","code":"nss-runtime-graph-pin"}}\n'
+        self.write('summary.json', summary)
+        probes = {name: ('PRIVATE-NSS:' + name).encode() for name, _ in archive.NSS_PROBE_FILES}
+        for name, raw in probes.items():
+            self.write(name, raw)
+        receipt = self.export(nss_origin=True, nss_probes=True)
+        members = self.members()
+        self.assertEqual(members['summary.json'], summary)
+        self.assertTrue(all(members[name] == raw for name, raw in probes.items()))
+        self.assertTrue(json.loads(members['manifest.json'])['nssProbeFilesCaptured'])
+        self.assertFalse(receipt['productQualification'])
+        self.assertNotIn('PRIVATE-', json.dumps(receipt))
+
+    def test_nss_selector_cannot_cross_old_branch_or_origin_profiles(self):
+        with self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+            self.export(nss_origin=True)
+        self.environment['GITHUB_REF'] = 'refs/heads/' + archive.NSS_BRANCH
+        with self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+            self.export()
+        with self.assertRaisesRegex(Failure, 'diagnostic-origin-binding'):
+            self.export(nss_origin=True)
+        self.origin.update(ref=self.environment['GITHUB_REF'])
+        self.write('job-origin.json', json.dumps(self.origin).encode())
+        with self.assertRaisesRegex(Failure, 'diagnostic-origin-binding'):
+            self.export(nss_origin=True)
+        self.assertFalse(self.output.exists())
+
+    def test_nss_route_still_rejects_rerun_dispatch_and_foreign_identity(self):
+        env = {**self.environment, 'GITHUB_REF': 'refs/heads/' + archive.NSS_BRANCH}
+        for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                           ('GITHUB_REPOSITORY', 'foreign/repository'), ('GITHUB_SHA', 'bad')):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                self.export(environment={**env, key: value}, nss_origin=True)
+        self.assertFalse(self.output.exists())
+
+    def test_nss_selector_requires_boolean_and_snapshot_cannot_bypass_ref_binding(self):
+        for value in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'diagnostic-run-binding'):
+                archive.bindings(self.environment, nss_origin=value)
+        with self.assertRaisesRegex(Failure, 'diagnostic-origin-binding'):
+            archive.snapshot(self.task, archive.bindings(self.environment), nss_origin=True)
+
     def test_missing_log_is_explicit_and_does_not_claim_capture_or_pass(self):
         (self.task/archive.SCOPED[0]).unlink()
         receipt = self.export()

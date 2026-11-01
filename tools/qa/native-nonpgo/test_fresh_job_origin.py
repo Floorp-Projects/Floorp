@@ -129,7 +129,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=True,
-                                           monitor_repair=False, diagnostics=False)
+                                           monitor_repair=False, diagnostics=False, nss=False)
 
     def test_monitor_repair_requires_initial_bound_branch_and_keeps_original_budget(self):
         self.env['GITHUB_REF']='refs/heads/'+origin.MONITOR_REPAIR_BRANCH
@@ -185,7 +185,7 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout',new_callable=io.StringIO):
             self.assertEqual(origin.main(),0)
         initialize.assert_called_once_with(self.task,continuation=False,install_repair=False,
-                                           monitor_repair=True,diagnostics=False)
+                                           monitor_repair=True,diagnostics=False,nss=False)
 
     def test_diagnostics_route_preserves_original_clock_and_rejects_old_routes(self):
         for branch in (origin.BRANCH, origin.CONTINUATION_BRANCH, origin.INSTALL_REPAIR_BRANCH,
@@ -230,7 +230,51 @@ class FreshJobOriginTests(unittest.TestCase):
              mock.patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(origin.main(), 0)
         initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
-                                           monitor_repair=False, diagnostics=True)
+                                           monitor_repair=False, diagnostics=True, nss=False)
+
+    def test_nss_profile_keeps_authenticated_job_clock_and_original_bounds(self):
+        self.env['GITHUB_REF'] = 'refs/heads/' + origin.NSS_BRANCH
+        self.run['head_branch'] = origin.NSS_BRANCH
+        record = origin.initialize(self.task, environment=self.env, opener=self.client,
+            wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, nss=True)
+        self.assertEqual(record['profile'], origin.NSS_PROFILE)
+        self.assertEqual(float((self.task/'started-monotonic').read_text()), 940)
+        self.assertEqual((record['platformMinutes'], record['workDeadlineMinutes']), (360, 345))
+        self.assertIs(record['clockResetAllowed'], False)
+
+    def test_nss_rejects_every_old_branch_ambiguous_selector_and_noninitial_execution(self):
+        env = {**self.env, 'GITHUB_REF': 'refs/heads/' + origin.NSS_BRANCH}
+        for branch in (origin.BRANCH, origin.CONTINUATION_BRANCH, origin.INSTALL_REPAIR_BRANCH,
+                       origin.MONITOR_REPAIR_BRANCH, origin.DIAGNOSTICS_BRANCH, 'main'):
+            with self.subTest(branch=branch), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**env, 'GITHUB_REF': 'refs/heads/' + branch}, nss=True)
+        for key, value in (('GITHUB_RUN_ATTEMPT', '2'), ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                           ('FRESH_PUSH_CREATED', 'false'), ('FRESH_PUSH_BEFORE', 'a'*40)):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment={**env, key: value}, nss=True)
+        for key in ('continuation', 'install_repair', 'monitor_repair', 'diagnostics'):
+            with self.subTest(key=key), self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, nss=True, **{key: True})
+        for value in (None, 1, 'true'):
+            with self.assertRaisesRegex(Failure, 'fresh-origin-run-scope'):
+                origin.initialize(self.task, environment=env, nss=value)
+        self.assertFalse(self.task.exists())
+        self.assertEqual(self.requests, [])
+
+    def test_nss_requires_its_authenticated_run_branch(self):
+        self.env['GITHUB_REF'] = 'refs/heads/' + origin.NSS_BRANCH
+        with self.assertRaisesRegex(Failure, 'fresh-origin-run-provenance'):
+            origin.initialize(self.task, environment=self.env, opener=self.client,
+                wall_clock=lambda: self.wall, monotonic_clock=lambda: self.mono, nss=True)
+        self.assertFalse(self.task.exists())
+
+    def test_cli_nss_selects_only_its_explicit_profile(self):
+        with mock.patch.object(origin, 'initialize') as initialize, \
+             mock.patch('sys.argv', ['fresh_job_origin.py', '--task', str(self.task), '--nss-20261102']), \
+             mock.patch('sys.stdout', new_callable=io.StringIO):
+            self.assertEqual(origin.main(), 0)
+        initialize.assert_called_once_with(self.task, continuation=False, install_repair=False,
+                                           monitor_repair=False, diagnostics=False, nss=True)
 
     def test_continuation_selector_cannot_admit_legacy_other_branch_rerun_or_dispatch(self):
         for selector in (None,1,'true'):
