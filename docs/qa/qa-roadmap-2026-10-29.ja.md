@@ -216,3 +216,9 @@ Native41350068009/attempt1/head4b365e79/job124978125641はSDK取得前のcheckpo
 修正版診断41418651939/attempt1/headd35a4f53/job125188586689の全API/完全ZIP/CMS8ファイル/157pins/824 exact IDsを照合。824件は821成功・3error・skip/failure0で完走し、3件ともstock stack wrapper後のdirectory-bindingだった。firstfailure checkpoint-tests/nonzero-exit/566.68秒と保存summaryは一致。消費3stageのleader reap/group消滅を確認、session/全子孫・全task cleanupは未認定。後続14制御・NSS/42件未実行、元NSS41350068009の個別失敗は未回収のまま保持する。
 
 親へ出力entryを追加すると同じ失敗が再現したため、ancestorのdev/inode/owner/modeとFD/名前束縛を維持しつつnlinkを可変metadataへ移した。読取root/内側directory/fileの全属性、link/FIFO拒否は維持。置換・保護root変更等を含む関連105 unique隔離テスト成功、旧824IDs全保持の830catalog/157pins。全830回帰・不変725件は再実行しない。Macの実変化属性と修正成否は未確認なので、別の最大20分診断で固定105件＋未到達14制御を先に検証する。前回通常CI全5jobs/shadow312は終端照合success。SDK/API/期限/保存全ZIP同一、旧失敗/45ledger/practical/実行済みworkflowを保持。詳細は `qa-stack-binding-2026-11-03.ja.md`。
+
+## 2026-11-03 JST 06時台：Mac束縛修正を確認しNSS実機再開を準備
+
+限定Mac41470665560/attempt1/head8068a6435/job125363063696のAPI/完全ZIP/CMS9ファイル/157pins/105 exact IDsを終端照合。関連105件と14記録制御は全成功・skip0、以前の3errorも成功した。制御内の親nlink4→5とsize/mtime/ctime変化、inode/owner/modeおよび保護tool全属性の不変を実Macで観測。元NSS41350068009の未回収個別失敗は不明のまま保持する。5stageのleader reap/owned group消滅を確認、全task/session子孫cleanupは未認定。SDK/NSS/42未実行、旧45ledger/firstfailure/practicalは保持。
+
+同head通常CI全5jobsとshadow312件は全API/artifact/ZIP/log監査success。SDK13011079529は最新API/保存全ZIP同一・期限11/13、同bytesの49701-member監査を再利用する。新しい初回専用NSS-binding origin/branchを追加し、新回収経路だけ固定preflight5パスを追加して全16パス暗号化。work345/job360・3秒query/3samples・30秒profile・FD/source identity・owned cleanupと元の上流期待を維持する。新sourceの全839 IDs発見/旧830保持、関連67件は隔離全成功・skip0、5変更以外152hash不変。全839/変更なし772件は再実行・加算しない。新workflow/公開verifier/固有入力と同head CIを凍結後、別native初回1回へ進む。詳細は `qa-nss-binding-resume-2026-11-03.ja.md`。

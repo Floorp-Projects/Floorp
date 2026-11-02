@@ -15,7 +15,8 @@ import tempfile
 import time
 
 from firefox_target_observer import _FixedRead, decode, identity
-from fresh_job_origin import DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE, NSS_BRANCH, NSS_PROFILE, REPOSITORY
+from fresh_job_origin import (DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE, NSS_BRANCH, NSS_PROFILE,
+                              NSS_BINDING_BRANCH, NSS_BINDING_PROFILE, REPOSITORY)
 from qa_core import Failure, require
 
 CONTRACT = 'fresh45-encrypted-diagnostics-v1'
@@ -34,14 +35,26 @@ NSS_PROBE_FILES = (
     ('mozilla-nss-load/native-private/harness.raw.jsonl', MIB),
     ('mozilla-nss-load/mozilla-xpcshell.private.log', MIB),
 )
+PREFLIGHT_FILES = (
+    ('monitor-preflight.json', 2*MIB), ('checkpoint-tests.private.log', 16*MIB),
+    ('failure-recording-tests.private.log', 2*MIB), ('monitor-preflight.private.log', 2*MIB),
+    ('census-abi-compile.private.log', MIB),
+)
 ALLOWED_REASONS = ('missing', 'size-limit', 'total-limit', 'file-kind', 'file-binding',
                   'directory-binding', 'root-binding', 'permission', 'io-unavailable')
 
 
-def bindings(environment, *, nss_origin=False):
+def _origin_profile(nss_origin, nss_binding_origin, code):
+    require(type(nss_origin) is bool and type(nss_binding_origin) is bool and
+            not (nss_origin and nss_binding_origin), code)
+    if nss_binding_origin:
+        return NSS_BINDING_BRANCH, NSS_BINDING_PROFILE
+    return (NSS_BRANCH, NSS_PROFILE) if nss_origin else (DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE)
+
+
+def bindings(environment, *, nss_origin=False, nss_binding_origin=False):
     env = environment
-    require(type(nss_origin) is bool, 'diagnostic-run-binding')
-    branch = NSS_BRANCH if nss_origin else DIAGNOSTICS_BRANCH
+    branch, _ = _origin_profile(nss_origin, nss_binding_origin, 'diagnostic-run-binding')
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and
             env.get('GITHUB_REF') == 'refs/heads/'+branch and
             env.get('GITHUB_EVENT_NAME') == 'push' and env.get('GITHUB_RUN_ATTEMPT') == '1',
@@ -57,9 +70,9 @@ def bindings(environment, *, nss_origin=False):
             'runtimeSource': env['RUNTIME_SHA']}
 
 
-def snapshot(task, expected, *, nss_probes=False, nss_origin=False):
-    require(type(nss_origin) is bool and
-            expected.get('ref') == 'refs/heads/' + (NSS_BRANCH if nss_origin else DIAGNOSTICS_BRANCH),
+def snapshot(task, expected, *, nss_probes=False, nss_origin=False, nss_binding_origin=False):
+    branch, profile = _origin_profile(nss_origin, nss_binding_origin, 'diagnostic-origin-binding')
+    require(expected.get('ref') == 'refs/heads/' + branch,
             'diagnostic-origin-binding')
     with ExitStack() as stack:
         reader = _FixedRead(task, stack, time.monotonic()+30)
@@ -70,14 +83,15 @@ def snapshot(task, expected, *, nss_probes=False, nss_origin=False):
         require(type(origin) is dict and
                 all(origin.get(key) == expected[key] and type(origin.get(key)) is type(expected[key])
                     for key in ('repository', 'ref', 'run', 'attempt', 'head')) and
-                origin.get('profile') == (NSS_PROFILE if nss_origin else DIAGNOSTICS_PROFILE) and
+                origin.get('profile') == profile and
                 type(origin.get('job')) is int and origin['job'] > 0 and
                 origin.get('jobName') == 'fresh-firefox45' and
                 type(origin.get('platformMinutes')) is int and origin['platformMinutes'] == 360 and
                 type(origin.get('workDeadlineMinutes')) is int and origin['workDeadlineMinutes'] == 345 and
                 origin.get('clockResetAllowed') is False, 'diagnostic-origin-binding')
         captured, records = {}, []
-        for name, cap in FILES + (NSS_PROBE_FILES if nss_probes else ()):
+        files = FILES + (NSS_PROBE_FILES if nss_probes else ()) + (PREFLIGHT_FILES if nss_binding_origin else ())
+        for name, cap in files:
             raw, record = reader.read(name, cap)
             if raw is not None:
                 captured[name] = raw
@@ -91,6 +105,8 @@ def snapshot(task, expected, *, nss_probes=False, nss_origin=False):
                 'qualification': None, 'productQualification': False}
     if nss_probes:
         manifest['nssProbeFilesCaptured'] = all(name in captured for name, _ in NSS_PROBE_FILES)
+    if nss_binding_origin:
+        manifest['preflightFilesCaptured'] = all(name in captured for name, _ in PREFLIGHT_FILES)
     payload = io.BytesIO()
     with tarfile.open(fileobj=payload, mode='w', format=tarfile.USTAR_FORMAT) as archive:
         members = {'manifest.json': (json.dumps(manifest, sort_keys=True)+'\n').encode(), **captured}
@@ -114,8 +130,9 @@ def openssl_run(openssl, arguments, *, payload=None):
 
 
 def export(task, certificate, certificate_sha256, output, *, openssl, environment=None,
-           nss_probes=False, nss_origin=False):
-    expected = bindings(os.environ if environment is None else environment, nss_origin=nss_origin)
+           nss_probes=False, nss_origin=False, nss_binding_origin=False):
+    expected = bindings(os.environ if environment is None else environment, nss_origin=nss_origin,
+                        nss_binding_origin=nss_binding_origin)
     require(type(certificate_sha256) is str and
             re.fullmatch('[0-9a-f]{64}', certificate_sha256) is not None, 'diagnostic-recipient')
     version = openssl_run(openssl, ['version'])
@@ -129,7 +146,8 @@ def export(task, certificate, certificate_sha256, output, *, openssl, environmen
     output = Path(output)
     require(output.is_absolute() and output.parent.resolve() == output.parent and
             not output.exists() and not output.is_symlink(), 'diagnostic-destination')
-    payload, manifest = snapshot(task, expected, nss_probes=nss_probes, nss_origin=nss_origin)
+    payload, manifest = snapshot(task, expected, nss_probes=nss_probes, nss_origin=nss_origin,
+                                 nss_binding_origin=nss_binding_origin)
     with tempfile.TemporaryDirectory(prefix='.diagnostic-recipient-', dir=output.parent) as temporary:
         pinned_cert = Path(temporary)/'recipient.pem'
         pinned_cert.write_bytes(cert)
@@ -165,12 +183,15 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--openssl', type=Path, required=True)
     parser.add_argument('--nss-probes', action='store_true')
-    parser.add_argument('--nss-origin-20261102', action='store_true')
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument('--nss-origin-20261102', action='store_true')
+    selection.add_argument('--nss-binding-origin-20261103', action='store_true')
     args = parser.parse_args()
     try:
         result = export(args.task, args.certificate, args.certificate_sha256, args.output,
                         openssl=args.openssl, nss_probes=args.nss_probes,
-                        nss_origin=args.nss_origin_20261102)
+                        nss_origin=args.nss_origin_20261102,
+                        nss_binding_origin=args.nss_binding_origin_20261103)
     except BaseException as error:
         code = str(error) if isinstance(error, Failure) and str(error) in (
             'diagnostic-run-binding', 'diagnostic-private-root', 'diagnostic-origin-binding',

@@ -28,6 +28,8 @@ DIAGNOSTICS_BRANCH = 'b/qa-fresh45-diagnostics-20261029'
 DIAGNOSTICS_PROFILE = 'fresh-firefox45-diagnostics-job-origin-20261029-v1'
 NSS_BRANCH = 'b/qa-fresh45-nss-20261102'
 NSS_PROFILE = 'fresh-firefox45-nss-job-origin-20261102-v1'
+NSS_BINDING_BRANCH = 'b/qa-fresh45-nss-binding-20261103'
+NSS_BINDING_PROFILE = 'fresh-firefox45-nss-binding-job-origin-20261103-v1'
 API_CAP = 2 * 1024**2
 
 
@@ -52,12 +54,12 @@ def _decode(raw):
 
 def initialize(task, *, environment=None, opener=None, wall_clock=None, monotonic_clock=None,
                continuation=False, install_repair=False, monitor_repair=False, diagnostics=False,
-               nss=False):
+               nss=False, nss_binding=False):
     """No clock reset, checkpoint role, payload operation, or permission mutation."""
     env = os.environ if environment is None else environment
     wall = time.time if wall_clock is None else wall_clock
     mono = time.monotonic if monotonic_clock is None else monotonic_clock
-    selectors = (continuation, install_repair, monitor_repair, diagnostics, nss)
+    selectors = (continuation, install_repair, monitor_repair, diagnostics, nss, nss_binding)
     require(all(type(value) is bool for value in selectors) and
             sum(selectors) <= 1, 'fresh-origin-run-scope')
     branch = CONTINUATION_BRANCH if continuation else BRANCH
@@ -70,6 +72,8 @@ def initialize(task, *, environment=None, opener=None, wall_clock=None, monotoni
         branch, profile = DIAGNOSTICS_BRANCH, DIAGNOSTICS_PROFILE
     if nss:
         branch, profile = NSS_BRANCH, NSS_PROFILE
+    if nss_binding:
+        branch, profile = NSS_BINDING_BRANCH, NSS_BINDING_PROFILE
     require(env.get('GITHUB_REPOSITORY') == REPOSITORY and env.get('GITHUB_EVENT_NAME') == 'push' and
             env.get('GITHUB_RUN_ATTEMPT') == '1' and env.get('GITHUB_REF') == 'refs/heads/' + branch and
             env.get('FRESH_PUSH_CREATED') == 'true' and env.get('FRESH_PUSH_BEFORE') == '0' * 40,
@@ -170,12 +174,14 @@ def main():
     selection.add_argument('--monitor-repair-20261028', action='store_true')
     selection.add_argument('--diagnostics-20261029', action='store_true')
     selection.add_argument('--nss-20261102', action='store_true')
+    selection.add_argument('--nss-binding-20261103', action='store_true')
     args = parser.parse_args()
     try:
         initialize(args.task, continuation=args.continuation_20261026,
                    install_repair=args.install_repair_20261027,
                    monitor_repair=args.monitor_repair_20261028,
-                   diagnostics=args.diagnostics_20261029, nss=args.nss_20261102)
+                   diagnostics=args.diagnostics_20261029, nss=args.nss_20261102,
+                   nss_binding=args.nss_binding_20261103)
     except Failure as error:
         print(json.dumps({'freshJobOrigin': 'failed', 'code': str(error)}), flush=True)
         return 1
