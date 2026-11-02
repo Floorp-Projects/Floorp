@@ -210,3 +210,9 @@ Native41350068009/attempt1/head4b365e79/job124978125641はSDK取得前のcheckpo
 前回の短時間診断41382285951/attempt1/head7c7d52d3/job125075486438の全API/完全ZIP/CMS認証復号を照合。driverの `platform-budget-binding` は診断器がplan360分を15分へ置換し、ABIの360分呼出しとの一致検査でspawn前に拒否されたことによる。824件/14controlsは実行0、元NSS41350068009の個別失敗は引き続き不明。SDK/NSS/42件未実行、旧firstfailure/practical/45ledgerを保持する。
 
 実行済みworkflow/scriptを保ち、元plan360分の引数契約とAPI開始基準のphase15分を併存させる別診断を追加。job20分/step10分/同fixtureab661c0a/824IDs/157pins/固定10パス暗号化回収、専用handoff固定parent7c7d52d3から初回push1回に限定。旧不整合の実Runner再現、compile境界到達、15分超過時spawn拒否、firstfailure保存を含む隔離16件が全成功。実Macのcompile以降は未検証で、次は新診断の同run/head/attempt/jobを照合し、元の個別failureを回収する。詳細は `qa-preflight-budget-2026-11-02.ja.md`。
+
+## 2026-11-03 JST 00時台：個別3errorを回収し入力祖先の束縛を修正
+
+修正版診断41418651939/attempt1/headd35a4f53/job125188586689の全API/完全ZIP/CMS8ファイル/157pins/824 exact IDsを照合。824件は821成功・3error・skip/failure0で完走し、3件ともstock stack wrapper後のdirectory-bindingだった。firstfailure checkpoint-tests/nonzero-exit/566.68秒と保存summaryは一致。消費3stageのleader reap/group消滅を確認、session/全子孫・全task cleanupは未認定。後続14制御・NSS/42件未実行、元NSS41350068009の個別失敗は未回収のまま保持する。
+
+親へ出力entryを追加すると同じ失敗が再現したため、ancestorのdev/inode/owner/modeとFD/名前束縛を維持しつつnlinkを可変metadataへ移した。読取root/内側directory/fileの全属性、link/FIFO拒否は維持。置換・保護root変更等を含む関連105 unique隔離テスト成功、旧824IDs全保持の830catalog/157pins。全830回帰・不変725件は再実行しない。Macの実変化属性と修正成否は未確認なので、別の最大20分診断で固定105件＋未到達14制御を先に検証する。前回通常CI全5jobs/shadow312は終端照合success。SDK/API/期限/保存全ZIP同一、旧失敗/45ledger/practical/実行済みworkflowを保持。詳細は `qa-stack-binding-2026-11-03.ja.md`。

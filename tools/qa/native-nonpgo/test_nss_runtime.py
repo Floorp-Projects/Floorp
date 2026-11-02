@@ -154,6 +154,97 @@ class RuntimeTests(ClosureFixture, unittest.TestCase):
         self.assertEqual(self.result['symbolicationQuality'], 'UNVERIFIED')
         self.assertNotIn(str(self.task), json.dumps(self.result))
 
+    def test_stack_probe_allows_sibling_output_under_input_ancestor(self):
+        executable = self.prepare_tool()
+        self.stack_runner()
+        original = self.runner.run
+        before = self.task.stat().st_nlink
+        tool_before = nss.identity(executable.stat())
+        def output(*args, **kwargs):
+            original(*args, **kwargs)
+            (self.task / 'separate-output').mkdir()
+        self.runner.run = output
+        nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        self.assertEqual(self.result['status'], 'passed')
+        self.assertEqual(nss.identity(executable.stat()), tool_before)
+        self.assertGreater(self.task.stat().st_nlink, before)
+
+    def test_stack_log_creation_records_mutable_ancestor_fields(self):
+        executable = self.prepare_tool()
+        self.stack_runner()
+        fields = ('st_dev', 'st_ino', 'st_uid', 'st_mode', 'st_nlink',
+                  'st_size', 'st_mtime_ns', 'st_ctime_ns')
+        before = self.task.stat()
+        tools_before = nss.identity(executable.parent.parent.stat())
+        file_before = nss.identity(executable.stat())
+        nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        after = self.task.stat()
+        self.assertEqual(nss.identity(before, False), nss.identity(after, False))
+        self.assertEqual(nss.identity(executable.parent.parent.stat()), tools_before)
+        self.assertEqual(nss.identity(executable.stat()), file_before)
+        self.assertEqual(self.result['status'], 'passed')
+        print(json.dumps({'nssStackBindingControlDiagnostic': {
+            'schema': 1, 'case': self.id(),
+            'ancestorChangedFields': [key for key in fields if getattr(before, key) != getattr(after, key)],
+            'ancestorLinkCountBefore': before.st_nlink, 'ancestorLinkCountAfter': after.st_nlink,
+            'ancestorInodeOwnerModeStable': True, 'toolDirectoryFullIdentityStable': True,
+            'toolFileFullIdentityStable': True, 'productQualification': False}}))
+
+    def test_stack_probe_rejects_ancestor_permission_change(self):
+        self.prepare_tool()
+        self.stack_runner()
+        original = self.runner.run
+        def change(*args, **kwargs):
+            original(*args, **kwargs)
+            self.task.chmod(0o750)
+        self.runner.run = change
+        with self.assertRaisesRegex(Exception, 'directory-binding'):
+            nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        self.assertFalse(self.result['realToolExecuted'])
+
+    def test_stack_probe_rejects_same_byte_tool_replacement_after_execution(self):
+        executable = self.prepare_tool()
+        self.stack_runner()
+        original = self.runner.run
+        def replace(*args, **kwargs):
+            original(*args, **kwargs)
+            replacement = executable.with_name('replacement')
+            replacement.write_bytes(executable.read_bytes())
+            replacement.chmod(0o700)
+            replacement.replace(executable)
+        self.runner.run = replace
+        with self.assertRaisesRegex(Exception, 'directory-binding|file-binding'):
+            nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        self.assertFalse(self.result['realToolExecuted'])
+
+    def test_stack_probe_rejects_new_entry_inside_protected_tools_root(self):
+        self.prepare_tool()
+        self.stack_runner()
+        original = self.runner.run
+        def change(*args, **kwargs):
+            original(*args, **kwargs)
+            (self.task / 'tools' / 'new-entry').write_bytes(b'changed')
+        self.runner.run = change
+        with self.assertRaisesRegex(Exception, 'root-binding'):
+            nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        self.assertFalse(self.result['realToolExecuted'])
+
+    def test_stack_probe_rejects_renamed_ancestor_with_same_byte_tool(self):
+        executable = self.prepare_tool()
+        self.stack_runner()
+        original = self.runner.run
+        def replace(*args, **kwargs):
+            original(*args, **kwargs)
+            tools = self.task / 'tools'
+            tools.rename(self.task / 'original-tools')
+            executable.parent.mkdir(parents=True)
+            executable.write_text('#!/bin/sh\nexec /bin/cat\n')
+            executable.chmod(0o700)
+        self.runner.run = replace
+        with self.assertRaisesRegex(Exception, 'root-binding|file-binding'):
+            nss.run_stack_probe(self.task, self.runner, self.env, 345, self.result)
+        self.assertFalse(self.result['realToolExecuted'])
+
     def test_missing_linked_tool_or_injected_environment_never_executes_wrapper(self):
         executable = self.prepare_tool()
         reference = executable.with_name('original')
