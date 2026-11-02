@@ -198,3 +198,9 @@ opt-inのfresh45経路へ、同OBJDIRのsoftoken/freebl targetを実graph宣言/
 関連58テスト全成功、新824 exact IDs全発見/旧816保持、157hashes固定。変更5ファイル以外の152hashesは不変です。旧全816回帰は過去証拠として保持し、不変766件を再実行・合算しません。新nativeでは全824件/skip0を要求します。独立NSS正例1＋26負例/秘匿制御、公開射影7制御、起動正例1＋10負例と全bash/埋込Python構文・flag結合は成功しました。
 
 次は専用handoffの固定fixture通常CIとRuntime shadowを終端照合し、branch不存在/push0・SDK/API/期限/bytes・担当/両Draft・固有意図を直前確認して必要な初回nativeへ進めます。実Macのbuild/load/toolと42件は未判定、元45ledger/first failure/cleanup限定/旧practicalを保持。詳細は `qa-nss-input-freeze-2026-11-02.ja.md`。
+
+## 2026-11-02 JST 12時台：NSS初回のpreflight終端と失敗ログ回収
+
+Native41350068009/attempt1/head4b365e79/job124978125641はSDK取得前のcheckpoint-tests/nonzero-exitでfailure。全API/2artifactの全ZIP/認証復号/最終stdout保存一致と157pinsを確認した。固定11パス中2件回収、テスト詳細ログが旧allowlist外のため個別失敗・完了数・cleanupは未確定。今回の公開45ledgerはinventory未確認の45UNVERIFIEDで、旧42UNVERIFIED+3無効と旧firstfailure/practicalは保持する。NSS build/load/tool・上流42件は未実行。
+
+失敗時と同じfixtureab661c0a/824IDs/157pinsを用い、専用handoffの固定parentから1回だけ起動する別のpreflight証拠診断を用意した。20分job/15分work/10分preflight、SDK/本体buildなし、固定10パスを暗号化回収する。新回収器/起動/暗号認証等の隔離12件は成功。既済Linux全回帰は再実行・合算しない。終端の個別失敗を読んでから必要修正とNSS実機再開条件を判断する。詳細は `qa-preflight-evidence-2026-11-02.ja.md`。
