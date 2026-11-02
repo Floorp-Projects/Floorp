@@ -204,3 +204,9 @@ opt-inのfresh45経路へ、同OBJDIRのsoftoken/freebl targetを実graph宣言/
 Native41350068009/attempt1/head4b365e79/job124978125641はSDK取得前のcheckpoint-tests/nonzero-exitでfailure。全API/2artifactの全ZIP/認証復号/最終stdout保存一致と157pinsを確認した。固定11パス中2件回収、テスト詳細ログが旧allowlist外のため個別失敗・完了数・cleanupは未確定。今回の公開45ledgerはinventory未確認の45UNVERIFIEDで、旧42UNVERIFIED+3無効と旧firstfailure/practicalは保持する。NSS build/load/tool・上流42件は未実行。
 
 失敗時と同じfixtureab661c0a/824IDs/157pinsを用い、専用handoffの固定parentから1回だけ起動する別のpreflight証拠診断を用意した。20分job/15分work/10分preflight、SDK/本体buildなし、固定10パスを暗号化回収する。新回収器/起動/暗号認証等の隔離12件は成功。既済Linux全回帰は再実行・合算しない。終端の個別失敗を読んでから必要修正とNSS実機再開条件を判断する。詳細は `qa-preflight-evidence-2026-11-02.ja.md`。
+
+## 2026-11-02 JST 18時台：診断器の時間契約を修正
+
+前回の短時間診断41382285951/attempt1/head7c7d52d3/job125075486438の全API/完全ZIP/CMS認証復号を照合。driverの `platform-budget-binding` は診断器がplan360分を15分へ置換し、ABIの360分呼出しとの一致検査でspawn前に拒否されたことによる。824件/14controlsは実行0、元NSS41350068009の個別失敗は引き続き不明。SDK/NSS/42件未実行、旧firstfailure/practical/45ledgerを保持する。
+
+実行済みworkflow/scriptを保ち、元plan360分の引数契約とAPI開始基準のphase15分を併存させる別診断を追加。job20分/step10分/同fixtureab661c0a/824IDs/157pins/固定10パス暗号化回収、専用handoff固定parent7c7d52d3から初回push1回に限定。旧不整合の実Runner再現、compile境界到達、15分超過時spawn拒否、firstfailure保存を含む隔離16件が全成功。実Macのcompile以降は未検証で、次は新診断の同run/head/attempt/jobを照合し、元の個別failureを回収する。詳細は `qa-preflight-budget-2026-11-02.ja.md`。
