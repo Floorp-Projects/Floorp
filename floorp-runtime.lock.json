@@ -3,11 +3,11 @@
   "source": {
     "repository": "Floorp-Projects/Floorp-Runtime",
     "trackingRef": "nora-0.2.0",
-    "ref": "daily-1177",
-    "commit": "0ac255739cdd64e100cd6913329247421b0ec2ea",
-    "tree": "77fe023f67fc8a25b6889f34025bf75df3fa5c75",
+    "ref": "daily-1179",
+    "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+    "tree": "53216e352ae9a27c402b707e1384bb5d62e9db7e",
     "release": {
-      "id": 424056383,
+      "id": 433288890,
       "immutable": false
     },
     "materials": {
@@ -660,19 +660,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 677666998,
+        "id": 707330206,
         "name": "floorp-linux-aarch64-moz-artifact.tar.xz",
-        "size": 78305348,
-        "sha256": "1e3db75a3527393fadbb4d6e453deb65431e92b0e864c8643a42536cbc1d1a33"
+        "size": 78273412,
+        "sha256": "56d0188571bf1e61c2466cb4c3861cdb758679fd5597b88fe044e89dea81be18"
       },
       "applicationIniAsset": {
-        "id": 677667001,
+        "id": 707330201,
         "name": "linux-aarch64-application-ini.zip",
-        "size": 534,
-        "sha256": "cc99a36bfb6e4198d86561cfc8901b78557bacf3ce0fdaa4f362d75dd7e3a6c4"
+        "size": 535,
+        "sha256": "4763c671d0e3ed447b91aaa1aecd3224e442de03d4c77f766f11d1cefbcc27ca"
       },
-      "version": "159.0",
-      "buildId": "20261026023026"
+      "version": "159.0.1",
+      "buildId": "20261103153232"
     },
     {
       "platform": "linux",
@@ -680,19 +680,19 @@
       "format": "tar.xz",
       "extractionPolicy": "tar-xz-floorp",
       "asset": {
-        "id": 677666992,
+        "id": 707330202,
         "name": "floorp-linux-x86_64-moz-artifact.tar.xz",
-        "size": 86798268,
-        "sha256": "8b130d9f8c0e1c032064f9e1163db1d6000f955c29ac16036ac19138f0c445f5"
+        "size": 86774264,
+        "sha256": "cb9b01283d5ce3167f4ba046ee7b39ae9d98a692e1beba73bd9f85f460157772"
       },
       "applicationIniAsset": {
-        "id": 677666989,
+        "id": 707330199,
         "name": "linux-x86_64-application-ini.zip",
-        "size": 534,
-        "sha256": "94bddfe22d9c27cc35c66a6774d27820ae012a7d598a487327b9c75636c42dcf"
+        "size": 535,
+        "sha256": "742bd72ce869d127abefdcbfdd0a0e785786dbd7afd133c6a930833e54d6b956"
       },
-      "version": "159.0",
-      "buildId": "20261026023026"
+      "version": "159.0.1",
+      "buildId": "20261103153232"
     },
     {
       "platform": "macos",
@@ -700,19 +700,19 @@
       "format": "dmg",
       "extractionPolicy": "dmg-floorp-app",
       "asset": {
-        "id": 677666994,
+        "id": 707330210,
         "name": "floorp-macOS-universal-moz-artifact.dmg",
-        "size": 197442349,
-        "sha256": "eba3e99f24fde6529cfe47dd9a73aad5486f16f8d0a37a58cbcdc350d9d5e63b"
+        "size": 197496588,
+        "sha256": "6c24cc4562a51e542afe9b47eba9e92923b05d172bc5181818ddb07225d99b58"
       },
       "applicationIniAsset": {
-        "id": 677666990,
+        "id": 707330200,
         "name": "macOS-universal-application-ini.zip",
-        "size": 534,
-        "sha256": "5ac8a99b5d503eaf8d647ed488c1f6af4ae849fd6be94b0d7a25e7b9a88acab3"
+        "size": 535,
+        "sha256": "1bce59ef5427d41292d26a8eb141331af84ad18f5976abf087ad823f674f104d"
       },
-      "version": "159.0",
-      "buildId": "20261026023026"
+      "version": "159.0.1",
+      "buildId": "20261103153232"
     },
     {
       "platform": "windows",
@@ -720,19 +720,19 @@
       "format": "zip",
       "extractionPolicy": "zip-direct-floorp",
       "asset": {
-        "id": 677666999,
+        "id": 707330207,
         "name": "floorp-windows-x86_64-moz-artifact.zip",
-        "size": 140916582,
-        "sha256": "3843ff41659fde3e764d78443bc0c454ec98ee056ff368088d1bcc24b5ace209"
+        "size": 140973940,
+        "sha256": "a657a3fd9a6376e6f9c894dc76f6c72a0504f2ad2bba1c03bfdf02c637bf74e8"
       },
       "applicationIniAsset": {
-        "id": 677666991,
+        "id": 707330198,
         "name": "windows-x86_64-application-ini.zip",
-        "size": 534,
-        "sha256": "baeef91785f3ae05fdc6924abda19d7125a789b1213772dab9403b99fb9c6632"
+        "size": 535,
+        "sha256": "6ef48a28dcb906edf2bf0cb5d1907d1ed1bf998ca1395db3c8051709fb6806b1"
       },
-      "version": "159.0",
-      "buildId": "20261026023026"
+      "version": "159.0.1",
+      "buildId": "20261103153232"
     }
   ]
 }
