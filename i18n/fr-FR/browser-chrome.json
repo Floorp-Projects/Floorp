@@ -142,9 +142,9 @@
       "reopen-confirm": "Rouvrir cet onglet dans son conteneur synchronisé ? L'onglet actuel sera remplacé après le chargement de la nouvelle page. Les données saisies dans le formulaire et l'état de la page qui n'ont pas été enregistrés risquent d'être perdus.",
       "default-unavailable": "Conteneur — utilisez d'abord Configurer les conteneurs d'espace de travail dans le menu de l'espace de travail.",
       "legacy-scope": "Quelles affectations de conteneur manquantes faut-il définir ? Les onglets signifient chaque onglet de cet espace de travail dont le conteneur est toujours inconnu.",
-      "legacy-scope-default": "Espace de travail par défaut uniquement",
+      "legacy-scope-default": "Conteneur par défaut de cet espace de travail uniquement",
       "legacy-scope-tabs": "Tous les onglets avec des conteneurs inconnus",
-      "legacy-scope-all": "Espace de travail par défaut et tous les onglets avec des conteneurs inconnus",
+      "legacy-scope-all": "Conteneur par défaut de cet espace de travail et tous les onglets dont le conteneur est inconnu",
       "legacy-target": "Choisissez le conteneur pour les tâches sélectionnées. Les identifiants de connexion existants sur cet appareil seront utilisés.",
       "legacy-none": "Aucun conteneur (navigation normale)",
       "legacy-create": "Créer un conteneur en utilisant le nom de l'espace de travail (connexion requise)"
