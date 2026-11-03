@@ -75,7 +75,7 @@
       "status-selected": "Incluído na sincronização",
       "status-error": "Erro de sincronização",
       "status-paused": "Sincronização em pausa",
-      "indicator-paused": "{{name}} — Erro de sincronização do espaço de trabalho: {{error}}",
+      "indicator-paused": "{{name}} — Sincronização do espaço de trabalho em pausa: {{error}}",
       "engine-disabled": "A sincronização do espaço de trabalho está desativada. Selecione “Retomar sincronização do espaço de trabalho” no menu do espaço de trabalho para sincronizar os espaços de trabalho selecionados."
     },
     "context-menu": {
@@ -86,7 +86,7 @@
       "archive": "Arquivo de espaços de trabalho",
       "sync": "Sincronize este espaço de trabalho e suas abas",
       "sync-paused": "A sincronização do espaço de trabalho requer atenção",
-      "sync-resume": "Retomar a sincronização da espaço de trabalho"
+      "sync-resume": "Retomar a sincronização do espaço de trabalho"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
@@ -126,7 +126,7 @@
       "status-pending": "Configuração do contêiner necessária",
       "indicator-pending": "{{name}} — Configuração de contêiner necessária: {{error}}",
       "definition-missing": "As informações sobre o contêiner ainda não chegaram. As abas serão abertas assim que estiverem disponíveis.",
-      "legacy-unresolved": "Algumas abas sincronizadas mais antigas não têm nenhum contêiner atribuído. Use a opção “Configurar contêineres da área de trabalho” para escolher onde elas devem ser abertas.",
+      "legacy-unresolved": "Algumas abas sincronizadas mais antigas não têm nenhum contêiner atribuído. Use a opção “Configurar contêineres de espaço de trabalho…” para escolher onde elas devem ser abertas.",
       "confirmation": "Escolha o contêiner a ser usado para “{{name}}”. Os logins já existentes nesse contêiner serão utilizados neste dispositivo.",
       "deleted": "O contêiner vinculado a “{{name}}” foi excluído. Vincule outro contêiner, crie um ou interrompa a sincronização deste espaço de trabalho.",
       "creating": "O contêiner do espaço de trabalho está sendo criado. Suas abas estão aguardando.",
@@ -140,12 +140,12 @@
       "reopen-needed": "Algumas abas existentes precisam ser reabertas em seu contêiner sincronizado. Selecione a ação “Reabrir” no menu da área de trabalho.",
       "reopen-select": "Escolha uma aba para reabri-la em seu contêiner sincronizado.",
       "reopen-confirm": "Deseja reabrir esta aba em seu contêiner sincronizado? A aba atual será substituída assim que a nova página for carregada. As entradas de formulário e o estado da página que não tiverem sido salvos poderão ser perdidos.",
-      "default-unavailable": "Contêiner — utilize primeiro a opção “Configurar contêineres da área de trabalho” no menu da área de trabalho.",
+      "default-unavailable": "Contêiner — utilize primeiro a opção “Configurar contêineres de espaço de trabalho…” no menu do espaço de trabalho.",
       "legacy-scope": "Quais atribuições de contêineres ausentes devem ser definidas? “Abas” refere-se a todas as abas neste espaço de trabalho cujo contêiner ainda é desconhecido.",
-      "legacy-scope-default": "Espaço de trabalho padrão apenas",
+      "legacy-scope-default": "Apenas o contêiner padrão deste espaço de trabalho",
       "legacy-scope-tabs": "Todas as abas com contêineres desconhecidos",
       "legacy-scope-all": "Padrão do espaço de trabalho e todas as guias com contêineres desconhecidos",
-      "legacy-target": "Escolha o contêiner para as tarefas selecionadas. Serão utilizadas as sessões de login existentes neste dispositivo.",
+      "legacy-target": "Escolha o contêiner para as atribuições selecionadas. Serão utilizadas as sessões de login existentes neste dispositivo.",
       "legacy-none": "Sem contêiner (navegação normal)",
       "legacy-create": "Crie um contêiner usando o nome do espaço de trabalho (é necessário fazer login)"
     }
